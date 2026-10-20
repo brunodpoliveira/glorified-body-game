@@ -5,6 +5,7 @@ using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
+using GlorifiedBody.Cameras;
 using GlorifiedBody.Combat;
 using GlorifiedBody.Core;
 using GlorifiedBody.Enemy;
@@ -62,7 +63,11 @@ namespace GlorifiedBody.Tests.PlayMode
 
             yield return WaitUntil(() => shooter.Current == DummyShooter.State.Telegraph, 2f);
             Assert.AreEqual(DummyShooter.State.Telegraph, shooter.Current, "then the telegraph");
-            Assert.IsTrue(shooter.transform.Find("TelegraphRing").GetComponent<LineRenderer>().enabled, "the circle shows");
+            PlayerHud hud = UnityEngine.Object.FindFirstObjectByType<PlayerHud>();
+            Assert.IsNotNull(hud, "the HUD exists");
+            yield return null;
+            Assert.AreEqual(1, hud.ActiveThreatRings, "the circle shows on the HUD, over the locked point (her)");
+            Assert.IsTrue(shooter.transform.Find("TelegraphRing") == null, "no circle in the world any more");
             Vector3 lockedAim = shooter.AimPoint;
             float p0 = shooter.TelegraphProgress;
             yield return new WaitForSeconds(0.3f);
@@ -74,6 +79,39 @@ namespace GlorifiedBody.Tests.PlayMode
             yield return WaitUntil(() => health.CurrentHealth < hp0, 2f);
             Assert.Less(health.CurrentHealth, hp0, "the bullet hits her");
             Assert.AreEqual(DummyShooter.State.Cooldown, shooter.Current, "then it cools down");
+        }
+
+        [UnityTest]
+        public IEnumerator Telegraph_ShowsAnEdgeArrow_WhenTheShooterIsOutsideTheFrame()
+        {
+            // Bruno, 2026-10-20: the circle is her heads-up to dodge, so it must show when the camera hides the shooter.
+            // The camera goes 3 m above her and looks down: she is in the frame, the dummy 4 m away is not.
+            FixedCameraDirector director = UnityEngine.Object.FindFirstObjectByType<FixedCameraDirector>();
+            if (director != null) director.enabled = false;
+            Camera cam = Camera.main;
+            Assert.IsNotNull(cam, "a camera");
+            cam.transform.position = player.transform.position + Vector3.up * 3f;
+            cam.transform.rotation = Quaternion.LookRotation(Vector3.down, Vector3.forward);
+            cam.fieldOfView = 60f;
+            yield return null;
+            Vector3 shooterScreen = cam.WorldToScreenPoint(shooter.transform.position + Vector3.up);
+            bool shooterInFrame = shooterScreen.z > 0f && shooterScreen.x >= 0f && shooterScreen.x <= Screen.width && shooterScreen.y >= 0f && shooterScreen.y <= Screen.height;
+            Assert.IsFalse(shooterInFrame, "the dummy is outside the frame");
+
+            PlayerHud hud = UnityEngine.Object.FindFirstObjectByType<PlayerHud>();
+            Assert.IsNotNull(hud, "the HUD exists");
+            shooter.enabled = true;
+            yield return WaitUntil(() => shooter.Current == DummyShooter.State.Aiming, 2f);
+            yield return null;
+            Assert.AreEqual(1, hud.ActiveThreatArrows, "an edge arrow points at the shooter while it aims");
+            yield return WaitUntil(() => shooter.Current == DummyShooter.State.Telegraph, 2f);
+            yield return null;
+            Assert.AreEqual(1, hud.ActiveThreatRings, "the circle shows over her during the telegraph");
+            Assert.AreEqual(1, hud.ActiveThreatArrows, "the arrow stays during the telegraph");
+            yield return WaitUntil(() => shooter.ShotsFired >= 1, 2f);
+            yield return null;
+            Assert.AreEqual(0, hud.ActiveThreatRings, "the circle is gone after the shot");
+            Assert.AreEqual(0, hud.ActiveThreatArrows, "the arrow is gone after the shot");
         }
 
         [UnityTest]

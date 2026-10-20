@@ -8,8 +8,10 @@ namespace GlorifiedBody.Enemy
 {
     /// <summary>
     /// The training room dummy: a shooter with the canon telegraph (design §3.1). It aims with a laser line
-    /// that follows Lucy, then the aim locks (it cannot aim again), a circle over it spins and shrinks to the
-    /// moment it fires, and the bullet goes to the locked point. The difficulty rule limits how many shooters
+    /// that follows Lucy, then the aim locks (it cannot aim again), a circle spins and shrinks to the moment it
+    /// fires, and the bullet goes to the locked point. The circle is on the HUD, over the locked point (her), with
+    /// an edge arrow when the shooter is outside the frame (PlayerHud, Bruno 2026-10-20: the camera may not show
+    /// the enemy, and the circle is her heads-up to dodge). The difficulty rule limits how many shooters
     /// aim at once (ShooterScheduler). A blast staggers it, a lift stops it. Numbers are PROPOSED.
     /// </summary>
     [RequireComponent(typeof(Health))]
@@ -29,9 +31,7 @@ namespace GlorifiedBody.Enemy
         private Health health;
         private Transform player;
         private LineRenderer laser;
-        private LineRenderer ring;
         private float timer;
-        private float ringSpin;
         private Vector3 aimPoint;
 
         public State Current { get; private set; } = State.Idle;
@@ -47,10 +47,7 @@ namespace GlorifiedBody.Enemy
         {
             health = GetComponent<Health>();
             laser = MakeLine("Laser", new Color(1f, 0.1f, 0.1f), 0.03f, 2);
-            ring = MakeLine("TelegraphRing", new Color(1f, 0.85f, 0.2f), 0.05f, 33);
-            ring.loop = true;
             laser.enabled = false;
-            ring.enabled = false;
         }
 
         private void OnEnable()
@@ -126,14 +123,12 @@ namespace GlorifiedBody.Enemy
                     {
                         Current = State.Telegraph;
                         timer = telegraphSeconds;
-                        ring.enabled = true;
                         RunTelemetry.Event("enemy_telegraph", enemyId);
                     }
                     break;
 
                 case State.Telegraph:
                     DrawLaser();
-                    DrawRing(dt);
                     timer -= dt;
                     if (timer <= 0f) Fire();
                     break;
@@ -166,19 +161,6 @@ namespace GlorifiedBody.Enemy
             laser.SetPosition(1, aimPoint);
         }
 
-        private void DrawRing(float dt)
-        {
-            ringSpin += 360f * dt;
-            float radius = Mathf.Lerp(1.2f, 0.1f, TelegraphProgress);
-            Vector3 center = transform.position + Vector3.up * 2.4f;
-            int n = ring.positionCount;
-            for (int i = 0; i < n; i++)
-            {
-                float a = (ringSpin + i * 360f / (n - 1)) * Mathf.Deg2Rad;
-                ring.SetPosition(i, center + new Vector3(Mathf.Cos(a) * radius, 0f, Mathf.Sin(a) * radius));
-            }
-        }
-
         private void Fire()
         {
             Vector3 origin = Muzzle;
@@ -192,7 +174,6 @@ namespace GlorifiedBody.Enemy
         {
             if (HoldsSlot) ShooterScheduler.Release(this);
             laser.enabled = false;
-            ring.enabled = false;
             Current = next;
             timer = seconds;
         }

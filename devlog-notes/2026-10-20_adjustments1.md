@@ -51,6 +51,22 @@ this (`PsychicStats.Update` skips the decay at full). The rule is now pinned by 
   never lands. `MenuLoopSetup` now removes and re-adds `ShortController` on every build, and the test
   `Short_EndsByItself_AtAboutHalfHp` pins the 8 s.
 
+## 5. The telegraph circle moves to the HUD (Bruno, 2026-10-20)
+
+The circle is her heads-up to dodge or to put up a defence before the shot. A fixed camera may not show the
+enemy, so a circle over the enemy's head can be outside the frame. Now (`PlayerHud`, PROPOSED):
+
+- The circle is on the HUD, over the locked aim point. That point is her chest, so it is always in the frame.
+  It shrinks from 280 to 60 px over the 1 s telegraph, turns once per second, and goes from orange to red.
+  One ring per shooter in its telegraph (up to four).
+- An arrow at the screen edge points at a shooter outside the frame while it aims (orange) or telegraphs (red).
+  So she knows which side the shot comes from before she picks the dodge direction.
+- The laser line stays in the world. The world ring over the enemy's head is gone (`DummyShooter`).
+- Tests: `Shooter_Aims_Telegraphs_Fires_AndHitsLucy` checks the HUD ring. New
+  `Telegraph_ShowsAnEdgeArrow_WhenTheShooterIsOutsideTheFrame` puts the camera 3 m above her, looking down, so
+  the dummy is outside the frame: the arrow shows while it aims, the ring and the arrow show during the telegraph,
+  both go after the shot. The bot saves `hud_telegraph.png`.
+
 ## Proof
 
 - Four new PlayMode tests. Three in `TankControlTests`: Space plus TurnRight dashes right, a double tap on
@@ -71,7 +87,10 @@ this (`PsychicStats.Update` skips the decay at full). The rule is now pinned by 
 `Assets/_Game/Scripts/Editor/MenuLoopSetup.cs`, `Assets/_Game/Scripts/UI/HowToPlayUI.cs`,
 `Assets/_Game/Tests/PlayMode/TankControlTests.cs`, `README.md`.
 
-RUNS (final, the short change): `runs/20261020-203940-exec-321139` (scene rebuild, CLEAN),
+RUNS (final, the HUD telegraph): `runs/20261020-204702-test-playmode-323984` (36/36, CLEAN),
+`runs/20261020-204936-play-323983` (bot 21/21, CLEAN, `hud_telegraph.png` checked at full size: the ring over her,
+the laser from the shooter).
+RUNS (the short change): `runs/20261020-203940-exec-321139` (scene rebuild, CLEAN),
 `runs/20261020-204017-test-playmode-321674` (35/35, CLEAN), `runs/20261020-204224-play-321138` (bot 21/21,
 CLEAN, telemetry 2.5 HP per shock, 87 to 77 over four shocks).
 RUNS (the SHORT rule): `runs/20261020-202445-test-playmode-316605` (35/35 with the full-SHORT rule test, CLEAN),

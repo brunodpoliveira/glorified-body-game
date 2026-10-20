@@ -337,7 +337,14 @@ namespace GlorifiedBody.Automation
             tank.Teleport(new Vector3(0f, 1f, 0f), 0f);
             yield return WaitUntilReal(() => shooter.Current == DummyShooter.State.Telegraph, 6f);
             bool telegraph = shooter.Current == DummyShooter.State.Telegraph;
-            if (telegraph) { yield return WaitReal(0.3f); CaptureShot("telegraph"); }
+            if (telegraph)
+            {
+                yield return WaitReal(0.3f);
+                CaptureShot("telegraph");
+                // The circle lives on the HUD now (over her), so the overlay shot shows the heads-up. hud_telegraph.png.
+                PlayerHud telegraphHud = FindFirstObjectByType<PlayerHud>();
+                if (telegraphHud != null && telegraphHud.Canvas != null) yield return OverlayShot.Capture(telegraphHud.Canvas, "hud_telegraph.png", 0.05f);
+            }
             yield return WaitUntilReal(() => shooter.ShotsFired >= 1, 3f);
             Record("telegraph", telegraph && shooter.ShotsFired >= 1, $"telegraph={telegraph} shots={shooter.ShotsFired} hp={playerHealth.CurrentHealth:0}");
 

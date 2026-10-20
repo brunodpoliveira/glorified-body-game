@@ -19,7 +19,8 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   Proof: 27 EditMode tests, 35 PlayMode tests, the bot (21 steps), see `devlog-notes/`. Adjustments after Bruno's
   first play (2026-10-20): the dodge is directional (Space plus a direction key, or a double tap), the debug
   keys F5 / F6 / F7 fill the SHORT bar, start the short, refill her, a full SHORT bar holds until a short or
-  a drug (CANON rule), and during a short she can move (8 s, same damage per shock, half her HP). Next: step 4 in
+  a drug (CANON rule), during a short she can move (8 s, same damage per shock, half her HP), and the enemy
+  telegraph circle is on the HUD over her, with an edge arrow for a shooter outside the frame. Next: step 4 in
   `03_GAME_DESIGN.md` §7 (the look test: one room greyboxed, then dressed two ways, for Bruno's pick).
 
 ## Rules

@@ -1,6 +1,8 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using GlorifiedBody.Core;
+using GlorifiedBody.Enemy;
 using GlorifiedBody.Player;
 
 namespace GlorifiedBody.UI
@@ -24,6 +26,21 @@ namespace GlorifiedBody.UI
         private RectTransform ringRect;
         private Sprite white;
         private Sprite ringSprite;
+        private Sprite arrowSprite;
+
+        // The enemy telegraph (Bruno, 2026-10-20): the circle is drawn here, over the locked aim point (her), so a
+        // fixed camera that hides the shooter still shows the heads-up. An arrow at the screen edge points at a
+        // shooter outside the frame while it aims or telegraphs.
+        private const int MaxThreats = 4;
+        private readonly List<RectTransform> threatRings = new List<RectTransform>();
+        private readonly List<Image> threatRingImages = new List<Image>();
+        private readonly List<RectTransform> threatArrows = new List<RectTransform>();
+        private readonly List<Image> threatArrowImages = new List<Image>();
+        private DummyShooter[] shooters = System.Array.Empty<DummyShooter>();
+        private float shootersRefreshAt;
+
+        public int ActiveThreatRings { get; private set; }
+        public int ActiveThreatArrows { get; private set; }
 
         private Transform player;
         private Health health;
@@ -39,6 +56,7 @@ namespace GlorifiedBody.UI
         {
             white = MakeWhiteSprite();
             ringSprite = MakeRingSprite();
+            arrowSprite = MakeArrowSprite();
             BuildUi();
         }
 
@@ -91,6 +109,38 @@ namespace GlorifiedBody.UI
             chargeRing.fillClockwise = true;
             chargeRing.raycastTarget = false;
             ringObj.SetActive(false);
+
+            // The enemy telegraph rings and the edge arrows, a small pool of each.
+            for (int i = 0; i < MaxThreats; i++)
+            {
+                var threatObj = Element("ThreatRing" + i, canvasObj.transform);
+                var threatRect = threatObj.GetComponent<RectTransform>();
+                threatRect.anchorMin = new Vector2(0.5f, 0.5f);
+                threatRect.anchorMax = new Vector2(0.5f, 0.5f);
+                threatRect.sizeDelta = new Vector2(280f, 280f);
+                var threatImage = threatObj.AddComponent<Image>();
+                threatImage.sprite = ringSprite;
+                threatImage.type = Image.Type.Filled;
+                threatImage.fillMethod = Image.FillMethod.Radial360;
+                threatImage.fillOrigin = (int)Image.Origin360.Top;
+                threatImage.fillAmount = 0.75f; // the gap makes the spin visible
+                threatImage.raycastTarget = false;
+                threatObj.SetActive(false);
+                threatRings.Add(threatRect);
+                threatRingImages.Add(threatImage);
+
+                var arrowObj = Element("ThreatArrow" + i, canvasObj.transform);
+                var arrowRect = arrowObj.GetComponent<RectTransform>();
+                arrowRect.anchorMin = new Vector2(0.5f, 0.5f);
+                arrowRect.anchorMax = new Vector2(0.5f, 0.5f);
+                arrowRect.sizeDelta = new Vector2(64f, 64f);
+                var arrowImage = arrowObj.AddComponent<Image>();
+                arrowImage.sprite = arrowSprite;
+                arrowImage.raycastTarget = false;
+                arrowObj.SetActive(false);
+                threatArrows.Add(arrowRect);
+                threatArrowImages.Add(arrowImage);
+            }
         }
 
         private Image Bar(Transform parent, string label, int row, Color color)
@@ -253,6 +303,103 @@ namespace GlorifiedBody.UI
                     }
                 }
             }
+
+            UpdateThreats(Camera.main);
+        }
+
+        /// <summary>
+        /// One ring per shooter in its telegraph, over the locked aim point (her chest), 280 to 60 px as it closes,
+        /// one turn per second. One edge arrow per shooter outside the frame while it aims or telegraphs.
+        /// </summary>
+        private void UpdateThreats(Camera cam)
+        {
+            int rings = 0;
+            int arrows = 0;
+            if (cam != null)
+            {
+                if (Time.unscaledTime >= shootersRefreshAt)
+                {
+                    shooters = FindObjectsByType<DummyShooter>(FindObjectsSortMode.None);
+                    shootersRefreshAt = Time.unscaledTime + 0.5f;
+                }
+
+                foreach (DummyShooter shooter in shooters)
+                {
+                    if (shooter == null || !shooter.isActiveAndEnabled) continue;
+                    bool telegraph = shooter.Current == DummyShooter.State.Telegraph;
+                    bool aiming = shooter.Current == DummyShooter.State.Aiming;
+                    if (!telegraph && !aiming) continue;
+
+                    if (telegraph && rings < MaxThreats && ToCanvas(cam, shooter.AimPoint, out Vector2 at))
+                    {
+                        RectTransform rect = threatRings[rings];
+                        if (!rect.gameObject.activeSelf) rect.gameObject.SetActive(true);
+                        rect.anchoredPosition = at;
+                        float size = Mathf.Lerp(280f, 60f, shooter.TelegraphProgress);
+                        rect.sizeDelta = new Vector2(size, size);
+                        rect.localEulerAngles = new Vector3(0f, 0f, -(Time.time * 360f) % 360f);
+                        threatRingImages[rings].color = Color.Lerp(new Color(1f, 0.6f, 0.2f), new Color(1f, 0.15f, 0.1f), shooter.TelegraphProgress);
+                        rings++;
+                    }
+
+                    Vector3 screen = cam.WorldToScreenPoint(shooter.transform.position + Vector3.up);
+                    bool onScreen = screen.z > 0f && screen.x >= 0f && screen.x <= Screen.width && screen.y >= 0f && screen.y <= Screen.height;
+                    if (onScreen || arrows >= MaxThreats) continue;
+
+                    // The direction from the screen centre to the shooter. Behind the camera the projection flips.
+                    Vector2 centre = new Vector2(Screen.width * 0.5f, Screen.height * 0.5f);
+                    Vector2 dir = new Vector2(screen.x, screen.y) - centre;
+                    if (screen.z < 0f) dir = -dir;
+                    if (dir.sqrMagnitude < 1f) dir = Vector2.up;
+                    dir.Normalize();
+                    const float margin = 60f;
+                    float halfW = Screen.width * 0.5f - margin;
+                    float halfH = Screen.height * 0.5f - margin;
+                    float reach = Mathf.Min(halfW / Mathf.Max(Mathf.Abs(dir.x), 0.0001f), halfH / Mathf.Max(Mathf.Abs(dir.y), 0.0001f));
+                    Vector2 edge = centre + dir * reach;
+                    if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, edge, null, out Vector2 local)) continue;
+                    RectTransform arrow = threatArrows[arrows];
+                    if (!arrow.gameObject.activeSelf) arrow.gameObject.SetActive(true);
+                    arrow.anchoredPosition = local;
+                    arrow.localEulerAngles = new Vector3(0f, 0f, Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg - 90f); // the sprite points up
+                    threatArrowImages[arrows].color = telegraph ? new Color(1f, 0.15f, 0.1f) : new Color(1f, 0.6f, 0.2f);
+                    arrows++;
+                }
+            }
+
+            for (int i = rings; i < MaxThreats; i++) if (threatRings[i].gameObject.activeSelf) threatRings[i].gameObject.SetActive(false);
+            for (int i = arrows; i < MaxThreats; i++) if (threatArrows[i].gameObject.activeSelf) threatArrows[i].gameObject.SetActive(false);
+            ActiveThreatRings = rings;
+            ActiveThreatArrows = arrows;
+        }
+
+        private bool ToCanvas(Camera cam, Vector3 world, out Vector2 local)
+        {
+            Vector3 screen = cam.WorldToScreenPoint(world);
+            local = Vector2.zero;
+            return screen.z > 0f && RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, screen, null, out local);
+        }
+
+        /// <summary>A triangle that points up. The arrow rotates to point at the shooter.</summary>
+        private static Sprite MakeArrowSprite()
+        {
+            const int size = 64;
+            var tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            var px = new Color32[size * size];
+            for (int y = 0; y < size; y++)
+            {
+                float t = y / (float)(size - 1); // 0 at the base, 1 at the tip
+                float halfWidth = (1f - t) * (size * 0.5f - 2f);
+                for (int x = 0; x < size; x++)
+                {
+                    bool inside = y >= 4 && Mathf.Abs(x - (size * 0.5f - 0.5f)) <= halfWidth;
+                    px[y * size + x] = inside ? new Color32(255, 255, 255, 240) : new Color32(0, 0, 0, 0);
+                }
+            }
+            tex.SetPixels32(px);
+            tex.Apply();
+            tex.filterMode = FilterMode.Bilinear;
+            return Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f));
         }
     }
 }
