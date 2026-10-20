@@ -11,11 +11,11 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
 
 ## State
 
-- 2026-10-20: step 1 done. The Unity project sits at the repo root (public GitHub repo, GPL-3.0). The menu loop
-  (main menu, pause, options with key remap, difficulty presets + modifiers, death screen) and the training room
-  greybox are built by code. The batch harness runs: 27 EditMode tests, 6 PlayMode tests, the menu-loop bot.
-  The three Asset Store packages are imported. Next: step 2 in `03_GAME_DESIGN.md` §7 (tank controls, fixed
-  cameras, auto-lock). See `devlog-notes/2026-10-20_step1.md`.
+- 2026-10-20: steps 1 and 2 done. Step 1: the project at the repo root (public GitHub repo, GPL-3.0), the menu
+  loop and the batch harness. Step 2: tank controls with a dodge, fixed cameras per room with zones, auto-lock
+  with a target switch, a charge that stops and turns her. Lucy is still a capsule. Proof: 27 EditMode tests,
+  15 PlayMode tests, the bot (15 steps), see `devlog-notes/`. Next: step 3 in `03_GAME_DESIGN.md` §7 (the
+  training room: the dummy enemy with its telegraph, the circle charge, HP / NALCON / SHORT, the drugs).
 
 ## Rules
 

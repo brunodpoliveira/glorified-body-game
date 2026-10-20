@@ -21,7 +21,8 @@ namespace GlorifiedBody.Editor.Automation
         {
             // The persistent managers (GameManager, InputManager, SettingsManager, DifficultyManager) live in
             // Main_Menu and survive the scene load. GameplayInitializer creates them when the room starts alone.
-            "ImpactFrameController", "PlayerDeathFlowController", "GameplayInitializer", "PoolService"
+            "ImpactFrameController", "PlayerDeathFlowController", "GameplayInitializer", "PoolService",
+            "TankController", "LockOnController", "FixedCameraDirector"
         };
 
         private struct Check

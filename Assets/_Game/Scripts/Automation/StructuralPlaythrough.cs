@@ -6,8 +6,10 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using GlorifiedBody.Cameras;
 using GlorifiedBody.Core;
 using GlorifiedBody.DebugTools;
+using GlorifiedBody.Player;
 using GlorifiedBody.Systems;
 using GlorifiedBody.UI;
 
@@ -19,8 +21,10 @@ namespace GlorifiedBody.Automation
     /// death screen, restart, back to the main menu. Later steps add the room and the mechanics.
     /// Active only when BotArgs.Bot == "structural". Writes playthrough.json to BotArgs.RunDir.
     /// </summary>
+    [DefaultExecutionOrder(-1000)]
     public class StructuralPlaythrough : MonoBehaviour
     {
+        private VirtualPad pad;
         [Serializable]
         private class Step
         {
@@ -67,6 +71,7 @@ namespace GlorifiedBody.Automation
 
         private void Update()
         {
+            pad?.Commit();
             if (Time.unscaledTime >= measureFrom) maxFrameMs = Mathf.Max(maxFrameMs, Time.unscaledDeltaTime * 1000f);
         }
 
@@ -121,6 +126,9 @@ namespace GlorifiedBody.Automation
             RunTelemetry.Event("bot_assist", "on");
             yield return WaitReal(0.5f);
             CaptureShot("play_training_room");
+
+            // 2b. Step 2: tank controls, dodge, camera cuts and the lock-on, driven through the virtual pad.
+            yield return MovementSteps(player, playerHealth);
 
             // 3. Pause round trip: the pause menu shows on Pause() and hides on Resume().
             gm.Pause();
@@ -190,6 +198,103 @@ namespace GlorifiedBody.Automation
             Record("main_menu_return", backInMenu, $"scene={SceneManager.GetActiveScene().name} state={gm.CurrentState} timeScale={Time.timeScale:0.00}");
 
             Finish();
+        }
+
+        private IEnumerator MovementSteps(GameObject player, Health playerHealth)
+        {
+            TankController tank = player.GetComponent<TankController>();
+            LockOnController lockOn = player.GetComponent<LockOnController>();
+            FixedCameraDirector director = FixedCameraDirector.Instance;
+            if (tank == null || lockOn == null || director == null)
+            {
+                Record("step2_components", false, $"tank={tank != null} lockOn={lockOn != null} director={director != null}");
+                yield break;
+            }
+
+            pad = new VirtualPad();
+            GameInput.SetBotSource(pad);
+            tank.Teleport(new Vector3(0f, 1f, 0f), 0f);
+            // Let the game clock settle after the load hitches, then measure in game time (WaitGame).
+            yield return WaitReal(0.5f);
+            yield return WaitGame(0.2f);
+
+            // Walk forward for one second.
+            Vector3 start = player.transform.position;
+            Vector3 forward = player.transform.forward;
+            pad.SetHeld(InputManager.GameAction.Forward, true);
+            yield return WaitGame(1f);
+            pad.ReleaseAll();
+            yield return null;
+            float along = Vector3.Dot(player.transform.position - start, forward);
+            Record("walk_forward", along >= 0.8f, $"{along:0.00} m along the facing in 1 s (walk {tank.WalkSpeed} m/s)");
+
+            // Turn right for half a second.
+            float yaw0 = tank.Yaw;
+            pad.SetHeld(InputManager.GameAction.TurnRight, true);
+            yield return WaitGame(0.5f);
+            pad.ReleaseAll();
+            yield return null;
+            float turned = Mathf.DeltaAngle(yaw0, tank.Yaw);
+            Record("turn_right", turned >= 45f, $"{turned:0} deg in 0.5 s (turn {tank.TurnSpeed} deg/s)");
+
+            // Dodge: a dash with invulnerability frames.
+            Vector3 beforeDodge = player.transform.position;
+            pad.Tap(InputManager.GameAction.Dodge);
+            yield return null;
+            yield return null;
+            bool dodging = tank.IsDodging;
+            bool invulnerable = playerHealth.IsInvulnerable;
+            yield return WaitGame(0.6f);
+            float dodged = Vector3.Distance(beforeDodge, player.transform.position);
+            Record("dodge", dodging && invulnerable && dodged >= 1f, $"dodging={dodging} invulnerable={invulnerable} moved={dodged:0.00} m");
+
+            // Camera cuts: into the north-east zone, the south-west zone, back to the wide camera.
+            tank.Teleport(new Vector3(3f, 1f, 3f), 180f);
+            yield return WaitUntilReal(() => director.CurrentName == "Cam_NorthEast", 1.5f);
+            string camA = director.CurrentName;
+            yield return WaitReal(0.3f);
+            CaptureShot("cam_northeast");
+            tank.Teleport(new Vector3(-3f, 1f, -3f), 0f);
+            yield return WaitUntilReal(() => director.CurrentName == "Cam_SouthWest", 1.5f);
+            string camB = director.CurrentName;
+            yield return WaitReal(0.3f);
+            CaptureShot("cam_southwest");
+            tank.Teleport(new Vector3(0f, 1f, 0f), 0f);
+            yield return WaitUntilReal(() => director.CurrentName == "Cam_Wide", 1.5f);
+            string camC = director.CurrentName;
+            Record("camera_cut", camA == "Cam_NorthEast" && camB == "Cam_SouthWest" && camC == "Cam_Wide", $"{camA} > {camB} > {camC}");
+
+            // Lock-on: the nearest dummy, then the switch.
+            yield return WaitUntilReal(() => lockOn.HasTarget, 1.5f);
+            string first = lockOn.TargetName;
+            pad.Tap(InputManager.GameAction.SwitchTarget);
+            yield return null;
+            yield return null;
+            string second = lockOn.TargetName;
+            Record("lock_on", lockOn.HasTarget && first != "none" && second != first, $"nearest={first} switched={second}");
+            yield return WaitReal(0.3f);
+            CaptureShot("lock_on");
+
+            // Charge: she stands still and faces the target.
+            Vector3 beforeCharge = player.transform.position;
+            pad.SetHeld(InputManager.GameAction.Charge, true);
+            pad.SetHeld(InputManager.GameAction.Forward, true);
+            yield return WaitGame(0.6f);
+            float moved = Vector3.Distance(beforeCharge, player.transform.position);
+            float angle = 999f;
+            if (lockOn.CurrentTarget != null)
+            {
+                Vector3 to = lockOn.CurrentTarget.GetLockPoint() - player.transform.position;
+                to.y = 0f;
+                angle = Vector3.Angle(player.transform.forward, to);
+            }
+            Record("charge_faces_target", lockOn.IsCharging && moved < 0.05f && angle < 8f, $"charging={lockOn.IsCharging} moved={moved:0.00} m angle={angle:0}");
+            pad.ReleaseAll();
+            yield return null;
+            yield return null;
+
+            GameInput.ClearBotSource(pad);
+            pad = null;
         }
 
         private static GameObject FindPlayer(out Health health)
@@ -271,6 +376,12 @@ namespace GlorifiedBody.Automation
         private static IEnumerator WaitReal(float seconds)
         {
             yield return new WaitForSecondsRealtime(seconds);
+        }
+
+        /// <summary>Game-clock wait, for distances and angles: the controllers integrate Time.deltaTime.</summary>
+        private static IEnumerator WaitGame(float seconds)
+        {
+            yield return new WaitForSeconds(seconds);
         }
     }
 }

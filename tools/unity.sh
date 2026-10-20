@@ -86,11 +86,18 @@ triage() {
 }
 
 batch_guard() {
-  if editor_open_on "$PROJ"; then
-    echo "[unity.sh] ERROR: an editor has '$PROJ' open. Batch mode cannot open the same project."
-    echo "[unity.sh] Close the editor first, or use the w* modes for the warm editor."
-    exit 3
-  fi
+  # GB_EDITOR_WAIT_MAX > 0: wait that many seconds for an open editor to close instead of refusing at once.
+  local waited=0
+  while editor_open_on "$PROJ"; do
+    if [ "${GB_EDITOR_WAIT_MAX:-0}" -le 0 ] || [ "$waited" -ge "${GB_EDITOR_WAIT_MAX:-0}" ]; then
+      echo "[unity.sh] ERROR: an editor has '$PROJ' open. Batch mode cannot open the same project."
+      echo "[unity.sh] Close the editor first, or use the w* modes for the warm editor."
+      exit 3
+    fi
+    [ "$waited" -eq 0 ] && echo "[unity.sh] editor gate: an editor has the project open. Waiting up to ${GB_EDITOR_WAIT_MAX}s ($(date +%T))..."
+    sleep 30; waited=$((waited + 30))
+  done
+  [ "$waited" -gt 0 ] && echo "[unity.sh] editor gate: editor closed after ${waited}s ($(date +%T))."
   rm -f "$PROJ/Library/EditorInstance.json"   # stale file copied with Library/ from another tree
   playmode_flag_guard
 }

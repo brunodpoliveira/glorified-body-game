@@ -4,10 +4,13 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using GlorifiedBody.Cameras;
+using GlorifiedBody.Combat;
 using GlorifiedBody.Core;
 using GlorifiedBody.DebugTools;
 using GlorifiedBody.Level;
 using GlorifiedBody.Level.Build;
+using GlorifiedBody.Player;
 using GlorifiedBody.Pooling;
 using GlorifiedBody.Systems;
 using GlorifiedBody.UI;
@@ -16,8 +19,9 @@ namespace GlorifiedBody.Editor
 {
     /// <summary>
     /// Builds the step-1 menu loop from code, never from hand-edited YAML:
-    /// Main_Menu.unity (managers + MainMenuUI) and TrainingRoom.unity (a greybox floor, one fixed camera,
-    /// a placeholder Lucy with Health, the gameplay systems and the overlay menus).
+    /// Main_Menu.unity (managers + MainMenuUI) and TrainingRoom.unity (a greybox room, three fixed cameras with
+    /// two camera zones, a placeholder Lucy with the tank controller and the lock-on, two target dummies, the
+    /// gameplay systems and the overlay menus).
     /// Idempotent: an existing scene is opened and completed, so its GUID in Build Settings stays valid.
     /// Menu: GlorifiedBody > Build Menu Loop Scenes.
     /// Batch: tools/unity.sh exec GlorifiedBody.Editor.MenuLoopSetup.BuildMenuLoopScenes
@@ -60,17 +64,29 @@ namespace GlorifiedBody.Editor
 
             GameObject floor = EnsurePrimitive("Floor", PrimitiveType.Plane, Vector3.zero, Vector3.one);
             floor.isStatic = true;
-            EnsurePrimitive("Wall_North", PrimitiveType.Cube, new Vector3(0f, 1.5f, 5f), new Vector3(10f, 3f, 0.2f)).isStatic = true;
-            EnsurePrimitive("Wall_South", PrimitiveType.Cube, new Vector3(0f, 1.5f, -5f), new Vector3(10f, 3f, 0.2f)).isStatic = true;
-            EnsurePrimitive("Wall_East", PrimitiveType.Cube, new Vector3(5f, 1.5f, 0f), new Vector3(0.2f, 3f, 10f)).isStatic = true;
-            EnsurePrimitive("Wall_West", PrimitiveType.Cube, new Vector3(-5f, 1.5f, 0f), new Vector3(0.2f, 3f, 10f)).isStatic = true;
+            // Walls 0.5 m thick: a run step at a low batch frame rate must not pass through them.
+            EnsurePrimitive("Wall_North", PrimitiveType.Cube, new Vector3(0f, 1.5f, 5.15f), new Vector3(10.6f, 3f, 0.5f)).isStatic = true;
+            EnsurePrimitive("Wall_South", PrimitiveType.Cube, new Vector3(0f, 1.5f, -5.15f), new Vector3(10.6f, 3f, 0.5f)).isStatic = true;
+            EnsurePrimitive("Wall_East", PrimitiveType.Cube, new Vector3(5.15f, 1.5f, 0f), new Vector3(0.5f, 3f, 10.6f)).isStatic = true;
+            EnsurePrimitive("Wall_West", PrimitiveType.Cube, new Vector3(-5.15f, 1.5f, 0f), new Vector3(0.5f, 3f, 10.6f)).isStatic = true;
 
-            // Lucy placeholder: a capsule with Health. The step-2 controller replaces the capsule.
+            // Lucy placeholder: a capsule with Health, the tank controller and the lock-on. The CharacterController
+            // is her collider, so the primitive's capsule collider and any rigidbody go.
             GameObject player = EnsurePrimitive("Lucy_Placeholder", PrimitiveType.Capsule, new Vector3(0f, 1f, 0f), Vector3.one);
             player.tag = "Player";
-            Rigidbody body = EnsureComponent<Rigidbody>(player);
-            body.isKinematic = true;
-            body.useGravity = false;
+            RemoveComponent<Rigidbody>(player);
+            RemoveComponent<CapsuleCollider>(player);
+            CharacterController controller = EnsureComponent<CharacterController>(player);
+            controller.height = 2f;
+            controller.radius = 0.4f;
+            controller.center = Vector3.zero;
+            controller.stepOffset = 0.3f;
+            controller.slopeLimit = 45f;
+            controller.minMoveDistance = 0f;
+            EnsureComponent<TankController>(player);
+            EnsureComponent<LockOnController>(player);
+            GameObject nose = EnsureChildPrimitive(player, "Nose", PrimitiveType.Cube, new Vector3(0f, 0.6f, 0.5f), Vector3.one * 0.2f);
+            RemoveComponent<BoxCollider>(nose);
             Health health = EnsureComponent<Health>(player);
             var healthSo = new SerializedObject(health);
             healthSo.FindProperty("maxHealth").floatValue = 100f;
@@ -87,12 +103,27 @@ namespace GlorifiedBody.Editor
             volumeSo.FindProperty("bypassSecondWind").boolValue = true;
             volumeSo.ApplyModifiedPropertiesWithoutUndo();
 
+            // Two target dummies for the lock-on. Step 3 replaces them with the Invector dummy enemy.
+            SetupDummy(EnsurePrimitive("Dummy_A", PrimitiveType.Capsule, new Vector3(3f, 1f, 2f), Vector3.one));
+            SetupDummy(EnsurePrimitive("Dummy_B", PrimitiveType.Capsule, new Vector3(-2f, 1f, 4f), Vector3.one));
+
+            // Fixed cameras: the wide default, plus two corner cameras with their zones.
+            GameObject camerasRoot = EnsureRoot("[Cameras]");
+            FixedCameraDirector director = EnsureComponent<FixedCameraDirector>(camerasRoot);
+            FixedCamera wide = EnsureFixedCamera(camerasRoot, "Cam_Wide", camera.transform.position, new Vector3(0f, 1f, 0f), 50f);
+            FixedCamera northEast = EnsureFixedCamera(camerasRoot, "Cam_NorthEast", new Vector3(4.3f, 3.4f, 4.3f), new Vector3(0f, 1f, 0f), 55f);
+            FixedCamera southWest = EnsureFixedCamera(camerasRoot, "Cam_SouthWest", new Vector3(-4.3f, 3.0f, -4.3f), new Vector3(0f, 1f, 0f), 55f);
+            director.SetDefaultCamera(wide);
+            EnsureCameraZone(camerasRoot, "Zone_NorthEast", new Vector3(3f, 1.5f, 3f), new Vector3(4f, 3f, 4f), northEast, 1);
+            EnsureCameraZone(camerasRoot, "Zone_SouthWest", new Vector3(-3f, 1.5f, -3f), new Vector3(4f, 3f, 4f), southWest, 1);
+
             GameObject systems = EnsureRoot("[GameplaySystems]");
             EnsureComponent<GameplayInitializer>(systems);
             EnsureComponent<ImpactFrameController>(systems);
             EnsureComponent<PlayerDeathFlowController>(systems);
             EnsureComponent<PoolService>(systems);
             EnsureComponent<DebugKillKey>(systems);
+            EnsureComponent<DebugStatusLine>(systems);
 
             GameObject ui = EnsureRoot("[RuntimeUI]");
             EnsureComponent<PauseMenuUI>(ui);
@@ -102,11 +133,17 @@ namespace GlorifiedBody.Editor
             EnsureComponent<CreditsUI>(ui);
             EnsureComponent<LevelCompleteUI>(ui);
 
-            GameObject shot = EnsureRoot("ShotPoint_fixed_camera");
-            shot.transform.SetPositionAndRotation(camera.transform.position, camera.transform.rotation);
-            ShotPoint shotPoint = EnsureComponent<ShotPoint>(shot);
-            shotPoint.shotName = "fixed_camera";
-            shotPoint.fieldOfView = camera.fieldOfView;
+            // One ShotPoint per fixed camera, so `tools/unity.sh shots TrainingRoom` renders every view.
+            GameObject oldShot = GameObject.Find("ShotPoint_fixed_camera");
+            if (oldShot != null) Object.DestroyImmediate(oldShot);
+            foreach (FixedCamera fixedCamera in new[] { wide, northEast, southWest })
+            {
+                GameObject shot = EnsureRoot("ShotPoint_" + fixedCamera.cameraName);
+                shot.transform.SetPositionAndRotation(fixedCamera.transform.position, fixedCamera.transform.rotation);
+                ShotPoint shotPoint = EnsureComponent<ShotPoint>(shot);
+                shotPoint.shotName = fixedCamera.cameraName;
+                shotPoint.fieldOfView = fixedCamera.fieldOfView;
+            }
 
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
@@ -251,6 +288,69 @@ namespace GlorifiedBody.Editor
         {
             T component = obj.GetComponent<T>();
             return component != null ? component : obj.AddComponent<T>();
+        }
+
+        private static void RemoveComponent<T>(GameObject obj) where T : Component
+        {
+            T component = obj.GetComponent<T>();
+            if (component != null) Object.DestroyImmediate(component);
+        }
+
+        private static GameObject EnsureChild(GameObject parent, string name)
+        {
+            Transform child = parent.transform.Find(name);
+            if (child != null) return child.gameObject;
+            var obj = new GameObject(name);
+            obj.transform.SetParent(parent.transform, false);
+            return obj;
+        }
+
+        private static GameObject EnsureChildPrimitive(GameObject parent, string name, PrimitiveType type, Vector3 localPosition, Vector3 localScale)
+        {
+            Transform child = parent.transform.Find(name);
+            GameObject obj = child != null ? child.gameObject : GameObject.CreatePrimitive(type);
+            obj.name = name;
+            obj.transform.SetParent(parent.transform, false);
+            obj.transform.localPosition = localPosition;
+            obj.transform.localScale = localScale;
+            return obj;
+        }
+
+        private static FixedCamera EnsureFixedCamera(GameObject root, string name, Vector3 position, Vector3 lookAt, float fieldOfView)
+        {
+            GameObject obj = EnsureChild(root, name);
+            obj.transform.position = position;
+            obj.transform.LookAt(lookAt);
+            FixedCamera fixedCamera = EnsureComponent<FixedCamera>(obj);
+            fixedCamera.cameraName = name;
+            fixedCamera.fieldOfView = fieldOfView;
+            return fixedCamera;
+        }
+
+        private static void EnsureCameraZone(GameObject root, string name, Vector3 center, Vector3 size, FixedCamera fixedCamera, int priority)
+        {
+            GameObject obj = EnsureChild(root, name);
+            obj.transform.position = center;
+            BoxCollider box = EnsureComponent<BoxCollider>(obj);
+            box.isTrigger = true;
+            box.size = size;
+            box.center = Vector3.zero;
+            CameraZone zone = EnsureComponent<CameraZone>(obj);
+            zone.fixedCamera = fixedCamera;
+            zone.priority = priority;
+        }
+
+        private static void SetupDummy(GameObject dummy)
+        {
+            dummy.tag = "Enemy";
+            Health health = EnsureComponent<Health>(dummy);
+            var so = new SerializedObject(health);
+            so.FindProperty("maxHealth").floatValue = 50f;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            LockOnTargetable target = EnsureComponent<LockOnTargetable>(dummy);
+            var targetSo = new SerializedObject(target);
+            targetSo.FindProperty("fallbackHeight").floatValue = 0.6f;
+            targetSo.ApplyModifiedPropertiesWithoutUndo();
         }
     }
 }

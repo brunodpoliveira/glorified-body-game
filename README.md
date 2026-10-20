@@ -5,10 +5,11 @@ memory and three psychic powers, escapes the cult's lab. Steam, PC, keyboard and
 
 ## Status
 
-Build order step 1 (2026-10-20): the Unity project, the menu loop (main menu, pause, options with key remap,
-difficulty presets and modifiers, death screen), the batch harness and its tests. No gameplay yet.
+Build order steps 1 and 2 (2026-10-20): the Unity project, the menu loop (main menu, pause, options with key
+remap, difficulty presets and modifiers, death screen), the batch harness and its tests, then tank controls with a
+dodge, fixed cameras per room, and the auto-lock with a target switch. Lucy is a capsule in a greybox room.
 
-Next: step 2, tank controls and fixed cameras. Step 3, the training room with the powers and the bars.
+Next: step 3, the training room with the dummy enemy, the circle charge, the three bars and the drugs.
 Step 4, the look test.
 
 ## Open the project
@@ -18,7 +19,8 @@ Step 4, the look test.
    order: Invector Third Person Controller (Shooter Template), Invector FSM AI Template, Gore System URP
    (That Individual). Without them the gore and Invector bridge scripts do not compile.
 3. Open the folder in the Unity Hub. Press Play in `Assets/_Game/Scenes/Main_Menu.unity`.
-4. In the training room: F4 kills Lucy (shows the death screen). Esc pauses.
+4. In the training room: W/S walk, A/D turn, Shift runs, Space dodges, Tab switches the lock target, hold LMB to
+   face the target. F4 kills Lucy (shows the death screen). F1 hides the status line. Esc pauses.
 
 ## Batch tools (no editor open)
 
