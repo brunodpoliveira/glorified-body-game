@@ -76,6 +76,8 @@ namespace GlorifiedBody.Player
                 Nalcon = Mathf.Min(MaxNalcon, Nalcon + outfit.nalconRegenPerSecond * dt);
                 changed = true;
             }
+            // A full SHORT bar holds (Bruno, 2026-10-20). Only the short (ResetShort at its end) or a drug
+            // (RefillAll) empties it. A part-full bar drains at the outfit rate.
             if (outfit.shortDecayPerSecond > 0f && Short > 0f && !IsShortFull)
             {
                 Short = Mathf.Max(0f, Short - outfit.shortDecayPerSecond * dt);

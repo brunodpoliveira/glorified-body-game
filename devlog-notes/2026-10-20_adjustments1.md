@@ -28,11 +28,19 @@ so by hand the bar tops out near 50. Not a bug: the room is too small for it. Th
 `DebugCheatKeys` sits next to `DebugKillKey` (F4) on `[GameplaySystems]`. The F-keys are reserved and never
 rebound. The keys go away when the game ships.
 
+## 3. A full SHORT bar holds (rule from Bruno, 2026-10-20)
+
+A full SHORT bar does not drain. Only two things empty it: the short itself (at its end) and a drug (any drug,
+short or not). A part-full bar drains at the outfit rate (nude 1 per second, guard 0). The code already did
+this (`PsychicStats.Update` skips the decay at full). The rule is now pinned by the test
+`FullShort_Holds_UntilAShortOrADrug` and stated in the code comment.
+
 ## Proof
 
 - Four new PlayMode tests. Three in `TankControlTests`: Space plus TurnRight dashes right, a double tap on
   Forward dashes forward, one tap does not dodge. One in `PowersAndBarsTests`: the debug keys sit on
-  `[GameplaySystems]`, F6 starts the short, F5 fills the bar, F7 refills. PlayMode total: 34.
+  `[GameplaySystems]`, F6 starts the short, F5 fills the bar, F7 refills. Plus the full-SHORT rule test from
+  section 3. PlayMode total: 35.
 - The scenes were rebuilt from code (`MenuLoopSetup.BuildMenuLoopScenes`), so `TrainingRoom.unity` carries the
   new component.
 - The how-to-play panel got three rows (the two dodge forms, the debug keys) and grew from 760 to 900 px, so the
@@ -47,7 +55,8 @@ rebound. The keys go away when the game ships.
 `Assets/_Game/Scripts/Editor/MenuLoopSetup.cs`, `Assets/_Game/Scripts/UI/HowToPlayUI.cs`,
 `Assets/_Game/Tests/PlayMode/TankControlTests.cs`, `README.md`.
 
-RUNS (final): `runs/20261020-195148-test-playmode-308964` (34/34, CLEAN), `runs/20261020-195347-play-308963`
+RUNS (final): `runs/20261020-202445-test-playmode-316605` (35/35 with the full-SHORT rule test, CLEAN),
+`runs/20261020-195148-test-playmode-308964` (34/34, CLEAN), `runs/20261020-195347-play-308963`
 (bot 21/21, CLEAN, the how-to-play shot checked at full size). Scene rebuild: `runs/20261020-194154-exec-305209`
 (CLEAN). Earlier passes: `runs/20261020-193625-compile-303047`, `runs/20261020-193725-test-playmode-303799`
 (33/33), `runs/20261020-193914-play-303046` (20/20), `runs/20261020-194238-test-playmode-305831` (34/34),

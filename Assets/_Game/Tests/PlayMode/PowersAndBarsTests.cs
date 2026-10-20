@@ -263,6 +263,37 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator FullShort_Holds_UntilAShortOrADrug()
+        {
+            // Bruno, 2026-10-20: a full SHORT bar does not drain. Only a short or a drug empties it.
+            Assert.Greater(stats.Outfit.shortDecayPerSecond, 0f, "the nude outfit drains a part-full bar");
+            stats.DebugSet(100f, 90f);
+            yield return new WaitForSeconds(1f);
+            Assert.Less(stats.Short, 89.5f, "a part-full bar drains");
+
+            stats.DebugSet(100f, PsychicStats.MaxShort);
+            yield return new WaitForSeconds(2f);
+            Assert.IsTrue(stats.IsShortFull, "a full bar holds");
+            Assert.AreEqual(PsychicStats.MaxShort, stats.Short, 0.001f, "not one point lost");
+            health.TakeDamage(5f);
+            yield return null;
+            Assert.AreEqual(PsychicStats.MaxShort, stats.Short, 0.001f, "damage keeps it full");
+
+            drugs.DebugSet(DrugType.Red, 1);
+            pad.Tap(InputManager.GameAction.UseDrug);
+            yield return null;
+            yield return null;
+            Assert.AreEqual(0f, stats.Short, 0.01f, "a drug empties the full bar, short or not");
+            Assert.IsFalse(shortController.IsActive, "no short ran");
+
+            stats.DebugSet(100f, PsychicStats.MaxShort);
+            shortController.Begin();
+            yield return new WaitForSeconds(shortController.Duration + 0.6f);
+            Assert.IsFalse(shortController.IsActive, "the short ended");
+            Assert.AreEqual(0f, stats.Short, 0.01f, "the short empties the bar");
+        }
+
+        [UnityTest]
         public IEnumerator Short_EndsByItself_AtAboutHalfHp()
         {
             stats.SetOutfit(Resources.Load<OutfitProfile>("Outfits/outfit_guard"));
