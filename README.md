@@ -5,12 +5,12 @@ memory and three psychic powers, escapes the cult's lab. Steam, PC, keyboard and
 
 ## Status
 
-Build order steps 1 and 2 (2026-10-20): the Unity project, the menu loop (main menu, pause, options with key
-remap, difficulty presets and modifiers, death screen), the batch harness and its tests, then tank controls with a
-dodge, fixed cameras per room, and the auto-lock with a target switch. Lucy is a capsule in a greybox room.
+Build order steps 1 to 3 (2026-10-20): the Unity project, the menu loop (main menu, pause, options with key
+remap, difficulty presets and modifiers, death screen), the batch harness and its tests, tank controls with a dodge,
+fixed cameras per room, the auto-lock with a target switch, the circle charge with the three powers, the HP /
+NALCON / SHORT bars, the short, the drugs, and a dummy shooter with the telegraph. Lucy is a capsule in a greybox room.
 
-Next: step 3, the training room with the dummy enemy, the circle charge, the three bars and the drugs.
-Step 4, the look test.
+Next: step 4, the look test (one room greyboxed, then dressed two ways).
 
 ## Open the project
 
@@ -20,7 +20,8 @@ Step 4, the look test.
    (That Individual). Without them the gore and Invector bridge scripts do not compile.
 3. Open the folder in the Unity Hub. Press Play in `Assets/_Game/Scenes/Main_Menu.unity`.
 4. In the training room: W/S walk, A/D turn, Shift runs, Space dodges, Tab switches the lock target, hold LMB to
-   face the target. F4 kills Lucy (shows the death screen). F1 hides the status line. Esc pauses.
+   charge the selected power on the target. 1, 2, 3 select BLAST, FIRE, TELEKINESIS. Q uses a drug.
+   F4 kills Lucy (shows the death screen). F1 hides the status line. Esc pauses.
 
 ## Batch tools (no editor open)
 

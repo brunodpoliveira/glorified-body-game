@@ -8,6 +8,7 @@ using GlorifiedBody.Cameras;
 using GlorifiedBody.Combat;
 using GlorifiedBody.Core;
 using GlorifiedBody.DebugTools;
+using GlorifiedBody.Enemy;
 using GlorifiedBody.Level;
 using GlorifiedBody.Level.Build;
 using GlorifiedBody.Player;
@@ -41,6 +42,7 @@ namespace GlorifiedBody.Editor
             Directory.CreateDirectory(ResourcesFolder);
             AssetDatabase.Refresh();
 
+            CreatePowerAssets.CreateAll();
             EnsureDeathContent();
             BuildTrainingRoomScene();
             BuildMainMenuScene();
@@ -85,6 +87,10 @@ namespace GlorifiedBody.Editor
             controller.minMoveDistance = 0f;
             EnsureComponent<TankController>(player);
             EnsureComponent<LockOnController>(player);
+            EnsureComponent<PsychicStats>(player);
+            EnsureComponent<DrugInventory>(player);
+            EnsureComponent<ShortController>(player);
+            EnsureComponent<PsychicPowers>(player);
             GameObject nose = EnsureChildPrimitive(player, "Nose", PrimitiveType.Cube, new Vector3(0f, 0.6f, 0.5f), Vector3.one * 0.2f);
             RemoveComponent<BoxCollider>(nose);
             Health health = EnsureComponent<Health>(player);
@@ -104,8 +110,15 @@ namespace GlorifiedBody.Editor
             volumeSo.ApplyModifiedPropertiesWithoutUndo();
 
             // Two target dummies for the lock-on. Step 3 replaces them with the Invector dummy enemy.
-            SetupDummy(EnsurePrimitive("Dummy_A", PrimitiveType.Capsule, new Vector3(3f, 1f, 2f), Vector3.one));
+            GameObject dummyA = EnsurePrimitive("Dummy_A", PrimitiveType.Capsule, new Vector3(3f, 1f, 2f), Vector3.one);
+            SetupDummy(dummyA);
+            EnsureComponent<DummyShooter>(dummyA); // the one that shoots, with the telegraph
             SetupDummy(EnsurePrimitive("Dummy_B", PrimitiveType.Capsule, new Vector3(-2f, 1f, 4f), Vector3.one));
+
+            // Three drugs on the floor, one per power.
+            EnsurePickup("Drug_Nalcon", DrugType.Nalcon, new Vector3(-3f, 0.4f, 0f));
+            EnsurePickup("Drug_Red", DrugType.Red, new Vector3(-3.5f, 0.4f, 1.2f));
+            EnsurePickup("Drug_DFelon", DrugType.DFelon, new Vector3(-2.5f, 0.4f, -1.2f));
 
             // Fixed cameras: the wide default, plus two corner cameras with their zones.
             GameObject camerasRoot = EnsureRoot("[Cameras]");
@@ -132,6 +145,7 @@ namespace GlorifiedBody.Editor
             EnsureComponent<DeathMenuUI>(ui);
             EnsureComponent<CreditsUI>(ui);
             EnsureComponent<LevelCompleteUI>(ui);
+            EnsureComponent<PlayerHud>(ui);
 
             // One ShotPoint per fixed camera, so `tools/unity.sh shots TrainingRoom` renders every view.
             GameObject oldShot = GameObject.Find("ShotPoint_fixed_camera");
@@ -177,10 +191,24 @@ namespace GlorifiedBody.Editor
 
         private static void EnsureDeathContent()
         {
-            if (AssetDatabase.LoadAssetAtPath<DeathScreenContent>(DeathContentPath) != null) return;
-            var content = ScriptableObject.CreateInstance<DeathScreenContent>();
-            AssetDatabase.CreateAsset(content, DeathContentPath);
-            Debug.Log($"[MenuLoopSetup] placeholder death screen content created at {DeathContentPath}.");
+            var content = AssetDatabase.LoadAssetAtPath<DeathScreenContent>(DeathContentPath);
+            if (content == null)
+            {
+                content = ScriptableObject.CreateInstance<DeathScreenContent>();
+                AssetDatabase.CreateAsset(content, DeathContentPath);
+                Debug.Log($"[MenuLoopSetup] placeholder death screen content created at {DeathContentPath}.");
+            }
+
+            // One entry per enemy, placeholder words until the writer delivers them.
+            if (content.Find("dummy_shooter") == content.fallback)
+            {
+                content.entries.Add(new DeathScreenContent.Entry
+                {
+                    killerId = "dummy_shooter",
+                    hint = "PLACEHOLDER HINT: step back when the circle closes, then charge."
+                });
+                EditorUtility.SetDirty(content);
+            }
         }
 
         // ── Build settings ────────────────────────────────────────────
@@ -338,6 +366,16 @@ namespace GlorifiedBody.Editor
             CameraZone zone = EnsureComponent<CameraZone>(obj);
             zone.fixedCamera = fixedCamera;
             zone.priority = priority;
+        }
+
+        private static void EnsurePickup(string name, DrugType type, Vector3 position)
+        {
+            GameObject obj = EnsurePrimitive(name, PrimitiveType.Capsule, position, Vector3.one * 0.3f);
+            Collider collider = obj.GetComponent<Collider>();
+            if (collider != null) collider.isTrigger = true;
+            DrugPickup pickup = EnsureComponent<DrugPickup>(obj);
+            pickup.drugType = type;
+            pickup.amount = 1;
         }
 
         private static void SetupDummy(GameObject dummy)

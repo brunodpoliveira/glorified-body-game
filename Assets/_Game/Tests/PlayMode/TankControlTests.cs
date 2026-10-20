@@ -9,6 +9,7 @@ using GlorifiedBody.Automation;
 using GlorifiedBody.Cameras;
 using GlorifiedBody.Combat;
 using GlorifiedBody.Core;
+using GlorifiedBody.Enemy;
 using GlorifiedBody.Player;
 using GlorifiedBody.Systems;
 
@@ -48,6 +49,7 @@ namespace GlorifiedBody.Tests.PlayMode
             yield return WaitUntil(() => SceneManager.GetActiveScene().name == Room && GameManager.Instance.IsPlaying, 10f);
             yield return null;
 
+            foreach (DummyShooter shooter in UnityEngine.Object.FindObjectsByType<DummyShooter>(FindObjectsSortMode.None)) shooter.enabled = false;
             player = GameObject.FindGameObjectWithTag("Player");
             Assert.IsNotNull(player, "player");
             tank = player.GetComponent<TankController>();

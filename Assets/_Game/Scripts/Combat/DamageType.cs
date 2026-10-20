@@ -21,6 +21,12 @@ namespace GlorifiedBody.Combat
         SonicBoom,
         Throw,
         Grenade,
-        EnemyProjectile
+        EnemyProjectile,
+
+        // ── THE GLORIFIED BODY: the psychic powers and the short ─────────
+        PsychicBlast,
+        PsychicFire,
+        PsychicTelekinesis,
+        ShortShock
     }
 }

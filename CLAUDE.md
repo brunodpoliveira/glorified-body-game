@@ -5,17 +5,19 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
 
 - **Design (CANON):** `/home/pc/MEGA/code/reality-fabricator/the-glorified-body/03_GAME_DESIGN.md`.
 - **World and story:** `/home/pc/MEGA/code/reality-fabricator/the-glorified-body/01_SERIES_BIBLE.md`.
-- **Asset lessons:** `/home/pc/MEGA/code/reality-fabricator/the-glorified-body/tests/T15_3d_set/LESSONS_LEARNED.md`.
+- **Art rules, read before any art work:** `ART_LESSONS.md` (this folder).
+- **Asset lessons, full detail:** `/home/pc/MEGA/code/reality-fabricator/the-glorified-body/tests/T15_3d_set/LESSONS_LEARNED.md`.
 - **Agents:** `glorified-body-game` builds the game, `glorified-body-writer` writes the story, the cutscenes, the
   barks and the devlog scripts. Bruno decides.
 
 ## State
 
-- 2026-10-20: steps 1 and 2 done. Step 1: the project at the repo root (public GitHub repo, GPL-3.0), the menu
-  loop and the batch harness. Step 2: tank controls with a dodge, fixed cameras per room with zones, auto-lock
-  with a target switch, a charge that stops and turns her. Lucy is still a capsule. Proof: 27 EditMode tests,
-  15 PlayMode tests, the bot (15 steps), see `devlog-notes/`. Next: step 3 in `03_GAME_DESIGN.md` §7 (the
-  training room: the dummy enemy with its telegraph, the circle charge, HP / NALCON / SHORT, the drugs).
+- 2026-10-20: steps 1, 2 and 3 done. Step 1: the project at the repo root (public GitHub repo, GPL-3.0), the
+  menu loop and the batch harness. Step 2: tank controls with a dodge, fixed cameras per room, auto-lock with a
+  target switch. Step 3: the circle charge with BLAST, FIRE and TELEKINESIS, the HP / NALCON / SHORT bars, the
+  short, the drugs, a capsule dummy shooter with the canon telegraph, the greybox HUD. Lucy is still a capsule.
+  Proof: 27 EditMode tests, 30 PlayMode tests, the bot (20 steps), see `devlog-notes/`. Next: step 4 in
+  `03_GAME_DESIGN.md` §7 (the look test: one room greyboxed, then dressed two ways, for Bruno's pick).
 
 ## Rules
 

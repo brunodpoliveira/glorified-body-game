@@ -17,4 +17,8 @@ MonoBehaviour:
     picture: {fileID: 0}
     hint: PLACEHOLDER HINT
     voiceLine: {fileID: 0}
-  entries: []
+  entries:
+  - killerId: dummy_shooter
+    picture: {fileID: 0}
+    hint: 'PLACEHOLDER HINT: step back when the circle closes, then charge.'
+    voiceLine: {fileID: 0}

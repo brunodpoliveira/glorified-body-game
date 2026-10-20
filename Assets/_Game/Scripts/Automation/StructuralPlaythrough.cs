@@ -7,8 +7,10 @@ using System.Text;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using GlorifiedBody.Cameras;
+using GlorifiedBody.Combat;
 using GlorifiedBody.Core;
 using GlorifiedBody.DebugTools;
+using GlorifiedBody.Enemy;
 using GlorifiedBody.Player;
 using GlorifiedBody.Systems;
 using GlorifiedBody.UI;
@@ -293,8 +295,93 @@ namespace GlorifiedBody.Automation
             yield return null;
             yield return null;
 
+            // Step 3: the shooter's telegraph, a charged blast, the kill and the SHORT bar, a drug, the short.
+            yield return PowerSteps(player, playerHealth, tank, lockOn);
+
             GameInput.ClearBotSource(pad);
             pad = null;
+        }
+
+        private IEnumerator PowerSteps(GameObject player, Health playerHealth, TankController tank, LockOnController lockOn)
+        {
+            PsychicStats stats = player.GetComponent<PsychicStats>();
+            PsychicPowers powers = player.GetComponent<PsychicPowers>();
+            DrugInventory drugs = player.GetComponent<DrugInventory>();
+            ShortController shortController = player.GetComponent<ShortController>();
+            GameObject dummyObject = GameObject.Find("Dummy_A");
+            DummyShooter shooter = dummyObject != null ? dummyObject.GetComponent<DummyShooter>() : null;
+            if (stats == null || powers == null || drugs == null || shortController == null || shooter == null)
+            {
+                Record("step3_components", false, $"stats={stats != null} powers={powers != null} drugs={drugs != null} short={shortController != null} shooter={shooter != null}");
+                yield break;
+            }
+
+            // The telegraph: the dummy aims at her, the circle spins and shrinks, then it fires.
+            tank.Teleport(new Vector3(0f, 1f, 0f), 0f);
+            yield return WaitUntilReal(() => shooter.Current == DummyShooter.State.Telegraph, 6f);
+            bool telegraph = shooter.Current == DummyShooter.State.Telegraph;
+            if (telegraph) { yield return WaitReal(0.3f); CaptureShot("telegraph"); }
+            yield return WaitUntilReal(() => shooter.ShotsFired >= 1, 3f);
+            Record("telegraph", telegraph && shooter.ShotsFired >= 1, $"telegraph={telegraph} shots={shooter.ShotsFired} hp={playerHealth.CurrentHealth:0}");
+
+            // A full-circle blast on Dummy_A (the lock may still sit on Dummy_B after the switch).
+            lockOn.SetTarget(dummyObject.GetComponent<LockOnTargetable>());
+            yield return null;
+            powers.Select(PowerKind.Blast);
+            stats.DebugSet(100f, 0f);
+            Health dummyHealth = dummyObject.GetComponent<Health>();
+            float dummyHp0 = dummyHealth.CurrentHealth;
+            pad.SetHeld(InputManager.GameAction.Charge, true);
+            yield return WaitGame(powers.Selected.fullChargeTime * 0.7f);
+            CaptureShot("charge");
+            yield return WaitGame(powers.Selected.fullChargeTime * 0.5f);
+            float charge = powers.Charge;
+            pad.ReleaseAll();
+            yield return null;
+            yield return null;
+            float dealt = dummyHp0 - dummyHealth.CurrentHealth;
+            Record("blast_full_charge", charge >= 0.99f && powers.LastResult == "fired" && dealt >= powers.Selected.baseDamage - 0.5f,
+                $"charge={charge:0.00} result={powers.LastResult} dealt={dealt:0} nalcon={stats.Nalcon:0}");
+
+            // Finish it: the kill fills the SHORT bar by 25.
+            float shortBefore = stats.Short;
+            int guard = 0;
+            while (!dummyHealth.IsDead && guard++ < 10)
+            {
+                powers.FireAt(powers.Selected, 1f, lockOn.CurrentTarget != null && lockOn.TargetName == "Dummy_A" ? lockOn.CurrentTarget : dummyObject.GetComponent<LockOnTargetable>());
+                yield return null;
+            }
+            yield return null;
+            Record("kill_fills_short", dummyHealth.IsDead && stats.Short >= shortBefore + 24f, $"dead={dummyHealth.IsDead} short {shortBefore:0} -> {stats.Short:0} kills={stats.Kills}");
+
+            // A drug from the floor.
+            GameObject pickup = GameObject.Find("Drug_Nalcon");
+            if (pickup != null) tank.Teleport(pickup.transform.position + Vector3.up * 0.6f, 0f);
+            yield return WaitUntilReal(() => drugs.Count(DrugType.Nalcon) >= 1, 2f);
+            Record("drug_pickup", drugs.Count(DrugType.Nalcon) >= 1, $"nalcon drugs={drugs.Count(DrugType.Nalcon)}");
+            tank.Teleport(new Vector3(0f, 1f, 0f), 0f);
+            yield return null;
+
+            // The short: a full bar, a release, the shocks, then the drug ends it.
+            stats.DebugSet(100f, 100f);
+            pad.SetHeld(InputManager.GameAction.Charge, true);
+            yield return WaitGame(0.6f);
+            pad.ReleaseAll();
+            yield return null;
+            yield return null;
+            bool shortBegan = shortController.IsActive;
+            float hpBefore = playerHealth.CurrentHealth;
+            yield return WaitGame(1.2f);
+            CaptureShot("short");
+            PlayerHud hud = FindFirstObjectByType<PlayerHud>();
+            if (hud != null && hud.Canvas != null) yield return OverlayShot.Capture(hud.Canvas, "hud_short.png", 0.1f);
+            float hpDuring = playerHealth.CurrentHealth;
+            pad.Tap(InputManager.GameAction.UseDrug);
+            yield return null;
+            yield return null;
+            Record("short_and_drug", shortBegan && hpDuring < hpBefore - 3f && !shortController.IsActive && playerHealth.CurrentHealth >= playerHealth.MaxHealth - 0.5f,
+                $"began={shortBegan} hp {hpBefore:0} -> {hpDuring:0} -> {playerHealth.CurrentHealth:0} ended={!shortController.IsActive} drugs={drugs.Count(DrugType.Nalcon)}");
+            if (hud != null && hud.Canvas != null) yield return OverlayShot.Capture(hud.Canvas, "hud.png", 0.2f);
         }
 
         private static GameObject FindPlayer(out Health health)
