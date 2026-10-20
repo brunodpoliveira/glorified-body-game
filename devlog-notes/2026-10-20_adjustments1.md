@@ -35,6 +35,22 @@ short or not). A part-full bar drains at the outfit rate (nude 1 per second, gua
 this (`PsychicStats.Update` skips the decay at full). The rule is now pinned by the test
 `FullShort_Holds_UntilAShortOrADrug` and stated in the code comment.
 
+## 4. The short: she keeps her legs, it lasts longer (Bruno, 2026-10-20)
+
+- She can walk, run and dodge during a short. No powers (a release during a short does nothing). Before, the
+  short locked her in place. The design text says "out of her control" about the shocks, not about her legs.
+- Duration 4 s to 8 s (PROPOSED: twice). The self drain spreads over the 8 s, so it is half as fast per second.
+  The total stays about half her HP. Each shock does the same damage to the others (12 every 0.4 s within 6 m).
+  Over 8 s that is twice the damage to the enemies around her. If the total should stay as before, the per shock
+  damage goes to 6. Bruno decides.
+- A dodge during a short gives her the dodge frames. A shock that lands in them does not vanish: it waits for
+  the next shock, so the total HP cost stays the same.
+- The test `FullShort_TurnsTheRelease_IntoAShort_AndADrugEndsIt` now walks her 1 s during the short.
+- A trap found by the bot telemetry: the first run still showed 5 HP per shock, the 4 s value. The scene builder
+  opens the existing scene and keeps a present component with its old serialized numbers, so a new C# default
+  never lands. `MenuLoopSetup` now removes and re-adds `ShortController` on every build, and the test
+  `Short_EndsByItself_AtAboutHalfHp` pins the 8 s.
+
 ## Proof
 
 - Four new PlayMode tests. Three in `TankControlTests`: Space plus TurnRight dashes right, a double tap on
@@ -55,7 +71,10 @@ this (`PsychicStats.Update` skips the decay at full). The rule is now pinned by 
 `Assets/_Game/Scripts/Editor/MenuLoopSetup.cs`, `Assets/_Game/Scripts/UI/HowToPlayUI.cs`,
 `Assets/_Game/Tests/PlayMode/TankControlTests.cs`, `README.md`.
 
-RUNS (final): `runs/20261020-202445-test-playmode-316605` (35/35 with the full-SHORT rule test, CLEAN),
+RUNS (final, the short change): `runs/20261020-203940-exec-321139` (scene rebuild, CLEAN),
+`runs/20261020-204017-test-playmode-321674` (35/35, CLEAN), `runs/20261020-204224-play-321138` (bot 21/21,
+CLEAN, telemetry 2.5 HP per shock, 87 to 77 over four shocks).
+RUNS (the SHORT rule): `runs/20261020-202445-test-playmode-316605` (35/35 with the full-SHORT rule test, CLEAN),
 `runs/20261020-195148-test-playmode-308964` (34/34, CLEAN), `runs/20261020-195347-play-308963`
 (bot 21/21, CLEAN, the how-to-play shot checked at full size). Scene rebuild: `runs/20261020-194154-exec-305209`
 (CLEAN). Earlier passes: `runs/20261020-193625-compile-303047`, `runs/20261020-193725-test-playmode-303799`

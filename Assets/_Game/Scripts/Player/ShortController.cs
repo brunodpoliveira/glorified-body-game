@@ -12,20 +12,22 @@ namespace GlorifiedBody.Player
     /// THE SHORT (design §2.8). When the SHORT bar is full, the next power starts a short: a migraine, and
     /// electric shocks fly everywhere out of her control. They do huge damage around her, and they take about
     /// half of her HP before she stabilises. A drug ends the short at once and refills her. Numbers are PROPOSED.
+    /// Bruno, 2026-10-20: she keeps her legs during a short (walk, run, dodge), no powers. It lasts 8 s, so the
+    /// HP drain is slower, and each shock does the same damage to the others as before.
     /// </summary>
-    [RequireComponent(typeof(PsychicStats), typeof(TankController))]
+    [RequireComponent(typeof(PsychicStats))]
     public sealed class ShortController : MonoBehaviour
     {
-        [SerializeField, Min(0.5f)] private float duration = 4f;
+        [SerializeField, Min(0.5f)] private float duration = 8f;
         [SerializeField, Min(0.1f)] private float shockInterval = 0.4f;
         [SerializeField, Min(1f)] private float shockRadius = 6f;
         [SerializeField, Min(0f)] private float shockDamageToOthers = 12f;
         [SerializeField, Range(0f, 1f)] private float selfHpFraction = 0.5f;
 
         private PsychicStats stats;
-        private TankController tank;
         private Health health;
         private readonly List<Health> seen = new List<Health>();
+        private float pendingSelf; // Self damage that a dodge frame blocked. Lands at the next shock.
 
         public bool IsActive { get; private set; }
         public float Remaining { get; private set; }
@@ -38,7 +40,6 @@ namespace GlorifiedBody.Player
         private void Awake()
         {
             stats = GetComponent<PsychicStats>();
-            tank = GetComponent<TankController>();
             health = GetComponent<Health>();
         }
 
@@ -48,8 +49,8 @@ namespace GlorifiedBody.Player
             IsActive = true;
             Remaining = duration;
             ShocksFired = 0;
+            pendingSelf = 0f;
             stats.RegenPaused = true;
-            tank.LockMovement(true);
             RunTelemetry.Event("short_begin", $"hp={health.CurrentHealth:0}");
             OnShortBegan?.Invoke();
             StartCoroutine(Run());
@@ -62,7 +63,6 @@ namespace GlorifiedBody.Player
             IsActive = false;
             Remaining = 0f;
             stats.RegenPaused = false;
-            tank.LockMovement(false);
             stats.ResetShort();
             RunTelemetry.Event("short_end", byDrug ? "drug" : "timeout");
             OnShortEnded?.Invoke();
@@ -106,9 +106,19 @@ namespace GlorifiedBody.Player
                 });
             }
 
-            // The migraine: it never kills her by itself, it stops at 1 HP.
-            float self = Mathf.Min(selfDamage, health.CurrentHealth - 1f);
-            if (self > 0f) health.TakeDamage(self);
+            // The migraine: it never kills her by itself, it stops at 1 HP. She can dodge during a short now, and
+            // the dodge frames make her invulnerable, so a shock that lands in them waits for the next one.
+            // The total stays about half her HP.
+            if (health.IsInvulnerable)
+            {
+                pendingSelf += selfDamage;
+            }
+            else
+            {
+                float self = Mathf.Min(selfDamage + pendingSelf, health.CurrentHealth - 1f);
+                pendingSelf = 0f;
+                if (self > 0f) health.TakeDamage(self);
+            }
 
             for (int i = 0; i < 3; i++) Spark(origin + UnityEngine.Random.insideUnitSphere * (shockRadius * 0.5f) + Vector3.up);
             RunTelemetry.Event("short_shock", $"{ShocksFired} hp={health.CurrentHealth:0} hit={seen.Count}");

@@ -2379,8 +2379,8 @@ GameObject:
   - component: {fileID: 1855441258}
   - component: {fileID: 1855441264}
   - component: {fileID: 1855441263}
-  - component: {fileID: 1855441262}
   - component: {fileID: 1855441261}
+  - component: {fileID: 1855441265}
   m_Layer: 0
   m_Name: Lucy_Placeholder
   m_TagString: Player
@@ -2573,23 +2573,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GlorifiedBody.Player.PsychicPowers
   powers: []
---- !u!114 &1855441262
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1855441251}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 799438345b3ef7f2881fe33488de5ec9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::GlorifiedBody.Player.ShortController
-  duration: 4
-  shockInterval: 0.4
-  shockRadius: 6
-  shockDamageToOthers: 12
-  selfHpFraction: 0.5
 --- !u!114 &1855441263
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2617,6 +2600,23 @@ MonoBehaviour:
   outfit: {fileID: 0}
   shortPerKill: 25
   shortPerDamagePoint: 0.6
+--- !u!114 &1855441265
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1855441251}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 799438345b3ef7f2881fe33488de5ec9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GlorifiedBody.Player.ShortController
+  duration: 8
+  shockInterval: 0.4
+  shockRadius: 6
+  shockDamageToOthers: 12
+  selfHpFraction: 0.5
 --- !u!1 &2053905863
 GameObject:
   m_ObjectHideFlags: 0

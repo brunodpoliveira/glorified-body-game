@@ -89,6 +89,10 @@ namespace GlorifiedBody.Editor
             EnsureComponent<LockOnController>(player);
             EnsureComponent<PsychicStats>(player);
             EnsureComponent<DrugInventory>(player);
+            // The builder opens the existing scene, so a kept component keeps its old serialized numbers and a new
+            // C# default never lands (the short stayed at 4 s after the change to 8 s, 2026-10-20). ShortController
+            // holds only tunings and nothing in the scene points at it, so it is made fresh on every build.
+            RemoveComponent<ShortController>(player);
             EnsureComponent<ShortController>(player);
             EnsureComponent<PsychicPowers>(player);
             GameObject nose = EnsureChildPrimitive(player, "Nose", PrimitiveType.Cube, new Vector3(0f, 0.6f, 0.5f), Vector3.one * 0.2f);

@@ -246,8 +246,13 @@ namespace GlorifiedBody.Tests.PlayMode
             yield return null;
             yield return null;
             Assert.IsTrue(shortController.IsActive, "a full SHORT turns the release into a short");
-            Assert.IsTrue(tank.MovementLocked, "she loses control");
+            Assert.IsFalse(tank.MovementLocked, "she keeps her legs during a short (Bruno, 2026-10-20)");
+            Vector3 before = player.transform.position;
+            pad.SetHeld(InputManager.GameAction.Forward, true);
             yield return new WaitForSeconds(1.0f);
+            pad.ReleaseAll();
+            Assert.Greater(Vector3.Distance(before, player.transform.position), 0.8f, "she walked during the short");
+            Assert.IsTrue(shortController.IsActive, "the short goes on while she walks");
             Assert.Less(health.CurrentHealth, hpMax - 5f, "the shocks hurt her");
             Assert.GreaterOrEqual(health.CurrentHealth, 1f, "the short never kills her");
 
@@ -299,6 +304,7 @@ namespace GlorifiedBody.Tests.PlayMode
             stats.SetOutfit(Resources.Load<OutfitProfile>("Outfits/outfit_guard"));
             stats.DebugSet(100f, 100f);
             float hpMax = health.MaxHealth;
+            Assert.AreEqual(8f, shortController.Duration, 0.01f, "8 s (Bruno, 2026-10-20). The scene must carry the C# default.");
             shortController.Begin();
             Assert.IsTrue(shortController.IsActive);
             yield return new WaitForSeconds(shortController.Duration + 0.6f);
