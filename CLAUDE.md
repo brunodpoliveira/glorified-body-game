@@ -16,7 +16,9 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   menu loop and the batch harness. Step 2: tank controls with a dodge, fixed cameras per room, auto-lock with a
   target switch. Step 3: the circle charge with BLAST, FIRE and TELEKINESIS, the HP / NALCON / SHORT bars, the
   short, the drugs, a capsule dummy shooter with the canon telegraph, the greybox HUD. Lucy is still a capsule.
-  Proof: 27 EditMode tests, 30 PlayMode tests, the bot (20 steps), see `devlog-notes/`. Next: step 4 in
+  Proof: 27 EditMode tests, 34 PlayMode tests, the bot (21 steps), see `devlog-notes/`. Adjustments after Bruno's
+  first play (2026-10-20): the dodge is directional (Space plus a direction key, or a double tap), and the debug
+  keys F5 / F6 / F7 fill the SHORT bar, start the short, refill her. Next: step 4 in
   `03_GAME_DESIGN.md` §7 (the look test: one room greyboxed, then dressed two ways, for Bruno's pick).
 
 ## Rules

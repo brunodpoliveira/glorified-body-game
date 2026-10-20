@@ -179,6 +179,52 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator Dodge_WithAHeldDirection_DashesThatWay()
+        {
+            Vector3 start = player.transform.position;
+            Vector3 right = player.transform.right;
+            pad.SetHeld(InputManager.GameAction.TurnRight, true);
+            yield return null;
+            pad.Tap(InputManager.GameAction.Dodge);
+            yield return null;
+            yield return null;
+            pad.ReleaseAll();
+            Assert.IsTrue(tank.IsDodging, "dodging");
+            Assert.AreEqual(TankController.DodgeDirection.Right, tank.LastDodge, "Space plus TurnRight dashes right");
+            yield return WaitReal(0.5f);
+            float across = Vector3.Dot(player.transform.position - start, right);
+            Assert.Greater(across, 1.5f, "she moved to her right");
+        }
+
+        [UnityTest]
+        public IEnumerator DoubleTap_Forward_Dodges_Forward()
+        {
+            Vector3 start = player.transform.position;
+            Vector3 forward = player.transform.forward;
+            pad.Tap(InputManager.GameAction.Forward);
+            yield return null;
+            yield return null;
+            yield return null;
+            pad.Tap(InputManager.GameAction.Forward);
+            yield return null;
+            yield return null;
+            Assert.IsTrue(tank.IsDodging, "a double tap dodges");
+            Assert.AreEqual(TankController.DodgeDirection.Forward, tank.LastDodge, "forward, the tapped direction");
+            yield return WaitReal(0.5f);
+            float along = Vector3.Dot(player.transform.position - start, forward);
+            Assert.Greater(along, 1.5f, "she dashed ahead");
+        }
+
+        [UnityTest]
+        public IEnumerator SingleTap_DoesNotDodge()
+        {
+            pad.Tap(InputManager.GameAction.TurnLeft);
+            yield return null;
+            yield return null;
+            Assert.IsFalse(tank.IsDodging, "one tap is a turn, not a dodge");
+        }
+
+        [UnityTest]
         public IEnumerator CameraZone_CutsToTheZoneCamera_AndBack()
         {
             FixedCameraDirector director = FixedCameraDirector.Instance;

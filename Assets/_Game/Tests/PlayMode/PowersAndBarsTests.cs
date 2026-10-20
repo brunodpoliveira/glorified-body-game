@@ -8,6 +8,7 @@ using UnityEngine.TestTools;
 using GlorifiedBody.Automation;
 using GlorifiedBody.Combat;
 using GlorifiedBody.Core;
+using GlorifiedBody.DebugTools;
 using GlorifiedBody.Enemy;
 using GlorifiedBody.Player;
 using GlorifiedBody.Systems;
@@ -288,6 +289,31 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.IsTrue(pickup == null, "the pickup is gone");
             Assert.AreEqual(1, drugs.Add(DrugType.Nalcon, 5), "the nude outfit holds two of each: one more fits");
             Assert.AreEqual(2, drugs.Count(DrugType.Nalcon));
+        }
+
+        [UnityTest]
+        public IEnumerator DebugCheatKeys_StartTheShort_FillTheBar_AndRefill()
+        {
+            DebugCheatKeys cheats = UnityEngine.Object.FindFirstObjectByType<DebugCheatKeys>();
+            Assert.IsNotNull(cheats, "DebugCheatKeys sits on [GameplaySystems]");
+            Assert.IsFalse(shortController.IsActive, "no short at the start");
+
+            Assert.IsTrue(cheats.StartShort(), "F6 starts the short");
+            yield return null;
+            Assert.IsTrue(shortController.IsActive, "the short is active at once");
+            Assert.IsFalse(cheats.StartShort(), "a second F6 during a short does nothing");
+            shortController.End(false);
+            yield return null;
+            Assert.IsFalse(shortController.IsActive, "the short ended");
+
+            stats.DebugSet(stats.Nalcon, 0f);
+            Assert.IsTrue(cheats.FillShort(), "F5 fills the bar");
+            Assert.IsTrue(stats.IsShortFull, "the SHORT bar is full");
+
+            drugs.DebugSet(DrugType.Red, 0);
+            Assert.IsTrue(cheats.Refill(), "F7 refills");
+            Assert.AreEqual(2, drugs.Count(DrugType.Red), "two of each drug");
+            Assert.AreEqual(2, drugs.Count(DrugType.Nalcon), "two of each drug");
         }
 
         private static IEnumerator WaitUntil(Func<bool> condition, float timeoutSeconds)

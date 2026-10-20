@@ -136,6 +136,7 @@ namespace GlorifiedBody.Editor
             EnsureComponent<PlayerDeathFlowController>(systems);
             EnsureComponent<PoolService>(systems);
             EnsureComponent<DebugKillKey>(systems);
+            EnsureComponent<DebugCheatKeys>(systems);
             EnsureComponent<DebugStatusLine>(systems);
 
             GameObject ui = EnsureRoot("[RuntimeUI]");

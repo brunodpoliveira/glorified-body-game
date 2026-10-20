@@ -21,7 +21,9 @@ Next: step 4, the look test (one room greyboxed, then dressed two ways).
 3. Open the folder in the Unity Hub. Press Play in `Assets/_Game/Scenes/Main_Menu.unity`.
 4. In the training room: W/S walk, A/D turn, Shift runs, Space dodges, Tab switches the lock target, hold LMB to
    charge the selected power on the target. 1, 2, 3 select BLAST, FIRE, TELEKINESIS. Q uses a drug.
-   F4 kills Lucy (shows the death screen). F1 hides the status line. Esc pauses.
+   Space plus a direction key, or a double tap on a direction key, dodges that way. F4 kills Lucy (shows the
+   death screen). F5 fills the SHORT bar, F6 starts the short, F7 refills her and gives drugs. F1 hides the
+   status line. Esc pauses.
 
 ## Batch tools (no editor open)
 

@@ -95,7 +95,9 @@ namespace GlorifiedBody.UI
             rootRect.anchorMax = new Vector2(0.5f, 0.5f);
             rootRect.pivot = new Vector2(0.5f, 0.5f);
             rootRect.anchoredPosition = Vector2.zero;
-            rootRect.sizeDelta = new Vector2(720, 760);
+            // 17 control rows at 24 px, the premise at its own height, the button: 760 overflowed after the dodge
+            // and debug rows (2026-10-20). 900 holds them all on the 1080 reference height.
+            rootRect.sizeDelta = new Vector2(720, 900);
 
             rootPanel.AddComponent<Image>().color = new Color(0.06f, 0.06f, 0.09f, 0.97f);
 
@@ -117,9 +119,9 @@ namespace GlorifiedBody.UI
 
             CreateSection(p, "PREMISE");
             CreateBody(p,
-                "You are Lucy. You wake in the lab with no memory and three psychic powers: BLAST, FIRE,\n" +
-                "TELEKINESIS. Every attack is a circle charge: hold to charge, release to strike. You stand\n" +
-                "still while you charge. Three bars: HP, NALCON (psychic energy) and SHORT (it fills with\n" +
+                "You are Lucy. You wake in the lab with no memory and three psychic powers: BLAST, FIRE, " +
+                "TELEKINESIS. Every attack is a circle charge: hold to charge, release to strike. You stand " +
+                "still while you charge. Three bars: HP, NALCON (psychic energy) and SHORT (it fills with " +
                 "every kill and every hit you take). PLACEHOLDER TEXT: the writer supplies the final words.");
             CreateSpacer(p, 10);
 
@@ -143,7 +145,10 @@ namespace GlorifiedBody.UI
 
             CreateSection(p, "SYSTEM");
             CreateControl(p, "Esc", "Pause / menus");
+            CreateControl(p, "Space + W/A/S/D", "Dodge that way (no direction key: a step back)");
+            CreateControl(p, "W/A/S/D twice", "A double tap: the same dodge, no Space");
             CreateControl(p, "F4", "Debug: kill Lucy (shows the death screen)");
+            CreateControl(p, "F5 / F6 / F7", "Debug: fill SHORT / start the short / refill + drugs");
             CreateSpacer(p, 14);
 
             backBtn = CreateButton(p, "Back", OnBackClicked);
@@ -195,7 +200,10 @@ namespace GlorifiedBody.UI
         private void CreateBody(Transform parent, string text)
         {
             var label = CreateLabel(parent, text, 14, TextAnchor.UpperLeft, 0, FontStyle.Italic, new Color(0.78f, 0.8f, 0.86f));
-            FitToText(label);
+            // The vertical layout controls the height. A LayoutElement with -1 is "not set", so the Text supplies its
+            // own preferred height from the wrapped lines. With 0 the row collapsed and the text overlapped the
+            // controls (seen in how_to_play_ui.png, 2026-10-20). A ContentSizeFitter fights the layout group.
+            label.GetComponent<LayoutElement>().preferredHeight = -1f;
         }
 
         private void CreateControl(Transform parent, string key, string desc)
@@ -229,12 +237,6 @@ namespace GlorifiedBody.UI
             descTxt.color = new Color(0.9f, 0.9f, 0.92f);
             descTxt.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             descTxt.horizontalOverflow = HorizontalWrapMode.Wrap;
-        }
-
-        private void FitToText(Text label)
-        {
-            var fitter = label.gameObject.AddComponent<ContentSizeFitter>();
-            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
         }
 
         private void CreateDivider(Transform parent, Color color, float height)

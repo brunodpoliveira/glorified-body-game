@@ -10,7 +10,9 @@ namespace GlorifiedBody.Player
     /// <summary>
     /// Tank controls (Galerians): Forward and Back move along the facing, TurnLeft and TurnRight rotate the yaw.
     /// Input is relative to Lucy, never to the camera, so a camera cut never changes what a key does.
-    /// Run is a held modifier. Dodge is a short dash with invulnerability frames and a cooldown.
+    /// Run is a held modifier. Dodge is a short dash with invulnerability frames and a cooldown. The dash is
+    /// directional (Bruno, 2026-10-20): Dodge plus a held direction key, or a double tap on a direction key.
+    /// Forward and Back dash along the facing, TurnLeft and TurnRight dash sideways. No direction = a step back.
     /// Movement locks (the circle charge, a stun) stop the walk but keep the facing control of others.
     /// Tunings are PROPOSED (2026-10-20): Bruno decides after the first playtest.
     /// </summary>
@@ -29,6 +31,7 @@ namespace GlorifiedBody.Player
         [SerializeField, Min(0.05f)] private float dodgeDuration = 0.35f;
         [SerializeField, Min(0f)] private float dodgeInvulnerableTime = 0.3f;
         [SerializeField, Min(0f)] private float dodgeCooldown = 0.8f;
+        [SerializeField, Min(0.05f)] private float doubleTapWindow = 0.3f;
 
         [Header("Gravity")]
         [SerializeField] private float gravity = -20f;
@@ -40,6 +43,11 @@ namespace GlorifiedBody.Player
         private float dodgeCooldownTimer;
         private Vector3 dodgeDirection;
         private int movementLocks;
+        private readonly float[] lastTapTime = { -10f, -10f, -10f, -10f }; // Forward, Back, TurnLeft, TurnRight
+        private bool forwardHeld, backHeld, leftHeld, rightHeld;
+
+        public enum DodgeDirection { Back, Forward, Left, Right }
+        public DodgeDirection LastDodge { get; private set; }
 
         public float MoveInput { get; private set; }
         public float TurnInput { get; private set; }
@@ -100,21 +108,49 @@ namespace GlorifiedBody.Player
             verticalVelocity = 0f;
         }
 
+        /// <summary>The dodge in the direction the held keys give: forward, back, left, right. No key = back.</summary>
         public bool TryDodge()
+        {
+            DodgeDirection direction = forwardHeld ? DodgeDirection.Forward
+                : backHeld ? DodgeDirection.Back
+                : leftHeld ? DodgeDirection.Left
+                : rightHeld ? DodgeDirection.Right
+                : DodgeDirection.Back;
+            return TryDodge(direction);
+        }
+
+        public bool TryDodge(DodgeDirection direction)
         {
             if (!DodgeReady || MovementLocked) return false;
             dodgeTimer = dodgeDuration;
             dodgeCooldownTimer = dodgeCooldown;
-            // Forward held = a dash ahead. Otherwise a step back, the horror default.
-            dodgeDirection = MoveInput > 0.5f ? transform.forward : -transform.forward;
+            LastDodge = direction;
+            switch (direction)
+            {
+                case DodgeDirection.Forward: dodgeDirection = transform.forward; break;
+                case DodgeDirection.Left: dodgeDirection = -transform.right; break;
+                case DodgeDirection.Right: dodgeDirection = transform.right; break;
+                default: dodgeDirection = -transform.forward; break;
+            }
+
             if (health != null && dodgeInvulnerableTime > 0f)
             {
                 health.SetRuntimeInvulnerable(true);
                 StartCoroutine(EndInvulnerability(dodgeInvulnerableTime));
             }
-            RunTelemetry.Event("dodge", MoveInput > 0.5f ? "forward" : "back");
+            RunTelemetry.Event("dodge", direction.ToString().ToLowerInvariant());
             OnDodge?.Invoke();
             return true;
+        }
+
+        /// <summary>A second press of the same direction key inside doubleTapWindow is a dodge that way.</summary>
+        private bool DoubleTap(InputManager.GameAction action, KeyCode fallback, int slot)
+        {
+            if (!GameInput.GetActionDown(action, fallback)) return false;
+            float now = Time.time;
+            bool isDouble = now - lastTapTime[slot] <= doubleTapWindow;
+            lastTapTime[slot] = isDouble ? -10f : now;
+            return isDouble;
         }
 
         private IEnumerator EndInvulnerability(float seconds)
@@ -133,6 +169,13 @@ namespace GlorifiedBody.Player
             if (GameInput.GetActionDown(InputManager.GameAction.Dodge, KeyCode.Space))
             {
                 TryDodge();
+            }
+            else if (!MovementLocked)
+            {
+                if (DoubleTap(InputManager.GameAction.Forward, KeyCode.W, 0)) TryDodge(DodgeDirection.Forward);
+                else if (DoubleTap(InputManager.GameAction.Back, KeyCode.S, 1)) TryDodge(DodgeDirection.Back);
+                else if (DoubleTap(InputManager.GameAction.TurnLeft, KeyCode.A, 2)) TryDodge(DodgeDirection.Left);
+                else if (DoubleTap(InputManager.GameAction.TurnRight, KeyCode.D, 3)) TryDodge(DodgeDirection.Right);
             }
 
             Vector3 planar;
@@ -167,6 +210,7 @@ namespace GlorifiedBody.Player
                 MoveInput = 0f;
                 TurnInput = 0f;
                 IsRunning = false;
+                forwardHeld = backHeld = leftHeld = rightHeld = false;
                 return;
             }
 
@@ -174,6 +218,10 @@ namespace GlorifiedBody.Player
             bool back = GameInput.GetAction(InputManager.GameAction.Back, KeyCode.S);
             bool left = GameInput.GetAction(InputManager.GameAction.TurnLeft, KeyCode.A);
             bool right = GameInput.GetAction(InputManager.GameAction.TurnRight, KeyCode.D);
+            forwardHeld = forward;
+            backHeld = back;
+            leftHeld = left;
+            rightHeld = right;
             MoveInput = (forward ? 1f : 0f) - (back ? 1f : 0f);
             TurnInput = (right ? 1f : 0f) - (left ? 1f : 0f);
             IsRunning = MoveInput > 0f && GameInput.GetAction(InputManager.GameAction.Run, KeyCode.LeftShift);

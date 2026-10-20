@@ -106,6 +106,23 @@ namespace GlorifiedBody.Automation
             {
                 bool menuUi = FindFirstObjectByType<MainMenuUI>() != null;
                 Record("menu_loaded", gm != null && menuUi, $"GameManager={gm != null} MainMenuUI={menuUi}");
+
+                // 1b. The how-to-play panel: shown, shot, hidden. Saved as how_to_play_ui.png (the rows must fit).
+                HowToPlayUI howTo = FindFirstObjectByType<HowToPlayUI>();
+                bool howToShown = false;
+                if (howTo != null)
+                {
+                    howTo.Show();
+                    yield return null;
+                    yield return null;
+                    howToShown = howTo.IsVisible;
+                    Transform howToCanvas = howTo.transform.Find("HowToPlayCanvas");
+                    if (howToShown && howToCanvas != null) yield return OverlayShot.Capture(howToCanvas.GetComponent<Canvas>(), "how_to_play_ui.png", 0.2f);
+                    howTo.Hide();
+                    yield return null;
+                }
+                Record("how_to_play_ui", howTo != null && howToShown && !howTo.IsVisible, $"found={howTo != null} shown={howToShown}");
+
                 if (gm != null) gm.LoadLevel(level);
                 else SceneManager.LoadScene(level);
                 yield return WaitForScene(level, 30f);
