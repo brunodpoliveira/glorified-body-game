@@ -1,0 +1,14 @@
+# One Python regex per line. A log block (message + stack) that matches is ignored by log-triage.py.
+# Add a line only for known, harmless engine noise. Never add a line to hide a real game error.
+Curl error
+Licensing::
+\[Licensing::
+Failed to connect to.*Hub
+PackageManager.*offline
+\[Package Manager\].*Cannot connect
+Unable to load the icon
+Ignoring depth surface load action as it is memoryless
+# Unity Search indexer race at editor start (engine bug, not game code)
+UnityEditor\.Search\.SearchDatabase
+# EditMode tests call MonoBehaviour messages through SendMessage (known Unity test-harness assert)
+Assertion failed on expression: 'ShouldRunBehaviour\(\)'

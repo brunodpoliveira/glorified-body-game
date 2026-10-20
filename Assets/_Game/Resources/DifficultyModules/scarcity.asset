@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f43226abc344609aaf6175fda0ff1bf, type: 3}
+  m_Name: scarcity
+  m_EditorClassIdentifier: Assembly-CSharp::GlorifiedBody.Systems.DifficultyModuleDefinition
+  moduleId: scarcity
+  displayName: SCARCITY
+  symbol: "\u26A0"
+  description: 'Nalcon drains 50% faster. No effect yet: it arrives with the HP and
+    nalcon bars (build order step 3).'
+  difficultyPercent: 10
+  moduleType: 6
+  isBaseline: 0
+  hideInUI: 0
+  presetGroup: 
+  parameters:
+  - key: drainMultiplier
+    value: 1.5

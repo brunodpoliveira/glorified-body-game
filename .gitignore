@@ -107,3 +107,22 @@ InitTestScene*.unity*
 
 # Auto-generated cache in Assets folder
 /[Aa]ssets/[Ss]ceneDependencyCache*
+
+# Paid Asset Store packages and their copies: never in a public repo.
+# A fresh clone needs the three .unitypackage imports (see README.md).
+/Assets/Invector-3rdPersonController/
+/Assets/Invector-3rdPersonController.meta
+/Assets/Invector-FSMAIController/
+/Assets/Invector-FSMAIController.meta
+/Assets/Invector-!SharedFiles*/
+/Assets/Invector-!SharedFiles*.meta
+/Assets/ThatIndividual STORE ASSETS/
+/Assets/ThatIndividual STORE ASSETS.meta
+/Assets/MiddlewareForInvectorTemplate/
+/Assets/MiddlewareForInvectorTemplate.meta
+
+# Batch run folders (logs, test results, shots)
+/runs/
+
+# Claude Code session files
+/.claude/

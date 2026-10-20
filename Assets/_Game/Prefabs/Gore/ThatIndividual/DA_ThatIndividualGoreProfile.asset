@@ -1,0 +1,74 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9e9108a6eeca092d8a7a1673e482708d, type: 3}
+  m_Name: DA_ThatIndividualGoreProfile
+  m_EditorClassIdentifier: Assembly-CSharp::WarspiteP2.Gore.ThatIndividual.ThatIndividualGoreProfile
+  backend: 2
+  muteLegacyBlood: 1
+  lightSprays:
+  - {fileID: 1237180233159178240, guid: cd82fc9e64a6a7ee999204f6b6647c56, type: 3}
+  - {fileID: 8342512165498731173, guid: 7ea065e2d36bd4212b1e5d39fbd0ef1d, type: 3}
+  - {fileID: 7587688573429580, guid: 1f725ef65d20e831283b155a257554ff, type: 3}
+  - {fileID: 9183310876831496023, guid: 73cad170402b2211da7c0074fbbabc6d, type: 3}
+  heavySprays:
+  - {fileID: 3669657124035937285, guid: 4dd5c53239204e15eb7c40856b9199bd, type: 3}
+  - {fileID: 5890461850951836970, guid: 3a739e32981a20c1c9bf172aa3fb610d, type: 3}
+  - {fileID: 5303060253291920709, guid: f0c5483895298e6c796df6cdd5965ea0, type: 3}
+  - {fileID: 3580861125803253807, guid: e83a6a94b9da98a808d3ff4e1e2f95b3, type: 3}
+  fatalBursts:
+  - {fileID: 3049728988941478701, guid: 6391984245089ab1db6b523742043535, type: 3}
+  - {fileID: 7091314252022122735, guid: 1d0ade344b59e349297ae34869e5d74b, type: 3}
+  fatalHeavyExtras:
+  - {fileID: 3204813772891861563, guid: 02a89c74c9f82c8a9ac25044d82a0b62, type: 3}
+  - {fileID: 1925907153156337814, guid: bb93a14324e87a7f2b6f08f7b94eed2f, type: 3}
+  floorStains:
+  - {fileID: 5583888336643763384, guid: c4c4cc1bfcd179ad2910ce0a3f904bd6, type: 3}
+  - {fileID: 7497032340353547637, guid: cf59181ef8b8e5b31b62d4b8d66ad6d0, type: 3}
+  - {fileID: 9051086013968025956, guid: e013ee02e002e1b33bb5cbd99c24bed4, type: 3}
+  - {fileID: 7938283583612581881, guid: b893869682a0ac22393f4b9a49917e13, type: 3}
+  - {fileID: 2904927357397292839, guid: 53ba3a19efc962d2e89e48be3ecc7814, type: 3}
+  wallStains:
+  - {fileID: 7938283583612581881, guid: b893869682a0ac22393f4b9a49917e13, type: 3}
+  - {fileID: 2904927357397292839, guid: 53ba3a19efc962d2e89e48be3ecc7814, type: 3}
+  - {fileID: 3275363250728451558, guid: 03b8477deb3039b54a9ca091a41ccccb, type: 3}
+  wallDecals:
+  - {fileID: 1580736309660429346, guid: 61d8f078e8bef54dda6c038c4727b146, type: 3}
+  - {fileID: 4501978001964585686, guid: e011a0e3921261e6882a5ecc49269382, type: 3}
+  - {fileID: 4250890502058963705, guid: 5df9bd462e64c7d62aa15363757b7e65, type: 3}
+  sprayScale: 1.35
+  floorStainScale: {x: 1.1, y: 1.8}
+  wallStainScale: {x: 1.4, y: 2.2}
+  stainColor: {r: 0.36, g: 0, b: 0.02, a: 1}
+  sprayColor: {r: 0.85, g: 0.02, b: 0.04, a: 1}
+  sprayEdgeColor: {r: 0.45, g: 0, b: 0.02, a: 1}
+  mistAlpha: 0.45
+  playerVictimScale: 0.6
+  sprayLift: 0.35
+  lightLifetime: 1.2
+  heavyLifetime: 2
+  fatalLifetime: 3
+  stainLifetime: 6
+  maxParticleLifetime: 6
+  maxLiveEffects: 24
+  maxLiveStains: 24
+  prewarmPerPrefab: 5
+  lowTierBudget: 0.4
+  heavyDamageThreshold: 60
+  lightWallStainChance: 0.25
+  heavyWallStainChance: 0.7
+  floorRayHeight: 1.5
+  floorRayDistance: 5
+  wallRayDistance: 6
+  surfaceOffset: 0.02
+  surfaceMask:
+    serializedVersion: 2
+    m_Bits: 1

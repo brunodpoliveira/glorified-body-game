@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f43226abc344609aaf6175fda0ff1bf, type: 3}
+  m_Name: fragile
+  m_EditorClassIdentifier: Assembly-CSharp::GlorifiedBody.Systems.DifficultyModuleDefinition
+  moduleId: fragile
+  displayName: FRAGILE
+  symbol: "\u2764"
+  description: 'HP drains twice as fast. No effect yet: it arrives with the HP and
+    nalcon bars (build order step 3).'
+  difficultyPercent: 10
+  moduleType: 4
+  isBaseline: 0
+  hideInUI: 0
+  presetGroup: 
+  parameters:
+  - key: degenMultiplier
+    value: 2
