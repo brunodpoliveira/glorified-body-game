@@ -13,8 +13,10 @@ materials". The look test (step 4) comes next, with this cast in it.
   mirror steps of T19 dropped them. Every `<class>_animated.glb` has idle, walk and run on the same mesh (the same
   mesh node and vertex count), so the pipeline takes the mesh and the rig from the animated file and the base
   colour from the game file. No new tokens.
-- Every bone has translation keys in the clips (a baked rig). Unity keeps the clips in place (the root position
-  and rotation baked into the pose).
+- Every bone has translation keys in the clips (a baked rig). The walk and the run are NOT in place: the hips
+  travel 1.53 m per walk cycle (2.33 s) and 2.95 m per run cycle (1.23 s) at 1 m scale, in a straight line
+  (the residual under 8 cm). The idle stays on the spot, with a sway of 17 cm. Found by Bruno on the morning of
+  2026-10-21 (section 7).
 
 ## 2. The pipeline: `tools/characters.sh`
 
@@ -31,7 +33,9 @@ materials". The look test (step 4) comes next, with this cast in it.
 3. Unity: `tools/unity.sh exec GlorifiedBody.Editor.Characters.CreateCharacterAssets.BuildAll`.
    - `CharacterImportSettings` (an AssetPostprocessor on `Assets/_Game/Characters/Models/`): the FBX as Humanoid
      with its own avatar (the mixamo names map by themselves), no materials, every clip a loop named after its
-     action (idle, walk, run) and kept in place. The texture at 1024, point sampling, mipmaps, no compression.
+     action (idle, walk, run). The idle keeps its root in the pose. The walk and the run give their travel to
+     the root motion (Root Transform Position XZ not baked, centre of mass), which the Animator does not apply,
+     so they play in place. The texture at 1024, point sampling, mipmaps, no compression.
    - `CreateCharacterAssets`: one URP Lit material per class (base colour, smoothness 0, metallic 0, no specular
      highlights, no reflections), the two animator controllers, one prefab per class (root > Model at
      height / 1 m, the material, the Animator, culling off), the catalog `Resources/Characters/catalog.asset`,
@@ -85,7 +89,10 @@ guard's idle left the 2.6 m power armour 14 cm in the air (the test caught it), 
   height, three figures each (the first single shot cut the power armour and the fireman off). Bot total: 24.
 - The red lock marker floats 0.9 m over the chest point now (it sat on the guard's face at 0.45, the first shot
   showed it).
-- PlayMode total: 49. EditMode: 27 cases.
+- `Lucy_WalksAndRunsInPlace_TheModelStaysOverHerRoot` (added in section 7): the shooter off, Lucy walks 2 s
+  and runs 1.2 s across the floor, then stops. Every frame, the hips stay within 0.35 m of her root and the
+  model root does not move. The root stays where she stopped. With the travel baked, the hips reached 2.6 m.
+- PlayMode total: 50. EditMode: 27 cases.
 - Run folders: the `RUNS` line at the end.
 
 ## 6. Bruno's notes of 2026-10-21, for later
@@ -96,6 +103,21 @@ guard's idle left the 2.6 m power armour 14 cm in the air (the test caught it), 
    movie). And logs: grab and read a placeholder log.
 4. The fireman and the power armour stand in the room for the material test. They are not in the first pass of
    the demo.
+
+## 7. The morning check (Bruno, 2026-10-21): the model slid
+
+Bruno: "every time she walks into a direction and stops, her model slides back", "every time she starts
+walking, the model also snaps forward then it goes back", "that was not happening with the capsules".
+
+- The cause: the walk and the run travel in the source (section 1), and the import baked the root XZ into the
+  pose. So the model walked 2.6 m ahead of the controller in one cycle, snapped back at the loop, and the blend
+  to the idle slid it back when she stopped. The snap forward at the start: the blend tree syncs the clips by
+  normalized time, so the walk started in the middle of its travel. The capsule had no clip, so it did not move.
+  The controller itself stops at once (no inertia): only the model moved.
+- The fix: `CharacterImportSettings` takes the travel out of the walk and the run (Root Transform Position XZ
+  not baked, based on the centre of mass). The Animator has no root motion, so the body stays over the root.
+  The idle keeps its sway in the pose. The sway of the walk goes with the travel (a small loss, placeholders).
+- The proof: the test in section 5, and the chain in the `RUNS` line.
 
 ## Files
 
@@ -109,7 +131,12 @@ guard's idle left the 2.6 m power armour 14 cm in the air (the test caught it), 
 `Assets/_Game/Scripts/Enemy/EnemyProjectile.cs`, `Assets/_Game/Scripts/Automation/StructuralPlaythrough.cs`,
 `Assets/_Game/Tests/PlayMode/CharacterTests.cs` (new), `README.md`, `CLAUDE.md`.
 
-RUNS (final): `runs/20261021-013940-exec-417786` (the character build and the scenes, CLEAN: 9 of 9 classes, 22
+RUNS (final, after the in-place fix of section 7): `runs/20261021-142811-exec-29643` (the rebuild with the new
+clip settings, CLEAN), `runs/20261021-142842-test-playmode-29995` (50/50, CLEAN),
+`runs/20261021-143144-play-30574` (bot 24/24, CLEAN, 19 shots). The run before the fix,
+`runs/20261021-124328-exec-504981`, stopped with the PC freeze of 12:59 (a memory thrash into the swap, 4.8 GB
+free at the start: the rebuild runs with `GB_MIN_AVAIL_MB=6000` from now on).
+Before the fix: `runs/20261021-013940-exec-417786` (the character build and the scenes, CLEAN: 9 of 9 classes, 22
 human bones mapped per class), `runs/20261021-014545-test-playmode-419820` (49/49, CLEAN),
 `runs/20261021-015032-play-421270` (bot 24/24, CLEAN, `cast`: lucyHuman=True dummies=2 cast=6, the shooter
 rests for the two line-up shots). Earlier: `runs/20261021-014855-play-419819` (24/24, the laser across the east

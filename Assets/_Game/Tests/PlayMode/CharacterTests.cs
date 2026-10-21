@@ -164,6 +164,84 @@ namespace GlorifiedBody.Tests.PlayMode
             }
         }
 
+        /// <summary>
+        /// The walk and the run of the source travel across the floor (1.5 m and 3 m per cycle at 1 m scale, the
+        /// hips move). The import takes the travel out as root motion that the Animator does not apply, so the
+        /// model stays over her root: no run ahead, no snap back at the loop, no slide back when she stops
+        /// (Bruno, 2026-10-21: "her model slides back"). Baked into the pose, the hips reached 2.6 m from the root.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator Lucy_WalksAndRunsInPlace_TheModelStaysOverHerRoot()
+        {
+            yield return LoadRoom();
+            foreach (DummyShooter shooter in UnityEngine.Object.FindObjectsByType<DummyShooter>(FindObjectsSortMode.None)) shooter.enabled = false;
+            GameObject player = GameObject.FindGameObjectWithTag("Player");
+            TankController tank = player.GetComponent<TankController>();
+            Animator animator = player.GetComponentInChildren<Animator>();
+            Transform model = animator.transform;
+            Transform hips = animator.GetBoneTransform(HumanBodyBones.Hips);
+            Assert.IsNotNull(hips, "the hips bone of the Humanoid");
+            // Facing north from the south half: about 9 m of floor ahead, no collider on her line.
+            tank.Teleport(new Vector3(0f, 1f, -4f), 0f);
+
+            var pad = new VirtualPad();
+            PadDriver padDriver = new GameObject("[PadDriver]").AddComponent<PadDriver>();
+            padDriver.pad = pad;
+            GameInput.SetBotSource(pad);
+            var worst = new float[1];
+            try
+            {
+                yield return null;
+                yield return null;
+                float idle = HipsOffset(hips, player.transform);
+                Assert.Less(idle, HipsLimit, $"idle: the hips over the root ({idle:0.00} m)");
+
+                pad.SetHeld(InputManager.GameAction.Forward, true);
+                yield return SampleHips(hips, player.transform, model, 2f, worst);
+                Assert.Less(worst[0], HipsLimit, $"walk: the hips stay over the root (worst {worst[0]:0.00} m)");
+
+                pad.SetHeld(InputManager.GameAction.Run, true);
+                yield return SampleHips(hips, player.transform, model, 1.2f, worst);
+                Assert.Less(worst[0], HipsLimit, $"run: the hips stay over the root (worst {worst[0]:0.00} m)");
+
+                pad.ReleaseAll();
+                Vector3 stop = player.transform.position;
+                yield return SampleHips(hips, player.transform, model, 0.6f, worst);
+                Assert.Less(worst[0], HipsLimit, $"stop: no slide back ({worst[0]:0.00} m)");
+                Assert.Less(Vector3.Distance(stop, player.transform.position), 0.05f, "the root stays where she stopped");
+                Assert.Greater(stop.z, -1f, $"she crossed the floor (z {stop.z:0.0})");
+            }
+            finally
+            {
+                pad.ReleaseAll();
+                GameInput.ClearBotSource(pad);
+                UnityEngine.Object.Destroy(padDriver.gameObject);
+            }
+        }
+
+        /// <summary>The hips sit near the centre of mass, which the import keeps over the root. 0.35 m leaves room for the sway.</summary>
+        private const float HipsLimit = 0.35f;
+
+        private static float HipsOffset(Transform hips, Transform root)
+        {
+            Vector3 d = hips.position - root.position;
+            d.y = 0f;
+            return d.magnitude;
+        }
+
+        /// <summary>Samples the hips offset every frame for a while. worst[0] = the largest offset. The model root must not move.</summary>
+        private static IEnumerator SampleHips(Transform hips, Transform root, Transform model, float seconds, float[] worst)
+        {
+            worst[0] = 0f;
+            float t0 = Time.time;
+            while (Time.time - t0 < seconds)
+            {
+                yield return null;
+                worst[0] = Mathf.Max(worst[0], HipsOffset(hips, root));
+                if (model.localPosition.magnitude > 0.01f) worst[0] = Mathf.Max(worst[0], 99f);
+            }
+        }
+
         [UnityTest]
         public IEnumerator Dummy_WearsTheGuard_AndAimsWithTheAimPose()
         {

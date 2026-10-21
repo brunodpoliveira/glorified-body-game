@@ -16,13 +16,15 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   menu loop and the batch harness. Step 2: tank controls with a dodge, fixed cameras per room, auto-lock with a
   target switch. Step 3: the circle charge with BLAST, FIRE and TELEKINESIS, the HP / NALCON / SHORT bars, the
   short, the drugs, a capsule dummy shooter with the canon telegraph, the greybox HUD.
-  Proof: 27 EditMode tests, 49 PlayMode tests, the bot (24 steps), see `devlog-notes/`.
+  Proof: 27 EditMode tests, 50 PlayMode tests, the bot (24 steps), see `devlog-notes/`.
 - 2026-10-21, the cast in the engine (`devlog-notes/2026-10-21_characters.md`): the nine T19 models are in the
   room. `tools/characters.sh` (Blender, GLB to FBX plus a 1024 base colour, the figure turned to +z) then
   `CreateCharacterAssets.BuildAll` (Humanoid import, matte URP materials, the Lucy and Enemy animator
   controllers with Invector clips as placeholder poses, prefabs, the catalog in `Resources/Characters/`). Lucy
   (lucy_bare, 1.70 m) stands on her root with a 1.7 m controller, the dummies wear the guard and the soldier, the
-  other six stand along the north wall. Body points in `Characters.Body` (chest 1.2, muzzle 1.3).
+  other six stand along the north wall. Body points in `Characters.Body` (chest 1.2, muzzle 1.3). The T19 walk
+  and run clips travel in the source: the import takes the travel out as root motion (not applied), so the model
+  stays over the controller (Bruno's morning check: "her model slides back").
 - Adjustments after Bruno's two plays (2026-10-20, `devlog-notes/2026-10-20_adjustments1.md` and `_adjustments2.md`):
   the dodge is directional (Space plus a direction key, or a double tap). Debug keys F5 to F9: fill the SHORT
   bar, start the short, refill her, nalcon -25 / +25. A full SHORT bar holds until a short or a drug (CANON), and
