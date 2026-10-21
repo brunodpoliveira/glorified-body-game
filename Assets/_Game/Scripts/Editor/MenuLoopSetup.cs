@@ -100,7 +100,13 @@ namespace GlorifiedBody.Editor
             controller.stepOffset = 0.3f;
             controller.slopeLimit = 45f;
             controller.minMoveDistance = 0f;
-            EnsureComponent<TankController>(player);
+            TankController tankController = EnsureComponent<TankController>(player);
+            // The kept component keeps its old numbers, so the dodge tunings land here (Bruno, 2026-10-21).
+            var tankSo = new SerializedObject(tankController);
+            tankSo.FindProperty("doubleTapWindow").floatValue = TankController.DefaultDoubleTapWindow;
+            tankSo.FindProperty("dodgeAimWindow").floatValue = TankController.DefaultDodgeAimWindow;
+            tankSo.FindProperty("dodgeBufferTime").floatValue = TankController.DefaultDodgeBufferTime;
+            tankSo.ApplyModifiedPropertiesWithoutUndo();
             EnsureComponent<LockOnController>(player);
             EnsureComponent<PsychicStats>(player);
             EnsureComponent<DrugInventory>(player);
@@ -122,13 +128,10 @@ namespace GlorifiedBody.Editor
             healthSo.FindProperty("secondWindInvulnerabilityDuration").floatValue = 2.5f;
             healthSo.ApplyModifiedPropertiesWithoutUndo();
 
-            // A kill volume for walking tests once the controller exists (step 2).
-            GameObject killVolume = EnsurePrimitive("KillVolume", PrimitiveType.Cube, new Vector3(4f, 1f, 0f), new Vector3(1f, 2f, 1f));
-            killVolume.GetComponent<Collider>().isTrigger = true;
-            PlayerDeathTestVolume volume = EnsureComponent<PlayerDeathTestVolume>(killVolume);
-            var volumeSo = new SerializedObject(volume);
-            volumeSo.FindProperty("bypassSecondWind").boolValue = true;
-            volumeSo.ApplyModifiedPropertiesWithoutUndo();
+            // The step 1 kill volume (a dark 1 x 2 m box at (4, 1, 0) with a PlayerDeathTestVolume) is gone: Bruno
+            // walked into it and died at once (2026-10-21). The bot and the tests kill through Health. The builder
+            // opens the existing scene, so the removal is explicit.
+            RemoveObject("KillVolume");
 
             // Two target dummies for the lock-on, with the guard and the soldier models. The FSM AI comes later.
             GameObject dummyA = EnsureDummy("Dummy_A", new Vector3(3f, 0f, 2f), catalog, "guard");
@@ -353,6 +356,12 @@ namespace GlorifiedBody.Editor
         {
             T component = obj.GetComponent<T>();
             if (component != null) Object.DestroyImmediate(component);
+        }
+
+        private static void RemoveObject(string name)
+        {
+            GameObject obj = GameObject.Find(name);
+            if (obj != null) Object.DestroyImmediate(obj);
         }
 
         private static GameObject EnsureChild(GameObject parent, string name)

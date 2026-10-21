@@ -10,6 +10,7 @@ using GlorifiedBody.Cameras;
 using GlorifiedBody.Combat;
 using GlorifiedBody.Core;
 using GlorifiedBody.Enemy;
+using GlorifiedBody.Level;
 using GlorifiedBody.Player;
 using GlorifiedBody.Systems;
 
@@ -154,7 +155,7 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator Dodge_DashesBack_GrantsInvulnerability_ThenCoolsDown()
+        public IEnumerator Dodge_DashesBack_GrantsInvulnerability_AndAPressInTheCooldownWaits()
         {
             Vector3 start = player.transform.position;
             Vector3 forward = player.transform.forward;
@@ -174,8 +175,63 @@ namespace GlorifiedBody.Tests.PlayMode
             pad.Tap(InputManager.GameAction.Dodge);
             yield return null;
             yield return null;
-            Assert.IsFalse(tank.IsDodging, "a second dodge inside the cooldown is refused");
+            Assert.IsFalse(tank.IsDodging, "a press inside the cooldown does not dodge at once");
+            Assert.IsTrue(tank.DodgePending, "the press waits for the cooldown (Bruno, 2026-10-21: the cooldown ate it before)");
             Assert.Less(Vector3.Distance(again, player.transform.position), 0.05f);
+            yield return WaitUntil(() => tank.IsDodging, 0.5f);
+            Assert.IsTrue(tank.IsDodging, "the kept press fires when the dodge is ready");
+            Assert.AreEqual(TankController.DodgeDirection.Back, tank.LastDodge, "no key held: the step back");
+        }
+
+        /// <summary>
+        /// Bruno (2026-10-21): "hard to trigger the dodge at the sides". Space one frame before the side key gave
+        /// the step back, because the direction was read on the Space frame only.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator Dodge_SpaceOneFrameBeforeTheSideKey_DashesToTheSide()
+        {
+            Vector3 start = player.transform.position;
+            Vector3 right = player.transform.right;
+            pad.Tap(InputManager.GameAction.Dodge);
+            yield return null;
+            pad.SetHeld(InputManager.GameAction.TurnRight, true);
+            yield return null;
+            yield return null;
+            Assert.IsTrue(tank.IsDodging, "dodging");
+            Assert.AreEqual(TankController.DodgeDirection.Right, tank.LastDodge, "the side key one frame after Space aims the dash");
+            pad.ReleaseAll();
+            yield return WaitReal(0.5f);
+            float across = Vector3.Dot(player.transform.position - start, right);
+            Assert.Greater(across, 1.2f, $"she moved to her right (across={across:0.00})");
+        }
+
+        /// <summary>Walking with W held, Space plus D is a dodge to the right: the key pressed last wins, not W.</summary>
+        [UnityTest]
+        public IEnumerator Dodge_WhileWalking_TheDirectionKeyPressedLastWins()
+        {
+            pad.SetHeld(InputManager.GameAction.Forward, true);
+            yield return WaitReal(0.3f);
+            pad.SetHeld(InputManager.GameAction.TurnRight, true);
+            pad.Tap(InputManager.GameAction.Dodge);
+            yield return null;
+            yield return null;
+            Assert.IsTrue(tank.IsDodging, "dodging");
+            Assert.AreEqual(TankController.DodgeDirection.Right, tank.LastDodge, "D pressed after W: a dodge to the right, not forward");
+            pad.ReleaseAll();
+        }
+
+        /// <summary>Two taps 0.35 s apart are a double tap. The window was 0.3 s, and a slow hand missed it.</summary>
+        [UnityTest]
+        public IEnumerator DoubleTap_AtAThirdOfASecond_Dodges()
+        {
+            Assert.GreaterOrEqual(tank.DoubleTapWindow, 0.4f, "the scene carries the 0.4 s window (the builder sets it)");
+            pad.Tap(InputManager.GameAction.TurnLeft);
+            yield return WaitReal(0.35f);
+            pad.Tap(InputManager.GameAction.TurnLeft);
+            yield return null;
+            yield return null;
+            Assert.IsTrue(tank.IsDodging, "two taps 0.35 s apart dodge");
+            Assert.AreEqual(TankController.DodgeDirection.Left, tank.LastDodge, "to the left");
         }
 
         [UnityTest]
@@ -278,6 +334,29 @@ namespace GlorifiedBody.Tests.PlayMode
             yield return null;
             Assert.IsFalse(lockOn.IsCharging, "the charge ends on release");
             Assert.IsFalse(tank.MovementLocked, "movement is free again");
+        }
+
+        /// <summary>
+        /// Bruno (2026-10-21) walked into the step 1 kill volume, a dark box at (4, 1, 0), and died at once. The
+        /// room has no kill volume now (the bot and the tests kill through Health), and a walk through that spot
+        /// along the east wall leaves her alive and at full HP.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator TheRoom_HasNoKillVolume_SheWalksTheEastWallAndLives()
+        {
+            Assert.AreEqual(0, UnityEngine.Object.FindObjectsByType<PlayerDeathTestVolume>(FindObjectsSortMode.None).Length, "no PlayerDeathTestVolume in the room");
+            Assert.IsNull(GameObject.Find("KillVolume"), "no KillVolume object");
+            float hpBefore = health.CurrentHealth;
+            tank.Teleport(new Vector3(2.5f, 1f, 0f), 90f); // facing east, the box stood from x 3.5 to 4.5
+            yield return Settle();
+            pad.SetHeld(InputManager.GameAction.Forward, true);
+            yield return WaitReal(2f);
+            pad.ReleaseAll();
+            yield return null;
+            Assert.IsFalse(health.IsDead, "alive after the walk along the east wall");
+            Assert.AreEqual(hpBefore, health.CurrentHealth, 0.01f, "no damage on the walk");
+            Assert.Greater(player.transform.position.x, 3.6f, $"she walked through where the box stood (x={player.transform.position.x:0.00})");
+            Assert.IsTrue(GameManager.Instance.IsPlaying, "state " + GameManager.Instance.CurrentState);
         }
 
         // ── Helpers ───────────────────────────────────────────────────

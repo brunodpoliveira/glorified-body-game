@@ -16,7 +16,9 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   menu loop and the batch harness. Step 2: tank controls with a dodge, fixed cameras per room, auto-lock with a
   target switch. Step 3: the circle charge with BLAST, FIRE and TELEKINESIS, the HP / NALCON / SHORT bars, the
   short, the drugs, a capsule dummy shooter with the canon telegraph, the greybox HUD.
-  Proof: 30 EditMode tests, 51 PlayMode tests, the bot (24 steps), see `devlog-notes/`.
+  Proof: 30 EditMode tests, 55 PlayMode tests, the bot (24 steps), see `devlog-notes/`.
+  The step 1 kill volume (the dark box at the east wall) is out of the room since 2026-10-21: Bruno walked into
+  it and died (`devlog-notes/2026-10-21_kill_volume.md`). The bot and the tests kill through `Health`.
 - 2026-10-21, the cast in the engine (`devlog-notes/2026-10-21_characters.md`): the nine T19 models are in the
   room. `tools/characters.sh` (Blender, GLB to FBX plus a 1024 base colour, the figure turned to +z) then
   `CreateCharacterAssets.BuildAll` (Humanoid import, matte URP materials, the Lucy and Enemy animator
@@ -28,7 +30,10 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   (Bruno's morning check: "her model slides back"). A new class needs its measurement file, or the EditMode
   test `CharacterImportTests` fails.
 - Adjustments after Bruno's two plays (2026-10-20, `devlog-notes/2026-10-20_adjustments1.md` and `_adjustments2.md`):
-  the dodge is directional (Space plus a direction key, or a double tap). Debug keys F5 to F9: fill the SHORT
+  the dodge is directional (Space plus a direction key, or a double tap). The press is forgiving (Bruno,
+  2026-10-21, `devlog-notes/2026-10-21_dodge_input.md`): a press inside the cooldown waits 0.5 s and fires when
+  the dodge is ready, a direction key up to 0.1 s after Space aims the dash, the key pressed last wins, the
+  double tap window is 0.4 s. Debug keys F5 to F9: fill the SHORT
   bar, start the short, refill her, nalcon -25 / +25. A full SHORT bar holds until a short or a drug (CANON), and
   with a full bar the attack or the defend press starts the short at once. The short lasts 16 s, she walks slowly
   (no run, no dodge), same damage per shock, half her HP. The telegraph circle is on the HUD over her, with an
