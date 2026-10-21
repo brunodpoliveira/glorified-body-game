@@ -96,8 +96,9 @@ namespace GlorifiedBody.UI
             rootRect.pivot = new Vector2(0.5f, 0.5f);
             rootRect.anchoredPosition = Vector2.zero;
             // 17 control rows at 24 px, the premise at its own height, the button: 760 overflowed after the dodge
-            // and debug rows (2026-10-20). 900 holds them all on the 1080 reference height.
-            rootRect.sizeDelta = new Vector2(720, 900);
+            // and debug rows (2026-10-20). 990 holds them all, with the two telekinesis rows and the Defend binding,
+            // on the 1080 reference height.
+            rootRect.sizeDelta = new Vector2(720, 990);
 
             rootPanel.AddComponent<Image>().color = new Color(0.06f, 0.06f, 0.09f, 0.97f);
 
@@ -147,6 +148,8 @@ namespace GlorifiedBody.UI
             CreateControl(p, "Esc", "Pause / menus");
             CreateControl(p, "Space + W/A/S/D", "Dodge that way (no direction key: a step back)");
             CreateControl(p, "W/A/S/D twice", "A double tap: the same dodge, no Space");
+            CreateControl(p, "LMB again (TK)", "Enemy in the air: turn to aim, throw it into another one");
+            CreateControl(p, "RMB (TK), bullet near", "Defend: catch the bullet, send it back at the shooter");
             CreateControl(p, "F4", "Debug: kill Lucy (shows the death screen)");
             CreateControl(p, "F5 / F6 / F7", "Debug: fill SHORT / start the short / refill + drugs");
             CreateSpacer(p, 14);

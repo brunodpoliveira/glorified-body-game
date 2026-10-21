@@ -185,7 +185,7 @@ namespace GlorifiedBody.Automation
                 options.Hide();
                 yield return null;
             }
-            Record("options_controls", optionsShown && remapRows == 13, $"shown={optionsShown} remapRows={remapRows}");
+            Record("options_controls", optionsShown && remapRows == 14, $"shown={optionsShown} remapRows={remapRows}");
 
             // 4. Forced death: lethal damage through Health, then the game-over state.
             playerHealth.SetSecondWindEnabled(false);
@@ -384,6 +384,18 @@ namespace GlorifiedBody.Automation
             yield return WaitUntilReal(() => drugs.Count(DrugType.Nalcon) >= 1, 2f);
             Record("drug_pickup", drugs.Count(DrugType.Nalcon) >= 1, $"nalcon drugs={drugs.Count(DrugType.Nalcon)}");
             tank.Teleport(new Vector3(0f, 1f, 0f), 0f);
+            yield return null;
+
+            // The bar warnings (Bruno): low HP, low nalcon, high SHORT, each with an icon and a word. hud_warnings.png.
+            playerHealth.TakeDamage(Mathf.Max(0f, playerHealth.CurrentHealth - playerHealth.MaxHealth * 0.2f));
+            stats.DebugSet(20f, 80f);
+            yield return WaitReal(0.3f);
+            PlayerHud warnHud = FindFirstObjectByType<PlayerHud>();
+            bool warnings = warnHud != null && warnHud.LowHpWarning && warnHud.LowNalconWarning && warnHud.HighShortWarning;
+            if (warnHud != null && warnHud.Canvas != null) yield return OverlayShot.Capture(warnHud.Canvas, "hud_warnings.png", 0.05f);
+            Record("hud_warnings", warnings && warnHud.WarningBeeps >= 1,
+                $"hp={warnHud?.LowHpWarning} nalcon={warnHud?.LowNalconWarning} short={warnHud?.HighShortWarning} beeps={warnHud?.WarningBeeps}");
+            stats.RefillAll();
             yield return null;
 
             // The short: a full bar, a release, the shocks, then the drug ends it.

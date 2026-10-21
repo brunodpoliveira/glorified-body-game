@@ -20,7 +20,9 @@ Next: step 4, the look test (one room greyboxed, then dressed two ways).
    (That Individual). Without them the gore and Invector bridge scripts do not compile.
 3. Open the folder in the Unity Hub. Press Play in `Assets/_Game/Scenes/Main_Menu.unity`.
 4. In the training room: W/S walk, A/D turn, Shift runs, Space dodges, Tab switches the lock target, hold LMB to
-   charge the selected power on the target. 1, 2, 3 select BLAST, FIRE, TELEKINESIS. Q uses a drug.
+   charge the selected power on the target, RMB is the defensive use of the power (TELEKINESIS: a bullet near
+   her goes back at the shooter). With an enemy in the air, turn to aim and press LMB again to throw it.
+   1, 2, 3 select BLAST, FIRE, TELEKINESIS. Q uses a drug.
    Space plus a direction key, or a double tap on a direction key, dodges that way. F4 kills Lucy (shows the
    death screen). F5 fills the SHORT bar, F6 starts the short, F7 refills her and gives drugs. F1 hides the
    status line. Esc pauses.

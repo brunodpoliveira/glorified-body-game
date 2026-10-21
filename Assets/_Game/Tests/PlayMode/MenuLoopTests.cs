@@ -84,6 +84,7 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.IsNotNull(health);
 
             float t0 = Time.realtimeSinceStartup;
+            health.SetSecondWindEnabled(false); // the second wind has its own test; this one is the death flow
             health.TakeDamage(9999f);
             yield return WaitUntil(() => GameManager.Instance.IsGameOver, 2f);
             float elapsed = Time.realtimeSinceStartup - t0;

@@ -32,13 +32,15 @@ namespace GlorifiedBody.Editor
             {
                 p.kind = PowerKind.Fire; p.displayName = "FIRE"; p.drug = DrugType.Red;
                 p.fullChargeTime = 1.5f; p.minCharge = 0.2f; p.range = 12f;
-                p.nalconCost = 25f; p.baseDamage = 10f; p.burnSeconds = 4f; p.burnPerSecond = 6f;
+                // staggerSeconds: the flash of a part charge, times the charge (Bruno, 2026-10-20, option c).
+                p.nalconCost = 25f; p.baseDamage = 10f; p.burnSeconds = 4f; p.burnPerSecond = 6f; p.staggerSeconds = 1f;
             });
             Power("power_telekinesis", p =>
             {
                 p.kind = PowerKind.Telekinesis; p.displayName = "TELEKINESIS"; p.drug = DrugType.DFelon;
                 p.fullChargeTime = 1.8f; p.minCharge = 0.2f; p.range = 12f;
-                p.nalconCost = 30f; p.baseDamage = 40f; p.liftHeight = 1.5f; p.liftSeconds = 0.4f; p.holdSeconds = 0.8f;
+                // The hold is the launch window (Bruno, 2026-10-20): 1.5 s to press again and throw it.
+                p.nalconCost = 30f; p.baseDamage = 40f; p.liftHeight = 1.5f; p.liftSeconds = 0.4f; p.holdSeconds = 1.5f;
             });
 
             Outfit("outfit_nude", o =>

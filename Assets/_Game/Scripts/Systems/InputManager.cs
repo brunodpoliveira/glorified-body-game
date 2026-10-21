@@ -31,7 +31,8 @@ namespace GlorifiedBody.Systems
             PowerFire,
             PowerTelekinesis,
             UseDrug,
-            Interact
+            Interact,
+            Defend // RMB: the defensive use of the selected power (Bruno, 2026-10-20)
         }
 
         [Serializable]
@@ -56,12 +57,17 @@ namespace GlorifiedBody.Systems
                 GameAction.PowerTelekinesis => "Power: Telekinesis",
                 GameAction.UseDrug => "Use Drug",
                 GameAction.Interact => "Interact",
+                GameAction.Defend => "Defend (hold: shield, later)",
                 _ => action.ToString()
             };
         }
 
-        [Header("Default Bindings")]
-        [SerializeField] private List<KeyBinding> bindings = new List<KeyBinding>()
+        /// <summary>
+        /// The code defaults. The scene keeps its own serialized copy of the list, so a new action added here
+        /// never reached a built scene (Defend was missing from the remap list, 2026-10-20). Awake now appends
+        /// every default the serialized list lacks (EnsureAllActions).
+        /// </summary>
+        private static readonly KeyBinding[] Defaults =
         {
             new KeyBinding { action = GameAction.Forward, defaultKey = KeyCode.W },
             new KeyBinding { action = GameAction.Back, defaultKey = KeyCode.S },
@@ -76,7 +82,11 @@ namespace GlorifiedBody.Systems
             new KeyBinding { action = GameAction.PowerTelekinesis, defaultKey = KeyCode.Alpha3 },
             new KeyBinding { action = GameAction.UseDrug, defaultKey = KeyCode.Q },
             new KeyBinding { action = GameAction.Interact, defaultKey = KeyCode.E },
+            new KeyBinding { action = GameAction.Defend, defaultKey = KeyCode.Mouse1 },
         };
+
+        [Header("Default Bindings")]
+        [SerializeField] private List<KeyBinding> bindings = new List<KeyBinding>(Defaults);
 
         private Dictionary<GameAction, KeyCode> keyMap = new Dictionary<GameAction, KeyCode>();
 
@@ -100,7 +110,23 @@ namespace GlorifiedBody.Systems
 
             Instance = this;
             DontDestroyOnLoad(gameObject);
+            EnsureAllActions();
             LoadBindings();
+        }
+
+        /// <summary>Appends the code default of every action the serialized list lacks, in enum order.</summary>
+        private void EnsureAllActions()
+        {
+            if (bindings == null) bindings = new List<KeyBinding>();
+            foreach (KeyBinding fallback in Defaults)
+            {
+                bool present = false;
+                for (int i = 0; i < bindings.Count; i++)
+                {
+                    if (bindings[i].action == fallback.action) { present = true; break; }
+                }
+                if (!present) bindings.Add(new KeyBinding { action = fallback.action, defaultKey = fallback.defaultKey });
+            }
         }
 
         void Update()

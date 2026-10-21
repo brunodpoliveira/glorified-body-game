@@ -115,15 +115,22 @@ namespace GlorifiedBody.Core
             currentHealth = fillToMax ? maxHealth : Mathf.Clamp(currentHealth, 0f, maxHealth);
         }
 
+        /// <summary>Full HP again (a drug). The second wind stays used: only RearmSecondWind gives it back.</summary>
         public void ReviveToFull()
         {
             IsDead = false;
             currentHealth = maxHealth;
-            secondWindAvailable = enableSecondWind;
             secondWindActive = false;
             secondWindInvulnerableUntil = -1f;
             runtimeInvulnerable = false;
             OnHealed?.Invoke(maxHealth);
+        }
+
+        /// <summary>The second wind pill (Bruno, 2026-10-20, a rare item, coded later): one more second wind.</summary>
+        public void RearmSecondWind()
+        {
+            if (!enableSecondWind) return;
+            secondWindAvailable = true;
         }
 
         private void Die()

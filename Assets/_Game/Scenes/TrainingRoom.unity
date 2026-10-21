@@ -2406,8 +2406,8 @@ MonoBehaviour:
   destroyDelay: 0
   invulnerable: 0
   isPlayerHealth: 1
-  enableSecondWind: 0
-  secondWindInvulnerabilityDuration: 3.2
+  enableSecondWind: 1
+  secondWindInvulnerabilityDuration: 2.5
   OnDamaged:
     m_PersistentCalls:
       m_Calls: []

@@ -102,7 +102,9 @@ namespace GlorifiedBody.Editor
             healthSo.FindProperty("maxHealth").floatValue = 100f;
             healthSo.FindProperty("isPlayerHealth").boolValue = true;
             healthSo.FindProperty("destroyOnDeath").boolValue = false;
-            healthSo.FindProperty("enableSecondWind").boolValue = false;
+            // The second wind (Bruno, 2026-10-20): the first lethal hit leaves her at 1 HP, invulnerable 2.5 s, once.
+            healthSo.FindProperty("enableSecondWind").boolValue = true;
+            healthSo.FindProperty("secondWindInvulnerabilityDuration").floatValue = 2.5f;
             healthSo.ApplyModifiedPropertiesWithoutUndo();
 
             // A kill volume for walking tests once the controller exists (step 2).

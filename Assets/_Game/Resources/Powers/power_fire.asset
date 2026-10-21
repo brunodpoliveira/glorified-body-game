@@ -20,7 +20,7 @@ MonoBehaviour:
   range: 12
   nalconCost: 25
   baseDamage: 10
-  staggerSeconds: 0.8
+  staggerSeconds: 1
   burnSeconds: 4
   burnPerSecond: 6
   liftHeight: 1.5

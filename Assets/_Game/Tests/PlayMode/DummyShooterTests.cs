@@ -131,6 +131,7 @@ namespace GlorifiedBody.Tests.PlayMode
         {
             DeathMenuUI.LastKillerId = "";
             player.GetComponent<PsychicStats>().SetOutfit(Resources.Load<OutfitProfile>("Outfits/outfit_guard"));
+            health.SetSecondWindEnabled(false); // the second wind has its own test; this one is the killer's name
             health.SetHealth(5f);
             shooter.enabled = true;
             yield return WaitUntil(() => health.IsDead, 10f);

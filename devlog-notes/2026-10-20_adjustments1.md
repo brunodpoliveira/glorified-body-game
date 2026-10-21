@@ -67,6 +67,83 @@ enemy, so a circle over the enemy's head can be outside the frame. Now (`PlayerH
   the dummy is outside the frame: the arrow shows while it aims, the ring and the arrow show during the telegraph,
   both go after the shot. The bot saves `hud_telegraph.png`.
 
+## 6. Telekinesis: the second press throws the held enemy (Bruno, 2026-10-20)
+
+- With an enemy in the air (the rise and the hold), the next attack press throws it. No charge, no nalcon: the
+  lift was paid. The enemy flies at 14 m/s into the nearest other living enemy in range (12 m). On contact both
+  take the telekinesis damage (40 at a full lift), and the hit enemy loses its aim (0.8 s). The thrown one drops
+  to the floor where it hit. With nobody in range it flies 8 m straight ahead of her, or to a wall, and drops with
+  the slam damage. Numbers PROPOSED.
+- The hold grew from 0.8 s to 1.5 s: that is the window for the second press. No press: the slam, as before.
+- `TelekinesisLift.Launch`, `PsychicPowers.TryLaunch`, the press that throws does not start a charge.
+- Test: `Telekinesis_SecondPress_ThrowsTheHeldEnemy_IntoTheOther`.
+
+## 7. FIRE: only a full charge ignites (Bruno, 2026-10-20)
+
+- Before, any charge above 20 percent lit the burn, scaled by the charge. Now a full charge (the circle closed)
+  lights the burn (6 per second for 4 s) and does a 5 hit. A part charge is a heat hit: 10 times the charge, no
+  burn (PROPOSED, see section 8).
+- Placeholder look for the burn, so it is visible by eye: the victim turns orange and small flames rise off it
+  for the 4 s (`BurningStatus`). The final effect comes with the art.
+- Test: `Fire_Ignites_OnlyAtFullCharge_WithAVisibleBurn`.
+
+## 8. Bruno's decisions (2026-10-20, evening) and what they changed
+
+1. A part charge of FIRE = option (c), the flash: a heat hit (10 times the charge) and the shooter loses its
+   aim for 1 s times the charge (`staggerSeconds` on the FIRE asset). No burn. Test: `Fire_PartCharge_FlashesTheShooter`.
+   The two other options stay in the record: (a) heat only, (b) heat that adds up to a burn.
+2. The defensive telekinesis: (c) first, then all three. Built now, (c) the bullet catch: with TELEKINESIS
+   selected and no enemy in the air, the attack press catches a bullet within 2.5 m of her chest. It stops,
+   turns blue and flies back at its shooter at 1.5 times the speed with twice the damage (30). The shooter takes
+   it and loses its aim. Costs 10 nalcon. A timing move: the telegraph says when the bullet comes. An early
+   press counts for 0.2 s (a press buffer), so a press just before the bullet arrives still catches it. Numbers
+   PROPOSED. Test: `Telekinesis_CatchesABullet_AndSendsItBack`. The first batch run of it failed: the test
+   tapped RMB every frame, and the virtual pad reads that as one long press, so the one press came too early.
+   The buffer and a release between the taps fixed it.
+   Later: (b) grab and throw props with the Warspite catch-and-throw port, when the look test rooms get props.
+   (a) the floor slab shield: Bruno's idea, a "defensive full charge". Needs rooms with loose floor.
+4. LMB attacks, RMB defends (Bruno: "more intuitive", and the auto-lock makes "no target" rare). A new action
+   `Defend` on Mouse1, in the remap list (14 rows now). TELEKINESIS: RMB tap = the bullet catch. RMB hold = the
+   floor shield later (the defensive full charge). LMB with an enemy in the air = the throw, as before. BLAST
+   and FIRE have no defensive form yet (OPEN).
+   The same scene trap again: `InputManager` keeps its binding list serialized in `Main_Menu.unity`, so the new
+   action never reached the remap list (the bot saw 13 rows). `InputManager.Awake` now appends every code
+   default the serialized list lacks.
+3. The held enemy turns with her (Bruno: "it would be fun"). While it hangs it keeps its offset from her, turned
+   by her yaw change: she turns with A and D and the enemy swings around her. The throw aims by her facing: the
+   nearest living enemy inside 25 degrees of her forward, else the nearest other enemy in range, else straight
+   ahead. The slam lands where it hangs. Test: `Telekinesis_HeldEnemy_TurnsWithHer`.
+
+## 9. The bar warnings (Bruno, 2026-10-20)
+
+- Low HP (25 percent or under), low NALCON (25 percent or under), high SHORT (75 percent or over). Thresholds
+  PROPOSED.
+- Each warning sits right of its bar: an icon shape (a heart, a drop, a bolt), an exclamation mark and a word
+  ("! LOW", "! LOW", "! HIGH"). The icon stays, the text blinks. Shape plus word, so a colorblind player reads
+  it without the colour.
+- One series of three beeps when a warning first triggers (Bruno: like DOOM 2016), 0.15 s apart, a short sine
+  with the bar's own pitch (880 Hz for HP, 620 Hz for nalcon, 1180 Hz for SHORT, placeholder). No repeat while
+  it stays on. It beeps again only after it clears and triggers again. Two triggers at once queue up. Volume
+  follows the master and SFX settings.
+- Test: `Hud_Warns_LowHp_LowNalcon_HighShort_WithIconsAndBeeps`. The bot saves `hud_warnings.png`.
+
+## 10. The second wind (Bruno, 2026-10-20)
+
+- The first hit that would kill her leaves her at 1 HP and invulnerable for 2.5 s. Once. The HUD flashes
+  "SECOND WIND". After that a lethal hit kills her. A drug refills her but does not give the second wind back.
+  The second wind pill (a rare item, later) calls `Health.RearmSecondWind`.
+- The code came from Warspite (`Health`): it was off for Lucy and the drug re-armed it. Now on, 2.5 s, and
+  `ReviveToFull` leaves it used. The death tests switch it off first, they test the death flow.
+- Test: `SecondWind_LeavesHerAt1Hp_Invulnerable_Once_AndADrugDoesNotRearmIt`.
+
+## How to test the drug by hand
+
+1. Start the training room. Press F7: two drugs of each type, HP and nalcon full.
+2. Press F6: the short starts. The SHORT text blinks, the shocks hurt her, she can walk.
+3. Press Q: the short ends at once, HP and nalcon refill, the SHORT bar is empty, one drug is gone.
+4. The slow way: F5 fills the SHORT bar. Hold LMB on a target and let go: the release starts the short. Q ends it.
+5. Check the other way: F6, then wait 8 s without Q. The short ends by itself at about half her HP.
+
 ## Proof
 
 - Four new PlayMode tests. Three in `TankControlTests`: Space plus TurnRight dashes right, a double tap on
@@ -87,7 +164,13 @@ enemy, so a circle over the enemy's head can be outside the frame. Now (`PlayerH
 `Assets/_Game/Scripts/Editor/MenuLoopSetup.cs`, `Assets/_Game/Scripts/UI/HowToPlayUI.cs`,
 `Assets/_Game/Tests/PlayMode/TankControlTests.cs`, `README.md`.
 
-RUNS (final, the HUD telegraph): `runs/20261020-204702-test-playmode-323984` (36/36, CLEAN),
+RUNS (final, sections 6 to 10): `runs/20261020-220238-exec-348564` (scene and asset rebuild, CLEAN),
+`runs/20261020-222534-test-playmode-355360` (43/43, CLEAN), `runs/20261020-222832-play-355359` (bot 22/22,
+CLEAN, `hud_warnings.png` checked at full size: the heart, the drop and the bolt with their words). Earlier
+runs of the same code: `runs/20261020-221325-test-playmode-350980` (42/43, the catch test tapped every frame),
+`runs/20261020-222035-play-352527` (21/22, the remap list had 13 rows), `runs/20261020-222204-test-playmode-354288`
+(42/43, the nalcon tolerance).
+RUNS (the HUD telegraph): `runs/20261020-204702-test-playmode-323984` (36/36, CLEAN),
 `runs/20261020-204936-play-323983` (bot 21/21, CLEAN, `hud_telegraph.png` checked at full size: the ring over her,
 the laser from the shooter).
 RUNS (the short change): `runs/20261020-203940-exec-321139` (scene rebuild, CLEAN),

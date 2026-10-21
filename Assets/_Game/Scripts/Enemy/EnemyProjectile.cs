@@ -9,6 +9,8 @@ namespace GlorifiedBody.Enemy
     /// <summary>
     /// A straight bullet. It moves by itself and checks the path with a ray each frame. On Lucy it names the
     /// killer for the death screen, then damages her. On anything else it dies. Lifetime 3 s.
+    /// Caught by telekinesis (Return, Bruno 2026-10-20) it turns blue and flies back at its shooter, faster and
+    /// twice as hard, as her projectile: an enemy it hits takes the damage and loses its aim.
     /// </summary>
     public sealed class EnemyProjectile : MonoBehaviour
     {
@@ -18,7 +20,32 @@ namespace GlorifiedBody.Enemy
         private string killerId;
         private float life = 3f;
         private CharacterController playerController;
+        private bool returned;
         private const float Radius = 0.075f;
+
+        public bool Catchable => !returned;
+        public bool Returned => returned;
+        public string KillerId => killerId;
+
+        /// <summary>Telekinesis caught it: back at the shooter (its chest if alive, else the reverse way).</summary>
+        public void Return(GameObject catcher)
+        {
+            if (returned) return;
+            returned = true;
+            Vector3 direction = -transform.forward;
+            if (attacker != null)
+            {
+                Health shooter = attacker.GetComponentInParent<Health>() ?? attacker.GetComponentInChildren<Health>();
+                if (shooter != null && !shooter.IsDead) direction = (attacker.transform.position + Vector3.up * 0.9f - transform.position).normalized;
+            }
+            transform.rotation = Quaternion.LookRotation(direction, Vector3.up);
+            speed *= 1.5f;
+            damage *= 2f;
+            life = 3f;
+            attacker = catcher;
+            var renderer = GetComponent<Renderer>();
+            if (renderer != null && renderer.material != null) renderer.material.color = new Color(0.3f, 0.7f, 1f);
+        }
 
         public static EnemyProjectile Launch(Vector3 origin, Vector3 direction, float speed, float damage, GameObject attacker, string killerId)
         {
@@ -58,7 +85,8 @@ namespace GlorifiedBody.Enemy
             Vector3 next = origin + transform.forward * step;
 
             // Lucy first, by geometry: a ray does not register her CharacterController in every frame rate.
-            if (CrossesPlayer(origin, next, out Vector3 playerPoint))
+            // A returned bullet is hers: it leaves her and never hits her.
+            if (!returned && CrossesPlayer(origin, next, out Vector3 playerPoint))
             {
                 ImpactPlayer(playerPoint);
                 return;
@@ -158,7 +186,29 @@ namespace GlorifiedBody.Enemy
             Transform root = hit.transform.root;
             RunTelemetry.Event("projectile_impact", $"{killerId}>{hit.transform.name}@{hit.point.x:0.0},{hit.point.y:0.0},{hit.point.z:0.0}");
             bool isPlayer = hit.transform.CompareTag("Player") || (root != null && root.CompareTag("Player"));
-            if (isPlayer)
+            if (returned && !isPlayer)
+            {
+                Health enemy = hit.transform.GetComponentInParent<Health>();
+                if (enemy != null && !enemy.IsDead)
+                {
+                    enemy.TakeDamage(damage);
+                    HitEventBus.Raise(new HitInfo
+                    {
+                        Attacker = attacker,
+                        Victim = enemy.gameObject,
+                        HitCollider = hit.collider,
+                        HitTransform = hit.transform,
+                        HitPoint = hit.point,
+                        HitNormal = hit.normal,
+                        DamageAmount = damage,
+                        DamageType = DamageType.PsychicTelekinesis,
+                        WasFatal = enemy.IsDead
+                    });
+                    enemy.GetComponentInParent<IStaggerable>()?.Stagger(0.8f);
+                    RunTelemetry.Event("bullet_returned_hit", $"{enemy.name}:{damage:0}");
+                }
+            }
+            else if (isPlayer)
             {
                 Health health = hit.transform.GetComponentInParent<Health>() ?? root.GetComponentInChildren<Health>();
                 if (health != null && !health.IsDead)

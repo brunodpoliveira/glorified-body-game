@@ -4,6 +4,7 @@ using UnityEngine;
 using GlorifiedBody.Combat;
 using GlorifiedBody.Core;
 using GlorifiedBody.DebugTools;
+using GlorifiedBody.Enemy;
 using GlorifiedBody.Systems;
 
 namespace GlorifiedBody.Player
@@ -24,12 +25,17 @@ namespace GlorifiedBody.Player
         private LockOnController lockOn;
         private ShortController shortController;
         private bool wasCharging;
+        private TelekinesisLift activeLift;
+        private bool holdAfterLaunch; // the press that launched must not start a charge
+        private float catchPressUntil = -1f; // an RMB press counts for CatchBuffer seconds (the bullet may still be on its way)
 
         public IReadOnlyList<PowerDefinition> Powers => powers;
         public int SelectedIndex { get; private set; }
         public PowerDefinition Selected => powers != null && powers.Length > 0 ? powers[Mathf.Clamp(SelectedIndex, 0, powers.Length - 1)] : null;
         public float Charge { get; private set; }
-        public bool IsCharging => lockOn != null && lockOn.IsCharging && !(shortController != null && shortController.IsActive);
+        public bool IsCharging => lockOn != null && lockOn.IsCharging && !holdAfterLaunch && !(shortController != null && shortController.IsActive);
+        /// <summary>The enemy she holds in the air with telekinesis, while a launch is possible.</summary>
+        public TelekinesisLift HeldLift => activeLift != null && activeLift.CanLaunch ? activeLift : null;
         public string LastResult { get; private set; } = "";
 
         public event Action OnChanged;
@@ -75,6 +81,23 @@ namespace GlorifiedBody.Player
             if (GameInput.GetActionDown(InputManager.GameAction.PowerFire, KeyCode.Alpha2)) Select(PowerKind.Fire);
             if (GameInput.GetActionDown(InputManager.GameAction.PowerTelekinesis, KeyCode.Alpha3)) Select(PowerKind.Telekinesis);
             if (GameInput.GetActionDown(InputManager.GameAction.UseDrug, KeyCode.Q)) UseDrug();
+
+            // LMB attacks, RMB defends (Bruno, 2026-10-20). Telekinesis: the attack press with an enemy in the air
+            // throws it (no charge, and the press that threw does not start one). The defend press catches a
+            // bullet near her and sends it back. The defend hold (the floor shield) comes later.
+            if (holdAfterLaunch && !GameInput.GetAction(InputManager.GameAction.Charge, KeyCode.Mouse0)) holdAfterLaunch = false;
+            if (GameInput.GetActionDown(InputManager.GameAction.Charge, KeyCode.Mouse0) && Selected.kind == PowerKind.Telekinesis && HeldLift != null)
+            {
+                if (TryLaunch()) holdAfterLaunch = true;
+            }
+            if (GameInput.GetActionDown(InputManager.GameAction.Defend, KeyCode.Mouse1) && Selected.kind == PowerKind.Telekinesis)
+            {
+                catchPressUntil = Time.time + CatchBuffer;
+            }
+            if (Time.time <= catchPressUntil && TryCatchBullet())
+            {
+                catchPressUntil = -1f;
+            }
 
             bool charging = IsCharging;
             if (charging)
@@ -152,14 +175,18 @@ namespace GlorifiedBody.Player
                     break;
 
                 case PowerKind.Fire:
-                    float initial = damage * 0.5f;
-                    health?.TakeDamage(initial);
-                    RaiseHit(victim, health, point, normal, initial, DamageType.PsychicFire);
-                    BurningStatus.Ignite(health != null ? health.gameObject : victim, gameObject, power.burnPerSecond * charge, power.burnSeconds);
+                    // Bruno, 2026-10-20: only a full charge ignites. A part charge is a flash: a heat hit and the
+                    // shooter loses its aim for staggerSeconds times the charge (option c, PROPOSED numbers).
+                    bool fullCharge = charge >= 0.999f;
+                    float heat = fullCharge ? damage * 0.5f : damage;
+                    health?.TakeDamage(heat);
+                    RaiseHit(victim, health, point, normal, heat, DamageType.PsychicFire);
+                    if (fullCharge) BurningStatus.Ignite(health != null ? health.gameObject : victim, gameObject, power.burnPerSecond, power.burnSeconds);
+                    else victim.GetComponentInParent<IStaggerable>()?.Stagger(power.staggerSeconds * charge);
                     break;
 
                 case PowerKind.Telekinesis:
-                    TelekinesisLift.Apply(health != null ? health.gameObject : victim, gameObject, power.liftHeight, power.liftSeconds, power.holdSeconds, damage);
+                    activeLift = TelekinesisLift.Apply(health != null ? health.gameObject : victim, gameObject, power.liftHeight, power.liftSeconds, power.holdSeconds, damage);
                     break;
             }
 
@@ -199,6 +226,95 @@ namespace GlorifiedBody.Player
             LastResult = "drug:" + used;
             OnChanged?.Invoke();
             return true;
+        }
+
+        public const float LaunchAimCone = 25f;   // degrees each side of her facing, PROPOSED
+        public const float CatchRadius = 2.5f;     // metres from her chest, PROPOSED
+        public const float CatchNalconCost = 10f;  // PROPOSED
+        public const float CatchBuffer = 0.2f;     // seconds an early RMB press stays valid, PROPOSED
+
+        /// <summary>
+        /// Throws the enemy she holds in the air. She aims with her facing: the living enemy inside LaunchAimCone
+        /// of her forward, nearest first, else the nearest other enemy in range, else straight ahead. Both take
+        /// the damage. Free: the lift was paid.
+        /// </summary>
+        public bool TryLaunch()
+        {
+            TelekinesisLift lift = HeldLift;
+            if (lift == null) return false;
+            PowerDefinition power = Selected;
+            float range = power != null ? power.range : 12f;
+            LockOnTargetable victim = FindAimedTarget(lift.transform, range) ?? FindLaunchTarget(lift.transform, range);
+            Vector3 destination = victim != null
+                ? victim.GetLockPoint()
+                : lift.transform.position + Vector3.ProjectOnPlane(transform.forward, Vector3.up).normalized * 8f;
+            Health victimHealth = victim != null ? victim.GetComponent<Health>() ?? victim.GetComponentInParent<Health>() : null;
+            if (!lift.Launch(destination, victimHealth)) return false;
+            LastResult = "launch:" + (victim != null ? victim.name : "free");
+            OnChanged?.Invoke();
+            return true;
+        }
+
+        /// <summary>The living enemy inside the aim cone of her facing, the nearest one. Null when none.</summary>
+        private LockOnTargetable FindAimedTarget(Transform flyer, float range)
+        {
+            LockOnTargetable best = null;
+            float bestDistance = range;
+            Vector3 forward = Vector3.ProjectOnPlane(transform.forward, Vector3.up).normalized;
+            foreach (LockOnTargetable candidate in TargetRegistry.All)
+            {
+                if (candidate == null || !candidate.IsAlive || !candidate.Selectable) continue;
+                if (candidate.transform == flyer || candidate.transform.IsChildOf(flyer)) continue;
+                Vector3 to = Vector3.ProjectOnPlane(candidate.GetLockPoint() - transform.position, Vector3.up);
+                float distance = to.magnitude;
+                if (distance >= bestDistance || Vector3.Angle(forward, to) > LaunchAimCone) continue;
+                best = candidate;
+                bestDistance = distance;
+            }
+            return best;
+        }
+
+        /// <summary>
+        /// The defensive telekinesis, first form (Bruno, 2026-10-20): a bullet within CatchRadius of her chest
+        /// stops and flies back at its shooter, twice as hard. Costs CatchNalconCost. A timing move: the
+        /// telegraph says when the bullet comes.
+        /// </summary>
+        public bool TryCatchBullet()
+        {
+            Vector3 chest = transform.position + Vector3.up * 0.9f;
+            EnemyProjectile best = null;
+            float bestDistance = CatchRadius;
+            foreach (EnemyProjectile bullet in FindObjectsByType<EnemyProjectile>(FindObjectsSortMode.None))
+            {
+                if (bullet == null || !bullet.Catchable) continue;
+                float distance = Vector3.Distance(chest, bullet.transform.position);
+                if (distance >= bestDistance) continue;
+                best = bullet;
+                bestDistance = distance;
+            }
+            if (best == null) return false;
+            if (!stats.TrySpendNalcon(CatchNalconCost)) return Result("no_nalcon", 0f);
+            best.Return(gameObject);
+            LastResult = "catch";
+            RunTelemetry.Event("bullet_caught", best.KillerId);
+            OnChanged?.Invoke();
+            return true;
+        }
+
+        private static LockOnTargetable FindLaunchTarget(Transform flyer, float range)
+        {
+            LockOnTargetable best = null;
+            float bestDistance = range;
+            foreach (LockOnTargetable candidate in TargetRegistry.All)
+            {
+                if (candidate == null || !candidate.IsAlive || !candidate.Selectable) continue;
+                if (candidate.transform == flyer || candidate.transform.IsChildOf(flyer)) continue;
+                float distance = Vector3.Distance(flyer.position, candidate.GetLockPoint());
+                if (distance >= bestDistance) continue;
+                best = candidate;
+                bestDistance = distance;
+            }
+            return best;
         }
     }
 }

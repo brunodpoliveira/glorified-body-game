@@ -25,4 +25,4 @@ MonoBehaviour:
   burnPerSecond: 6
   liftHeight: 1.5
   liftSeconds: 0.4
-  holdSeconds: 0.8
+  holdSeconds: 1.5
