@@ -150,7 +150,8 @@ namespace GlorifiedBody.Player
             if (marker == null) return;
             bool show = CurrentTarget != null;
             if (marker.gameObject.activeSelf != show) marker.gameObject.SetActive(show);
-            if (show) marker.position = CurrentTarget.GetDisplayPoint() + Vector3.up * 0.45f;
+            // The display point is the chest (1.2 m). The marker floats over the head, not on the face (PROPOSED 0.9).
+            if (show) marker.position = CurrentTarget.GetDisplayPoint() + Vector3.up * 0.9f;
         }
 
         private void OnDestroy()

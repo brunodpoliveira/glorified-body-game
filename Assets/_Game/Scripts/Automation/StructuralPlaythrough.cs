@@ -146,6 +146,32 @@ namespace GlorifiedBody.Automation
             yield return WaitReal(0.5f);
             CaptureShot("play_training_room");
 
+            // 2a. The cast (2026-10-21): Lucy's model with its Humanoid animator, the two dummies with theirs, the
+            // six figures along the north wall. cast_lineup.png from a camera in front of the line-up.
+            Animator lucyAnimator = player.GetComponentInChildren<Animator>();
+            bool lucyHuman = lucyAnimator != null && lucyAnimator.avatar != null && lucyAnimator.avatar.isHuman;
+            int dummiesWithModels = 0;
+            foreach (string dummyName in new[] { "Dummy_A", "Dummy_B" })
+            {
+                GameObject dummy = GameObject.Find(dummyName);
+                if (dummy != null && dummy.GetComponentInChildren<SkinnedMeshRenderer>() != null) dummiesWithModels++;
+            }
+            int castFigures = 0;
+            foreach (SkinnedMeshRenderer skin in FindObjectsByType<SkinnedMeshRenderer>(FindObjectsSortMode.None))
+            {
+                if (skin.transform.root.name.StartsWith("Cast_")) castFigures++;
+            }
+            // The shooter rests for the two shots: its laser crossed the east shot (the camera stands next to it).
+            GameObject dummyAObject = GameObject.Find("Dummy_A");
+            DummyShooter castShooter = dummyAObject != null ? dummyAObject.GetComponent<DummyShooter>() : null;
+            bool shooterWasOn = castShooter != null && castShooter.enabled;
+            if (castShooter != null) castShooter.enabled = false;
+            yield return null;
+            CaptureLineupShot("cast_lineup_west", -2.4f); // the power armour, Lucy guard, the soldier, the patient
+            CaptureLineupShot("cast_lineup_east", 2.0f);  // the nurse, the lab worker, the fireman, the guard in front
+            if (castShooter != null) castShooter.enabled = shooterWasOn;
+            Record("cast", lucyHuman && dummiesWithModels == 2 && castFigures == 6, $"lucyHuman={lucyHuman} dummies={dummiesWithModels} cast={castFigures}");
+
             // 2b. Step 2: tank controls, dodge, camera cuts and the lock-on, driven through the virtual pad.
             yield return MovementSteps(player, playerHealth);
 
@@ -238,6 +264,7 @@ namespace GlorifiedBody.Automation
             yield return WaitGame(0.2f);
 
             // Walk forward for one second.
+            Clip("tank_controls");
             Vector3 start = player.transform.position;
             Vector3 forward = player.transform.forward;
             pad.SetHeld(InputManager.GameAction.Forward, true);
@@ -246,6 +273,7 @@ namespace GlorifiedBody.Automation
             yield return null;
             float along = Vector3.Dot(player.transform.position - start, forward);
             Record("walk_forward", along >= 0.8f, $"{along:0.00} m along the facing in 1 s (walk {tank.WalkSpeed} m/s)");
+            yield return Linger(0.8f);
 
             // Turn right for half a second.
             float yaw0 = tank.Yaw;
@@ -255,6 +283,7 @@ namespace GlorifiedBody.Automation
             yield return null;
             float turned = Mathf.DeltaAngle(yaw0, tank.Yaw);
             Record("turn_right", turned >= 45f, $"{turned:0} deg in 0.5 s (turn {tank.TurnSpeed} deg/s)");
+            yield return Linger(0.8f);
 
             // Dodge: a dash with invulnerability frames.
             Vector3 beforeDodge = player.transform.position;
@@ -266,18 +295,23 @@ namespace GlorifiedBody.Automation
             yield return WaitGame(0.6f);
             float dodged = Vector3.Distance(beforeDodge, player.transform.position);
             Record("dodge", dodging && invulnerable && dodged >= 1f, $"dodging={dodging} invulnerable={invulnerable} moved={dodged:0.00} m");
+            yield return Linger(1f);
+            EndClip();
 
             // Camera cuts: into the north-east zone, the south-west zone, back to the wide camera.
+            Clip("camera_cuts");
             tank.Teleport(new Vector3(3f, 1f, 3f), 180f);
             yield return WaitUntilReal(() => director.CurrentName == "Cam_NorthEast", 1.5f);
             string camA = director.CurrentName;
             yield return WaitReal(0.3f);
             CaptureShot("cam_northeast");
+            yield return Linger(1.5f);
             tank.Teleport(new Vector3(-3f, 1f, -3f), 0f);
             yield return WaitUntilReal(() => director.CurrentName == "Cam_SouthWest", 1.5f);
             string camB = director.CurrentName;
             yield return WaitReal(0.3f);
             CaptureShot("cam_southwest");
+            yield return Linger(1.5f);
 
             // The edge arrow from the room's own camera (Bruno, 2026-10-20: no camera angle hid the dummy).
             // Cam_SouthWest looks west along the south wall, so Dummy_A is outside the frame here. While it
@@ -300,8 +334,11 @@ namespace GlorifiedBody.Automation
             yield return WaitUntilReal(() => director.CurrentName == "Cam_Wide", 1.5f);
             string camC = director.CurrentName;
             Record("camera_cut", camA == "Cam_NorthEast" && camB == "Cam_SouthWest" && camC == "Cam_Wide", $"{camA} > {camB} > {camC}");
+            yield return Linger(1.5f);
+            EndClip();
 
             // Lock-on: the nearest dummy, then the switch.
+            Clip("lock_on_charge");
             yield return WaitUntilReal(() => lockOn.HasTarget, 1.5f);
             string first = lockOn.TargetName;
             pad.Tap(InputManager.GameAction.SwitchTarget);
@@ -311,6 +348,7 @@ namespace GlorifiedBody.Automation
             Record("lock_on", lockOn.HasTarget && first != "none" && second != first, $"nearest={first} switched={second}");
             yield return WaitReal(0.3f);
             CaptureShot("lock_on");
+            yield return Linger(1f);
 
             // Charge: she stands still and faces the target.
             Vector3 beforeCharge = player.transform.position;
@@ -326,9 +364,12 @@ namespace GlorifiedBody.Automation
                 angle = Vector3.Angle(player.transform.forward, to);
             }
             Record("charge_faces_target", lockOn.IsCharging && moved < 0.05f && angle < 8f, $"charging={lockOn.IsCharging} moved={moved:0.00} m angle={angle:0}");
+            yield return Linger(1f);
             pad.ReleaseAll();
             yield return null;
             yield return null;
+            yield return Linger(1f);
+            EndClip();
 
             // Step 3: the shooter's telegraph, a charged blast, the kill and the SHORT bar, a drug, the short.
             yield return PowerSteps(player, playerHealth, tank, lockOn);
@@ -352,7 +393,10 @@ namespace GlorifiedBody.Automation
             }
 
             // The telegraph: the dummy aims at her, the circle spins and shrinks, then it fires.
+            Clip("telegraph");
             tank.Teleport(new Vector3(0f, 1f, 0f), 0f);
+            // On video: start with the aim (the laser), so the clip shows aim, telegraph, shot and impact.
+            if (FrameRecorder.Enabled) yield return WaitUntilReal(() => shooter.Current == DummyShooter.State.Aiming, 5f);
             yield return WaitUntilReal(() => shooter.Current == DummyShooter.State.Telegraph, 6f);
             bool telegraph = shooter.Current == DummyShooter.State.Telegraph;
             if (telegraph)
@@ -365,8 +409,11 @@ namespace GlorifiedBody.Automation
             }
             yield return WaitUntilReal(() => shooter.ShotsFired >= 1, 3f);
             Record("telegraph", telegraph && shooter.ShotsFired >= 1, $"telegraph={telegraph} shots={shooter.ShotsFired} hp={playerHealth.CurrentHealth:0}");
+            yield return Linger(1.5f);
+            EndClip();
 
             // A full-circle blast on Dummy_A (the lock may still sit on Dummy_B after the switch).
+            Clip("blast_kill");
             lockOn.SetTarget(dummyObject.GetComponent<LockOnTargetable>());
             yield return null;
             powers.Select(PowerKind.Blast);
@@ -395,14 +442,25 @@ namespace GlorifiedBody.Automation
             }
             yield return null;
             Record("kill_fills_short", dummyHealth.IsDead && stats.Short >= shortBefore + 24f, $"dead={dummyHealth.IsDead} short {shortBefore:0} -> {stats.Short:0} kills={stats.Kills}");
+            yield return Linger(1.5f);
+            EndClip();
 
             // A drug from the floor.
+            Clip("drug_pickup");
             GameObject pickup = GameObject.Find("Drug_Nalcon");
+            if (pickup != null && FrameRecorder.Enabled)
+            {
+                // On video: stand next to it first, then step onto it.
+                tank.Teleport(pickup.transform.position + Vector3.up * 0.6f - Vector3.forward * 1.2f, 0f);
+                yield return Linger(0.8f);
+            }
             if (pickup != null) tank.Teleport(pickup.transform.position + Vector3.up * 0.6f, 0f);
             yield return WaitUntilReal(() => drugs.Count(DrugType.Nalcon) >= 1, 2f);
             Record("drug_pickup", drugs.Count(DrugType.Nalcon) >= 1, $"nalcon drugs={drugs.Count(DrugType.Nalcon)}");
+            yield return Linger(1f);
             tank.Teleport(new Vector3(0f, 1f, 0f), 0f);
             yield return null;
+            EndClip();
 
             // The bar warnings (Bruno): low HP, low nalcon, high SHORT, each with an icon and a word. hud_warnings.png.
             playerHealth.TakeDamage(Mathf.Max(0f, playerHealth.CurrentHealth - playerHealth.MaxHealth * 0.2f));
@@ -418,6 +476,7 @@ namespace GlorifiedBody.Automation
 
             // The short: a full bar, the attack press starts it at once (Bruno, 2026-10-20), the shocks, the slow
             // walk, then the drug ends it.
+            Clip("short");
             stats.DebugSet(100f, 100f);
             pad.Tap(InputManager.GameAction.Charge);
             yield return null;
@@ -425,6 +484,7 @@ namespace GlorifiedBody.Automation
             bool shortBegan = shortController.IsActive && tank.SlowWalk;
             float hpBefore = playerHealth.CurrentHealth;
             yield return WaitGame(1.2f);
+            yield return Linger(2f);
             CaptureShot("short");
             PlayerHud hud = FindFirstObjectByType<PlayerHud>();
             if (hud != null && hud.Canvas != null) yield return OverlayShot.Capture(hud.Canvas, "hud_short.png", 0.1f);
@@ -435,6 +495,25 @@ namespace GlorifiedBody.Automation
             Record("short_and_drug", shortBegan && hpDuring < hpBefore - 2f && !shortController.IsActive && !tank.SlowWalk && playerHealth.CurrentHealth >= playerHealth.MaxHealth - 0.5f,
                 $"began={shortBegan} hp {hpBefore:0} -> {hpDuring:0} -> {playerHealth.CurrentHealth:0} ended={!shortController.IsActive} slow={tank.SlowWalk} drugs={drugs.Count(DrugType.Nalcon)}");
             if (hud != null && hud.Canvas != null) yield return OverlayShot.Capture(hud.Canvas, "hud.png", 0.2f);
+            yield return Linger(1f);
+            EndClip();
+        }
+
+        /// <summary>A game-clock pause, only on video (-gbRecord 1), so a clip holds on what it shows.</summary>
+        private static IEnumerator Linger(float seconds)
+        {
+            if (FrameRecorder.Enabled) yield return WaitGame(seconds);
+        }
+
+        /// <summary>Starts a video clip of the next steps (only with -gbRecord 1, see FrameRecorder).</summary>
+        private static void Clip(string name)
+        {
+            if (FrameRecorder.Enabled) FrameRecorder.Ensure().Begin(name);
+        }
+
+        private static void EndClip()
+        {
+            if (FrameRecorder.Instance != null) FrameRecorder.Instance.End();
         }
 
         private static GameObject FindPlayer(out Health health)
@@ -474,6 +553,35 @@ namespace GlorifiedBody.Automation
             }
         }
 
+        /// <summary>
+        /// A part of the cast along the north wall (z 4.4) from a camera 4 m in front of it at eye height, centred
+        /// on centreX: three figures fill the frame, the 2.6 m one included (a look check).
+        /// </summary>
+        private void CaptureLineupShot(string shotName, float centreX)
+        {
+            string dir = BotArgs.RunDir;
+            if (string.IsNullOrEmpty(dir) || Camera.main == null) return;
+            var rig = new GameObject("[LineupCamera]");
+            try
+            {
+                Camera cam = rig.AddComponent<Camera>();
+                cam.CopyFrom(Camera.main);
+                cam.enabled = false;
+                cam.transform.position = new Vector3(centreX, 1.35f, 0.4f);
+                cam.transform.LookAt(new Vector3(centreX, 1.2f, 4.4f));
+                cam.fieldOfView = 45f;
+                ShotRenderer.Render(cam, Path.Combine(dir, "shots", SafeName(shotName) + ".png"));
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning("[Bot] line-up shot failed: " + ex.Message);
+            }
+            finally
+            {
+                Destroy(rig);
+            }
+        }
+
         private static string SafeName(string s)
         {
             foreach (char c in Path.GetInvalidFileNameChars()) s = s.Replace(c, '_');
@@ -484,6 +592,7 @@ namespace GlorifiedBody.Automation
         {
             if (finished) return;
             finished = true;
+            EndClip();
             bool pass = steps.Count > 0 && steps.All(s => s.ok);
             RunTelemetry.Event("bot_assist", "off");
             RunTelemetry.Event("bot_done", pass ? "pass" : "fail");

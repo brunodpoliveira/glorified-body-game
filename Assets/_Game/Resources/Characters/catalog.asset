@@ -1,0 +1,69 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2d6cf96b7a694a9cfae67d602f452a4b, type: 3}
+  m_Name: catalog
+  m_EditorClassIdentifier: Assembly-CSharp::GlorifiedBody.Characters.CharacterCatalog
+  entries:
+  - id: lucy_bare
+    displayName: LUCY
+    prefab: {fileID: 3487530174497896584, guid: 3267c77bd6033b6af82f851f983ecaba, type: 3}
+    height: 1.7
+    outfitId: nude
+    role: 0
+  - id: lucy_guard
+    displayName: LUCY (GUARD)
+    prefab: {fileID: 7909721863573052930, guid: 3f3170bcb1fd627b5861eb5fefb986dc, type: 3}
+    height: 1.7
+    outfitId: guard
+    role: 0
+  - id: patient
+    displayName: PATIENT
+    prefab: {fileID: 5081980937239804962, guid: 674818e267d354a239059ffe0aa3a75c, type: 3}
+    height: 1.68
+    outfitId: 
+    role: 2
+  - id: nurse
+    displayName: NURSE
+    prefab: {fileID: 8852222527009961729, guid: f20fb0793456b3dccb6468912c4289a9, type: 3}
+    height: 1.68
+    outfitId: 
+    role: 2
+  - id: labworker
+    displayName: LAB WORKER
+    prefab: {fileID: 1780919496467519784, guid: 048d2f908081a6476ac72715e1672943, type: 3}
+    height: 1.78
+    outfitId: 
+    role: 1
+  - id: guard
+    displayName: SECURITY GUARD
+    prefab: {fileID: 6271875952528614771, guid: f83fb9b2d4315ba5db214ead3855d4c0, type: 3}
+    height: 1.8
+    outfitId: 
+    role: 1
+  - id: soldier
+    displayName: SOLDIER
+    prefab: {fileID: 4618464907789639186, guid: 3d381c31ec29c6e7bbe1608c4eefc352, type: 3}
+    height: 1.8
+    outfitId: 
+    role: 1
+  - id: fireman
+    displayName: FIREMAN
+    prefab: {fileID: 8724497974720145725, guid: 8440f0eb3a85ff8da90fa38c5647d618, type: 3}
+    height: 1.8
+    outfitId: 
+    role: 2
+  - id: power_armour
+    displayName: POWER ARMOUR
+    prefab: {fileID: 8160538590636394547, guid: 15e059578b4d07a11860e2af70594f1f, type: 3}
+    height: 2.6
+    outfitId: 
+    role: 1

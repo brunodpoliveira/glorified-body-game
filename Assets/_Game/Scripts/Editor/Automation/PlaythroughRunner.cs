@@ -40,10 +40,11 @@ namespace GlorifiedBody.Editor.Automation
                 AutomationArgs.Get("-gbLevel", "Gameplay"),
                 AutomationArgs.Get("-gbBot", "structural"),
                 AutomationArgs.Get("-gbTimeout", "900"),
-                exitWhenDone: true);
+                exitWhenDone: true,
+                record: AutomationArgs.Get("-gbRecord", "0") == "1");
         }
 
-        public static void Begin(string runDir, string startScene, string level, string bot, string timeout, bool exitWhenDone)
+        public static void Begin(string runDir, string startScene, string level, string bot, string timeout, bool exitWhenDone, bool record = false)
         {
             Directory.CreateDirectory(runDir);
             string result = Path.Combine(runDir, "playthrough.json");
@@ -53,6 +54,7 @@ namespace GlorifiedBody.Editor.Automation
             SessionState.SetString(BotArgs.KeyBot, bot);
             SessionState.SetString(BotArgs.KeyLevel, level);
             SessionState.SetString(BotArgs.KeyTimeout, timeout);
+            SessionState.SetString(BotArgs.KeyRecord, record ? "1" : "0");
             SessionState.SetBool(KeyActive, true);
             SessionState.SetBool(KeyExit, exitWhenDone);
             SessionState.SetFloat(KeyStart, (float)EditorApplication.timeSinceStartup);
@@ -95,7 +97,7 @@ namespace GlorifiedBody.Editor.Automation
                 SessionState.EraseBool(k);
                 SessionState.EraseFloat(k);
             }
-            foreach (string k in new[] { BotArgs.KeyRunDir, BotArgs.KeyBot, BotArgs.KeyLevel, BotArgs.KeyTimeout })
+            foreach (string k in new[] { BotArgs.KeyRunDir, BotArgs.KeyBot, BotArgs.KeyLevel, BotArgs.KeyTimeout, BotArgs.KeyRecord })
             {
                 SessionState.EraseString(k);
             }

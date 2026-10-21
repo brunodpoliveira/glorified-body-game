@@ -1,4 +1,5 @@
 using UnityEngine;
+using GlorifiedBody.Characters;
 using GlorifiedBody.Combat;
 using GlorifiedBody.Core;
 using GlorifiedBody.DebugTools;
@@ -41,7 +42,7 @@ namespace GlorifiedBody.Enemy
         public float TelegraphProgress => Current == State.Telegraph ? 1f - Mathf.Clamp01(timer / telegraphSeconds) : 0f;
         public int ShotsFired { get; private set; }
         public string EnemyId => enemyId;
-        public Vector3 Muzzle => transform.position + Vector3.up * 0.9f + transform.forward * 0.5f;
+        public Vector3 Muzzle => transform.position + Vector3.up * Body.MuzzleHeight + transform.forward * 0.5f;
 
         private void Awake()
         {
@@ -99,7 +100,7 @@ namespace GlorifiedBody.Enemy
                 if (player == null) return;
             }
 
-            Vector3 chest = player.position + Vector3.up * 0.9f;
+            Vector3 chest = player.position + Vector3.up * Body.ChestHeight;
             float distance = Vector3.Distance(transform.position, player.position);
             FaceYaw(player.position);
 

@@ -8,9 +8,21 @@ memory and three psychic powers, escapes the cult's lab. Steam, PC, keyboard and
 Build order steps 1 to 3 (2026-10-20): the Unity project, the menu loop (main menu, pause, options with key
 remap, difficulty presets and modifiers, death screen), the batch harness and its tests, tank controls with a dodge,
 fixed cameras per room, the auto-lock with a target switch, the circle charge with the three powers, the HP /
-NALCON / SHORT bars, the short, the drugs, and a dummy shooter with the telegraph. Lucy is a capsule in a greybox room.
+NALCON / SHORT bars, the short, the drugs, and a dummy shooter with the telegraph. The cast (2026-10-21): the nine
+character models of the demo are in the greybox room, Lucy on the tank controls with idle, walk and run, the
+guard and the soldier as the dummies, the other six along the north wall.
 
 Next: step 4, the look test (one room greyboxed, then dressed two ways).
+
+## The characters
+
+The models come from the RFab 3D Studio (T19, `~/glorified-body-renders/T19_characters/models/`), 2,500
+triangles each, a mixamo rig, idle, walk and run. `tools/characters.sh` turns each one into an FBX plus a 1024 px
+base colour under `Assets/_Game/Characters/Models/` (Blender 5.2 in the background). Then
+`tools/unity.sh exec GlorifiedBody.Editor.Characters.CreateCharacterAssets.BuildAll` makes the materials, the
+animator controllers, the prefabs, the catalog in `Resources/Characters/` and rebuilds the scenes. The FBX and the
+base colours are in the repository, so a clone needs no Blender. The single-pose states (dodge, aim, stagger,
+fall, death) use Invector's humanoid clips. Without the Invector package they play the idle.
 
 ## Open the project
 

@@ -5,9 +5,11 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using GlorifiedBody.Cameras;
+using GlorifiedBody.Characters;
 using GlorifiedBody.Combat;
 using GlorifiedBody.Core;
 using GlorifiedBody.DebugTools;
+using GlorifiedBody.Editor.Characters;
 using GlorifiedBody.Enemy;
 using GlorifiedBody.Level;
 using GlorifiedBody.Level.Build;
@@ -72,16 +74,29 @@ namespace GlorifiedBody.Editor
             EnsurePrimitive("Wall_East", PrimitiveType.Cube, new Vector3(5.15f, 1.5f, 0f), new Vector3(0.5f, 3f, 10.6f)).isStatic = true;
             EnsurePrimitive("Wall_West", PrimitiveType.Cube, new Vector3(-5.15f, 1.5f, 0f), new Vector3(0.5f, 3f, 10.6f)).isStatic = true;
 
-            // Lucy placeholder: a capsule with Health, the tank controller and the lock-on. The CharacterController
-            // is her collider, so the primitive's capsule collider and any rigidbody go.
-            GameObject player = EnsurePrimitive("Lucy_Placeholder", PrimitiveType.Capsule, new Vector3(0f, 1f, 0f), Vector3.one);
+            // Lucy: the T19 model (lucy_bare) under a root that stands on its feet (y 0), with Health, the tank
+            // controller and the lock-on. The CharacterController is her collider. The capsule placeholder of
+            // step 2 migrates: same object, same components, the primitive mesh and the nose marker go.
+            CharacterCatalog catalog = AssetDatabase.LoadAssetAtPath<CharacterCatalog>(CreateCharacterAssets.CatalogPath);
+            if (catalog == null) Debug.LogWarning("[MenuLoopSetup] no character catalog: run CreateCharacterAssets.BuildAll first. The room gets no models.");
+            GameObject player = GameObject.Find("Lucy");
+            if (player == null) player = GameObject.Find("Lucy_Placeholder");
+            if (player == null) player = new GameObject("Lucy");
+            player.name = "Lucy";
             player.tag = "Player";
+            player.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
+            player.transform.localScale = Vector3.one;
             RemoveComponent<Rigidbody>(player);
             RemoveComponent<CapsuleCollider>(player);
+            RemoveComponent<MeshRenderer>(player);
+            RemoveComponent<MeshFilter>(player);
+            Transform nose = player.transform.Find("Nose");
+            if (nose != null) Object.DestroyImmediate(nose.gameObject);
+            float lucyHeight = catalog != null && catalog.Find("lucy_bare") != null ? catalog.Find("lucy_bare").height : 1.7f;
             CharacterController controller = EnsureComponent<CharacterController>(player);
-            controller.height = 2f;
-            controller.radius = 0.4f;
-            controller.center = Vector3.zero;
+            controller.height = lucyHeight;
+            controller.radius = 0.3f;
+            controller.center = new Vector3(0f, lucyHeight * 0.5f, 0f);
             controller.stepOffset = 0.3f;
             controller.slopeLimit = 45f;
             controller.minMoveDistance = 0f;
@@ -95,8 +110,8 @@ namespace GlorifiedBody.Editor
             RemoveComponent<ShortController>(player);
             EnsureComponent<ShortController>(player);
             EnsureComponent<PsychicPowers>(player);
-            GameObject nose = EnsureChildPrimitive(player, "Nose", PrimitiveType.Cube, new Vector3(0f, 0.6f, 0.5f), Vector3.one * 0.2f);
-            RemoveComponent<BoxCollider>(nose);
+            EnsureCharacterModel(player, catalog, "lucy_bare");
+            EnsureComponent<LucyAnimator>(player);
             Health health = EnsureComponent<Health>(player);
             var healthSo = new SerializedObject(health);
             healthSo.FindProperty("maxHealth").floatValue = 100f;
@@ -115,11 +130,16 @@ namespace GlorifiedBody.Editor
             volumeSo.FindProperty("bypassSecondWind").boolValue = true;
             volumeSo.ApplyModifiedPropertiesWithoutUndo();
 
-            // Two target dummies for the lock-on. Step 3 replaces them with the Invector dummy enemy.
-            GameObject dummyA = EnsurePrimitive("Dummy_A", PrimitiveType.Capsule, new Vector3(3f, 1f, 2f), Vector3.one);
-            SetupDummy(dummyA);
+            // Two target dummies for the lock-on, with the guard and the soldier models. The FSM AI comes later.
+            GameObject dummyA = EnsureDummy("Dummy_A", new Vector3(3f, 0f, 2f), catalog, "guard");
             EnsureComponent<DummyShooter>(dummyA); // the one that shoots, with the telegraph
-            SetupDummy(EnsurePrimitive("Dummy_B", PrimitiveType.Capsule, new Vector3(-2f, 1f, 4f), Vector3.one));
+            EnsureDummy("Dummy_B", new Vector3(-2f, 0f, 4f), catalog, "soldier");
+
+            // The cast along the north wall, facing the room (Bruno, 2026-10-21: all of them in the room now, to
+            // test the materials). Visual only: no Health, no collider, the idle on each.
+            string[] castIds = { "power_armour", "lucy_guard", "patient", "nurse", "labworker", "fireman" };
+            float[] castX = { -4.4f, -3.2f, -0.4f, 0.8f, 2.0f, 3.2f };
+            for (int i = 0; i < castIds.Length; i++) EnsureCastFigure(catalog, castIds[i], new Vector3(castX[i], 0f, 4.4f), 180f);
 
             // Three drugs on the floor, one per power.
             EnsurePickup("Drug_Nalcon", DrugType.Nalcon, new Vector3(-3f, 0.4f, 0f));
@@ -136,8 +156,9 @@ namespace GlorifiedBody.Editor
             FixedCamera northEast = EnsureFixedCamera(camerasRoot, "Cam_NorthEast", new Vector3(4.3f, 3.4f, 4.3f), new Vector3(0f, 1f, 0f), 55f);
             FixedCamera southWest = EnsureFixedCamera(camerasRoot, "Cam_SouthWest", new Vector3(4.6f, 2.8f, -4.6f), new Vector3(-3.0f, 0.9f, -3.4f), 50f);
             director.SetDefaultCamera(wide);
-            EnsureCameraZone(camerasRoot, "Zone_NorthEast", new Vector3(3f, 1.5f, 3f), new Vector3(4f, 3f, 4f), northEast, 1);
-            EnsureCameraZone(camerasRoot, "Zone_SouthWest", new Vector3(-3f, 1.5f, -3f), new Vector3(4f, 3f, 4f), southWest, 1);
+            // The zones test her root, which stands on the floor now, so they reach below it.
+            EnsureCameraZone(camerasRoot, "Zone_NorthEast", new Vector3(3f, 1f, 3f), new Vector3(4f, 3f, 4f), northEast, 1);
+            EnsureCameraZone(camerasRoot, "Zone_SouthWest", new Vector3(-3f, 1f, -3f), new Vector3(4f, 3f, 4f), southWest, 1);
 
             GameObject systems = EnsureRoot("[GameplaySystems]");
             EnsureComponent<GameplayInitializer>(systems);
@@ -388,17 +409,72 @@ namespace GlorifiedBody.Editor
             pickup.amount = 1;
         }
 
-        private static void SetupDummy(GameObject dummy)
+        /// <summary>
+        /// A dummy enemy: a root on its feet with a capsule collider the size of the class, Health (50), the
+        /// lock-on target at chest height, the class model and its animator. The capsule placeholder migrates.
+        /// </summary>
+        private static GameObject EnsureDummy(string name, Vector3 position, CharacterCatalog catalog, string classId)
         {
+            GameObject dummy = GameObject.Find(name);
+            if (dummy == null) dummy = new GameObject(name);
             dummy.tag = "Enemy";
+            dummy.transform.position = position;
+            dummy.transform.rotation = Quaternion.LookRotation(new Vector3(-position.x, 0f, -position.z).normalized, Vector3.up);
+            dummy.transform.localScale = Vector3.one;
+            RemoveComponent<Rigidbody>(dummy);
+            RemoveComponent<MeshRenderer>(dummy);
+            RemoveComponent<MeshFilter>(dummy);
+            CharacterEntry entry = catalog != null ? catalog.Find(classId) : null;
+            float height = entry != null ? entry.height : 1.8f;
+            CapsuleCollider capsule = EnsureComponent<CapsuleCollider>(dummy);
+            capsule.isTrigger = false;
+            capsule.height = height;
+            capsule.radius = 0.3f;
+            capsule.center = new Vector3(0f, height * 0.5f, 0f);
+
             Health health = EnsureComponent<Health>(dummy);
             var so = new SerializedObject(health);
             so.FindProperty("maxHealth").floatValue = 50f;
             so.ApplyModifiedPropertiesWithoutUndo();
             LockOnTargetable target = EnsureComponent<LockOnTargetable>(dummy);
             var targetSo = new SerializedObject(target);
-            targetSo.FindProperty("fallbackHeight").floatValue = 0.6f;
+            targetSo.FindProperty("fallbackHeight").floatValue = Body.ChestHeight;
             targetSo.ApplyModifiedPropertiesWithoutUndo();
+
+            EnsureCharacterModel(dummy, catalog, classId);
+            EnsureComponent<EnemyAnimator>(dummy);
+            return dummy;
+        }
+
+        /// <summary>A figure of the cast with no game role: the model and its idle, for the look.</summary>
+        private static GameObject EnsureCastFigure(CharacterCatalog catalog, string classId, Vector3 position, float yaw)
+        {
+            string name = "Cast_" + classId;
+            GameObject figure = GameObject.Find(name);
+            if (figure == null) figure = new GameObject(name);
+            figure.transform.SetPositionAndRotation(position, Quaternion.Euler(0f, yaw, 0f));
+            EnsureCharacterModel(figure, catalog, classId);
+            return figure;
+        }
+
+        /// <summary>The class prefab as the child "Model" of a root. A present child is replaced.</summary>
+        private static GameObject EnsureCharacterModel(GameObject root, CharacterCatalog catalog, string classId)
+        {
+            Transform old = root.transform.Find("Model");
+            if (old != null) Object.DestroyImmediate(old.gameObject);
+            CharacterEntry entry = catalog != null ? catalog.Find(classId) : null;
+            if (entry == null || entry.prefab == null)
+            {
+                Debug.LogWarning($"[MenuLoopSetup] no prefab for the class '{classId}': {root.name} has no model.");
+                return null;
+            }
+            var model = (GameObject)PrefabUtility.InstantiatePrefab(entry.prefab);
+            model.name = "Model";
+            model.transform.SetParent(root.transform, false);
+            model.transform.localPosition = Vector3.zero;
+            model.transform.localRotation = Quaternion.identity;
+            model.transform.localScale = Vector3.one;
+            return model;
         }
     }
 }

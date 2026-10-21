@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using GlorifiedBody.Characters;
 using GlorifiedBody.Combat;
 using GlorifiedBody.Core;
 using GlorifiedBody.DebugTools;
@@ -296,7 +297,7 @@ namespace GlorifiedBody.Player
         /// </summary>
         public bool TryCatchBullet()
         {
-            Vector3 chest = transform.position + Vector3.up * 0.9f;
+            Vector3 chest = transform.position + Vector3.up * Body.ChestHeight;
             EnemyProjectile best = null;
             float bestDistance = CatchRadius;
             foreach (EnemyProjectile bullet in FindObjectsByType<EnemyProjectile>(FindObjectsSortMode.None))

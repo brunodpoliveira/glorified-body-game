@@ -1,4 +1,5 @@
 using UnityEngine;
+using GlorifiedBody.Characters;
 using GlorifiedBody.Combat;
 using GlorifiedBody.Core;
 using GlorifiedBody.DebugTools;
@@ -36,7 +37,7 @@ namespace GlorifiedBody.Enemy
             if (attacker != null)
             {
                 Health shooter = attacker.GetComponentInParent<Health>() ?? attacker.GetComponentInChildren<Health>();
-                if (shooter != null && !shooter.IsDead) direction = (attacker.transform.position + Vector3.up * 0.9f - transform.position).normalized;
+                if (shooter != null && !shooter.IsDead) direction = (attacker.transform.position + Vector3.up * Body.ChestHeight - transform.position).normalized;
             }
             transform.rotation = Quaternion.LookRotation(direction, Vector3.up);
             speed *= 1.5f;

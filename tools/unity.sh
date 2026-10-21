@@ -14,6 +14,10 @@
 #   play <Level> [StartScene] [bot] [timeoutSec]
 #                               Batch Play mode with a bot (default: Main_Menu, structural, 900)
 #                               -> playthrough.json, runtime.jsonl, shots/.     (slot: batch)
+#   record <Level> [StartScene] [bot] [timeoutSec]
+#                               The play run with video: the bot saves 1080p30 frames of its steps,
+#                               ffmpeg makes clips/<step>.mp4, copies go to
+#                               ~/glorified-body-renders/devlog/clips/{latest,<stamp>}/. (slot: batch)
 #   import <file.unitypackage>  Batch: import an Asset Store package (unity assets import). (slot: batch)
 #   triage <run-dir>            Re-run log triage on a run folder.
 #
@@ -212,22 +216,46 @@ case "$mode" in
       -gbScene "$scene" -gbRunDir "$RUN"; rc=$?
     ls "$RUN/shots" 2>/dev/null
     triage; t=$?; [ $rc -eq 0 ] && rc=$t; exit $rc ;;
-  play)
+  play|record)
     level="${1:?Level scene required}"; start="${2:-Main_Menu}"; bot="${3:-structural}"; tmo="${4:-900}"
-    new_run play "$level" "$start" "$bot"
+    record=0; [ "$mode" = record ] && record=1
+    new_run "$mode" "$level" "$start" "$bot"
     play_batch() {
       batch_guard; wait_ram || return 4
       # Direct editor call: unity run always adds -quit, which would stop Play mode at once.
       timeout --kill-after=30 "$((tmo + 300))" "$UNITY_BIN" -batchmode -projectPath "$PROJ" -logFile "$RUN/editor.log" \
         -executeMethod GlorifiedBody.Editor.Automation.PlaythroughRunner.Run \
-        -gbRunDir "$RUN" -gbScene "$start" -gbLevel "$level" -gbBot "$bot" -gbTimeout "$tmo" \
+        -gbRunDir "$RUN" -gbScene "$start" -gbLevel "$level" -gbBot "$bot" -gbTimeout "$tmo" -gbRecord "$record" \
         > "$RUN/cli.out" 2>&1
       local rc=$?
       echo "[unity.sh] editor exit code: $rc  [legend: 0 = bot pass, 1 = bot fail, 2 = bot timeout, 124 = hard timeout]"
       return $rc
     }
+    encode_clips() {  # frames/<clip>/00001.png -> clips/<clip>.mp4 (1080p30), then the frames go
+      local out="$RUN/clips" dest="${GB_CLIPS_DIR:-$HOME/glorified-body-renders/devlog/clips}" stamp
+      stamp=$(date +%Y%m%d-%H%M)
+      mkdir -p "$out"
+      for d in "$RUN"/frames/*/; do
+        [ -d "$d" ] || continue
+        local c n; c=$(basename "$d"); n=$(find "$d" -maxdepth 1 -name '*.png' | wc -l)
+        [ "$n" -ge 2 ] || { echo "[record] $c: $n frames, skipped"; continue; }
+        if ffmpeg -loglevel error -y -framerate 30 -i "$d/%05d.png" -c:v libx264 -crf 18 -preset medium \
+             -pix_fmt yuv420p -movflags +faststart "$out/$c.mp4"; then
+          echo "[record] $c: $n frames -> clips/$c.mp4 ($(awk "BEGIN{printf \"%.1f\", $n/30}") s)"
+          rm -rf "$d"
+        else
+          echo "[record] $c: ffmpeg failed, frames kept in $d"
+        fi
+      done
+      ls "$out"/*.mp4 >/dev/null 2>&1 || { echo "[record] no clips made"; return 1; }
+      mkdir -p "$dest/$stamp" "$dest/latest"
+      cp "$out"/*.mp4 "$dest/$stamp/"; cp "$out"/*.mp4 "$dest/latest/"
+      cp "$RUN/frames/clips.json" "$dest/$stamp/" 2>/dev/null
+      echo "[record] clips in $dest/latest/ and $dest/$stamp/"
+    }
     with_lock batch play_batch; rc=$?
     [ -f "$RUN/playthrough.json" ] && python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print('[play]', 'PASS' if d['pass'] else 'FAIL', d['duration_s'], 's, max frame', d['max_frame_ms'], 'ms'); [print('  ', 'ok  ' if s['ok'] else 'FAIL', s['name'], s['detail']) for s in d['steps']]" "$RUN/playthrough.json"
+    [ "$record" = 1 ] && encode_clips
     triage; t=$?; [ $rc -eq 0 ] && rc=$t; exit $rc ;;
   import)
     pkg="${1:?.unitypackage path required}"

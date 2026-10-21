@@ -15,8 +15,14 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
 - 2026-10-20: steps 1, 2 and 3 done. Step 1: the project at the repo root (public GitHub repo, GPL-3.0), the
   menu loop and the batch harness. Step 2: tank controls with a dodge, fixed cameras per room, auto-lock with a
   target switch. Step 3: the circle charge with BLAST, FIRE and TELEKINESIS, the HP / NALCON / SHORT bars, the
-  short, the drugs, a capsule dummy shooter with the canon telegraph, the greybox HUD. Lucy is still a capsule.
-  Proof: 27 EditMode tests, 45 PlayMode tests, the bot (23 steps), see `devlog-notes/`.
+  short, the drugs, a capsule dummy shooter with the canon telegraph, the greybox HUD.
+  Proof: 27 EditMode tests, 49 PlayMode tests, the bot (24 steps), see `devlog-notes/`.
+- 2026-10-21, the cast in the engine (`devlog-notes/2026-10-21_characters.md`): the nine T19 models are in the
+  room. `tools/characters.sh` (Blender, GLB to FBX plus a 1024 base colour, the figure turned to +z) then
+  `CreateCharacterAssets.BuildAll` (Humanoid import, matte URP materials, the Lucy and Enemy animator
+  controllers with Invector clips as placeholder poses, prefabs, the catalog in `Resources/Characters/`). Lucy
+  (lucy_bare, 1.70 m) stands on her root with a 1.7 m controller, the dummies wear the guard and the soldier, the
+  other six stand along the north wall. Body points in `Characters.Body` (chest 1.2, muzzle 1.3).
 - Adjustments after Bruno's two plays (2026-10-20, `devlog-notes/2026-10-20_adjustments1.md` and `_adjustments2.md`):
   the dodge is directional (Space plus a direction key, or a double tap). Debug keys F5 to F9: fill the SHORT
   bar, start the short, refill her, nalcon -25 / +25. A full SHORT bar holds until a short or a drug (CANON), and
@@ -29,7 +35,9 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   (icon, "!", word, three beeps once). The second wind: the first lethal hit leaves her at 1 HP, invulnerable
   2.5 s, once. Nude outfit nalcon recharge 2 per second.
   OPEN for Bruno: drugs with one stat each (tbc), difficulty as percentages (easy 100, normal 150, hard 200,
-  custom), the HP recharge rate.
+  custom), the HP recharge rate. Later (Bruno, 2026-10-21): the Invector FSM AI with "move or shoot, never
+  both", props from free assets or Invector's placeholder weapons, the psychic scan (a clue from an object), the
+  logs (grab and read).
   Next: step 4 in
   `03_GAME_DESIGN.md` §7 (the look test: one room greyboxed, then dressed two ways, for Bruno's pick).
 

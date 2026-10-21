@@ -109,10 +109,17 @@ namespace GlorifiedBody.Player
             return Quaternion.Angle(transform.rotation, wanted);
         }
 
-        /// <summary>Moves Lucy to a point at once (bots and tests). The controller is disabled for the jump.</summary>
+        /// <summary>
+        /// Moves Lucy to a point at once (bots and tests). The controller is disabled for the jump. Her root
+        /// stands on her feet, so the point snaps down to the floor under it (triggers do not count).
+        /// </summary>
         public void Teleport(Vector3 position, float yaw)
         {
             controller.enabled = false;
+            if (Physics.Raycast(position + Vector3.up, Vector3.down, out RaycastHit floorHit, 6f, ~0, QueryTriggerInteraction.Ignore))
+            {
+                position.y = floorHit.point.y + 0.02f;
+            }
             transform.SetPositionAndRotation(position, Quaternion.Euler(0f, yaw, 0f));
             Physics.SyncTransforms();
             controller.enabled = true;

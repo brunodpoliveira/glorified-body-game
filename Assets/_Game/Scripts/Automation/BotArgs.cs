@@ -12,10 +12,14 @@ namespace GlorifiedBody.Automation
         public const string KeyLevel = "GlorifiedBody.Bot.Level";
         public const string KeyRunDir = "GlorifiedBody.RunDir";
         public const string KeyTimeout = "GlorifiedBody.Bot.Timeout";
+        public const string KeyRecord = "GlorifiedBody.Bot.Record";
 
         public static string Bot => Read("-gbBot", KeyBot);
         public static string Level => Read("-gbLevel", KeyLevel);
         public static string RunDir => Read("-gbRunDir", KeyRunDir);
+
+        /// <summary>-gbRecord 1: the bot saves video frames of its steps (FrameRecorder).</summary>
+        public static bool Record => Read("-gbRecord", KeyRecord) == "1";
 
         public static float TimeoutSeconds
         {
