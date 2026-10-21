@@ -119,6 +119,31 @@ walking, the model also snaps forward then it goes back", "that was not happenin
   The idle keeps its sway in the pose. The sway of the walk goes with the travel (a small loss, placeholders).
 - The proof: the test in section 5, and the chain in the `RUNS` line.
 
+Bruno, after the fix: "ensure this animation glitch won't happen to the other models once we start animating
+them as well". The first fix decided by the clip name (walk, run). A future clip with another name that travels
+(a sprint, a patrol, a crawl) would bake again. Now the decision comes from the data:
+
+1. `tools/characters_clips.py` (a step of `tools/characters.sh`) reads the animated GLB and evaluates the hips
+   through the node chain (the armature, the root bone, the hips) at every key time. `travel` = the net move
+   on the floor over the clip, `reach` = the largest move from the start. A clip travels when travel is 0.1 m
+   or more (source units, the figures are 1 m tall). It writes `<class>.clips.json` next to the FBX. The nine:
+   the idle travel 0.000 (reach 0.15 to 0.18, the sway), the walk 1.38 to 1.66, the run 2.65 to 3.19.
+2. `CharacterImportSettings` reads that file for each clip. Without the file, the names decide (walk, run) and
+   the import logs a warning. `BuildAll` logs the decision per class ("idle stays, walk travels 1.53, ...").
+3. `CharacterImportTests` (EditMode, 3 tests): every FBX under `Models/` has its measurement, every clip of the
+   import follows it (root XZ to the root motion when it travels, baked when it stays), the measured clips are
+   all in the import, no prefab applies root motion, and the lucy_bare file flags the walk and the run, not
+   the idle. A new class without its file fails here.
+4. `EveryClass_PlaysItsLocomotionInPlace` (PlayMode): each of the nine prefabs plays its idle, walk and run
+   across one cycle (`Animator.Play` at 21 normalized times, `Update(0)`), the hips within 0.3 x height of the
+   root, no net travel over the cycle (under 0.1 x height), the model root still. A baked walk gives 1.5 x
+   height.
+
+What this does not cover: a clip in a state outside the Locomotion tree (a future patrol or a crawl) gets its
+import setting from the measurement (item 2 and 3), but the PlayMode sampling only plays the three locomotion
+speeds. Add the state to the test when the clip arrives. A clip that walks in a circle (no net travel, a large
+reach) stays baked: none in T19.
+
 ## Files
 
 `tools/characters.sh`, `tools/characters_basecolor.py`, `tools/characters_export.py` (new),
@@ -131,7 +156,11 @@ walking, the model also snaps forward then it goes back", "that was not happenin
 `Assets/_Game/Scripts/Enemy/EnemyProjectile.cs`, `Assets/_Game/Scripts/Automation/StructuralPlaythrough.cs`,
 `Assets/_Game/Tests/PlayMode/CharacterTests.cs` (new), `README.md`, `CLAUDE.md`.
 
-RUNS (final, after the in-place fix of section 7): `runs/20261021-142811-exec-29643` (the rebuild with the new
+RUNS (final, the measured root motion of section 7): `runs/20261021-150303-exec-34377` (the rebuild reads the
+nine `clips.json`, CLEAN, "idle stays, run travels 2.95, walk travels 1.53" per class),
+`runs/20261021-150356-test-editmode-34909` (30/30, CLEAN), `runs/20261021-150423-test-playmode-35181` (51/51,
+CLEAN), `runs/20261021-150737-play-35730` (bot 24/24, CLEAN, 19 shots).
+The in-place fix by name: `runs/20261021-142811-exec-29643` (the rebuild with the new
 clip settings, CLEAN), `runs/20261021-142842-test-playmode-29995` (50/50, CLEAN),
 `runs/20261021-143144-play-30574` (bot 24/24, CLEAN, 19 shots). The run before the fix,
 `runs/20261021-124328-exec-504981`, stopped with the PC freeze of 12:59 (a memory thrash into the swap, 4.8 GB

@@ -18,11 +18,15 @@ Next: step 4, the look test (one room greyboxed, then dressed two ways).
 
 The models come from the RFab 3D Studio (T19, `~/glorified-body-renders/T19_characters/models/`), 2,500
 triangles each, a mixamo rig, idle, walk and run. `tools/characters.sh` turns each one into an FBX plus a 1024 px
-base colour under `Assets/_Game/Characters/Models/` (Blender 5.2 in the background). Then
+base colour under `Assets/_Game/Characters/Models/` (Blender 5.2 in the background), and measures the travel of
+each clip into `<class>.clips.json` (`tools/characters_clips.py`). Then
 `tools/unity.sh exec GlorifiedBody.Editor.Characters.CreateCharacterAssets.BuildAll` makes the materials, the
-animator controllers, the prefabs, the catalog in `Resources/Characters/` and rebuilds the scenes. The FBX and the
-base colours are in the repository, so a clone needs no Blender. The single-pose states (dodge, aim, stagger,
-fall, death) use Invector's humanoid clips. Without the Invector package they play the idle.
+animator controllers, the prefabs, the catalog in `Resources/Characters/` and rebuilds the scenes. The FBX, the
+base colours and the measurements are in the repository, so a clone needs no Blender. The walk and the run of
+T19 travel across the floor in the source: the import reads the measurement and gives that travel to the root
+motion, which the Animator does not apply, so every clip plays in place (an EditMode test checks each FBX, a
+PlayMode test samples each class). The single-pose states (dodge, aim, stagger, fall, death) use Invector's
+humanoid clips. Without the Invector package they play the idle.
 
 ## Open the project
 

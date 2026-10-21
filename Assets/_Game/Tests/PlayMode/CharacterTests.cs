@@ -219,6 +219,55 @@ namespace GlorifiedBody.Tests.PlayMode
             }
         }
 
+        /// <summary>
+        /// Every class plays its locomotion in place: the idle, the walk and the run sampled across one cycle on
+        /// the prefab (Animator.Play at a normalized time, then Update(0)). The hips never leave the root and the
+        /// cycle has no net travel. The import takes the travel out of a clip that moves in the source
+        /// (CharacterImportSettings with tools/characters_clips.py), so a future clip set cannot slide.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator EveryClass_PlaysItsLocomotionInPlace()
+        {
+            CharacterCatalog catalog = CharacterCatalog.Load();
+            Assert.IsNotNull(catalog, "Resources/Characters/catalog (CreateCharacterAssets.BuildAll)");
+            foreach (string id in Classes)
+            {
+                CharacterEntry entry = catalog.Find(id);
+                Assert.IsNotNull(entry, id + " is in the catalog");
+                GameObject figure = UnityEngine.Object.Instantiate(entry.prefab, new Vector3(0f, 0f, -20f), Quaternion.identity);
+                Animator animator = figure.GetComponentInChildren<Animator>();
+                Assert.IsNotNull(animator, id + ": an Animator");
+                yield return null;
+                Transform hips = animator.GetBoneTransform(HumanBodyBones.Hips);
+                Assert.IsNotNull(hips, id + ": the hips bone");
+                foreach (float speed in new[] { 0f, 0.5f, 1f })
+                {
+                    string clip = speed == 0f ? "idle" : speed == 0.5f ? "walk" : "run";
+                    animator.SetFloat("Speed", speed);
+                    Vector3 first = Vector3.zero;
+                    Vector3 last = Vector3.zero;
+                    float worst = 0f;
+                    const int steps = 20;
+                    for (int i = 0; i <= steps; i++)
+                    {
+                        animator.Play("Locomotion", 0, i / (float)steps);
+                        animator.Update(0f);
+                        Vector3 d = hips.position - figure.transform.position;
+                        d.y = 0f;
+                        if (i == 0) first = d;
+                        last = d;
+                        worst = Mathf.Max(worst, d.magnitude);
+                    }
+                    float travel = (last - first).magnitude;
+                    Assert.Less(travel, 0.1f * entry.height, $"{id} {clip}: no travel over a cycle ({travel:0.00} m, the source walk baked would give {1.5f * entry.height:0.0} m)");
+                    Assert.Less(worst, 0.3f * entry.height, $"{id} {clip}: the hips stay over the root (worst {worst:0.00} m)");
+                    Assert.Less(animator.transform.localPosition.magnitude, 0.01f, $"{id} {clip}: the Animator does not move the model root");
+                }
+                UnityEngine.Object.Destroy(figure);
+                yield return null;
+            }
+        }
+
         /// <summary>The hips sit near the centre of mass, which the import keeps over the root. 0.35 m leaves room for the sway.</summary>
         private const float HipsLimit = 0.35f;
 

@@ -1,0 +1,36 @@
+{
+  "source": "nurse_animated.glb",
+  "hips": "mixamorig:Hips",
+  "chain": [
+    "Armature",
+    "Root",
+    "mixamorig:Hips"
+  ],
+  "travelMin": 0.1,
+  "clips": [
+    {
+      "name": "idle",
+      "duration": 15.3333,
+      "keys": 461,
+      "travel": 0.0,
+      "reach": 0.1459,
+      "travels": false
+    },
+    {
+      "name": "run",
+      "duration": 1.2333,
+      "keys": 38,
+      "travel": 2.6469,
+      "reach": 2.6469,
+      "travels": true
+    },
+    {
+      "name": "walk",
+      "duration": 2.3333,
+      "keys": 71,
+      "travel": 1.3767,
+      "reach": 1.3767,
+      "travels": true
+    }
+  ]
+}

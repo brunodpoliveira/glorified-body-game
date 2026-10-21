@@ -73,6 +73,11 @@ namespace GlorifiedBody.Editor.Characters
                 string tex = TexturePath(c.id);
                 if (tex != null) AssetDatabase.ImportAsset(tex, ImportAssetOptions.ForceUpdate);
                 present++;
+                // The root motion decision per clip, from the measurement next to the FBX (CharacterImportSettings).
+                ClipTravelFile measured = CharacterImportSettings.ReadClipTravel(fbx);
+                Debug.Log(measured == null
+                    ? $"[CreateCharacterAssets] {c.id}: no clips.json, the clip names decide the root motion"
+                    : $"[CreateCharacterAssets] {c.id}: {measured.Describe()}");
             }
 
             Dictionary<string, AnimationClip> invector = LoadInvectorClips();
