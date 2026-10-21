@@ -98,7 +98,7 @@ namespace GlorifiedBody.UI
             // 17 control rows at 24 px, the premise at its own height, the button: 760 overflowed after the dodge
             // and debug rows (2026-10-20). 990 holds them all, with the two telekinesis rows and the Defend binding,
             // on the 1080 reference height.
-            rootRect.sizeDelta = new Vector2(720, 990);
+            rootRect.sizeDelta = new Vector2(720, 1020);
 
             rootPanel.AddComponent<Image>().color = new Color(0.06f, 0.06f, 0.09f, 0.97f);
 
@@ -152,6 +152,7 @@ namespace GlorifiedBody.UI
             CreateControl(p, "RMB (TK), bullet near", "Defend: catch the bullet, send it back at the shooter");
             CreateControl(p, "F4", "Debug: kill Lucy (shows the death screen)");
             CreateControl(p, "F5 / F6 / F7", "Debug: fill SHORT / start the short / refill + drugs");
+            CreateControl(p, "F8 / F9", "Debug: nalcon -25 / +25");
             CreateSpacer(p, 14);
 
             backBtn = CreateButton(p, "Back", OnBackClicked);

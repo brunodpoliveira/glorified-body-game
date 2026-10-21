@@ -278,6 +278,24 @@ namespace GlorifiedBody.Automation
             string camB = director.CurrentName;
             yield return WaitReal(0.3f);
             CaptureShot("cam_southwest");
+
+            // The edge arrow from the room's own camera (Bruno, 2026-10-20: no camera angle hid the dummy).
+            // Cam_SouthWest looks west along the south wall, so Dummy_A is outside the frame here. While it
+            // aims, the HUD points at it from the screen edge. hud_edge_arrow.png.
+            GameObject edgeDummy = GameObject.Find("Dummy_A");
+            DummyShooter edgeShooter = edgeDummy != null ? edgeDummy.GetComponent<DummyShooter>() : null;
+            PlayerHud edgeHud = FindFirstObjectByType<PlayerHud>();
+            bool shooterHidden = false;
+            if (Camera.main != null && edgeShooter != null)
+            {
+                Vector3 screen = Camera.main.WorldToScreenPoint(edgeShooter.transform.position + Vector3.up);
+                shooterHidden = !(screen.z > 0f && screen.x >= 0f && screen.x <= Screen.width && screen.y >= 0f && screen.y <= Screen.height);
+            }
+            yield return WaitUntilReal(() => edgeHud != null && edgeHud.ActiveThreatArrows >= 1, 6f);
+            bool arrow = edgeHud != null && edgeHud.ActiveThreatArrows >= 1;
+            if (arrow && edgeHud.Canvas != null) yield return OverlayShot.Capture(edgeHud.Canvas, "hud_edge_arrow.png", 0.05f);
+            Record("edge_arrow", shooterHidden && arrow, $"hidden={shooterHidden} arrows={edgeHud?.ActiveThreatArrows} shooter={edgeShooter?.Current}");
+
             tank.Teleport(new Vector3(0f, 1f, 0f), 0f);
             yield return WaitUntilReal(() => director.CurrentName == "Cam_Wide", 1.5f);
             string camC = director.CurrentName;
@@ -398,14 +416,13 @@ namespace GlorifiedBody.Automation
             stats.RefillAll();
             yield return null;
 
-            // The short: a full bar, a release, the shocks, then the drug ends it.
+            // The short: a full bar, the attack press starts it at once (Bruno, 2026-10-20), the shocks, the slow
+            // walk, then the drug ends it.
             stats.DebugSet(100f, 100f);
-            pad.SetHeld(InputManager.GameAction.Charge, true);
-            yield return WaitGame(0.6f);
-            pad.ReleaseAll();
+            pad.Tap(InputManager.GameAction.Charge);
             yield return null;
             yield return null;
-            bool shortBegan = shortController.IsActive;
+            bool shortBegan = shortController.IsActive && tank.SlowWalk;
             float hpBefore = playerHealth.CurrentHealth;
             yield return WaitGame(1.2f);
             CaptureShot("short");
@@ -415,8 +432,8 @@ namespace GlorifiedBody.Automation
             pad.Tap(InputManager.GameAction.UseDrug);
             yield return null;
             yield return null;
-            Record("short_and_drug", shortBegan && hpDuring < hpBefore - 3f && !shortController.IsActive && playerHealth.CurrentHealth >= playerHealth.MaxHealth - 0.5f,
-                $"began={shortBegan} hp {hpBefore:0} -> {hpDuring:0} -> {playerHealth.CurrentHealth:0} ended={!shortController.IsActive} drugs={drugs.Count(DrugType.Nalcon)}");
+            Record("short_and_drug", shortBegan && hpDuring < hpBefore - 2f && !shortController.IsActive && !tank.SlowWalk && playerHealth.CurrentHealth >= playerHealth.MaxHealth - 0.5f,
+                $"began={shortBegan} hp {hpBefore:0} -> {hpDuring:0} -> {playerHealth.CurrentHealth:0} ended={!shortController.IsActive} slow={tank.SlowWalk} drugs={drugs.Count(DrugType.Nalcon)}");
             if (hud != null && hud.Canvas != null) yield return OverlayShot.Capture(hud.Canvas, "hud.png", 0.2f);
         }
 

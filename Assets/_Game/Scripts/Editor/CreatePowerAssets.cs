@@ -46,7 +46,8 @@ namespace GlorifiedBody.Editor
             Outfit("outfit_nude", o =>
             {
                 o.outfitId = "nude"; o.displayName = "NUDE"; o.maxHp = 100f;
-                o.hpRegenPerSecond = 1f; o.nalconRegenPerSecond = 6f; o.shortDecayPerSecond = 1f; o.drugSlotsPerType = 2;
+                // nalconRegenPerSecond: 6 was too quick (Bruno, 2026-10-20). 2 = a full bar in 50 s, PROPOSED.
+                o.hpRegenPerSecond = 1f; o.nalconRegenPerSecond = 2f; o.shortDecayPerSecond = 1f; o.drugSlotsPerType = 2;
             });
             Outfit("outfit_guard", o =>
             {

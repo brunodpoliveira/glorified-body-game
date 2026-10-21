@@ -340,7 +340,7 @@ namespace GlorifiedBody.Tests.PlayMode
                 yield return null;
             }
             Assert.AreEqual("catch", powers.LastResult, "RMB caught the bullet inside the catch radius");
-            Assert.AreEqual(100f - PsychicPowers.CatchNalconCost, stats.Nalcon, 0.5f, "the catch costs nalcon (the nude outfit regenerates 6 per second, a frame or two passed)");
+            Assert.AreEqual(100f - PsychicPowers.CatchNalconCost, stats.Nalcon, 0.5f, "the catch costs nalcon (the nude outfit regenerates 2 per second, a frame or two passed)");
             Assert.AreEqual(health.MaxHealth, health.CurrentHealth, 0.01f, "the bullet never hit her");
 
             yield return WaitUntil(() => shooterHealth.CurrentHealth < hp0, 2f);
@@ -421,9 +421,11 @@ namespace GlorifiedBody.Tests.PlayMode
         [UnityTest]
         public IEnumerator Nalcon_Recharges_Nude_NotGuard()
         {
+            // Bruno, 2026-10-20: 6 per second was too quick. 2 per second (PROPOSED): a full bar in 50 s.
+            Assert.AreEqual(2f, stats.Outfit.nalconRegenPerSecond, 0.01f, "the nude outfit recharges 2 nalcon per second (the asset must carry the new number)");
             stats.DebugSet(50f, 0f);
             yield return new WaitForSeconds(1f);
-            Assert.Greater(stats.Nalcon, 54f, "the nude outfit recharges nalcon");
+            Assert.That(stats.Nalcon, Is.InRange(51.5f, 52.7f), "the nude outfit recharges nalcon, slowly");
 
             stats.SetOutfit(Resources.Load<OutfitProfile>("Outfits/outfit_guard"));
             Assert.AreEqual(150f, health.MaxHealth, "the guard outfit has more HP");
@@ -445,8 +447,10 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator FullShort_TurnsTheRelease_IntoAShort_AndADrugEndsIt()
+        public IEnumerator FullShort_StartsOnTheAttackPress_SlowWalk_AndADrugEndsIt()
         {
+            // Bruno, 2026-10-20: with a full bar the short starts the moment she presses attack or defend. During
+            // it she walks slowly: no run, no dodge.
             powers.Select(PowerKind.Blast);
             drugs.DebugSet(DrugType.Nalcon, 1);
             stats.DebugSet(100f, 100f);
@@ -454,19 +458,34 @@ namespace GlorifiedBody.Tests.PlayMode
             float hpMax = health.MaxHealth;
 
             pad.SetHeld(InputManager.GameAction.Charge, true);
-            yield return new WaitForSeconds(0.6f);
+            yield return null;
+            yield return null;
+            Assert.IsTrue(shortController.IsActive, "the attack press starts the short at once, before any release");
+            Assert.AreEqual("short", powers.LastResult);
+            Assert.AreEqual(0f, powers.Charge, 0.001f, "that press starts no charge");
             pad.ReleaseAll();
             yield return null;
             yield return null;
-            Assert.IsTrue(shortController.IsActive, "a full SHORT turns the release into a short");
-            Assert.IsFalse(tank.MovementLocked, "she keeps her legs during a short (Bruno, 2026-10-20)");
+            Assert.IsTrue(shortController.IsActive, "the release changes nothing");
+            Assert.IsFalse(tank.MovementLocked, "she keeps her legs during a short");
+            Assert.IsTrue(tank.SlowWalk, "a slow walk during the short");
+
             Vector3 before = player.transform.position;
             pad.SetHeld(InputManager.GameAction.Forward, true);
-            yield return new WaitForSeconds(1.0f);
+            pad.SetHeld(InputManager.GameAction.Run, true);
+            yield return new WaitForSeconds(0.5f);
+            Assert.IsFalse(tank.IsRunning, "no run during the short, Shift or not");
+            yield return new WaitForSeconds(0.5f);
             pad.ReleaseAll();
-            Assert.Greater(Vector3.Distance(before, player.transform.position), 0.8f, "she walked during the short");
+            yield return null;
+            float walked = Vector3.Distance(before, player.transform.position);
+            Assert.That(walked, Is.InRange(0.4f, tank.WalkSpeed * 0.85f), $"she walked, slower than the normal walk ({walked:0.00} m in 1 s)");
+            pad.Tap(InputManager.GameAction.Dodge);
+            yield return null;
+            yield return null;
+            Assert.IsFalse(tank.IsDodging, "no dodge during the short");
             Assert.IsTrue(shortController.IsActive, "the short goes on while she walks");
-            Assert.Less(health.CurrentHealth, hpMax - 5f, "the shocks hurt her");
+            Assert.Less(health.CurrentHealth, hpMax - 2f, "the shocks hurt her");
             Assert.GreaterOrEqual(health.CurrentHealth, 1f, "the short never kills her");
 
             pad.Tap(InputManager.GameAction.UseDrug);
@@ -478,6 +497,23 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.AreEqual(0f, stats.Short, 0.01f, "SHORT reset");
             Assert.AreEqual(0, drugs.Count(DrugType.Nalcon), "one drug used");
             Assert.IsFalse(tank.MovementLocked, "control is back");
+            Assert.IsFalse(tank.SlowWalk, "the normal walk is back");
+        }
+
+        [UnityTest]
+        public IEnumerator FullShort_StartsOnTheDefendPress_Too()
+        {
+            powers.Select(PowerKind.Telekinesis);
+            stats.DebugSet(100f, 100f);
+            pad.Tap(InputManager.GameAction.Defend);
+            yield return null;
+            yield return null;
+            Assert.IsTrue(shortController.IsActive, "the defend press starts the short at once (Bruno, 2026-10-20)");
+            Assert.AreEqual("short", powers.LastResult, "and it is no catch");
+            shortController.End(byDrug: false);
+            yield return null;
+            Assert.IsFalse(shortController.IsActive);
+            Assert.IsFalse(tank.SlowWalk, "the normal walk is back");
         }
 
         [UnityTest]
@@ -517,7 +553,7 @@ namespace GlorifiedBody.Tests.PlayMode
             stats.SetOutfit(Resources.Load<OutfitProfile>("Outfits/outfit_guard"));
             stats.DebugSet(100f, 100f);
             float hpMax = health.MaxHealth;
-            Assert.AreEqual(8f, shortController.Duration, 0.01f, "8 s (Bruno, 2026-10-20). The scene must carry the C# default.");
+            Assert.AreEqual(16f, shortController.Duration, 0.01f, "16 s (Bruno, 2026-10-20). The scene must carry the C# default.");
             shortController.Begin();
             Assert.IsTrue(shortController.IsActive);
             yield return new WaitForSeconds(shortController.Duration + 0.6f);
@@ -564,6 +600,17 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.IsTrue(cheats.Refill(), "F7 refills");
             Assert.AreEqual(2, drugs.Count(DrugType.Red), "two of each drug");
             Assert.AreEqual(2, drugs.Count(DrugType.Nalcon), "two of each drug");
+
+            // Bruno, 2026-10-20: the low-nalcon warning by hand. F8 takes 25, F9 gives 25.
+            stats.DebugSet(100f, stats.Short);
+            Assert.IsTrue(cheats.RemoveNalcon(), "F8 takes nalcon");
+            Assert.AreEqual(75f, stats.Nalcon, 0.01f, "25 less");
+            cheats.RemoveNalcon();
+            cheats.RemoveNalcon();
+            cheats.RemoveNalcon();
+            Assert.AreEqual(0f, stats.Nalcon, 0.01f, "never under 0");
+            Assert.IsTrue(cheats.AddNalcon(), "F9 gives nalcon");
+            Assert.AreEqual(25f, stats.Nalcon, 0.01f, "25 more");
         }
 
         private static IEnumerator WaitUntil(Func<bool> condition, float timeoutSeconds)

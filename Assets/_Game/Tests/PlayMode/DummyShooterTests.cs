@@ -115,6 +115,42 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator Telegraph_EdgeArrow_ShowsFromTheRoomsOwnSouthWestCamera()
+        {
+            // Bruno, 2026-10-20: "no camera angle cuts the dummy target". Cam_SouthWest now looks west along the
+            // south wall: in its zone she is in the frame and the shooter is not, so the arrow shows in the room
+            // itself, with no test camera.
+            FixedCameraDirector director = FixedCameraDirector.Instance;
+            Assert.IsNotNull(director, "FixedCameraDirector");
+            tank.Teleport(new Vector3(-3f, 1f, -3f), 0f);
+            yield return WaitUntil(() => director.CurrentName == "Cam_SouthWest", 1.5f);
+            Assert.AreEqual("Cam_SouthWest", director.CurrentName, "the south-west zone cuts to its camera");
+            yield return null;
+            Camera cam = Camera.main;
+            Assert.IsTrue(InFrame(cam, player.transform.position + Vector3.up), "she is in the frame");
+            Assert.IsFalse(InFrame(cam, shooter.transform.position + Vector3.up), "the shooter is outside the frame");
+            Assert.Less(Vector3.Distance(player.transform.position, shooter.transform.position), 10f, "and inside its range, so it aims");
+
+            PlayerHud hud = UnityEngine.Object.FindFirstObjectByType<PlayerHud>();
+            Assert.IsNotNull(hud, "the HUD exists");
+            shooter.enabled = true;
+            yield return WaitUntil(() => shooter.Current == DummyShooter.State.Aiming, 2f);
+            Assert.AreEqual(DummyShooter.State.Aiming, shooter.Current, "it aims at her from outside the frame");
+            yield return null;
+            Assert.AreEqual(1, hud.ActiveThreatArrows, "the edge arrow shows from the room's own camera");
+            yield return WaitUntil(() => shooter.Current == DummyShooter.State.Telegraph, 2f);
+            yield return null;
+            Assert.AreEqual(1, hud.ActiveThreatRings, "the circle shows over her");
+            Assert.AreEqual(1, hud.ActiveThreatArrows, "the arrow stays during the telegraph");
+        }
+
+        private static bool InFrame(Camera cam, Vector3 world)
+        {
+            Vector3 screen = cam.WorldToScreenPoint(world);
+            return screen.z > 0f && screen.x >= 0f && screen.x <= Screen.width && screen.y >= 0f && screen.y <= Screen.height;
+        }
+
+        [UnityTest]
         public IEnumerator Blast_StaggersTheAim()
         {
             shooter.enabled = true;

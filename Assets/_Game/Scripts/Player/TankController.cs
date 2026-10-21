@@ -14,6 +14,7 @@ namespace GlorifiedBody.Player
     /// directional (Bruno, 2026-10-20): Dodge plus a held direction key, or a double tap on a direction key.
     /// Forward and Back dash along the facing, TurnLeft and TurnRight dash sideways. No direction = a step back.
     /// Movement locks (the circle charge, a stun) stop the walk but keep the facing control of others.
+    /// The slow walk (the short, Bruno 2026-10-20): walk and back step at slowWalkScale, no run, no dodge.
     /// Tunings are PROPOSED (2026-10-20): Bruno decides after the first playtest.
     /// </summary>
     [RequireComponent(typeof(CharacterController))]
@@ -25,6 +26,7 @@ namespace GlorifiedBody.Player
         [SerializeField, Min(0f)] private float runSpeed = 3.6f;
         [SerializeField, Min(0f)] private float turnSpeed = 150f;
         [SerializeField, Min(0f)] private float runTurnSpeed = 110f;
+        [SerializeField, Range(0.1f, 1f)] private float slowWalkScale = 0.6f; // the short's walk, PROPOSED
 
         [Header("Dodge")]
         [SerializeField, Min(0f)] private float dodgeDistance = 2.5f;
@@ -54,7 +56,10 @@ namespace GlorifiedBody.Player
         public bool IsRunning { get; private set; }
         public bool IsDodging => dodgeTimer > 0f;
         public bool MovementLocked => movementLocks > 0;
-        public bool DodgeReady => dodgeCooldownTimer <= 0f && !IsDodging;
+        /// <summary>The short: a slow walk, no run, no dodge.</summary>
+        public bool SlowWalk { get; private set; }
+        public float SlowWalkScale => slowWalkScale;
+        public bool DodgeReady => dodgeCooldownTimer <= 0f && !IsDodging && !SlowWalk;
         public float Yaw => transform.eulerAngles.y;
         public Vector3 PlanarVelocity { get; private set; }
         public float WalkSpeed => walkSpeed;
@@ -84,6 +89,13 @@ namespace GlorifiedBody.Player
                 TurnInput = 0f;
                 IsRunning = false;
             }
+        }
+
+        /// <summary>The slow walk of the short: walk and back step at slowWalkScale, no run, no dodge.</summary>
+        public void SetSlowWalk(bool slow)
+        {
+            SlowWalk = slow;
+            if (slow) IsRunning = false;
         }
 
         /// <summary>Turns the yaw toward a world point at degreesPerSecond. Returns the remaining angle in degrees.</summary>
@@ -193,6 +205,7 @@ namespace GlorifiedBody.Player
                 float turnRate = IsRunning ? runTurnSpeed : turnSpeed;
                 transform.Rotate(0f, TurnInput * turnRate * dt, 0f, Space.World);
                 float speed = MoveInput > 0f ? (IsRunning ? runSpeed : walkSpeed) : MoveInput < 0f ? -backSpeed : 0f;
+                if (SlowWalk) speed *= slowWalkScale;
                 planar = transform.forward * speed;
             }
 
@@ -224,7 +237,7 @@ namespace GlorifiedBody.Player
             rightHeld = right;
             MoveInput = (forward ? 1f : 0f) - (back ? 1f : 0f);
             TurnInput = (right ? 1f : 0f) - (left ? 1f : 0f);
-            IsRunning = MoveInput > 0f && GameInput.GetAction(InputManager.GameAction.Run, KeyCode.LeftShift);
+            IsRunning = MoveInput > 0f && !SlowWalk && GameInput.GetAction(InputManager.GameAction.Run, KeyCode.LeftShift);
         }
     }
 }

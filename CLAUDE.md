@@ -16,16 +16,20 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   menu loop and the batch harness. Step 2: tank controls with a dodge, fixed cameras per room, auto-lock with a
   target switch. Step 3: the circle charge with BLAST, FIRE and TELEKINESIS, the HP / NALCON / SHORT bars, the
   short, the drugs, a capsule dummy shooter with the canon telegraph, the greybox HUD. Lucy is still a capsule.
-  Proof: 27 EditMode tests, 35 PlayMode tests, the bot (21 steps), see `devlog-notes/`. Adjustments after Bruno's
-  first play (2026-10-20): the dodge is directional (Space plus a direction key, or a double tap), the debug
-  keys F5 / F6 / F7 fill the SHORT bar, start the short, refill her, a full SHORT bar holds until a short or
-  a drug (CANON rule), during a short she can move (8 s, same damage per shock, half her HP), and the enemy
-  telegraph circle is on the HUD over her, with an edge arrow for a shooter outside the frame. Telekinesis: a
-  held enemy turns with her, a second press throws it where she faces (both hurt), and with no enemy held the
-  press catches a bullet near her and sends it back (the first defensive form, props and the floor shield come
-  later). FIRE ignites only at a full charge, a part charge is a flash that breaks the aim. The burn has a
-  placeholder look. The HUD warns on low HP, low nalcon and high SHORT (icon, "!", word, beep). The second
-  wind is on: the first lethal hit leaves her at 1 HP, invulnerable 2.5 s, once (a drug does not re-arm it).
+  Proof: 27 EditMode tests, 45 PlayMode tests, the bot (23 steps), see `devlog-notes/`.
+- Adjustments after Bruno's two plays (2026-10-20, `devlog-notes/2026-10-20_adjustments1.md` and `_adjustments2.md`):
+  the dodge is directional (Space plus a direction key, or a double tap). Debug keys F5 to F9: fill the SHORT
+  bar, start the short, refill her, nalcon -25 / +25. A full SHORT bar holds until a short or a drug (CANON), and
+  with a full bar the attack or the defend press starts the short at once. The short lasts 16 s, she walks slowly
+  (no run, no dodge), same damage per shock, half her HP. The telegraph circle is on the HUD over her, with an
+  edge arrow for a shooter outside the frame, and `Cam_SouthWest` looks along the south wall so the arrow shows
+  in the room. Telekinesis: a held enemy turns with her, a second press throws it where she faces (both hurt),
+  and RMB catches a bullet near her and sends it back (props and the floor shield later). FIRE ignites only at a
+  full charge, a part charge is a flash that breaks the aim. The HUD warns on low HP, low nalcon and high SHORT
+  (icon, "!", word, three beeps once). The second wind: the first lethal hit leaves her at 1 HP, invulnerable
+  2.5 s, once. Nude outfit nalcon recharge 2 per second.
+  OPEN for Bruno: drugs with one stat each (tbc), difficulty as percentages (easy 100, normal 150, hard 200,
+  custom), the HP recharge rate.
   Next: step 4 in
   `03_GAME_DESIGN.md` §7 (the look test: one room greyboxed, then dressed two ways, for Bruno's pick).
 

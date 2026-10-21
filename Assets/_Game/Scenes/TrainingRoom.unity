@@ -149,7 +149,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GlorifiedBody.Level.Build.ShotPoint
   shotName: Cam_SouthWest
-  fieldOfView: 55
+  fieldOfView: 50
 --- !u!4 &124078461
 Transform:
   m_ObjectHideFlags: 0
@@ -158,8 +158,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 124078459}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.14616165, y: 0.3778641, z: -0.060542133, w: 0.9122446}
-  m_LocalPosition: {x: -4.3, y: 3, z: -4.3}
+  m_LocalRotation: {x: 0.091802776, y: -0.64487606, z: 0.07844491, w: 0.75468767}
+  m_LocalPosition: {x: 4.6, y: 2.8, z: -4.6}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1618,6 +1618,8 @@ MonoBehaviour:
   fillShortKey: 286
   startShortKey: 287
   refillKey: 288
+  removeNalconKey: 289
+  addNalconKey: 290
 --- !u!1 &1358350503
 GameObject:
   m_ObjectHideFlags: 0
@@ -2529,6 +2531,7 @@ MonoBehaviour:
   runSpeed: 3.6
   turnSpeed: 150
   runTurnSpeed: 110
+  slowWalkScale: 0.6
   dodgeDistance: 2.5
   dodgeDuration: 0.35
   dodgeInvulnerableTime: 0.3
@@ -2612,7 +2615,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 799438345b3ef7f2881fe33488de5ec9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GlorifiedBody.Player.ShortController
-  duration: 8
+  duration: 16
   shockInterval: 0.4
   shockRadius: 6
   shockDamageToOthers: 12
@@ -2647,7 +2650,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GlorifiedBody.Cameras.FixedCamera
   cameraName: Cam_SouthWest
-  fieldOfView: 55
+  fieldOfView: 50
   followPlayerYaw: 0
   followMaxYaw: 20
   followSpeed: 60
@@ -2659,8 +2662,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2053905863}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.14616165, y: 0.3778641, z: -0.060542133, w: 0.9122446}
-  m_LocalPosition: {x: -4.3, y: 3, z: -4.3}
+  m_LocalRotation: {x: 0.09180277, y: -0.64487606, z: 0.078444906, w: 0.75468767}
+  m_LocalPosition: {x: 4.6, y: 2.8, z: -4.6}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

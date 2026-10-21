@@ -16,6 +16,6 @@ MonoBehaviour:
   displayName: NUDE
   maxHp: 100
   hpRegenPerSecond: 1
-  nalconRegenPerSecond: 6
+  nalconRegenPerSecond: 2
   shortDecayPerSecond: 1
   drugSlotsPerType: 2

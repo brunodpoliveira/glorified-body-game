@@ -13,7 +13,8 @@ namespace GlorifiedBody.Player
     /// The three powers and the circle charge (design §2). Keys 1, 2, 3 select BLAST, FIRE, TELEKINESIS.
     /// Hold Charge: she stands still, turns to the locked target (LockOnController) and the circle fills over
     /// fullChargeTime. Release: the power fires at the target with that charge. Cost and damage scale with the
-    /// charge. A full SHORT bar turns the release into a short instead. Q uses the drug of the selected power.
+    /// charge. A full SHORT bar: the attack press or the defend press starts the short at once (Bruno,
+    /// 2026-10-20), and a release with a full bar starts it too. Q uses the drug of the selected power.
     /// </summary>
     [RequireComponent(typeof(PsychicStats), typeof(DrugInventory), typeof(LockOnController))]
     public sealed class PsychicPowers : MonoBehaviour
@@ -82,15 +83,25 @@ namespace GlorifiedBody.Player
             if (GameInput.GetActionDown(InputManager.GameAction.PowerTelekinesis, KeyCode.Alpha3)) Select(PowerKind.Telekinesis);
             if (GameInput.GetActionDown(InputManager.GameAction.UseDrug, KeyCode.Q)) UseDrug();
 
+            // A full SHORT bar (Bruno, 2026-10-20): the attack press or the defend press starts the short at once.
+            // That press does nothing else: no charge, no throw, no catch.
+            bool attackDown = GameInput.GetActionDown(InputManager.GameAction.Charge, KeyCode.Mouse0);
+            bool defendDown = GameInput.GetActionDown(InputManager.GameAction.Defend, KeyCode.Mouse1);
+            if ((attackDown || defendDown) && TryStartShort(0f))
+            {
+                attackDown = false;
+                defendDown = false;
+            }
+
             // LMB attacks, RMB defends (Bruno, 2026-10-20). Telekinesis: the attack press with an enemy in the air
             // throws it (no charge, and the press that threw does not start one). The defend press catches a
             // bullet near her and sends it back. The defend hold (the floor shield) comes later.
             if (holdAfterLaunch && !GameInput.GetAction(InputManager.GameAction.Charge, KeyCode.Mouse0)) holdAfterLaunch = false;
-            if (GameInput.GetActionDown(InputManager.GameAction.Charge, KeyCode.Mouse0) && Selected.kind == PowerKind.Telekinesis && HeldLift != null)
+            if (attackDown && Selected.kind == PowerKind.Telekinesis && HeldLift != null)
             {
                 if (TryLaunch()) holdAfterLaunch = true;
             }
-            if (GameInput.GetActionDown(InputManager.GameAction.Defend, KeyCode.Mouse1) && Selected.kind == PowerKind.Telekinesis)
+            if (defendDown && Selected.kind == PowerKind.Telekinesis)
             {
                 catchPressUntil = Time.time + CatchBuffer;
             }
@@ -115,21 +126,16 @@ namespace GlorifiedBody.Player
             wasCharging = charging;
         }
 
-        /// <summary>The release of the circle: fizzle, short, no target, no nalcon, or the attack.</summary>
+        /// <summary>The release of the circle: short, fizzle, no target, no nalcon, or the attack.</summary>
         public bool Release(float charge)
         {
             PowerDefinition power = Selected;
             if (power == null) return false;
+            // The bar filled during the charge (damage taken): the release starts the short, whatever the charge.
+            if (TryStartShort(charge)) return false;
             if (charge < power.minCharge)
             {
                 return Result("fizzle", charge);
-            }
-
-            if (stats.IsShortFull && shortController != null)
-            {
-                Result("short", charge);
-                shortController.Begin();
-                return false;
             }
 
             LockOnTargetable target = lockOn.CurrentTarget;
@@ -146,6 +152,15 @@ namespace GlorifiedBody.Player
 
             FireAt(power, charge, target);
             return true;
+        }
+
+        /// <summary>A full SHORT bar starts the short (design §2.8). True when the short started now.</summary>
+        private bool TryStartShort(float charge)
+        {
+            if (shortController == null || shortController.IsActive || !stats.IsShortFull || stats.Health.IsDead) return false;
+            Result("short", charge);
+            shortController.Begin();
+            return shortController.IsActive;
         }
 
         private bool Result(string what, float charge)

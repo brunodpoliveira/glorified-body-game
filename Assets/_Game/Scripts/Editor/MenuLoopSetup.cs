@@ -127,11 +127,14 @@ namespace GlorifiedBody.Editor
             EnsurePickup("Drug_DFelon", DrugType.DFelon, new Vector3(-2.5f, 0.4f, -1.2f));
 
             // Fixed cameras: the wide default, plus two corner cameras with their zones.
+            // Cam_SouthWest sits in the south-east corner and looks west along the south wall (Bruno, 2026-10-20:
+            // "no camera angle cuts the dummy target"). From its zone both dummies are outside the frame at 16:9
+            // and at 4:3, so the HUD edge arrow shows there, and Lucy stays in the frame over the whole zone.
             GameObject camerasRoot = EnsureRoot("[Cameras]");
             FixedCameraDirector director = EnsureComponent<FixedCameraDirector>(camerasRoot);
             FixedCamera wide = EnsureFixedCamera(camerasRoot, "Cam_Wide", camera.transform.position, new Vector3(0f, 1f, 0f), 50f);
             FixedCamera northEast = EnsureFixedCamera(camerasRoot, "Cam_NorthEast", new Vector3(4.3f, 3.4f, 4.3f), new Vector3(0f, 1f, 0f), 55f);
-            FixedCamera southWest = EnsureFixedCamera(camerasRoot, "Cam_SouthWest", new Vector3(-4.3f, 3.0f, -4.3f), new Vector3(0f, 1f, 0f), 55f);
+            FixedCamera southWest = EnsureFixedCamera(camerasRoot, "Cam_SouthWest", new Vector3(4.6f, 2.8f, -4.6f), new Vector3(-3.0f, 0.9f, -3.4f), 50f);
             director.SetDefaultCamera(wide);
             EnsureCameraZone(camerasRoot, "Zone_NorthEast", new Vector3(3f, 1.5f, 3f), new Vector3(4f, 3f, 4f), northEast, 1);
             EnsureCameraZone(camerasRoot, "Zone_SouthWest", new Vector3(-3f, 1.5f, -3f), new Vector3(4f, 3f, 4f), southWest, 1);

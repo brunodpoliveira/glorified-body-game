@@ -21,7 +21,7 @@ so by hand the bar tops out near 50. Not a bug: the room is too small for it. Th
 
 | Key | Does |
 |---|---|
-| F5 | Fills the SHORT bar. The next release (hold and let go of the attack button) starts a short. |
+| F5 | Fills the SHORT bar. The next attack or defend press starts a short (the press rule came the same night, see `2026-10-20_adjustments2.md`). |
 | F6 | Starts the short at once. |
 | F7 | Refills HP and nalcon, gives two drugs of each type. |
 
@@ -141,8 +141,9 @@ enemy, so a circle over the enemy's head can be outside the frame. Now (`PlayerH
 1. Start the training room. Press F7: two drugs of each type, HP and nalcon full.
 2. Press F6: the short starts. The SHORT text blinks, the shocks hurt her, she can walk.
 3. Press Q: the short ends at once, HP and nalcon refill, the SHORT bar is empty, one drug is gone.
-4. The slow way: F5 fills the SHORT bar. Hold LMB on a target and let go: the release starts the short. Q ends it.
-5. Check the other way: F6, then wait 8 s without Q. The short ends by itself at about half her HP.
+4. The slow way: F5 fills the SHORT bar. Press LMB or RMB: the short starts at once. Q ends it.
+5. Check the other way: F6, then wait 16 s without Q. The short ends by itself at about half her HP.
+   (Steps 4 and 5 changed the same night: the press rule and the 16 s, see `2026-10-20_adjustments2.md`.)
 
 ## Proof
 

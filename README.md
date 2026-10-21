@@ -23,9 +23,10 @@ Next: step 4, the look test (one room greyboxed, then dressed two ways).
    charge the selected power on the target, RMB is the defensive use of the power (TELEKINESIS: a bullet near
    her goes back at the shooter). With an enemy in the air, turn to aim and press LMB again to throw it.
    1, 2, 3 select BLAST, FIRE, TELEKINESIS. Q uses a drug.
-   Space plus a direction key, or a double tap on a direction key, dodges that way. F4 kills Lucy (shows the
-   death screen). F5 fills the SHORT bar, F6 starts the short, F7 refills her and gives drugs. F1 hides the
-   status line. Esc pauses.
+   Space plus a direction key, or a double tap on a direction key, dodges that way. With a full SHORT bar, LMB or
+   RMB starts the short: 16 s of shocks, she walks slowly, no run, no dodge. F4 kills Lucy (shows the death
+   screen). F5 fills the SHORT bar, F6 starts the short, F7 refills her and gives drugs, F8 and F9 take and give
+   25 nalcon. F1 hides the status line. Esc pauses.
 
 ## Batch tools (no editor open)
 
