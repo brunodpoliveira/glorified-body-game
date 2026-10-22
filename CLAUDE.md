@@ -91,7 +91,15 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   keys, F2 skips. The TUTORIAL button in the main menu. `TutorialDrive` plays it through the virtual pad for
   the test and the bot (`play Tutorial Main_Menu tutorial 400`). `CameraCoverage` is the shared coverage
   check. The later features add a step each.
-  Next: the test log, then the scan (one image, one video), props, the FSM AI.
+- 2026-10-22, the Interact and Scan keys (`devlog-notes/2026-10-22_interact_scan.md`): E interacts (an item asks
+  "Take it?" first: E takes, S leaves; a log opens for reading), F scans (a picture or a clip fills the screen),
+  separate keys (Bruno). `ItemInventory` with slots from the outfit (nude 4, guard 8, PROPOSED), `Interactor`,
+  `PsychicScanner`, `Scannable`, `ItemPickup`, `ItemDefinition` (`Scripts/Interaction/`), `InteractionUI` on
+  every room. Placeholders: the test log (`Resources/Items/item_test_log.asset`), the scan picture and clip
+  (`Assets/_Game/Scan/`, ffmpeg cards, the clip VP8 webm because the Linux editor has no H.264). The tutorial
+  has 14 steps (log, scan_image, scan_video added). The look rooms' cameras follow the game-room coverage rule
+  (1.2 m near skip) now. Bruno's words on the presenter's lines: refine them after the scan step.
+  Next: props, then the FSM AI. Bruno does a manual play first.
 
 ## Rules
 

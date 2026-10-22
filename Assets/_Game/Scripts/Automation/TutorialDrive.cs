@@ -3,6 +3,7 @@ using UnityEngine;
 using GlorifiedBody.Characters;
 using GlorifiedBody.Combat;
 using GlorifiedBody.Enemy;
+using GlorifiedBody.Interaction;
 using GlorifiedBody.Player;
 using GlorifiedBody.Systems;
 using GlorifiedBody.Tutorial;
@@ -27,6 +28,8 @@ namespace GlorifiedBody.Automation
             public TankController Tank;
             public PsychicPowers Powers;
             public DrugInventory Drugs;
+            /// <summary>Called at the moments worth a shot (the question, the open log, the scan): the bot shoots them.</summary>
+            public System.Action<string> Moment;
 
             public static Context From(VirtualPad pad, TutorialDirector director)
             {
@@ -100,6 +103,28 @@ namespace GlorifiedBody.Automation
                     yield return new WaitForSecondsRealtime(0.2f);
                     Debug.Log($"[TutorialDrive] capsule: at {c.Lucy.position}, capsule {(GameObject.Find("Capsule") != null ? "still there" : "taken")}, nalcon drugs before the use {before}, result '{c.Powers?.LastResult}'.");
                     break;
+                case "log":
+                {
+                    yield return WalkTo(c, c.Director.LogPoint, run: false, radius: 0.3f);
+                    ItemPickup log = FindPickup(c.Director.LogItemId);
+                    if (log == null) break;
+                    yield return TurnTo(c, log.transform.position, 4f);
+                    c.Pad.Tap(InputManager.GameAction.Interact); // "Take it?"
+                    yield return new WaitForSecondsRealtime(0.3f);
+                    c.Moment?.Invoke("log_confirm");
+                    c.Pad.Tap(InputManager.GameAction.Interact); // take: the page opens
+                    yield return new WaitForSecondsRealtime(0.5f);
+                    c.Moment?.Invoke("log_reader");
+                    c.Pad.Tap(InputManager.GameAction.Interact); // close the page
+                    yield return new WaitForSecondsRealtime(0.3f);
+                    break;
+                }
+                case "scan_image":
+                    yield return ScanAt(c, c.Director.BarsPoint, c.Director.DoorScanId, 1.0f);
+                    break;
+                case "scan_video":
+                    yield return ScanAt(c, c.Director.MonitorsPoint, c.Director.MonitorsScanId, -1f);
+                    break;
                 case "short":
                     c.Pad.Tap(InputManager.GameAction.Charge);
                     yield return new WaitForSecondsRealtime(1.2f);
@@ -151,6 +176,61 @@ namespace GlorifiedBody.Automation
                 }
                 pad.ReleaseAll();
             }
+        }
+
+        /// <summary>
+        /// Walks her to a point, turns her to the scan target, presses Scan. A picture closes after holdSeconds
+        /// with a second press; a clip (holdSeconds below zero) plays to its end.
+        /// </summary>
+        public static IEnumerator ScanAt(Context c, Vector3 standPoint, string scanId, float holdSeconds)
+        {
+            yield return WalkTo(c, standPoint, run: false, radius: 0.35f);
+            Scannable target = FindScannable(scanId);
+            if (target == null) yield break;
+            yield return TurnTo(c, target.FocusPoint, 4f);
+            PsychicScanner scanner = c.Lucy.GetComponent<PsychicScanner>();
+            c.Pad.Tap(InputManager.GameAction.Scan);
+            yield return new WaitForSecondsRealtime(0.2f);
+            if (holdSeconds >= 0f)
+            {
+                yield return new WaitForSecondsRealtime(holdSeconds);
+                c.Moment?.Invoke("scan_" + scanId);
+                c.Pad.Tap(InputManager.GameAction.Scan);
+                yield return new WaitForSecondsRealtime(0.3f);
+            }
+            else
+            {
+                float t0 = Time.realtimeSinceStartup;
+                bool shot = false;
+                while (scanner != null && scanner.IsViewing && Time.realtimeSinceStartup - t0 < 8f)
+                {
+                    if (!shot && Time.realtimeSinceStartup - t0 > 1.5f)
+                    {
+                        c.Moment?.Invoke("scan_" + scanId);
+                        shot = true;
+                    }
+                    yield return null;
+                }
+            }
+            if (scanner != null && scanner.LastClosedId != scanId) Debug.LogWarning($"[TutorialDrive] scan {scanId}: last result '{scanner.LastResult}', focus {(scanner.Focus != null ? scanner.Focus.scanId : "none")}, Lucy at {c.Lucy.position} facing {c.Lucy.eulerAngles.y:0}.");
+        }
+
+        public static ItemPickup FindPickup(string itemId)
+        {
+            foreach (ItemPickup pickup in ItemPickup.All)
+            {
+                if (pickup != null && pickup.item != null && pickup.item.itemId == itemId) return pickup;
+            }
+            return null;
+        }
+
+        public static Scannable FindScannable(string scanId)
+        {
+            foreach (Scannable target in Scannable.All)
+            {
+                if (target != null && target.scanId == scanId) return target;
+            }
+            return null;
         }
 
         /// <summary>Turns her toward a point with the turn keys, within the tolerance in degrees.</summary>

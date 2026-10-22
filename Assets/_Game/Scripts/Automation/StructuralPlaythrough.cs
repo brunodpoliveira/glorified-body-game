@@ -211,7 +211,8 @@ namespace GlorifiedBody.Automation
                 options.Hide();
                 yield return null;
             }
-            Record("options_controls", optionsShown && remapRows == 14, $"shown={optionsShown} remapRows={remapRows}");
+            int actions = System.Enum.GetValues(typeof(InputManager.GameAction)).Length; // one remap row per action (15 with Scan, 2026-10-22)
+            Record("options_controls", optionsShown && remapRows == actions, $"shown={optionsShown} remapRows={remapRows} actions={actions}");
 
             // 4. Forced death: lethal damage through Health, then the game-over state.
             playerHealth.SetSecondWindEnabled(false);

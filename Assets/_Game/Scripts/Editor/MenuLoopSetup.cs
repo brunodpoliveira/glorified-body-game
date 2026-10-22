@@ -11,6 +11,7 @@ using GlorifiedBody.Core;
 using GlorifiedBody.DebugTools;
 using GlorifiedBody.Editor.Characters;
 using GlorifiedBody.Enemy;
+using GlorifiedBody.Interaction;
 using GlorifiedBody.Level;
 using GlorifiedBody.Level.Build;
 using GlorifiedBody.Player;
@@ -173,6 +174,11 @@ namespace GlorifiedBody.Editor
             RemoveComponent<ShortController>(player);
             EnsureComponent<ShortController>(player);
             EnsureComponent<PsychicPowers>(player);
+            // The Interact and Scan keys (Bruno, 2026-10-22): the item inventory sized by the outfit, the pickup
+            // with its confirmation, the psychic scan.
+            EnsureComponent<ItemInventory>(player);
+            EnsureComponent<PsychicScanner>(player);
+            EnsureComponent<Interactor>(player);
             EnsureCharacterModel(player, catalog, "lucy_bare");
             EnsureComponent<LucyAnimator>(player);
             Health health = EnsureComponent<Health>(player);
@@ -213,6 +219,7 @@ namespace GlorifiedBody.Editor
             EnsureComponent<CreditsUI>(ui);
             EnsureComponent<LevelCompleteUI>(ui);
             EnsureComponent<PlayerHud>(ui);
+            EnsureComponent<InteractionUI>(ui);
         }
 
         /// <summary>One ShotPoint per fixed camera, so `tools/unity.sh shots &lt;scene&gt;` renders every view.</summary>

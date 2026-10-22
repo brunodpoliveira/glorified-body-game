@@ -706,22 +706,19 @@ namespace GlorifiedBody.Editor
             PlaceFigure(catalog, "Figure_Soldier", "soldier", new Vector3(1.5f, 0f, 2f));
             PlaceFigure(catalog, "Figure_Guard", "guard", new Vector3(-1f, 0f, 5.5f));
 
-            // Cameras: inside the room, at a level angle (ART_LESSONS 1.6). The wide one by default. The corner
-            // camera covers the south-east section behind the wide one (Bruno, 2026-10-22: "needs a new camera
-            // angle to cover this section").
-            GameObject camerasRoot = MenuLoopSetup.EnsureRoot("[Cameras]");
+            // Cameras: inside the room, at a level angle (ART_LESSONS 1.6), under the game-room rule (Bruno,
+            // 2026-10-22: fix the look rooms too): no floor point within 1.2 m of its camera, every band seen from
+            // a wall camera about 6 m across from it (scratchpad camsearch.py found the spots, 0 misses offline).
+            GameObject camerasRoot = ResetCameras();
             FixedCameraDirector director = MenuLoopSetup.EnsureComponent<FixedCameraDirector>(camerasRoot);
-            // The numbers come from the coverage check (scratchpad coverage.py, the same frustum math as the
-            // PlayMode test): the door camera on the WEST wall looks north-east at the door, so the north strip
-            // is in its frame (a camera on the north wall cannot see along the north wall).
-            FixedCamera wide = MenuLoopSetup.EnsureFixedCamera(camerasRoot, "Cam_Wide", new Vector3(-3.2f, 1.6f, -7.2f), new Vector3(0f, 1.2f, 2f), 55f);
-            FixedCamera corner = MenuLoopSetup.EnsureFixedCamera(camerasRoot, "Cam_Corner", new Vector3(3.7f, 1.7f, -4f), new Vector3(-1.5f, 0.9f, -7.2f), 58f);
-            FixedCamera mid = MenuLoopSetup.EnsureFixedCamera(camerasRoot, "Cam_Mid", new Vector3(3.6f, 1.7f, 0.5f), new Vector3(-1.5f, 1f, 2.5f), 55f);
-            FixedCamera door = MenuLoopSetup.EnsureFixedCamera(camerasRoot, "Cam_Door", new Vector3(-3.5f, 1.6f, 4.8f), new Vector3(2f, 1f, 7f), 60f);
+            FixedCamera wide = MenuLoopSetup.EnsureFixedCamera(camerasRoot, "Cam_Wide", new Vector3(3.7f, 1.7f, 6.3f), new Vector3(0.2f, 1f, 2.2f), 55f);      // the middle, z 0..4 (the default)
+            FixedCamera corner = MenuLoopSetup.EnsureFixedCamera(camerasRoot, "Cam_Corner", new Vector3(-3.7f, 1.7f, -1.7f), new Vector3(0f, 1f, -5.8f), 55f); // the south end, z -8..-4
+            FixedCamera mid = MenuLoopSetup.EnsureFixedCamera(camerasRoot, "Cam_Mid", new Vector3(-3.7f, 1.7f, 2.3f), new Vector3(-0.3f, 1f, -1.7f), 55f);    // z -4..0
+            FixedCamera door = MenuLoopSetup.EnsureFixedCamera(camerasRoot, "Cam_Door", new Vector3(3.7f, 1.7f, 2.3f), new Vector3(-0.3f, 1f, 6f), 64f);       // the door end, z 4..8
             director.SetDefaultCamera(wide);
-            MenuLoopSetup.EnsureCameraZone(camerasRoot, "Zone_Corner", new Vector3(1.6f, 1.5f, -5.75f), new Vector3(4.8f, 3f, 4.5f), corner, 1);
-            MenuLoopSetup.EnsureCameraZone(camerasRoot, "Zone_Mid", new Vector3(0f, 1f, 1f), new Vector3(RoomWidth, 3f, 4f), mid, 1);
-            MenuLoopSetup.EnsureCameraZone(camerasRoot, "Zone_Door", new Vector3(0f, 1f, 5.5f), new Vector3(RoomWidth, 3f, 5f), door, 1);
+            MenuLoopSetup.EnsureCameraZone(camerasRoot, "Zone_South", new Vector3(0f, 1f, -6f), new Vector3(RoomWidth, 3f, 4f), corner, 1);
+            MenuLoopSetup.EnsureCameraZone(camerasRoot, "Zone_MidSouth", new Vector3(0f, 1f, -2f), new Vector3(RoomWidth, 3f, 4f), mid, 1);
+            MenuLoopSetup.EnsureCameraZone(camerasRoot, "Zone_Door", new Vector3(0f, 1f, 6f), new Vector3(RoomWidth, 3f, 4f), door, 1);
             ProbeGrid(new Vector3(-hw, 0f, -hl), new Vector3(hw, 0f, hl), 2f, 0.6f, 2.2f);
 
             FinishScene(scene, p, new[] { wide, corner, mid, door }, "the Gallery, 11 spots");
@@ -876,29 +873,31 @@ namespace GlorifiedBody.Editor
             PlaceFigure(catalog, "Figure_LabWorker", "labworker", new Vector3(4.2f, 0f, 6.6f));
             PlaceFigure(catalog, "Figure_Patient", "patient", new Vector3(2.2f, 0f, 12.5f));
 
-            // ── Cameras (ART_LESSONS 1.6: inside the room, level): the corridor from its south end (the T12 view,
-            // the default), from its north end, at the recovery door; the recovery room from the south wall and
-            // from the bed corner; the gym from the door corner and from the bars corner.
-            GameObject camerasRoot = MenuLoopSetup.EnsureRoot("[Cameras]");
+            // ── Cameras (ART_LESSONS 1.6: inside the room, level), under the game-room rule (no floor point within
+            // 1.2 m of its camera; scratchpad camsearch.py, 0 misses offline): the corridor's middle from its south
+            // end (the T12 view, the default), its two ends from the east wall across from them; the recovery room
+            // in two bands, each from the west wall across from it; the gym as in the tutorial (the door corner,
+            // the corner over the rack for the north band, the west wall for the strip by the door).
+            GameObject camerasRoot = ResetCameras();
             FixedCameraDirector director = MenuLoopSetup.EnsureComponent<FixedCameraDirector>(camerasRoot);
-            // The numbers come from the coverage check (scratchpad coverage.py): the corridor cameras sit near
-            // the centre line, the bars camera holds the west part of the gym, the gym camera the rest.
             FixedCamera corridorS = MenuLoopSetup.EnsureFixedCamera(camerasRoot, "Cam_Corridor_S", new Vector3(0.6f, 1.6f, -9.4f), new Vector3(-0.1f, 1.3f, 2f), 60f);
-            FixedCamera corridorN = MenuLoopSetup.EnsureFixedCamera(camerasRoot, "Cam_Corridor_N", new Vector3(0f, 1.7f, 9.5f), new Vector3(0.3f, 1f, -4f), 52f);
-            FixedCamera corridorDoor = MenuLoopSetup.EnsureFixedCamera(camerasRoot, "Cam_Corridor_Door", new Vector3(-1.6f, 1.6f, 7.8f), new Vector3(1.9f, 1.1f, 4.6f), 50f);
-            FixedCamera recovery = MenuLoopSetup.EnsureFixedCamera(camerasRoot, "Cam_Recovery", new Vector3(rc.x, 1.6f, rMin.z + 0.15f), new Vector3(rc.x, 1.15f, rMax.z), 66f);
-            FixedCamera recoveryBed = MenuLoopSetup.EnsureFixedCamera(camerasRoot, "Cam_Recovery_Bed", new Vector3(rMax.x - 0.3f, 1.7f, rMax.z - 0.3f), new Vector3(2.8f, 1f, 4.6f), 62f);
+            FixedCamera corridorSouthEnd = MenuLoopSetup.EnsureFixedCamera(camerasRoot, "Cam_Corridor_SouthEnd", new Vector3(1.7f, 1.7f, -2.7f), new Vector3(0f, 1f, -7.4f), 55f);
+            FixedCamera corridorNorthEnd = MenuLoopSetup.EnsureFixedCamera(camerasRoot, "Cam_Corridor_NorthEnd", new Vector3(1.7f, 1.7f, 3.3f), new Vector3(0f, 1f, 7.45f), 55f);
+            FixedCamera recovery = MenuLoopSetup.EnsureFixedCamera(camerasRoot, "Cam_Recovery", new Vector3(2.5f, 1.7f, 7.5f), new Vector3(4.7f, 1f, 4.15f), 60f);
+            FixedCamera recoveryBed = MenuLoopSetup.EnsureFixedCamera(camerasRoot, "Cam_Recovery_Bed", new Vector3(2.5f, 1.7f, 3.9f), new Vector3(4.5f, 1f, 7f), 60f);
             FixedCamera gym = MenuLoopSetup.EnsureFixedCamera(camerasRoot, "Cam_Gym", new Vector3(3.3f, 1.7f, gMin.z + 0.4f), new Vector3(-1.6f, 1f, 15.5f), 62f);
-            FixedCamera gymBars = MenuLoopSetup.EnsureFixedCamera(camerasRoot, "Cam_Gym_Bars", new Vector3(gMin.x + 0.4f, 1.7f, gMax.z - 1.3f), new Vector3(2.5f, 1f, 12f), 58f); // in front of the CRT wall
+            FixedCamera gymNorth = MenuLoopSetup.EnsureFixedCamera(camerasRoot, "Cam_Gym_NE", new Vector3(3.6f, 1.7f, 16.9f), new Vector3(-2f, 1f, 12.5f), 62f);
+            FixedCamera gymWest = MenuLoopSetup.EnsureFixedCamera(camerasRoot, "Cam_Gym_W", new Vector3(-3.7f, 1.7f, 13.2f), new Vector3(3f, 1f, 11.5f), 62f);
             director.SetDefaultCamera(corridorS);
-            MenuLoopSetup.EnsureCameraZone(camerasRoot, "Zone_Corridor_N", new Vector3(0f, 1.5f, 4f), new Vector3(CorridorWidth, 3f, 12f), corridorN, 1);
-            MenuLoopSetup.EnsureCameraZone(camerasRoot, "Zone_Corridor_Door", new Vector3(1.25f, 1.5f, 5f), new Vector3(1.5f, 3f, 3f), corridorDoor, 2);
-            MenuLoopSetup.EnsureCameraZone(camerasRoot, "Zone_Recovery", new Vector3((cw + rMax.x) * 0.5f, 1.5f, rc.z), new Vector3(rMax.x - cw, 3f, rd), recovery, 3);
-            MenuLoopSetup.EnsureCameraZone(camerasRoot, "Zone_Recovery_Bed", new Vector3(rc.x, 1.5f, rMax.z - 1f), new Vector3(rw, 3f, 2f), recoveryBed, 4);
+            MenuLoopSetup.EnsureCameraZone(camerasRoot, "Zone_Corridor_SouthEnd", new Vector3(0f, 1.5f, -7.5f), new Vector3(CorridorWidth, 3f, 5f), corridorSouthEnd, 1);
+            MenuLoopSetup.EnsureCameraZone(camerasRoot, "Zone_Corridor_NorthEnd", new Vector3(0f, 1.5f, 7.5f), new Vector3(CorridorWidth, 3f, 5f), corridorNorthEnd, 1);
+            MenuLoopSetup.EnsureCameraZone(camerasRoot, "Zone_Recovery_South", new Vector3((cw + rMax.x) * 0.5f, 1.5f, (rMin.z + 5.5f) * 0.5f), new Vector3(rMax.x - cw, 3f, 5.5f - rMin.z), recovery, 3);
+            MenuLoopSetup.EnsureCameraZone(camerasRoot, "Zone_Recovery_North", new Vector3((cw + rMax.x) * 0.5f, 1.5f, (5.5f + rMax.z) * 0.5f), new Vector3(rMax.x - cw, 3f, rMax.z - 5.5f), recoveryBed, 3);
             MenuLoopSetup.EnsureCameraZone(camerasRoot, "Zone_Gym", new Vector3(gc.x, 1.5f, (cl + gMax.z) * 0.5f), new Vector3(gw, 3f, gMax.z - cl), gym, 3);
-            MenuLoopSetup.EnsureCameraZone(camerasRoot, "Zone_Gym_Bars", new Vector3(-1.75f, 1.5f, 15.4f), new Vector3(4.5f, 3f, 3.8f), gymBars, 4);
+            MenuLoopSetup.EnsureCameraZone(camerasRoot, "Zone_Gym_North", new Vector3(0f, 1.5f, 15.4f), new Vector3(8f, 3f, 3.8f), gymNorth, 4);
+            MenuLoopSetup.EnsureCameraZone(camerasRoot, "Zone_Gym_DoorStrip", new Vector3(3f, 1.5f, 11.9f), new Vector3(2f, 3f, 3.2f), gymWest, 4);
 
-            FinishScene(scene, p, new[] { corridorS, corridorN, corridorDoor, recovery, recoveryBed, gym, gymBars }, "the corridor, the recovery room, the gym, 12 spots and 1 panel light");
+            FinishScene(scene, p, new[] { corridorS, corridorSouthEnd, corridorNorthEnd, recovery, recoveryBed, gym, gymNorth, gymWest }, "the corridor, the recovery room, the gym, 12 spots and 1 panel light");
         }
 
         /// <summary>
@@ -1001,6 +1000,19 @@ namespace GlorifiedBody.Editor
             Spot(lights, "Gym_Pool_Rack", new Vector3(3.0f, gh - 0.1f, 14.5f), Quaternion.Euler(70f, 90f, 0f), warm, 40f, 70f);
             Spot(lights, "Gym_Door_Cold", new Vector3(0f, gh - 0.1f, 10.9f), Quaternion.Euler(80f, 180f, 0f), cold, 35f, 60f);
             ProbeGrid(gMin, gMax, 1.5f, 0.6f, 2.4f);
+        }
+
+        /// <summary>
+        /// A fresh "[Cameras]" root: the builder reopens the existing scene, so a renamed camera, zone or shot
+        /// point of an earlier layout would stay. Removes the old root and every "ShotPoint_" root first.
+        /// </summary>
+        internal static GameObject ResetCameras()
+        {
+            foreach (GameObject root in SceneManager.GetActiveScene().GetRootGameObjects())
+            {
+                if (root.name == "[Cameras]" || root.name.StartsWith("ShotPoint_")) UnityEngine.Object.DestroyImmediate(root);
+            }
+            return MenuLoopSetup.EnsureRoot("[Cameras]");
         }
 
         // ── Room helpers ──────────────────────────────────────────────

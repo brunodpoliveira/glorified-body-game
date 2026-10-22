@@ -47,12 +47,12 @@ namespace GlorifiedBody.Editor
             {
                 o.outfitId = "nude"; o.displayName = "NUDE"; o.maxHp = 100f;
                 // nalconRegenPerSecond: 6 was too quick (Bruno, 2026-10-20). 2 = a full bar in 50 s, PROPOSED.
-                o.hpRegenPerSecond = 1f; o.nalconRegenPerSecond = 2f; o.shortDecayPerSecond = 1f; o.drugSlotsPerType = 2;
+                o.hpRegenPerSecond = 1f; o.nalconRegenPerSecond = 2f; o.shortDecayPerSecond = 1f; o.drugSlotsPerType = 2; o.itemSlots = 4;
             });
             Outfit("outfit_guard", o =>
             {
                 o.outfitId = "guard"; o.displayName = "SECURITY GUARD"; o.maxHp = 150f;
-                o.hpRegenPerSecond = 0f; o.nalconRegenPerSecond = 0f; o.shortDecayPerSecond = 0f; o.drugSlotsPerType = 4;
+                o.hpRegenPerSecond = 0f; o.nalconRegenPerSecond = 0f; o.shortDecayPerSecond = 0f; o.drugSlotsPerType = 4; o.itemSlots = 8;
             });
 
             AssetDatabase.SaveAssets();

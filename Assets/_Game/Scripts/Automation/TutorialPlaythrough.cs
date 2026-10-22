@@ -98,6 +98,7 @@ namespace GlorifiedBody.Automation
             pad = new VirtualPad();
             GameInput.SetBotSource(pad);
             TutorialDrive.Context context = TutorialDrive.Context.From(pad, director);
+            context.Moment = moment => ShotWithOverlays(Path.Combine(BotArgs.RunDir, "shots", $"tutorial_moment_{moment}.png"));
             string shotsDir = Path.Combine(BotArgs.RunDir, "shots");
 
             int guard = 0;
@@ -143,6 +144,8 @@ namespace GlorifiedBody.Automation
             if (prompt != null && prompt.Canvas != null && prompt.Canvas.gameObject.activeInHierarchy) canvases.Add(prompt.Canvas);
             PlayerHud hud = FindFirstObjectByType<PlayerHud>();
             if (hud != null && hud.Canvas != null && hud.Canvas.gameObject.activeInHierarchy) canvases.Add(hud.Canvas);
+            InteractionUI interaction = FindFirstObjectByType<InteractionUI>();
+            if (interaction != null && interaction.Canvas != null && interaction.Canvas.gameObject.activeInHierarchy) canvases.Add(interaction.Canvas);
             var modes = new List<(Canvas canvas, RenderMode mode, Camera camera, float plane)>();
             foreach (Canvas canvas in canvases)
             {

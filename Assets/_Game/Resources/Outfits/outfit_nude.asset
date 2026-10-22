@@ -19,3 +19,4 @@ MonoBehaviour:
   nalconRegenPerSecond: 2
   shortDecayPerSecond: 1
   drugSlotsPerType: 2
+  itemSlots: 4

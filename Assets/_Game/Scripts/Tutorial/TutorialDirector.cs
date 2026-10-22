@@ -5,6 +5,7 @@ using UnityEngine;
 using GlorifiedBody.Combat;
 using GlorifiedBody.DebugTools;
 using GlorifiedBody.Enemy;
+using GlorifiedBody.Interaction;
 using GlorifiedBody.Player;
 using GlorifiedBody.Systems;
 
@@ -15,8 +16,9 @@ namespace GlorifiedBody.Tutorial
     /// 2026-10-22: "tutorial mode, since it'll allow us to add the other features and test them"). In the
     /// therapy gym the recorded presenter of the investors' demonstration (CONCEPTS 6.4) asks the subject for
     /// each faculty in turn, on the padded dummies: the walk, the run, the dodge, the target switch, BLAST,
-    /// FIRE, TELEKINESIS with the throw, the bullet catch, a capsule, the overflow (the short). Each step ends
-    /// when the player did the thing. The later features (the log, the scan, the props) add their steps here.
+    /// FIRE, TELEKINESIS with the throw, the bullet catch, a capsule, a log to take and read, the scan of the door
+    /// (a picture) and of the monitors (a clip), the overflow (the short). Each step ends
+    /// when the player did the thing. The later features (the props, the enemies) add their steps here.
     /// The lines are placeholders until the writer gives the words. F2 skips a step (debug).
     /// </summary>
     public sealed class TutorialDirector : MonoBehaviour
@@ -27,6 +29,10 @@ namespace GlorifiedBody.Tutorial
         [SerializeField] private Vector3 barsPoint = new Vector3(-1.8f, 0f, 11.2f);
         [SerializeField] private Vector3 monitorsPoint = new Vector3(-2.4f, 0f, 16f);
         [SerializeField] private Vector3 capsulePoint = new Vector3(-2.6f, 0f, 13.5f);
+        [SerializeField] private Vector3 logPoint = new Vector3(-2.9f, 0f, 14.6f);
+        [SerializeField] private string logItemId = "test_log";
+        [SerializeField] private string doorScanId = "gym_door";
+        [SerializeField] private string monitorsScanId = "gym_monitors";
         [SerializeField, Min(0.3f)] private float reachRadius = 1.3f;
         [SerializeField] private string shooterTargetName = "Target_Gun";
         [SerializeField] private KeyCode skipKey = KeyCode.F2;
@@ -41,6 +47,10 @@ namespace GlorifiedBody.Tutorial
         public Vector3 BarsPoint => barsPoint;
         public Vector3 MonitorsPoint => monitorsPoint;
         public Vector3 CapsulePoint => capsulePoint;
+        public Vector3 LogPoint => logPoint;
+        public string LogItemId => logItemId;
+        public string DoorScanId => doorScanId;
+        public string MonitorsScanId => monitorsScanId;
         public float ReachRadius => reachRadius;
         public DummyShooter Shooter { get; private set; }
 
@@ -56,9 +66,11 @@ namespace GlorifiedBody.Tutorial
         private ShortController shortController;
         private DrugInventory drugs;
         private LockOnTargetable shooterTarget;
+        private Interactor interactor;
+        private PsychicScanner scanner;
 
         // The flags of the current step, reset on enter.
-        private bool ranInStep, dodgedSide, launched, caught, drugUsed, shortBegan, shortEnded;
+        private bool ranInStep, dodgedSide, launched, caught, drugUsed, shortBegan, shortEnded, logRead, doorScanned, monitorsScanned;
         private int targetChanges;
         private PowerKind? firedKind;
         private float firedCharge;
@@ -90,6 +102,8 @@ namespace GlorifiedBody.Tutorial
             stats = player.GetComponent<PsychicStats>();
             shortController = player.GetComponent<ShortController>();
             drugs = player.GetComponent<DrugInventory>();
+            interactor = player.GetComponent<Interactor>();
+            scanner = player.GetComponent<PsychicScanner>();
             GameObject shooterObject = GameObject.Find(shooterTargetName);
             Shooter = shooterObject != null ? shooterObject.GetComponent<DummyShooter>() : null;
             shooterTarget = shooterObject != null ? shooterObject.GetComponent<LockOnTargetable>() : null;
@@ -109,6 +123,8 @@ namespace GlorifiedBody.Tutorial
                 shortController.OnShortBegan += OnShortBegan;
                 shortController.OnShortEnded += OnShortEnded;
             }
+            if (interactor != null) interactor.OnChanged += OnInteractorChanged;
+            if (scanner != null) scanner.OnScanEnded += OnScanEnded;
 
             BuildSteps();
             Enter(0);
@@ -128,6 +144,8 @@ namespace GlorifiedBody.Tutorial
                 shortController.OnShortBegan -= OnShortBegan;
                 shortController.OnShortEnded -= OnShortEnded;
             }
+            if (interactor != null) interactor.OnChanged -= OnInteractorChanged;
+            if (scanner != null) scanner.OnScanEnded -= OnScanEnded;
         }
 
         // ── The steps ─────────────────────────────────────────────────
@@ -173,6 +191,18 @@ namespace GlorifiedBody.Tutorial
                 "A capsule lies by the bars. Take it. Use it.",
                 "Walk over the capsule. {UseDrug} uses it: the bars refill.",
                 () => drugUsed));
+            steps.Add(new TutorialStep("log",
+                "A record was left by the wall. Take it. Read it.",
+                "Face the record. {Interact} asks to take it, {Interact} again takes it, {Back} leaves it. {Interact} closes the page.",
+                () => logRead));
+            steps.Add(new TutorialStep("scan_image",
+                "Look at the door without your hands. Tell us what opens it.",
+                "Face the door. {Scan} scans it: a picture. {Scan} again closes it.",
+                () => doorScanned));
+            steps.Add(new TutorialStep("scan_video",
+                "Now the monitors. They remember more.",
+                "Face the monitors. {Scan} scans them: a short clip. It closes at its end, or with {Scan}.",
+                () => monitorsScanned));
             steps.Add(new TutorialStep("short",
                 "The overflow. Your bar is full: the next faculty shorts. A capsule ends it.",
                 "{Charge} starts the short. {UseDrug} ends it.",
@@ -237,7 +267,7 @@ namespace GlorifiedBody.Tutorial
         {
             StepIndex = index;
             StepStartTime = Time.time;
-            ranInStep = dodgedSide = launched = caught = drugUsed = shortBegan = shortEnded = false;
+            ranInStep = dodgedSide = launched = caught = drugUsed = shortBegan = shortEnded = logRead = doorScanned = monitorsScanned = false;
             targetChanges = 0;
             firedKind = null;
             firedCharge = 0f;
@@ -283,6 +313,18 @@ namespace GlorifiedBody.Tutorial
         }
 
         private void OnShortBegan() => shortBegan = true;
+
+        private void OnInteractorChanged()
+        {
+            if (interactor != null && interactor.LastResult == "closed:" + logItemId) logRead = true;
+        }
+
+        private void OnScanEnded(Scannable target)
+        {
+            if (target == null) return;
+            if (target.scanId == doorScanId) doorScanned = true;
+            if (target.scanId == monitorsScanId) monitorsScanned = true;
+        }
 
         private void OnShortEnded()
         {

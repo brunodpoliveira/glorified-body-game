@@ -4,11 +4,13 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.Video;
 using GlorifiedBody.Cameras;
 using GlorifiedBody.Characters;
 using GlorifiedBody.Combat;
 using GlorifiedBody.Core;
 using GlorifiedBody.Enemy;
+using GlorifiedBody.Interaction;
 using GlorifiedBody.Player;
 using GlorifiedBody.Tutorial;
 using GlorifiedBody.UI;
@@ -33,6 +35,13 @@ namespace GlorifiedBody.Editor
         public static readonly Vector3 BarsPoint = new Vector3(-1.8f, 0f, 11.2f);
         public static readonly Vector3 MonitorsPoint = new Vector3(-2.4f, 0f, 16f);
         public static readonly Vector3 CapsulePoint = new Vector3(-2.6f, 0f, 13.5f);
+        public static readonly Vector3 LogPoint = new Vector3(-2.9f, 0f, 14.6f);   // where she stands to take the log
+        public static readonly Vector3 LogStand = new Vector3(-3.72f, 0f, 14.6f);  // the stand against the west wall
+        public const string ItemsFolder = MenuLoopSetup.ResourcesFolder + "/Items";
+        public const string TestLogPath = ItemsFolder + "/item_test_log.asset";
+        public const string ScanFolder = "Assets/_Game/Scan";
+        public const string ScanImagePath = ScanFolder + "/scan_placeholder_image.png";
+        public const string ScanVideoPath = ScanFolder + "/scan_placeholder_video.webm";
         public const float ReachRadius = 1.3f;
         public const float TargetHealth = 150f; // padded: it takes the whole demonstration
         public static readonly string[] TargetNames = { "Target_1", "Target_2", "Target_3", "Target_Gun" };
@@ -69,6 +78,21 @@ namespace GlorifiedBody.Editor
             PaddedTarget("Target_Gun", new Vector3(-3.65f, 0f, 11.6f), 30f, p, gun: true);
             MenuLoopSetup.EnsurePickup("Capsule", DrugType.Nalcon, CapsulePoint + Vector3.up * 0.4f);
 
+            // The test log on a steel stand against the west wall, and the two scan targets: the door (a
+            // picture) and the wall of monitors (a clip). Placeholders (Bruno, 2026-10-22).
+            ItemDefinition log = EnsureTestLog();
+            GameObject stand = LookTestSetup.Block(room, "Log_Stand", PrimitiveType.Cube, LogStand + new Vector3(0f, 0.45f, 0f), new Vector3(0.4f, 0.9f, 0.5f), p.DarkSteel);
+            GameObject logObject = LookTestSetup.Block(room, "Log_Clipboard", PrimitiveType.Cube, LogStand + new Vector3(0f, 0.92f, 0f), new Vector3(0.24f, 0.03f, 0.32f), p.Mattress, Quaternion.Euler(0f, 8f, 0f));
+            logObject.isStatic = false;
+            ItemPickup pickup = MenuLoopSetup.EnsureComponent<ItemPickup>(logObject);
+            pickup.item = log;
+            pickup.range = 1.6f;
+            Texture2D scanImage = EnsureScanImage();
+            VideoClip scanClip = AssetDatabase.LoadAssetAtPath<VideoClip>(ScanVideoPath);
+            if (scanClip == null) Debug.LogError($"[TutorialSetup] no clip at {ScanVideoPath}.");
+            ScanTarget("Scan_Door", new Vector3(0f, 1.2f, LookTestSetup.GymMin.z + 0.1f), "gym_door", "PLACEHOLDER: what opens this door.", scanImage, null);
+            ScanTarget("Scan_Monitors", new Vector3(-2.2f, 1.3f, LookTestSetup.GymMax.z - 0.55f), "gym_monitors", "PLACEHOLDER: what the monitors saw.", null, scanClip);
+
             // Cameras (ART_LESSONS 1.6), from the coverage check with the near skip at 1.2 m (the first layout
             // put a camera 1.2 m from the monitors point: Lucy out of frame where the run step ends): the door
             // corner (the default), the corner over the rack looking back across the room (the north band:
@@ -104,6 +128,10 @@ namespace GlorifiedBody.Editor
             so.FindProperty("barsPoint").vector3Value = BarsPoint;
             so.FindProperty("monitorsPoint").vector3Value = MonitorsPoint;
             so.FindProperty("capsulePoint").vector3Value = CapsulePoint;
+            so.FindProperty("logPoint").vector3Value = LogPoint;
+            so.FindProperty("logItemId").stringValue = "test_log";
+            so.FindProperty("doorScanId").stringValue = "gym_door";
+            so.FindProperty("monitorsScanId").stringValue = "gym_monitors";
             so.FindProperty("reachRadius").floatValue = ReachRadius;
             so.FindProperty("shooterTargetName").stringValue = "Target_Gun";
             so.ApplyModifiedPropertiesWithoutUndo();
@@ -114,6 +142,58 @@ namespace GlorifiedBody.Editor
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
             Debug.Log($"[TutorialSetup] {ScenePath}: the therapy gym, four targets, three cameras, the director. Next: BakeTutorial.");
+        }
+
+        /// <summary>The placeholder log (Bruno, 2026-10-22: "add a placeholder test log"). The writer gives the words later.</summary>
+        internal static ItemDefinition EnsureTestLog()
+        {
+            Directory.CreateDirectory(ItemsFolder);
+            var item = AssetDatabase.LoadAssetAtPath<ItemDefinition>(TestLogPath);
+            if (item == null)
+            {
+                item = ScriptableObject.CreateInstance<ItemDefinition>();
+                AssetDatabase.CreateAsset(item, TestLogPath);
+            }
+            item.itemId = "test_log";
+            item.displayName = "TEST LOG";
+            item.kind = ItemKind.Log;
+            item.description = "A placeholder record on a clipboard.";
+            item.logText = "PLACEHOLDER LOG\n\nSession 0. Subject L.\n\nThis page stands in for the logs of the demo: the whiteboard, the orientation program, the tape. "
+                + "The writer gives the words later.\n\nIt proves the Interact key: she faces it, the game asks, she takes it, it opens here, and it stays in her inventory.";
+            EditorUtility.SetDirty(item);
+            return item;
+        }
+
+        /// <summary>The placeholder picture of the scan, imported as a plain 1280 x 720 UI texture.</summary>
+        internal static Texture2D EnsureScanImage()
+        {
+            var importer = AssetImporter.GetAtPath(ScanImagePath) as TextureImporter;
+            if (importer != null)
+            {
+                importer.textureType = TextureImporterType.Default;
+                importer.npotScale = TextureImporterNPOTScale.None;
+                importer.mipmapEnabled = false;
+                importer.sRGBTexture = true;
+                importer.textureCompression = TextureImporterCompression.Uncompressed;
+                importer.wrapMode = TextureWrapMode.Clamp;
+                importer.SaveAndReimport();
+            }
+            Texture2D image = AssetDatabase.LoadAssetAtPath<Texture2D>(ScanImagePath);
+            if (image == null) Debug.LogError($"[TutorialSetup] no picture at {ScanImagePath}.");
+            return image;
+        }
+
+        private static void ScanTarget(string name, Vector3 position, string scanId, string caption, Texture2D image, VideoClip clip)
+        {
+            GameObject obj = MenuLoopSetup.EnsureRoot(name);
+            obj.transform.SetPositionAndRotation(position, Quaternion.identity);
+            Scannable target = MenuLoopSetup.EnsureComponent<Scannable>(obj);
+            target.scanId = scanId;
+            target.caption = caption;
+            target.image = image;
+            target.clip = clip;
+            target.range = 3f;
+            target.focus = null;
         }
 
         [MenuItem("GlorifiedBody/Bake Tutorial (the bounce light)")]

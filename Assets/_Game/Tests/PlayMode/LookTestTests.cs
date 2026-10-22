@@ -234,7 +234,8 @@ namespace GlorifiedBody.Tests.PlayMode
         {
             look.SetDressing(LookDressing.Greybox);
             yield return null;
-            CameraCoverage.Report report = CameraCoverage.Check(director);
+            // The game-room rule (Bruno, 2026-10-22: fix the look rooms too): no floor point within 1.2 m of its camera.
+            CameraCoverage.Report report = CameraCoverage.Check(director, CameraCoverage.GameRoomNear, false);
             Debug.Log("[LookTestTests] " + Room + ": " + report);
             Assert.Greater(report.Total, 50, "floor points");
             Assert.LessOrEqual(report.Uncovered.Count, report.Total * CoverageTolerance, report.ToString());
@@ -290,7 +291,7 @@ namespace GlorifiedBody.Tests.PlayMode
     public class LookTest2Tests : LookRoomTests
     {
         protected override string Room => "LookTest2";
-        protected override string[] ExpectedCameras => new[] { "Cam_Corridor_S", "Cam_Corridor_N", "Cam_Corridor_Door", "Cam_Recovery", "Cam_Recovery_Bed", "Cam_Gym", "Cam_Gym_Bars" };
+        protected override string[] ExpectedCameras => new[] { "Cam_Corridor_S", "Cam_Corridor_SouthEnd", "Cam_Corridor_NorthEnd", "Cam_Recovery", "Cam_Recovery_Bed", "Cam_Gym", "Cam_Gym_NE", "Cam_Gym_W" };
         protected override string[] ExpectedFigures => new[] { "Figure_Guard", "Figure_LabWorker", "Figure_Patient" };
         protected override string FloorObject => "Recovery_Floor";
         protected override string FloorDressedMaterial => "GB_TileFloor";

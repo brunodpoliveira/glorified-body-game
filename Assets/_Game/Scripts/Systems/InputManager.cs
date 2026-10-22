@@ -32,7 +32,8 @@ namespace GlorifiedBody.Systems
             PowerTelekinesis,
             UseDrug,
             Interact,
-            Defend // RMB: the defensive use of the selected power (Bruno, 2026-10-20)
+            Defend, // RMB: the defensive use of the selected power (Bruno, 2026-10-20)
+            Scan    // the psychic scan, separate from Interact (Bruno, 2026-10-22)
         }
 
         [Serializable]
@@ -56,7 +57,8 @@ namespace GlorifiedBody.Systems
                 GameAction.PowerFire => "Power: Fire",
                 GameAction.PowerTelekinesis => "Power: Telekinesis",
                 GameAction.UseDrug => "Use Drug",
-                GameAction.Interact => "Interact",
+                GameAction.Interact => "Interact (take, read)",
+                GameAction.Scan => "Psychic Scan",
                 GameAction.Defend => "Defend (hold: shield, later)",
                 _ => action.ToString()
             };
@@ -83,6 +85,7 @@ namespace GlorifiedBody.Systems
             new KeyBinding { action = GameAction.UseDrug, defaultKey = KeyCode.Q },
             new KeyBinding { action = GameAction.Interact, defaultKey = KeyCode.E },
             new KeyBinding { action = GameAction.Defend, defaultKey = KeyCode.Mouse1 },
+            new KeyBinding { action = GameAction.Scan, defaultKey = KeyCode.F },
         };
 
         [Header("Default Bindings")]
