@@ -44,13 +44,25 @@ logic except the bot that records the clips.
 - `night.sh ep00` and `night.sh ep01`: ep00 long 353 s, short 59 s. ep01 long 387 s, short 58 s. No MISSING
   visual. Packets: `~/glorified-body-renders/devlog/ep00/v1/README.md` and `ep01/v1/README.md`.
 
+## Version 2, the same night (01:50 to 02:11)
+
+Bruno (2026-10-21, CANON, now in `03_GAME_DESIGN.md` section 6): full transparency, the devlogs name every tool,
+model and provider. The writer changed 20 of 52 sections (Unity 6, Blender 5.2, Mixamo, Tripo behind 3D Studio,
+Fish Audio behind the Voice Cloner, Gemini TTS behind Voice Scenes, Nano Banana Pro, GPT Image 2, Seedream 4.5,
+Seedance, Mureka V9, Lyria 3 Pro, Claude Code and Claude Fable 5.1, ffmpeg) and showed the nine game models in
+ep01. The audio cache paid only for those sections: 18,591 tokens for v2 against 35,136 for v1. Packets:
+`~/glorified-body-renders/devlog/ep00/v2/README.md`, `ep01/v2/README.md`. Lengths: ep00 long 6:48, short 1:16,
+ep01 long 7:14, short 1:05. The whole night: about 54,000 tokens.
+
 ## Owed
 
-1. Bruno's notes in `NOTES.md` next to each video, then `/devlog-night ep00` (and `ep01`) for v2.
-2. The writer's open points for Bruno: no company or product names in the narration (the rule), the child Lucy
-   of the series in the ep00 slice shots (sections 6 and 11 of the long, 3 of the short), the test counts on the
-   ep01 card (27 EditMode, 36 PlayMode, 21 bot steps as briefed, or the newer 45 and 23).
-3. Language: the scripts are in English (the clone was recorded in English). A pt-BR version through the Dubber
+1. Bruno's notes in `NOTES.md` next to each v2 video, then `/devlog-night ep00` (and `ep01`) for v3.
+2. Open for Bruno: the child Lucy of the series in the ep00 slice shots (sections 6 and 11 of the long, 3 of the
+   short), the test counts on the ep01 card (27 EditMode, 36 PlayMode, 21 bot steps as briefed, or the newer
+   45 and 23), and the voice section's new line that the script is drafted by Claude Code from his notes.
+3. The nine-model strip in ep01 section 18 is wide and small in the frame. A crop or a seq of single models
+   would read better. The writer picks in v3.
+4. Language: the scripts are in English (the clone was recorded in English). A pt-BR version through the Dubber
    is a later step.
 
 ## Files
