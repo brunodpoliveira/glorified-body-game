@@ -153,7 +153,7 @@ namespace GlorifiedBody.UI
             CreateControl(p, "F4", "Debug: kill Lucy (shows the death screen)");
             CreateControl(p, "F5 / F6 / F7", "Debug: fill SHORT / start the short / refill + drugs");
             CreateControl(p, "F8 / F9", "Debug: nalcon -25 / +25");
-            CreateControl(p, "F11 / F10", "Debug: the look test room / cycle its dressings");
+            CreateControl(p, "F11 / F3", "Debug: the next look test room / cycle its dressings");
             CreateSpacer(p, 14);
 
             backBtn = CreateButton(p, "Back", OnBackClicked);

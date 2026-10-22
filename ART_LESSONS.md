@@ -16,6 +16,13 @@ T17). Each rule cost us hours once. Full detail: `the-glorified-body/tests/T15_3
    reception rooms have a CRT TV for propaganda.
 6. Camera: inside the room, at a level angle. Bruno rejected the high, tilted render angle.
 7. Fonts Bruno likes (Galerians guidebook): Anton, Oswald, Zen Old Mincho Black, EB Garamond.
+8. (2026-10-22) The detail of 1999 came from greebles on the walls and from the texture: Parasite Eve II and
+   Galerians painted the relief a normal map gives today (ribbed panels, grooves, trims). On our concrete the
+   greebles stay subtle: weathering, cracks, panel seams, tie holes, stains, chips, plus skirting, steel bands,
+   grilles, conduits and junction boxes as geometry. Textures at 2K (scale down only when a number says so).
+   Clarity first: trilinear, anisotropy 8, no compression.
+9. (2026-10-22) Every floor point of a room is in the frame of the camera its zone picks. A section without a
+   camera is a bug (Bruno walked into one in the Gallery). The PlayMode coverage test guards every look room.
 
 ## 2. Concept art: what to ask for
 

@@ -9,7 +9,7 @@ using GlorifiedBody.Rendering;
 
 namespace GlorifiedBody.Tests.EditMode
 {
-    /// <summary>The assets of the look test, as LookTestSetup.BuildLookTest writes them. Batch: tools/unity.sh test editmode.</summary>
+    /// <summary>The assets of the look test, as LookTestSetup.BuildAll and BakeAll write them. Batch: tools/unity.sh test editmode.</summary>
     public class LookTestAssetsTests
     {
         [Test]
@@ -18,7 +18,7 @@ namespace GlorifiedBody.Tests.EditMode
             var full = AssetDatabase.LoadAssetAtPath<UniversalRendererData>(LookTestSetup.FullRendererPath);
             var expensive = AssetDatabase.LoadAssetAtPath<UniversalRendererData>(LookTestSetup.ExpensiveRendererPath);
             var plate = AssetDatabase.LoadAssetAtPath<UniversalRendererData>(LookTestSetup.PlateRendererPath);
-            Assert.IsNotNull(full, "GB_Full (LookTestSetup.BuildLookTest)");
+            Assert.IsNotNull(full, "GB_Full (LookTestSetup.BuildAll)");
             Assert.IsNotNull(expensive, "GB_Expensive");
             Assert.IsNotNull(plate, "GB_Plate");
 
@@ -53,7 +53,8 @@ namespace GlorifiedBody.Tests.EditMode
         {
             var asset = AssetDatabase.LoadAssetAtPath<UniversalRenderPipelineAsset>(LookTestSetup.StockPipelinePath);
             Assert.IsNotNull(asset, "PC_RPAsset");
-            SerializedProperty list = new SerializedObject(asset).FindProperty("m_RendererDataList");
+            var so = new SerializedObject(asset);
+            SerializedProperty list = so.FindProperty("m_RendererDataList");
             Assert.AreEqual(4, list.arraySize, "the stock renderer plus the three of the look");
             Assert.AreEqual("GB_Full", list.GetArrayElementAtIndex(LookTestSetup.FullRendererIndex).objectReferenceValue.name);
             Assert.AreEqual("GB_Expensive", list.GetArrayElementAtIndex(LookTestSetup.ExpensiveRendererIndex).objectReferenceValue.name);
@@ -63,6 +64,8 @@ namespace GlorifiedBody.Tests.EditMode
             Assert.IsFalse(asset.supportsSoftShadows, "hard shadows only");
             Assert.IsTrue(asset.supportsAdditionalLightShadows, "the spots cast shadows");
             Assert.AreEqual(LightRenderingMode.PerPixel, asset.additionalLightsRenderingMode);
+            Assert.AreEqual(LookTestSetup.ShadowAtlas, asset.additionalLightsShadowmapResolution, "the 4096 atlas (eleven spots at 1024)");
+            Assert.AreEqual(1024, so.FindProperty("m_AdditionalLightsShadowResolutionTierHigh").intValue, "the high tier of the spots");
         }
 
         [Test]
@@ -71,21 +74,43 @@ namespace GlorifiedBody.Tests.EditMode
             foreach (string name in LookTestSetup.TextureNames)
             {
                 string path = $"{LookTestSetup.TexturesFolder}/{name}.png";
-                Assert.IsTrue(File.Exists(path), $"{path} (tools/look_textures.sh, then tools/look_textures.sh import)");
+                Assert.IsTrue(File.Exists(path), $"{path} (tools/look_textures.sh then import, or tools/look_textures_procedural.py)");
                 var importer = AssetImporter.GetAtPath(path) as TextureImporter;
                 Assert.IsNotNull(importer, name);
-                Assert.AreEqual(LookTestSetup.TextureSize, importer.maxTextureSize, name + ": 1024");
-                Assert.AreEqual(FilterMode.Bilinear, importer.filterMode, name + ": clean filtering");
+                Assert.AreEqual(LookTestSetup.TextureSize, importer.maxTextureSize, name + ": 2K (Bruno: clarity)");
+                Assert.AreEqual(FilterMode.Trilinear, importer.filterMode, name + ": clean filtering");
+                Assert.AreEqual(LookTestSetup.TextureAniso, importer.anisoLevel, name + ": the floors stay sharp at a low angle");
                 Assert.AreEqual(TextureImporterCompression.Uncompressed, importer.textureCompression, name + ": no compression");
-                Assert.AreEqual(name == "gear_emblem" ? TextureWrapMode.Clamp : TextureWrapMode.Mirror, importer.wrapMode, name + ": the wrap");
+                bool stretched = LookTestSetup.StretchedTextures.Contains(name);
+                Assert.AreEqual(stretched ? TextureWrapMode.Clamp : TextureWrapMode.Mirror, importer.wrapMode, name + ": the wrap");
+                Assert.AreEqual(name == "fern", importer.alphaIsTransparency, name + ": only the fern card has a cutout");
+                var texture = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+                Assert.IsNotNull(texture, name);
+                Assert.GreaterOrEqual(Mathf.Max(texture.width, texture.height), 2048, name + ": the picture is 2K");
             }
         }
 
         [Test]
-        public void TheScene_IsInTheBuildList()
+        public void TheScenes_AreInTheBuildList()
         {
-            Assert.IsTrue(File.Exists(LookTestSetup.ScenePath), LookTestSetup.ScenePath);
-            Assert.IsTrue(EditorBuildSettings.scenes.Any(s => s.enabled && s.path == LookTestSetup.ScenePath), "LookTest in Build Settings");
+            foreach (string path in LookTestSetup.ScenePaths)
+            {
+                Assert.IsTrue(File.Exists(path), path);
+                Assert.IsTrue(EditorBuildSettings.scenes.Any(s => s.enabled && s.path == path), path + " in Build Settings");
+            }
+        }
+
+        [Test]
+        public void TheBake_LeftLightmapsAndProbes_ForEveryLookScene()
+        {
+            Assert.IsNotNull(AssetDatabase.LoadAssetAtPath<LightingSettings>(LookTestSetup.LightingSettingsPath), "the lighting settings of the bake");
+            foreach (string path in LookTestSetup.ScenePaths)
+            {
+                string folder = Path.Combine(Path.GetDirectoryName(path), Path.GetFileNameWithoutExtension(path));
+                Assert.IsTrue(Directory.Exists(folder), folder + " (LookTestSetup.BakeAll)");
+                Assert.IsTrue(File.Exists(Path.Combine(folder, "LightingData.asset")), folder + "/LightingData.asset");
+                Assert.IsTrue(Directory.GetFiles(folder, "Lightmap-*").Any(), folder + ": a lightmap");
+            }
         }
     }
 }

@@ -15,16 +15,18 @@ using GlorifiedBody.Systems;
 namespace GlorifiedBody.Automation
 {
     /// <summary>
-    /// The look bot (build order step 4): loads the look test room, then for each dressing (greybox, real time,
-    /// plate) holds every fixed camera and saves a 1080p shot, walks Lucy one step down the gallery and saves
-    /// one more, and measures the frame time. Bruno picks from the pictures. Active only when BotArgs.Bot ==
-    /// "look". Writes playthrough.json and shots/look_&lt;dressing&gt;_&lt;camera&gt;.png to BotArgs.RunDir.
-    /// Batch: tools/unity.sh play LookTest Main_Menu look 300
+    /// The look bot (build order step 4): loads a look test room (LookTest, LookTest2), then for each dressing
+    /// (greybox, real time, real time with the baked light, plate) holds every fixed camera and saves a 1080p
+    /// shot, runs Lucy three seconds from her start (the zones cut the cameras, the plate captures again) and
+    /// saves one more, and measures the frame time. Bruno picks from the pictures. Active only when BotArgs.Bot
+    /// == "look". Writes playthrough.json and shots/look_&lt;dressing&gt;_&lt;camera&gt;.png to BotArgs.RunDir.
+    /// Batch: tools/unity.sh play LookTest Main_Menu look 300 (or LookTest2)
     /// </summary>
     [DefaultExecutionOrder(-1000)]
     public class LookPlaythrough : MonoBehaviour
     {
         public const int ShotWidth = 1920, ShotHeight = 1080;
+        public const float RunSeconds = 3f;
 
         [Serializable]
         private class Step
@@ -41,6 +43,7 @@ namespace GlorifiedBody.Automation
         private bool finished;
         private int frames;
         private float frameSum, frameMax;
+        private int cuts;
 
         public static bool IsRequested => string.Equals(BotArgs.Bot, "look", StringComparison.OrdinalIgnoreCase);
 
@@ -110,25 +113,30 @@ namespace GlorifiedBody.Automation
             FixedCamera[] cameras = FindObjectsByType<FixedCamera>(FindObjectsSortMode.None).OrderBy(c => c.cameraName).ToArray();
             GameObject player = GameObject.FindGameObjectWithTag("Player");
             TankController tank = player != null ? player.GetComponent<TankController>() : null;
-            Record("look_loaded", SceneManager.GetActiveScene().name == level && look != null && director != null && cameras.Length == 3 && tank != null,
-                $"scene={SceneManager.GetActiveScene().name} look={look != null} director={director != null} cameras={cameras.Length} lucy={tank != null}");
+            Record("look_loaded", SceneManager.GetActiveScene().name == level && look != null && director != null && cameras.Length >= 3 && tank != null,
+                $"scene={SceneManager.GetActiveScene().name} look={look != null} director={director != null} cameras={cameras.Length} lucy={tank != null} baked={(look != null && look.HasBakedLight)}");
             if (look == null || director == null || tank == null) { Finish(); yield break; }
+            Record("baked_light", look.HasBakedLight, look.HasBakedLight ? "the scene carries lightmaps" : "no lightmaps: run LookTestSetup.BakeAll");
+            director.OnCameraChanged += _ => cuts++;
 
             pad = new VirtualPad();
             GameInput.SetBotSource(pad);
             look.PlateSizeOverride = new Vector2Int(Mathf.RoundToInt(ShotWidth * LookDirector.LookRenderScale), Mathf.RoundToInt(ShotHeight * LookDirector.LookRenderScale));
             string shotsDir = Path.Combine(BotArgs.RunDir, "shots");
-            Vector3 home = new Vector3(-2f, 0f, -5.5f);
+            Vector3 home = look.Home;
+            float homeYaw = look.HomeYaw;
 
-            foreach (LookDressing dressing in new[] { LookDressing.Greybox, LookDressing.RealTime, LookDressing.Plate })
+            foreach (LookDressing dressing in (LookDressing[])Enum.GetValues(typeof(LookDressing)))
             {
                 string tag = dressing.ToString().ToLowerInvariant();
-                tank.Teleport(home, 0f);
+                director.Override(null);
+                tank.Teleport(home, homeYaw);
                 look.SetDressing(dressing);
                 yield return null;
                 yield return null;
-                bool rendererOk = look.Dressing == dressing && look.RendererIndex == (dressing == LookDressing.Greybox ? 0 : dressing == LookDressing.RealTime ? 1 : 3);
-                Record($"dressing_{tag}", rendererOk, $"renderer={look.RendererIndex} dressed={look.IsDressed}");
+                int wantedRenderer = dressing == LookDressing.Greybox ? 0 : dressing == LookDressing.Plate ? 3 : 1;
+                bool bakedOk = dressing == LookDressing.Greybox || dressing == LookDressing.RealTime ? !look.BakedLightOn : look.BakedLightOn == look.HasBakedLight;
+                Record($"dressing_{tag}", look.Dressing == dressing && look.RendererIndex == wantedRenderer && bakedOk, $"renderer={look.RendererIndex} dressed={look.IsDressed} bakedOn={look.BakedLightOn}");
 
                 foreach (FixedCamera fixedCamera in cameras)
                 {
@@ -142,22 +150,27 @@ namespace GlorifiedBody.Automation
                     Record($"shot_{tag}_{fixedCamera.cameraName.ToLowerInvariant()}", saved && plateOk, $"saved={saved} camera={director.CurrentName} plate={look.PlateCameraName}");
                 }
 
-                // One step down the gallery under the wide camera: the characters move, the plate stays.
-                director.Override(cameras.First(c => c.cameraName == "Cam_Wide"));
+                // Three seconds of running from her start under the zone cameras: the characters move, the
+                // cameras cut where the zones say, the plate captures again on each cut.
+                director.Override(null);
+                tank.Teleport(home, homeYaw);
                 yield return null;
                 yield return null;
+                int cutsBefore = cuts, capturesBefore = look.PlateCaptures;
                 pad.SetHeld(InputManager.GameAction.Forward, true);
-                yield return new WaitForSeconds(1.2f);
+                pad.SetHeld(InputManager.GameAction.Run, true);
+                yield return new WaitForSeconds(RunSeconds);
                 pad.ReleaseAll();
+                yield return null;
                 yield return null;
                 string walkFile = Path.Combine(shotsDir, $"look_{tag}_walk.png");
                 bool walkSaved = ShotRenderer.Render(Camera.main, walkFile, ShotWidth, ShotHeight, useTargetTexture: true);
-                float walked = Vector3.Distance(home, player.transform.position);
-                Record($"walk_{tag}", walkSaved && walked > 0.8f, $"walked={walked:0.00} m plateCaptures={look.PlateCaptures}");
+                float ran = Vector3.Distance(home, player.transform.position);
+                int newCuts = cuts - cutsBefore, newCaptures = look.PlateCaptures - capturesBefore;
+                bool captured = dressing != LookDressing.Plate || newCuts == 0 || newCaptures >= newCuts;
+                Record($"walk_{tag}", walkSaved && ran > 2f && captured, $"ran={ran:0.00} m camera={director.CurrentName} cuts={newCuts} plateCaptures={newCaptures}");
 
                 // The frame time of the dressing over one second of play (the live view, no shots).
-                director.Override(null);
-                yield return null;
                 ResetFrames();
                 yield return new WaitForSecondsRealtime(1f);
                 float avg = frames > 0 ? frameSum / frames : 0f;

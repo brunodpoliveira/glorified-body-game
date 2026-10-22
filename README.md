@@ -30,22 +30,36 @@ humanoid clips. Without the Invector package they play the idle.
 
 ## The look test (build order step 4)
 
-`Assets/_Game/Scenes/LookTest.unity` is the Gallery of floor 1 (raw concrete, planters, hard pools of light)
-with Lucy, two figures and three fixed cameras, built by
-`tools/unity.sh exec GlorifiedBody.Editor.LookTestSetup.BuildLookTest` (menu GlorifiedBody > Build Look Test).
-F10 cycles the three dressings, the label at the top left names the one on screen:
+Two scenes, built by `tools/unity.sh exec GlorifiedBody.Editor.LookTestSetup.BuildAll` (menu GlorifiedBody >
+Build Look Tests), then `tools/unity.sh exec GlorifiedBody.Editor.LookTestSetup.BakeAll` for the bounce light
+(the CPU lightmapper, minutes):
+
+- `Assets/_Game/Scenes/LookTest.unity`: the Gallery of floor 1 (raw concrete, planters, hard pools of light),
+  Lucy, two figures, four fixed cameras.
+- `Assets/_Game/Scenes/LookTest2.unity`: the skylight corridor (concrete, three light shafts, ferns, vents and
+  tubes), the recovery room (white tile, one panel light, the bed with the cut straps) and the therapy gym (tile,
+  the wall of CRTs, the parallel bars, the mirror, the padded dummies), Lucy, three figures, seven cameras.
+
+F11 loads the next look room (from the training room: the Gallery, then LookTest2, then the Gallery again).
+F3 cycles the four dressings, the label at the top left names the one on screen:
 
 1. Greybox: flat grey, the stock renderer.
-2. RealTime: the textures and the spots live every frame, the 720p frame scaled up, 32 levels with a Bayer
-   dither on the background (the characters keep their colours through a stencil mark).
-3. Plate: the room rendered once per camera (ambient occlusion, 4096 shadow maps) into a plate, then each frame
-   draws the plate, the room as depth only and the characters over it. A camera cut captures again.
+2. RealTime: the textures and the spots live every frame, no bounce light, the 720p frame scaled up, 32 levels
+   with a Bayer dither on the background (the characters keep their colours through a stencil mark).
+3. RealTimeBaked: the same plus the baked bounce light (the lightmaps of the room, the probes for the figures).
+4. Plate: the room rendered once per camera (the bounce, ambient occlusion, 4096 shadow maps) into a plate,
+   then each frame draws the plate, the room as depth only and the characters over it. A camera cut captures
+   again.
 
 The renderers (GB_Full, GB_Expensive, GB_Plate next to the stock one on the URP assets), the materials
-(Simple Lit, one colour map each) and the scene come from `LookTestSetup`. The textures:
-`tools/look_textures_procedural.py` (tileable noise, 1024 px) or `tools/look_textures.sh` (RFab). The look
-bot, `tools/unity.sh play LookTest Main_Menu look 300`, saves every camera in every dressing at 1080p plus a
-walk shot, and the frame time. Tests: `LookTestAssetsTests` (EditMode), `LookTestTests` (PlayMode).
+(Simple Lit, one colour map each, the relief painted in the picture), the probes, the lighting settings and the
+scenes come from `LookTestSetup`. The textures are 2K: `tools/look_textures.sh` (RFab Nano Banana Pro, ten
+surfaces, the fern keyed to alpha by `tools/look_fern_alpha.py`) and `tools/look_textures_procedural.py` (the
+gear emblem, the CRT face, the light panel, plus a tileable fallback for every surface). The look bot,
+`tools/unity.sh play LookTest Main_Menu look 400` (or `LookTest2`), saves every camera in every dressing at
+1080p plus a run through the zones, and the frame time; `tools/look_sheets.sh` makes the contact sheets.
+Tests: `LookTestAssetsTests` (EditMode), `LookTestGalleryTests` and `LookTest2Tests` (PlayMode, with the
+camera coverage test: every floor point is in the frame of the camera its zone picks).
 
 ## Open the project
 
@@ -60,7 +74,7 @@ walk shot, and the frame time. Tests: `LookTestAssetsTests` (EditMode), `LookTes
    1, 2, 3 select BLAST, FIRE, TELEKINESIS. Q uses a drug.
    Space plus a direction key, or a double tap on a direction key, dodges that way. With a full SHORT bar, LMB or
    RMB starts the short: 16 s of shocks, she walks slowly, no run, no dodge. F4 kills Lucy (shows the death
-   screen). F11 loads the look test room (F10 cycles its dressings there). F5 fills the SHORT bar, F6 starts the
+   screen). F11 loads the next look test room (F3 cycles its dressings there). F5 fills the SHORT bar, F6 starts the
    short, F7 refills her and gives drugs, F8 and F9 take and give
    25 nalcon. F1 hides the status line. Esc pauses.
 

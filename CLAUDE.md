@@ -53,14 +53,24 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   spots and wall washers, ambient near black), Lucy, a soldier and a guard, three fixed cameras with zones.
   `LookTestSetup.BuildLookTest` makes the renderers (GB_Full: a character stencil mark plus the 32-level Bayer
   dither on the background, GB_Expensive: plus ambient occlusion, GB_Plate: the plate blit plus the room as
-  depth only), the Simple Lit materials, the texture imports and the scene. `LookDirector` (F10 cycles, a label
-  at the top left) swaps greybox / real time / plate: the plate is the room rendered once per camera into a
+  depth only), the Simple Lit materials, the texture imports and the scene. `LookDirector` (F3 cycles since the
+  morning, a label at the top left) swaps greybox / real time / plate: the plate is the room rendered once per camera into a
   720p texture, the characters drawn over it (`PlateBlitFeature`, Render Graph). The URP assets carry the look
   for the whole game: render scale 2/3 (720p of 1080p), linear upscale, hard shadows only, per-pixel spots.
   Textures: `tools/look_textures.sh` (RFab Nano Banana, 1024 px, mirror wrap) with
   `tools/look_textures_procedural.py` as the fallback (RFab gap 11: the default model draws scenes). F11 in the
   training room loads the look test room. Shots for Bruno's pick: `~/glorified-body-renders/game/look_test/`.
-  OPEN for Bruno: the pick (real time or plate), the darkness level, the texture scale (2 m tiles).
+- 2026-10-22, the second look test (`devlog-notes/2026-10-22_look_test2.md`), after Bruno's morning rulings
+  (F10 is the editor's menu key, 2K textures and clarity, the relief painted in the texture and subtle greebles
+  on concrete, a camera for every section): `LookTest2.unity` is the skylight corridor of T12 GALLERY_v3 plus
+  the recovery room and the therapy gym of T18, with seven cameras; the Gallery got a fourth camera
+  (Cam_Corner), skirting, a steel band, grilles and a junction box. `LookTestSetup.BuildAll` builds both,
+  `BakeAll` bakes the bounce light (lightmaps indirect only, probes; the spots stay live and hard). Four
+  dressings on F3: Greybox, RealTime (no bounce, the ruling), RealTimeBaked, Plate (bounce, ambient occlusion).
+  F11 cycles the look rooms. The textures are 2K from Nano Banana Pro (`--res 2k`, $0.32 each, 66 MB in git),
+  trilinear, aniso 8. The shadow atlas is 4096 (eleven spots in 2048 were halved). The PlayMode coverage test
+  (every floor point in the frame of its zone's camera) runs on both rooms.
+  OPEN for Bruno: the pick (real time, real time with the bounce, or plate), the darkness, the texture scale.
   Next: Bruno's pick, then his "later" items (the FSM AI, props, the psychic scan, the logs, the tutorial mode).
 
 ## Rules

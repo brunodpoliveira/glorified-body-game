@@ -288,6 +288,7 @@ namespace GlorifiedBody.Editor
             EnsureBuildScene(scenes, MainMenuScenePath);
             EnsureBuildScene(scenes, TrainingRoomScenePath);
             if (File.Exists(LookTestSetup.ScenePath)) EnsureBuildScene(scenes, LookTestSetup.ScenePath);
+            if (File.Exists(LookTestSetup.Scene2Path)) EnsureBuildScene(scenes, LookTestSetup.Scene2Path);
 
             // The main menu loads first.
             scenes.Sort((a, b) =>
