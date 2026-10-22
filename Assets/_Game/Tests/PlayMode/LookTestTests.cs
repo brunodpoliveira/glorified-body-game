@@ -1,14 +1,13 @@
 #if UNITY_INCLUDE_TESTS
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.Rendering.Universal;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
+using GlorifiedBody.Automation;
 using GlorifiedBody.Cameras;
 using GlorifiedBody.Core;
 using GlorifiedBody.Player;
@@ -36,8 +35,6 @@ namespace GlorifiedBody.Tests.PlayMode
         protected abstract string SecondCamera { get; }
         /// <summary>The share of floor points that may fall out of the frame of their camera.</summary>
         protected virtual float CoverageTolerance => 0.03f;
-        /// <summary>A point this close to its camera (across the floor) is not checked: she fills the frame there, cut at the waist as in 1999.</summary>
-        protected const float NearCamera = 3f;
 
         protected LookDirector look;
         protected FixedCameraDirector director;
@@ -237,65 +234,13 @@ namespace GlorifiedBody.Tests.PlayMode
         {
             look.SetDressing(LookDressing.Greybox);
             yield return null;
-            int roomLayers = 1 << LayerMask.NameToLayer("Default");
-            CameraZone[] zones = UnityEngine.Object.FindObjectsByType<CameraZone>(FindObjectsSortMode.None);
-            float aspect = 16f / 9f;
-            var uncovered = new List<string>();
-            int total = 0;
-            foreach (RoomFace floor in UnityEngine.Object.FindObjectsByType<RoomFace>(FindObjectsSortMode.None).Where(f => f.name.EndsWith("Floor")))
-            {
-                // A floor face lies flat: its local x runs along the world x, its local y along the world z.
-                Vector3 c = floor.transform.position;
-                for (float dx = -floor.width * 0.5f + 0.45f; dx <= floor.width * 0.5f - 0.45f; dx += 0.5f)
-                {
-                    for (float dz = -floor.height * 0.5f + 0.45f; dz <= floor.height * 0.5f - 0.45f; dz += 0.5f)
-                    {
-                        Vector3 p = new Vector3(c.x + dx, 0f, c.z + dz);
-                        // A point inside a planter, a column or a bed is not a place she can stand. The camera
-                        // zones are trigger boxes on the same layer: both queries must ignore triggers.
-                        if (Physics.CheckBox(p + Vector3.up * 0.9f, new Vector3(0.2f, 0.8f, 0.2f), Quaternion.identity, roomLayers, QueryTriggerInteraction.Ignore)) continue;
-                        total++;
-                        FixedCamera cam = CameraFor(p, zones);
-                        if (cam == null) { uncovered.Add($"{p} no camera"); continue; }
-                        Vector3 camPos = cam.transform.position;
-                        if (Vector2.Distance(new Vector2(p.x, p.z), new Vector2(camPos.x, camPos.z)) < NearCamera) continue;
-                        Vector3 head = p + Vector3.up * 1.6f, hip = p + Vector3.up * 0.9f;
-                        bool inFrame = InFrame(cam, head, aspect, 0.05f) && InFrame(cam, hip, aspect, 0f);
-                        bool hidden = Physics.Linecast(camPos, head, roomLayers, QueryTriggerInteraction.Ignore);
-                        if (!inFrame || hidden) uncovered.Add($"{p.x:0.0},{p.z:0.0} {cam.cameraName} {(inFrame ? "hidden" : "out of frame")}");
-                    }
-                }
-            }
-            Assert.Greater(total, 50, "floor points");
-            var sb = new StringBuilder();
-            sb.Append($"{uncovered.Count} of {total} floor points out of their camera's frame:");
-            foreach (string line in uncovered.Take(25)) sb.Append("\n  ").Append(line);
-            Debug.Log("[LookTestTests] " + Room + ": " + sb);
-            Assert.LessOrEqual(uncovered.Count, total * CoverageTolerance, sb.ToString());
+            CameraCoverage.Report report = CameraCoverage.Check(director);
+            Debug.Log("[LookTestTests] " + Room + ": " + report);
+            Assert.Greater(report.Total, 50, "floor points");
+            Assert.LessOrEqual(report.Uncovered.Count, report.Total * CoverageTolerance, report.ToString());
         }
 
         // ── Helpers ───────────────────────────────────────────────────
-
-        private FixedCamera CameraFor(Vector3 p, CameraZone[] zones)
-        {
-            CameraZone best = null;
-            foreach (CameraZone zone in zones)
-            {
-                if (zone.fixedCamera == null || !zone.Contains(p + Vector3.up)) continue;
-                if (best == null || zone.priority >= best.priority) best = zone;
-            }
-            return best != null ? best.fixedCamera : director.DefaultCamera;
-        }
-
-        private static bool InFrame(FixedCamera cam, Vector3 point, float aspect, float margin)
-        {
-            Matrix4x4 view = Matrix4x4.Scale(new Vector3(1f, 1f, -1f)) * Matrix4x4.TRS(cam.transform.position, cam.transform.rotation, Vector3.one).inverse;
-            Matrix4x4 projection = Matrix4x4.Perspective(cam.fieldOfView, aspect, 0.1f, 100f);
-            Vector4 clip = projection * view * new Vector4(point.x, point.y, point.z, 1f);
-            if (clip.w <= 0.01f) return false;
-            float x = clip.x / clip.w, y = clip.y / clip.w;
-            return Mathf.Abs(x) <= 1f - margin && Mathf.Abs(y) <= 1f - margin;
-        }
 
         private static Color32[] RenderFrame(int width, int height)
         {

@@ -22,6 +22,7 @@ namespace GlorifiedBody.UI
 
         [Header("Labels")]
         [SerializeField] private string startLabel = "START";
+        [SerializeField] private string tutorialScene = "Tutorial"; // the therapy gym demonstration (Bruno, 2026-10-22)
         [SerializeField] private string subtitleLabel = "WORK IN PROGRESS";
 
         private Canvas canvas;
@@ -32,6 +33,7 @@ namespace GlorifiedBody.UI
         private Button defaultBtn;
         private Button startBtn;
         private Button modifiersBtn;
+        private Button tutorialBtn;
         private Button howToBtn;
         private Button optionsBtn;
         private Button creditsBtn;
@@ -132,6 +134,11 @@ namespace GlorifiedBody.UI
         }
 
         // ── Button Callbacks ─────────────────────────────────────────────
+
+        private void OnTutorialClicked()
+        {
+            GameManager.Instance?.LoadLevel(tutorialScene);
+        }
 
         private void OnStartClicked()
         {
@@ -374,6 +381,8 @@ namespace GlorifiedBody.UI
                 new Color(0.62f, 0.1f, 0.12f, 0.95f), new Color(0.85f, 0.2f, 0.22f, 1f), new Color(0.96f, 0.93f, 0.9f));
             nav.Add(startBtn);
             CreateSpacer(column.transform, 10f);
+            tutorialBtn = CreateButton(column.transform, "TUTORIAL", 420, OnTutorialClicked, 52);
+            nav.Add(tutorialBtn);
             howToBtn = CreateButton(column.transform, "HOW TO PLAY", 420, OnHowToPlayClicked, 52);
             modifiersBtn = CreateButton(column.transform, "DIFFICULTY", 420, OnModifiersClicked, 52);
             modifiersLabel = modifiersBtn.GetComponentInChildren<Text>();

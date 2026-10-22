@@ -128,6 +128,11 @@ namespace GlorifiedBody.Editor
             foreach (string path in ScenePaths) Bake(path);
         }
 
+        /// <summary>One scene at a time, for the batch harness (a flaky baker crash on 2026-10-22 needed the split).</summary>
+        public static void BakeGallery() => Bake(ScenePath);
+
+        public static void BakeScene2() => Bake(Scene2Path);
+
         internal static void Bake(string scenePath)
         {
             if (!File.Exists(scenePath))
@@ -138,10 +143,19 @@ namespace GlorifiedBody.Editor
             Scene scene = EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);
             LightingSettings settings = EnsureLightingSettings();
             Lightmapping.SetLightingSettingsForScene(scene, settings);
-            Lightmapping.Clear();
             double t0 = EditorApplication.timeSinceStartup;
-            bool ok = Lightmapping.Bake();
-            int count = LightmapSettings.lightmaps != null ? LightmapSettings.lightmaps.Length : 0;
+            // The LightBaker process crashed at random on 2026-10-22 (a general protection fault in the kernel
+            // log, the same scene baked fine a minute later): Bake() still returns true, with zero lightmaps.
+            // Up to three attempts in the same run.
+            int count = 0;
+            bool ok = false;
+            for (int attempt = 1; attempt <= 3 && count == 0; attempt++)
+            {
+                Lightmapping.Clear();
+                ok = Lightmapping.Bake();
+                count = LightmapSettings.lightmaps != null ? LightmapSettings.lightmaps.Length : 0;
+                if (count == 0) Debug.LogWarning($"[LookTestSetup] bake {scene.name}: attempt {attempt} left no lightmaps (ok={ok}).");
+            }
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
             AssetDatabase.SaveAssets();
@@ -510,13 +524,13 @@ namespace GlorifiedBody.Editor
         }
 
         /// <summary>The material set of both scenes. Made once per build, shared by every room.</summary>
-        private sealed class Palette
+        internal sealed class Palette
         {
             public Material Greybox, Wall, Ceiling, Floor, Planter, Steel, DarkSteel, Soil, Shrub, Fern, Emblem, Grille;
             public Material TileWall, TileFloor, ResinFloor, Skirting, Mirror, Glass, Lane, Canvas, Vest, Leather, Mattress, Sky, LightPanel, Crt;
         }
 
-        private static Palette EnsurePalette()
+        internal static Palette EnsurePalette()
         {
             var p = new Palette
             {
@@ -552,11 +566,11 @@ namespace GlorifiedBody.Editor
 
         // ── The scene builders ────────────────────────────────────────
 
-        private static readonly List<Renderer> roomRenderers = new List<Renderer>();
-        private static readonly List<Material> dressedMaterials = new List<Material>();
-        private static readonly List<Vector3> probePositions = new List<Vector3>();
+        internal static readonly List<Renderer> roomRenderers = new List<Renderer>();
+        internal static readonly List<Material> dressedMaterials = new List<Material>();
+        internal static readonly List<Vector3> probePositions = new List<Vector3>();
 
-        private static Scene BeginScene(string path)
+        internal static Scene BeginScene(string path)
         {
             Scene scene = MenuLoopSetup.OpenOrCreate(path);
             roomRenderers.Clear();
@@ -594,7 +608,7 @@ namespace GlorifiedBody.Editor
             Debug.Log($"[LookTestSetup] {scene.path}: {summary}, {roomRenderers.Count} room surfaces, {cameras.Length} cameras, {probePositions.Count} probes.");
         }
 
-        private static GameObject PlaceLucy(CharacterCatalog catalog, Vector3 position, float yaw)
+        internal static GameObject PlaceLucy(CharacterCatalog catalog, Vector3 position, float yaw)
         {
             GameObject lucy = MenuLoopSetup.EnsureLucy(catalog, position, yaw);
             // No red lock marker over the figures: the picture is the point of these rooms.
@@ -604,13 +618,13 @@ namespace GlorifiedBody.Editor
             return lucy;
         }
 
-        private static GameObject PlaceFigure(CharacterCatalog catalog, string name, string classId, Vector3 position)
+        internal static GameObject PlaceFigure(CharacterCatalog catalog, string name, string classId, Vector3 position)
         {
             GameObject figure = MenuLoopSetup.EnsureDummy(name, position, catalog, classId);
             return figure;
         }
 
-        private static void ProbeGrid(Vector3 min, Vector3 max, float step, params float[] heights)
+        internal static void ProbeGrid(Vector3 min, Vector3 max, float step, params float[] heights)
         {
             for (float x = min.x + step * 0.5f; x < max.x; x += step)
             {
@@ -844,18 +858,83 @@ namespace GlorifiedBody.Editor
             FernCard(room, "Recovery_Fern_b", new Vector3(rMin.x + 0.5f, 0.62f, rMax.z - 0.5f), 1.0f, 0.9f, -60f, p.Fern);
             ProbeGrid(rMin, rMax, 1.5f, 0.6f, 2.2f);
 
-            // ── The therapy gym (T18 room_therapy_gym_1: tile, the wall of CRTs, the bars, the mirror, the dummies).
+            // ── The therapy gym, shared with the tutorial scene (BuildTherapyGym), its doorway cut into the corridor's north wall.
+            BuildTherapyGym(room, lights, p, corridorOpening: true);
+            DoorTunnel(room, "GymDoor", new Vector3(0f, 0f, cl), Quaternion.identity, GymMin.z - cl, 2.2f, 3f, p.TileWall, p.Steel);
+            Vector3 gMin = GymMin, gMax = GymMax;
+            Vector3 gc = new Vector3((gMin.x + gMax.x) * 0.5f, 0f, (gMin.z + gMax.z) * 0.5f);
+            float gw = gMax.x - gMin.x;
+
+            // ── The cast: Lucy at the south end of the corridor, a guard at its far end, the lab worker in the
+            // recovery room, a patient in the gym.
+            // Lucy three metres from the south camera at the edge of the first skylight pool (the first pass
+            // had her one metre from the lens, in the dark), the guard by the recovery door, the lab worker at
+            // the back of the recovery room by the drip stand (not in front of the lens).
+            CharacterCatalog catalog = MenuLoopSetup.LoadCatalog();
+            PlaceLucy(catalog, new Vector3(-0.3f, 0f, -6.5f), 0f);
+            PlaceFigure(catalog, "Figure_Guard", "guard", new Vector3(0.8f, 0f, 6f));
+            PlaceFigure(catalog, "Figure_LabWorker", "labworker", new Vector3(4.2f, 0f, 6.6f));
+            PlaceFigure(catalog, "Figure_Patient", "patient", new Vector3(2.2f, 0f, 12.5f));
+
+            // ── Cameras (ART_LESSONS 1.6: inside the room, level): the corridor from its south end (the T12 view,
+            // the default), from its north end, at the recovery door; the recovery room from the south wall and
+            // from the bed corner; the gym from the door corner and from the bars corner.
+            GameObject camerasRoot = MenuLoopSetup.EnsureRoot("[Cameras]");
+            FixedCameraDirector director = MenuLoopSetup.EnsureComponent<FixedCameraDirector>(camerasRoot);
+            // The numbers come from the coverage check (scratchpad coverage.py): the corridor cameras sit near
+            // the centre line, the bars camera holds the west part of the gym, the gym camera the rest.
+            FixedCamera corridorS = MenuLoopSetup.EnsureFixedCamera(camerasRoot, "Cam_Corridor_S", new Vector3(0.6f, 1.6f, -9.4f), new Vector3(-0.1f, 1.3f, 2f), 60f);
+            FixedCamera corridorN = MenuLoopSetup.EnsureFixedCamera(camerasRoot, "Cam_Corridor_N", new Vector3(0f, 1.7f, 9.5f), new Vector3(0.3f, 1f, -4f), 52f);
+            FixedCamera corridorDoor = MenuLoopSetup.EnsureFixedCamera(camerasRoot, "Cam_Corridor_Door", new Vector3(-1.6f, 1.6f, 7.8f), new Vector3(1.9f, 1.1f, 4.6f), 50f);
+            FixedCamera recovery = MenuLoopSetup.EnsureFixedCamera(camerasRoot, "Cam_Recovery", new Vector3(rc.x, 1.6f, rMin.z + 0.15f), new Vector3(rc.x, 1.15f, rMax.z), 66f);
+            FixedCamera recoveryBed = MenuLoopSetup.EnsureFixedCamera(camerasRoot, "Cam_Recovery_Bed", new Vector3(rMax.x - 0.3f, 1.7f, rMax.z - 0.3f), new Vector3(2.8f, 1f, 4.6f), 62f);
+            FixedCamera gym = MenuLoopSetup.EnsureFixedCamera(camerasRoot, "Cam_Gym", new Vector3(3.3f, 1.7f, gMin.z + 0.4f), new Vector3(-1.6f, 1f, 15.5f), 62f);
+            FixedCamera gymBars = MenuLoopSetup.EnsureFixedCamera(camerasRoot, "Cam_Gym_Bars", new Vector3(gMin.x + 0.4f, 1.7f, gMax.z - 1.3f), new Vector3(2.5f, 1f, 12f), 58f); // in front of the CRT wall
+            director.SetDefaultCamera(corridorS);
+            MenuLoopSetup.EnsureCameraZone(camerasRoot, "Zone_Corridor_N", new Vector3(0f, 1.5f, 4f), new Vector3(CorridorWidth, 3f, 12f), corridorN, 1);
+            MenuLoopSetup.EnsureCameraZone(camerasRoot, "Zone_Corridor_Door", new Vector3(1.25f, 1.5f, 5f), new Vector3(1.5f, 3f, 3f), corridorDoor, 2);
+            MenuLoopSetup.EnsureCameraZone(camerasRoot, "Zone_Recovery", new Vector3((cw + rMax.x) * 0.5f, 1.5f, rc.z), new Vector3(rMax.x - cw, 3f, rd), recovery, 3);
+            MenuLoopSetup.EnsureCameraZone(camerasRoot, "Zone_Recovery_Bed", new Vector3(rc.x, 1.5f, rMax.z - 1f), new Vector3(rw, 3f, 2f), recoveryBed, 4);
+            MenuLoopSetup.EnsureCameraZone(camerasRoot, "Zone_Gym", new Vector3(gc.x, 1.5f, (cl + gMax.z) * 0.5f), new Vector3(gw, 3f, gMax.z - cl), gym, 3);
+            MenuLoopSetup.EnsureCameraZone(camerasRoot, "Zone_Gym_Bars", new Vector3(-1.75f, 1.5f, 15.4f), new Vector3(4.5f, 3f, 3.8f), gymBars, 4);
+
+            FinishScene(scene, p, new[] { corridorS, corridorN, corridorDoor, recovery, recoveryBed, gym, gymBars }, "the corridor, the recovery room, the gym, 12 spots and 1 panel light");
+        }
+
+        /// <summary>
+        /// The therapy gym (T18 room_therapy_gym_1, CONCEPTS 8.1): tile, the wall of CRTs, the parallel bars over
+        /// the painted lane, the mirror with the gear over it, the rack with the padded dummies, four pools of
+        /// light. At GymMin..GymMax. With the corridor opening for LookTest2, with a shut steel door for the
+        /// tutorial. The cast, the cameras and the probes are the caller's.
+        /// </summary>
+        internal static void BuildTherapyGym(GameObject room, GameObject lights, Palette p, bool corridorOpening)
+        {
+            Color cold = new Color(0.82f, 0.9f, 1f);
+            Color warm = new Color(1f, 0.93f, 0.8f);
             Vector3 gMin = GymMin, gMax = GymMax;
             float gh = gMax.y, gw = gMax.x - gMin.x, gd = gMax.z - gMin.z;
             Vector3 gc = new Vector3((gMin.x + gMax.x) * 0.5f, 0f, (gMin.z + gMax.z) * 0.5f);
+            // ── The therapy gym (T18 room_therapy_gym_1: tile, the wall of CRTs, the bars, the mirror, the dummies).
             Face(room, "Gym_Floor", gc, Quaternion.Euler(90f, 0f, 0f), gw, gd, p.ResinFloor, 0.3f);
             Face(room, "Gym_Ceiling", gc + new Vector3(0f, gh, 0f), Quaternion.Euler(-90f, 0f, 0f), gw, gd, p.Ceiling, 0.3f);
-            WallWithOpening(room, "Gym_Wall_South", new Vector3(gc.x, 0f, gMin.z), Quaternion.Euler(0f, 180f, 0f), gw, gh, new Vector3(0f, 0f, gMin.z), 2.2f, 3f, p.TileWall, WallThickness);
+            if (corridorOpening)
+            {
+                WallWithOpening(room, "Gym_Wall_South", new Vector3(gc.x, 0f, gMin.z), Quaternion.Euler(0f, 180f, 0f), gw, gh, new Vector3(0f, 0f, gMin.z), 2.2f, 3f, p.TileWall, WallThickness);
+            }
+            else
+            {
+                // The tutorial gym: the door is shut (a steel leaf in its frame, the gear over it).
+                Face(room, "Gym_Wall_South", new Vector3(gc.x, gh * 0.5f, gMin.z), Quaternion.Euler(0f, 180f, 0f), gw, gh, p.TileWall, WallThickness);
+                Block(room, "Gym_Door", PrimitiveType.Cube, new Vector3(0f, 1.1f, gMin.z + 0.07f), new Vector3(1.2f, 2.2f, 0.12f), p.Steel);
+                Block(room, "Gym_DoorFrame_Top", PrimitiveType.Cube, new Vector3(0f, 2.27f, gMin.z + 0.07f), new Vector3(1.5f, 0.14f, 0.1f), p.Steel);
+                Block(room, "Gym_DoorFrame_W", PrimitiveType.Cube, new Vector3(-0.67f, 1.1f, gMin.z + 0.07f), new Vector3(0.14f, 2.2f, 0.1f), p.Steel);
+                Block(room, "Gym_DoorFrame_E", PrimitiveType.Cube, new Vector3(0.67f, 1.1f, gMin.z + 0.07f), new Vector3(0.14f, 2.2f, 0.1f), p.Steel);
+                Face(room, "Gym_DoorPanel", new Vector3(0f, 2.95f, gMin.z + 0.02f), Quaternion.Euler(0f, 180f, 0f), 0.8f, 0.8f, p.Emblem, 0f, stretch: true);
+            }
             Face(room, "Gym_Wall_North", new Vector3(gc.x, gh * 0.5f, gMax.z), Quaternion.identity, gw, gh, p.TileWall, WallThickness);
             Face(room, "Gym_Wall_East", new Vector3(gMax.x, gh * 0.5f, gc.z), Quaternion.Euler(0f, 90f, 0f), gd, gh, p.TileWall, WallThickness);
             Face(room, "Gym_Wall_West", new Vector3(gMin.x, gh * 0.5f, gc.z), Quaternion.Euler(0f, -90f, 0f), gd, gh, p.TileWall, WallThickness);
             Skirting(room, gc, gw, gd, 0.15f, p.Skirting, "Gym_");
-            DoorTunnel(room, "GymDoor", new Vector3(0f, 0f, cl), Quaternion.identity, gMin.z - cl, 2.2f, 3f, p.TileWall, p.Steel);
             // The wall of CRTs: four shelves, six monitors each, a green cursor on every screen.
             for (int row = 0; row < 4; row++)
             {
@@ -922,46 +1001,11 @@ namespace GlorifiedBody.Editor
             Spot(lights, "Gym_Pool_Rack", new Vector3(3.0f, gh - 0.1f, 14.5f), Quaternion.Euler(70f, 90f, 0f), warm, 40f, 70f);
             Spot(lights, "Gym_Door_Cold", new Vector3(0f, gh - 0.1f, 10.9f), Quaternion.Euler(80f, 180f, 0f), cold, 35f, 60f);
             ProbeGrid(gMin, gMax, 1.5f, 0.6f, 2.4f);
-
-            // ── The cast: Lucy at the south end of the corridor, a guard at its far end, the lab worker in the
-            // recovery room, a patient in the gym.
-            // Lucy three metres from the south camera at the edge of the first skylight pool (the first pass
-            // had her one metre from the lens, in the dark), the guard by the recovery door, the lab worker at
-            // the back of the recovery room by the drip stand (not in front of the lens).
-            CharacterCatalog catalog = MenuLoopSetup.LoadCatalog();
-            PlaceLucy(catalog, new Vector3(-0.3f, 0f, -6.5f), 0f);
-            PlaceFigure(catalog, "Figure_Guard", "guard", new Vector3(0.8f, 0f, 6f));
-            PlaceFigure(catalog, "Figure_LabWorker", "labworker", new Vector3(4.2f, 0f, 6.6f));
-            PlaceFigure(catalog, "Figure_Patient", "patient", new Vector3(2.2f, 0f, 12.5f));
-
-            // ── Cameras (ART_LESSONS 1.6: inside the room, level): the corridor from its south end (the T12 view,
-            // the default), from its north end, at the recovery door; the recovery room from the south wall and
-            // from the bed corner; the gym from the door corner and from the bars corner.
-            GameObject camerasRoot = MenuLoopSetup.EnsureRoot("[Cameras]");
-            FixedCameraDirector director = MenuLoopSetup.EnsureComponent<FixedCameraDirector>(camerasRoot);
-            // The numbers come from the coverage check (scratchpad coverage.py): the corridor cameras sit near
-            // the centre line, the bars camera holds the west part of the gym, the gym camera the rest.
-            FixedCamera corridorS = MenuLoopSetup.EnsureFixedCamera(camerasRoot, "Cam_Corridor_S", new Vector3(0.6f, 1.6f, -9.4f), new Vector3(-0.1f, 1.3f, 2f), 60f);
-            FixedCamera corridorN = MenuLoopSetup.EnsureFixedCamera(camerasRoot, "Cam_Corridor_N", new Vector3(0f, 1.7f, 9.5f), new Vector3(0.3f, 1f, -4f), 52f);
-            FixedCamera corridorDoor = MenuLoopSetup.EnsureFixedCamera(camerasRoot, "Cam_Corridor_Door", new Vector3(-1.6f, 1.6f, 7.8f), new Vector3(1.9f, 1.1f, 4.6f), 50f);
-            FixedCamera recovery = MenuLoopSetup.EnsureFixedCamera(camerasRoot, "Cam_Recovery", new Vector3(rc.x, 1.6f, rMin.z + 0.15f), new Vector3(rc.x, 1.15f, rMax.z), 66f);
-            FixedCamera recoveryBed = MenuLoopSetup.EnsureFixedCamera(camerasRoot, "Cam_Recovery_Bed", new Vector3(rMax.x - 0.3f, 1.7f, rMax.z - 0.3f), new Vector3(2.8f, 1f, 4.6f), 62f);
-            FixedCamera gym = MenuLoopSetup.EnsureFixedCamera(camerasRoot, "Cam_Gym", new Vector3(3.3f, 1.7f, gMin.z + 0.4f), new Vector3(-1.6f, 1f, 15.5f), 62f);
-            FixedCamera gymBars = MenuLoopSetup.EnsureFixedCamera(camerasRoot, "Cam_Gym_Bars", new Vector3(gMin.x + 0.5f, 1.7f, gMax.z - 0.5f), new Vector3(2.5f, 1f, 12f), 58f);
-            director.SetDefaultCamera(corridorS);
-            MenuLoopSetup.EnsureCameraZone(camerasRoot, "Zone_Corridor_N", new Vector3(0f, 1.5f, 4f), new Vector3(CorridorWidth, 3f, 12f), corridorN, 1);
-            MenuLoopSetup.EnsureCameraZone(camerasRoot, "Zone_Corridor_Door", new Vector3(1.25f, 1.5f, 5f), new Vector3(1.5f, 3f, 3f), corridorDoor, 2);
-            MenuLoopSetup.EnsureCameraZone(camerasRoot, "Zone_Recovery", new Vector3((cw + rMax.x) * 0.5f, 1.5f, rc.z), new Vector3(rMax.x - cw, 3f, rd), recovery, 3);
-            MenuLoopSetup.EnsureCameraZone(camerasRoot, "Zone_Recovery_Bed", new Vector3(rc.x, 1.5f, rMax.z - 1f), new Vector3(rw, 3f, 2f), recoveryBed, 4);
-            MenuLoopSetup.EnsureCameraZone(camerasRoot, "Zone_Gym", new Vector3(gc.x, 1.5f, (cl + gMax.z) * 0.5f), new Vector3(gw, 3f, gMax.z - cl), gym, 3);
-            MenuLoopSetup.EnsureCameraZone(camerasRoot, "Zone_Gym_Bars", new Vector3(-1.75f, 1.5f, 15.4f), new Vector3(4.5f, 3f, 3.8f), gymBars, 4);
-
-            FinishScene(scene, p, new[] { corridorS, corridorN, corridorDoor, recovery, recoveryBed, gym, gymBars }, "the corridor, the recovery room, the gym, 12 spots and 1 panel light");
         }
 
         // ── Room helpers ──────────────────────────────────────────────
 
-        private static GameObject Face(GameObject parent, string name, Vector3 position, Quaternion rotation, float width, float height, Material material, float colliderDepth, float tile = TileMetres, bool stretch = false)
+        internal static GameObject Face(GameObject parent, string name, Vector3 position, Quaternion rotation, float width, float height, Material material, float colliderDepth, float tile = TileMetres, bool stretch = false)
         {
             GameObject obj = MenuLoopSetup.EnsureChild(parent, name);
             obj.transform.SetPositionAndRotation(position, rotation);
@@ -986,12 +1030,12 @@ namespace GlorifiedBody.Editor
             return obj;
         }
 
-        private static GameObject Block(GameObject parent, string name, PrimitiveType type, Vector3 position, Vector3 scale, Material material)
+        internal static GameObject Block(GameObject parent, string name, PrimitiveType type, Vector3 position, Vector3 scale, Material material)
         {
             return Block(parent, name, type, position, scale, material, Quaternion.identity);
         }
 
-        private static GameObject Block(GameObject parent, string name, PrimitiveType type, Vector3 position, Vector3 scale, Material material, Quaternion rotation)
+        internal static GameObject Block(GameObject parent, string name, PrimitiveType type, Vector3 position, Vector3 scale, Material material, Quaternion rotation)
         {
             GameObject obj = MenuLoopSetup.EnsureChildPrimitive(parent, name, type, position, scale);
             obj.transform.rotation = rotation;
@@ -1010,7 +1054,7 @@ namespace GlorifiedBody.Editor
         /// with the same facing. The wall stands on the floor at its bottom centre; the opening at a world point
         /// on that line.
         /// </summary>
-        private static void WallWithOpening(GameObject parent, string name, Vector3 bottomCentre, Quaternion rotation, float width, float height, Vector3 openingCentre, float openingWidth, float openingHeight, Material material, float colliderDepth)
+        internal static void WallWithOpening(GameObject parent, string name, Vector3 bottomCentre, Quaternion rotation, float width, float height, Vector3 openingCentre, float openingWidth, float openingHeight, Material material, float colliderDepth)
         {
             Vector3 right = rotation * Vector3.right;
             float ox = Vector3.Dot(openingCentre - bottomCentre, right);
@@ -1028,7 +1072,7 @@ namespace GlorifiedBody.Editor
         /// over it, a steel sill on the floor. The opening starts at a point on the first wall's line and runs
         /// along that wall's forward (out of the first room, into the second).
         /// </summary>
-        private static void DoorTunnel(GameObject parent, string name, Vector3 start, Quaternion facing, float thickness, float width, float height, Material material, Material sill)
+        internal static void DoorTunnel(GameObject parent, string name, Vector3 start, Quaternion facing, float thickness, float width, float height, Material material, Material sill)
         {
             Vector3 forward = facing * Vector3.forward;
             Vector3 right = facing * Vector3.right;
@@ -1040,13 +1084,13 @@ namespace GlorifiedBody.Editor
         }
 
         /// <summary>A dark band at the foot of the four walls of a rectangular room (centre on the floor, x width, z depth).</summary>
-        private static void Skirting(GameObject parent, Vector3 centre, float width, float depth, float height, Material material, string prefix = "")
+        internal static void Skirting(GameObject parent, Vector3 centre, float width, float depth, float height, Material material, string prefix = "")
         {
             Band(parent, centre, width, depth, 0f, height, material, prefix + "Skirting");
         }
 
         /// <summary>A band on the four walls at some height, a hair in front of them.</summary>
-        private static void Band(GameObject parent, Vector3 centre, float width, float depth, float bottom, float height, Material material, string name = "Band")
+        internal static void Band(GameObject parent, Vector3 centre, float width, float depth, float bottom, float height, Material material, string name = "Band")
         {
             const float gap = 0.012f;
             float y = bottom + height * 0.5f;
@@ -1058,14 +1102,14 @@ namespace GlorifiedBody.Editor
         }
 
         /// <summary>A fern: two crossed cutout cards standing on the soil, turned by a yaw so no two planters match.</summary>
-        private static void FernCard(GameObject parent, string name, Vector3 soil, float width, float height, float yaw, Material material)
+        internal static void FernCard(GameObject parent, string name, Vector3 soil, float width, float height, float yaw, Material material)
         {
             Vector3 centre = soil + Vector3.up * (height * 0.5f);
             Face(parent, name + "_1", centre, Quaternion.Euler(0f, yaw, 0f), width, height, material, 0f, stretch: true);
             Face(parent, name + "_2", centre, Quaternion.Euler(0f, yaw + 90f, 0f), width, height, material, 0f, stretch: true);
         }
 
-        private static Light Spot(GameObject parent, string name, Vector3 position, Quaternion rotation, Color colour, float intensity, float spotAngle, float range = 12f)
+        internal static Light Spot(GameObject parent, string name, Vector3 position, Quaternion rotation, Color colour, float intensity, float spotAngle, float range = 12f)
         {
             GameObject obj = MenuLoopSetup.EnsureChild(parent, name);
             obj.transform.SetPositionAndRotation(position, rotation);
@@ -1086,7 +1130,7 @@ namespace GlorifiedBody.Editor
         }
 
         /// <summary>A panel light: a point light just under the emissive panel, hard shadows on six faces at the medium tier.</summary>
-        private static Light Point(GameObject parent, string name, Vector3 position, Color colour, float intensity, float range)
+        internal static Light Point(GameObject parent, string name, Vector3 position, Color colour, float intensity, float range)
         {
             GameObject obj = MenuLoopSetup.EnsureChild(parent, name);
             obj.transform.SetPositionAndRotation(position, Quaternion.identity);

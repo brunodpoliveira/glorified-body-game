@@ -80,7 +80,18 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   shafts point straight down, the ferns stay crossed cutout cards. Bruno's rule: "we want the vibes of the
   look, but we don't need to be clamped by the same tech limitations; we can cheat".
   OPEN for Bruno: the darkness level, the texture scale.
-  Next: his "later" items (the FSM AI, props, the psychic scan, the logs, the tutorial mode).
+- 2026-10-22, step 5, the tutorial mode (`devlog-notes/2026-10-22_tutorial.md`; Bruno's order: "tutorial
+  mode, a test log, psychic scan (one test image, one test video), props, fsm ai"; his rulings of the day in
+  `03_GAME_DESIGN.md` §11: exp levels with civilians worth more, the firemen farm, the short shocks one enemy
+  at a time, retreat by rank). `Tutorial.unity` (`TutorialSetup.BuildTutorial`, then `BakeTutorial`) is the
+  therapy gym (the shared `LookTestSetup.BuildTherapyGym`) with four padded targets (`Target_1..3`,
+  `Target_Gun` with a DummyShooter off until its step), a capsule, three cameras. `TutorialDirector` runs
+  eleven steps on the player's own actions (walk, run, dodge, switch, blast, fire, lift_throw, catch, capsule,
+  short, complete), `TutorialPromptUI` shows the presenter's placeholder line and the hint with the bound
+  keys, F2 skips. The TUTORIAL button in the main menu. `TutorialDrive` plays it through the virtual pad for
+  the test and the bot (`play Tutorial Main_Menu tutorial 400`). `CameraCoverage` is the shared coverage
+  check. The later features add a step each.
+  Next: the test log, then the scan (one image, one video), props, the FSM AI.
 
 ## Rules
 

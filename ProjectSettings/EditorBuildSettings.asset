@@ -17,5 +17,8 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/_Game/Scenes/LookTest2.unity
     guid: f16ac6bfa3cc9ac95b2e04c2c3b5ebe3
+  - enabled: 1
+    path: Assets/_Game/Scenes/Tutorial.unity
+    guid: 03b1e66e174a0a6839b7878b1b3be2e9
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0

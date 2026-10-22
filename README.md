@@ -65,6 +65,18 @@ gear emblem, the CRT face, the light panel, plus a tileable fallback for every s
 Tests: `LookTestAssetsTests` (EditMode), `LookTestGalleryTests` and `LookTest2Tests` (PlayMode, with the
 camera coverage test: every floor point is in the frame of the camera its zone picks).
 
+## The tutorial (build order step 5)
+
+`Assets/_Game/Scenes/Tutorial.unity` is the therapy gym as the investors' demonstration: the recorded presenter
+asks the subject for each faculty on the padded dummies, in eleven steps (the walk, the run, the dodge, the
+target switch, BLAST, FIRE, TELEKINESIS with the throw, the bullet catch, a capsule, the short, complete).
+`TutorialDirector` runs the steps, `TutorialPromptUI` shows the line and the hint with the bound keys. The
+TUTORIAL button of the main menu opens it. F2 skips a step. Built by
+`tools/unity.sh exec GlorifiedBody.Editor.TutorialSetup.BuildTutorial`, then `TutorialSetup.BakeTutorial` for
+the bounce. The bot: `tools/unity.sh play Tutorial Main_Menu tutorial 400` (a shot per step). Tests:
+`TutorialTests` (PlayMode), `TutorialAssetsTests` (EditMode). The later features (the log, the scan, the props,
+the enemies) add their steps here.
+
 ## Open the project
 
 1. Unity 6000.3.15f1, URP.
