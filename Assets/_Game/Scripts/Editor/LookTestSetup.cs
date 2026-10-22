@@ -248,9 +248,11 @@ namespace GlorifiedBody.Editor
                 list.GetArrayElementAtIndex(ExpensiveRendererIndex).objectReferenceValue = expensive;
                 list.GetArrayElementAtIndex(PlateRendererIndex).objectReferenceValue = plate;
                 so.FindProperty("m_DefaultRendererIndex").intValue = 0;
-                // The 1999 frame (CONCEPTS 7.4): 720p of 1080p, scaled up with a plain filter.
+                // The frame at 1080p (Bruno, 2026-10-22; 720p of 1080p before). MSAA off on disk: the Clear
+                // look sets 4x at runtime (LookQualityApplier).
                 so.FindProperty("m_RenderScale").floatValue = LookDirector.LookRenderScale;
                 so.FindProperty("m_UpscalingFilter").intValue = (int)UpscalingFilterSelection.Linear;
+                so.FindProperty("m_MSAA").intValue = 1;
                 // ART_LESSONS 1.3: hard shadows, never soften them. The spots need per-pixel lights with shadows.
                 so.FindProperty("m_SoftShadowsSupported").boolValue = false;
                 so.FindProperty("m_MainLightShadowsSupported").boolValue = true;
@@ -584,7 +586,7 @@ namespace GlorifiedBody.Editor
             LookDirector look = MenuLoopSetup.EnsureComponent<LookDirector>(lookRoot);
             var greyboxes = new Material[roomRenderers.Count];
             for (int i = 0; i < greyboxes.Length; i++) greyboxes[i] = palette.Greybox;
-            look.Configure(FullRendererIndex, ExpensiveRendererIndex, PlateRendererIndex, RoomLayerMask, roomRenderers.ToArray(), greyboxes, dressedMaterials.ToArray());
+            look.Configure(FullRendererIndex, ExpensiveRendererIndex, PlateRendererIndex, RoomLayerMask, roomRenderers.ToArray(), greyboxes, dressedMaterials.ToArray(), LookDressing.RealTimeBaked);
             EditorUtility.SetDirty(look);
 
             EditorSceneManager.MarkSceneDirty(scene);
@@ -595,7 +597,6 @@ namespace GlorifiedBody.Editor
         private static GameObject PlaceLucy(CharacterCatalog catalog, Vector3 position, float yaw)
         {
             GameObject lucy = MenuLoopSetup.EnsureLucy(catalog, position, yaw);
-            SetLayer(lucy, "Player");
             // No red lock marker over the figures: the picture is the point of these rooms.
             var lockSo = new SerializedObject(lucy.GetComponent<LockOnController>());
             lockSo.FindProperty("showMarker").boolValue = false;
@@ -606,7 +607,6 @@ namespace GlorifiedBody.Editor
         private static GameObject PlaceFigure(CharacterCatalog catalog, string name, string classId, Vector3 position)
         {
             GameObject figure = MenuLoopSetup.EnsureDummy(name, position, catalog, classId);
-            SetLayer(figure, "Enemy");
             return figure;
         }
 
@@ -736,7 +736,7 @@ namespace GlorifiedBody.Editor
             WallWithOpening(room, "Wall_North", new Vector3(0f, 0f, cl), Quaternion.identity, CorridorWidth, ch, new Vector3(0f, 0f, cl), 2.2f, 3f, p.Wall, WallThickness);
             Skirting(room, Vector3.zero, CorridorWidth, CorridorLength, 0.2f, p.Skirting);
             // The ceiling with three skylight slots in a column east of the centre: strips around the slots, a
-            // shaft of four walls each, a sky panel at the top, a narrow cold spot through it, tilted west.
+            // shaft of four walls each, a sky panel at the top, a narrow cold spot straight down through it.
             float sx0 = -0.2f, sx1 = 0.8f;
             float[] slotZ = { -5.5f, -0.5f, 4.5f };
             const float slotLength = 3f, shaftDepth = 0.8f;
@@ -757,7 +757,7 @@ namespace GlorifiedBody.Editor
                 Face(room, $"Shaft_{i}_South", new Vector3(columnX, ym, zc - slotLength * 0.5f), Quaternion.Euler(0f, 180f, 0f), columnW, shaftDepth, p.Wall, 0f);
                 Face(room, $"Shaft_{i}_North", new Vector3(columnX, ym, zc + slotLength * 0.5f), Quaternion.identity, columnW, shaftDepth, p.Wall, 0f);
                 Face(room, $"Sky_{i}", new Vector3(columnX, ch + shaftDepth, zc), Quaternion.Euler(-90f, 0f, 0f), columnW, slotLength, p.Sky, 0f, stretch: true);
-                Spot(lights, $"Skylight_{i}", new Vector3(columnX, ch + shaftDepth - 0.1f, zc), Quaternion.Euler(80f, -90f, 0f), cold, 90f, 26f, 14f);
+                Spot(lights, $"Skylight_{i}", new Vector3(columnX, ch + shaftDepth - 0.1f, zc), Quaternion.Euler(90f, 0f, 0f), cold, 90f, 26f, 14f); // straight down (Bruno, 2026-10-22)
             }
             // The greebles of the corridor: a dark steel beam along the top of each wall, two conduits, the vent
             // grilles and the tube lights on the east wall, a steel frame around the recovery door.
@@ -1112,14 +1112,6 @@ namespace GlorifiedBody.Editor
             so.FindProperty("m_AdditionalLightsShadowResolutionTier").intValue = tier;
             so.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(data);
-        }
-
-        private static void SetLayer(GameObject root, string layerName)
-        {
-            if (root == null) return;
-            int layer = LayerMask.NameToLayer(layerName);
-            if (layer < 0) return;
-            foreach (Transform t in root.GetComponentsInChildren<Transform>(true)) t.gameObject.layer = layer;
         }
     }
 }

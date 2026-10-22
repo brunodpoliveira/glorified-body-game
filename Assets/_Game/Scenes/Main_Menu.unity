@@ -401,6 +401,7 @@ MonoBehaviour:
   defaultFullscreen: 1
   defaultVSync: 1
   defaultRainEnabled: 1
+  defaultLookQuality: 0
 --- !u!114 &1113079123
 MonoBehaviour:
   m_ObjectHideFlags: 0

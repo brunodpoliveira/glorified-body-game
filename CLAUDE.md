@@ -70,8 +70,17 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   F11 cycles the look rooms. The textures are 2K from Nano Banana Pro (`--res 2k`, $0.32 each, 66 MB in git),
   trilinear, aniso 8. The shadow atlas is 4096 (eleven spots in 2048 were halved). The PlayMode coverage test
   (every floor point in the frame of its zone's camera) runs on both rooms.
-  OPEN for Bruno: the pick (real time, real time with the bounce, or plate), the darkness, the texture scale.
-  Next: Bruno's pick, then his "later" items (the FSM AI, props, the psychic scan, the logs, the tutorial mode).
+- 2026-10-22, THE PICK (`devlog-notes/2026-10-22_look_pick.md`): "real time with the baked bounce looks the
+  best; the pure plates lose char shadows and aren't that much better image-wise". So: every room is lit live
+  by hard spots with the bounce baked (`LookTestSetup.BakeAll` per look scene; a game room needs its bake
+  too), the plate stays in the look test as a reference. The frame is 1080p (`LookDirector.LookRenderScale`
+  1). The LOOK option (Options > Display, `SettingsManager.LookQuality`, `LookQualityApplier` on the gameplay
+  systems): Authentic (GB_Full: the dither, no anti-aliasing) or Clear (the stock renderer, MSAA 4x, SMAA).
+  Lucy is on the Player layer and every figure on the Enemy layer in every room (the stencil mark). Skylight
+  shafts point straight down, the ferns stay crossed cutout cards. Bruno's rule: "we want the vibes of the
+  look, but we don't need to be clamped by the same tech limitations; we can cheat".
+  OPEN for Bruno: the darkness level, the texture scale.
+  Next: his "later" items (the FSM AI, props, the psychic scan, the logs, the tutorial mode).
 
 ## Rules
 

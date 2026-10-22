@@ -14,6 +14,7 @@ using GlorifiedBody.Enemy;
 using GlorifiedBody.Level;
 using GlorifiedBody.Level.Build;
 using GlorifiedBody.Player;
+using GlorifiedBody.Rendering;
 using GlorifiedBody.Pooling;
 using GlorifiedBody.Systems;
 using GlorifiedBody.UI;
@@ -183,6 +184,7 @@ namespace GlorifiedBody.Editor
             healthSo.FindProperty("enableSecondWind").boolValue = true;
             healthSo.FindProperty("secondWindInvulnerabilityDuration").floatValue = 2.5f;
             healthSo.ApplyModifiedPropertiesWithoutUndo();
+            SetLayer(player, "Player"); // the stencil mark of the look: the dither skips the characters
             return player;
         }
 
@@ -197,6 +199,7 @@ namespace GlorifiedBody.Editor
             EnsureComponent<DebugKillKey>(systems);
             EnsureComponent<DebugCheatKeys>(systems);
             EnsureComponent<DebugStatusLine>(systems);
+            EnsureComponent<LookQualityApplier>(systems); // the LOOK setting (Authentic or Clear) on the room's camera
         }
 
         /// <summary>The overlay menus and the HUD, on "[RuntimeUI]".</summary>
@@ -395,6 +398,15 @@ namespace GlorifiedBody.Editor
             if (obj != null) Object.DestroyImmediate(obj);
         }
 
+        /// <summary>Every transform under the root on the named layer: Player for Lucy, Enemy for the figures (the stencil mark of the look, the physics matrix allows every pair).</summary>
+        internal static void SetLayer(GameObject root, string layerName)
+        {
+            if (root == null) return;
+            int layer = LayerMask.NameToLayer(layerName);
+            if (layer < 0) return;
+            foreach (Transform t in root.GetComponentsInChildren<Transform>(true)) t.gameObject.layer = layer;
+        }
+
         internal static GameObject EnsureChild(GameObject parent, string name)
         {
             Transform child = parent.transform.Find(name);
@@ -483,6 +495,7 @@ namespace GlorifiedBody.Editor
 
             EnsureCharacterModel(dummy, catalog, classId);
             EnsureComponent<EnemyAnimator>(dummy);
+            SetLayer(dummy, "Enemy");
             return dummy;
         }
 
@@ -494,6 +507,7 @@ namespace GlorifiedBody.Editor
             if (figure == null) figure = new GameObject(name);
             figure.transform.SetPositionAndRotation(position, Quaternion.Euler(0f, yaw, 0f));
             EnsureCharacterModel(figure, catalog, classId);
+            SetLayer(figure, "Enemy");
             return figure;
         }
 

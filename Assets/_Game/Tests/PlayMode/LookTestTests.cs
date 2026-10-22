@@ -49,6 +49,7 @@ namespace GlorifiedBody.Tests.PlayMode
             Time.timeScale = 1f;
             SceneManager.LoadScene(MainMenu);
             yield return WaitUntil(() => SceneManager.GetActiveScene().name == MainMenu && GameManager.Instance != null && GameManager.Instance.IsInMenu, 10f);
+            SettingsManager.Instance.LookQuality = LookQuality.Authentic;
             GameManager.Instance.LoadLevel(Room);
             yield return WaitUntil(() => SceneManager.GetActiveScene().name == Room && GameManager.Instance.IsPlaying, 10f);
             yield return new WaitForSecondsRealtime(0.5f);
@@ -65,6 +66,7 @@ namespace GlorifiedBody.Tests.PlayMode
         {
             if (look != null) look.PlateSizeOverride = default;
             if (director != null) director.Override(null);
+            if (SettingsManager.Instance != null) SettingsManager.Instance.LookQuality = LookQuality.Authentic;
             yield return null;
         }
 
@@ -93,6 +95,8 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.Less(RenderSettings.ambientLight.maxColorComponent, 0.05f, "near-black corners: no ambient");
             Assert.GreaterOrEqual(look.RoomRendererCount, 20, "the room surfaces the director dresses");
             Assert.IsNotNull(UnityEngine.Object.FindFirstObjectByType<LightProbeGroup>(), "the light probes of the bake");
+            Assert.AreEqual(LookDressing.RealTimeBaked, look.Dressing, "the room opens in Bruno's pick: real time with the baked bounce");
+            Assert.AreEqual(1f, LookDirector.LookRenderScale, 0.001f, "the frame at 1080p (Bruno, 2026-10-22)");
 
             UniversalRenderPipelineAsset asset = UniversalRenderPipeline.asset;
             Assert.IsNotNull(asset, "a URP asset");
@@ -137,6 +141,27 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.IsTrue(look.IsDressed);
             Assert.IsTrue(look.BakedLightOn, "the plate carries the bounce");
             Assert.IsNotNull(PlateBlitFeature.Plate, "the plate is armed");
+        }
+
+        [UnityTest]
+        public IEnumerator TheClearLook_UsesTheStockRenderer_InTheLiveDressings()
+        {
+            SettingsManager.Instance.LookQuality = LookQuality.Clear;
+            yield return null;
+            Assert.AreEqual(LookDressing.RealTimeBaked, look.Dressing, "the quality change keeps the dressing");
+            Assert.AreEqual(0, look.RendererIndex, "Clear: the stock renderer, no dither");
+            Assert.IsTrue(look.BakedLightOn, "the bounce stays");
+            Assert.AreEqual(AntialiasingMode.SubpixelMorphologicalAntiAliasing, Camera.main.GetUniversalAdditionalCameraData().antialiasing, "SMAA on the camera");
+            look.SetDressing(LookDressing.RealTime);
+            yield return null;
+            Assert.AreEqual(0, look.RendererIndex, "Clear: real time without the bounce on the stock renderer too");
+            look.SetDressing(LookDressing.Plate);
+            yield return null;
+            Assert.AreEqual(3, look.RendererIndex, "the plate keeps its renderer");
+            SettingsManager.Instance.LookQuality = LookQuality.Authentic;
+            look.SetDressing(LookDressing.RealTimeBaked);
+            yield return null;
+            Assert.AreEqual(1, look.RendererIndex, "Authentic: GB_Full with the dither");
         }
 
         [UnityTest]

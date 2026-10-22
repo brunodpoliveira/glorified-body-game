@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using GlorifiedBody.Rendering;
 using GlorifiedBody.Systems;
 
 namespace GlorifiedBody.UI
@@ -38,6 +39,8 @@ namespace GlorifiedBody.UI
         private Toggle fullscreenToggle;
         private Dropdown vsyncDropdown;
         private Toggle rainToggle;
+        private Button lookAuthenticButton;
+        private Button lookClearButton;
 
         // Mouse
         private Slider sensitivitySlider;
@@ -220,6 +223,8 @@ namespace GlorifiedBody.UI
             SetModeButtonHighlight(slideHoldButton, SettingsManager.Instance.SlideMode == SettingsManager.SlideInputMode.Hold);
             SetModeButtonHighlight(catchThrowHoldButton, SettingsManager.Instance.CatchThrowMode == SettingsManager.CatchThrowInputMode.Hold);
             SetModeButtonHighlight(catchThrowToggleButton, SettingsManager.Instance.CatchThrowMode == SettingsManager.CatchThrowInputMode.Toggle);
+            SetModeButtonHighlight(lookAuthenticButton, SettingsManager.Instance.LookQuality == LookQuality.Authentic);
+            SetModeButtonHighlight(lookClearButton, SettingsManager.Instance.LookQuality == LookQuality.Clear);
         }
 
         private void SetModeButtonHighlight(Button button, bool active)
@@ -275,6 +280,13 @@ namespace GlorifiedBody.UI
         {
             if (SettingsManager.Instance != null)
                 SettingsManager.Instance.CatchThrowMode = (SettingsManager.CatchThrowInputMode)Mathf.Clamp(index, 0, 1);
+            RefreshModeButtons();
+        }
+
+        private void OnLookQualityChanged(int index)
+        {
+            if (SettingsManager.Instance != null)
+                SettingsManager.Instance.LookQuality = (LookQuality)Mathf.Clamp(index, 0, 1);
             RefreshModeButtons();
         }
 
@@ -510,6 +522,16 @@ namespace GlorifiedBody.UI
             vsyncDropdown.onValueChanged.AddListener(OnVSyncChanged);
 
             rainToggle = CreateToggleRow(content, "Rain Effects", OnRainChanged);
+
+            // The LOOK (Bruno, 2026-10-22): the 1999 frame with the dither, or the same picture clear with anti-aliasing.
+            CreateModeRow(
+                content,
+                "Look",
+                OnLookQualityChanged,
+                out lookAuthenticButton,
+                out lookClearButton,
+                firstOptionLabel: "Authentic (1999)",
+                secondOptionLabel: "Clear (anti-aliasing)");
 
             return panel;
         }

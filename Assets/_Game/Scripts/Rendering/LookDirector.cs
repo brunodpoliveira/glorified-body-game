@@ -31,12 +31,12 @@ namespace GlorifiedBody.Rendering
     /// in the plate dressing, renders the static room once per camera with the expensive renderer (GB_Expensive:
     /// ambient occlusion, 4096 shadow maps, the baked bounce) into the plate. A camera cut marks the plate dirty
     /// and the next Update captures it again. The plate has the size of the view at the look's render scale
-    /// (720p of 1080p), so it matches the live 720p frame pixel for pixel; a bot sets the size by hand before
-    /// it renders a shot of another size.
+    /// (1080p since Bruno's pick), so it matches the live frame pixel for pixel; a bot sets the size by hand
+    /// before it renders a shot of another size. The renderer of the live dressings follows the LOOK setting.
     /// </summary>
     public sealed class LookDirector : MonoBehaviour
     {
-        public const float LookRenderScale = 2f / 3f; // 720p of 1080p (CONCEPTS 7.4, Bruno's T2 ruling)
+        public const float LookRenderScale = 1f; // 1080p (Bruno, 2026-10-22: "render scale up to 1080"; 720p of 1080p before)
         public const int ExpensiveShadowResolution = 4096;
         public const KeyCode CycleKey = KeyCode.F3; // F10 opens the menu bar of the editor on Linux (Bruno, 2026-10-22)
         public const int DressingCount = 4;
@@ -45,7 +45,7 @@ namespace GlorifiedBody.Rendering
         [SerializeField] private int expensiveRendererIndex = 2;
         [SerializeField] private int plateRendererIndex = 3;
         [SerializeField] private LayerMask roomLayers = 1; // Default
-        [SerializeField] private LookDressing startDressing = LookDressing.RealTime;
+        [SerializeField] private LookDressing startDressing = LookDressing.RealTimeBaked; // Bruno's pick, 2026-10-22
         [SerializeField] private Renderer[] roomRenderers = new Renderer[0];
         [SerializeField] private Material[] greyboxMaterials = new Material[0];
         [SerializeField] private Material[] dressedMaterials = new Material[0];
@@ -81,7 +81,7 @@ namespace GlorifiedBody.Rendering
         private readonly List<int> lightmapIndices = new List<int>();
         private readonly List<Renderer> characterRenderers = new List<Renderer>();
 
-        public void Configure(int full, int expensive, int plateIndex, LayerMask room, Renderer[] renderers, Material[] greybox, Material[] dressed)
+        public void Configure(int full, int expensive, int plateIndex, LayerMask room, Renderer[] renderers, Material[] greybox, Material[] dressed, LookDressing start)
         {
             fullRendererIndex = full;
             expensiveRendererIndex = expensive;
@@ -90,6 +90,7 @@ namespace GlorifiedBody.Rendering
             roomRenderers = renderers;
             greyboxMaterials = greybox;
             dressedMaterials = dressed;
+            startDressing = start;
         }
 
         private void Awake()
@@ -111,6 +112,7 @@ namespace GlorifiedBody.Rendering
         {
             director = FixedCameraDirector.Instance;
             if (director != null) director.OnCameraChanged += OnCameraCut;
+            if (SettingsManager.Instance != null) SettingsManager.Instance.OnLookQualityChanged += OnQualityChanged;
             GameObject player = GameObject.FindGameObjectWithTag("Player");
             if (player != null)
             {
@@ -130,6 +132,7 @@ namespace GlorifiedBody.Rendering
         private void OnDestroy()
         {
             if (director != null) director.OnCameraChanged -= OnCameraCut;
+            if (SettingsManager.Instance != null) SettingsManager.Instance.OnLookQualityChanged -= OnQualityChanged;
             PlateBlitFeature.Plate = null;
             if (plate != null) plate.Release();
             if (captureTarget != null) captureTarget.Release();
@@ -139,6 +142,23 @@ namespace GlorifiedBody.Rendering
         private void OnCameraCut(FixedCamera camera)
         {
             plateDirty = true;
+        }
+
+        /// <summary>The LOOK setting changed: the live dressings take the renderer of the new quality.</summary>
+        private void OnQualityChanged(LookQuality quality)
+        {
+            SetDressing(Dressing);
+        }
+
+        /// <summary>The renderer of a dressing: the stock one for the greybox and for the Clear look, GB_Full with the dither for Authentic, GB_Plate for the plate.</summary>
+        private int RendererFor(LookDressing dressing)
+        {
+            switch (dressing)
+            {
+                case LookDressing.Greybox: return 0;
+                case LookDressing.Plate: return plateRendererIndex;
+                default: return LookQualityApplier.Current == LookQuality.Clear ? LookQualityApplier.ClearRendererIndex : fullRendererIndex;
+            }
         }
 
         private void Update()
@@ -167,11 +187,11 @@ namespace GlorifiedBody.Rendering
                     break;
                 case LookDressing.RealTime:
                     SetBakedLight(false);
-                    UseRenderer(fullRendererIndex);
+                    UseRenderer(RendererFor(dressing));
                     break;
                 case LookDressing.RealTimeBaked:
                     SetBakedLight(true);
-                    UseRenderer(fullRendererIndex);
+                    UseRenderer(RendererFor(dressing));
                     break;
                 default:
                     SetBakedLight(true);
@@ -288,7 +308,7 @@ namespace GlorifiedBody.Rendering
         {
             string camName = director != null ? director.CurrentName : "none";
             string baked = HasBakedLight ? (BakedLightOn ? "on" : "off") : "none";
-            GUI.Label(new Rect(12f, 8f, 1100f, 24f), $"LOOK TEST  {Dressing}  (F3 cycles, F11 the next room)   camera {camName}   baked light {baked}   plate {PlateCameraName} x{PlateCaptures}");
+            GUI.Label(new Rect(12f, 8f, 1200f, 24f), $"LOOK TEST  {Dressing}  (F3 cycles, F11 the next room)   look {LookQualityApplier.Current}   camera {camName}   baked light {baked}   plate {PlateCameraName} x{PlateCaptures}");
         }
     }
 }

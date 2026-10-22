@@ -41,15 +41,19 @@ Build Look Tests), then `tools/unity.sh exec GlorifiedBody.Editor.LookTestSetup.
   the wall of CRTs, the parallel bars, the mirror, the padded dummies), Lucy, three figures, seven cameras.
 
 F11 loads the next look room (from the training room: the Gallery, then LookTest2, then the Gallery again).
-F3 cycles the four dressings, the label at the top left names the one on screen:
+F3 cycles the four dressings, the label at the top left names the one on screen. A room opens in the third
+one, Bruno's pick of 2026-10-22:
 
 1. Greybox: flat grey, the stock renderer.
-2. RealTime: the textures and the spots live every frame, no bounce light, the 720p frame scaled up, 32 levels
-   with a Bayer dither on the background (the characters keep their colours through a stencil mark).
-3. RealTimeBaked: the same plus the baked bounce light (the lightmaps of the room, the probes for the figures).
-4. Plate: the room rendered once per camera (the bounce, ambient occlusion, 4096 shadow maps) into a plate,
-   then each frame draws the plate, the room as depth only and the characters over it. A camera cut captures
-   again.
+2. RealTime: the textures and the spots live every frame, no bounce light.
+3. RealTimeBaked (THE LOOK): the same plus the baked bounce light (the lightmaps of the room, the probes for
+   the figures).
+4. Plate (rejected, a reference): the room rendered once per camera (the bounce, ambient occlusion, 4096 shadow
+   maps) into a plate, then each frame draws the plate, the room as depth only and the characters over it.
+
+The frame is 1080p. The LOOK option in Options > Display picks the finish for every room: Authentic (the
+32-level Bayer dither on the background, the characters keep their colours through a stencil mark, no
+anti-aliasing) or Clear (no dither, MSAA 4x and SMAA). `LookQualityApplier` on the gameplay systems follows it.
 
 The renderers (GB_Full, GB_Expensive, GB_Plate next to the stock one on the URP assets), the materials
 (Simple Lit, one colour map each, the relief painted in the picture), the probes, the lighting settings and the

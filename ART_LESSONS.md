@@ -9,8 +9,12 @@ T17). Each rule cost us hours once. Full detail: `the-glorified-body/tests/T15_3
 1. It LOOKS like a late-PS1 game. It is not one. An "upscaled PS1 game": clean 720p, no painterly look, no VHS look.
 2. The detail lives in the TEXTURE, not in the mesh. That is why faces need no lip sync and no emotes.
 3. Hard shadows. Never soften them.
-4. Light like Parasite Eve II and Resident Evil 2: point lights and spots, hard pools of light, near-black corners,
-   no bounce light.
+4. Light like Parasite Eve II and Resident Evil 2: point lights and spots, hard pools of light, near-black corners.
+   The bounce light is BAKED (Bruno's pick of 2026-10-22 from the second look test: "real time with the baked
+   bounce looks the best"): the spots stay live and hard, the lightmaps carry the indirect light and the ambient
+   occlusion, the probes light the figures. Without it a concrete corridor is black between the pools. The plate
+   (the room pre-rendered per camera) lost the character shadows for no visible gain: rejected, kept in the look
+   test as a reference.
 5. The world: concrete, conduits, steel trim, grilles, tiled textures, hard highlights. Nature is TAMED: planters
    only, no ivy. Patient rooms are clean, bright and tiled. The cult emblem is a white gear on black. Intake and
    reception rooms have a CRT TV for propaganda.
@@ -23,6 +27,12 @@ T17). Each rule cost us hours once. Full detail: `the-glorified-body/tests/T15_3
    Clarity first: trilinear, anisotropy 8, no compression.
 9. (2026-10-22) Every floor point of a room is in the frame of the camera its zone picks. A section without a
    camera is a bug (Bruno walked into one in the Gallery). The PlayMode coverage test guards every look room.
+10. (2026-10-22, the pick) The frame is 1080p (the 720p scale is gone). Two looks in the settings, the player
+    chooses: Authentic (the 32-level dither on the background, no anti-aliasing) and Clear (no dither, MSAA 4x
+    and SMAA). Bruno: "we want the vibes of the look, but we don't need to be clamped by the same tech
+    limitations; we can cheat to make the picture look better". The vibe is the hard light, the baked bounce,
+    the texture detail and the fixed cameras. The resolution, the anti-aliasing and the filtering are free.
+    Skylight shafts point straight down. Plants are crossed cutout cards, as in 1999.
 
 ## 2. Concept art: what to ask for
 

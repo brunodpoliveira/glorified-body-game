@@ -59,7 +59,9 @@ namespace GlorifiedBody.Tests.EditMode
             Assert.AreEqual("GB_Full", list.GetArrayElementAtIndex(LookTestSetup.FullRendererIndex).objectReferenceValue.name);
             Assert.AreEqual("GB_Expensive", list.GetArrayElementAtIndex(LookTestSetup.ExpensiveRendererIndex).objectReferenceValue.name);
             Assert.AreEqual("GB_Plate", list.GetArrayElementAtIndex(LookTestSetup.PlateRendererIndex).objectReferenceValue.name);
-            Assert.AreEqual(LookDirector.LookRenderScale, asset.renderScale, 0.001f, "720p of 1080p");
+            Assert.AreEqual(LookDirector.LookRenderScale, asset.renderScale, 0.001f, "the frame at 1080p (Bruno, 2026-10-22)");
+            Assert.AreEqual(1f, asset.renderScale, 0.001f, "scale 1");
+            Assert.AreEqual(1, asset.msaaSampleCount, "MSAA off on disk: the Clear look sets 4x at runtime");
             Assert.AreEqual(UpscalingFilterSelection.Linear, asset.upscalingFilter);
             Assert.IsFalse(asset.supportsSoftShadows, "hard shadows only");
             Assert.IsTrue(asset.supportsAdditionalLightShadows, "the spots cast shadows");

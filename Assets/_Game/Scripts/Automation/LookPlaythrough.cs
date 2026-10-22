@@ -177,6 +177,25 @@ namespace GlorifiedBody.Automation
                 Record($"frames_{tag}", frames > 0, $"frames={frames} avg={avg:0.00} ms max={frameMax:0.00} ms");
             }
 
+            // The LOOK option (Bruno's pick, 2026-10-22): the baked dressing under the default camera, Clear
+            // (the stock renderer, MSAA, SMAA) then Authentic (the dither), one shot each for the pixels.
+            look.SetDressing(LookDressing.RealTimeBaked);
+            director.Override(director.DefaultCamera);
+            tank.Teleport(home, homeYaw);
+            if (SettingsManager.Instance != null)
+            {
+                foreach (LookQuality quality in new[] { LookQuality.Clear, LookQuality.Authentic })
+                {
+                    string qualityTag = quality.ToString().ToLowerInvariant();
+                    SettingsManager.Instance.LookQuality = quality;
+                    yield return null;
+                    yield return null;
+                    string qualityFile = Path.Combine(shotsDir, $"look_quality_{qualityTag}.png");
+                    bool qualitySaved = ShotRenderer.Render(Camera.main, qualityFile, ShotWidth, ShotHeight, useTargetTexture: true);
+                    Record($"quality_{qualityTag}", qualitySaved && look.RendererIndex == LookQualityApplier.RendererIndexFor(quality), $"saved={qualitySaved} renderer={look.RendererIndex}");
+                }
+            }
+
             GameInput.ClearBotSource(pad);
             Finish();
         }

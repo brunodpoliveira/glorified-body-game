@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using GlorifiedBody.Rendering;
 
 namespace GlorifiedBody.Systems
 {
@@ -143,11 +144,13 @@ namespace GlorifiedBody.Systems
         [SerializeField] private bool defaultFullscreen = true;
         [SerializeField] private int defaultVSync = 1;
         [SerializeField] private bool defaultRainEnabled = true;
+        [SerializeField] private LookQuality defaultLookQuality = LookQuality.Authentic;
 
         private bool fullscreen;
         private int resolutionIndex;
         private int vSyncCount;
         private bool rainEnabled;
+        private LookQuality lookQuality;
 
         public bool Fullscreen
         {
@@ -192,6 +195,20 @@ namespace GlorifiedBody.Systems
             }
         }
 
+        /// <summary>The LOOK option (Bruno, 2026-10-22): Authentic (the dither, no anti-aliasing) or Clear (MSAA and SMAA, no dither). LookQualityApplier follows it.</summary>
+        public LookQuality LookQuality
+        {
+            get => lookQuality;
+            set
+            {
+                lookQuality = Enum.IsDefined(typeof(LookQuality), value) ? value : LookQuality.Authentic;
+                SaveSettings();
+                OnLookQualityChanged?.Invoke(lookQuality);
+            }
+        }
+
+        public event Action<LookQuality> OnLookQualityChanged;
+
         // ── PlayerPrefs Keys ───────────────────────────────────────────
 
         private const string KEY_MASTER_VOL = "settings_masterVolume";
@@ -205,6 +222,7 @@ namespace GlorifiedBody.Systems
         private const string KEY_RESOLUTION = "settings_resolutionIndex";
         private const string KEY_VSYNC = "settings_vsync";
         private const string KEY_RAIN_ENABLED = "settings_rainEnabled";
+        private const string KEY_LOOK_QUALITY = "settings_lookQuality";
 
         void Awake()
         {
@@ -234,6 +252,8 @@ namespace GlorifiedBody.Systems
             resolutionIndex = PlayerPrefs.GetInt(KEY_RESOLUTION, GetCurrentResolutionIndex());
             vSyncCount = PlayerPrefs.GetInt(KEY_VSYNC, defaultVSync);
             rainEnabled = PlayerPrefs.GetInt(KEY_RAIN_ENABLED, defaultRainEnabled ? 1 : 0) == 1;
+            lookQuality = (LookQuality)PlayerPrefs.GetInt(KEY_LOOK_QUALITY, (int)defaultLookQuality);
+            if (!Enum.IsDefined(typeof(LookQuality), lookQuality)) lookQuality = defaultLookQuality;
 
             ApplyAudioSettings();
             ApplyDisplaySettings();
@@ -253,6 +273,7 @@ namespace GlorifiedBody.Systems
             PlayerPrefs.SetInt(KEY_RESOLUTION, resolutionIndex);
             PlayerPrefs.SetInt(KEY_VSYNC, vSyncCount);
             PlayerPrefs.SetInt(KEY_RAIN_ENABLED, rainEnabled ? 1 : 0);
+            PlayerPrefs.SetInt(KEY_LOOK_QUALITY, (int)lookQuality);
             PlayerPrefs.Save();
         }
 
@@ -304,12 +325,14 @@ namespace GlorifiedBody.Systems
             fullscreen = defaultFullscreen;
             vSyncCount = defaultVSync;
             rainEnabled = defaultRainEnabled;
+            lookQuality = defaultLookQuality;
             resolutionIndex = GetCurrentResolutionIndex();
 
             ApplyAudioSettings();
             ApplyDisplaySettings();
             QualitySettings.vSyncCount = vSyncCount;
             OnMouseSensitivityChanged?.Invoke(mouseSensitivity);
+            OnLookQualityChanged?.Invoke(lookQuality);
             SaveSettings();
         }
 
