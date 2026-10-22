@@ -24,6 +24,7 @@ namespace GlorifiedBody.Player
 
         private TankController tank;
         private Transform marker;
+        [SerializeField] private bool showMarker = true;
 
         public LockOnTargetable CurrentTarget { get; private set; }
         public bool HasTarget => CurrentTarget != null;
@@ -145,10 +146,17 @@ namespace GlorifiedBody.Player
             marker.gameObject.SetActive(false);
         }
 
+        /// <summary>The red sphere over the target. Off in the look test, where the picture is the point.</summary>
+        public bool ShowMarker
+        {
+            get => showMarker;
+            set => showMarker = value;
+        }
+
         private void UpdateMarker()
         {
             if (marker == null) return;
-            bool show = CurrentTarget != null;
+            bool show = showMarker && CurrentTarget != null;
             if (marker.gameObject.activeSelf != show) marker.gameObject.SetActive(show);
             // The display point is the chest (1.2 m). The marker floats over the head, not on the face (PROPOSED 0.9).
             if (show) marker.position = CurrentTarget.GetDisplayPoint() + Vector3.up * 0.9f;

@@ -57,7 +57,7 @@ namespace GlorifiedBody.Editor
 
         // ── Training room ─────────────────────────────────────────────
 
-        private static void BuildTrainingRoomScene()
+        internal static void BuildTrainingRoomScene()
         {
             Scene scene = OpenOrCreate(TrainingRoomScenePath);
 
@@ -74,17 +74,73 @@ namespace GlorifiedBody.Editor
             EnsurePrimitive("Wall_East", PrimitiveType.Cube, new Vector3(5.15f, 1.5f, 0f), new Vector3(0.5f, 3f, 10.6f)).isStatic = true;
             EnsurePrimitive("Wall_West", PrimitiveType.Cube, new Vector3(-5.15f, 1.5f, 0f), new Vector3(0.5f, 3f, 10.6f)).isStatic = true;
 
-            // Lucy: the T19 model (lucy_bare) under a root that stands on its feet (y 0), with Health, the tank
-            // controller and the lock-on. The CharacterController is her collider. The capsule placeholder of
-            // step 2 migrates: same object, same components, the primitive mesh and the nose marker go.
+            CharacterCatalog catalog = LoadCatalog();
+            EnsureLucy(catalog, Vector3.zero, 0f);
+
+            // The step 1 kill volume (a dark 1 x 2 m box at (4, 1, 0) with a PlayerDeathTestVolume) is gone: Bruno
+            // walked into it and died at once (2026-10-21). The bot and the tests kill through Health. The builder
+            // opens the existing scene, so the removal is explicit.
+            RemoveObject("KillVolume");
+
+            // Two target dummies for the lock-on, with the guard and the soldier models. The FSM AI comes later.
+            GameObject dummyA = EnsureDummy("Dummy_A", new Vector3(3f, 0f, 2f), catalog, "guard");
+            EnsureComponent<DummyShooter>(dummyA); // the one that shoots, with the telegraph
+            EnsureDummy("Dummy_B", new Vector3(-2f, 0f, 4f), catalog, "soldier");
+
+            // The cast along the north wall, facing the room (Bruno, 2026-10-21: all of them in the room now, to
+            // test the materials). Visual only: no Health, no collider, the idle on each.
+            string[] castIds = { "power_armour", "lucy_guard", "patient", "nurse", "labworker", "fireman" };
+            float[] castX = { -4.4f, -3.2f, -0.4f, 0.8f, 2.0f, 3.2f };
+            for (int i = 0; i < castIds.Length; i++) EnsureCastFigure(catalog, castIds[i], new Vector3(castX[i], 0f, 4.4f), 180f);
+
+            // Three drugs on the floor, one per power.
+            EnsurePickup("Drug_Nalcon", DrugType.Nalcon, new Vector3(-3f, 0.4f, 0f));
+            EnsurePickup("Drug_Red", DrugType.Red, new Vector3(-3.5f, 0.4f, 1.2f));
+            EnsurePickup("Drug_DFelon", DrugType.DFelon, new Vector3(-2.5f, 0.4f, -1.2f));
+
+            // Fixed cameras: the wide default, plus two corner cameras with their zones.
+            // Cam_SouthWest sits in the south-east corner and looks west along the south wall (Bruno, 2026-10-20:
+            // "no camera angle cuts the dummy target"). From its zone both dummies are outside the frame at 16:9
+            // and at 4:3, so the HUD edge arrow shows there, and Lucy stays in the frame over the whole zone.
+            GameObject camerasRoot = EnsureRoot("[Cameras]");
+            FixedCameraDirector director = EnsureComponent<FixedCameraDirector>(camerasRoot);
+            FixedCamera wide = EnsureFixedCamera(camerasRoot, "Cam_Wide", camera.transform.position, new Vector3(0f, 1f, 0f), 50f);
+            FixedCamera northEast = EnsureFixedCamera(camerasRoot, "Cam_NorthEast", new Vector3(4.3f, 3.4f, 4.3f), new Vector3(0f, 1f, 0f), 55f);
+            FixedCamera southWest = EnsureFixedCamera(camerasRoot, "Cam_SouthWest", new Vector3(4.6f, 2.8f, -4.6f), new Vector3(-3.0f, 0.9f, -3.4f), 50f);
+            director.SetDefaultCamera(wide);
+            // The zones test her root, which stands on the floor now, so they reach below it.
+            EnsureCameraZone(camerasRoot, "Zone_NorthEast", new Vector3(3f, 1f, 3f), new Vector3(4f, 3f, 4f), northEast, 1);
+            EnsureCameraZone(camerasRoot, "Zone_SouthWest", new Vector3(-3f, 1f, -3f), new Vector3(4f, 3f, 4f), southWest, 1);
+
+            EnsureGameplaySystems();
+            EnsureRuntimeUi();
+            EnsureShotPoints(new[] { wide, northEast, southWest });
+
+            EditorSceneManager.MarkSceneDirty(scene);
+            EditorSceneManager.SaveScene(scene);
+            Debug.Log($"[MenuLoopSetup] {TrainingRoomScenePath} built.");
+        }
+
+        internal static CharacterCatalog LoadCatalog()
+        {
             CharacterCatalog catalog = AssetDatabase.LoadAssetAtPath<CharacterCatalog>(CreateCharacterAssets.CatalogPath);
             if (catalog == null) Debug.LogWarning("[MenuLoopSetup] no character catalog: run CreateCharacterAssets.BuildAll first. The room gets no models.");
+            return catalog;
+        }
+
+        /// <summary>
+        /// Lucy: the T19 model (lucy_bare) under a root that stands on its feet (y 0), with Health, the tank
+        /// controller and the lock-on. The CharacterController is her collider. The capsule placeholder of
+        /// step 2 migrates: same object, same components, the primitive mesh and the nose marker go.
+        /// </summary>
+        internal static GameObject EnsureLucy(CharacterCatalog catalog, Vector3 position, float yaw)
+        {
             GameObject player = GameObject.Find("Lucy");
             if (player == null) player = GameObject.Find("Lucy_Placeholder");
             if (player == null) player = new GameObject("Lucy");
             player.name = "Lucy";
             player.tag = "Player";
-            player.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
+            player.transform.SetPositionAndRotation(position, Quaternion.Euler(0f, yaw, 0f));
             player.transform.localScale = Vector3.one;
             RemoveComponent<Rigidbody>(player);
             RemoveComponent<CapsuleCollider>(player);
@@ -127,42 +183,12 @@ namespace GlorifiedBody.Editor
             healthSo.FindProperty("enableSecondWind").boolValue = true;
             healthSo.FindProperty("secondWindInvulnerabilityDuration").floatValue = 2.5f;
             healthSo.ApplyModifiedPropertiesWithoutUndo();
+            return player;
+        }
 
-            // The step 1 kill volume (a dark 1 x 2 m box at (4, 1, 0) with a PlayerDeathTestVolume) is gone: Bruno
-            // walked into it and died at once (2026-10-21). The bot and the tests kill through Health. The builder
-            // opens the existing scene, so the removal is explicit.
-            RemoveObject("KillVolume");
-
-            // Two target dummies for the lock-on, with the guard and the soldier models. The FSM AI comes later.
-            GameObject dummyA = EnsureDummy("Dummy_A", new Vector3(3f, 0f, 2f), catalog, "guard");
-            EnsureComponent<DummyShooter>(dummyA); // the one that shoots, with the telegraph
-            EnsureDummy("Dummy_B", new Vector3(-2f, 0f, 4f), catalog, "soldier");
-
-            // The cast along the north wall, facing the room (Bruno, 2026-10-21: all of them in the room now, to
-            // test the materials). Visual only: no Health, no collider, the idle on each.
-            string[] castIds = { "power_armour", "lucy_guard", "patient", "nurse", "labworker", "fireman" };
-            float[] castX = { -4.4f, -3.2f, -0.4f, 0.8f, 2.0f, 3.2f };
-            for (int i = 0; i < castIds.Length; i++) EnsureCastFigure(catalog, castIds[i], new Vector3(castX[i], 0f, 4.4f), 180f);
-
-            // Three drugs on the floor, one per power.
-            EnsurePickup("Drug_Nalcon", DrugType.Nalcon, new Vector3(-3f, 0.4f, 0f));
-            EnsurePickup("Drug_Red", DrugType.Red, new Vector3(-3.5f, 0.4f, 1.2f));
-            EnsurePickup("Drug_DFelon", DrugType.DFelon, new Vector3(-2.5f, 0.4f, -1.2f));
-
-            // Fixed cameras: the wide default, plus two corner cameras with their zones.
-            // Cam_SouthWest sits in the south-east corner and looks west along the south wall (Bruno, 2026-10-20:
-            // "no camera angle cuts the dummy target"). From its zone both dummies are outside the frame at 16:9
-            // and at 4:3, so the HUD edge arrow shows there, and Lucy stays in the frame over the whole zone.
-            GameObject camerasRoot = EnsureRoot("[Cameras]");
-            FixedCameraDirector director = EnsureComponent<FixedCameraDirector>(camerasRoot);
-            FixedCamera wide = EnsureFixedCamera(camerasRoot, "Cam_Wide", camera.transform.position, new Vector3(0f, 1f, 0f), 50f);
-            FixedCamera northEast = EnsureFixedCamera(camerasRoot, "Cam_NorthEast", new Vector3(4.3f, 3.4f, 4.3f), new Vector3(0f, 1f, 0f), 55f);
-            FixedCamera southWest = EnsureFixedCamera(camerasRoot, "Cam_SouthWest", new Vector3(4.6f, 2.8f, -4.6f), new Vector3(-3.0f, 0.9f, -3.4f), 50f);
-            director.SetDefaultCamera(wide);
-            // The zones test her root, which stands on the floor now, so they reach below it.
-            EnsureCameraZone(camerasRoot, "Zone_NorthEast", new Vector3(3f, 1f, 3f), new Vector3(4f, 3f, 4f), northEast, 1);
-            EnsureCameraZone(camerasRoot, "Zone_SouthWest", new Vector3(-3f, 1f, -3f), new Vector3(4f, 3f, 4f), southWest, 1);
-
+        /// <summary>The systems every playable room needs, on "[GameplaySystems]".</summary>
+        internal static void EnsureGameplaySystems()
+        {
             GameObject systems = EnsureRoot("[GameplaySystems]");
             EnsureComponent<GameplayInitializer>(systems);
             EnsureComponent<ImpactFrameController>(systems);
@@ -171,7 +197,11 @@ namespace GlorifiedBody.Editor
             EnsureComponent<DebugKillKey>(systems);
             EnsureComponent<DebugCheatKeys>(systems);
             EnsureComponent<DebugStatusLine>(systems);
+        }
 
+        /// <summary>The overlay menus and the HUD, on "[RuntimeUI]".</summary>
+        internal static void EnsureRuntimeUi()
+        {
             GameObject ui = EnsureRoot("[RuntimeUI]");
             EnsureComponent<PauseMenuUI>(ui);
             EnsureComponent<OptionsMenuUI>(ui);
@@ -180,11 +210,14 @@ namespace GlorifiedBody.Editor
             EnsureComponent<CreditsUI>(ui);
             EnsureComponent<LevelCompleteUI>(ui);
             EnsureComponent<PlayerHud>(ui);
+        }
 
-            // One ShotPoint per fixed camera, so `tools/unity.sh shots TrainingRoom` renders every view.
+        /// <summary>One ShotPoint per fixed camera, so `tools/unity.sh shots &lt;scene&gt;` renders every view.</summary>
+        internal static void EnsureShotPoints(FixedCamera[] cameras)
+        {
             GameObject oldShot = GameObject.Find("ShotPoint_fixed_camera");
             if (oldShot != null) Object.DestroyImmediate(oldShot);
-            foreach (FixedCamera fixedCamera in new[] { wide, northEast, southWest })
+            foreach (FixedCamera fixedCamera in cameras)
             {
                 GameObject shot = EnsureRoot("ShotPoint_" + fixedCamera.cameraName);
                 shot.transform.SetPositionAndRotation(fixedCamera.transform.position, fixedCamera.transform.rotation);
@@ -192,15 +225,11 @@ namespace GlorifiedBody.Editor
                 shotPoint.shotName = fixedCamera.cameraName;
                 shotPoint.fieldOfView = fixedCamera.fieldOfView;
             }
-
-            EditorSceneManager.MarkSceneDirty(scene);
-            EditorSceneManager.SaveScene(scene);
-            Debug.Log($"[MenuLoopSetup] {TrainingRoomScenePath} built.");
         }
 
         // ── Main menu ─────────────────────────────────────────────────
 
-        private static void BuildMainMenuScene()
+        internal static void BuildMainMenuScene()
         {
             Scene scene = OpenOrCreate(MainMenuScenePath);
 
@@ -223,7 +252,7 @@ namespace GlorifiedBody.Editor
 
         // ── Death screen content ──────────────────────────────────────
 
-        private static void EnsureDeathContent()
+        internal static void EnsureDeathContent()
         {
             var content = AssetDatabase.LoadAssetAtPath<DeathScreenContent>(DeathContentPath);
             if (content == null)
@@ -247,7 +276,7 @@ namespace GlorifiedBody.Editor
 
         // ── Build settings ────────────────────────────────────────────
 
-        private static void CleanBuildSettings()
+        internal static void CleanBuildSettings()
         {
             var scenes = new List<EditorBuildSettingsScene>();
             foreach (EditorBuildSettingsScene entry in EditorBuildSettings.scenes)
@@ -258,6 +287,7 @@ namespace GlorifiedBody.Editor
 
             EnsureBuildScene(scenes, MainMenuScenePath);
             EnsureBuildScene(scenes, TrainingRoomScenePath);
+            if (File.Exists(LookTestSetup.ScenePath)) EnsureBuildScene(scenes, LookTestSetup.ScenePath);
 
             // The main menu loads first.
             scenes.Sort((a, b) =>
@@ -269,7 +299,7 @@ namespace GlorifiedBody.Editor
             EditorBuildSettings.scenes = scenes.ToArray();
         }
 
-        private static void EnsureBuildScene(List<EditorBuildSettingsScene> scenes, string path)
+        internal static void EnsureBuildScene(List<EditorBuildSettingsScene> scenes, string path)
         {
             foreach (EditorBuildSettingsScene entry in scenes)
             {
@@ -285,7 +315,7 @@ namespace GlorifiedBody.Editor
 
         // ── Helpers ───────────────────────────────────────────────────
 
-        private static Scene OpenOrCreate(string path)
+        internal static Scene OpenOrCreate(string path)
         {
             if (File.Exists(path))
             {
@@ -297,7 +327,7 @@ namespace GlorifiedBody.Editor
             return scene;
         }
 
-        private static Camera EnsureCamera(Vector3 position, Vector3 lookAt, float fieldOfView)
+        internal static Camera EnsureCamera(Vector3 position, Vector3 lookAt, float fieldOfView)
         {
             Camera camera = Camera.main;
             if (camera == null)
@@ -316,7 +346,7 @@ namespace GlorifiedBody.Editor
             return camera;
         }
 
-        private static void EnsureLight()
+        internal static void EnsureLight()
         {
             if (Object.FindFirstObjectByType<Light>() != null) return;
             var lightObj = new GameObject("Directional Light");
@@ -326,13 +356,13 @@ namespace GlorifiedBody.Editor
             lightObj.transform.rotation = Quaternion.Euler(50f, -30f, 0f);
         }
 
-        private static GameObject EnsureRoot(string name)
+        internal static GameObject EnsureRoot(string name)
         {
             GameObject obj = GameObject.Find(name);
             return obj != null ? obj : new GameObject(name);
         }
 
-        private static GameObject EnsurePrimitive(string name, PrimitiveType type, Vector3 position, Vector3 scale)
+        internal static GameObject EnsurePrimitive(string name, PrimitiveType type, Vector3 position, Vector3 scale)
         {
             GameObject obj = GameObject.Find(name);
             if (obj == null)
@@ -346,25 +376,25 @@ namespace GlorifiedBody.Editor
             return obj;
         }
 
-        private static T EnsureComponent<T>(GameObject obj) where T : Component
+        internal static T EnsureComponent<T>(GameObject obj) where T : Component
         {
             T component = obj.GetComponent<T>();
             return component != null ? component : obj.AddComponent<T>();
         }
 
-        private static void RemoveComponent<T>(GameObject obj) where T : Component
+        internal static void RemoveComponent<T>(GameObject obj) where T : Component
         {
             T component = obj.GetComponent<T>();
             if (component != null) Object.DestroyImmediate(component);
         }
 
-        private static void RemoveObject(string name)
+        internal static void RemoveObject(string name)
         {
             GameObject obj = GameObject.Find(name);
             if (obj != null) Object.DestroyImmediate(obj);
         }
 
-        private static GameObject EnsureChild(GameObject parent, string name)
+        internal static GameObject EnsureChild(GameObject parent, string name)
         {
             Transform child = parent.transform.Find(name);
             if (child != null) return child.gameObject;
@@ -373,7 +403,7 @@ namespace GlorifiedBody.Editor
             return obj;
         }
 
-        private static GameObject EnsureChildPrimitive(GameObject parent, string name, PrimitiveType type, Vector3 localPosition, Vector3 localScale)
+        internal static GameObject EnsureChildPrimitive(GameObject parent, string name, PrimitiveType type, Vector3 localPosition, Vector3 localScale)
         {
             Transform child = parent.transform.Find(name);
             GameObject obj = child != null ? child.gameObject : GameObject.CreatePrimitive(type);
@@ -384,7 +414,7 @@ namespace GlorifiedBody.Editor
             return obj;
         }
 
-        private static FixedCamera EnsureFixedCamera(GameObject root, string name, Vector3 position, Vector3 lookAt, float fieldOfView)
+        internal static FixedCamera EnsureFixedCamera(GameObject root, string name, Vector3 position, Vector3 lookAt, float fieldOfView)
         {
             GameObject obj = EnsureChild(root, name);
             obj.transform.position = position;
@@ -395,7 +425,7 @@ namespace GlorifiedBody.Editor
             return fixedCamera;
         }
 
-        private static void EnsureCameraZone(GameObject root, string name, Vector3 center, Vector3 size, FixedCamera fixedCamera, int priority)
+        internal static void EnsureCameraZone(GameObject root, string name, Vector3 center, Vector3 size, FixedCamera fixedCamera, int priority)
         {
             GameObject obj = EnsureChild(root, name);
             obj.transform.position = center;
@@ -408,7 +438,7 @@ namespace GlorifiedBody.Editor
             zone.priority = priority;
         }
 
-        private static void EnsurePickup(string name, DrugType type, Vector3 position)
+        internal static void EnsurePickup(string name, DrugType type, Vector3 position)
         {
             GameObject obj = EnsurePrimitive(name, PrimitiveType.Capsule, position, Vector3.one * 0.3f);
             Collider collider = obj.GetComponent<Collider>();
@@ -422,7 +452,7 @@ namespace GlorifiedBody.Editor
         /// A dummy enemy: a root on its feet with a capsule collider the size of the class, Health (50), the
         /// lock-on target at chest height, the class model and its animator. The capsule placeholder migrates.
         /// </summary>
-        private static GameObject EnsureDummy(string name, Vector3 position, CharacterCatalog catalog, string classId)
+        internal static GameObject EnsureDummy(string name, Vector3 position, CharacterCatalog catalog, string classId)
         {
             GameObject dummy = GameObject.Find(name);
             if (dummy == null) dummy = new GameObject(name);
@@ -456,7 +486,7 @@ namespace GlorifiedBody.Editor
         }
 
         /// <summary>A figure of the cast with no game role: the model and its idle, for the look.</summary>
-        private static GameObject EnsureCastFigure(CharacterCatalog catalog, string classId, Vector3 position, float yaw)
+        internal static GameObject EnsureCastFigure(CharacterCatalog catalog, string classId, Vector3 position, float yaw)
         {
             string name = "Cast_" + classId;
             GameObject figure = GameObject.Find(name);
@@ -467,7 +497,7 @@ namespace GlorifiedBody.Editor
         }
 
         /// <summary>The class prefab as the child "Model" of a root. A present child is replaced.</summary>
-        private static GameObject EnsureCharacterModel(GameObject root, CharacterCatalog catalog, string classId)
+        internal static GameObject EnsureCharacterModel(GameObject root, CharacterCatalog catalog, string classId)
         {
             Transform old = root.transform.Find("Model");
             if (old != null) Object.DestroyImmediate(old.gameObject);

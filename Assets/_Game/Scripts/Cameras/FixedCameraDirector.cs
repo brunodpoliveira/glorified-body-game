@@ -82,6 +82,17 @@ namespace GlorifiedBody.Cameras
             Resolve(force: true);
         }
 
+        /// <summary>
+        /// Holds one camera whatever the zones say (the look test bot shoots every camera). Null releases it.
+        /// </summary>
+        public void Override(FixedCamera camera)
+        {
+            overrideCamera = camera;
+            Resolve(force: true);
+        }
+
+        private FixedCamera overrideCamera;
+
         private void Update()
         {
             if (UpdateZones()) Resolve(force: false);
@@ -133,7 +144,7 @@ namespace GlorifiedBody.Cameras
                 if (best == null || zone.priority >= best.priority) best = zone;
             }
 
-            FixedCamera wanted = best != null ? best.fixedCamera : defaultCamera;
+            FixedCamera wanted = overrideCamera != null ? overrideCamera : best != null ? best.fixedCamera : defaultCamera;
             if (!force && wanted == Current) return;
 
             Current = wanted;

@@ -19,6 +19,8 @@ namespace GlorifiedBody.DebugTools
         [SerializeField] private KeyCode refillKey = KeyCode.F7;
         [SerializeField] private KeyCode removeNalconKey = KeyCode.F8;
         [SerializeField] private KeyCode addNalconKey = KeyCode.F9;
+        [SerializeField] private KeyCode lookTestKey = KeyCode.F11; // the look test room of step 4 (F10 cycles its dressings)
+        [SerializeField] private string lookTestScene = "LookTest";
 
         private void Update()
         {
@@ -29,6 +31,7 @@ namespace GlorifiedBody.DebugTools
             if (Input.GetKeyDown(refillKey)) Refill();
             if (Input.GetKeyDown(removeNalconKey)) RemoveNalcon();
             if (Input.GetKeyDown(addNalconKey)) AddNalcon();
+            if (Input.GetKeyDown(lookTestKey) && GameManager.Instance != null) GameManager.Instance.LoadLevel(lookTestScene);
         }
 
         /// <summary>F5: the SHORT bar goes to full. The next attack or defend press starts a short.</summary>

@@ -16,7 +16,8 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   menu loop and the batch harness. Step 2: tank controls with a dodge, fixed cameras per room, auto-lock with a
   target switch. Step 3: the circle charge with BLAST, FIRE and TELEKINESIS, the HP / NALCON / SHORT bars, the
   short, the drugs, a capsule dummy shooter with the canon telegraph, the greybox HUD.
-  Proof: 30 EditMode tests, 55 PlayMode tests, the bot (24 steps), see `devlog-notes/`.
+  Proof: 34 EditMode tests, 59 PlayMode tests, the structural bot (24 steps) and the look bot (19 steps), see
+  `devlog-notes/`.
   The step 1 kill volume (the dark box at the east wall) is out of the room since 2026-10-21: Bruno walked into
   it and died (`devlog-notes/2026-10-21_kill_volume.md`). The bot and the tests kill through `Health`.
 - 2026-10-21, the cast in the engine (`devlog-notes/2026-10-21_characters.md`): the nine T19 models are in the
@@ -47,8 +48,20 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   custom), the HP recharge rate. Later (Bruno, 2026-10-21): the Invector FSM AI with "move or shoot, never
   both", props from free assets or Invector's placeholder weapons, the psychic scan (a clue from an object), the
   logs (grab and read).
-  Next: step 4 in
-  `03_GAME_DESIGN.md` §7 (the look test: one room greyboxed, then dressed two ways, for Bruno's pick).
+- 2026-10-22, step 4 built, the look test (`devlog-notes/2026-10-22_look_test.md`): `LookTest.unity` is the
+  Gallery of floor 1 (16 x 8 m concrete, planters, columns, conduits, the steel door, the gear panels, hard
+  spots and wall washers, ambient near black), Lucy, a soldier and a guard, three fixed cameras with zones.
+  `LookTestSetup.BuildLookTest` makes the renderers (GB_Full: a character stencil mark plus the 32-level Bayer
+  dither on the background, GB_Expensive: plus ambient occlusion, GB_Plate: the plate blit plus the room as
+  depth only), the Simple Lit materials, the texture imports and the scene. `LookDirector` (F10 cycles, a label
+  at the top left) swaps greybox / real time / plate: the plate is the room rendered once per camera into a
+  720p texture, the characters drawn over it (`PlateBlitFeature`, Render Graph). The URP assets carry the look
+  for the whole game: render scale 2/3 (720p of 1080p), linear upscale, hard shadows only, per-pixel spots.
+  Textures: `tools/look_textures.sh` (RFab Nano Banana, 1024 px, mirror wrap) with
+  `tools/look_textures_procedural.py` as the fallback (RFab gap 11: the default model draws scenes). F11 in the
+  training room loads the look test room. Shots for Bruno's pick: `~/glorified-body-renders/game/look_test/`.
+  OPEN for Bruno: the pick (real time or plate), the darkness level, the texture scale (2 m tiles).
+  Next: Bruno's pick, then his "later" items (the FSM AI, props, the psychic scan, the logs, the tutorial mode).
 
 ## Rules
 
@@ -71,3 +84,6 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
    `GlorifiedBody.Integration.Invector` may `using Invector.*`. No asmdefs (the vendor code has none).
 7. Writing style for anything Bruno reads: ASD-STE100.
 8. Every step ends with a note in `devlog-notes/` and the shots Bruno can open, checked at full size first.
+9. The game is RFab's dogfood (Bruno, 2026-10-22). Every RFab bug, limit or missing piece found while building
+   goes the same day as one row in `/home/pc/MEGA/code/reality-fabricator/the-glorified-body/RFAB_GAPS.md`,
+   with the evidence file. The RFab agent works that list.

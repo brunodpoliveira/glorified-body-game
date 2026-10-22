@@ -11,5 +11,8 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/_Game/Scenes/TrainingRoom.unity
     guid: 7ea10558d54fcbf168e1f261856fe570
+  - enabled: 1
+    path: Assets/_Game/Scenes/LookTest.unity
+    guid: 4dcf584bbe1429f5dab2bfc9490e5591
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0
