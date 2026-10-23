@@ -22,5 +22,7 @@ namespace GlorifiedBody.Enemy
         void Stop();
         /// <summary>Off while a power holds the body (the lift): no navigation, no physics.</summary>
         void Suspend(bool suspended);
+        /// <summary>Planted feet while the gun aims and counts down: a walking body cannot push it off its spot.</summary>
+        void Brace(bool braced);
     }
 }

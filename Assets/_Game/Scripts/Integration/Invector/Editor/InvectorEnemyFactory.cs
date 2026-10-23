@@ -199,7 +199,9 @@ namespace GlorifiedBody.Integration.Invector.Build
             var aiSo = new SerializedObject(ai);
             SetFloat(aiSo, "_maxHealth", 100000f);
             SetFloat(aiSo, "_currentHealth", 100000f);
-            SetBool(aiSo, "removeComponentsAfterDie", true);
+            // Off: Invector's cleanup destroys every MonoBehaviour on the object (our Health too).
+            // InvectorEnemyBody lays the corpse down itself.
+            SetBool(aiSo, "removeComponentsAfterDie", false);
             aiSo.ApplyModifiedPropertiesWithoutUndo();
 
             // Our side.

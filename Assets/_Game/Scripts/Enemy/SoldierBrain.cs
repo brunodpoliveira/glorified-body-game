@@ -43,6 +43,7 @@ namespace GlorifiedBody.Enemy
         private Vector3 shootPosition;
         private float moveStarted;
         private bool aimStarted;
+        private bool driftLogged;
 
         public Phase Current { get; private set; } = Phase.Idle;
         public bool Engaged => Time.frameCount - lastEngageFrame <= 2;
@@ -138,12 +139,26 @@ namespace GlorifiedBody.Enemy
                 if (!aimStarted)
                 {
                     aimStarted = true;
+                    driftLogged = false;
                     shootPosition = transform.position;
+                    body.Brace(true);
                 }
-                else if (Flat(transform.position, shootPosition) > 0.05f) MovedWhileShootingFrames++;
+                else if (Flat(transform.position, shootPosition) > 0.05f)
+                {
+                    MovedWhileShootingFrames++;
+                    if (!driftLogged)
+                    {
+                        driftLogged = true;
+                        Debug.LogWarning($"[SoldierBrain] {name} drifted {Flat(transform.position, shootPosition):0.00} m during its aim (gun {gun.Current}, phase {Current}).");
+                    }
+                }
                 body.Stop();
             }
-            else aimStarted = false;
+            else if (aimStarted)
+            {
+                aimStarted = false;
+                body.Brace(false);
+            }
 
             // Out of the fight state (the FSM searches or idles): the gun holds fire after its shot.
             if (!Engaged && Current != Phase.Hold)
