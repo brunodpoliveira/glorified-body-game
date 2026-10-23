@@ -1,6 +1,5 @@
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using GlorifiedBody.Combat;
 using GlorifiedBody.Core;
@@ -14,6 +13,10 @@ namespace GlorifiedBody.Player
     /// half of her HP before she stabilises. A drug ends the short at once and refills her. Numbers are PROPOSED.
     /// Bruno, 2026-10-20: it lasts 16 s. She can walk, slowly: no run, no dodge, no powers (TankController.SlowWalk).
     /// The HP drain spreads over the 16 s, and each shock does the same damage to the others as before.
+    /// One enemy at a time (Bruno, 2026-10-22, design §11.4: "i want the enemies to see their colleagues dying in
+    /// a gruesome manner"): every shock hits one victim, the nearest live enemy in the radius, and stays on it
+    /// until it dies or leaves the radius. Then the next nearest. A shock-immune target (the bosses) is never
+    /// a victim.
     /// </summary>
     [RequireComponent(typeof(PsychicStats))]
     public sealed class ShortController : MonoBehaviour
@@ -27,12 +30,13 @@ namespace GlorifiedBody.Player
         private PsychicStats stats;
         private Health health;
         private TankController tank; // optional: the slow walk during the short
-        private readonly List<Health> seen = new List<Health>();
         private float pendingSelf; // Self damage that a dodge frame blocked. Lands at the next shock.
 
         public bool IsActive { get; private set; }
         public float Remaining { get; private set; }
         public int ShocksFired { get; private set; }
+        /// <summary>The enemy the shocks hit now. Null when nobody is in the radius.</summary>
+        public Health Victim { get; private set; }
         public float Duration => duration;
 
         public event Action OnShortBegan;
@@ -56,6 +60,7 @@ namespace GlorifiedBody.Player
             IsActive = true;
             Remaining = duration;
             ShocksFired = 0;
+            Victim = null;
             pendingSelf = 0f;
             stats.RegenPaused = true;
             if (tank != null) tank.SetSlowWalk(true);
@@ -95,12 +100,10 @@ namespace GlorifiedBody.Player
         {
             ShocksFired++;
             Vector3 origin = transform.position;
-            seen.Clear();
-            foreach (Collider col in Physics.OverlapSphere(origin, shockRadius, ~0, QueryTriggerInteraction.Ignore))
+            if (!CanShock(Victim, origin)) Victim = NearestVictim(origin);
+            Health other = Victim;
+            if (other != null)
             {
-                Health other = col.GetComponentInParent<Health>();
-                if (other == null || other == health || other.IsDead || seen.Contains(other)) continue;
-                seen.Add(other);
                 other.TakeDamage(shockDamageToOthers);
                 HitEventBus.Raise(new HitInfo
                 {
@@ -129,7 +132,33 @@ namespace GlorifiedBody.Player
             }
 
             for (int i = 0; i < 3; i++) Spark(origin + UnityEngine.Random.insideUnitSphere * (shockRadius * 0.5f) + Vector3.up);
-            RunTelemetry.Event("short_shock", $"{ShocksFired} hp={health.CurrentHealth:0} hit={seen.Count}");
+            if (other != null) Spark(other.transform.position + Vector3.up * 1.2f); // the spark on the victim shows who it hits
+            RunTelemetry.Event("short_shock", $"{ShocksFired} hp={health.CurrentHealth:0} hit={(other != null ? other.name : "none")}");
+        }
+
+        /// <summary>A live enemy in the radius that the shocks can hurt.</summary>
+        private bool CanShock(Health other, Vector3 origin)
+        {
+            if (other == null || other == health || other.IsDead) return false;
+            if ((other.transform.position - origin).sqrMagnitude > shockRadius * shockRadius) return false;
+            LockOnTargetable target = other.GetComponent<LockOnTargetable>() ?? other.GetComponentInParent<LockOnTargetable>();
+            return target == null || !target.IsShockImmune;
+        }
+
+        private Health NearestVictim(Vector3 origin)
+        {
+            Health best = null;
+            float bestDistance = float.MaxValue;
+            foreach (Collider col in Physics.OverlapSphere(origin, shockRadius, ~0, QueryTriggerInteraction.Ignore))
+            {
+                Health other = col.GetComponentInParent<Health>();
+                if (other == best || !CanShock(other, origin)) continue;
+                float distance = (other.transform.position - origin).sqrMagnitude;
+                if (distance >= bestDistance) continue;
+                best = other;
+                bestDistance = distance;
+            }
+            return best;
         }
 
         private static void Spark(Vector3 at)

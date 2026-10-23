@@ -124,6 +124,10 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   goes back to an enemy; a heavy target refuses the lift at no cost ("TOO HEAVY" on the HUD). Crates
   (`PropAssets.Crate`, unlit, `tools/prop_crate_texture.py`): two in the training room, one in the gym.
   Tutorial: 19 steps (a prop step). The tutorial drive walks to the door through the lane west of the bars.
+- 2026-10-23, the short on one enemy (`devlog-notes/2026-10-23_short_one_enemy.md`): every shock of the short
+  hits one victim, the nearest live enemy in the radius, until it dies (design §11.4, after Bruno's report that
+  all enemies took equal damage). `LockOnTargetable.IsShockImmune` for the bosses (heavy and shock immune; the
+  power armour is only heavy). A thrown or slammed prop breaks (single use, `PropPiece`).
   Next: the FSM AI (the power armour is the first heavy enemy).
 
 ## Rules

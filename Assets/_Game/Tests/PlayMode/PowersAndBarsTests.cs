@@ -287,7 +287,7 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator Props_LiftAndThrow_TheCrateHurtsTheEnemy_AndTheLockGoesBack()
+        public IEnumerator Props_LiftAndThrow_TheCrateHurtsTheEnemy_Breaks_AndTheLockGoesBack()
         {
             powers.Select(PowerKind.Telekinesis);
             PowerDefinition tk = powers.Selected;
@@ -309,10 +309,10 @@ namespace GlorifiedBody.Tests.PlayMode
             yield return null;
             yield return null;
             StringAssert.StartsWith("launch_prop:Dummy_A", powers.LastResult, "the crate flies at the dummy");
-            yield return WaitUntil(() => crate.GetComponent<TelekinesisLift>() == null, 3f);
+            yield return WaitUntil(() => crate == null, 3f);
+            Assert.IsTrue(crate == null, "a thrown crate breaks: single use (Bruno, 2026-10-23)");
             Assert.AreEqual(hp0 - tk.baseDamage, target.CurrentHealth, 0.5f, "the crate hurts the dummy");
-            Assert.AreEqual(y0, crate.transform.position.y, 0.05f, "the crate lies on the floor again");
-            Assert.IsFalse(lockOn.CurrentTarget == crate, "after the throw the lock leaves the crate");
+            Assert.IsNotNull(UnityEngine.Object.FindFirstObjectByType<PropPiece>(), "the pieces of the crate");
             Assert.IsTrue(lockOn.HasTarget && !lockOn.CurrentTarget.IsProp, "the auto-lock takes an enemy again: " + lockOn.TargetName);
         }
 
@@ -341,6 +341,49 @@ namespace GlorifiedBody.Tests.PlayMode
             lockOn.SetTarget(dummyB);
             Assert.IsTrue(powers.Release(1f), "the other powers still hit it");
             dummyB.SetHeavy(false);
+        }
+
+        [UnityTest]
+        public IEnumerator Short_ShocksOneEnemyAtATime_TheNearestFirst_ThenTheNext()
+        {
+            // Bruno, 2026-10-22 (design §11.4): one shock, one enemy, the others watch. Before, every shock hit
+            // every enemy in the radius for the same damage (his report of 2026-10-23).
+            Health a = dummyA.GetComponent<Health>();
+            Health b = dummyB.GetComponent<Health>();
+            Assert.Less(Vector3.Distance(player.transform.position, a.transform.position),
+                Vector3.Distance(player.transform.position, b.transform.position), "Dummy_A is the nearer one");
+            Assert.Less(Vector3.Distance(player.transform.position, b.transform.position), 6f, "both in the shock radius");
+            float hpA = a.CurrentHealth, hpB = b.CurrentHealth;
+
+            shortController.Begin();
+            yield return new WaitForSeconds(1.0f);
+            Assert.AreEqual(a, shortController.Victim, "the shocks hit the nearest enemy");
+            Assert.Less(a.CurrentHealth, hpA, "Dummy_A takes the shocks");
+            Assert.AreEqual(hpB, b.CurrentHealth, 0.01f, "Dummy_B only watches");
+
+            yield return WaitUntil(() => a == null || a.IsDead, 4f);
+            Assert.IsTrue(a == null || a.IsDead, "the shocks kill Dummy_A");
+            yield return new WaitForSeconds(1.0f);
+            Assert.AreEqual(b, shortController.Victim, "then the shocks move to the next enemy");
+            Assert.Less(b.CurrentHealth, hpB, "Dummy_B takes the shocks now");
+            shortController.End(byDrug: false);
+        }
+
+        [UnityTest]
+        public IEnumerator Short_PassesAShockImmuneTarget()
+        {
+            // Bruno, 2026-10-23: the bosses are heavy and immune to the shocks.
+            dummyA.SetShockImmune(true);
+            Health a = dummyA.GetComponent<Health>();
+            Health b = dummyB.GetComponent<Health>();
+            float hpA = a.CurrentHealth, hpB = b.CurrentHealth;
+            shortController.Begin();
+            yield return new WaitForSeconds(1.0f);
+            Assert.AreEqual(hpA, a.CurrentHealth, 0.01f, "the immune dummy takes no shock");
+            Assert.AreEqual(b, shortController.Victim, "the shocks go to the next enemy");
+            Assert.Less(b.CurrentHealth, hpB, "Dummy_B takes the shocks");
+            shortController.End(byDrug: false);
+            dummyA.SetShockImmune(false);
         }
 
         [UnityTest]

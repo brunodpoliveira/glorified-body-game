@@ -12,7 +12,8 @@ namespace GlorifiedBody.Combat
     /// throws it (Launch): it flies into another enemy and both take the damage, or flies straight and drops. A full
     /// charge slams it into the floor (Slam). A hit from someone other than her drops it, unhurt (Release). While it
     /// hangs it turns with her, so she aims the throw with the tank turn. An enemy with this component does nothing
-    /// until it ends (see DummyShooter). Props and ragdolls come later.
+    /// until it ends (see DummyShooter). A prop (a crate) is single use (Bruno, 2026-10-23: "crate/props thrown are
+    /// single-use only"): it breaks where a throw or a slam lands it. A dropped prop (a release) stays whole.
     /// </summary>
     public sealed class TelekinesisLift : MonoBehaviour
     {
@@ -165,7 +166,34 @@ namespace GlorifiedBody.Combat
             }
 
             IsLifted = false;
+            LockOnTargetable prop = GetComponent<LockOnTargetable>();
+            if (prop != null && prop.IsProp && Ending != "released")
+            {
+                Break();
+                yield break;
+            }
             Destroy(this);
+        }
+
+        /// <summary>The prop breaks: a few pieces with its material fly apart and vanish, the prop is gone.</summary>
+        private void Break()
+        {
+            RunTelemetry.Event("prop_broken", name);
+            Renderer renderer = GetComponent<Renderer>();
+            Material material = renderer != null ? renderer.sharedMaterial : null;
+            float size = transform.lossyScale.x;
+            for (int i = 0; i < 6; i++)
+            {
+                var piece = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                piece.name = "PropPiece";
+                Destroy(piece.GetComponent<Collider>());
+                piece.transform.position = transform.position + Random.insideUnitSphere * size * 0.4f;
+                piece.transform.rotation = Random.rotation;
+                piece.transform.localScale = new Vector3(size * 0.5f, size * 0.12f, size * 0.25f);
+                if (material != null) piece.GetComponent<Renderer>().sharedMaterial = material;
+                piece.AddComponent<PropPiece>().Velocity = (Random.insideUnitSphere + Vector3.up) * 2.5f;
+            }
+            Destroy(gameObject);
         }
 
         /// <summary>The hang point: her position plus the start offset, turned by her yaw change since the lift.</summary>

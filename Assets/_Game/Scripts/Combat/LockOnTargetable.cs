@@ -30,6 +30,8 @@ namespace GlorifiedBody.Combat
         [SerializeField] private bool isProp;
         [Tooltip("Too heavy to lift (the power armour, later): telekinesis refuses it, at no cost.")]
         [SerializeField] private bool heavy;
+        [Tooltip("The short's shocks pass it by (the bosses, Bruno 2026-10-23).")]
+        [SerializeField] private bool shockImmune;
 
         private Health cachedHealth;
         private bool registered;
@@ -39,6 +41,7 @@ namespace GlorifiedBody.Combat
         public bool Selectable => selectable && isActiveAndEnabled;
         public bool IsProp => isProp;
         public bool IsHeavy => heavy;
+        public bool IsShockImmune => shockImmune;
 
         private void Awake()
         {
@@ -131,6 +134,11 @@ namespace GlorifiedBody.Combat
         public void SetHeavy(bool value)
         {
             heavy = value;
+        }
+
+        public void SetShockImmune(bool value)
+        {
+            shockImmune = value;
         }
 
 #if UNITY_EDITOR
