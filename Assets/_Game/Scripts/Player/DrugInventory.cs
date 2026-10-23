@@ -5,30 +5,38 @@ using GlorifiedBody.DebugTools;
 namespace GlorifiedBody.Player
 {
     /// <summary>
-    /// The drugs she carries, one type per power. The outfit caps each type. A drug ends a short and refills
-    /// HP and nalcon (design §2.8). The difference between the three drugs is OPEN for Bruno.
+    /// The drugs she carries, one type per power. A drug ends a short and refills HP and nalcon (design §2.8).
+    /// Each drug takes one slot of the item inventory (Bruno, 2026-10-22: the grabbables take space, the slots
+    /// come from the outfit); without an item inventory the outfit's per-type cap applies. The difference
+    /// between the three drugs is OPEN for Bruno.
     /// </summary>
     public sealed class DrugInventory : MonoBehaviour
     {
         private readonly int[] counts = new int[3];
         private PsychicStats stats;
+        private GlorifiedBody.Interaction.ItemInventory items;
 
         public event Action OnChanged;
 
         private void Awake()
         {
             stats = GetComponent<PsychicStats>();
+            items = GetComponent<GlorifiedBody.Interaction.ItemInventory>();
         }
 
         public int Count(DrugType type) => counts[(int)type];
 
-        public int Capacity => stats != null && stats.Outfit != null ? stats.Outfit.drugSlotsPerType : 2;
+        public int Total => counts[0] + counts[1] + counts[2];
 
-        /// <summary>Adds up to the capacity. Returns the number taken.</summary>
+        /// <summary>The most of one type she could hold now: the free slots plus the ones held, or the outfit's per-type cap without an item inventory.</summary>
+        public int Capacity => items != null ? items.Free + Total : stats != null && stats.Outfit != null ? stats.Outfit.drugSlotsPerType : 2;
+
+        /// <summary>Adds up to the free slots. Returns the number taken.</summary>
         public int Add(DrugType type, int amount)
         {
             int before = counts[(int)type];
-            counts[(int)type] = Mathf.Clamp(before + amount, 0, Capacity);
+            int room = items != null ? items.Free : Mathf.Max(0, Capacity - before);
+            counts[(int)type] = before + Mathf.Clamp(amount, 0, room);
             int taken = counts[(int)type] - before;
             if (taken > 0)
             {

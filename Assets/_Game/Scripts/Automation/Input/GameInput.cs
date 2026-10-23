@@ -46,19 +46,19 @@ namespace GlorifiedBody.Systems
 
         public static bool GetActionDown(InputManager.GameAction action, KeyCode fallback)
         {
-            if (BotSource != null) return !IsBlocked() && BotSource.GetActionDown(action);
+            if (BotSource != null) return !IsBlocked(action) && BotSource.GetActionDown(action);
             return InputManager.Instance != null ? InputManager.Instance.GetActionDown(action) : Input.GetKeyDown(fallback);
         }
 
         public static bool GetAction(InputManager.GameAction action, KeyCode fallback)
         {
-            if (BotSource != null) return !IsBlocked() && BotSource.GetAction(action);
+            if (BotSource != null) return !IsBlocked(action) && BotSource.GetAction(action);
             return InputManager.Instance != null ? InputManager.Instance.GetAction(action) : Input.GetKey(fallback);
         }
 
         public static bool GetActionUp(InputManager.GameAction action, KeyCode fallback)
         {
-            if (BotSource != null) return !IsBlocked() && BotSource.GetActionUp(action);
+            if (BotSource != null) return !IsBlocked(action) && BotSource.GetActionUp(action);
             return InputManager.Instance != null ? InputManager.Instance.GetActionUp(action) : Input.GetKeyUp(fallback);
         }
 
@@ -74,10 +74,10 @@ namespace GlorifiedBody.Systems
         public static float GetAxisRaw(string axisName) => BotSource != null ? BotSource.GetAxis(axisName) : Input.GetAxisRaw(axisName);
 
         // Same block rule as InputManager: no actions while paused or game over.
-        private static bool IsBlocked()
+        private static bool IsBlocked(InputManager.GameAction action)
         {
             GameManager gm = GameManager.Instance;
-            return gm != null && (gm.IsPaused || gm.IsGameOver);
+            return gm != null && !gm.AllowsAction(action);
         }
     }
 }

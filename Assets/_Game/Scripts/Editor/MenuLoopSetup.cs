@@ -47,6 +47,7 @@ namespace GlorifiedBody.Editor
             AssetDatabase.Refresh();
 
             CreatePowerAssets.CreateAll();
+            ItemAssets.CreateAll();
             EnsureDeathContent();
             BuildTrainingRoomScene();
             BuildMainMenuScene();
@@ -220,6 +221,7 @@ namespace GlorifiedBody.Editor
             EnsureComponent<LevelCompleteUI>(ui);
             EnsureComponent<PlayerHud>(ui);
             EnsureComponent<InteractionUI>(ui);
+            EnsureComponent<InventoryUI>(ui);
         }
 
         /// <summary>One ShotPoint per fixed camera, so `tools/unity.sh shots &lt;scene&gt;` renders every view.</summary>
@@ -459,14 +461,13 @@ namespace GlorifiedBody.Editor
             zone.priority = priority;
         }
 
+        /// <summary>
+        /// A drug on the floor: a grabbable (Bruno, 2026-10-22: pills are picked up with the Interact key after a
+        /// confirmation, not by walking over them), drawn unlit so it stands out, one slot when taken.
+        /// </summary>
         internal static void EnsurePickup(string name, DrugType type, Vector3 position)
         {
-            GameObject obj = EnsurePrimitive(name, PrimitiveType.Capsule, position, Vector3.one * 0.3f);
-            Collider collider = obj.GetComponent<Collider>();
-            if (collider != null) collider.isTrigger = true;
-            DrugPickup pickup = EnsureComponent<DrugPickup>(obj);
-            pickup.drugType = type;
-            pickup.amount = 1;
+            ItemAssets.Pickup(null, name, ItemAssets.Drug(type), PrimitiveType.Capsule, position, Vector3.one * 0.3f, Quaternion.Euler(0f, 0f, 90f));
         }
 
         /// <summary>

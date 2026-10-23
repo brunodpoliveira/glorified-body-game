@@ -68,9 +68,10 @@ camera coverage test: every floor point is in the frame of the camera its zone p
 ## The tutorial (build order step 5)
 
 `Assets/_Game/Scenes/Tutorial.unity` is the therapy gym as the investors' demonstration: the recorded presenter
-asks the subject for each faculty on the padded dummies, in fourteen steps (the walk, the run, the dodge, the
+asks the subject for each faculty on the padded dummies, in seventeen steps (the walk, the run, the dodge, the
 target switch, BLAST, FIRE, TELEKINESIS with the throw, the bullet catch, a capsule, a log to take and read, the
-scan of the door (a picture) and of the monitors (a clip), the short, complete).
+scan of the door (a picture), the key, the locked door, the inventory, the scan of the monitors (a clip), the
+short, complete).
 `TutorialDirector` runs the steps, `TutorialPromptUI` shows the line and the hint with the bound keys. The
 TUTORIAL button of the main menu opens it. F2 skips a step. Built by
 `tools/unity.sh exec GlorifiedBody.Editor.TutorialSetup.BuildTutorial`, then `TutorialSetup.BakeTutorial` for
@@ -89,7 +90,9 @@ the enemies) add their steps here.
    charge the selected power on the target, RMB is the defensive use of the power (TELEKINESIS: a bullet near
    her goes back at the shooter). With an enemy in the air, turn to aim and press LMB again to throw it.
    1, 2, 3 select BLAST, FIRE, TELEKINESIS. Q uses a drug. E interacts: it asks before it takes an item
-   (E again takes it, S leaves it) and opens a log for reading. F is the psychic scan: a picture or a short clip.
+   (E again takes it, S leaves it), opens a log for reading, and opens a locked door with its key. F is the psychic
+   scan (close to the object): a picture or a short clip. I opens the inventory over the frozen room: key items
+   take no slot, pills and objects take one slot each (nude 4, guard 8).
    Space plus a direction key, or a double tap on a direction key, dodges that way. With a full SHORT bar, LMB or
    RMB starts the short: 16 s of shocks, she walks slowly, no run, no dodge. F4 kills Lucy (shows the death
    screen). F11 loads the next look test room (F3 cycles its dressings there). F5 fills the SHORT bar, F6 starts the

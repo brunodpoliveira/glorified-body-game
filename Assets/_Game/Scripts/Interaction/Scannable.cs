@@ -15,7 +15,10 @@ namespace GlorifiedBody.Interaction
         public string caption = "";
         public Texture2D image;
         public VideoClip clip;
-        [Min(0.5f)] public float range = 3f;
+        /// <summary>Close to the object (Bruno, 2026-10-22: 3 m was too far). PROPOSED.</summary>
+        public const float DefaultRange = 1.5f;
+
+        [Min(0.5f)] public float range = DefaultRange;
         [Tooltip("The point the scan aims at (the centre of the door, the middle of the screen). Empty = this transform.")]
         public Transform focus;
 

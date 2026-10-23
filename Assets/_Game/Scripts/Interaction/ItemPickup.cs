@@ -1,34 +1,34 @@
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace GlorifiedBody.Interaction
 {
     /// <summary>
-    /// An item lying in the room. The Interact key on it asks "Take it?"; a yes puts it in the inventory and
-    /// removes it from the room (a log opens for reading at once). All pickups register here, so the
-    /// interactor finds the one she faces without a physics query.
+    /// An item lying in the room (a log, a key, a pill). The Interact key on it asks "Take it?"; a yes puts it in
+    /// the inventory and removes it from the room (a log opens for reading at once). A grabbable that finds no
+    /// free slot stays. The pickup is drawn unlit so it stands out of the room light (Bruno, 2026-10-22, after
+    /// Resident Evil 4).
     /// </summary>
-    public sealed class ItemPickup : MonoBehaviour
+    public sealed class ItemPickup : Interactable
     {
         public ItemDefinition item;
-        [Min(0.3f)] public float range = 1.6f;
 
-        private static readonly List<ItemPickup> all = new List<ItemPickup>();
-        public static IReadOnlyList<ItemPickup> All => all;
+        public override bool Available => base.Available && item != null;
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void ResetOnLoad() => all.Clear();
+        public string Name => item != null ? "the " + item.displayName.ToLowerInvariant() : "it";
 
-        private void OnEnable()
+        public override string Hint => "take " + Name;
+
+        public override InteractKind KindFor(Interactor who) => InteractKind.Ask;
+
+        public override string TextFor(Interactor who) => $"Take {Name}?";
+
+        public override string Confirm(Interactor who)
         {
-            if (!all.Contains(this)) all.Add(this);
+            ItemInventory inventory = who != null ? who.Inventory : null;
+            if (inventory == null || !inventory.TryAdd(item)) return "full:" + item.itemId;
+            gameObject.SetActive(false);
+            Destroy(gameObject);
+            return "taken:" + item.itemId;
         }
-
-        private void OnDisable()
-        {
-            all.Remove(this);
-        }
-
-        public string Prompt => item != null ? "the " + item.displayName.ToLowerInvariant() : "it";
     }
 }

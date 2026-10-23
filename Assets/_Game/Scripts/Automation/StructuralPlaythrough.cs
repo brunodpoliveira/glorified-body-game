@@ -446,16 +446,21 @@ namespace GlorifiedBody.Automation
             yield return Linger(1.5f);
             EndClip();
 
-            // A drug from the floor.
+            // A drug from the floor: she faces it and takes it with the Interact key (Bruno, 2026-10-22: pills ask
+            // first, no walk-over pickup).
             Clip("drug_pickup");
             GameObject pickup = GameObject.Find("Drug_Nalcon");
-            if (pickup != null && FrameRecorder.Enabled)
+            if (pickup != null)
             {
-                // On video: stand next to it first, then step onto it.
-                tank.Teleport(pickup.transform.position + Vector3.up * 0.6f - Vector3.forward * 1.2f, 0f);
+                Vector3 p = pickup.transform.position;
+                tank.Teleport(new Vector3(p.x, 1f, p.z - 0.8f), 0f);
                 yield return Linger(0.8f);
+                yield return new WaitForSecondsRealtime(0.1f);
+                pad.Tap(InputManager.GameAction.Interact); // "Take the nalcon?"
+                yield return Linger(0.8f);
+                yield return new WaitForSecondsRealtime(0.1f);
+                pad.Tap(InputManager.GameAction.Interact); // yes
             }
-            if (pickup != null) tank.Teleport(pickup.transform.position + Vector3.up * 0.6f, 0f);
             yield return WaitUntilReal(() => drugs.Count(DrugType.Nalcon) >= 1, 2f);
             Record("drug_pickup", drugs.Count(DrugType.Nalcon) >= 1, $"nalcon drugs={drugs.Count(DrugType.Nalcon)}");
             yield return Linger(1f);

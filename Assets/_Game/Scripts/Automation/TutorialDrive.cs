@@ -96,19 +96,27 @@ namespace GlorifiedBody.Automation
                     yield return CatchOneBullet(c, 20f);
                     break;
                 case "capsule":
-                    yield return WalkTo(c, c.Director.CapsulePoint, run: false, radius: 0.35f);
+                {
+                    // The capsule asks first now (Bruno, 2026-10-22: pills are grabbables, not walk-over).
+                    ItemPickup capsule = FindPickup("nalcon");
+                    if (capsule != null)
+                    {
+                        yield return WalkTo(c, capsule.Point, run: false, radius: 0.8f);
+                        yield return TakeFacing(c, capsule);
+                    }
                     yield return new WaitForSecondsRealtime(0.2f);
                     int before = c.Drugs != null ? c.Drugs.Count(DrugType.Nalcon) : -1;
                     c.Pad.Tap(InputManager.GameAction.UseDrug);
                     yield return new WaitForSecondsRealtime(0.2f);
                     Debug.Log($"[TutorialDrive] capsule: at {c.Lucy.position}, capsule {(GameObject.Find("Capsule") != null ? "still there" : "taken")}, nalcon drugs before the use {before}, result '{c.Powers?.LastResult}'.");
                     break;
+                }
                 case "log":
                 {
                     yield return WalkTo(c, c.Director.LogPoint, run: false, radius: 0.3f);
                     ItemPickup log = FindPickup(c.Director.LogItemId);
                     if (log == null) break;
-                    yield return TurnTo(c, log.transform.position, 4f);
+                    yield return TurnTo(c, log.Point, 4f);
                     c.Pad.Tap(InputManager.GameAction.Interact); // "Take it?"
                     yield return new WaitForSecondsRealtime(0.3f);
                     c.Moment?.Invoke("log_confirm");
@@ -120,7 +128,37 @@ namespace GlorifiedBody.Automation
                     break;
                 }
                 case "scan_image":
-                    yield return ScanAt(c, c.Director.BarsPoint, c.Director.DoorScanId, 1.0f);
+                    yield return ScanAt(c, c.Director.DoorPoint, c.Director.DoorScanId, 1.0f);
+                    break;
+                case "key":
+                {
+                    yield return WalkTo(c, c.Director.KeyPoint, run: false, radius: 0.3f);
+                    ItemPickup key = FindPickup(c.Director.KeyItemId);
+                    if (key != null) yield return TakeFacing(c, key);
+                    break;
+                }
+                case "door":
+                {
+                    yield return WalkTo(c, c.Director.DoorPoint, run: false, radius: 0.3f);
+                    if (c.Director.Door == null) break;
+                    yield return TurnTo(c, c.Director.Door.Point, 4f);
+                    c.Pad.Tap(InputManager.GameAction.Interact); // "Use the test key?"
+                    yield return new WaitForSecondsRealtime(0.3f);
+                    c.Moment?.Invoke("door_confirm");
+                    c.Pad.Tap(InputManager.GameAction.Interact); // yes: the leaf slides
+                    yield return new WaitForSecondsRealtime(1.2f);
+                    c.Moment?.Invoke("door_open");
+                    break;
+                }
+                case "inventory":
+                    c.Pad.Tap(InputManager.GameAction.Inventory); // the room stops
+                    yield return new WaitForSecondsRealtime(0.4f);
+                    c.Moment?.Invoke("inventory");
+                    c.Pad.Tap(InputManager.GameAction.TurnRight);
+                    yield return new WaitForSecondsRealtime(0.3f);
+                    c.Moment?.Invoke("inventory_next");
+                    c.Pad.Tap(InputManager.GameAction.Inventory); // closed
+                    yield return new WaitForSecondsRealtime(0.3f);
                     break;
                 case "scan_video":
                     yield return ScanAt(c, c.Director.MonitorsPoint, c.Director.MonitorsScanId, -1f);
@@ -217,11 +255,21 @@ namespace GlorifiedBody.Automation
 
         public static ItemPickup FindPickup(string itemId)
         {
-            foreach (ItemPickup pickup in ItemPickup.All)
+            foreach (Interactable target in Interactable.All)
             {
-                if (pickup != null && pickup.item != null && pickup.item.itemId == itemId) return pickup;
+                if (target is ItemPickup pickup && pickup.item != null && pickup.item.itemId == itemId) return pickup;
             }
             return null;
+        }
+
+        /// <summary>Turns her to a pickup and takes it: Interact asks, Interact again says yes.</summary>
+        public static IEnumerator TakeFacing(Context c, ItemPickup pickup)
+        {
+            yield return TurnTo(c, pickup.Point, 4f);
+            c.Pad.Tap(InputManager.GameAction.Interact);
+            yield return new WaitForSecondsRealtime(0.3f);
+            c.Pad.Tap(InputManager.GameAction.Interact);
+            yield return new WaitForSecondsRealtime(0.3f);
         }
 
         public static Scannable FindScannable(string scanId)

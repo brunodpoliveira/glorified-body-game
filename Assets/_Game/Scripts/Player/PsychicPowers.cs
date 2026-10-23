@@ -231,7 +231,12 @@ namespace GlorifiedBody.Player
         public bool UseDrug()
         {
             PowerDefinition power = Selected;
-            DrugType wanted = power != null ? power.drug : DrugType.Nalcon;
+            return UseDrug(power != null ? power.drug : DrugType.Nalcon);
+        }
+
+        /// <summary>Uses a drug of the type (or any other when that one is empty): the inventory screen calls it.</summary>
+        public bool UseDrug(DrugType wanted)
+        {
             if (!drugs.TryUse(wanted, out DrugType used))
             {
                 return Result("drug_none", 0f);

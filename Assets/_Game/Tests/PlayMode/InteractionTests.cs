@@ -63,6 +63,7 @@ namespace GlorifiedBody.Tests.PlayMode
         [UnityTearDown]
         public IEnumerator TearDown()
         {
+            if (GameManager.Instance != null && GameManager.Instance.IsInventory) GameManager.Instance.CloseInventory();
             GameInput.ClearBotSource(pad);
             if (driver != null) UnityEngine.Object.Destroy(driver.gameObject);
             yield return null;
@@ -112,27 +113,35 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator AFullInventory_RefusesThePickup_AndTheGuardOutfitCarriesMore()
+        public IEnumerator AFullInventory_RefusesAGrabbable_ButNeverAKeyItem_AndTheGuardOutfitCarriesMore()
         {
             PsychicStats stats = tank.GetComponent<PsychicStats>();
             int nudeSlots = inventory.Capacity;
             Assert.AreEqual("nude", stats.Outfit.outfitId);
             var filler = ScriptableObject.CreateInstance<ItemDefinition>();
             filler.itemId = "filler";
+            filler.kind = ItemKind.Object;
             while (!inventory.IsFull) inventory.TryAdd(filler);
 
+            ItemPickup capsule = TutorialDrive.FindPickup("nalcon");
+            yield return StandFacing(capsule.Point + Vector3.forward * 0.8f, capsule.Point);
+            yield return Press(InputManager.GameAction.Interact);
+            yield return Press(InputManager.GameAction.Interact);
+            Assert.IsTrue(interactor.LastResult.StartsWith("full:"), "a full inventory refuses a grabbable: " + interactor.LastResult);
+            Assert.AreEqual(Interactor.State.Message, interactor.Current, "it says so");
+            Assert.IsTrue(capsule != null && capsule.gameObject.activeInHierarchy, "the capsule stays in the room");
+            yield return Press(InputManager.GameAction.Interact);
+
             ItemPickup log = TutorialDrive.FindPickup(director.LogItemId);
-            yield return StandFacing(director.LogPoint, log.transform.position);
+            yield return StandFacing(director.LogPoint, log.Point);
             yield return Press(InputManager.GameAction.Interact);
             yield return Press(InputManager.GameAction.Interact);
-            Assert.IsTrue(interactor.LastResult.StartsWith("full:"), "a full inventory refuses: " + interactor.LastResult);
-            Assert.IsFalse(inventory.Has(director.LogItemId));
-            Assert.IsTrue(log != null && log.gameObject.activeInHierarchy, "the log stays in the room");
-            Assert.AreEqual(Interactor.State.Free, interactor.Current);
+            Assert.IsTrue(inventory.Has(director.LogItemId), "a key item fits a full inventory: it takes no slot");
+            yield return Press(InputManager.GameAction.Interact);
 
             stats.SetOutfit(Resources.Load<OutfitProfile>("Outfits/outfit_guard"));
             Assert.Greater(inventory.Capacity, nudeSlots, "the guard outfit has more slots (Bruno, 2026-10-22)");
-            Assert.IsFalse(inventory.IsFull, "room for the log now");
+            Assert.IsFalse(inventory.IsFull, "room for the capsule now");
             inventory.Clear();
             UnityEngine.Object.Destroy(filler);
         }
@@ -143,13 +152,15 @@ namespace GlorifiedBody.Tests.PlayMode
             Scannable door = TutorialDrive.FindScannable(director.DoorScanId);
             Assert.IsNotNull(door, "the door is a scan target");
             Assert.IsNotNull(door.image, "the placeholder picture");
-            yield return StandFacing(director.BarsPoint, door.FocusPoint);
+            yield return StandFacing(director.DoorPoint, door.FocusPoint);
             Assert.AreSame(door, scanner.Focus, "the door is in reach and in front of her");
             Assert.IsTrue(ui.HintShown.Contains("scan"), "the hint offers the scan: " + ui.HintShown);
 
             yield return Press(InputManager.GameAction.Interact);
             Assert.IsFalse(scanner.IsViewing, "Interact never scans");
-            Assert.AreEqual(Interactor.State.Free, interactor.Current, "nothing to take at the door");
+            Assert.AreEqual(Interactor.State.Message, interactor.Current, "Interact at the door says it is locked");
+            yield return Press(InputManager.GameAction.Back);
+            Assert.AreEqual(Interactor.State.Free, interactor.Current);
 
             yield return Press(InputManager.GameAction.Scan);
             Assert.IsTrue(scanner.IsViewing, "Scan reads the door");
@@ -192,6 +203,114 @@ namespace GlorifiedBody.Tests.PlayMode
             yield return Press(InputManager.GameAction.Scan);
             Assert.IsFalse(scanner.IsViewing);
             Assert.AreEqual("nothing", scanner.LastResult);
+        }
+
+        [UnityTest]
+        public IEnumerator Scan_ReachesOnlyCloseToTheObject()
+        {
+            Scannable door = TutorialDrive.FindScannable(director.DoorScanId);
+            Assert.AreEqual(Scannable.DefaultRange, door.range, 0.01f, "the scan reach (Bruno, 2026-10-22: closer)");
+            Assert.LessOrEqual(Scannable.DefaultRange, 1.6f, "no farther than the Interact reach");
+            Vector3 away = door.FocusPoint + (director.DoorPoint - door.FocusPoint).normalized * (Scannable.DefaultRange + 0.6f);
+            away.y = 0f;
+            yield return StandFacing(away, door.FocusPoint);
+            Assert.IsNull(scanner.Focus, "too far to scan");
+            yield return Press(InputManager.GameAction.Scan);
+            Assert.IsFalse(scanner.IsViewing);
+        }
+
+        [UnityTest]
+        public IEnumerator TheLockedDoor_SaysItIsLocked_AndOpensWithTheKey()
+        {
+            LockedDoor door = UnityEngine.Object.FindFirstObjectByType<LockedDoor>();
+            Assert.IsNotNull(door, "the locked door of the gym");
+            Vector3 leafBefore = door.leaf.position;
+            yield return StandFacing(director.DoorPoint, door.Point);
+            Assert.AreSame(door, interactor.Focus, "the door is in reach");
+            yield return Press(InputManager.GameAction.Interact);
+            Assert.AreEqual(Interactor.State.Message, interactor.Current, "no key: a message, no question");
+            Assert.IsTrue(ui.ConfirmTextShown.Contains("locked"), ui.ConfirmTextShown);
+            yield return Press(InputManager.GameAction.Interact);
+            Assert.AreEqual(Interactor.State.Free, interactor.Current);
+            Assert.IsFalse(door.IsOpen);
+
+            ItemPickup key = TutorialDrive.FindPickup(director.KeyItemId);
+            Assert.IsNotNull(key, "the test key on its stand");
+            yield return StandFacing(director.KeyPoint, key.Point);
+            int usedBefore = inventory.UsedSlots;
+            yield return Press(InputManager.GameAction.Interact);
+            yield return Press(InputManager.GameAction.Interact);
+            Assert.IsTrue(inventory.Has(director.KeyItemId), "the key taken");
+            Assert.AreEqual(usedBefore, inventory.UsedSlots, "a key item takes no slot");
+
+            yield return StandFacing(director.DoorPoint, door.Point);
+            yield return Press(InputManager.GameAction.Interact);
+            Assert.AreEqual(Interactor.State.Confirming, interactor.Current, "with the key it asks");
+            Assert.IsTrue(ui.ConfirmTextShown.Contains("test key"), ui.ConfirmTextShown);
+            yield return Press(InputManager.GameAction.Interact);
+            Assert.IsTrue(door.IsOpen, "the yes opens it");
+            yield return new WaitForSecondsRealtime(door.openSeconds + 0.2f);
+            Assert.Greater(Vector3.Distance(leafBefore, door.leaf.position), 1f, "the leaf slid aside");
+            Assert.IsFalse(door.leaf.GetComponent<Collider>().enabled, "the way is clear");
+            Assert.IsTrue(inventory.Has(director.KeyItemId), "the key stays");
+        }
+
+        [UnityTest]
+        public IEnumerator TheCapsule_AsksFirst_AndTakesASlot()
+        {
+            ItemPickup capsule = TutorialDrive.FindPickup("nalcon");
+            Assert.IsNotNull(capsule, "the capsule is a grabbable");
+            Renderer renderer = capsule.GetComponent<Renderer>();
+            Assert.AreEqual("Universal Render Pipeline/Unlit", renderer.sharedMaterial.shader.name, "unlit: it stands out of the room light");
+            DrugInventory drugs = tank.GetComponent<DrugInventory>();
+            int before = drugs.Count(GlorifiedBody.Player.DrugType.Nalcon);
+            yield return StandFacing(capsule.Point + Vector3.forward * 0.8f, capsule.Point);
+            Assert.AreEqual(before, drugs.Count(GlorifiedBody.Player.DrugType.Nalcon), "walking onto it takes nothing");
+            yield return Press(InputManager.GameAction.Interact);
+            Assert.AreEqual(Interactor.State.Confirming, interactor.Current, "it asks");
+            yield return Press(InputManager.GameAction.Interact);
+            Assert.AreEqual(before + 1, drugs.Count(GlorifiedBody.Player.DrugType.Nalcon), "taken");
+            Assert.AreEqual(1, inventory.UsedSlots, "one slot used");
+        }
+
+        [UnityTest]
+        public IEnumerator TheInventory_StopsTheRoom_AndListsTheItems()
+        {
+            InventoryUI screen = UnityEngine.Object.FindFirstObjectByType<InventoryUI>();
+            Assert.IsNotNull(screen, "the inventory screen in the room");
+            ItemPickup log = TutorialDrive.FindPickup(director.LogItemId);
+            yield return StandFacing(director.LogPoint, log.Point);
+            yield return Press(InputManager.GameAction.Interact);
+            yield return Press(InputManager.GameAction.Interact);
+            yield return Press(InputManager.GameAction.Interact); // close the page
+            tank.GetComponent<DrugInventory>().DebugSet(GlorifiedBody.Player.DrugType.Red, 2);
+
+            yield return Press(InputManager.GameAction.Inventory);
+            Assert.IsTrue(screen.IsOpen, "the inventory opens");
+            Assert.IsTrue(GameManager.Instance.IsInventory, "the game is in the inventory state");
+            Assert.AreEqual(0f, Time.timeScale, "the room stops");
+            Assert.AreEqual(2, screen.Entries.Count, "the log and the red drugs");
+            Assert.IsTrue(screen.SlotsShown.Contains("2 / 4"), "the log takes no slot, two drugs take two: " + screen.SlotsShown);
+            Vector3 lucyBefore = tank.transform.position;
+            pad.SetHeld(InputManager.GameAction.Forward, true);
+            yield return null;
+            yield return null;
+            pad.SetHeld(InputManager.GameAction.Forward, false);
+            Assert.AreEqual(lucyBefore, tank.transform.position, "she does not walk while it is open");
+
+            yield return Press(InputManager.GameAction.Interact); // the log is first: read it
+            Assert.IsTrue(screen.ReaderOpen, "Interact reads the log from the inventory");
+            yield return Press(InputManager.GameAction.Back);
+            Assert.IsFalse(screen.ReaderOpen);
+            yield return Press(InputManager.GameAction.TurnRight);
+            Assert.AreEqual(1, screen.Selected, "the next cell");
+            yield return Press(InputManager.GameAction.Interact); // use one red
+            Assert.AreEqual(1, tank.GetComponent<DrugInventory>().Count(GlorifiedBody.Player.DrugType.Red), "a drug used from the inventory");
+
+            yield return Press(InputManager.GameAction.Inventory);
+            Assert.IsFalse(screen.IsOpen, "the Inventory key closes it");
+            Assert.IsTrue(GameManager.Instance.IsPlaying);
+            Assert.AreEqual(1f, Time.timeScale, "the room runs again");
         }
 
         // ── Helpers ───────────────────────────────────────────────────

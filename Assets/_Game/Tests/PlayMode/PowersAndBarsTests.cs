@@ -563,18 +563,29 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator DrugPickup_AddsToTheInventory_UpToTheCapacity()
+        public IEnumerator DrugPickup_AsksFirst_AndTakesOneSlotEach_UpToTheOutfitSlots()
         {
             Assert.AreEqual(0, drugs.Count(DrugType.Nalcon));
             GameObject pickup = GameObject.Find("Drug_Nalcon");
             Assert.IsNotNull(pickup, "a nalcon drug lies in the room");
-            tank.Teleport(pickup.transform.position + Vector3.up * 0.6f, 0f);
+            Vector3 point = pickup.transform.position;
+            tank.Teleport(new Vector3(point.x, 0f, point.z - 0.8f), 0f);
+            yield return null;
+            yield return null;
+            Assert.AreEqual(0, drugs.Count(DrugType.Nalcon), "walking up to it takes nothing (Bruno, 2026-10-22: grabbables ask first)");
+            pad.Tap(InputManager.GameAction.Interact);
+            yield return null;
+            yield return null;
+            yield return null;
+            pad.Tap(InputManager.GameAction.Interact);
             yield return WaitUntil(() => drugs.Count(DrugType.Nalcon) == 1, 2f);
-            Assert.AreEqual(1, drugs.Count(DrugType.Nalcon), "picked up");
+            Assert.AreEqual(1, drugs.Count(DrugType.Nalcon), "the second press takes it");
             yield return null;
             Assert.IsTrue(pickup == null, "the pickup is gone");
-            Assert.AreEqual(1, drugs.Add(DrugType.Nalcon, 5), "the nude outfit holds two of each: one more fits");
-            Assert.AreEqual(2, drugs.Count(DrugType.Nalcon));
+            var items = tank.GetComponent<GlorifiedBody.Interaction.ItemInventory>();
+            Assert.AreEqual(1, items.UsedSlots, "one slot");
+            Assert.AreEqual(items.Capacity - 1, drugs.Add(DrugType.Red, 10), "the drugs fill the free slots, no more");
+            Assert.IsTrue(items.IsFull);
         }
 
         [UnityTest]

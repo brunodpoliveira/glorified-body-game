@@ -18,6 +18,7 @@ namespace GlorifiedBody.Systems
             Loading,
             Playing,
             Paused,
+            Inventory, // the inventory overlay: time stops, only its keys pass (Bruno, 2026-10-22)
             GameOver,
             LevelComplete
         }
@@ -34,6 +35,40 @@ namespace GlorifiedBody.Systems
 
         public GameState CurrentState => currentState;
         public bool IsPaused => currentState == GameState.Paused;
+        public bool IsInventory => currentState == GameState.Inventory;
+
+        /// <summary>The keys the inventory overlay uses; every other game action is blocked while it is open.</summary>
+        public static bool IsInventoryAction(InputManager.GameAction action) =>
+            action == InputManager.GameAction.Inventory || action == InputManager.GameAction.Interact
+            || action == InputManager.GameAction.Back || action == InputManager.GameAction.Forward
+            || action == InputManager.GameAction.TurnLeft || action == InputManager.GameAction.TurnRight;
+
+        /// <summary>False while a menu or the game over owns the keys; inside the inventory only its keys pass.</summary>
+        public bool AllowsAction(InputManager.GameAction action)
+        {
+            if (currentState == GameState.Paused || currentState == GameState.GameOver) return false;
+            if (currentState == GameState.Inventory) return IsInventoryAction(action);
+            return true;
+        }
+
+        /// <summary>Opens the inventory overlay: the game stops as in the pause, the overlay owns the keys.</summary>
+        public void OpenInventory()
+        {
+            if (currentState != GameState.Playing) return;
+            storedTimeScale = Time.timeScale;
+            storedFixedDeltaTime = Time.fixedDeltaTime;
+            Time.timeScale = 0f;
+            Time.fixedDeltaTime = 0f;
+            SetState(GameState.Inventory);
+        }
+
+        public void CloseInventory()
+        {
+            if (currentState != GameState.Inventory) return;
+            Time.timeScale = storedTimeScale;
+            Time.fixedDeltaTime = storedFixedDeltaTime;
+            SetState(GameState.Playing);
+        }
         public bool IsGameOver => currentState == GameState.GameOver;
         public bool IsPlaying => currentState == GameState.Playing;
         public bool IsInMenu => currentState == GameState.MainMenu;
@@ -54,6 +89,11 @@ namespace GlorifiedBody.Systems
 
         void Update()
         {
+            if (currentState == GameState.Inventory)
+            {
+                if (Input.GetKeyDown(KeyCode.Escape)) CloseInventory();
+                return;
+            }
             if (currentState == GameState.Playing || currentState == GameState.Paused)
             {
                 if (InputManager.Instance != null && InputManager.Instance.IsRebinding) return;
@@ -231,6 +271,10 @@ namespace GlorifiedBody.Systems
 
                 case GameState.Paused:
                     SetCursor(true);
+                    break;
+
+                case GameState.Inventory:
+                    SetCursor(false);
                     break;
 
                 case GameState.GameOver:

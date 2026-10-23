@@ -37,6 +37,10 @@ namespace GlorifiedBody.Editor
         public static readonly Vector3 CapsulePoint = new Vector3(-2.6f, 0f, 13.5f);
         public static readonly Vector3 LogPoint = new Vector3(-2.9f, 0f, 14.6f);   // where she stands to take the log
         public static readonly Vector3 LogStand = new Vector3(-3.72f, 0f, 14.6f);  // the stand against the west wall
+        public static readonly Vector3 KeyPoint = new Vector3(-2.9f, 0f, 15.4f);   // where she stands to take the key
+        public static readonly Vector3 KeyStand = new Vector3(-3.72f, 0f, 15.4f);
+        public static readonly Vector3 DoorPoint = new Vector3(-1.6f, 0f, 10.9f);  // where she stands to scan and open the door
+        public static readonly Vector3 DoorFocus = new Vector3(-0.45f, 1.2f, 10.45f); // the west half of the door leaf
         public const string ItemsFolder = MenuLoopSetup.ResourcesFolder + "/Items";
         public const string TestLogPath = ItemsFolder + "/item_test_log.asset";
         public const string ScanFolder = "Assets/_Game/Scan";
@@ -58,9 +62,15 @@ namespace GlorifiedBody.Editor
             camera.backgroundColor = Color.black;
             LookTestSetup.Palette p = LookTestSetup.EnsurePalette();
 
+            // A fresh room: the builder reopens the scene, and the first layout's closed wall must not stay.
+            MenuLoopSetup.RemoveObject("[Room]");
+            MenuLoopSetup.RemoveObject("[Lights]");
             GameObject room = MenuLoopSetup.EnsureRoot("[Room]");
             GameObject lights = MenuLoopSetup.EnsureRoot("[Lights]");
-            LookTestSetup.BuildTherapyGym(room, lights, p, corridorOpening: false);
+            // The gym with its south doorway open: a locked steel door slides in it, a closet lies behind (Bruno,
+            // 2026-10-22: "a test key to open a locked door").
+            LookTestSetup.BuildTherapyGym(room, lights, p, corridorOpening: true);
+            BuildLockedDoorAndCloset(room, lights, p);
             LookTestSetup.ProbeGrid(LookTestSetup.GymMin, LookTestSetup.GymMax, 1.5f, 0.6f, 2.4f);
 
             // Lucy at the door, the lock marker on (she must see what the lock holds).
@@ -78,19 +88,18 @@ namespace GlorifiedBody.Editor
             PaddedTarget("Target_Gun", new Vector3(-3.65f, 0f, 11.6f), 30f, p, gun: true);
             MenuLoopSetup.EnsurePickup("Capsule", DrugType.Nalcon, CapsulePoint + Vector3.up * 0.4f);
 
-            // The test log on a steel stand against the west wall, and the two scan targets: the door (a
-            // picture) and the wall of monitors (a clip). Placeholders (Bruno, 2026-10-22).
-            ItemDefinition log = EnsureTestLog();
-            GameObject stand = LookTestSetup.Block(room, "Log_Stand", PrimitiveType.Cube, LogStand + new Vector3(0f, 0.45f, 0f), new Vector3(0.4f, 0.9f, 0.5f), p.DarkSteel);
-            GameObject logObject = LookTestSetup.Block(room, "Log_Clipboard", PrimitiveType.Cube, LogStand + new Vector3(0f, 0.92f, 0f), new Vector3(0.24f, 0.03f, 0.32f), p.Mattress, Quaternion.Euler(0f, 8f, 0f));
-            logObject.isStatic = false;
-            ItemPickup pickup = MenuLoopSetup.EnsureComponent<ItemPickup>(logObject);
-            pickup.item = log;
-            pickup.range = 1.6f;
+            // The test log and the test key on two steel stands against the west wall, unlit so they stand out
+            // (Bruno, 2026-10-22, after Resident Evil 4), and the two scan targets: the door (a picture, seen from
+            // close by its west half) and the wall of monitors (a clip). Placeholders.
+            ItemAssets.CreateAll();
+            LookTestSetup.Block(room, "Log_Stand", PrimitiveType.Cube, LogStand + new Vector3(0f, 0.45f, 0f), new Vector3(0.4f, 0.9f, 0.5f), p.DarkSteel);
+            ItemAssets.Pickup(null, "Log_Clipboard", ItemAssets.TestLog(), PrimitiveType.Cube, LogStand + new Vector3(0f, 0.93f, 0f), new Vector3(0.24f, 0.03f, 0.32f), Quaternion.Euler(0f, 8f, 0f));
+            LookTestSetup.Block(room, "Key_Stand", PrimitiveType.Cube, KeyStand + new Vector3(0f, 0.45f, 0f), new Vector3(0.4f, 0.9f, 0.4f), p.DarkSteel);
+            ItemAssets.Pickup(null, "Test_Key", ItemAssets.TestKey(), PrimitiveType.Cube, KeyStand + new Vector3(0f, 0.93f, 0f), new Vector3(0.2f, 0.03f, 0.13f), Quaternion.Euler(0f, -12f, 0f));
             Texture2D scanImage = EnsureScanImage();
             VideoClip scanClip = AssetDatabase.LoadAssetAtPath<VideoClip>(ScanVideoPath);
             if (scanClip == null) Debug.LogError($"[TutorialSetup] no clip at {ScanVideoPath}.");
-            ScanTarget("Scan_Door", new Vector3(0f, 1.2f, LookTestSetup.GymMin.z + 0.1f), "gym_door", "PLACEHOLDER: what opens this door.", scanImage, null);
+            ScanTarget("Scan_Door", DoorFocus, "gym_door", "PLACEHOLDER: what opens this door.", scanImage, null);
             ScanTarget("Scan_Monitors", new Vector3(-2.2f, 1.3f, LookTestSetup.GymMax.z - 0.55f), "gym_monitors", "PLACEHOLDER: what the monitors saw.", null, scanClip);
 
             // Cameras (ART_LESSONS 1.6), from the coverage check with the near skip at 1.2 m (the first layout
@@ -111,7 +120,10 @@ namespace GlorifiedBody.Editor
             director.SetDefaultCamera(gym);
             MenuLoopSetup.EnsureCameraZone(camerasRoot, "Zone_Gym_North", new Vector3(0f, 1.5f, 15.4f), new Vector3(8f, 3f, 3.8f), north, 1);
             MenuLoopSetup.EnsureCameraZone(camerasRoot, "Zone_Gym_DoorStrip", new Vector3(3f, 1.5f, 11.9f), new Vector3(2f, 3f, 3.2f), west, 1);
-            MenuLoopSetup.EnsureShotPoints(new[] { gym, north, west });
+            // The closet behind the locked door: its own camera in the far corner, looking back at the doorway.
+            FixedCamera closet = MenuLoopSetup.EnsureFixedCamera(camerasRoot, "Cam_Closet", new Vector3(0.7f, 1.9f, 8.6f), new Vector3(-0.4f, 0.7f, 10.2f), 70f);
+            MenuLoopSetup.EnsureCameraZone(camerasRoot, "Zone_Closet", new Vector3(0f, 1.5f, 9.3f), new Vector3(1.8f, 3f, 1.9f), closet, 5);
+            MenuLoopSetup.EnsureShotPoints(new[] { gym, north, west, closet });
 
             MenuLoopSetup.EnsureGameplaySystems();
             MenuLoopSetup.EnsureRuntimeUi();
@@ -130,6 +142,9 @@ namespace GlorifiedBody.Editor
             so.FindProperty("capsulePoint").vector3Value = CapsulePoint;
             so.FindProperty("logPoint").vector3Value = LogPoint;
             so.FindProperty("logItemId").stringValue = "test_log";
+            so.FindProperty("keyPoint").vector3Value = KeyPoint;
+            so.FindProperty("keyItemId").stringValue = "test_key";
+            so.FindProperty("doorPoint").vector3Value = DoorPoint;
             so.FindProperty("doorScanId").stringValue = "gym_door";
             so.FindProperty("monitorsScanId").stringValue = "gym_monitors";
             so.FindProperty("reachRadius").floatValue = ReachRadius;
@@ -144,25 +159,56 @@ namespace GlorifiedBody.Editor
             Debug.Log($"[TutorialSetup] {ScenePath}: the therapy gym, four targets, three cameras, the director. Next: BakeTutorial.");
         }
 
-        /// <summary>The placeholder log (Bruno, 2026-10-22: "add a placeholder test log"). The writer gives the words later.</summary>
-        internal static ItemDefinition EnsureTestLog()
+        /// <summary>
+        /// The locked door in the gym's south doorway: the steel leaf (it slides west when the key opens it), its
+        /// frame, the jambs and the soffit of the opening, the gear over it, and a closet behind with a dim light
+        /// and a red pill (the reward). The LockedDoor sits on "Door_Gym" and measures the reach to the leaf's
+        /// west half, where she stands to scan it.
+        /// </summary>
+        private static void BuildLockedDoorAndCloset(GameObject room, GameObject lights, LookTestSetup.Palette p)
         {
-            Directory.CreateDirectory(ItemsFolder);
-            var item = AssetDatabase.LoadAssetAtPath<ItemDefinition>(TestLogPath);
-            if (item == null)
-            {
-                item = ScriptableObject.CreateInstance<ItemDefinition>();
-                AssetDatabase.CreateAsset(item, TestLogPath);
-            }
-            item.itemId = "test_log";
-            item.displayName = "TEST LOG";
-            item.kind = ItemKind.Log;
-            item.description = "A placeholder record on a clipboard.";
-            item.logText = "PLACEHOLDER LOG\n\nSession 0. Subject L.\n\nThis page stands in for the logs of the demo: the whiteboard, the orientation program, the tape. "
-                + "The writer gives the words later.\n\nIt proves the Interact key: she faces it, the game asks, she takes it, it opens here, and it stays in her inventory.";
-            EditorUtility.SetDirty(item);
-            return item;
+            float z = LookTestSetup.GymMin.z;
+            LookTestSetup.DoorTunnel(room, "GymDoor", new Vector3(0f, 0f, z), Quaternion.Euler(0f, 180f, 0f), 0.3f, 1.2f, 2.2f, p.TileWall, p.Steel);
+            LookTestSetup.Block(room, "Gym_DoorFrame_Top", PrimitiveType.Cube, new Vector3(0f, 2.27f, z + 0.05f), new Vector3(1.5f, 0.14f, 0.1f), p.Steel);
+            LookTestSetup.Block(room, "Gym_DoorFrame_W", PrimitiveType.Cube, new Vector3(-0.67f, 1.1f, z + 0.05f), new Vector3(0.14f, 2.2f, 0.1f), p.Steel);
+            LookTestSetup.Block(room, "Gym_DoorFrame_E", PrimitiveType.Cube, new Vector3(0.67f, 1.1f, z + 0.05f), new Vector3(0.14f, 2.2f, 0.1f), p.Steel);
+            LookTestSetup.Face(room, "Gym_DoorPanel", new Vector3(0f, 2.95f, z + 0.02f), Quaternion.Euler(0f, 180f, 0f), 0.8f, 0.8f, p.Emblem, 0f, stretch: true); // faces into the gym
+
+            // The closet: 1.8 x 1.6 m, 2.4 m high, behind the wall (z from 8.4 to 10.0).
+            float z0 = 8.4f, z1 = z - 0.3f, w = 1.8f, h = 2.4f;
+            Vector3 c = new Vector3(0f, 0f, (z0 + z1) * 0.5f);
+            LookTestSetup.Face(room, "Closet_Floor", c, Quaternion.Euler(90f, 0f, 0f), w, z1 - z0, p.TileFloor, 0.3f);
+            LookTestSetup.Face(room, "Closet_Ceiling", c + Vector3.up * h, Quaternion.Euler(-90f, 0f, 0f), w, z1 - z0, p.Ceiling, 0.3f);
+            LookTestSetup.Face(room, "Closet_Wall_South", new Vector3(0f, h * 0.5f, z0), Quaternion.Euler(0f, 180f, 0f), w, h, p.TileWall, 0.3f);
+            LookTestSetup.Face(room, "Closet_Wall_West", new Vector3(-w * 0.5f, h * 0.5f, c.z), Quaternion.Euler(0f, -90f, 0f), z1 - z0, h, p.TileWall, 0.3f);
+            LookTestSetup.Face(room, "Closet_Wall_East", new Vector3(w * 0.5f, h * 0.5f, c.z), Quaternion.Euler(0f, 90f, 0f), z1 - z0, h, p.TileWall, 0.3f);
+            LookTestSetup.Face(room, "Closet_Wall_North_W", new Vector3(-0.75f, h * 0.5f, z1), Quaternion.identity, 0.3f, h, p.TileWall, 0f);
+            LookTestSetup.Face(room, "Closet_Wall_North_E", new Vector3(0.75f, h * 0.5f, z1), Quaternion.identity, 0.3f, h, p.TileWall, 0f);
+            LookTestSetup.Face(room, "Closet_Wall_North_Top", new Vector3(0f, 2.3f, z1), Quaternion.identity, 1.2f, 0.2f, p.TileWall, 0f);
+            LookTestSetup.Point(lights, "Closet_Light", new Vector3(0f, h - 0.2f, c.z), new Color(1f, 0.9f, 0.75f), 4f, 3f);
+            ItemAssets.Pickup(null, "Closet_Pill", ItemAssets.Drug(DrugType.Red), PrimitiveType.Capsule, new Vector3(0f, 0.15f, z0 + 0.5f), Vector3.one * 0.3f, Quaternion.Euler(0f, 0f, 90f));
+
+            // The leaf: a movable steel slab in the opening, not static (it slides), its own collider.
+            GameObject leaf = MenuLoopSetup.EnsureChildPrimitive(room, "Gym_Door", PrimitiveType.Cube, new Vector3(0f, 1.1f, z + 0.05f), new Vector3(1.2f, 2.2f, 0.08f));
+            leaf.transform.rotation = Quaternion.identity;
+            leaf.isStatic = false;
+            leaf.GetComponent<Renderer>().sharedMaterial = p.Steel;
+            GameObject doorRoot = MenuLoopSetup.EnsureRoot("Door_Gym");
+            doorRoot.transform.position = new Vector3(0f, 1.1f, z + 0.1f);
+            Transform reach = doorRoot.transform.Find("Reach");
+            if (reach == null) { reach = new GameObject("Reach").transform; reach.SetParent(doorRoot.transform, false); }
+            reach.position = DoorFocus;
+            LockedDoor door = MenuLoopSetup.EnsureComponent<LockedDoor>(doorRoot);
+            door.keyItemId = "test_key";
+            door.keyName = "the test key";
+            door.leaf = leaf.transform;
+            door.openOffset = new Vector3(-1.25f, 0f, 0f);
+            door.point = reach;
+            door.range = 1.6f;
         }
+
+        /// <summary>The placeholder log (Bruno, 2026-10-22: "add a placeholder test log"). The writer gives the words later.</summary>
+        internal static ItemDefinition EnsureTestLog() => ItemAssets.TestLog();
 
         /// <summary>The placeholder picture of the scan, imported as a plain 1280 x 720 UI texture.</summary>
         internal static Texture2D EnsureScanImage()
@@ -192,7 +238,7 @@ namespace GlorifiedBody.Editor
             target.caption = caption;
             target.image = image;
             target.clip = clip;
-            target.range = 3f;
+            target.range = Scannable.DefaultRange; // close to the object (Bruno, 2026-10-22)
             target.focus = null;
         }
 

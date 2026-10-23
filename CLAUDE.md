@@ -99,6 +99,16 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   (`Assets/_Game/Scan/`, ffmpeg cards, the clip VP8 webm because the Linux editor has no H.264). The tutorial
   has 14 steps (log, scan_image, scan_video added). The look rooms' cameras follow the game-room coverage rule
   (1.2 m near skip) now. Bruno's words on the presenter's lines: refine them after the scan step.
+- 2026-10-22, night, the inventory (`devlog-notes/2026-10-22_inventory.md`): I opens an overlay that pauses the
+  game (`GameState.Inventory`, only its keys pass `GameManager.AllowsAction`), after the Galerians item screen
+  (`InventoryUI`). Key items (keys, logs, the injector) take no slot; grabbables (objects, every drug) take one
+  each; `DrugInventory` draws on the item slots. `DrugPickup` is gone: pills are `ItemPickup`s that ask first.
+  `Interactable` is the base of `ItemPickup` and `LockedDoor` (a message without the key, a question with it).
+  The tutorial gym has a test key, a locked door with a closet (a red pill, its own camera). Pickups are unlit
+  (`ItemAssets`, after Resident Evil 4). The scan reaches 1.5 m. Tutorial: 17 steps. FOR LATER (§12 of the
+  design): nalcon becomes MK, the power names mk_warspite / mk_erebus / mk_orzabal / mk_edgar, Telekinesis holds
+  until thrown, slammed or hit, Fire damages only at a full charge, MK at 50 percent or more doubles damage and
+  charge speed.
   Next: props, then the FSM AI. Bruno does a manual play first.
 
 ## Rules

@@ -33,7 +33,8 @@ namespace GlorifiedBody.Systems
             UseDrug,
             Interact,
             Defend, // RMB: the defensive use of the selected power (Bruno, 2026-10-20)
-            Scan    // the psychic scan, separate from Interact (Bruno, 2026-10-22)
+            Scan,     // the psychic scan, separate from Interact (Bruno, 2026-10-22)
+            Inventory // the inventory overlay, pauses the game (Bruno, 2026-10-22)
         }
 
         [Serializable]
@@ -59,6 +60,7 @@ namespace GlorifiedBody.Systems
                 GameAction.UseDrug => "Use Drug",
                 GameAction.Interact => "Interact (take, read)",
                 GameAction.Scan => "Psychic Scan",
+                GameAction.Inventory => "Inventory",
                 GameAction.Defend => "Defend (hold: shield, later)",
                 _ => action.ToString()
             };
@@ -86,6 +88,7 @@ namespace GlorifiedBody.Systems
             new KeyBinding { action = GameAction.Interact, defaultKey = KeyCode.E },
             new KeyBinding { action = GameAction.Defend, defaultKey = KeyCode.Mouse1 },
             new KeyBinding { action = GameAction.Scan, defaultKey = KeyCode.F },
+            new KeyBinding { action = GameAction.Inventory, defaultKey = KeyCode.I },
         };
 
         [Header("Default Bindings")]
@@ -144,21 +147,21 @@ namespace GlorifiedBody.Systems
 
         public bool GetActionDown(GameAction action)
         {
-            if (GameManager.Instance != null && (GameManager.Instance.IsPaused || GameManager.Instance.IsGameOver)) return false;
+            if (GameManager.Instance != null && !GameManager.Instance.AllowsAction(action)) return false;
             if (IsRebinding) return false;
             return Input.GetKeyDown(GetKey(action));
         }
 
         public bool GetAction(GameAction action)
         {
-            if (GameManager.Instance != null && (GameManager.Instance.IsPaused || GameManager.Instance.IsGameOver)) return false;
+            if (GameManager.Instance != null && !GameManager.Instance.AllowsAction(action)) return false;
             if (IsRebinding) return false;
             return Input.GetKey(GetKey(action));
         }
 
         public bool GetActionUp(GameAction action)
         {
-            if (GameManager.Instance != null && (GameManager.Instance.IsPaused || GameManager.Instance.IsGameOver)) return false;
+            if (GameManager.Instance != null && !GameManager.Instance.AllowsAction(action)) return false;
             if (IsRebinding) return false;
             return Input.GetKeyUp(GetKey(action));
         }

@@ -11,6 +11,7 @@ using GlorifiedBody.Automation;
 using GlorifiedBody.Cameras;
 using GlorifiedBody.Combat;
 using GlorifiedBody.Core;
+using GlorifiedBody.Interaction;
 using GlorifiedBody.Enemy;
 using GlorifiedBody.Rendering;
 using GlorifiedBody.Systems;
@@ -28,7 +29,7 @@ namespace GlorifiedBody.Tests.PlayMode
     public class TutorialTests
     {
         private const string MainMenu = "Main_Menu";
-        private static readonly string[] ExpectedSteps = { "walk", "run", "dodge", "switch", "blast", "fire", "lift_throw", "catch", "capsule", "log", "scan_image", "scan_video", "short", "complete" };
+        private static readonly string[] ExpectedSteps = { "walk", "run", "dodge", "switch", "blast", "fire", "lift_throw", "catch", "capsule", "log", "scan_image", "key", "door", "inventory", "scan_video", "short", "complete" };
 
         private TutorialDirector director;
 
@@ -74,7 +75,9 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.IsFalse(shooter.enabled, "the gun waits for its step");
             Assert.IsFalse(GameObject.Find("Target_Gun").GetComponent<LockOnTargetable>().Selectable, "the gun dummy is out of the lock until its step");
             Assert.IsNotNull(GameObject.Find("Capsule"), "the capsule by the bars");
-            Assert.AreEqual(3, UnityEngine.Object.FindObjectsByType<FixedCamera>(FindObjectsSortMode.None).Length, "three cameras");
+            Assert.AreEqual(4, UnityEngine.Object.FindObjectsByType<FixedCamera>(FindObjectsSortMode.None).Length, "three cameras in the gym, one in the closet");
+            Assert.IsNotNull(UnityEngine.Object.FindFirstObjectByType<LockedDoor>(), "the locked door");
+            Assert.IsNotNull(TutorialDrive.FindPickup("test_key"), "the test key");
             Assert.Greater(LightmapSettings.lightmaps.Length, 0, "the baked bounce (TutorialSetup.BakeTutorial)");
             Assert.IsNotNull(UnityEngine.Object.FindFirstObjectByType<LookQualityApplier>(), "the LOOK option applies here");
             Assert.IsNull(LookDirector.Instance, "no look director: a game room");

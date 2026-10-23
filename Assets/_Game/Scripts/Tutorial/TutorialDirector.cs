@@ -8,6 +8,7 @@ using GlorifiedBody.Enemy;
 using GlorifiedBody.Interaction;
 using GlorifiedBody.Player;
 using GlorifiedBody.Systems;
+using GlorifiedBody.UI;
 
 namespace GlorifiedBody.Tutorial
 {
@@ -31,6 +32,9 @@ namespace GlorifiedBody.Tutorial
         [SerializeField] private Vector3 capsulePoint = new Vector3(-2.6f, 0f, 13.5f);
         [SerializeField] private Vector3 logPoint = new Vector3(-2.9f, 0f, 14.6f);
         [SerializeField] private string logItemId = "test_log";
+        [SerializeField] private Vector3 keyPoint = new Vector3(-2.9f, 0f, 15.4f);
+        [SerializeField] private string keyItemId = "test_key";
+        [SerializeField] private Vector3 doorPoint = new Vector3(-1.6f, 0f, 10.9f);
         [SerializeField] private string doorScanId = "gym_door";
         [SerializeField] private string monitorsScanId = "gym_monitors";
         [SerializeField, Min(0.3f)] private float reachRadius = 1.3f;
@@ -49,6 +53,10 @@ namespace GlorifiedBody.Tutorial
         public Vector3 CapsulePoint => capsulePoint;
         public Vector3 LogPoint => logPoint;
         public string LogItemId => logItemId;
+        public Vector3 KeyPoint => keyPoint;
+        public string KeyItemId => keyItemId;
+        public Vector3 DoorPoint => doorPoint;
+        public LockedDoor Door { get; private set; }
         public string DoorScanId => doorScanId;
         public string MonitorsScanId => monitorsScanId;
         public float ReachRadius => reachRadius;
@@ -70,7 +78,8 @@ namespace GlorifiedBody.Tutorial
         private PsychicScanner scanner;
 
         // The flags of the current step, reset on enter.
-        private bool ranInStep, dodgedSide, launched, caught, drugUsed, shortBegan, shortEnded, logRead, doorScanned, monitorsScanned;
+        private bool ranInStep, dodgedSide, launched, caught, drugUsed, shortBegan, shortEnded, logRead, doorScanned, monitorsScanned, inventoryOpened, inventoryClosed;
+        private ItemInventory items;
         private int targetChanges;
         private PowerKind? firedKind;
         private float firedCharge;
@@ -104,6 +113,8 @@ namespace GlorifiedBody.Tutorial
             drugs = player.GetComponent<DrugInventory>();
             interactor = player.GetComponent<Interactor>();
             scanner = player.GetComponent<PsychicScanner>();
+            items = player.GetComponent<ItemInventory>();
+            Door = FindFirstObjectByType<LockedDoor>();
             GameObject shooterObject = GameObject.Find(shooterTargetName);
             Shooter = shooterObject != null ? shooterObject.GetComponent<DummyShooter>() : null;
             shooterTarget = shooterObject != null ? shooterObject.GetComponent<LockOnTargetable>() : null;
@@ -125,6 +136,8 @@ namespace GlorifiedBody.Tutorial
             }
             if (interactor != null) interactor.OnChanged += OnInteractorChanged;
             if (scanner != null) scanner.OnScanEnded += OnScanEnded;
+            InventoryUI.OnOpened += OnInventoryOpened;
+            InventoryUI.OnClosed += OnInventoryClosed;
 
             BuildSteps();
             Enter(0);
@@ -146,6 +159,15 @@ namespace GlorifiedBody.Tutorial
             }
             if (interactor != null) interactor.OnChanged -= OnInteractorChanged;
             if (scanner != null) scanner.OnScanEnded -= OnScanEnded;
+            InventoryUI.OnOpened -= OnInventoryOpened;
+            InventoryUI.OnClosed -= OnInventoryClosed;
+        }
+
+        private void OnInventoryOpened() => inventoryOpened = true;
+
+        private void OnInventoryClosed()
+        {
+            if (inventoryOpened) inventoryClosed = true;
         }
 
         // ── The steps ─────────────────────────────────────────────────
@@ -189,7 +211,7 @@ namespace GlorifiedBody.Tutorial
                 onExit: () => SetGunActive(false)));
             steps.Add(new TutorialStep("capsule",
                 "A capsule lies by the bars. Take it. Use it.",
-                "Walk over the capsule. {UseDrug} uses it: the bars refill.",
+                "Face the capsule. {Interact} asks, {Interact} again takes it. {UseDrug} uses it: the bars refill.",
                 () => drugUsed));
             steps.Add(new TutorialStep("log",
                 "A record was left by the wall. Take it. Read it.",
@@ -199,6 +221,18 @@ namespace GlorifiedBody.Tutorial
                 "Look at the door without your hands. Tell us what opens it.",
                 "Face the door. {Scan} scans it: a picture. {Scan} again closes it.",
                 () => doorScanned));
+            steps.Add(new TutorialStep("key",
+                "The scan showed a card. It lies by the wall. Take it.",
+                "Face the card. {Interact} asks, {Interact} again takes it. A key takes no slot.",
+                () => items != null && items.Has(keyItemId)));
+            steps.Add(new TutorialStep("door",
+                "Now open the door.",
+                "Face the door. {Interact} asks to use the key, {Interact} again opens it.",
+                () => Door != null && Door.IsOpen));
+            steps.Add(new TutorialStep("inventory",
+                "Show us what you carry.",
+                "{Inventory} opens the inventory: the room stops. {TurnLeft} {TurnRight} select, {Interact} reads or uses. {Inventory} closes it.",
+                () => inventoryClosed));
             steps.Add(new TutorialStep("scan_video",
                 "Now the monitors. They remember more.",
                 "Face the monitors. {Scan} scans them: a short clip. It closes at its end, or with {Scan}.",
@@ -267,7 +301,7 @@ namespace GlorifiedBody.Tutorial
         {
             StepIndex = index;
             StepStartTime = Time.time;
-            ranInStep = dodgedSide = launched = caught = drugUsed = shortBegan = shortEnded = logRead = doorScanned = monitorsScanned = false;
+            ranInStep = dodgedSide = launched = caught = drugUsed = shortBegan = shortEnded = logRead = doorScanned = monitorsScanned = inventoryOpened = inventoryClosed = false;
             targetChanges = 0;
             firedKind = null;
             firedCharge = 0f;

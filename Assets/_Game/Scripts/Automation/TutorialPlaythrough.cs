@@ -146,6 +146,8 @@ namespace GlorifiedBody.Automation
             if (hud != null && hud.Canvas != null && hud.Canvas.gameObject.activeInHierarchy) canvases.Add(hud.Canvas);
             InteractionUI interaction = FindFirstObjectByType<InteractionUI>();
             if (interaction != null && interaction.Canvas != null && interaction.Canvas.gameObject.activeInHierarchy) canvases.Add(interaction.Canvas);
+            InventoryUI inventory = FindFirstObjectByType<InventoryUI>();
+            if (inventory != null && inventory.Canvas != null && inventory.Canvas.gameObject.activeInHierarchy) canvases.Add(inventory.Canvas);
             var modes = new List<(Canvas canvas, RenderMode mode, Camera camera, float plane)>();
             foreach (Canvas canvas in canvases)
             {

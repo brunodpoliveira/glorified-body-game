@@ -34,6 +34,7 @@ namespace GlorifiedBody.UI
         public Canvas Canvas => canvas;
         public string HintShown => hintText != null && hintText.gameObject.activeSelf ? hintText.text : "";
         public bool ConfirmShown => confirmPanel != null && confirmPanel.activeSelf;
+        public string ConfirmTextShown => confirmText != null ? confirmText.text : "";
         public bool ReaderShown => readerPanel != null && readerPanel.activeSelf;
         public bool ScanShown => scanPanel != null && scanPanel.activeSelf;
         public string ReaderTextShown => readerBody != null ? readerBody.text : "";
@@ -80,7 +81,7 @@ namespace GlorifiedBody.UI
             string hint = "";
             if (interactor != null && interactor.Current == Interactor.State.Free && (scanner == null || !scanner.IsViewing))
             {
-                if (interactor.Focus != null) hint = $"{Key(InputManager.GameAction.Interact)}  take {interactor.Focus.Prompt}";
+                if (interactor.Focus != null) hint = $"{Key(InputManager.GameAction.Interact)}  {interactor.Focus.Hint}";
                 if (scanner != null && scanner.Focus != null) hint += (hint.Length > 0 ? "      " : "") + $"{Key(InputManager.GameAction.Scan)}  scan";
             }
             hintText.text = hint;
@@ -91,10 +92,18 @@ namespace GlorifiedBody.UI
         private void Refresh()
         {
             if (canvas == null || interactor == null) return;
-            confirmPanel.SetActive(interactor.Current == Interactor.State.Confirming);
-            if (interactor.Current == Interactor.State.Confirming && interactor.Pending != null)
+            bool asking = interactor.Current == Interactor.State.Confirming;
+            bool message = interactor.Current == Interactor.State.Message;
+            confirmPanel.SetActive(asking || message);
+            if (asking)
             {
-                confirmText.text = $"Take {interactor.Pending.Prompt}?\n\n{Key(InputManager.GameAction.Interact)}  take        {Key(InputManager.GameAction.Back)}  leave it";
+                string yes = interactor.Pending is ItemPickup ? "take" : "yes";
+                string no = interactor.Pending is ItemPickup ? "leave it" : "no";
+                confirmText.text = $"{interactor.Text}\n\n{Key(InputManager.GameAction.Interact)}  {yes}        {Key(InputManager.GameAction.Back)}  {no}";
+            }
+            else if (message)
+            {
+                confirmText.text = interactor.Text;
             }
             readerPanel.SetActive(interactor.Current == Interactor.State.Reading);
             if (interactor.Current == Interactor.State.Reading && interactor.Reading != null)
