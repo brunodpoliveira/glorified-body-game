@@ -307,6 +307,7 @@ namespace GlorifiedBody.Editor
             if (File.Exists(LookTestSetup.ScenePath)) EnsureBuildScene(scenes, LookTestSetup.ScenePath);
             if (File.Exists(LookTestSetup.Scene2Path)) EnsureBuildScene(scenes, LookTestSetup.Scene2Path);
             if (File.Exists(TutorialSetup.ScenePath)) EnsureBuildScene(scenes, TutorialSetup.ScenePath);
+            if (File.Exists(AiTestSetup.ScenePath)) EnsureBuildScene(scenes, AiTestSetup.ScenePath);
 
             // The main menu loads first.
             scenes.Sort((a, b) =>

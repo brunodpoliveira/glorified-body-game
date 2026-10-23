@@ -23,6 +23,7 @@ namespace GlorifiedBody.UI
         [Header("Labels")]
         [SerializeField] private string startLabel = "START";
         [SerializeField] private string tutorialScene = "Tutorial"; // the therapy gym demonstration (Bruno, 2026-10-22)
+        [SerializeField] private string aiTestScene = "AiTest";     // the FSM soldiers' hall (Bruno, 2026-10-23)
         [SerializeField] private string subtitleLabel = "WORK IN PROGRESS";
 
         private Canvas canvas;
@@ -34,6 +35,7 @@ namespace GlorifiedBody.UI
         private Button startBtn;
         private Button modifiersBtn;
         private Button tutorialBtn;
+        private Button aiTestBtn;
         private Button howToBtn;
         private Button optionsBtn;
         private Button creditsBtn;
@@ -138,6 +140,11 @@ namespace GlorifiedBody.UI
         private void OnTutorialClicked()
         {
             GameManager.Instance?.LoadLevel(tutorialScene);
+        }
+
+        private void OnAiTestClicked()
+        {
+            GameManager.Instance?.LoadLevel(aiTestScene);
         }
 
         private void OnStartClicked()
@@ -383,6 +390,8 @@ namespace GlorifiedBody.UI
             CreateSpacer(column.transform, 10f);
             tutorialBtn = CreateButton(column.transform, "TUTORIAL", 420, OnTutorialClicked, 52);
             nav.Add(tutorialBtn);
+            aiTestBtn = CreateButton(column.transform, "AI TEST", 420, OnAiTestClicked, 52);
+            nav.Add(aiTestBtn);
             howToBtn = CreateButton(column.transform, "HOW TO PLAY", 420, OnHowToPlayClicked, 52);
             modifiersBtn = CreateButton(column.transform, "DIFFICULTY", 420, OnModifiersClicked, 52);
             modifiersLabel = modifiersBtn.GetComponentInChildren<Text>();

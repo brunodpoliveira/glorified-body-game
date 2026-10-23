@@ -14,6 +14,9 @@ namespace GlorifiedBody.Enemy
     /// an edge arrow when the shooter is outside the frame (PlayerHud, Bruno 2026-10-20: the camera may not show
     /// the enemy, and the circle is her heads-up to dodge). The difficulty rule limits how many shooters
     /// aim at once (ShooterScheduler). A blast staggers it, a lift stops it. Numbers are PROPOSED.
+    /// The FSM soldier (SoldierBrain) uses the same gun: HoldFire keeps it from a new aim while the soldier
+    /// moves ("move or shoot, never both", Bruno 2026-10-21), and RequireLineOfSight stops an aim through a wall.
+    /// The training dummies leave both off.
     /// </summary>
     [RequireComponent(typeof(Health))]
     public sealed class DummyShooter : MonoBehaviour, IStaggerable
@@ -28,6 +31,8 @@ namespace GlorifiedBody.Enemy
         [SerializeField, Min(0.1f)] private float projectileSpeed = 12f;
         [SerializeField, Min(0f)] private float projectileDamage = 15f;
         [SerializeField] private string playerTag = "Player";
+        [SerializeField] private bool requireLineOfSight;
+        [SerializeField] private LayerMask sightBlockers = 1; // Default: the room
 
         private Health health;
         private Transform player;
@@ -42,6 +47,12 @@ namespace GlorifiedBody.Enemy
         public float TelegraphProgress => Current == State.Telegraph ? 1f - Mathf.Clamp01(timer / telegraphSeconds) : 0f;
         public int ShotsFired { get; private set; }
         public string EnemyId => enemyId;
+        public float Range => range;
+        /// <summary>No new aim while true (the soldier moves). An aim already started goes on to its shot.</summary>
+        public bool HoldFire { get; set; }
+        public bool RequireLineOfSight { get => requireLineOfSight; set => requireLineOfSight = value; }
+        /// <summary>Raised on a stagger with its seconds (the soldier stops for that long).</summary>
+        public event System.Action<float> OnStaggered;
         public Vector3 Muzzle => transform.position + Vector3.up * Body.MuzzleHeight + transform.forward * 0.5f;
 
         private void Awake()
@@ -102,12 +113,12 @@ namespace GlorifiedBody.Enemy
 
             Vector3 chest = player.position + Vector3.up * Body.ChestHeight;
             float distance = Vector3.Distance(transform.position, player.position);
-            FaceYaw(player.position);
+            if (!HoldFire || HoldsSlot) FaceYaw(player.position);
 
             switch (Current)
             {
                 case State.Idle:
-                    if (distance <= range && PlayerAlive() && ShooterScheduler.TryAcquire(this))
+                    if (!HoldFire && distance <= range && PlayerAlive() && Sees(chest) && ShooterScheduler.TryAcquire(this))
                     {
                         Current = State.Aiming;
                         timer = aimSeconds;
@@ -140,6 +151,14 @@ namespace GlorifiedBody.Enemy
                     if (timer <= 0f) Current = State.Idle;
                     break;
             }
+        }
+
+        /// <summary>A clear line from the muzzle to her chest, when the shooter needs one.</summary>
+        public bool Sees(Vector3 chest)
+        {
+            if (!requireLineOfSight) return true;
+            Vector3 from = Muzzle;
+            return !Physics.Linecast(from, chest, sightBlockers, QueryTriggerInteraction.Ignore);
         }
 
         private bool PlayerAlive()
@@ -184,6 +203,7 @@ namespace GlorifiedBody.Enemy
             if (IsDead || seconds <= 0f) return;
             CancelAim(State.Staggered, seconds);
             RunTelemetry.Event("enemy_staggered", $"{enemyId}:{seconds:0.00}");
+            OnStaggered?.Invoke(seconds);
         }
 
         private void Die()

@@ -1,0 +1,26 @@
+using UnityEngine;
+
+namespace GlorifiedBody.Enemy
+{
+    /// <summary>
+    /// The legs and the eyes of an FSM enemy, as SoldierBrain sees them. The Invector AI body implements it in
+    /// GlorifiedBody.Integration.Invector (rule 6: only that namespace uses Invector types).
+    /// </summary>
+    public interface IEnemyBody
+    {
+        bool IsDead { get; }
+        /// <summary>A target is known (seen now, or seen before and not lost yet).</summary>
+        bool HasTarget { get; }
+        /// <summary>The target is in the line of sight now.</summary>
+        bool CanSeeTarget { get; }
+        /// <summary>The last known position of the target, on its feet.</summary>
+        Vector3 TargetPosition { get; }
+        /// <summary>The body moves (its speed over a small threshold).</summary>
+        bool IsMoving { get; }
+        bool IsInDestination { get; }
+        void MoveTo(Vector3 point, bool run);
+        void Stop();
+        /// <summary>Off while a power holds the body (the lift): no navigation, no physics.</summary>
+        void Suspend(bool suspended);
+    }
+}

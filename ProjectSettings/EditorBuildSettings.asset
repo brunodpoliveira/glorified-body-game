@@ -20,5 +20,8 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/_Game/Scenes/Tutorial.unity
     guid: 03b1e66e174a0a6839b7878b1b3be2e9
+  - enabled: 1
+    path: Assets/_Game/Scenes/AiTest.unity
+    guid: 7ffbe3fa105c30dd8a0cb827f4c21639
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0
