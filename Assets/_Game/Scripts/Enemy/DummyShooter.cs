@@ -53,7 +53,13 @@ namespace GlorifiedBody.Enemy
         public bool RequireLineOfSight { get => requireLineOfSight; set => requireLineOfSight = value; }
         /// <summary>Raised on a stagger with its seconds (the soldier stops for that long).</summary>
         public event System.Action<float> OnStaggered;
-        public Vector3 Muzzle => transform.position + Vector3.up * Body.MuzzleHeight + transform.forward * 0.5f;
+        public event System.Action OnAimStarted;
+        public event System.Action OnAimEnded;
+        /// <summary>A shot leaves the muzzle: the origin and the direction (the gun's flash, smoke and sound).</summary>
+        public event System.Action<Vector3, Vector3> OnFired;
+        /// <summary>The muzzle of a gun model (EnemyGun). Without one, a point in front of the chest.</summary>
+        public Transform MuzzleOverride { get; set; }
+        public Vector3 Muzzle => MuzzleOverride != null ? MuzzleOverride.position : transform.position + Vector3.up * Body.MuzzleHeight + transform.forward * 0.5f;
 
         private void Awake()
         {
@@ -124,6 +130,7 @@ namespace GlorifiedBody.Enemy
                         timer = aimSeconds;
                         laser.enabled = true;
                         RunTelemetry.Event("enemy_aim", enemyId);
+                        OnAimStarted?.Invoke();
                     }
                     break;
 
@@ -186,16 +193,19 @@ namespace GlorifiedBody.Enemy
             Vector3 origin = Muzzle;
             EnemyProjectile.Launch(origin, aimPoint - origin, projectileSpeed, projectileDamage, gameObject, enemyId);
             ShotsFired++;
+            OnFired?.Invoke(origin, (aimPoint - origin).normalized);
             RunTelemetry.Event("enemy_fired", enemyId);
             CancelAim(State.Cooldown, cooldownSeconds);
         }
 
         private void CancelAim(State next, float seconds)
         {
+            bool wasAiming = HoldsSlot;
             if (HoldsSlot) ShooterScheduler.Release(this);
             laser.enabled = false;
             Current = next;
             timer = seconds;
+            if (wasAiming) OnAimEnded?.Invoke();
         }
 
         public void Stagger(float seconds)

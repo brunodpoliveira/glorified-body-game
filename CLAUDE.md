@@ -138,7 +138,13 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   (Invector's `removeComponentsAfterDie` must stay OFF: it destroys every MonoBehaviour), near awareness 6 m,
   the brace during the aim. `AiTest.unity` (`AiTestSetup.BuildAiTest`, the AI TEST button): three soldiers,
   the power armour heavy. Proof: `EnemyAiTests`, the "ai" bot (`play AiTest Main_Menu ai 300`).
-  Next: Bruno's morning test; then the reactions to a colleague's death, the retreat by rank, weapons.
+  Midday (Bruno: guns, effects, sounds, "the enemies weren't this dumb"): `EnemyGun` (the vendor `AI_Handgun`
+  stripped of scripts, at the right hand every frame, turned by its muzzle; flash, smoke, light, fire and aim
+  sounds), `ShotEffects` (`Resources/Effects/shot_effects.asset`: clips, `impactConcrete`), a tracer trail and a
+  wall impact on every enemy bullet. Awareness: `EnemyAlert` and `SoldierBrain.Alert` (sight, hurt, a power hit
+  within 12 m, a shot or an alert within 25 m); alerted soldiers keep a fixed Invector target (Warspite's rule)
+  and pick firing spots with a clear line. FSM: Idle <-> Engage on `GbAlertedDecision`.
+  Next: Bruno's test; then the reactions to a colleague's death, the retreat by rank, more weapon types.
 
 ## Rules
 

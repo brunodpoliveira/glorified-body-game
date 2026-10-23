@@ -24,5 +24,7 @@ namespace GlorifiedBody.Enemy
         void Suspend(bool suspended);
         /// <summary>Planted feet while the gun aims and counts down: a walking body cannot push it off its spot.</summary>
         void Brace(bool braced);
+        /// <summary>From now on the body keeps her as its target, also out of sight (the alerted soldier).</summary>
+        void Track(Transform target);
     }
 }

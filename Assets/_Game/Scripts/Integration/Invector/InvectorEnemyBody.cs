@@ -12,22 +12,19 @@ namespace GlorifiedBody.Integration.Invector
     /// <summary>
     /// The Invector AI body (vControlAI: NavMeshAgent, root motion, sight) behind IEnemyBody, for SoldierBrain.
     /// Our Health is the real one (the powers hit it): the Invector health is kept out of reach, and our death
-    /// kills the Invector body (its death animation, then it removes its physics). A hit on our Health makes the
-    /// body face the player even out of sight. The lift suspends the body: the FSM stops, the agent and the
-    /// physics go off, and the drop puts it back on the NavMesh. Near awareness (PROPOSED): within awareRadius and
-    /// with a clear line to her chest, the body keeps track of Lucy and turns to her even out of its field of
-    /// view (a flanking soldier walked past her facing away and forgot her).
+    /// kills the Invector body (its death animation, then the corpse lies still). The lift suspends the body: the
+    /// FSM stops, the agent and the physics go off, and the drop puts it back on the NavMesh. Track: the alerted
+    /// soldier keeps her as a fixed target (Warspite's rule), so Invector never forgets her.
     /// </summary>
     [RequireComponent(typeof(Health))] // not vControlAI: Invector removes it after the death animation
     public sealed class InvectorEnemyBody : MonoBehaviour, IEnemyBody
     {
         private const float MovingSpeed = 0.15f; // metres per second
         private const float SpeedWindow = 0.12f;  // seconds: the body moves on physics steps, not every frame
-        private const float AwareRadius = 6f;
-        private const float AwareCheckSeconds = 0.5f;
+        private const float TrackCheckSeconds = 0.35f;
         private const float CorpseSeconds = 1.5f; // the death animation, then the corpse lies still
-        private float nextAwareCheck;
-        private Transform player;
+        private float nextTrackCheck;
+        private Transform tracked;
         private bool stopRequested;
         private bool braced_;
 
@@ -61,22 +58,19 @@ namespace GlorifiedBody.Integration.Invector
         {
             health.OnDeath ??= new UnityEngine.Events.UnityEvent();
             health.OnDeath.AddListener(OnDeath);
-            health.OnDamaged ??= new UnityEngine.Events.UnityEvent<float>();
-            health.OnDamaged.AddListener(OnDamaged);
         }
 
         private void OnDisable()
         {
             health.OnDeath?.RemoveListener(OnDeath);
-            health.OnDamaged?.RemoveListener(OnDamaged);
         }
 
         private void Update()
         {
-            if (!IsDead && !suspended && Time.time >= nextAwareCheck)
+            if (!IsDead && !suspended && Time.time >= nextTrackCheck)
             {
-                nextAwareCheck = Time.time + AwareCheckSeconds;
-                StayAware();
+                nextTrackCheck = Time.time + TrackCheckSeconds;
+                KeepTrack();
             }
             windowTime += Time.deltaTime;
             if (windowTime < SpeedWindow) return;
@@ -135,26 +129,24 @@ namespace GlorifiedBody.Integration.Invector
             }
         }
 
-        private void StayAware()
+        /// <summary>
+        /// Warspite's rule (EnemyLogic.SyncInvectorTarget): once alerted, a fixed target on her, pushed again when
+        /// Invector clears it or marks it lost. A new target restarts Invector's path, so a stopped body stops again.
+        /// </summary>
+        private void KeepTrack()
         {
-            if (player == null)
-            {
-                GameObject p = GameObject.FindWithTag("Player");
-                player = p != null ? p.transform : null;
-                if (player == null) return;
-            }
-            if (CanSeeTarget) return;
-            // A stopped body that still has its target stays put: a new target restarts Invector's path, and
-            // the gun turns the body to her.
-            if (stopRequested && HasTarget) return;
-            Vector3 flat = player.position - transform.position;
-            flat.y = 0f;
-            if (flat.magnitude > AwareRadius) return;
-            Vector3 eyes = transform.position + Vector3.up * 1.6f;
-            Vector3 chest = player.position + Vector3.up * 1.2f;
-            if (Physics.Linecast(eyes, chest, LayerMask.GetMask("Default"), QueryTriggerInteraction.Ignore)) return;
-            ai.SetCurrentTarget(player, true);
+            if (tracked == null) return;
+            vAITarget current = ai.currentTarget;
+            if (current != null && current.transform == tracked && !current.isLost) return;
+            var target = new vAITarget(tracked) { isFixedTarget = true };
+            ai.SetCurrentTarget(target, true);
             if (stopRequested) ai.Stop();
+        }
+
+        public void Track(Transform target)
+        {
+            tracked = target;
+            if (!IsDead && !suspended) KeepTrack();
         }
 
         public void Brace(bool braced)
@@ -165,12 +157,6 @@ namespace GlorifiedBody.Integration.Invector
             if (braced) body.linearVelocity = Vector3.zero;
         }
 
-        private void OnDamaged(float amount)
-        {
-            if (IsDead || HasTarget) return;
-            GameObject player = GameObject.FindWithTag("Player");
-            if (player != null) ai.SetCurrentTarget(player.transform, true);
-        }
 
         private void OnDeath()
         {

@@ -187,6 +187,58 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.GreaterOrEqual(shots, 2, "they still shoot, one after the other");
         }
 
+        [UnityTest]
+        public IEnumerator Alert_AllFight_AndTheyKeepHerAsTarget_OutOfSight()
+        {
+            // Bruno, 2026-10-23: "on project warspite, the enemies weren't this dumb".
+            yield return WaitUntil(() => soldiers.All(s => s.Alerted), 6f);
+            Debug.Log("[EnemyAiTests] alert: " + string.Join(" ", soldiers.Select(s => $"{s.name}={s.AlertReason}")));
+            Assert.IsTrue(soldiers.All(s => s.Alerted), "every soldier is alerted");
+
+            // She goes to the south-east corner, behind the pillar from most spots.
+            lucy.GetComponent<TankController>().Teleport(new Vector3(8.2f, 0.1f, -6.5f), 0f);
+            yield return new WaitForSeconds(6f);
+            foreach (SoldierBrain s in soldiers)
+            {
+                Assert.IsTrue(s.Alerted, s.name + " stays alerted");
+                Assert.IsTrue(s.Body.HasTarget, s.name + " keeps her as its target out of sight");
+                Assert.Less(Vector3.Distance(s.TargetPosition, lucy.transform.position), 0.6f, s.name + " knows where she is");
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator Gun_InTheHand_Fires_WithFlashAndSound_AMissHitsTheWall()
+        {
+            foreach (SoldierBrain s in soldiers)
+            {
+                EnemyGun gun = s.GetComponent<EnemyGun>();
+                Assert.IsNotNull(gun, s.name + " carries a gun");
+                Assert.IsNotNull(gun.Model, s.name + " gun model");
+                Assert.IsNotNull(gun.Muzzle, s.name + " gun muzzle");
+            }
+            yield return new WaitForSeconds(0.5f);
+            foreach (SoldierBrain s in soldiers)
+            {
+                Transform hand = s.GetComponent<Animator>().GetBoneTransform(HumanBodyBones.RightHand);
+                Assert.Less(Vector3.Distance(hand.position, s.GetComponent<EnemyGun>().Model.position), 0.3f, s.name + ": the gun is in the right hand");
+            }
+
+            // A telegraph, then she steps aside: the bullet flies to the locked point and on into the wall.
+            yield return WaitUntil(() => soldiers.Any(s => s.Gun.Current == DummyShooter.State.Telegraph), 15f);
+            SoldierBrain shooter = soldiers.First(s => s.Gun.Current == DummyShooter.State.Telegraph);
+            EnemyGun shooterGun = shooter.GetComponent<EnemyGun>();
+            int shots = shooterGun.Shots;
+            Vector3 p = lucy.transform.position;
+            lucy.GetComponent<TankController>().Teleport(p + Vector3.right * 2.5f, 0f);
+            yield return WaitUntil(() => shooterGun.Shots > shots, 3f);
+            Assert.Greater(shooterGun.Shots, shots, "the gun fired");
+            Assert.GreaterOrEqual(shooterGun.AimClicks, 1, "the aim click played");
+            Assert.Less(Time.time - shooterGun.LastFireTime, 1f, "the flash and the sound played on the shot");
+            Assert.IsTrue(shooter.Gun.Muzzle == shooterGun.Muzzle.position, "the bullet leaves the gun's muzzle");
+            yield return WaitUntil(() => UnityEngine.Object.FindObjectsByType<Transform>(FindObjectsSortMode.None).Any(t => t.name.StartsWith("impactConcrete")), 3f);
+            Assert.IsTrue(UnityEngine.Object.FindObjectsByType<Transform>(FindObjectsSortMode.None).Any(t => t.name.StartsWith("impactConcrete")), "the missed bullet left an impact on the wall");
+        }
+
         private SoldierBrain Find(string name)
         {
             SoldierBrain soldier = soldiers.FirstOrDefault(s => s.name == name);

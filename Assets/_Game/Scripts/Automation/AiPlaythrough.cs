@@ -111,7 +111,42 @@ namespace GlorifiedBody.Automation
             Shot(Path.Combine(shots, "ai_02_telegraph.png"));
             Record("telegraph", aiming != null, aiming != null ? $"{aiming.name} counts down" : "no telegraph in 12 s");
 
-            yield return BotClock.Wait(8f);
+            Record("alerted", soldiers.All(s => s.Alerted), string.Join(" ", soldiers.Select(s => $"{s.name}={s.AlertReason}")));
+
+            // The gun: a close shot on the next muzzle flash.
+            EnemyGun[] guns = soldiers.Select(s => s.GetComponent<EnemyGun>()).Where(g => g != null).ToArray();
+            int before = guns.Sum(g => g.Shots);
+            t0 = BotClock.Now;
+            while (guns.Sum(g => g.Shots) == before && BotClock.Now - t0 < 10f) yield return null;
+            EnemyGun firing = guns.OrderByDescending(g => g.LastFireTime).FirstOrDefault();
+            yield return null;
+            Shot(Path.Combine(shots, "ai_06_flash_wide.png"));
+            // From the soldier's right side: the gun in profile, off the line of fire.
+            if (firing != null) CloseShot(firing.Model.position, firing.transform.right, Path.Combine(shots, "ai_07_flash_close.png"));
+            Record("muzzle_flash", firing != null && guns.Sum(g => g.Shots) > before, firing != null ? $"{firing.name} shots={firing.Shots}" : "no shot");
+
+            // A miss: she steps aside during a telegraph, the bullet hits the wall behind her.
+            t0 = BotClock.Now;
+            while (!soldiers.Any(s => s.Gun.Current == DummyShooter.State.Telegraph) && BotClock.Now - t0 < 12f) yield return null;
+            Vector3 stand = lucy.transform.position;
+            lucy.GetComponent<TankController>().Teleport(stand + Vector3.right * 2.5f, 0f);
+            Transform impact = null;
+            t0 = BotClock.Now;
+            while (impact == null && BotClock.Now - t0 < 4f)
+            {
+                impact = FindObjectsByType<Transform>(FindObjectsSortMode.None).FirstOrDefault(t => t.name.StartsWith("impactConcrete"));
+                yield return null;
+            }
+            if (impact != null)
+            {
+                yield return new WaitForSeconds(0.15f); // the particles need a moment
+                // The impact faces out of the wall: the camera stands on that side.
+                CloseShot(impact.position, impact.forward, Path.Combine(shots, "ai_08_impact.png"), 1.6f);
+            }
+            Record("impact", impact != null, impact != null ? $"at {impact.position}" : "no impact in 4 s");
+            lucy.GetComponent<TankController>().Teleport(stand, 0f);
+
+            yield return BotClock.Wait(4f);
             int fired = soldiers.Sum(s => s.Gun.ShotsFired);
             int drift = soldiers.Sum(s => s.MovedWhileShootingFrames);
             Record("move_or_shoot", fired >= 2 && drift == 0, $"shots={fired} frames moved while aiming={drift} " +
@@ -191,6 +226,33 @@ namespace GlorifiedBody.Automation
                     canvas.worldCamera = worldCamera;
                     canvas.planeDistance = plane;
                 }
+            }
+        }
+
+        /// <summary>A close shot from a temporary camera: it stands back from the point and looks at it.</summary>
+        private static void CloseShot(Vector3 point, Vector3 facing, string path, float distance = 1.4f)
+        {
+            facing.y = 0f;
+            if (facing.sqrMagnitude < 0.001f) facing = Vector3.forward;
+            var go = new GameObject("[CloseShotCamera]");
+            Camera cam = go.AddComponent<Camera>();
+            cam.fieldOfView = 40f;
+            cam.nearClipPlane = 0.05f;
+            Camera main = Camera.main;
+            if (main != null)
+            {
+                cam.clearFlags = main.clearFlags;
+                cam.backgroundColor = main.backgroundColor;
+            }
+            go.transform.position = point + facing.normalized * distance + Vector3.up * 0.25f;
+            go.transform.LookAt(point);
+            try
+            {
+                ShotRenderer.Render(cam, path, ShotWidth, ShotHeight, useTargetTexture: true);
+            }
+            finally
+            {
+                Destroy(go);
             }
         }
 

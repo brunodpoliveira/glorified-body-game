@@ -62,6 +62,7 @@ namespace GlorifiedBody.Editor
             CharacterCatalog catalog = MenuLoopSetup.LoadCatalog();
             MenuLoopSetup.EnsureLucy(catalog, LucyStart, 0f);
 
+            InvectorEnemyFactory.EnsureShotEffects();
             var fsm = InvectorEnemyFactory.BuildSoldierFsm();
             GameObject enemies = MenuLoopSetup.EnsureRoot("[Enemies]");
             Place(enemies, InvectorEnemyFactory.BuildSoldier(SoldierNames[0], InvectorEnemyFactory.SpecFor("soldier"), new Vector3(-5f, 0f, 5.5f), 160f, catalog, fsm));

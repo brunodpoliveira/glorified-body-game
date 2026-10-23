@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.AI;
+using GlorifiedBody.Characters;
 using GlorifiedBody.Combat;
 using GlorifiedBody.Core;
 using GlorifiedBody.DebugTools;
@@ -16,8 +17,12 @@ namespace GlorifiedBody.Enemy
     ///         sees her, she is in range and the difficulty gives a slot (ShooterScheduler). After the shot, or
     ///         when no shot starts within shootWaitSeconds, it moves again.
     /// The body never moves while the gun holds a slot (aim or telegraph). A stagger stops it for its seconds.
-    /// A lift (TelekinesisLift) suspends the body: no navigation, no physics, the gun holds fire. All numbers are
-    /// PROPOSED.
+    /// A lift (TelekinesisLift) suspends the body: no navigation, no physics, the gun holds fire.
+    /// Awareness (Bruno, 2026-10-23: "on project warspite, the enemies weren't this dumb"): a soldier is unaware
+    /// until it sees Lucy, takes a hit, hears a power hit near it, or hears an alert (EnemyAlert: a fellow soldier's
+    /// sight, hit or shot). Then it stays alerted in the room, as Warspite's enemies did: it always knows where she
+    /// is (the body tracks her as a fixed target), it calls the others, and it walks to a spot with a clear line
+    /// to her. All numbers are PROPOSED.
     /// </summary>
     [RequireComponent(typeof(DummyShooter), typeof(Health))]
     public sealed class SoldierBrain : MonoBehaviour
@@ -32,6 +37,8 @@ namespace GlorifiedBody.Enemy
         [SerializeField, Min(0f)] private float runOver = 8f;          // runs to a spot farther than this
         [SerializeField, Min(0f)] private float minMoveSeconds = 0.6f;  // a new path needs a moment before "arrived" counts
         [SerializeField, Min(0.1f)] private float arriveRadius = 0.7f;
+        [SerializeField, Min(1f)] private float alertRadius = 25f;
+        [SerializeField, Min(1f)] private float hearPowerRadius = 12f;
 
         private IEnemyBody body;
         private DummyShooter gun;
@@ -44,6 +51,7 @@ namespace GlorifiedBody.Enemy
         private float moveStarted;
         private bool aimStarted;
         private bool driftLogged;
+        private Transform player;
 
         public Phase Current { get; private set; } = Phase.Idle;
         public bool Engaged => Time.frameCount - lastEngageFrame <= 2;
@@ -54,6 +62,10 @@ namespace GlorifiedBody.Enemy
         public int ShootPhases { get; private set; }
         public IEnemyBody Body => body;
         public DummyShooter Gun => gun;
+        public bool Alerted { get; private set; }
+        public string AlertReason { get; private set; } = "";
+        /// <summary>Where she is: her real position once alerted, else the last seen position.</summary>
+        public Vector3 TargetPosition => Alerted && player != null ? player.position : body.TargetPosition;
 
         private void Awake()
         {
@@ -69,11 +81,63 @@ namespace GlorifiedBody.Enemy
         {
             health.OnDeath ??= new UnityEngine.Events.UnityEvent();
             health.OnDeath.AddListener(OnDeath);
+            health.OnDamaged ??= new UnityEngine.Events.UnityEvent<float>();
+            health.OnDamaged.AddListener(OnHurt);
+            EnemyAlert.OnAlert += OnAlertHeard;
+            HitEventBus.OnHit += OnHitHeard;
+            gun.OnFired += OnOwnShot;
         }
 
         private void OnDisable()
         {
             health.OnDeath?.RemoveListener(OnDeath);
+            health.OnDamaged?.RemoveListener(OnHurt);
+            EnemyAlert.OnAlert -= OnAlertHeard;
+            HitEventBus.OnHit -= OnHitHeard;
+            gun.OnFired -= OnOwnShot;
+        }
+
+        // ── Awareness ─────────────────────────────────────────────────
+
+        /// <summary>The soldier knows where Lucy is from now on, and calls the others when it is the first to know.</summary>
+        public void Alert(string reason, bool callOthers)
+        {
+            if (Alerted || Current == Phase.Dead) return;
+            if (player == null)
+            {
+                GameObject p = GameObject.FindWithTag("Player");
+                player = p != null ? p.transform : null;
+                if (player == null) return;
+            }
+            Alerted = true;
+            AlertReason = reason;
+            body.Track(player);
+            RunTelemetry.Event("soldier_alerted", $"{name}:{reason}");
+            if (callOthers) EnemyAlert.Raise(transform.position, alertRadius, reason);
+        }
+
+        private void OnAlertHeard(Vector3 origin, float radius, string reason)
+        {
+            if (Alerted || Current == Phase.Dead) return;
+            if (Flat(transform.position, origin) <= radius) Alert("heard " + reason, callOthers: false);
+        }
+
+        private void OnHurt(float amount)
+        {
+            if (health.IsDead) return;
+            Alert("hurt", callOthers: true);
+        }
+
+        private void OnOwnShot(Vector3 origin, Vector3 direction)
+        {
+            EnemyAlert.Raise(transform.position, alertRadius, "gunshot");
+        }
+
+        /// <summary>A power that hits something near it is loud: a blast on a crate, a burn on a fellow soldier.</summary>
+        private void OnHitHeard(HitInfo hit)
+        {
+            if (Alerted || Current == Phase.Dead || hit.Attacker == null || !hit.Attacker.CompareTag("Player")) return;
+            if (Flat(transform.position, hit.HitPoint) <= hearPowerRadius) Alert("power", callOthers: true);
         }
 
         private void OnDestroy()
@@ -124,6 +188,8 @@ namespace GlorifiedBody.Enemy
                 body.Suspend(false);
                 Hold(recoverSeconds);
             }
+
+            if (!Alerted && body.CanSeeTarget) Alert("sight", callOthers: true);
 
             if (Current == Phase.Hold)
             {
@@ -187,7 +253,7 @@ namespace GlorifiedBody.Enemy
                     bool arrived = Time.time - moveStarted >= minMoveSeconds && Flat(transform.position, Spot) <= arriveRadius;
                     if (timer <= 0f || arrived)
                     {
-                        if (body.CanSeeTarget && Distance() <= gun.Range) StartShoot();
+                        if (ClearLine() && Distance() <= gun.Range) StartShoot();
                         else StartMove();
                     }
                     break;
@@ -210,7 +276,10 @@ namespace GlorifiedBody.Enemy
             if (Current == Phase.Move || Current == Phase.Shoot) Current = Phase.Idle;
         }
 
-        private float Distance() => Flat(transform.position, body.TargetPosition);
+        private float Distance() => Flat(transform.position, TargetPosition);
+
+        /// <summary>A clear line from the gun to her chest now (the gun turns to her, so the field of view does not count).</summary>
+        private bool ClearLine() => gun.Sees(TargetPosition + Vector3.up * GlorifiedBody.Characters.Body.ChestHeight);
 
         private static float Flat(Vector3 a, Vector3 b)
         {
@@ -222,13 +291,7 @@ namespace GlorifiedBody.Enemy
         {
             if (gun.HoldsSlot) return; // the shot first, then the legs
             gun.HoldFire = true;
-            Vector3 target = body.TargetPosition;
-            Vector3 away = transform.position - target;
-            away.y = 0f;
-            if (away.sqrMagnitude < 0.01f) away = -transform.forward;
-            float turn = Random.Range(-flankDegrees, flankDegrees);
-            Vector3 spot = target + Quaternion.Euler(0f, turn, 0f) * away.normalized * preferredRange;
-            if (NavMesh.SamplePosition(spot, out NavMeshHit hit, 2.5f, NavMesh.AllAreas)) spot = hit.position;
+            Vector3 spot = PickSpot();
             Spot = spot;
             bool run = (spot - transform.position).magnitude > runOver;
             body.MoveTo(spot, run);
@@ -237,6 +300,44 @@ namespace GlorifiedBody.Enemy
             Current = Phase.Move;
             Moves++;
             RunTelemetry.Event("soldier_move", $"{name}:{spot.x:0.0},{spot.z:0.0}{(run ? " run" : "")}");
+        }
+
+        /// <summary>
+        /// A firing spot at preferredRange from her (or closer), off to one side. It prefers a spot with a clear line
+        /// to her chest, the nearest such one; without one, a random flank spot.
+        /// </summary>
+        private Vector3 PickSpot()
+        {
+            Vector3 target = TargetPosition;
+            Vector3 chest = target + Vector3.up * GlorifiedBody.Characters.Body.ChestHeight;
+            Vector3 away = transform.position - target;
+            away.y = 0f;
+            if (away.sqrMagnitude < 0.01f) away = -transform.forward;
+            away.Normalize();
+            int blockers = LayerMask.GetMask("Default");
+            float start = Random.Range(-flankDegrees, flankDegrees);
+            Vector3 best = Vector3.zero;
+            float bestCost = float.MaxValue;
+            for (int i = 0; i < 8; i++)
+            {
+                float turn = start + i * 45f;
+                foreach (float range in new[] { preferredRange, preferredRange * 0.65f })
+                {
+                    Vector3 candidate = target + Quaternion.Euler(0f, turn, 0f) * away * range;
+                    if (!NavMesh.SamplePosition(candidate, out NavMeshHit hit, 1.5f, NavMesh.AllAreas)) continue;
+                    if (Physics.Linecast(hit.position + Vector3.up * GlorifiedBody.Characters.Body.MuzzleHeight, chest, blockers, QueryTriggerInteraction.Ignore)) continue;
+                    float cost = Flat(transform.position, hit.position) + (i == 0 ? 0f : 0.5f);
+                    if (cost < bestCost)
+                    {
+                        bestCost = cost;
+                        best = hit.position;
+                    }
+                }
+            }
+            if (bestCost < float.MaxValue) return best;
+            Vector3 fallback = target + Quaternion.Euler(0f, start, 0f) * away * preferredRange;
+            if (NavMesh.SamplePosition(fallback, out NavMeshHit near, 2.5f, NavMesh.AllAreas)) fallback = near.position;
+            return fallback;
         }
 
         private void StartShoot()

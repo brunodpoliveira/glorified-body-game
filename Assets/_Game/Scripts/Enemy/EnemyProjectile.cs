@@ -56,10 +56,22 @@ namespace GlorifiedBody.Enemy
             if (collider != null) DestroyImmediate(collider); // at once: the ray must never see the bullet itself
             obj.transform.position = origin;
             obj.transform.rotation = Quaternion.LookRotation(direction.normalized, Vector3.up);
-            obj.transform.localScale = Vector3.one * 0.15f;
+            obj.transform.localScale = Vector3.one * 0.08f;
             var renderer = obj.GetComponent<Renderer>();
             var shader = Shader.Find("Universal Render Pipeline/Unlit") ?? Shader.Find("Unlit/Color");
-            if (renderer != null && shader != null) renderer.material = new Material(shader) { color = new Color(1f, 0.6f, 0.1f) };
+            ShotEffects fx = ShotEffects.Load();
+            Color tracer = fx != null ? fx.tracerColour : new Color(1f, 0.85f, 0.45f);
+            if (renderer != null && shader != null) renderer.material = new Material(shader) { color = tracer };
+            // The streak behind the bullet (Bruno, 2026-10-23: "bullets").
+            var trail = obj.AddComponent<TrailRenderer>();
+            trail.time = 0.12f;
+            trail.startWidth = 0.05f;
+            trail.endWidth = 0f;
+            trail.minVertexDistance = 0.05f;
+            trail.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            if (shader != null) trail.material = new Material(shader) { color = tracer };
+            trail.startColor = tracer;
+            trail.endColor = new Color(tracer.r, tracer.g, tracer.b, 0f);
 
             var projectile = obj.AddComponent<EnemyProjectile>();
             projectile.speed = speed;
@@ -211,6 +223,11 @@ namespace GlorifiedBody.Enemy
                     enemy.GetComponentInParent<IStaggerable>()?.Stagger(0.8f);
                     RunTelemetry.Event("bullet_returned_hit", $"{enemy.name}:{damage:0}");
                 }
+                else if (enemy == null) ShotEffects.Impact(hit.point, hit.normal);
+            }
+            else if (!isPlayer && hit.transform.GetComponentInParent<Health>() == null)
+            {
+                ShotEffects.Impact(hit.point, hit.normal); // the room: sparks, dust and the hit sound
             }
             else if (isPlayer)
             {
