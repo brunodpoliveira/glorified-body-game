@@ -44,7 +44,7 @@ namespace GlorifiedBody.Editor
         private static ItemDefinition Drug(DrugType type, string name, Color colour)
         {
             return Item(type.ToString().ToLowerInvariant(), name, ItemKind.Drug, colour,
-                "A drug. It ends a short and refills HP and nalcon. One slot.", "", type);
+                "A drug. It ends a short and refills HP and MK. One slot.", "", type);
         }
 
         public static ItemDefinition TestLog()

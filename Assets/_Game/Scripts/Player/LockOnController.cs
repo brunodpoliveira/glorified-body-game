@@ -11,7 +11,9 @@ namespace GlorifiedBody.Player
     /// input: the nearest live LockOnTargetable inside lockRange is the target, and SwitchTarget cycles to the
     /// next one by yaw. The lock drops when the target dies or leaves dropRange. While Charge is held, Lucy
     /// stands still (the circle charge of step 3) and turns to face the target. A small marker floats over
-    /// the target so the lock reads in the greybox.
+    /// the target so the lock reads in the greybox. Props (crates): the auto-lock never picks one; the switch
+    /// cycles through them too while IncludeProps is on (telekinesis selected, set by PsychicPowers), and a prop
+    /// lock drops when it goes off.
     /// </summary>
     [RequireComponent(typeof(TankController))]
     public sealed class LockOnController : MonoBehaviour
@@ -30,6 +32,8 @@ namespace GlorifiedBody.Player
         public bool HasTarget => CurrentTarget != null;
         public bool IsCharging { get; private set; }
         public string TargetName => CurrentTarget != null ? CurrentTarget.name : "none";
+        /// <summary>The switch includes props (telekinesis selected). PsychicPowers sets it.</summary>
+        public bool IncludeProps { get; set; }
 
         public event Action<LockOnTargetable> OnTargetChanged;
 
@@ -61,7 +65,7 @@ namespace GlorifiedBody.Player
         public bool SwitchTarget()
         {
             LockOnTargetable next = TargetRegistry.Cycle(CurrentTarget, +1, null, transform.position, transform,
-                lockRange, 360f, obstructionMask, requireLineOfSight);
+                lockRange, 360f, obstructionMask, requireLineOfSight, IncludeProps);
             if (next == null || next == CurrentTarget) return false;
             SetTarget(next);
             return true;
@@ -74,7 +78,7 @@ namespace GlorifiedBody.Player
             // Drop a dead, gone, or far target.
             if (CurrentTarget != null)
             {
-                bool gone = !CurrentTarget.Selectable || !CurrentTarget.IsAlive;
+                bool gone = !CurrentTarget.Selectable || !CurrentTarget.IsAlive || (CurrentTarget.IsProp && !IncludeProps);
                 bool far = (CurrentTarget.GetLockPoint() - transform.position).sqrMagnitude > dropRange * dropRange;
                 if (gone || far) SetTarget(null);
             }
@@ -115,7 +119,7 @@ namespace GlorifiedBody.Player
             for (int i = 0; i < all.Count; i++)
             {
                 LockOnTargetable t = all[i];
-                if (t == null || !t.Selectable || !t.IsAlive || t.transform == transform || t.transform.IsChildOf(transform)) continue;
+                if (t == null || !t.Selectable || t.IsProp || !t.IsAlive || t.transform == transform || t.transform.IsChildOf(transform)) continue;
                 float d = (t.GetLockPoint() - transform.position).sqrMagnitude;
                 if (d < bestDistance)
                 {

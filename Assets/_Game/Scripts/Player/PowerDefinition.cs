@@ -15,7 +15,7 @@ namespace GlorifiedBody.Player
     public sealed class PowerDefinition : ScriptableObject
     {
         public PowerKind kind = PowerKind.Blast;
-        public string displayName = "BLAST";
+        public string displayName = "mk_warspite";
         public DrugType drug = DrugType.Nalcon;
 
         [Header("Charge")]

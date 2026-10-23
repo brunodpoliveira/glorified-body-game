@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: power_blast
   m_EditorClassIdentifier: Assembly-CSharp::GlorifiedBody.Player.PowerDefinition
   kind: 0
-  displayName: BLAST
+  displayName: mk_warspite
   drug: 0
   fullChargeTime: 1.5
   minCharge: 0.2

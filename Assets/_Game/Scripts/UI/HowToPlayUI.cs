@@ -120,9 +120,9 @@ namespace GlorifiedBody.UI
 
             CreateSection(p, "PREMISE");
             CreateBody(p,
-                "You are Lucy. You wake in the lab with no memory and three psychic powers: BLAST, FIRE, " +
-                "TELEKINESIS. Every attack is a circle charge: hold to charge, release to strike. You stand " +
-                "still while you charge. Three bars: HP, NALCON (psychic energy) and SHORT (it fills with " +
+                "You are Lucy. You wake in the lab with no memory and three psychic powers: mk_warspite (blast), " +
+                "mk_erebus (fire), mk_orzabal (telekinesis). Every attack is a circle charge: hold to charge, release to strike. You stand " +
+                "still while you charge. Three bars: HP, MK (psychic energy) and SHORT (it fills with " +
                 "every kill and every hit you take). PLACEHOLDER TEXT: the writer supplies the final words.");
             CreateSpacer(p, 10);
 
@@ -152,7 +152,7 @@ namespace GlorifiedBody.UI
             CreateControl(p, "RMB (TK), bullet near", "Defend: catch the bullet, send it back at the shooter");
             CreateControl(p, "F4", "Debug: kill Lucy (shows the death screen)");
             CreateControl(p, "F5 / F6 / F7", "Debug: fill SHORT / start the short / refill + drugs");
-            CreateControl(p, "F8 / F9", "Debug: nalcon -25 / +25");
+            CreateControl(p, "F8 / F9", "Debug: MK -25 / +25");
             CreateControl(p, "F11 / F3", "Debug: the next look test room / cycle its dressings");
             CreateSpacer(p, 14);
 

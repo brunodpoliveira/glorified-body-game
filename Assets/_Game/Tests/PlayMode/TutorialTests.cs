@@ -29,7 +29,7 @@ namespace GlorifiedBody.Tests.PlayMode
     public class TutorialTests
     {
         private const string MainMenu = "Main_Menu";
-        private static readonly string[] ExpectedSteps = { "walk", "run", "dodge", "switch", "blast", "fire", "lift_throw", "slam", "catch", "capsule", "log", "scan_image", "key", "door", "inventory", "scan_video", "short", "complete" };
+        private static readonly string[] ExpectedSteps = { "walk", "run", "dodge", "switch", "blast", "fire", "lift_throw", "slam", "prop", "catch", "capsule", "log", "scan_image", "key", "door", "inventory", "scan_video", "short", "complete" };
 
         private TutorialDirector director;
 
@@ -75,6 +75,9 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.IsFalse(shooter.enabled, "the gun waits for its step");
             Assert.IsFalse(GameObject.Find("Target_Gun").GetComponent<LockOnTargetable>().Selectable, "the gun dummy is out of the lock until its step");
             Assert.IsNotNull(GameObject.Find("Capsule"), "the capsule by the bars");
+            GameObject crate = GameObject.Find("Prop_Crate");
+            Assert.IsNotNull(crate, "the crate for the prop step");
+            Assert.IsTrue(crate.GetComponent<LockOnTargetable>() != null && crate.GetComponent<LockOnTargetable>().IsProp, "the crate is a prop target");
             Assert.AreEqual(4, UnityEngine.Object.FindObjectsByType<FixedCamera>(FindObjectsSortMode.None).Length, "three cameras in the gym, one in the closet");
             Assert.IsNotNull(UnityEngine.Object.FindFirstObjectByType<LockedDoor>(), "the locked door");
             Assert.IsNotNull(TutorialDrive.FindPickup("test_key"), "the test key");

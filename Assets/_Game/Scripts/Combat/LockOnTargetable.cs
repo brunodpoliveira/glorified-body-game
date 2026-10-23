@@ -26,6 +26,10 @@ namespace GlorifiedBody.Combat
         [Header("Behaviour")]
         [Tooltip("If false, the registry will skip this target during scans.")]
         [SerializeField] private bool selectable = true;
+        [Tooltip("A prop (a crate): only telekinesis aims at it, with the target switch. The auto-lock never picks it.")]
+        [SerializeField] private bool isProp;
+        [Tooltip("Too heavy to lift (the power armour, later): telekinesis refuses it, at no cost.")]
+        [SerializeField] private bool heavy;
 
         private Health cachedHealth;
         private bool registered;
@@ -33,6 +37,8 @@ namespace GlorifiedBody.Combat
         public Transform LockPoint => lockPoint != null ? lockPoint : transform;
         public Transform DisplayPoint => displayPoint != null ? displayPoint : LockPoint;
         public bool Selectable => selectable && isActiveAndEnabled;
+        public bool IsProp => isProp;
+        public bool IsHeavy => heavy;
 
         private void Awake()
         {
@@ -115,6 +121,16 @@ namespace GlorifiedBody.Combat
         public void SetSelectable(bool value)
         {
             selectable = value;
+        }
+
+        public void SetProp(bool value)
+        {
+            isProp = value;
+        }
+
+        public void SetHeavy(bool value)
+        {
+            heavy = value;
         }
 
 #if UNITY_EDITOR

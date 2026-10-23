@@ -164,7 +164,7 @@ namespace GlorifiedBody.UI
                     if (def == null)
                     {
                         e.Name = type.ToString().ToUpperInvariant();
-                        e.Words = "A drug. It ends a short and refills HP and nalcon.";
+                        e.Words = "A drug. It ends a short and refills HP and MK.";
                         e.Colour = new Color(0.4f, 0.8f, 0.4f);
                     }
                     e.Label = $"{e.Name}\nx{count}";

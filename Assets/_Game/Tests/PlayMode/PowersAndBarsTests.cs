@@ -247,6 +247,103 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator Props_TheAutoLockSkipsThem_TheSwitchReachesThemOnlyWithMkOrzabal()
+        {
+            // Bruno, 2026-10-22: mk_orzabal lifts the enemy directly; the props are a choice, not the default.
+            LockOnTargetable crate = GameObject.Find("Prop_Crate_1").GetComponent<LockOnTargetable>();
+            Assert.IsTrue(crate.IsProp, "the crate is a prop");
+            Material material = crate.GetComponent<Renderer>().sharedMaterial;
+            Assert.AreEqual("Universal Render Pipeline/Unlit", material.shader.name, "a throwable object is unlit (Bruno, 2026-10-22)");
+            Assert.IsNotNull(material.GetTexture("_BaseMap"), "the crate face texture");
+            Assert.Less(Vector3.Distance(player.transform.position, crate.GetLockPoint()),
+                Vector3.Distance(player.transform.position, dummyA.GetLockPoint()), "the crate is nearer than the dummy");
+            Assert.AreEqual("Dummy_A", lockOn.TargetName, "the auto-lock took the dummy, not the nearer crate");
+
+            powers.Select(PowerKind.Blast);
+            for (int i = 0; i < 4; i++)
+            {
+                pad.Tap(InputManager.GameAction.SwitchTarget);
+                yield return null;
+                yield return null;
+                Assert.IsFalse(lockOn.CurrentTarget != null && lockOn.CurrentTarget.IsProp, "mk_warspite never locks a prop: " + lockOn.TargetName);
+            }
+
+            powers.Select(PowerKind.Telekinesis);
+            bool reached = false;
+            for (int i = 0; i < 6 && !reached; i++)
+            {
+                pad.Tap(InputManager.GameAction.SwitchTarget);
+                yield return null;
+                yield return null;
+                reached = lockOn.CurrentTarget != null && lockOn.CurrentTarget.IsProp;
+            }
+            Assert.IsTrue(reached, "with mk_orzabal the switch reaches a crate");
+
+            powers.Select(PowerKind.Blast);
+            yield return null;
+            yield return null;
+            Assert.IsFalse(lockOn.CurrentTarget != null && lockOn.CurrentTarget.IsProp, "another power drops the prop lock");
+            Assert.IsTrue(lockOn.HasTarget, "the auto-lock takes an enemy again");
+        }
+
+        [UnityTest]
+        public IEnumerator Props_LiftAndThrow_TheCrateHurtsTheEnemy_AndTheLockGoesBack()
+        {
+            powers.Select(PowerKind.Telekinesis);
+            PowerDefinition tk = powers.Selected;
+            LockOnTargetable crate = GameObject.Find("Prop_Crate_1").GetComponent<LockOnTargetable>();
+            float y0 = crate.transform.position.y;
+            Health target = dummyA.GetComponent<Health>();
+            float hp0 = target.CurrentHealth;
+
+            lockOn.SetTarget(crate);
+            float nalconBefore = stats.Nalcon;
+            Assert.IsTrue(powers.Release(1f), "the lift on the crate");
+            Assert.AreEqual(nalconBefore - tk.nalconCost, stats.Nalcon, 0.5f, "the lift costs as on an enemy");
+            yield return new WaitForSeconds(tk.liftSeconds + 0.3f);
+            Assert.IsNotNull(powers.HeldLift, "she holds the crate");
+            Assert.Greater(crate.transform.position.y, y0 + tk.liftHeight * 0.8f, "the crate is up");
+
+            pad.Tap(InputManager.GameAction.Charge); // a short press throws
+            yield return null;
+            yield return null;
+            yield return null;
+            StringAssert.StartsWith("launch_prop:Dummy_A", powers.LastResult, "the crate flies at the dummy");
+            yield return WaitUntil(() => crate.GetComponent<TelekinesisLift>() == null, 3f);
+            Assert.AreEqual(hp0 - tk.baseDamage, target.CurrentHealth, 0.5f, "the crate hurts the dummy");
+            Assert.AreEqual(y0, crate.transform.position.y, 0.05f, "the crate lies on the floor again");
+            Assert.IsFalse(lockOn.CurrentTarget == crate, "after the throw the lock leaves the crate");
+            Assert.IsTrue(lockOn.HasTarget && !lockOn.CurrentTarget.IsProp, "the auto-lock takes an enemy again: " + lockOn.TargetName);
+        }
+
+        [UnityTest]
+        public IEnumerator Telekinesis_RefusesAHeavyTarget_AtNoCost_AndTheHudSaysSo()
+        {
+            // Bruno, 2026-10-22: "maybe the power armor can't be lifted" (PROPOSED; the power armour arrives with the FSM AI).
+            dummyB.SetHeavy(true);
+            powers.Select(PowerKind.Telekinesis);
+            lockOn.SetTarget(dummyB);
+            Health target = dummyB.GetComponent<Health>();
+            float hp0 = target.CurrentHealth;
+            float nalconBefore = stats.Nalcon;
+            Assert.IsFalse(powers.Release(1f), "no lift");
+            Assert.AreEqual("too_heavy", powers.LastResult);
+            Assert.AreEqual(nalconBefore, stats.Nalcon, 0.01f, "no cost");
+            Assert.IsNull(dummyB.GetComponent<TelekinesisLift>(), "it stays on the floor");
+            Assert.AreEqual(hp0, target.CurrentHealth, 0.01f, "no damage");
+            yield return null;
+            PlayerHud hud = UnityEngine.Object.FindFirstObjectByType<PlayerHud>();
+            Assert.AreEqual("TOO HEAVY", hud.NoticeShown, "the HUD says why");
+            yield return new WaitForSeconds(PlayerHud.NoticeSeconds + 0.2f);
+            Assert.AreEqual("", hud.NoticeShown, "the notice goes");
+
+            powers.Select(PowerKind.Blast);
+            lockOn.SetTarget(dummyB);
+            Assert.IsTrue(powers.Release(1f), "the other powers still hit it");
+            dummyB.SetHeavy(false);
+        }
+
+        [UnityTest]
         public IEnumerator MkBoost_AtHalfABarOrMore_DoublesTheDamage_AndTheChargeSpeed()
         {
             powers.Select(PowerKind.Blast);

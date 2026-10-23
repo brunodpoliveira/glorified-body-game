@@ -116,7 +116,15 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   doubles damage and charge speed (`PsychicPowers.IsBoosted`, the HUD tick and "x2"). The inventory asks
   before it uses a drug. Tutorial: 18 steps (a slam step), targets 400 HP. Tests hold nalcon at 45 with the
   regen paused for the base numbers.
-  Next: props, then the FSM AI.
+- 2026-10-22, late, the names and the props (`devlog-notes/2026-10-22_props.md`): on screen the bar is MK and
+  the powers are mk_warspite, mk_erebus, mk_orzabal (display strings only; the code keeps Blast, Fire,
+  Telekinesis, Nalcon; the drug NALCON keeps its name). Props: `LockOnTargetable.IsProp` / `IsHeavy`. The
+  auto-lock never picks a prop; the target switch reaches props only while mk_orzabal is selected
+  (`LockOnController.IncludeProps`, set by `PsychicPowers`); a thrown prop hurts the enemy it hits and the lock
+  goes back to an enemy; a heavy target refuses the lift at no cost ("TOO HEAVY" on the HUD). Crates
+  (`PropAssets.Crate`, unlit, `tools/prop_crate_texture.py`): two in the training room, one in the gym.
+  Tutorial: 19 steps (a prop step). The tutorial drive walks to the door through the lane west of the bars.
+  Next: the FSM AI (the power armour is the first heavy enemy).
 
 ## Rules
 

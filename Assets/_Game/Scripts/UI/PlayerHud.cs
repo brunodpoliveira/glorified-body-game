@@ -25,6 +25,7 @@ namespace GlorifiedBody.UI
         private Image shortFill;
         private Text powerText;
         private Text drugText;
+        private Text noticeText;
         private Text shortText;
         private Image chargeRing;
         private RectTransform ringRect;
@@ -117,7 +118,7 @@ namespace GlorifiedBody.UI
             barsRect.anchoredPosition = new Vector2(32f, 32f);
             barsRect.sizeDelta = new Vector2(420f, 110f);
             hpFill = Bar(bars.transform, "HP", 0, new Color(0.85f, 0.15f, 0.15f));
-            nalconFill = Bar(bars.transform, "NALCON", 1, new Color(0.25f, 0.5f, 1f));
+            nalconFill = Bar(bars.transform, "MK", 1, new Color(0.25f, 0.5f, 1f));
             shortFill = Bar(bars.transform, "SHORT", 2, new Color(1f, 0.85f, 0.2f));
 
             // The MK boost (Bruno, 2026-10-22): a tick at half the NALCON bar, and "x2" on the bar while it is
@@ -157,6 +158,9 @@ namespace GlorifiedBody.UI
             // Power and drugs, bottom-right.
             powerText = Label(canvasObj.transform, "Power", 24, TextAnchor.LowerRight, new Vector2(1f, 0f), new Vector2(-32f, 64f), new Vector2(700f, 36f));
             drugText = Label(canvasObj.transform, "Drugs", 20, TextAnchor.LowerRight, new Vector2(1f, 0f), new Vector2(-32f, 32f), new Vector2(700f, 30f));
+            // A refusal for a moment over the power line: "TOO HEAVY" (a lift on a heavy target), "NOT ENOUGH MK".
+            noticeText = Label(canvasObj.transform, "Notice", 24, TextAnchor.LowerRight, new Vector2(1f, 0f), new Vector2(-32f, 104f), new Vector2(700f, 36f));
+            noticeText.color = new Color(1f, 0.55f, 0.35f);
 
             // The SHORT warning, top-centre.
             shortText = Label(canvasObj.transform, "Short", 48, TextAnchor.UpperCenter, new Vector2(0.5f, 1f), new Vector2(0f, -70f), new Vector2(800f, 60f));
@@ -245,6 +249,23 @@ namespace GlorifiedBody.UI
             fillImage.raycastTarget = false;
             return fillImage;
         }
+
+        public const float NoticeSeconds = 1.5f;
+
+        /// <summary>The words of a refused power for NoticeSeconds after it, else empty.</summary>
+        public static string Notice(string result, float age)
+        {
+            if (age > NoticeSeconds) return "";
+            switch (result)
+            {
+                case "too_heavy": return "TOO HEAVY";
+                case "no_nalcon": return "NOT ENOUGH MK";
+                default: return "";
+            }
+        }
+
+        /// <summary>The notice on screen now (tests read it).</summary>
+        public string NoticeShown => noticeText != null ? noticeText.text : "";
 
         private Text Label(Transform parent, string name, int size, TextAnchor anchor, Vector2 anchorPoint, Vector2 position, Vector2 sizeDelta)
         {
@@ -341,6 +362,7 @@ namespace GlorifiedBody.UI
                     line += (selected ? "<color=#ffd24d>" : "<color=#9a9a94>") + (i + 1) + " " + p.displayName + "</color>   ";
                 }
                 powerText.text = line.TrimEnd();
+                noticeText.text = Notice(powers.LastResult, Time.time - powers.LastResultTime);
             }
 
             if (drugs != null)

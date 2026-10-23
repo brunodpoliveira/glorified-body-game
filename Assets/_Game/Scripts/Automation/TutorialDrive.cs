@@ -101,6 +101,37 @@ namespace GlorifiedBody.Automation
                     yield return HoldChargeFull(c); // a full circle on the floater: the slam
                     yield return new WaitForSecondsRealtime(0.6f);
                     break;
+                case "prop":
+                {
+                    c.Pad.Tap(InputManager.GameAction.PowerTelekinesis);
+                    yield return null;
+                    if (c.Powers == null || c.Powers.HeldLift == null)
+                    {
+                        // The switch reaches the crate only with mk_orzabal selected.
+                        LockOnController lockOn = c.Lucy.GetComponent<LockOnController>();
+                        for (int i = 0; i < 6 && lockOn != null && (lockOn.CurrentTarget == null || !lockOn.CurrentTarget.IsProp); i++)
+                        {
+                            c.Pad.Tap(InputManager.GameAction.SwitchTarget);
+                            yield return new WaitForSecondsRealtime(0.15f);
+                        }
+                        if (lockOn == null || lockOn.CurrentTarget == null || !lockOn.CurrentTarget.IsProp)
+                        {
+                            Debug.LogWarning($"[TutorialDrive] prop: the switch did not reach the crate (lock {lockOn?.TargetName}).");
+                            break;
+                        }
+                        // A part charge lifts it for less MK: the slam before may have emptied the bar.
+                        yield return WaitForNalcon(c, 12f, 12f);
+                        yield return HoldCharge(c, 0.35f);
+                        yield return new WaitForSecondsRealtime(0.5f);
+                    }
+                    if (c.Powers == null || c.Powers.HeldLift == null) break;
+                    LockOnTargetable dummy = NearestLivingTarget(c.Lucy.position, c.Powers.HeldLift.transform);
+                    if (dummy != null) yield return TurnTo(c, dummy.transform.position, 8f, 1.5f);
+                    c.Pad.Tap(InputManager.GameAction.Charge);
+                    yield return new WaitForSecondsRealtime(0.6f);
+                    c.Moment?.Invoke("prop_thrown");
+                    break;
+                }
                 case "catch":
                     c.Pad.Tap(InputManager.GameAction.PowerTelekinesis);
                     yield return null;
@@ -139,6 +170,7 @@ namespace GlorifiedBody.Automation
                     break;
                 }
                 case "scan_image":
+                    yield return ViaWestLane(c, c.Director.DoorPoint);
                     yield return ScanAt(c, c.Director.DoorPoint, c.Director.DoorScanId, 1.0f);
                     break;
                 case "key":
@@ -150,6 +182,7 @@ namespace GlorifiedBody.Automation
                 }
                 case "door":
                 {
+                    yield return ViaWestLane(c, c.Director.DoorPoint);
                     yield return WalkTo(c, c.Director.DoorPoint, run: false, radius: 0.3f);
                     if (c.Director.Door == null) break;
                     yield return TurnTo(c, c.Director.Door.Point, 4f);
@@ -190,19 +223,28 @@ namespace GlorifiedBody.Automation
         /// Holds and releases the direction keys like a hand, not like a switch: a key released stays released
         /// for longer than the double-tap window (two presses of a direction key inside 0.4 s are a dodge: the
         /// first walk driver dashed her sideways on every threshold crossing), and a turn key stays held until
-        /// the aim is nearly exact.
+        /// the aim is nearly exact. The release times are shared by every hand: two walks in a row (the west
+        /// lane, then the door) used two hands, and the second pressed the turn key again inside the window (a
+        /// dodge in the bot run of 2026-10-22, late).
         /// </summary>
         private sealed class KeyHand
         {
             private const float ReleaseHold = 0.45f; // over TankController.DefaultDoubleTapWindow
             private readonly VirtualPad pad;
-            private readonly bool[] held = new bool[16];
-            private readonly float[] releasedAt = new float[16];
+            private static readonly int ActionCount = System.Enum.GetValues(typeof(InputManager.GameAction)).Length;
+            private static readonly float[] releasedAt = NewReleaseTimes();
+            private readonly bool[] held = new bool[ActionCount];
+
+            private static float[] NewReleaseTimes()
+            {
+                var times = new float[ActionCount];
+                for (int i = 0; i < times.Length; i++) times[i] = -10f;
+                return times;
+            }
 
             public KeyHand(VirtualPad pad)
             {
                 this.pad = pad;
-                for (int i = 0; i < releasedAt.Length; i++) releasedAt[i] = -10f;
             }
 
             public void Set(InputManager.GameAction action, bool wanted)
@@ -236,6 +278,12 @@ namespace GlorifiedBody.Automation
             yield return WalkTo(c, standPoint, run: false, radius: 0.35f);
             Scannable target = FindScannable(scanId);
             if (target == null) yield break;
+            // The walk stops up to 0.35 m short, on the side she came from: from the west lane that left her
+            // 1.55 m from the door focus, past the 1.5 m reach. Close in to 80 percent of the reach.
+            if (Flat(c.Lucy.position, target.FocusPoint) > target.range * 0.85f)
+            {
+                yield return WalkTo(c, target.FocusPoint, run: false, radius: target.range * 0.8f);
+            }
             yield return TurnTo(c, target.FocusPoint, 4f);
             PsychicScanner scanner = c.Lucy.GetComponent<PsychicScanner>();
             c.Pad.Tap(InputManager.GameAction.Scan);
@@ -338,6 +386,40 @@ namespace GlorifiedBody.Automation
             yield return null;
         }
 
+        /// <summary>
+        /// The lane west of the parallel bars. A walk from the stands to the door goes through it first: the
+        /// straight line from the north passed close to the bars' south posts and stopped there twice.
+        /// </summary>
+        public static readonly Vector3 WestLane = new Vector3(-2.5f, 0f, 12.4f);
+
+        /// <summary>From the north half of the gym, walks her to the west lane first.</summary>
+        public static IEnumerator ViaWestLane(Context c, Vector3 destination)
+        {
+            if (c.Lucy.position.z > WestLane.z + 0.5f && destination.z < WestLane.z)
+            {
+                yield return WalkTo(c, WestLane, run: false, radius: 0.4f);
+            }
+        }
+
+        /// <summary>Waits until her MK reaches the amount (the regen refills it), up to the timeout.</summary>
+        public static IEnumerator WaitForNalcon(Context c, float amount, float timeout)
+        {
+            PsychicStats stats = c.Lucy.GetComponent<PsychicStats>();
+            float t0 = Time.realtimeSinceStartup;
+            while (stats != null && stats.Nalcon < amount && Time.realtimeSinceStartup - t0 < timeout) yield return null;
+        }
+
+        /// <summary>Holds the attack until the circle reaches the level, then releases.</summary>
+        public static IEnumerator HoldCharge(Context c, float level, float timeout = 5f)
+        {
+            float t0 = Time.realtimeSinceStartup;
+            c.Pad.SetHeld(InputManager.GameAction.Charge, true);
+            while (Time.realtimeSinceStartup - t0 < timeout && (c.Powers == null || c.Powers.Charge < level)) yield return null;
+            c.Pad.SetHeld(InputManager.GameAction.Charge, false);
+            yield return null;
+            yield return null;
+        }
+
         /// <summary>Holds the attack until the circle is full, then releases (the power fires at the lock).</summary>
         public static IEnumerator HoldChargeFull(Context c, float timeout = 5f)
         {
@@ -386,7 +468,7 @@ namespace GlorifiedBody.Automation
             float bestDistance = float.MaxValue;
             foreach (LockOnTargetable candidate in TargetRegistry.All)
             {
-                if (candidate == null || !candidate.IsAlive || !candidate.Selectable) continue;
+                if (candidate == null || !candidate.IsAlive || !candidate.Selectable || candidate.IsProp) continue;
                 if (exclude != null && (candidate.transform == exclude || candidate.transform.IsChildOf(exclude))) continue;
                 float distance = Flat(from, candidate.transform.position);
                 if (distance >= bestDistance) continue;

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: power_fire
   m_EditorClassIdentifier: Assembly-CSharp::GlorifiedBody.Player.PowerDefinition
   kind: 1
-  displayName: FIRE
+  displayName: mk_erebus
   drug: 1
   fullChargeTime: 1.5
   minCharge: 0.2

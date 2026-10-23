@@ -11,7 +11,8 @@ using GlorifiedBody.Systems;
 namespace GlorifiedBody.Player
 {
     /// <summary>
-    /// The three powers and the circle charge (design §2). Keys 1, 2, 3 select BLAST, FIRE, TELEKINESIS.
+    /// The three powers and the circle charge (design §2). Keys 1, 2, 3 select mk_warspite (the blast), mk_erebus
+    /// (the fire), mk_orzabal (the telekinesis; Bruno's names of 2026-10-22, the code keeps Blast, Fire, Telekinesis).
     /// Hold Charge: she stands still, turns to the locked target (LockOnController) and the circle fills over
     /// fullChargeTime. Release: the power fires at the target with that charge. Cost and damage scale with the
     /// charge. A full SHORT bar: the attack press or the defend press starts the short at once (Bruno,
@@ -44,6 +45,8 @@ namespace GlorifiedBody.Player
         /// <summary>The enemy she holds in the air with telekinesis, while a launch is possible.</summary>
         public TelekinesisLift HeldLift => activeLift != null && activeLift.CanLaunch ? activeLift : null;
         public string LastResult { get; private set; } = "";
+        /// <summary>Time.time of the last result (the HUD shows "TOO HEAVY" for a moment).</summary>
+        public float LastResultTime { get; private set; } = -10f;
 
         public event Action OnChanged;
         public event Action<PowerDefinition, float, LockOnTargetable> OnPowerFired;
@@ -59,6 +62,13 @@ namespace GlorifiedBody.Player
                 powers = Resources.LoadAll<PowerDefinition>("Powers");
                 Array.Sort(powers, (a, b) => a.kind.CompareTo(b.kind));
             }
+            SyncProps();
+        }
+
+        /// <summary>Props join the target switch only while telekinesis is selected.</summary>
+        private void SyncProps()
+        {
+            if (lockOn != null) lockOn.IncludeProps = Selected != null && Selected.kind == PowerKind.Telekinesis;
         }
 
         public void Select(int index)
@@ -67,6 +77,7 @@ namespace GlorifiedBody.Player
             index = Mathf.Clamp(index, 0, powers.Length - 1);
             if (index == SelectedIndex) return;
             SelectedIndex = index;
+            SyncProps();
             RunTelemetry.Event("power_selected", Selected.kind.ToString());
             OnChanged?.Invoke();
         }
@@ -144,9 +155,15 @@ namespace GlorifiedBody.Player
             }
 
             LockOnTargetable target = lockOn.CurrentTarget;
-            if (target == null || !target.IsAlive || Vector3.Distance(transform.position, target.GetLockPoint()) > power.range)
+            if (target == null || !target.IsAlive || Vector3.Distance(transform.position, target.GetLockPoint()) > power.range
+                || (target.IsProp && power.kind != PowerKind.Telekinesis))
             {
                 return Result("no_target", charge);
+            }
+            // Too heavy to lift (the power armour, later): no lift and no cost.
+            if (power.kind == PowerKind.Telekinesis && target.IsHeavy)
+            {
+                return Result("too_heavy", charge);
             }
 
             float cost = power.nalconCost * charge;
@@ -172,6 +189,7 @@ namespace GlorifiedBody.Player
         private bool Result(string what, float charge)
         {
             LastResult = what;
+            LastResultTime = Time.time;
             RunTelemetry.Event("power_" + what, $"{Selected.kind}:{charge:0.00}");
             OnChanged?.Invoke();
             return false;
@@ -218,6 +236,11 @@ namespace GlorifiedBody.Player
                     break;
 
                 case PowerKind.Telekinesis:
+                    if (target.IsHeavy)
+                    {
+                        Result("too_heavy", charge);
+                        return;
+                    }
                     activeLift = TelekinesisLift.Apply(health != null ? health.gameObject : victim, gameObject, power.liftHeight, power.liftSeconds, power.holdSeconds, damage);
                     break;
             }
@@ -293,9 +316,10 @@ namespace GlorifiedBody.Player
         public const float CatchBuffer = 0.2f;     // seconds an early RMB press stays valid, PROPOSED
 
         /// <summary>
-        /// Throws the enemy she holds in the air. She aims with her facing: the living enemy inside LaunchAimCone
-        /// of her forward, nearest first, else the nearest other enemy in range, else straight ahead. Both take
-        /// the damage. Free: the lift was paid.
+        /// Throws the enemy or the prop she holds in the air. She aims with her facing: the living enemy inside
+        /// LaunchAimCone of her forward, nearest first, else the nearest other enemy in range, else straight ahead.
+        /// Both take the damage (a prop has no HP). Free: the lift was paid. After a prop throw the lock goes back
+        /// to the nearest enemy.
         /// </summary>
         public bool TryLaunch()
         {
@@ -309,7 +333,11 @@ namespace GlorifiedBody.Player
                 : lift.transform.position + Vector3.ProjectOnPlane(transform.forward, Vector3.up).normalized * 8f;
             Health victimHealth = victim != null ? victim.GetComponent<Health>() ?? victim.GetComponentInParent<Health>() : null;
             if (!lift.Launch(destination, victimHealth)) return false;
-            LastResult = "launch:" + (victim != null ? victim.name : "free");
+            LockOnTargetable thrown = lift.GetComponent<LockOnTargetable>();
+            bool prop = thrown != null && thrown.IsProp;
+            if (prop && lockOn.CurrentTarget == thrown) lockOn.SetTarget(null);
+            LastResult = (prop ? "launch_prop:" : "launch:") + (victim != null ? victim.name : "free");
+            LastResultTime = Time.time;
             OnChanged?.Invoke();
             return true;
         }
@@ -322,7 +350,7 @@ namespace GlorifiedBody.Player
             Vector3 forward = Vector3.ProjectOnPlane(transform.forward, Vector3.up).normalized;
             foreach (LockOnTargetable candidate in TargetRegistry.All)
             {
-                if (candidate == null || !candidate.IsAlive || !candidate.Selectable) continue;
+                if (candidate == null || !candidate.IsAlive || !candidate.Selectable || candidate.IsProp) continue;
                 if (candidate.transform == flyer || candidate.transform.IsChildOf(flyer)) continue;
                 Vector3 to = Vector3.ProjectOnPlane(candidate.GetLockPoint() - transform.position, Vector3.up);
                 float distance = to.magnitude;
@@ -366,7 +394,7 @@ namespace GlorifiedBody.Player
             float bestDistance = range;
             foreach (LockOnTargetable candidate in TargetRegistry.All)
             {
-                if (candidate == null || !candidate.IsAlive || !candidate.Selectable) continue;
+                if (candidate == null || !candidate.IsAlive || !candidate.Selectable || candidate.IsProp) continue;
                 if (candidate.transform == flyer || candidate.transform.IsChildOf(flyer)) continue;
                 float distance = Vector3.Distance(flyer.position, candidate.GetLockPoint());
                 if (distance >= bestDistance) continue;

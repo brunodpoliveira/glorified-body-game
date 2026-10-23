@@ -96,6 +96,11 @@ namespace GlorifiedBody.Editor
             float[] castX = { -4.4f, -3.2f, -0.4f, 0.8f, 2.0f, 3.2f };
             for (int i = 0; i < castIds.Length; i++) EnsureCastFigure(catalog, castIds[i], new Vector3(castX[i], 0f, 4.4f), 180f);
 
+            // Two crates for mk_orzabal (Bruno, 2026-10-22): select it, the target switch reaches them, lift, throw.
+            // Both in the wide camera's frame (at z -2.6 the south wall hid the second one).
+            PropAssets.Crate("Prop_Crate_1", new Vector3(1.8f, 0f, -1.2f), 15f);
+            PropAssets.Crate("Prop_Crate_2", new Vector3(-1.0f, 0f, -1.4f), -20f);
+
             // Three drugs on the floor, one per power.
             EnsurePickup("Drug_Nalcon", DrugType.Nalcon, new Vector3(-3f, 0.4f, 0f));
             EnsurePickup("Drug_Red", DrugType.Red, new Vector3(-3.5f, 0.4f, 1.2f));

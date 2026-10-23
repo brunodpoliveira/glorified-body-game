@@ -8,7 +8,7 @@ memory and three psychic powers, escapes the cult's lab. Steam, PC, keyboard and
 Build order steps 1 to 3 (2026-10-20): the Unity project, the menu loop (main menu, pause, options with key
 remap, difficulty presets and modifiers, death screen), the batch harness and its tests, tank controls with a dodge,
 fixed cameras per room, the auto-lock with a target switch, the circle charge with the three powers, the HP /
-NALCON / SHORT bars, the short, the drugs, and a dummy shooter with the telegraph. The cast (2026-10-21): the nine
+MK / SHORT bars, the short, the drugs, and a dummy shooter with the telegraph. The cast (2026-10-21): the nine
 character models of the demo are in the greybox room, Lucy on the tank controls with idle, walk and run, the
 guard and the soldier as the dummies, the other six along the north wall.
 
@@ -68,8 +68,9 @@ camera coverage test: every floor point is in the frame of the camera its zone p
 ## The tutorial (build order step 5)
 
 `Assets/_Game/Scenes/Tutorial.unity` is the therapy gym as the investors' demonstration: the recorded presenter
-asks the subject for each faculty on the padded dummies, in seventeen steps (the walk, the run, the dodge, the
-target switch, BLAST, FIRE, TELEKINESIS with the throw, the bullet catch, a capsule, a log to take and read, the
+asks the subject for each faculty on the padded dummies, in nineteen steps (the walk, the run, the dodge, the
+target switch, mk_warspite (blast), mk_erebus (fire), mk_orzabal (telekinesis) with the throw and the slam, a
+crate to lift and throw, the bullet catch, a capsule, a log to take and read, the
 scan of the door (a picture), the key, the locked door, the inventory, the scan of the monitors (a clip), the
 short, complete).
 `TutorialDirector` runs the steps, `TutorialPromptUI` shows the line and the hint with the bound keys. The
@@ -87,9 +88,11 @@ the enemies) add their steps here.
    (That Individual). Without them the gore and Invector bridge scripts do not compile.
 3. Open the folder in the Unity Hub. Press Play in `Assets/_Game/Scenes/Main_Menu.unity`.
 4. In the training room: W/S walk, A/D turn, Shift runs, Space dodges, Tab switches the lock target, hold LMB to
-   charge the selected power on the target, RMB is the defensive use of the power (TELEKINESIS: a bullet near
-   her goes back at the shooter). With an enemy in the air, turn to aim and press LMB again to throw it.
-   1, 2, 3 select BLAST, FIRE, TELEKINESIS. Q uses a drug. E interacts: it asks before it takes an item
+   charge the selected power on the target, RMB is the defensive use of the power (mk_orzabal: a bullet near
+   her goes back at the shooter). With an enemy in the air, turn to aim and press LMB again to throw it, or
+   charge it full to slam it. 1, 2, 3 select mk_warspite (blast), mk_erebus (fire), mk_orzabal (telekinesis).
+   With mk_orzabal selected, Tab also picks the crates: lift one and throw it at an enemy. A heavy target says
+   "TOO HEAVY". Q uses a drug. E interacts: it asks before it takes an item
    (E again takes it, S leaves it), opens a log for reading, and opens a locked door with its key. F is the psychic
    scan (close to the object): a picture or a short clip. I opens the inventory over the frozen room: key items
    take no slot, pills and objects take one slot each (nude 4, guard 8).
@@ -97,7 +100,7 @@ the enemies) add their steps here.
    RMB starts the short: 16 s of shocks, she walks slowly, no run, no dodge. F4 kills Lucy (shows the death
    screen). F11 loads the next look test room (F3 cycles its dressings there). F5 fills the SHORT bar, F6 starts the
    short, F7 refills her and gives drugs, F8 and F9 take and give
-   25 nalcon. F1 hides the status line. Esc pauses.
+   25 MK. F1 hides the status line. Esc pauses.
 
 ## Batch tools (no editor open)
 

@@ -39,6 +39,7 @@ namespace GlorifiedBody.Editor
         public static readonly Vector3 LogStand = new Vector3(-3.72f, 0f, 14.6f);  // the stand against the west wall
         public static readonly Vector3 KeyPoint = new Vector3(-2.9f, 0f, 15.4f);   // where she stands to take the key
         public static readonly Vector3 KeyStand = new Vector3(-3.72f, 0f, 15.4f);
+        public static readonly Vector3 CratePoint = new Vector3(0.4f, 0f, 15.4f);
         public static readonly Vector3 DoorPoint = new Vector3(-1.6f, 0f, 10.9f);  // where she stands to scan and open the door
         public static readonly Vector3 DoorFocus = new Vector3(-0.45f, 1.2f, 10.45f); // the west half of the door leaf
         public const string ItemsFolder = MenuLoopSetup.ResourcesFolder + "/Items";
@@ -87,6 +88,9 @@ namespace GlorifiedBody.Editor
             // the way, and no floor behind it for her to vanish into.
             PaddedTarget("Target_Gun", new Vector3(-3.65f, 0f, 11.6f), 30f, p, gun: true);
             MenuLoopSetup.EnsurePickup("Capsule", DrugType.Nalcon, CapsulePoint + Vector3.up * 0.4f);
+            // The crate for the prop step: between the bars and the first target, off every walk (the walks keep
+            // west of the bars), clear of the camera lines to the step points.
+            PropAssets.Crate("Prop_Crate", CratePoint, 15f);
 
             // The test log and the test key on two steel stands against the west wall, unlit so they stand out
             // (Bruno, 2026-10-22, after Resident Evil 4), and the two scan targets: the door (a picture, seen from

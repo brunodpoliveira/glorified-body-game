@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: power_telekinesis
   m_EditorClassIdentifier: Assembly-CSharp::GlorifiedBody.Player.PowerDefinition
   kind: 2
-  displayName: TELEKINESIS
+  displayName: mk_orzabal
   drug: 2
   fullChargeTime: 1.8
   minCharge: 0.2

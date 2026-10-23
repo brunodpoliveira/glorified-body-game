@@ -68,7 +68,8 @@ namespace GlorifiedBody.Combat
             float maxDistance,
             float maxAngle,
             LayerMask obstructionMask,
-            bool requireLineOfSight)
+            bool requireLineOfSight,
+            bool includeProps = false)
         {
             Vector3 viewForward = camera != null ? camera.transform.forward : (owner != null ? owner.forward : Vector3.forward);
 
@@ -78,7 +79,7 @@ namespace GlorifiedBody.Combat
             for (int i = 0; i < targets.Count; i++)
             {
                 LockOnTargetable t = targets[i];
-                if (!IsCandidate(t, owner))
+                if (!IsCandidate(t, owner, includeProps))
                 {
                     continue;
                 }
@@ -117,6 +118,7 @@ namespace GlorifiedBody.Combat
         /// Returns the next valid target on the chosen visual side (-1 = left, +1 = right).
         /// Sorting follows MIS' approach: signed yaw angle relative to camera-forward, with
         /// the *current* target excluded. Falls back to wrap-around so cycling never stalls.
+        /// Props join the cycle only with includeProps (telekinesis selected).
         /// </summary>
         public static LockOnTargetable Cycle(
             LockOnTargetable current,
@@ -127,7 +129,8 @@ namespace GlorifiedBody.Combat
             float maxDistance,
             float maxAngle,
             LayerMask obstructionMask,
-            bool requireLineOfSight)
+            bool requireLineOfSight,
+            bool includeProps = false)
         {
             if (direction == 0)
             {
@@ -145,7 +148,7 @@ namespace GlorifiedBody.Combat
             for (int i = 0; i < targets.Count; i++)
             {
                 LockOnTargetable t = targets[i];
-                if (!IsCandidate(t, owner) || t == current)
+                if (!IsCandidate(t, owner, includeProps) || t == current)
                 {
                     continue;
                 }
@@ -254,9 +257,9 @@ namespace GlorifiedBody.Combat
             return bestWrap != null ? bestWrap : current;
         }
 
-        private static bool IsCandidate(LockOnTargetable t, Transform owner)
+        private static bool IsCandidate(LockOnTargetable t, Transform owner, bool includeProps)
         {
-            if (t == null || !t.Selectable)
+            if (t == null || !t.Selectable || (t.IsProp && !includeProps))
             {
                 return false;
             }

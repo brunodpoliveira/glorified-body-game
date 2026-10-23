@@ -16,7 +16,7 @@ namespace GlorifiedBody.Editor
         private const string ResourcesFolder = "Assets/_Game/Resources";
         private const string AssetFolder = ResourcesFolder + "/DifficultyModules";
         private const string PresetGroup = "preset";
-        private const string NotYet = " No effect yet: it arrives with the HP and nalcon bars (build order step 3).";
+        private const string NotYet = " No effect yet: it arrives with the HP and MK bars (build order step 3).";
 
         [MenuItem("GlorifiedBody/Create Difficulty Modules")]
         public static void CreateAll()
@@ -51,7 +51,7 @@ namespace GlorifiedBody.Editor
                 DifficultyModuleDefinition.ModuleType.OneHitWonder, isBaseline: false, presetGroup: "",
                 parameters: new ModuleParam[] { });
 
-            CreateModule("scarcity", "SCARCITY", "⚠", "Nalcon drains 50% faster." + NotYet, 10,
+            CreateModule("scarcity", "SCARCITY", "⚠", "MK drains 50% faster." + NotYet, 10,
                 DifficultyModuleDefinition.ModuleType.Scarcity, isBaseline: false, presetGroup: "",
                 parameters: new[] { new ModuleParam { key = "drainMultiplier", value = 1.5f } });
 

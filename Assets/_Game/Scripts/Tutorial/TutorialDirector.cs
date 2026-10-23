@@ -16,10 +16,11 @@ namespace GlorifiedBody.Tutorial
     /// The tutorial mode (design §4.3, round 9: interactive, a separate mode, part of the story; Bruno,
     /// 2026-10-22: "tutorial mode, since it'll allow us to add the other features and test them"). In the
     /// therapy gym the recorded presenter of the investors' demonstration (CONCEPTS 6.4) asks the subject for
-    /// each faculty in turn, on the padded dummies: the walk, the run, the dodge, the target switch, BLAST,
-    /// FIRE, TELEKINESIS with the throw, the bullet catch, a capsule, a log to take and read, the scan of the door
-    /// (a picture) and of the monitors (a clip), the overflow (the short). Each step ends
-    /// when the player did the thing. The later features (the props, the enemies) add their steps here.
+    /// each faculty in turn, on the padded dummies: the walk, the run, the dodge, the target switch, mk_warspite
+    /// (the blast), mk_erebus (the fire), mk_orzabal (the telekinesis) with the throw and the slam, a crate to lift
+    /// and throw, the bullet catch, a capsule, a log to take and read, the scan of the door (a picture) and of the
+    /// monitors (a clip), the key and the door, the inventory, the overflow (the short). Each step ends when the
+    /// player did the thing. The later features (the enemies) add their steps here.
     /// The lines are placeholders until the writer gives the words. F2 skips a step (debug).
     /// </summary>
     public sealed class TutorialDirector : MonoBehaviour
@@ -78,7 +79,7 @@ namespace GlorifiedBody.Tutorial
         private PsychicScanner scanner;
 
         // The flags of the current step, reset on enter.
-        private bool slammed;
+        private bool slammed, propThrown;
         private bool ranInStep, dodgedSide, launched, caught, drugUsed, shortBegan, shortEnded, logRead, doorScanned, monitorsScanned, inventoryOpened, inventoryClosed;
         private ItemInventory items;
         private int targetChanges;
@@ -194,23 +195,27 @@ namespace GlorifiedBody.Tutorial
                 () => targetChanges >= 1 && lockOn != null && lockOn.CurrentTarget != null));
             steps.Add(new TutorialStep("blast",
                 "Faculty one. Fill the circle on a dummy and release.",
-                "{PowerBlast} selects BLAST. Hold {Charge}, release when the circle is full.",
+                "{PowerBlast} selects mk_warspite, the blast. Hold {Charge}, release when the circle is full.",
                 () => firedKind == PowerKind.Blast && firedCharge >= 0.99f));
             steps.Add(new TutorialStep("fire",
                 "Faculty two. Only a full circle burns.",
-                "{PowerFire} selects FIRE. Hold {Charge} to the full circle, then release.",
+                "{PowerFire} selects mk_erebus, the fire. Hold {Charge} to the full circle, then release.",
                 () => firedKind == PowerKind.Fire && firedCharge >= 0.999f));
             steps.Add(new TutorialStep("lift_throw",
                 "Faculty three. Lift one, turn, and throw it into another.",
-                "{PowerTelekinesis} selects TELEKINESIS. Hold {Charge}, release: it rises. Turn with {TurnLeft} or {TurnRight}, press {Charge} to throw.",
+                "{PowerTelekinesis} selects mk_orzabal, the telekinesis. Hold {Charge}, release: it rises. Turn with {TurnLeft} or {TurnRight}, press {Charge} to throw.",
                 () => launched));
             steps.Add(new TutorialStep("slam",
                 "Lift one again. Keep it up, fill the circle on it: it slams.",
-                "With TELEKINESIS: hold {Charge} and release to lift. While it hangs, hold {Charge} to a full circle and release: a slam. A short press throws instead.",
+                "With mk_orzabal: hold {Charge} and release to lift. While it hangs, hold {Charge} to a full circle and release: a slam. A short press throws instead.",
                 () => slammed));
+            steps.Add(new TutorialStep("prop",
+                "Faculty three moves objects too. Lift the crate and throw it into a dummy.",
+                "With mk_orzabal selected, {SwitchTarget} also picks the crate. Hold {Charge}, release: it rises. Turn, press {Charge}: it flies.",
+                () => propThrown));
             steps.Add(new TutorialStep("catch",
                 "The dummy by the door has a gun. When the circle closes, catch the bullet and send it back.",
-                "With TELEKINESIS selected, press {Defend} as the bullet reaches you.",
+                "With mk_orzabal selected, press {Defend} as the bullet reaches you.",
                 () => caught,
                 onEnter: () => SetGunActive(true),
                 onExit: () => SetGunActive(false)));
@@ -306,7 +311,7 @@ namespace GlorifiedBody.Tutorial
         {
             StepIndex = index;
             StepStartTime = Time.time;
-            slammed = false;
+            slammed = propThrown = false;
             ranInStep = dodgedSide = launched = caught = drugUsed = shortBegan = shortEnded = logRead = doorScanned = monitorsScanned = inventoryOpened = inventoryClosed = false;
             targetChanges = 0;
             firedKind = null;
@@ -349,6 +354,7 @@ namespace GlorifiedBody.Tutorial
             string result = powers.LastResult ?? "";
             if (result.StartsWith("launch")) launched = true;
             if (result == "slam") slammed = true;
+            if (result.StartsWith("launch_prop")) propThrown = true;
             if (result == "catch") caught = true;
             if (result.StartsWith("drug:")) drugUsed = true;
         }
