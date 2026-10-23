@@ -156,7 +156,8 @@ namespace GlorifiedBody.Tests.PlayMode
             shooter.enabled = true;
             yield return WaitUntil(() => shooter.Current == DummyShooter.State.Aiming || shooter.Current == DummyShooter.State.Telegraph, 2f);
             powers.Select(PowerKind.Blast);
-            powers.FireAt(powers.Selected, 1f, shooter.GetComponent<LockOnTargetable>());
+            // The stagger, not the kill: no MK boost (a boosted blast does 70 and the dummy has 50 HP).
+            powers.FireAt(powers.Selected, 1f, shooter.GetComponent<LockOnTargetable>(), 1f);
             yield return null;
             Assert.AreEqual(DummyShooter.State.Staggered, shooter.Current, "a blast interrupts the aim");
             Assert.IsFalse(shooter.transform.Find("Laser").GetComponent<LineRenderer>().enabled, "the laser is gone");

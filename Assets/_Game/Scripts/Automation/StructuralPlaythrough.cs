@@ -421,6 +421,8 @@ namespace GlorifiedBody.Automation
             stats.DebugSet(100f, 0f);
             Health dummyHealth = dummyObject.GetComponent<Health>();
             float dummyHp0 = dummyHealth.CurrentHealth;
+            // Read the bar before the blast: under the MK boost the full blast (70) kills the 50 HP dummy at once.
+            float shortBefore = stats.Short;
             pad.SetHeld(InputManager.GameAction.Charge, true);
             yield return WaitGame(powers.Selected.fullChargeTime * 0.7f);
             CaptureShot("charge");
@@ -433,8 +435,7 @@ namespace GlorifiedBody.Automation
             Record("blast_full_charge", charge >= 0.99f && powers.LastResult == "fired" && dealt >= powers.Selected.baseDamage - 0.5f,
                 $"charge={charge:0.00} result={powers.LastResult} dealt={dealt:0} nalcon={stats.Nalcon:0}");
 
-            // Finish it: the kill fills the SHORT bar by 25.
-            float shortBefore = stats.Short;
+            // Finish it (when the blast left it alive): the kill fills the SHORT bar by 25.
             int guard = 0;
             while (!dummyHealth.IsDead && guard++ < 10)
             {

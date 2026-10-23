@@ -109,7 +109,14 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   design): nalcon becomes MK, the power names mk_warspite / mk_erebus / mk_orzabal / mk_edgar, Telekinesis holds
   until thrown, slammed or hit, Fire damages only at a full charge, MK at 50 percent or more doubles damage and
   charge speed.
-  Next: props, then the FSM AI. Bruno does a manual play first.
+- 2026-10-22, late, the combat block (`devlog-notes/2026-10-22_combat_block.md`): Telekinesis holds with no
+  timer until a short press throws it, a full charge on it slams it (`PsychicPowers.TrySlam`, full cost, full
+  damage), or another enemy's hit drops it unhurt (`TelekinesisLift.Release`, the enemy bullet hook, the hit
+  bus). Fire hurts only at a full charge; a part charge only stuns. The MK boost: nalcon at 50 percent or more
+  doubles damage and charge speed (`PsychicPowers.IsBoosted`, the HUD tick and "x2"). The inventory asks
+  before it uses a drug. Tutorial: 18 steps (a slam step), targets 400 HP. Tests hold nalcon at 45 with the
+  regen paused for the base numbers.
+  Next: props, then the FSM AI.
 
 ## Rules
 

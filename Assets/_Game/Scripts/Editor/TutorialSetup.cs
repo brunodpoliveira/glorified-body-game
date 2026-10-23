@@ -47,7 +47,7 @@ namespace GlorifiedBody.Editor
         public const string ScanImagePath = ScanFolder + "/scan_placeholder_image.png";
         public const string ScanVideoPath = ScanFolder + "/scan_placeholder_video.webm";
         public const float ReachRadius = 1.3f;
-        public const float TargetHealth = 150f; // padded: it takes the whole demonstration
+        public const float TargetHealth = 400f; // padded: it takes the whole demonstration, the MK boost doubles every hit
         public static readonly string[] TargetNames = { "Target_1", "Target_2", "Target_3", "Target_Gun" };
 
         [MenuItem("GlorifiedBody/Build Tutorial")]

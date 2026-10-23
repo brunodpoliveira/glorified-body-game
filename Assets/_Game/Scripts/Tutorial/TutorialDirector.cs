@@ -78,6 +78,7 @@ namespace GlorifiedBody.Tutorial
         private PsychicScanner scanner;
 
         // The flags of the current step, reset on enter.
+        private bool slammed;
         private bool ranInStep, dodgedSide, launched, caught, drugUsed, shortBegan, shortEnded, logRead, doorScanned, monitorsScanned, inventoryOpened, inventoryClosed;
         private ItemInventory items;
         private int targetChanges;
@@ -203,6 +204,10 @@ namespace GlorifiedBody.Tutorial
                 "Faculty three. Lift one, turn, and throw it into another.",
                 "{PowerTelekinesis} selects TELEKINESIS. Hold {Charge}, release: it rises. Turn with {TurnLeft} or {TurnRight}, press {Charge} to throw.",
                 () => launched));
+            steps.Add(new TutorialStep("slam",
+                "Lift one again. Keep it up, fill the circle on it: it slams.",
+                "With TELEKINESIS: hold {Charge} and release to lift. While it hangs, hold {Charge} to a full circle and release: a slam. A short press throws instead.",
+                () => slammed));
             steps.Add(new TutorialStep("catch",
                 "The dummy by the door has a gun. When the circle closes, catch the bullet and send it back.",
                 "With TELEKINESIS selected, press {Defend} as the bullet reaches you.",
@@ -301,6 +306,7 @@ namespace GlorifiedBody.Tutorial
         {
             StepIndex = index;
             StepStartTime = Time.time;
+            slammed = false;
             ranInStep = dodgedSide = launched = caught = drugUsed = shortBegan = shortEnded = logRead = doorScanned = monitorsScanned = inventoryOpened = inventoryClosed = false;
             targetChanges = 0;
             firedKind = null;
@@ -342,6 +348,7 @@ namespace GlorifiedBody.Tutorial
             if (powers == null) return;
             string result = powers.LastResult ?? "";
             if (result.StartsWith("launch")) launched = true;
+            if (result == "slam") slammed = true;
             if (result == "catch") caught = true;
             if (result.StartsWith("drug:")) drugUsed = true;
         }

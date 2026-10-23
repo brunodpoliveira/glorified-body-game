@@ -35,6 +35,11 @@ namespace GlorifiedBody.Player
         public int SelectedIndex { get; private set; }
         public PowerDefinition Selected => powers != null && powers.Length > 0 ? powers[Mathf.Clamp(SelectedIndex, 0, powers.Length - 1)] : null;
         public float Charge { get; private set; }
+
+        /// <summary>The MK boost (Bruno, 2026-10-22): at half a nalcon bar or more, attacks do 2x damage and charge 2x as fast.</summary>
+        public const float BoostThreshold = 0.5f;
+        public const float BoostMultiplier = 2f;
+        public bool IsBoosted => stats != null && stats.Nalcon >= PsychicStats.MaxNalcon * BoostThreshold - 0.001f;
         public bool IsCharging => lockOn != null && lockOn.IsCharging && !holdAfterLaunch && !(shortController != null && shortController.IsActive);
         /// <summary>The enemy she holds in the air with telekinesis, while a launch is possible.</summary>
         public TelekinesisLift HeldLift => activeLift != null && activeLift.CanLaunch ? activeLift : null;
@@ -94,14 +99,10 @@ namespace GlorifiedBody.Player
                 defendDown = false;
             }
 
-            // LMB attacks, RMB defends (Bruno, 2026-10-20). Telekinesis: the attack press with an enemy in the air
-            // throws it (no charge, and the press that threw does not start one). The defend press catches a
-            // bullet near her and sends it back. The defend hold (the floor shield) comes later.
+            // LMB attacks, RMB defends (Bruno, 2026-10-20). Telekinesis with an enemy in the air (Bruno,
+            // 2026-10-22): the attack key charges as usual; a short press throws it, a full charge slams it
+            // (Release). The defend press catches a bullet near her and sends it back.
             if (holdAfterLaunch && !GameInput.GetAction(InputManager.GameAction.Charge, KeyCode.Mouse0)) holdAfterLaunch = false;
-            if (attackDown && Selected.kind == PowerKind.Telekinesis && HeldLift != null)
-            {
-                if (TryLaunch()) holdAfterLaunch = true;
-            }
             if (defendDown && Selected.kind == PowerKind.Telekinesis)
             {
                 catchPressUntil = Time.time + CatchBuffer;
@@ -115,7 +116,8 @@ namespace GlorifiedBody.Player
             if (charging)
             {
                 float before = Charge;
-                Charge = Mathf.Min(1f, Charge + dt / Selected.fullChargeTime);
+                float rate = IsBoosted ? BoostMultiplier : 1f; // the MK boost charges 2x as fast
+                Charge = Mathf.Min(1f, Charge + dt * rate / Selected.fullChargeTime);
                 if (!Mathf.Approximately(before, Charge)) OnChanged?.Invoke();
             }
             else if (wasCharging)
@@ -134,6 +136,8 @@ namespace GlorifiedBody.Player
             if (power == null) return false;
             // The bar filled during the charge (damage taken): the release starts the short, whatever the charge.
             if (TryStartShort(charge)) return false;
+            // Telekinesis with an enemy in the air: a full charge slams it, anything less throws it.
+            if (power.kind == PowerKind.Telekinesis && HeldLift != null) return charge >= 0.999f ? TrySlam() : TryLaunch();
             if (charge < power.minCharge)
             {
                 return Result("fizzle", charge);
@@ -146,12 +150,13 @@ namespace GlorifiedBody.Player
             }
 
             float cost = power.nalconCost * charge;
+            float scale = IsBoosted ? BoostMultiplier : 1f; // the boost is read before the cost lowers the bar
             if (!stats.TrySpendNalcon(cost))
             {
                 return Result("no_nalcon", charge);
             }
 
-            FireAt(power, charge, target);
+            FireAt(power, charge, target, scale);
             return true;
         }
 
@@ -172,13 +177,17 @@ namespace GlorifiedBody.Player
             return false;
         }
 
-        /// <summary>Applies the power to a target with a charge in 0..1. Tests call this directly.</summary>
-        public void FireAt(PowerDefinition power, float charge, LockOnTargetable target)
+        /// <summary>Applies the power to a target with a charge in 0..1, with the MK boost of the moment. Tests call this directly.</summary>
+        public void FireAt(PowerDefinition power, float charge, LockOnTargetable target) => FireAt(power, charge, target, IsBoosted ? BoostMultiplier : 1f);
+
+        /// <summary>Applies the power with a damage scale (2 under the MK boost, 1 without).</summary>
+        public void FireAt(PowerDefinition power, float charge, LockOnTargetable target, float damageScale)
         {
             charge = Mathf.Clamp01(charge);
             GameObject victim = target.gameObject;
             Health health = victim.GetComponent<Health>() ?? victim.GetComponentInParent<Health>();
-            float damage = power.baseDamage * charge;
+            float damage = power.baseDamage * charge * damageScale;
+            LastScale = damageScale;
             Vector3 point = target.GetLockPoint();
             Vector3 normal = (transform.position - point).normalized;
 
@@ -191,14 +200,21 @@ namespace GlorifiedBody.Player
                     break;
 
                 case PowerKind.Fire:
-                    // Bruno, 2026-10-20: only a full charge ignites. A part charge is a flash: a heat hit and the
-                    // shooter loses its aim for staggerSeconds times the charge (option c, PROPOSED numbers).
-                    bool fullCharge = charge >= 0.999f;
-                    float heat = fullCharge ? damage * 0.5f : damage;
-                    health?.TakeDamage(heat);
-                    RaiseHit(victim, health, point, normal, heat, DamageType.PsychicFire);
-                    if (fullCharge) BurningStatus.Ignite(health != null ? health.gameObject : victim, gameObject, power.burnPerSecond, power.burnSeconds);
-                    else victim.GetComponentInParent<IStaggerable>()?.Stagger(power.staggerSeconds * charge);
+                    // Bruno, 2026-10-22: "fire only damages on full charge; anything less just stuns them". A full
+                    // charge is a heat hit and the burn; a part charge does no damage and breaks the aim for
+                    // staggerSeconds times the charge.
+                    if (charge >= 0.999f)
+                    {
+                        float heat = damage * 0.5f;
+                        health?.TakeDamage(heat);
+                        RaiseHit(victim, health, point, normal, heat, DamageType.PsychicFire);
+                        BurningStatus.Ignite(health != null ? health.gameObject : victim, gameObject, power.burnPerSecond * damageScale, power.burnSeconds);
+                    }
+                    else
+                    {
+                        victim.GetComponentInParent<IStaggerable>()?.Stagger(power.staggerSeconds * charge);
+                        RunTelemetry.Event("fire_stun", $"{victim.name}:{power.staggerSeconds * charge:0.0}s");
+                    }
                     break;
 
                 case PowerKind.Telekinesis:
@@ -245,6 +261,28 @@ namespace GlorifiedBody.Player
             shortController?.End(byDrug: true);
             stats.RefillAll();
             LastResult = "drug:" + used;
+            OnChanged?.Invoke();
+            return true;
+        }
+
+        /// <summary>The damage scale of the last power fired (2 under the MK boost). Tests read it.</summary>
+        public float LastScale { get; private set; } = 1f;
+
+        /// <summary>
+        /// A full charge on the enemy she holds in the air (Bruno, 2026-10-22): it slams into the floor with the
+        /// power's full damage (2x under the MK boost). Costs the power's nalcon, like a full charge. PROPOSED.
+        /// </summary>
+        public bool TrySlam()
+        {
+            TelekinesisLift lift = HeldLift;
+            PowerDefinition power = Selected;
+            if (lift == null || power == null) return false;
+            float scale = IsBoosted ? BoostMultiplier : 1f;
+            if (!stats.TrySpendNalcon(power.nalconCost)) return Result("no_nalcon", 1f);
+            if (!lift.Slam(power.baseDamage * scale)) return false;
+            LastScale = scale;
+            LastResult = "slam";
+            RunTelemetry.Event("power_slam", $"{lift.name}:{power.baseDamage * scale:0}");
             OnChanged?.Invoke();
             return true;
         }

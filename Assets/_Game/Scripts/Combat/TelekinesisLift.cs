@@ -6,11 +6,13 @@ using GlorifiedBody.DebugTools;
 namespace GlorifiedBody.Combat
 {
     /// <summary>
-    /// TELEKINESIS, first form: the victim rises, hangs, and slams into the floor. The slam is the hit.
-    /// Bruno, 2026-10-20: while it hangs, the next attack press launches it (Launch). It flies into another enemy,
-    /// and both take the damage. With nobody to hit it flies straight and drops. While it hangs it turns with her:
-    /// it keeps its offset from her, turned by her yaw change, so she aims the throw with the tank turn. An enemy
-    /// with this component on it does nothing until it ends (see DummyShooter). Props and ragdolls come later.
+    /// TELEKINESIS: the victim rises and hangs, and it stays up (Bruno, 2026-10-22: "once target grabbed and
+    /// floating, telekinesis lasts until tgt thrown, slammed (full charge on target when it is floating) or damaged
+    /// by another enemy (in this case, the floater is released with no damage)"). A short press of the attack key
+    /// throws it (Launch): it flies into another enemy and both take the damage, or flies straight and drops. A full
+    /// charge slams it into the floor (Slam). A hit from someone other than her drops it, unhurt (Release). While it
+    /// hangs it turns with her, so she aims the throw with the tank turn. An enemy with this component does nothing
+    /// until it ends (see DummyShooter). Props and ragdolls come later.
     /// </summary>
     public sealed class TelekinesisLift : MonoBehaviour
     {
@@ -19,8 +21,10 @@ namespace GlorifiedBody.Combat
         private const float HitRadius = 0.7f;
 
         public bool IsLifted { get; private set; }
-        /// <summary>True while it rises or hangs: a launch is possible.</summary>
-        public bool CanLaunch => IsLifted && !launched && !slamming;
+        /// <summary>True while it rises or hangs: a throw, a slam or a release is possible.</summary>
+        public bool CanLaunch => IsLifted && !launched && !slamming && !released;
+        /// <summary>How it ended: "throw", "slam", "released", or "" while it hangs.</summary>
+        public string Ending { get; private set; } = "";
         public bool Launched => launched;
         public Health LaunchVictim { get; private set; }
 
@@ -34,6 +38,9 @@ namespace GlorifiedBody.Combat
         private bool slamming;
         private Vector3 launchDestination;
         private Health launchTarget;
+        private bool slamRequested;
+        private bool released;
+        private Health self;
 
         public static TelekinesisLift Apply(GameObject victim, GameObject attacker, float liftHeight, float liftSeconds, float holdSeconds, float slamDamage)
         {
@@ -43,6 +50,7 @@ namespace GlorifiedBody.Combat
             if (lift == null) lift = victim.AddComponent<TelekinesisLift>();
             lift.attacker = attacker;
             lift.slamDamage = slamDamage;
+            lift.self = victim.GetComponent<Health>() ?? victim.GetComponentInParent<Health>();
             lift.StartCoroutine(lift.Run(liftHeight, liftSeconds, holdSeconds));
             return lift;
         }
@@ -61,6 +69,37 @@ namespace GlorifiedBody.Combat
             return true;
         }
 
+        /// <summary>A full charge on the floater (Bruno, 2026-10-22): it slams into the floor with this damage.</summary>
+        public bool Slam(float damage)
+        {
+            if (!CanLaunch) return false;
+            slamDamage = damage;
+            slamRequested = true;
+            RunTelemetry.Event("tk_slam", name);
+            return true;
+        }
+
+        /// <summary>Another enemy hit the floater (Bruno, 2026-10-22): it drops, with no damage.</summary>
+        public bool Release(GameObject by)
+        {
+            if (!CanLaunch) return false;
+            released = true;
+            RunTelemetry.Event("tk_released", $"{name} by {(by != null ? by.name : "?")}");
+            return true;
+        }
+
+        private void OnEnable() => HitEventBus.OnHit += OnHit;
+
+        private void OnDisable() => HitEventBus.OnHit -= OnHit;
+
+        /// <summary>A hit on the floater from someone other than the holder releases it.</summary>
+        private void OnHit(HitInfo hit)
+        {
+            if (!CanLaunch || hit.Victim == null || hit.Attacker == attacker) return;
+            if (hit.Victim != gameObject && (self == null || hit.Victim != self.gameObject)) return;
+            Release(hit.Attacker);
+        }
+
         private IEnumerator Run(float liftHeight, float liftSeconds, float holdSeconds)
         {
             IsLifted = true;
@@ -72,7 +111,7 @@ namespace GlorifiedBody.Combat
                 holdYaw = holder.eulerAngles.y;
             }
             float t = 0f;
-            while (t < liftSeconds && !launched)
+            while (t < liftSeconds && !launched && !slamRequested && !released)
             {
                 t += Time.deltaTime;
                 holdHeight = Mathf.SmoothStep(0f, liftHeight, t / liftSeconds);
@@ -80,20 +119,37 @@ namespace GlorifiedBody.Combat
                 yield return null;
             }
 
-            t = 0f;
-            while (t < holdSeconds && !launched)
+            // It hangs until a throw, a slam or a release: no timer (holdSeconds is no longer a limit).
+            while (!launched && !slamRequested && !released)
             {
-                t += Time.deltaTime;
+                if (self != null && self.IsDead) released = true; // a burn or a hit killed it: it falls
+                if (attacker == null) released = true;
                 FollowHolder(holder);
                 yield return null;
             }
 
             if (launched)
             {
+                Ending = "throw";
                 yield return Fly();
+            }
+            else if (released)
+            {
+                Ending = "released";
+                Vector3 from = transform.position;
+                t = 0f;
+                const float dropSeconds = 0.25f;
+                while (t < dropSeconds)
+                {
+                    t += Time.deltaTime;
+                    transform.position = Vector3.Lerp(from, floor, t / dropSeconds);
+                    yield return null;
+                }
+                transform.position = floor;
             }
             else
             {
+                Ending = "slam";
                 slamming = true;
                 Vector3 from = transform.position;
                 t = 0f;

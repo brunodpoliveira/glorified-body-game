@@ -90,6 +90,17 @@ namespace GlorifiedBody.Automation
                     c.Pad.Tap(InputManager.GameAction.Charge);
                     yield return new WaitForSecondsRealtime(0.3f);
                     break;
+                case "slam":
+                    c.Pad.Tap(InputManager.GameAction.PowerTelekinesis);
+                    yield return null;
+                    if (c.Powers == null || c.Powers.HeldLift == null)
+                    {
+                        yield return HoldChargeFull(c); // lift the lock target
+                        yield return new WaitForSecondsRealtime(0.5f);
+                    }
+                    yield return HoldChargeFull(c); // a full circle on the floater: the slam
+                    yield return new WaitForSecondsRealtime(0.6f);
+                    break;
                 case "catch":
                     c.Pad.Tap(InputManager.GameAction.PowerTelekinesis);
                     yield return null;

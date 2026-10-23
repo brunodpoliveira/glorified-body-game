@@ -20,6 +20,8 @@ namespace GlorifiedBody.UI
         private RectTransform canvasRect;
         private Image hpFill;
         private Image nalconFill;
+        private Text boostText;
+        public bool BoostShown => boostText != null && boostText.enabled;
         private Image shortFill;
         private Text powerText;
         private Text drugText;
@@ -117,6 +119,23 @@ namespace GlorifiedBody.UI
             hpFill = Bar(bars.transform, "HP", 0, new Color(0.85f, 0.15f, 0.15f));
             nalconFill = Bar(bars.transform, "NALCON", 1, new Color(0.25f, 0.5f, 1f));
             shortFill = Bar(bars.transform, "SHORT", 2, new Color(1f, 0.85f, 0.2f));
+
+            // The MK boost (Bruno, 2026-10-22): a tick at half the NALCON bar, and "x2" on the bar while it is
+            // at or over the tick (2x damage, 2x charge speed).
+            var tick = Element("BoostTick", bars.transform);
+            var tickRect = tick.GetComponent<RectTransform>();
+            tickRect.anchorMin = tickRect.anchorMax = new Vector2(0f, 1f);
+            tickRect.pivot = new Vector2(0.5f, 1f);
+            tickRect.anchoredPosition = new Vector2(96f + 160f, -36f + 3f);
+            tickRect.sizeDelta = new Vector2(3f, 28f);
+            var tickImage = tick.AddComponent<Image>();
+            tickImage.sprite = white;
+            tickImage.color = new Color(1f, 1f, 1f, 0.85f);
+            tickImage.raycastTarget = false;
+            boostText = Label(bars.transform, "Boost", 18, TextAnchor.MiddleRight, new Vector2(0f, 1f), new Vector2(96f, -36f), new Vector2(312f, 24f));
+            boostText.fontStyle = FontStyle.Bold;
+            boostText.color = new Color(1f, 1f, 1f, 0.95f);
+            boostText.text = "x2";
 
             // The warnings, right of each bar: a heart, a drop, a bolt. The text blinks, the icon stays.
             hpWarning = WarningBadge(bars.transform, "HpWarning", 0, MakeShapeSprite(Heart), "LOW", new Color(1f, 0.35f, 0.3f), out hpWarningText);
@@ -307,6 +326,7 @@ namespace GlorifiedBody.UI
             if (stats != null)
             {
                 nalconFill.fillAmount = stats.Nalcon / PsychicStats.MaxNalcon;
+                if (boostText != null) boostText.enabled = powers != null && powers.IsBoosted;
                 shortFill.fillAmount = stats.Short / PsychicStats.MaxShort;
                 shortFill.color = stats.IsShortFull ? new Color(1f, 0.3f, 0.2f) : new Color(1f, 0.85f, 0.2f);
             }

@@ -81,6 +81,9 @@ namespace GlorifiedBody.Tests.PlayMode
             yield return new WaitForSeconds(0.2f);
             yield return WaitUntil(() => lockOn.HasTarget, 1.5f);
             Assert.AreEqual("Dummy_A", lockOn.TargetName, "the nearest dummy is the target");
+            // The base numbers: under half a bar, no MK boost, and no regen to cross the line during a test.
+            stats.RegenPaused = true;
+            stats.DebugSet(45f, 0f);
         }
 
         [UnityTearDown]
@@ -102,7 +105,7 @@ namespace GlorifiedBody.Tests.PlayMode
             PowerDefinition blast = powers.Selected;
             Health target = dummyA.GetComponent<Health>();
             float hp0 = target.CurrentHealth;
-            stats.DebugSet(100f, 0f);
+            stats.DebugSet(45f, 0f); // under the MK boost line
 
             pad.SetHeld(InputManager.GameAction.Charge, true);
             yield return new WaitForSeconds(blast.fullChargeTime + 0.3f);
@@ -126,7 +129,7 @@ namespace GlorifiedBody.Tests.PlayMode
             PowerDefinition blast = powers.Selected;
             Health target = dummyA.GetComponent<Health>();
             float hp0 = target.CurrentHealth;
-            stats.DebugSet(100f, 0f);
+            stats.DebugSet(45f, 0f); // under the MK boost line
 
             pad.SetHeld(InputManager.GameAction.Charge, true);
             yield return new WaitForSeconds(blast.fullChargeTime * 0.5f);
@@ -191,7 +194,36 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator Telekinesis_Lifts_ThenSlams()
+        public IEnumerator Telekinesis_Holds_UntilAFullChargeSlamsIt()
+        {
+            // Bruno, 2026-10-22: the floater stays up until a throw, a slam (a full charge on it) or another enemy's hit.
+            powers.Select(PowerKind.Telekinesis);
+            PowerDefinition tk = powers.Selected;
+            Health target = dummyB.GetComponent<Health>();
+            float hp0 = target.CurrentHealth;
+            float y0 = dummyB.transform.position.y;
+            powers.FireAt(tk, 1f, dummyB);
+            yield return new WaitForSeconds(tk.liftSeconds + tk.holdSeconds + 1.5f);
+            Assert.Greater(dummyB.transform.position.y, y0 + tk.liftHeight * 0.8f, "still up after the old 1.5 s window");
+            Assert.IsNotNull(powers.HeldLift, "she still holds it");
+            Assert.AreEqual(hp0, target.CurrentHealth, "no damage while in the air");
+
+            float nalconBefore = stats.Nalcon;
+            pad.SetHeld(InputManager.GameAction.Charge, true);
+            yield return new WaitForSeconds(tk.fullChargeTime + 0.2f);
+            Assert.AreEqual(1f, powers.Charge, 0.01f, "a full circle");
+            pad.ReleaseAll();
+            yield return null;
+            yield return null;
+            Assert.AreEqual("slam", powers.LastResult, "a full charge on the floater slams it");
+            yield return WaitUntil(() => dummyB.GetComponent<TelekinesisLift>() == null, 2f);
+            Assert.AreEqual(y0, dummyB.transform.position.y, 0.05f, "back on the floor");
+            Assert.AreEqual(hp0 - tk.baseDamage, target.CurrentHealth, 0.5f, "the slam damage");
+            Assert.AreEqual(nalconBefore - tk.nalconCost, stats.Nalcon, 0.5f, "the slam costs a full charge");
+        }
+
+        [UnityTest]
+        public IEnumerator Telekinesis_AnotherEnemysBullet_DropsTheFloater_Unhurt()
         {
             powers.Select(PowerKind.Telekinesis);
             PowerDefinition tk = powers.Selected;
@@ -199,12 +231,49 @@ namespace GlorifiedBody.Tests.PlayMode
             float hp0 = target.CurrentHealth;
             float y0 = dummyB.transform.position.y;
             powers.FireAt(tk, 1f, dummyB);
-            yield return new WaitForSeconds(tk.liftSeconds + 0.2f);
-            Assert.Greater(dummyB.transform.position.y, y0 + tk.liftHeight * 0.8f, "lifted");
-            Assert.AreEqual(hp0, target.CurrentHealth, "no damage while in the air");
-            yield return new WaitForSeconds(tk.holdSeconds + 0.5f);
-            Assert.AreEqual(y0, dummyB.transform.position.y, 0.05f, "back on the floor");
-            Assert.AreEqual(hp0 - tk.baseDamage, target.CurrentHealth, 0.5f, "the slam damage");
+            yield return new WaitForSeconds(tk.liftSeconds + 0.3f);
+            TelekinesisLift lift = dummyB.GetComponent<TelekinesisLift>();
+            Assert.IsNotNull(lift, "it floats");
+
+            Vector3 origin = dummyA.transform.position + Vector3.up * 1.3f;
+            Vector3 aim = dummyB.transform.position + Vector3.up * 1.0f;
+            EnemyProjectile.Launch(origin, aim - origin, 20f, 15f, dummyA.gameObject, "test_bullet");
+            yield return WaitUntil(() => lift == null || lift.Ending == "released", 2f);
+            Assert.IsTrue(lift == null || lift.Ending == "released", "the enemy's bullet releases it");
+            yield return WaitUntil(() => dummyB.GetComponent<TelekinesisLift>() == null, 2f);
+            Assert.AreEqual(y0, dummyB.transform.position.y, 0.05f, "it dropped to the floor");
+            Assert.AreEqual(hp0, target.CurrentHealth, 0.01f, "released with no damage");
+            Assert.IsNull(powers.HeldLift, "she holds nothing");
+        }
+
+        [UnityTest]
+        public IEnumerator MkBoost_AtHalfABarOrMore_DoublesTheDamage_AndTheChargeSpeed()
+        {
+            powers.Select(PowerKind.Blast);
+            PowerDefinition blast = powers.Selected;
+            Health target = dummyA.GetComponent<Health>();
+            PlayerHud hud = UnityEngine.Object.FindFirstObjectByType<PlayerHud>();
+
+            stats.DebugSet(45f, 0f);
+            yield return null;
+            Assert.IsFalse(powers.IsBoosted, "under half a bar: no boost");
+            Assert.IsFalse(hud.BoostShown, "no x2 on the HUD");
+
+            stats.DebugSet(100f, 0f);
+            yield return null;
+            Assert.IsTrue(powers.IsBoosted, "a full bar: the boost");
+            Assert.IsTrue(hud.BoostShown, "x2 on the HUD");
+            float hp0 = target.CurrentHealth;
+            pad.SetHeld(InputManager.GameAction.Charge, true);
+            yield return new WaitForSeconds(blast.fullChargeTime * 0.5f + 0.15f);
+            Assert.AreEqual(1f, powers.Charge, 0.01f, "the circle fills in half the time");
+            pad.ReleaseAll();
+            yield return null;
+            yield return null;
+            Assert.AreEqual("fired", powers.LastResult);
+            Assert.AreEqual(2f, powers.LastScale, 0.01f, "the boost doubles the damage");
+            float dealt = hp0 - target.CurrentHealth;
+            Assert.AreEqual(Mathf.Min(hp0, blast.baseDamage * 2f), dealt, 0.5f, "2x damage (up to the HP it had)");
         }
 
         [UnityTest]
@@ -220,9 +289,9 @@ namespace GlorifiedBody.Tests.PlayMode
             yield return null;
             BurningStatus burn = dummyB.GetComponent<BurningStatus>();
             Assert.IsTrue(burn == null || !burn.IsBurning, "a part charge does not ignite");
-            Assert.AreEqual(hp0 - fire.baseDamage * 0.6f, target.CurrentHealth, 0.01f, "a part charge is a heat hit");
+            Assert.AreEqual(hp0, target.CurrentHealth, 0.01f, "a part charge does no damage (Bruno, 2026-10-22: it only stuns)");
             yield return new WaitForSeconds(BurningStatus.TickSeconds + 0.2f);
-            Assert.AreEqual(hp0 - fire.baseDamage * 0.6f, target.CurrentHealth, 0.01f, "no burn ticks after a part charge");
+            Assert.AreEqual(hp0, target.CurrentHealth, 0.01f, "no burn ticks after a part charge");
 
             float hp1 = target.CurrentHealth;
             powers.FireAt(fire, 1f, dummyB);
@@ -246,7 +315,6 @@ namespace GlorifiedBody.Tests.PlayMode
             // Bruno, 2026-10-20: in the air, the next attack press throws it into another enemy. Both take the damage.
             powers.Select(PowerKind.Telekinesis);
             PowerDefinition tk = powers.Selected;
-            Assert.AreEqual(1.5f, tk.holdSeconds, 0.01f, "the hold is the launch window, 1.5 s");
             Health a = dummyA.GetComponent<Health>();
             Health b = dummyB.GetComponent<Health>();
             float hpA = a.CurrentHealth;
@@ -260,9 +328,9 @@ namespace GlorifiedBody.Tests.PlayMode
             pad.Tap(InputManager.GameAction.Charge);
             yield return null;
             yield return null;
-            Assert.AreEqual("launch:Dummy_B", powers.LastResult, "the press throws it at the other dummy");
-            Assert.IsFalse(powers.IsCharging, "the press does not start a charge");
-            Assert.AreEqual(0f, powers.Charge, 0.001f, "no charge");
+            Assert.AreEqual("launch:Dummy_B", powers.LastResult, "a short press throws it at the other dummy");
+            Assert.IsFalse(powers.IsCharging, "the press ended");
+            Assert.AreEqual(0f, powers.Charge, 0.001f, "the circle reset");
 
             yield return WaitUntil(() => dummyA.GetComponent<TelekinesisLift>() == null, 3f);
             Assert.IsTrue(dummyA.GetComponent<TelekinesisLift>() == null, "the throw ended");
@@ -296,7 +364,6 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.AreEqual(turned, swung, 8f, "the held enemy swung around her by the same angle");
             Assert.AreEqual(before.magnitude, after.magnitude, 0.2f, "at the same distance");
             Assert.IsNotNull(powers.HeldLift, "still in the air");
-            yield return WaitUntil(() => dummyA.GetComponent<TelekinesisLift>() == null, 3f);
         }
 
         [UnityTest]
@@ -312,7 +379,7 @@ namespace GlorifiedBody.Tests.PlayMode
             powers.FireAt(fire, 0.5f, dummyA);
             yield return null;
             Assert.AreEqual(DummyShooter.State.Staggered, shooter.Current, "the flash breaks its aim");
-            Assert.AreEqual(hp0 - fire.baseDamage * 0.5f, target.CurrentHealth, 0.01f, "the heat hit");
+            Assert.AreEqual(hp0, target.CurrentHealth, 0.01f, "a part charge does no damage, it only stuns");
             BurningStatus burn = dummyA.GetComponent<BurningStatus>();
             Assert.IsTrue(burn == null || !burn.IsBurning, "no burn");
         }
@@ -423,6 +490,7 @@ namespace GlorifiedBody.Tests.PlayMode
         {
             // Bruno, 2026-10-20: 6 per second was too quick. 2 per second (PROPOSED): a full bar in 50 s.
             Assert.AreEqual(2f, stats.Outfit.nalconRegenPerSecond, 0.01f, "the nude outfit recharges 2 nalcon per second (the asset must carry the new number)");
+            stats.RegenPaused = false;
             stats.DebugSet(50f, 0f);
             yield return new WaitForSeconds(1f);
             Assert.That(stats.Nalcon, Is.InRange(51.5f, 52.7f), "the nude outfit recharges nalcon, slowly");
@@ -521,6 +589,7 @@ namespace GlorifiedBody.Tests.PlayMode
         {
             // Bruno, 2026-10-20: a full SHORT bar does not drain. Only a short or a drug empties it.
             Assert.Greater(stats.Outfit.shortDecayPerSecond, 0f, "the nude outfit drains a part-full bar");
+            stats.RegenPaused = false; // the drain runs with the regen (the setup pauses both)
             stats.DebugSet(100f, 90f);
             yield return new WaitForSeconds(1f);
             Assert.Less(stats.Short, 89.5f, "a part-full bar drains");

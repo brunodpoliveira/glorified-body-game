@@ -51,6 +51,9 @@ namespace GlorifiedBody.UI
         private PsychicScanner scanner;
         private readonly List<Entry> entries = new List<Entry>();
         private int openFrame = -1;
+        private int pendingDrug = -1; // the drug the question "Use the ...?" is about (Bruno, 2026-10-22: ask first)
+
+        public bool AskingDrug => pendingDrug >= 0;
 
         public Canvas Canvas => canvas;
         public bool IsOpen => root != null && root.activeSelf;
@@ -99,6 +102,12 @@ namespace GlorifiedBody.UI
             if (ReaderOpen)
             {
                 if (back || use || toggle) readerPanel.SetActive(false);
+                return;
+            }
+            if (AskingDrug)
+            {
+                if (use) Act();
+                else if (back || toggle) { pendingDrug = -1; Select(Selected); }
                 return;
             }
             if (toggle || back)
@@ -199,6 +208,7 @@ namespace GlorifiedBody.UI
                 return;
             }
             Selected = (index % entries.Count + entries.Count) % entries.Count;
+            pendingDrug = -1;
             for (int i = 0; i < entries.Count && i < cells.Count; i++)
             {
                 Outline outline = cells[i].GetComponent<Outline>();
@@ -219,6 +229,15 @@ namespace GlorifiedBody.UI
             Entry e = entries[Selected];
             if (e.Drug.HasValue)
             {
+                if (pendingDrug != (int)e.Drug.Value)
+                {
+                    // The first press asks (Bruno, 2026-10-22): "Use the RED?".
+                    pendingDrug = (int)e.Drug.Value;
+                    wordsText.text = $"Use the {e.Name.ToLowerInvariant()}?";
+                    keysText.text = $"{Key(InputManager.GameAction.Interact)}  yes      {Key(InputManager.GameAction.Back)}  no";
+                    return "ask:" + e.Drug.Value;
+                }
+                pendingDrug = -1;
                 bool used = powers != null && powers.UseDrug(e.Drug.Value);
                 Rebuild();
                 Select(Selected);

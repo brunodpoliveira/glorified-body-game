@@ -187,6 +187,9 @@ namespace GlorifiedBody.Enemy
             Transform root = hit.transform.root;
             RunTelemetry.Event("projectile_impact", $"{killerId}>{hit.transform.name}@{hit.point.x:0.0},{hit.point.y:0.0},{hit.point.z:0.0}");
             bool isPlayer = hit.transform.CompareTag("Player") || (root != null && root.CompareTag("Player"));
+            // An enemy bullet that hits a floater drops it, unhurt (Bruno, 2026-10-22).
+            TelekinesisLift floater = !returned && !isPlayer ? hit.transform.GetComponentInParent<TelekinesisLift>() : null;
+            if (floater != null && floater.CanLaunch) floater.Release(attacker);
             if (returned && !isPlayer)
             {
                 Health enemy = hit.transform.GetComponentInParent<Health>();

@@ -304,7 +304,10 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.IsFalse(screen.ReaderOpen);
             yield return Press(InputManager.GameAction.TurnRight);
             Assert.AreEqual(1, screen.Selected, "the next cell");
-            yield return Press(InputManager.GameAction.Interact); // use one red
+            yield return Press(InputManager.GameAction.Interact); // "Use the red?"
+            Assert.IsTrue(screen.AskingDrug, "it asks first (Bruno, 2026-10-22)");
+            Assert.AreEqual(2, tank.GetComponent<DrugInventory>().Count(GlorifiedBody.Player.DrugType.Red), "nothing used yet");
+            yield return Press(InputManager.GameAction.Interact); // yes
             Assert.AreEqual(1, tank.GetComponent<DrugInventory>().Count(GlorifiedBody.Player.DrugType.Red), "a drug used from the inventory");
 
             yield return Press(InputManager.GameAction.Inventory);
