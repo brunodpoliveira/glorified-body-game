@@ -23,6 +23,10 @@ namespace GlorifiedBody.Automation
         public static FrameRecorder Instance { get; private set; }
         public static bool Enabled => BotArgs.Record && !string.IsNullOrEmpty(BotArgs.RunDir);
 
+        /// <summary>A bot can name the overlay canvases of every frame (the tutorial: the prompt, the HUD, the
+        /// item questions). Null: the player HUD only.</summary>
+        public static Func<List<Canvas>> OverlayProvider;
+
         private readonly List<string> manifest = new List<string>();
         private string clip;
         private string dir;
@@ -81,31 +85,40 @@ namespace GlorifiedBody.Automation
 
         // LateUpdate, not WaitForEndOfFrame: the end-of-frame callback is not reliable in batch mode. A manual
         // camera render here shows the state of this frame, after every Update.
+        /// <summary>A guard: a clip ends by itself after 60 s of video. A bot that waits on the game clock while the
+        /// game pauses would otherwise save the same frame forever (2026-10-23: 12,647 frames, 22 GB).</summary>
+        public const int MaxFramesPerClip = Fps * 60;
+
         private void LateUpdate()
         {
             if (clip == null) return;
+            if (frame >= MaxFramesPerClip)
+            {
+                Debug.LogWarning($"[Recorder] {clip} reached {MaxFramesPerClip} frames: the clip ends here");
+                End();
+                return;
+            }
             Camera cam = Camera.main;
             if (cam == null) return;
-            Canvas canvas = overlay;
-            if (canvas == null)
+            var canvases = new List<Canvas>();
+            if (overlay != null) canvases.Add(overlay);
+            else if (OverlayProvider != null) canvases.AddRange(OverlayProvider() ?? new List<Canvas>());
+            else
             {
                 if (hud == null) hud = FindFirstObjectByType<PlayerHud>();
-                canvas = hud != null ? hud.Canvas : null;
+                if (hud != null && hud.Canvas != null && hud.Canvas.gameObject.activeInHierarchy) canvases.Add(hud.Canvas);
             }
 
-            RenderMode oldMode = RenderMode.ScreenSpaceOverlay;
-            Camera oldCamera = null;
-            float oldPlane = 0f;
-            if (canvas != null)
+            var saved = new List<(Canvas canvas, RenderMode mode, Camera camera, float plane)>();
+            foreach (Canvas canvas in canvases)
             {
-                oldMode = canvas.renderMode;
-                oldCamera = canvas.worldCamera;
-                oldPlane = canvas.planeDistance;
+                if (canvas == null || canvas.renderMode != RenderMode.ScreenSpaceOverlay) continue;
+                saved.Add((canvas, canvas.renderMode, canvas.worldCamera, canvas.planeDistance));
                 canvas.renderMode = RenderMode.ScreenSpaceCamera;
                 canvas.worldCamera = cam;
                 canvas.planeDistance = cam.nearClipPlane + 0.05f;
-                Canvas.ForceUpdateCanvases();
             }
+            if (saved.Count > 0) Canvas.ForceUpdateCanvases();
             try
             {
                 frame++;
@@ -117,11 +130,11 @@ namespace GlorifiedBody.Automation
             }
             finally
             {
-                if (canvas != null)
+                foreach (var s in saved)
                 {
-                    canvas.renderMode = oldMode;
-                    canvas.worldCamera = oldCamera;
-                    canvas.planeDistance = oldPlane;
+                    s.canvas.renderMode = s.mode;
+                    s.canvas.worldCamera = s.camera;
+                    s.canvas.planeDistance = s.plane;
                 }
             }
         }

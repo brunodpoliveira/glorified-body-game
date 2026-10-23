@@ -62,13 +62,13 @@ namespace GlorifiedBody.Automation
                     yield return null;
                     yield return null;
                     c.Pad.Tap(InputManager.GameAction.Dodge);
-                    yield return new WaitForSecondsRealtime(0.35f);
+                    yield return BotClock.Wait(0.35f);
                     c.Pad.ReleaseAll();
-                    yield return new WaitForSecondsRealtime(0.6f);
+                    yield return BotClock.Wait(0.6f);
                     break;
                 case "switch":
                     c.Pad.Tap(InputManager.GameAction.SwitchTarget);
-                    yield return new WaitForSecondsRealtime(0.2f);
+                    yield return BotClock.Wait(0.2f);
                     break;
                 case "blast":
                     c.Pad.Tap(InputManager.GameAction.PowerBlast);
@@ -84,11 +84,11 @@ namespace GlorifiedBody.Automation
                     c.Pad.Tap(InputManager.GameAction.PowerTelekinesis);
                     yield return null;
                     yield return HoldChargeFull(c);
-                    yield return new WaitForSecondsRealtime(0.25f);
+                    yield return BotClock.Wait(0.25f);
                     LockOnTargetable other = NearestLivingTarget(c.Lucy.position, c.Powers != null && c.Powers.HeldLift != null ? c.Powers.HeldLift.transform : null);
                     if (other != null) yield return TurnTo(c, other.transform.position, 8f, 1.2f);
                     c.Pad.Tap(InputManager.GameAction.Charge);
-                    yield return new WaitForSecondsRealtime(0.3f);
+                    yield return BotClock.Wait(0.3f);
                     break;
                 case "slam":
                     c.Pad.Tap(InputManager.GameAction.PowerTelekinesis);
@@ -96,10 +96,10 @@ namespace GlorifiedBody.Automation
                     if (c.Powers == null || c.Powers.HeldLift == null)
                     {
                         yield return HoldChargeFull(c); // lift the lock target
-                        yield return new WaitForSecondsRealtime(0.5f);
+                        yield return BotClock.Wait(0.5f);
                     }
                     yield return HoldChargeFull(c); // a full circle on the floater: the slam
-                    yield return new WaitForSecondsRealtime(0.6f);
+                    yield return BotClock.Wait(0.6f);
                     break;
                 case "prop":
                 {
@@ -112,7 +112,7 @@ namespace GlorifiedBody.Automation
                         for (int i = 0; i < 6 && lockOn != null && (lockOn.CurrentTarget == null || !lockOn.CurrentTarget.IsProp); i++)
                         {
                             c.Pad.Tap(InputManager.GameAction.SwitchTarget);
-                            yield return new WaitForSecondsRealtime(0.15f);
+                            yield return BotClock.Wait(0.15f);
                         }
                         if (lockOn == null || lockOn.CurrentTarget == null || !lockOn.CurrentTarget.IsProp)
                         {
@@ -122,13 +122,13 @@ namespace GlorifiedBody.Automation
                         // A part charge lifts it for less MK: the slam before may have emptied the bar.
                         yield return WaitForNalcon(c, 12f, 12f);
                         yield return HoldCharge(c, 0.35f);
-                        yield return new WaitForSecondsRealtime(0.5f);
+                        yield return BotClock.Wait(0.5f);
                     }
                     if (c.Powers == null || c.Powers.HeldLift == null) break;
                     LockOnTargetable dummy = NearestLivingTarget(c.Lucy.position, c.Powers.HeldLift.transform);
                     if (dummy != null) yield return TurnTo(c, dummy.transform.position, 8f, 1.5f);
                     c.Pad.Tap(InputManager.GameAction.Charge);
-                    yield return new WaitForSecondsRealtime(0.6f);
+                    yield return BotClock.Wait(0.6f);
                     c.Moment?.Invoke("prop_thrown");
                     break;
                 }
@@ -146,10 +146,10 @@ namespace GlorifiedBody.Automation
                         yield return WalkTo(c, capsule.Point, run: false, radius: 0.8f);
                         yield return TakeFacing(c, capsule);
                     }
-                    yield return new WaitForSecondsRealtime(0.2f);
+                    yield return BotClock.Wait(0.2f);
                     int before = c.Drugs != null ? c.Drugs.Count(DrugType.Nalcon) : -1;
                     c.Pad.Tap(InputManager.GameAction.UseDrug);
-                    yield return new WaitForSecondsRealtime(0.2f);
+                    yield return BotClock.Wait(0.2f);
                     Debug.Log($"[TutorialDrive] capsule: at {c.Lucy.position}, capsule {(GameObject.Find("Capsule") != null ? "still there" : "taken")}, nalcon drugs before the use {before}, result '{c.Powers?.LastResult}'.");
                     break;
                 }
@@ -160,13 +160,13 @@ namespace GlorifiedBody.Automation
                     if (log == null) break;
                     yield return TurnTo(c, log.Point, 4f);
                     c.Pad.Tap(InputManager.GameAction.Interact); // "Take it?"
-                    yield return new WaitForSecondsRealtime(0.3f);
+                    yield return BotClock.Wait(0.3f);
                     c.Moment?.Invoke("log_confirm");
                     c.Pad.Tap(InputManager.GameAction.Interact); // take: the page opens
-                    yield return new WaitForSecondsRealtime(0.5f);
+                    yield return BotClock.Wait(0.5f);
                     c.Moment?.Invoke("log_reader");
                     c.Pad.Tap(InputManager.GameAction.Interact); // close the page
-                    yield return new WaitForSecondsRealtime(0.3f);
+                    yield return BotClock.Wait(0.3f);
                     break;
                 }
                 case "scan_image":
@@ -187,34 +187,34 @@ namespace GlorifiedBody.Automation
                     if (c.Director.Door == null) break;
                     yield return TurnTo(c, c.Director.Door.Point, 4f);
                     c.Pad.Tap(InputManager.GameAction.Interact); // "Use the test key?"
-                    yield return new WaitForSecondsRealtime(0.3f);
+                    yield return BotClock.Wait(0.3f);
                     c.Moment?.Invoke("door_confirm");
                     c.Pad.Tap(InputManager.GameAction.Interact); // yes: the leaf slides
-                    yield return new WaitForSecondsRealtime(1.2f);
+                    yield return BotClock.Wait(1.2f);
                     c.Moment?.Invoke("door_open");
                     break;
                 }
                 case "inventory":
                     c.Pad.Tap(InputManager.GameAction.Inventory); // the room stops
-                    yield return new WaitForSecondsRealtime(0.4f);
+                    yield return BotClock.Wait(0.4f);
                     c.Moment?.Invoke("inventory");
                     c.Pad.Tap(InputManager.GameAction.TurnRight);
-                    yield return new WaitForSecondsRealtime(0.3f);
+                    yield return BotClock.Wait(0.3f);
                     c.Moment?.Invoke("inventory_next");
                     c.Pad.Tap(InputManager.GameAction.Inventory); // closed
-                    yield return new WaitForSecondsRealtime(0.3f);
+                    yield return BotClock.Wait(0.3f);
                     break;
                 case "scan_video":
                     yield return ScanAt(c, c.Director.MonitorsPoint, c.Director.MonitorsScanId, -1f);
                     break;
                 case "short":
                     c.Pad.Tap(InputManager.GameAction.Charge);
-                    yield return new WaitForSecondsRealtime(1.2f);
+                    yield return BotClock.Wait(1.2f);
                     c.Pad.Tap(InputManager.GameAction.UseDrug);
-                    yield return new WaitForSecondsRealtime(0.3f);
+                    yield return BotClock.Wait(0.3f);
                     break;
                 default:
-                    yield return new WaitForSecondsRealtime(0.5f);
+                    yield return BotClock.Wait(0.5f);
                     break;
             }
         }
@@ -251,8 +251,8 @@ namespace GlorifiedBody.Automation
             {
                 int i = (int)action;
                 if (held[i] == wanted) return;
-                if (wanted && Time.realtimeSinceStartup - releasedAt[i] < ReleaseHold) return;
-                if (!wanted) releasedAt[i] = Time.realtimeSinceStartup;
+                if (wanted && BotClock.Now - releasedAt[i] < ReleaseHold) return;
+                if (!wanted) releasedAt[i] = BotClock.Now;
                 held[i] = wanted;
                 pad.SetHeld(action, wanted);
             }
@@ -263,7 +263,7 @@ namespace GlorifiedBody.Automation
                 {
                     if (!held[i]) continue;
                     held[i] = false;
-                    releasedAt[i] = Time.realtimeSinceStartup;
+                    releasedAt[i] = BotClock.Now;
                 }
                 pad.ReleaseAll();
             }
@@ -287,21 +287,21 @@ namespace GlorifiedBody.Automation
             yield return TurnTo(c, target.FocusPoint, 4f);
             PsychicScanner scanner = c.Lucy.GetComponent<PsychicScanner>();
             c.Pad.Tap(InputManager.GameAction.Scan);
-            yield return new WaitForSecondsRealtime(0.2f);
+            yield return BotClock.Wait(0.2f);
             if (holdSeconds >= 0f)
             {
-                yield return new WaitForSecondsRealtime(holdSeconds);
+                yield return BotClock.Wait(holdSeconds);
                 c.Moment?.Invoke("scan_" + scanId);
                 c.Pad.Tap(InputManager.GameAction.Scan);
-                yield return new WaitForSecondsRealtime(0.3f);
+                yield return BotClock.Wait(0.3f);
             }
             else
             {
-                float t0 = Time.realtimeSinceStartup;
+                float t0 = BotClock.Now;
                 bool shot = false;
-                while (scanner != null && scanner.IsViewing && Time.realtimeSinceStartup - t0 < 8f)
+                while (scanner != null && scanner.IsViewing && BotClock.Now - t0 < 8f)
                 {
-                    if (!shot && Time.realtimeSinceStartup - t0 > 1.5f)
+                    if (!shot && BotClock.Now - t0 > 1.5f)
                     {
                         c.Moment?.Invoke("scan_" + scanId);
                         shot = true;
@@ -326,9 +326,9 @@ namespace GlorifiedBody.Automation
         {
             yield return TurnTo(c, pickup.Point, 4f);
             c.Pad.Tap(InputManager.GameAction.Interact);
-            yield return new WaitForSecondsRealtime(0.3f);
+            yield return BotClock.Wait(0.3f);
             c.Pad.Tap(InputManager.GameAction.Interact);
-            yield return new WaitForSecondsRealtime(0.3f);
+            yield return BotClock.Wait(0.3f);
         }
 
         public static Scannable FindScannable(string scanId)
@@ -343,10 +343,10 @@ namespace GlorifiedBody.Automation
         /// <summary>Turns her toward a point with the turn keys, within the tolerance in degrees.</summary>
         public static IEnumerator TurnTo(Context c, Vector3 point, float toleranceDegrees = 6f, float timeout = 5f)
         {
-            float t0 = Time.realtimeSinceStartup;
+            float t0 = BotClock.Now;
             var hand = new KeyHand(c.Pad);
             int turning = 0;
-            while (Time.realtimeSinceStartup - t0 < timeout)
+            while (BotClock.Now - t0 < timeout)
             {
                 float signed = SignedYawTo(c, point);
                 if (turning == 0 && Mathf.Abs(signed) <= toleranceDegrees) break;
@@ -363,11 +363,11 @@ namespace GlorifiedBody.Automation
         /// <summary>Walks (or runs) her to a point: the turn keys keep her aimed, the forward key moves her, until the point is within the radius.</summary>
         public static IEnumerator WalkTo(Context c, Vector3 point, bool run, float radius, float timeout = 14f)
         {
-            float t0 = Time.realtimeSinceStartup;
+            float t0 = BotClock.Now;
             Vector3 start = c.Lucy.position;
             var hand = new KeyHand(c.Pad);
             int turning = 0;
-            while (Time.realtimeSinceStartup - t0 < timeout && Flat(c.Lucy.position, point) > radius)
+            while (BotClock.Now - t0 < timeout && Flat(c.Lucy.position, point) > radius)
             {
                 float signed = SignedYawTo(c, point);
                 // Start a turn past 10 degrees, keep it until 2 degrees (no flutter around one threshold).
@@ -405,16 +405,16 @@ namespace GlorifiedBody.Automation
         public static IEnumerator WaitForNalcon(Context c, float amount, float timeout)
         {
             PsychicStats stats = c.Lucy.GetComponent<PsychicStats>();
-            float t0 = Time.realtimeSinceStartup;
-            while (stats != null && stats.Nalcon < amount && Time.realtimeSinceStartup - t0 < timeout) yield return null;
+            float t0 = BotClock.Now;
+            while (stats != null && stats.Nalcon < amount && BotClock.Now - t0 < timeout) yield return null;
         }
 
         /// <summary>Holds the attack until the circle reaches the level, then releases.</summary>
         public static IEnumerator HoldCharge(Context c, float level, float timeout = 5f)
         {
-            float t0 = Time.realtimeSinceStartup;
+            float t0 = BotClock.Now;
             c.Pad.SetHeld(InputManager.GameAction.Charge, true);
-            while (Time.realtimeSinceStartup - t0 < timeout && (c.Powers == null || c.Powers.Charge < level)) yield return null;
+            while (BotClock.Now - t0 < timeout && (c.Powers == null || c.Powers.Charge < level)) yield return null;
             c.Pad.SetHeld(InputManager.GameAction.Charge, false);
             yield return null;
             yield return null;
@@ -423,9 +423,9 @@ namespace GlorifiedBody.Automation
         /// <summary>Holds the attack until the circle is full, then releases (the power fires at the lock).</summary>
         public static IEnumerator HoldChargeFull(Context c, float timeout = 5f)
         {
-            float t0 = Time.realtimeSinceStartup;
+            float t0 = BotClock.Now;
             c.Pad.SetHeld(InputManager.GameAction.Charge, true);
-            while (Time.realtimeSinceStartup - t0 < timeout && (c.Powers == null || c.Powers.Charge < 0.999f)) yield return null;
+            while (BotClock.Now - t0 < timeout && (c.Powers == null || c.Powers.Charge < 0.999f)) yield return null;
             yield return null;
             c.Pad.SetHeld(InputManager.GameAction.Charge, false);
             yield return null;
@@ -435,10 +435,10 @@ namespace GlorifiedBody.Automation
         /// <summary>Waits for a bullet near her chest and presses the defend key: the catch.</summary>
         public static IEnumerator CatchOneBullet(Context c, float timeout)
         {
-            float t0 = Time.realtimeSinceStartup;
+            float t0 = BotClock.Now;
             int bulletsSeen = 0, taps = 0;
             float closest = float.MaxValue;
-            while (Time.realtimeSinceStartup - t0 < timeout)
+            while (BotClock.Now - t0 < timeout)
             {
                 if (c.Powers != null && c.Powers.LastResult == "catch") yield break;
                 Vector3 chest = c.Lucy.position + Vector3.up * Body.ChestHeight;

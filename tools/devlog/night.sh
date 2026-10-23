@@ -40,6 +40,12 @@ exec > >(tee -a "$log") 2>&1
 echo "[night] $(date -Is) episode $ep version v$version -> $out"
 
 rc=0
+# The narration needs the RFab backend. "fetch failed" from narrate.js meant it was down (2026-10-23).
+base="${BASE:-http://localhost:3000}"
+if [ "$(curl -s -m 5 -o /dev/null -w '%{http_code}' "$base/status")" != 200 ]; then
+  echo "[night] ERROR: the RFab backend at $base does not answer. Start it: cd rfab-backend && npm start"
+  exit 3
+fi
 echo "[night] visuals catalog"
 python3 -I "$HERE/catalog.py" --copy "$SCRIPTS" | tail -1
 

@@ -138,12 +138,15 @@ namespace GlorifiedBody.Automation
                 bool bakedOk = dressing == LookDressing.Greybox || dressing == LookDressing.RealTime ? !look.BakedLightOn : look.BakedLightOn == look.HasBakedLight;
                 Record($"dressing_{tag}", look.Dressing == dressing && look.RendererIndex == wantedRenderer && bakedOk, $"renderer={look.RendererIndex} dressed={look.IsDressed} bakedOn={look.BakedLightOn}");
 
+                // On video: a tour of every camera in this dressing, 1.5 s each.
+                if (FrameRecorder.Enabled) FrameRecorder.Ensure().Begin($"{level.ToLowerInvariant()}_{tag}_tour");
                 foreach (FixedCamera fixedCamera in cameras)
                 {
                     // The cut marks the plate dirty; the director's next Update captures it for the new camera.
                     director.Override(fixedCamera);
                     yield return null;
                     yield return null;
+                    if (FrameRecorder.Enabled) yield return new WaitForSeconds(1.5f);
                     string file = Path.Combine(shotsDir, $"look_{tag}_{fixedCamera.cameraName.ToLowerInvariant()}.png");
                     bool saved = ShotRenderer.Render(Camera.main, file, ShotWidth, ShotHeight, useTargetTexture: true);
                     bool plateOk = dressing != LookDressing.Plate || (look.Plate != null && look.PlateCameraName == fixedCamera.cameraName);
@@ -152,10 +155,12 @@ namespace GlorifiedBody.Automation
 
                 // Three seconds of running from her start under the zone cameras: the characters move, the
                 // cameras cut where the zones say, the plate captures again on each cut.
+                if (FrameRecorder.Instance != null) FrameRecorder.Instance.End();
                 director.Override(null);
                 tank.Teleport(home, homeYaw);
                 yield return null;
                 yield return null;
+                if (FrameRecorder.Enabled) FrameRecorder.Ensure().Begin($"{level.ToLowerInvariant()}_{tag}_run");
                 int cutsBefore = cuts, capturesBefore = look.PlateCaptures;
                 pad.SetHeld(InputManager.GameAction.Forward, true);
                 pad.SetHeld(InputManager.GameAction.Run, true);
@@ -163,6 +168,11 @@ namespace GlorifiedBody.Automation
                 pad.ReleaseAll();
                 yield return null;
                 yield return null;
+                if (FrameRecorder.Instance != null)
+                {
+                    yield return new WaitForSeconds(0.8f);
+                    FrameRecorder.Instance.End();
+                }
                 string walkFile = Path.Combine(shotsDir, $"look_{tag}_walk.png");
                 bool walkSaved = ShotRenderer.Render(Camera.main, walkFile, ShotWidth, ShotHeight, useTargetTexture: true);
                 float ran = Vector3.Distance(home, player.transform.position);
@@ -190,6 +200,12 @@ namespace GlorifiedBody.Automation
                     SettingsManager.Instance.LookQuality = quality;
                     yield return null;
                     yield return null;
+                    if (FrameRecorder.Enabled)
+                    {
+                        FrameRecorder.Ensure().Begin($"{level.ToLowerInvariant()}_option_{qualityTag}");
+                        yield return new WaitForSeconds(2f);
+                        FrameRecorder.Instance.End();
+                    }
                     string qualityFile = Path.Combine(shotsDir, $"look_quality_{qualityTag}.png");
                     bool qualitySaved = ShotRenderer.Render(Camera.main, qualityFile, ShotWidth, ShotHeight, useTargetTexture: true);
                     Record($"quality_{qualityTag}", qualitySaved && look.RendererIndex == LookQualityApplier.RendererIndexFor(quality), $"saved={qualitySaved} renderer={look.RendererIndex}");
@@ -204,6 +220,7 @@ namespace GlorifiedBody.Automation
         {
             if (finished) return;
             finished = true;
+            if (FrameRecorder.Instance != null) FrameRecorder.Instance.End();
             bool pass = steps.Count > 0 && steps.All(s => s.ok);
             var sb = new StringBuilder();
             sb.Append("{\n  \"bot\": \"look\",\n  \"pass\": ").Append(pass ? "true" : "false").Append(",\n  \"steps\": [\n");

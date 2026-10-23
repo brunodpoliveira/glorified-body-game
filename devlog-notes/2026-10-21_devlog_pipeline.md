@@ -72,3 +72,18 @@ ep01 long 7:14, short 1:05. The whole night: about 54,000 tokens.
 markers), `Assets/_Game/Scripts/Editor/Automation/PlaythroughRunner.cs` (`-gbRecord`), `tools/unity.sh`
 (`record` mode), `.claude/skills/devlog-night/SKILL.md`. Private, outside git:
 `~/glorified-body-renders/devlog/voices.json`.
+
+## Episodes 2 and 3 (2026-10-23, 00:30 to 02:10)
+
+- The tutorial bot and the look bot record clips now: one clip per tutorial step with the prompt and the HUD
+  (`FrameRecorder.OverlayProvider`), a camera tour and a run for each dressing in both look rooms, the LOOK option.
+  `BotClock` (real time in a normal run, 1/30 s per frame in a record run) replaces the real-time waits of the
+  tutorial drive, so its timing holds on video. The other session's tutorial bot ran it in real time: 21/21.
+- Fault found: the hold after the last tutorial step used the game clock, and the game pauses at "complete", so
+  the clip never ended (12,647 frames, 22 GB). Fixed: the hold uses `BotClock.Wait`, and `FrameRecorder` ends any
+  clip at 60 s. The 18 other step clips were good. No script uses step 19.
+- Four record runs, all CLEAN: training room 7 clips (with the models), tutorial 18, LookTest 10, LookTest2 10.
+- The first render failed at the narration: the local backend was down ("fetch failed"). `night.sh` now checks
+  `/status` first and stops with a clear message.
+- Renders: ep02 long 7:02, short 1:10. ep03 long 6:34, short 1:09. Narration 37,388 tokens. Packets in
+  `~/glorified-body-renders/devlog/ep02/v1/` and `ep03/v1/`.

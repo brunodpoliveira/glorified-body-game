@@ -82,12 +82,12 @@ namespace GlorifiedBody.Automation
 
         private IEnumerator Run()
         {
-            yield return new WaitForSecondsRealtime(1f);
+            yield return BotClock.Wait(1f);
             GameManager gm = GameManager.Instance;
             if (gm != null) gm.LoadLevel(TutorialDirector.SceneName); else SceneManager.LoadScene(TutorialDirector.SceneName);
-            float t0 = Time.realtimeSinceStartup;
-            while (SceneManager.GetActiveScene().name != TutorialDirector.SceneName && Time.realtimeSinceStartup - t0 < 30f) yield return null;
-            yield return new WaitForSecondsRealtime(0.5f);
+            float t0 = BotClock.Now;
+            while (SceneManager.GetActiveScene().name != TutorialDirector.SceneName && BotClock.Now - t0 < 30f) yield return null;
+            yield return BotClock.Wait(0.5f);
             yield return new WaitForSeconds(0.3f);
 
             TutorialDirector director = TutorialDirector.Instance;
@@ -100,6 +100,7 @@ namespace GlorifiedBody.Automation
             TutorialDrive.Context context = TutorialDrive.Context.From(pad, director);
             context.Moment = moment => ShotWithOverlays(Path.Combine(BotArgs.RunDir, "shots", $"tutorial_moment_{moment}.png"));
             string shotsDir = Path.Combine(BotArgs.RunDir, "shots");
+            if (FrameRecorder.Enabled) FrameRecorder.OverlayProvider = GameOverlays;
 
             int guard = 0;
             while (!director.IsComplete && guard++ < 40)
@@ -109,21 +110,32 @@ namespace GlorifiedBody.Automation
                 yield return null;
                 string file = Path.Combine(shotsDir, $"tutorial_{index + 1:00}_{step.Id}.png");
                 ShotWithOverlays(file);
-                float stepStart = Time.realtimeSinceStartup;
+                // On video: one clip per step, the prompt read for a second before she acts.
+                if (FrameRecorder.Enabled)
+                {
+                    FrameRecorder.Ensure().Begin($"tut_{index + 1:00}_{step.Id}");
+                    yield return BotClock.Wait(1.2f);
+                }
+                float stepStart = BotClock.Now;
                 int attempts = 0;
-                while (director.StepIndex == index && !director.IsComplete && Time.realtimeSinceStartup - stepStart < TutorialDrive.StepTimeout)
+                while (director.StepIndex == index && !director.IsComplete && BotClock.Now - stepStart < TutorialDrive.StepTimeout)
                 {
                     attempts++;
                     yield return TutorialDrive.Drive(context, step.Id);
-                    float waitUntil = Time.realtimeSinceStartup + 1.5f;
-                    while (director.StepIndex == index && !director.IsComplete && Time.realtimeSinceStartup < waitUntil) yield return null;
+                    float waitUntil = BotClock.Now + 1.5f;
+                    while (director.StepIndex == index && !director.IsComplete && BotClock.Now < waitUntil) yield return null;
                 }
                 bool done = director.StepIndex != index || director.IsComplete;
-                Record($"step_{step.Id}", done, $"attempts={attempts} seconds={Time.realtimeSinceStartup - stepStart:0.0} timeScale={Time.timeScale}");
+                Record($"step_{step.Id}", done, $"attempts={attempts} seconds={BotClock.Now - stepStart:0.0} timeScale={Time.timeScale}");
+                if (FrameRecorder.Instance != null && FrameRecorder.Instance.IsRecording)
+                {
+                    yield return BotClock.Wait(0.8f);
+                    FrameRecorder.Instance.End();
+                }
                 if (!done) break;
             }
-            float tEnd = Time.realtimeSinceStartup;
-            while (!GameManager.Instance.IsLevelComplete && Time.realtimeSinceStartup - tEnd < 5f) yield return null;
+            float tEnd = BotClock.Now;
+            while (!GameManager.Instance.IsLevelComplete && BotClock.Now - tEnd < 5f) yield return null;
             Record("level_complete", director.IsComplete && GameManager.Instance.IsLevelComplete, $"complete={director.IsComplete} state={GameManager.Instance.IsLevelComplete}");
             ShotWithOverlays(Path.Combine(shotsDir, "tutorial_complete.png"));
 
@@ -139,6 +151,13 @@ namespace GlorifiedBody.Automation
         {
             Camera cam = Camera.main;
             if (cam == null) return;
+            ApplyOverlays(cam, GameOverlays(), path);
+        }
+
+        /// <summary>The overlay canvases of the tutorial: the prompt, the HUD, the item question, the inventory.
+        /// The frame recorder draws the same list on every video frame.</summary>
+        private static List<Canvas> GameOverlays()
+        {
             var canvases = new List<Canvas>();
             TutorialPromptUI prompt = FindFirstObjectByType<TutorialPromptUI>();
             if (prompt != null && prompt.Canvas != null && prompt.Canvas.gameObject.activeInHierarchy) canvases.Add(prompt.Canvas);
@@ -148,6 +167,11 @@ namespace GlorifiedBody.Automation
             if (interaction != null && interaction.Canvas != null && interaction.Canvas.gameObject.activeInHierarchy) canvases.Add(interaction.Canvas);
             InventoryUI inventory = FindFirstObjectByType<InventoryUI>();
             if (inventory != null && inventory.Canvas != null && inventory.Canvas.gameObject.activeInHierarchy) canvases.Add(inventory.Canvas);
+            return canvases;
+        }
+
+        private static void ApplyOverlays(Camera cam, List<Canvas> canvases, string path)
+        {
             var modes = new List<(Canvas canvas, RenderMode mode, Camera camera, float plane)>();
             foreach (Canvas canvas in canvases)
             {
@@ -176,6 +200,8 @@ namespace GlorifiedBody.Automation
         {
             if (finished) return;
             finished = true;
+            if (FrameRecorder.Instance != null) FrameRecorder.Instance.End();
+            FrameRecorder.OverlayProvider = null;
             bool pass = steps.Count > 0 && steps.All(s => s.ok);
             var sb = new StringBuilder();
             sb.Append("{\n  \"bot\": \"tutorial\",\n  \"pass\": ").Append(pass ? "true" : "false").Append(",\n  \"steps\": [\n");
