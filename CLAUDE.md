@@ -128,7 +128,17 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   hits one victim, the nearest live enemy in the radius, until it dies (design §11.4, after Bruno's report that
   all enemies took equal damage). `LockOnTargetable.IsShockImmune` for the bosses (heavy and shock immune; the
   power armour is only heavy). A thrown or slammed prop breaks (single use, `PropPiece`).
-  Next: the FSM AI (the power armour is the first heavy enemy).
+- 2026-10-23, the FSM AI (`devlog-notes/2026-10-23_fsm_ai.md`): Invector's AI body (`vControlAI`, NavMeshAgent,
+  root motion, the vendor shooter animator) on the T19 models, built by `InvectorEnemyFactory` (editor code in
+  `Scripts/Integration/Invector/Editor/`), driven by our FSM asset `Assets/_Game/AI/FSM_GB_Soldier.asset` (Idle,
+  Engage, Search; it opens in Invector's FSM window). The Engage state runs the custom action "Move Or Shoot"
+  (`GbEngageAction`), which hands the fight to `SoldierBrain` (`Scripts/Enemy/`, behind `IEnemyBody`): walk to a
+  firing spot, stop, aim with the `DummyShooter` telegraph gun (hold-fire gate, line of sight), fire, walk again,
+  never both. `InvectorEnemyBody` bridges our Health (the real one), the lift (suspend), the stagger, the death
+  (Invector's `removeComponentsAfterDie` must stay OFF: it destroys every MonoBehaviour), near awareness 6 m,
+  the brace during the aim. `AiTest.unity` (`AiTestSetup.BuildAiTest`, the AI TEST button): three soldiers,
+  the power armour heavy. Proof: `EnemyAiTests`, the "ai" bot (`play AiTest Main_Menu ai 300`).
+  Next: Bruno's morning test; then the reactions to a colleague's death, the retreat by rank, weapons.
 
 ## Rules
 

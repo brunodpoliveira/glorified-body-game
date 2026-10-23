@@ -80,6 +80,13 @@ the bounce. The bot: `tools/unity.sh play Tutorial Main_Menu tutorial 400` (a sh
 `TutorialTests` (PlayMode), `TutorialAssetsTests` (EditMode). The later features (the log, the scan, the props,
 the enemies) add their steps here.
 
+The AI test room, `Assets/_Game/Scenes/AiTest.unity` (2026-10-23), holds three FSM soldiers: Invector's AI body
+on the T19 models with our own FSM asset (`Assets/_Game/AI/FSM_GB_Soldier.asset`, it opens in Invector's FSM
+window). Each soldier sees Lucy, walks to a firing spot, stops, aims with the telegraph (the laser, the circle),
+fires, and walks again: it moves or shoots, never both. The power armour is heavy. The AI TEST button of the main
+menu opens it. Built by `tools/unity.sh exec GlorifiedBody.Editor.AiTestSetup.BuildAiTest`. The bot:
+`tools/unity.sh play AiTest Main_Menu ai 300`. Tests: `EnemyAiTests` (PlayMode).
+
 ## Open the project
 
 1. Unity 6000.3.15f1, URP.

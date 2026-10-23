@@ -342,6 +342,7 @@ MonoBehaviour:
   howToPlayUI: {fileID: 0}
   startLabel: START
   tutorialScene: Tutorial
+  aiTestScene: AiTest
   subtitleLabel: WORK IN PROGRESS
 --- !u!4 &1100764176
 Transform:
