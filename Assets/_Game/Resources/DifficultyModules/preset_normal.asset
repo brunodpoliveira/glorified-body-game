@@ -15,7 +15,7 @@ MonoBehaviour:
   moduleId: preset_normal
   displayName: NORMAL
   symbol: II
-  description: Two enemies fire at a time.
+  description: Two enemies fire at a time. 1.0 s from the laser to the shot.
   difficultyPercent: 0
   moduleType: 2
   isBaseline: 0
@@ -23,4 +23,8 @@ MonoBehaviour:
   presetGroup: preset
   parameters:
   - key: maxSimultaneousShooters
+    value: 2
+  - key: attackSeconds
+    value: 1
+  - key: restSeconds
     value: 2

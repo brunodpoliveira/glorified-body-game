@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: FRAGILE
   symbol: "\u2764"
   description: 'HP drains twice as fast. No effect yet: it arrives with the HP and
-    nalcon bars (build order step 3).'
+    MK bars (build order step 3).'
   difficultyPercent: 10
   moduleType: 4
   isBaseline: 0

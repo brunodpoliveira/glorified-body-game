@@ -15,7 +15,7 @@ MonoBehaviour:
   moduleId: preset_easy
   displayName: EASY
   symbol: I
-  description: One enemy fires at a time.
+  description: One enemy fires at a time. 1.5 s from the laser to the shot.
   difficultyPercent: -25
   moduleType: 1
   isBaseline: 0
@@ -24,3 +24,7 @@ MonoBehaviour:
   parameters:
   - key: maxSimultaneousShooters
     value: 1
+  - key: attackSeconds
+    value: 1.5
+  - key: restSeconds
+    value: 2

@@ -209,6 +209,16 @@ namespace GlorifiedBody.Player
             Vector3 point = target.GetLockPoint();
             Vector3 normal = (transform.position - point).normalized;
 
+            // A shield from the front stops mk_warspite and mk_erebus (Bruno, 2026-10-24). The MK is spent.
+            IFrontGuard guard = power.kind != PowerKind.Telekinesis ? victim.GetComponentInParent<IFrontGuard>() : null;
+            if (guard != null && guard.Blocks(transform.position))
+            {
+                guard.Blocked(point, power.kind.ToString());
+                LastScale = damageScale;
+                Result("blocked", charge);
+                return;
+            }
+
             switch (power.kind)
             {
                 case PowerKind.Blast:
@@ -313,6 +323,8 @@ namespace GlorifiedBody.Player
         public const float LaunchAimCone = 25f;   // degrees each side of her facing, PROPOSED
         public const float CatchRadius = 2.5f;     // metres from her chest, PROPOSED
         public const float CatchNalconCost = 10f;  // PROPOSED
+        public const float GrenadeCatchNalconCost = 15f; // PROPOSED
+        public const float RocketCatchNalconCost = 25f;  // Bruno, 2026-10-24: "yes, for more MK"
         public const float CatchBuffer = 0.2f;     // seconds an early RMB press stays valid, PROPOSED
 
         /// <summary>
@@ -364,7 +376,9 @@ namespace GlorifiedBody.Player
         /// <summary>
         /// The defensive telekinesis, first form (Bruno, 2026-10-20): a bullet within CatchRadius of her chest
         /// stops and flies back at its shooter, twice as hard. Costs CatchNalconCost. A timing move: the
-        /// telegraph says when the bullet comes.
+        /// telegraph says when the bullet comes. A grenade in the air is caught the same way (Bruno, 2026-10-24):
+        /// it flies back and bursts on the soldiers, for GrenadeCatchNalconCost. A rocket too, for RocketCatchNalconCost.
+        /// A rocket goes first, then a grenade, then a bullet: the bigger threat inside the radius.
         /// </summary>
         public bool TryCatchBullet()
         {
@@ -378,6 +392,46 @@ namespace GlorifiedBody.Player
                 if (distance >= bestDistance) continue;
                 best = bullet;
                 bestDistance = distance;
+            }
+            // The bigger threat first, inside the catch radius: a rocket, then a grenade, then a bullet.
+            EnemyRocket rocket = null;
+            float rocketDistance = CatchRadius;
+            foreach (EnemyRocket r in FindObjectsByType<EnemyRocket>(FindObjectsSortMode.None))
+            {
+                if (r == null || !r.Catchable) continue;
+                float distance = Vector3.Distance(chest, r.transform.position);
+                if (distance >= rocketDistance) continue;
+                rocket = r;
+                rocketDistance = distance;
+            }
+            if (rocket != null)
+            {
+                if (!stats.TrySpendNalcon(RocketCatchNalconCost)) return Result("no_nalcon", 0f);
+                rocket.Return(gameObject);
+                LastResult = "catch_rocket";
+                LastResultTime = Time.time;
+                OnChanged?.Invoke();
+                return true;
+            }
+            EnemyGrenade grenade = null;
+            float grenadeDistance = CatchRadius;
+            foreach (EnemyGrenade g in FindObjectsByType<EnemyGrenade>(FindObjectsSortMode.None))
+            {
+                if (g == null || !g.Catchable) continue;
+                float distance = Vector3.Distance(chest, g.transform.position);
+                if (distance >= grenadeDistance) continue;
+                grenade = g;
+                grenadeDistance = distance;
+            }
+            if (grenade != null)
+            {
+                if (!stats.TrySpendNalcon(GrenadeCatchNalconCost)) return Result("no_nalcon", 0f);
+                grenade.Return(gameObject);
+                LastResult = "catch_grenade";
+                LastResultTime = Time.time;
+                RunTelemetry.Event("grenade_caught_by_her", grenade.KillerId);
+                OnChanged?.Invoke();
+                return true;
             }
             if (best == null) return false;
             if (!stats.TrySpendNalcon(CatchNalconCost)) return Result("no_nalcon", 0f);

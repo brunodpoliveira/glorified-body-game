@@ -23,6 +23,9 @@ namespace GlorifiedBody.Enemy
     /// sight, hit or shot). Then it stays alerted in the room, as Warspite's enemies did: it always knows where she
     /// is (the body tracks her as a fixed target), it calls the others, and it walks to a spot with a clear line
     /// to her. All numbers are PROPOSED.
+    /// In the fight it runs, never walks, and sprints to a far spot (Bruno, 2026-10-24: "the enemies move too
+    /// slowly ... they don't look like they're in combat at all"). When she comes within melee range during a move,
+    /// it stops and the gun picks a melee strike (DummyShooter: the same slot and telegraph as a shot).
     /// </summary>
     [RequireComponent(typeof(DummyShooter), typeof(Health))]
     public sealed class SoldierBrain : MonoBehaviour
@@ -34,7 +37,7 @@ namespace GlorifiedBody.Enemy
         [SerializeField, Min(0.5f)] private float shootWaitSeconds = 3f;
         [SerializeField, Range(0f, 90f)] private float flankDegrees = 50f;
         [SerializeField, Min(0f)] private float recoverSeconds = 0.6f; // after a drop from the lift
-        [SerializeField, Min(0f)] private float runOver = 8f;          // runs to a spot farther than this
+        [SerializeField, Min(0f)] private float sprintOver = 8f;       // sprints to a spot farther than this
         [SerializeField, Min(0f)] private float minMoveSeconds = 0.6f;  // a new path needs a moment before "arrived" counts
         [SerializeField, Min(0.1f)] private float arriveRadius = 0.7f;
         [SerializeField, Min(1f)] private float alertRadius = 25f;
@@ -251,7 +254,12 @@ namespace GlorifiedBody.Enemy
                     gun.HoldFire = true;
                     timer -= dt;
                     bool arrived = Time.time - moveStarted >= minMoveSeconds && Flat(transform.position, Spot) <= arriveRadius;
-                    if (timer <= 0f || arrived)
+                    bool close = gun.CanMelee && Distance() <= gun.MeleeRange;
+                    if (close)
+                    {
+                        StartShoot(); // she came close: stop and strike
+                    }
+                    else if (timer <= 0f || arrived)
                     {
                         if (ClearLine() && Distance() <= gun.Range) StartShoot();
                         else StartMove();
@@ -293,13 +301,13 @@ namespace GlorifiedBody.Enemy
             gun.HoldFire = true;
             Vector3 spot = PickSpot();
             Spot = spot;
-            bool run = (spot - transform.position).magnitude > runOver;
-            body.MoveTo(spot, run);
+            bool sprint = (spot - transform.position).magnitude > sprintOver;
+            body.MoveTo(spot, sprint ? MoveSpeed.Sprint : MoveSpeed.Run);
             timer = Random.Range(moveSeconds.x, moveSeconds.y);
             moveStarted = Time.time;
             Current = Phase.Move;
             Moves++;
-            RunTelemetry.Event("soldier_move", $"{name}:{spot.x:0.0},{spot.z:0.0}{(run ? " run" : "")}");
+            RunTelemetry.Event("soldier_move", $"{name}:{spot.x:0.0},{spot.z:0.0}{(sprint ? " sprint" : " run")}");
         }
 
         /// <summary>

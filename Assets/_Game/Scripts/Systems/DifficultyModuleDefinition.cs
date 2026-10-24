@@ -25,6 +25,12 @@ namespace GlorifiedBody.Systems
         /// <summary>The parameter key that every preset carries. 0 = every enemy fires.</summary>
         public const string ParamMaxSimultaneousShooters = "maxSimultaneousShooters";
 
+        /// <summary>Seconds from the laser to the shot (Bruno, 2026-10-24: easy 1.5, normal 1.0, hard 0.8).</summary>
+        public const string ParamAttackSeconds = "attackSeconds";
+
+        /// <summary>Seconds an enemy rests after an attack before its next aim (2.0 on every preset).</summary>
+        public const string ParamRestSeconds = "restSeconds";
+
         [Header("Identity")]
         [Tooltip("Unique identifier used for persistence and lookups.")]
         public string moduleId;

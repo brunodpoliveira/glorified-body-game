@@ -22,3 +22,36 @@ MonoBehaviour:
   impactScale: 1
   impactLifetime: 3
   tracerColour: {r: 1, g: 0.85, b: 0.45, a: 1}
+  rifleFireClips:
+  - {fileID: 8300000, guid: a1d3b6d76325cf747be2333e91108aaf, type: 3}
+  - {fileID: 8300000, guid: b4bc1655997cd78488375e6627dbd4dd, type: 3}
+  - {fileID: 8300000, guid: bb9f8df4580fca94eb4ec5149f83cd86, type: 3}
+  - {fileID: 8300000, guid: 097e8235e0162d64ba53da9ef4ab8d61, type: 3}
+  rifleAimClip: {fileID: 8300000, guid: a3c47d05e2db5d2469c40c5304cdb283, type: 3}
+  launcherFireClips:
+  - {fileID: 8300000, guid: 80e63cbc50e5b9646a825374aaf68fb0, type: 3}
+  - {fileID: 8300000, guid: fe90135ad668a394287ca68605d4763b, type: 3}
+  launcherAimClip: {fileID: 8300000, guid: b6c0d23db0a9040448ebbc333b284e8f, type: 3}
+  meleeSwingClips:
+  - {fileID: 8300000, guid: 032c161149a1c104284b736112470e73, type: 3}
+  - {fileID: 8300000, guid: 60fdfa301881bae48ae59759cc83b842, type: 3}
+  - {fileID: 8300000, guid: f82a7d93926f978479349ce3a9e025f6, type: 3}
+  meleeHitClips:
+  - {fileID: 8300000, guid: 04e7958f2a1963f48bda0503464ed37e, type: 3}
+  - {fileID: 8300000, guid: fb4f3c8f4af0baf40a1ccb289ccefff9, type: 3}
+  - {fileID: 8300000, guid: 5bf70ae8e138f0444961a41e089c2f02, type: 3}
+  blockClips:
+  - {fileID: 8300000, guid: d488746f170863748a00445cf31c5420, type: 3}
+  - {fileID: 8300000, guid: 720e39bac05da5048b9276f12dd7b342, type: 3}
+  explosionPrefab: {fileID: 100000, guid: 617596ca1a1abd1469a7013007096cb8, type: 3}
+  explosionClip: {fileID: 8300000, guid: 29ef1fd8a82190d4086450ffcce231f7, type: 3}
+  explosionLifetime: 4
+  gasPrefab: {fileID: 3576302887141160372, guid: 67a09f2f1ca09e4cea5492032b3f13e6, type: 3}
+  gasClip: {fileID: 8300000, guid: d3ff19b1dfa10734c9ae088d93d28ded, type: 3}
+  rocketFireClips:
+  - {fileID: 8300000, guid: a16c0f7348674944f84b445509080684, type: 3}
+  - {fileID: 8300000, guid: 69277c056cb02354597bfbe822abe3c0, type: 3}
+  rocketMesh: {fileID: 4300000, guid: 1b131df6def5c584388fda0f0938427c, type: 2}
+  rocketMaterial: {fileID: 2100000, guid: 6e28447ba2c689044ad64c578428b199, type: 2}
+  rocketMeshRotation: {x: -0, y: -0, z: -0, w: 1}
+  rocketMeshScale: 1.0602127

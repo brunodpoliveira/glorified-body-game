@@ -15,8 +15,8 @@ MonoBehaviour:
   moduleId: scarcity
   displayName: SCARCITY
   symbol: "\u26A0"
-  description: 'Nalcon drains 50% faster. No effect yet: it arrives with the HP and
-    nalcon bars (build order step 3).'
+  description: 'MK drains 50% faster. No effect yet: it arrives with the HP and MK
+    bars (build order step 3).'
   difficultyPercent: 10
   moduleType: 6
   isBaseline: 0

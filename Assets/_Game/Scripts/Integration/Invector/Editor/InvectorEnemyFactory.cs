@@ -38,6 +38,9 @@ namespace GlorifiedBody.Integration.Invector.Build
             public bool heavy;
             public float range = 10f;
             public float detectDistance = 12f;
+            public DummyShooter.Weapon weapon = DummyShooter.Weapon.Pistol;
+            public bool shield;
+            public bool canMelee = true;
         }
 
         public static Spec SpecFor(string classId)
@@ -190,6 +193,9 @@ namespace GlorifiedBody.Integration.Invector.Build
             ai.SetObstaclesLayer(LayerMask.GetMask("Default"));
             ai.SetLineOfSight(180f, 1f, spec.detectDistance, 4f);
             var aiSo = new SerializedObject(ai);
+            // A fighter turns fast (Bruno, 2026-10-24: "they don't look like they're in combat at all").
+            SetFloat(aiSo, "freeSpeed.rotationSpeed", 16f);
+            SetFloat(aiSo, "strafeSpeed.rotationSpeed", 16f);
             SetFloat(aiSo, "_maxHealth", 100000f);
             SetFloat(aiSo, "_currentHealth", 100000f);
             // Off: Invector's cleanup destroys every MonoBehaviour on the object (our Health too).
@@ -206,7 +212,8 @@ namespace GlorifiedBody.Integration.Invector.Build
 
             LockOnTargetable target = root.AddComponent<LockOnTargetable>();
             var targetSo = new SerializedObject(target);
-            SetFloat(targetSo, "fallbackHeight", Body.ChestHeight);
+            // The chest of a 1.8 m soldier is 1.2 m; a taller class (the 2.6 m power armour) has a higher chest.
+            SetFloat(targetSo, "fallbackHeight", Body.ChestHeight * Mathf.Max(1f, entry.height / 1.8f));
             SetBool(targetSo, "heavy", spec.heavy);
             targetSo.ApplyModifiedPropertiesWithoutUndo();
 
@@ -215,17 +222,28 @@ namespace GlorifiedBody.Integration.Invector.Build
             gunSo.FindProperty("enemyId").stringValue = spec.classId;
             SetFloat(gunSo, "range", spec.range);
             SetBool(gunSo, "requireLineOfSight", true);
+            gunSo.FindProperty("weapon").enumValueIndex = (int)spec.weapon;
+            SetBool(gunSo, "canMelee", spec.canMelee);
             gunSo.ApplyModifiedPropertiesWithoutUndo();
 
             root.AddComponent<SoldierBrain>();
             root.AddComponent<InvectorEnemyBody>();
-            BuildGun(root, scale);
+            BuildGun(root, scale, spec.weapon);
+            if (spec.shield) BuildShield(root, scale);
             return root;
         }
 
         // ── The gun and the shot effects ──────────────────────────────
 
         public const string GunPrefabPath = "Assets/Invector-FSMAIController/Prefabs/Weapons/AI_Handgun.prefab";
+        public const string RiflePrefabPath = "Assets/Invector-FSMAIController/Prefabs/Weapons/AI_vAssaultRifle.prefab";
+        public const string LauncherPrefabPath = "Assets/Invector-FSMAIController/Prefabs/Weapons/AI_vShotgun.prefab"; // the placeholder launcher
+        public const string ShieldPrefabPath = "Assets/Invector-FSMAIController/Prefabs/Weapons/AI_vGreatShield.prefab";
+        private const string MeleeAudio = "Assets/Invector-3rdPersonController/Melee Combat/Audio/";
+        private const string ExplosionPath = "Assets/Invector-3rdPersonController/Shooter/Prefabs/Particles/Explosion/Explosion_Air.prefab";
+        private const string SmokeGrenadePath = "Assets/Invector-3rdPersonController/Shooter/Scripts/ThrowSystem/Prefabs/Grenades/vSmokeGrenade.prefab";
+        private const string RpgPath = "Assets/Invector-3rdPersonController/Shooter/3DModels/Weapons/vWeaponsNew/prefabs/vRPG.prefab";
+        public const string GasSmokePath = "Assets/_Game/Effects/GasCloud_Smoke.prefab";
         public const string EffectsPath = "Assets/_Game/Resources/Effects/shot_effects.asset";
         private const string WeaponAudio = "Assets/Invector-3rdPersonController/Shooter/Audio/Weapons/";
         private const string ImpactPath = "Assets/Invector-3rdPersonController/Shooter/Scripts/DecalManager/BulletEffect/Resources/prefabs/impactConcrete.prefab";
@@ -234,25 +252,15 @@ namespace GlorifiedBody.Integration.Invector.Build
         /// The vendor AI handgun without its scripts and colliders: the mesh, the flash and smoke particles, the
         /// light, the audio source. EnemyGun places it at the right hand every frame.
         /// </summary>
-        private static void BuildGun(GameObject root, float rootScale)
+        private static void BuildGun(GameObject root, float rootScale, DummyShooter.Weapon weapon)
         {
-            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(GunPrefabPath);
-            if (prefab == null) { Debug.LogError($"[InvectorEnemyFactory] no gun at {GunPrefabPath}."); return; }
-            var gun = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
-            PrefabUtility.UnpackPrefabInstance(gun, PrefabUnpackMode.Completely, InteractionMode.AutomatedAction);
-            gun.name = "Gun";
-            gun.transform.SetParent(root.transform, false);
-            gun.transform.localScale = Vector3.one / rootScale; // the root carries the model scale
-            // Scripts first (several passes: some require others), then the colliders.
-            for (int pass = 0; pass < 4; pass++)
-            {
-                foreach (MonoBehaviour script in gun.GetComponentsInChildren<MonoBehaviour>(true))
-                {
-                    if (script != null) Object.DestroyImmediate(script);
-                }
-            }
-            GameObjectUtility.RemoveMonoBehavioursWithMissingScript(gun);
-            foreach (Collider collider in gun.GetComponentsInChildren<Collider>(true)) Object.DestroyImmediate(collider);
+            // The launchers (frag, gas, the power armour's frag and rockets) use the vendor shotgun as a placeholder.
+            bool launcher = weapon == DummyShooter.Weapon.GrenadeLauncher || weapon == DummyShooter.Weapon.GasLauncher || weapon == DummyShooter.Weapon.ArmourLaunchers;
+            string path = weapon == DummyShooter.Weapon.Rifle ? RiflePrefabPath : launcher ? LauncherPrefabPath : GunPrefabPath;
+            // The vendor animator's weapon set: handgun 1, rifle 2, shotgun 3 (the vendor prefabs' upperBodyID).
+            int animatorId = weapon == DummyShooter.Weapon.Rifle ? 2 : launcher ? 3 : 1;
+            GameObject gun = StrippedVendorModel(path, "Gun", root, rootScale);
+            if (gun == null) return;
             foreach (string unused in new[] { "AimReference", "leftHandIK" })
             {
                 Transform t = FindDeep(gun.transform, unused);
@@ -286,8 +294,107 @@ namespace GlorifiedBody.Integration.Invector.Build
             if (muzzle == null) Debug.LogWarning("[InvectorEnemyFactory] the gun has no muzzle: the shot leaves the chest.");
 
             EnemyGun enemyGun = root.AddComponent<EnemyGun>();
-            enemyGun.Bind(gun.transform, muzzle, flashes.ToArray(), smoke, light, source);
+            enemyGun.Bind(gun.transform, muzzle, flashes.ToArray(), smoke, light, source, animatorId, animatorId);
             EditorUtility.SetDirty(enemyGun);
+        }
+
+        /// <summary>A vendor weapon prefab, unpacked under the root, without its scripts and colliders.</summary>
+        private static GameObject StrippedVendorModel(string path, string name, GameObject root, float rootScale)
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+            if (prefab == null) { Debug.LogError($"[InvectorEnemyFactory] no model at {path}."); return null; }
+            var model = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
+            PrefabUtility.UnpackPrefabInstance(model, PrefabUnpackMode.Completely, InteractionMode.AutomatedAction);
+            model.name = name;
+            model.transform.SetParent(root.transform, false);
+            model.transform.localScale = Vector3.one / rootScale; // the root carries the model scale
+            // Scripts first (several passes: some require others), then the colliders.
+            for (int pass = 0; pass < 4; pass++)
+            {
+                foreach (MonoBehaviour script in model.GetComponentsInChildren<MonoBehaviour>(true))
+                {
+                    if (script != null) Object.DestroyImmediate(script);
+                }
+            }
+            GameObjectUtility.RemoveMonoBehavioursWithMissingScript(model);
+            foreach (Collider collider in model.GetComponentsInChildren<Collider>(true)) Object.DestroyImmediate(collider);
+            return model;
+        }
+
+        /// <summary>
+        /// The vendor great shield, made 1.0 m tall. Its face (the thinnest side of its bounds) turns to the
+        /// soldier's front and its long side up; EnemyShield holds it in front of his left side.
+        /// </summary>
+        private static void BuildShield(GameObject root, float rootScale)
+        {
+            GameObject shield = StrippedVendorModel(ShieldPrefabPath, "Shield", root, rootScale);
+            if (shield == null) return;
+            SetLayer(shield, LayerMask.NameToLayer("Enemy"));
+            // Measure the model upright at the origin, in its own axes.
+            Quaternion keep = shield.transform.rotation;
+            Vector3 keepPos = shield.transform.position;
+            shield.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
+            Bounds bounds = new Bounds();
+            bool any = false;
+            foreach (Renderer r in shield.GetComponentsInChildren<Renderer>(true))
+            {
+                if (!any) { bounds = r.bounds; any = true; }
+                else bounds.Encapsulate(r.bounds);
+            }
+            Vector3 size = any ? bounds.size : Vector3.one;
+            Vector3[] axes = { Vector3.right, Vector3.up, Vector3.forward };
+            float[] extents = { size.x, size.y, size.z };
+            int thin = 0, tall = 0;
+            for (int i = 1; i < 3; i++)
+            {
+                if (extents[i] < extents[thin]) thin = i;
+                if (extents[i] > extents[tall]) tall = i;
+            }
+            if (thin == tall) tall = (thin + 1) % 3;
+            // The long side in the face plane, from the spread of the mesh points (the main axis of their
+            // covariance): the box axes lie when a child of the model is turned.
+            int u = (thin + 1) % 3, v = (thin + 2) % 3;
+            var points = new List<Vector3>();
+            foreach (MeshFilter mf in shield.GetComponentsInChildren<MeshFilter>(true))
+            {
+                if (mf.sharedMesh == null || !mf.sharedMesh.isReadable) continue;
+                foreach (Vector3 p in mf.sharedMesh.vertices) points.Add(mf.transform.TransformPoint(p));
+            }
+            Vector3 longSide = axes[tall];
+            float length = extents[tall];
+            if (points.Count > 8)
+            {
+                Vector3 mean = Vector3.zero;
+                foreach (Vector3 p in points) mean += p;
+                mean /= points.Count;
+                double cuu = 0, cvv = 0, cuv = 0;
+                foreach (Vector3 p in points)
+                {
+                    double du = p[u] - mean[u], dv = p[v] - mean[v];
+                    cuu += du * du; cvv += dv * dv; cuv += du * dv;
+                }
+                float angle = 0.5f * Mathf.Atan2((float)(2 * cuv), (float)(cuu - cvv));
+                longSide = (axes[u] * Mathf.Cos(angle) + axes[v] * Mathf.Sin(angle)).normalized;
+                if (Vector3.Dot(longSide, axes[tall]) < 0f) longSide = -longSide;
+                float min = float.MaxValue, max = float.MinValue;
+                foreach (Vector3 p in points)
+                {
+                    float d = Vector3.Dot(p, longSide);
+                    min = Mathf.Min(min, d);
+                    max = Mathf.Max(max, d);
+                }
+                length = max - min;
+            }
+            // The model's thin axis to +z (its face forward), its long side to +y.
+            Quaternion face = Quaternion.Inverse(Quaternion.LookRotation(axes[thin], longSide));
+            float fit = length > 0.01f ? 1.0f / length : 1f;
+            shield.transform.localScale *= fit;
+            shield.transform.SetPositionAndRotation(keepPos, keep);
+            Debug.Log($"[InvectorEnemyFactory] shield bounds {size}, thin axis {thin}, long side {longSide}, {points.Count} points, scale x{fit:0.00}.");
+
+            EnemyShield guard = root.AddComponent<EnemyShield>();
+            guard.Bind(shield.transform, face);
+            EditorUtility.SetDirty(guard);
         }
 
         /// <summary>The fire and aim sounds and the impact, from the vendor's shooter assets.</summary>
@@ -310,10 +417,143 @@ namespace GlorifiedBody.Integration.Invector.Build
             fx.fireClips = clips.ToArray();
             fx.aimClip = AssetDatabase.LoadAssetAtPath<AudioClip>(WeaponAudio + "NewWeaponSounds/LightWeaponAim.mp3");
             fx.impactPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(ImpactPath);
+            fx.rifleFireClips = Clips(WeaponAudio, "NewWeaponSounds/MediumWeaponShot1.mp3", "NewWeaponSounds/MediumWeaponShot2.mp3", "NewWeaponSounds/MediumWeaponShot3.mp3", "Rifle@Fire.wav");
+            fx.rifleAimClip = AssetDatabase.LoadAssetAtPath<AudioClip>(WeaponAudio + "NewWeaponSounds/MediumWeaponAim.mp3");
+            fx.launcherAimClip = AssetDatabase.LoadAssetAtPath<AudioClip>(WeaponAudio + "NewWeaponSounds/MediumWeaponAimB.mp3");
+            fx.meleeSwingClips = Clips(MeleeAudio, "slash_A.wav", "slash_B.wav", "slash_C.wav");
+            fx.meleeHitClips = Clips(MeleeAudio, "PunchA.wav", "PunchB.wav", "Kick.wav");
+            fx.blockClips = Clips(MeleeAudio, "Block 1.wav", "Block 2.wav");
+            fx.explosionPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(ExplosionPath);
+            if (fx.explosionPrefab == null) Debug.LogWarning($"[InvectorEnemyFactory] no explosion prefab at {ExplosionPath}.");
+            fx.explosionClip = AssetDatabase.LoadAssetAtPath<AudioClip>(WeaponAudio + "Explosion_A.wav");
+            fx.launcherFireClips = Clips(WeaponAudio, "PumpShotgun@FireA.mp3", "PumpShotgun@FireB.mp3");
+            fx.rocketFireClips = Clips(WeaponAudio, "RPG@Fire.wav", "RPG@FireB.mp3");
+            fx.gasClip = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Invector-3rdPersonController/Basic Locomotion/Audio/Others/grenade-explosion-sfx-medium-sized.flac");
+            fx.gasPrefab = BuildGasSmoke();
+            ReadRocketMesh(fx);
             if (fx.impactPrefab == null) Debug.LogWarning($"[InvectorEnemyFactory] no impact prefab at {ImpactPath}.");
             EditorUtility.SetDirty(fx);
             AssetDatabase.SaveAssets();
             return fx;
+        }
+
+        /// <summary>
+        /// The smoke of the vendor smoke grenade, its scripts removed, saved as our prefab (it refers to the vendor
+        /// particle materials, so it works only with the vendor folders present, like the soldiers).
+        /// </summary>
+        private static GameObject BuildGasSmoke()
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(SmokeGrenadePath);
+            if (prefab == null) { Debug.LogWarning($"[InvectorEnemyFactory] no smoke grenade at {SmokeGrenadePath}."); return null; }
+            var temp = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
+            PrefabUtility.UnpackPrefabInstance(temp, PrefabUnpackMode.Completely, InteractionMode.AutomatedAction);
+            Transform smoke = FindDeep(temp.transform, "SmokeEffect");
+            if (smoke == null) { Object.DestroyImmediate(temp); Debug.LogWarning("[InvectorEnemyFactory] the smoke grenade has no SmokeEffect."); return null; }
+            smoke.SetParent(null, false);
+            smoke.gameObject.SetActive(true); // the vendor wakes it when its grenade bursts: ours plays at once
+            smoke.localPosition = Vector3.zero;
+            smoke.localRotation = Quaternion.identity;
+            Object.DestroyImmediate(temp);
+            for (int pass = 0; pass < 4; pass++)
+            {
+                foreach (MonoBehaviour script in smoke.GetComponentsInChildren<MonoBehaviour>(true))
+                {
+                    if (script != null) Object.DestroyImmediate(script);
+                }
+            }
+            GameObjectUtility.RemoveMonoBehavioursWithMissingScript(smoke.gameObject);
+            foreach (Collider collider in smoke.GetComponentsInChildren<Collider>(true)) Object.DestroyImmediate(collider);
+            foreach (AudioSource audio in smoke.GetComponentsInChildren<AudioSource>(true)) Object.DestroyImmediate(audio);
+            foreach (ParticleSystem ps in smoke.GetComponentsInChildren<ParticleSystem>(true))
+            {
+                var main = ps.main;
+                main.playOnAwake = true;
+                main.loop = true;
+            }
+            if (!AssetDatabase.IsValidFolder("Assets/_Game/Effects")) AssetDatabase.CreateFolder("Assets/_Game", "Effects");
+            // The vendor smoke uses legacy built-in particle shaders: under URP they ignore a tint. Our own URP
+            // particle material per smoke texture, green (git-ignored: it points at the vendor texture).
+            var made = new Dictionary<Texture, Material>();
+            foreach (ParticleSystemRenderer r in smoke.GetComponentsInChildren<ParticleSystemRenderer>(true))
+            {
+                Texture tex = r.sharedMaterial != null ? r.sharedMaterial.mainTexture : null;
+                if (tex == null) continue;
+                if (!made.TryGetValue(tex, out Material gas))
+                {
+                    gas = GasMaterial(tex, $"Assets/_Game/Effects/GasSmoke_{made.Count}.mat");
+                    made[tex] = gas;
+                }
+                if (gas != null) r.sharedMaterial = gas;
+            }
+            if (!AssetDatabase.IsValidFolder("Assets/_Game/Effects")) AssetDatabase.CreateFolder("Assets/_Game", "Effects");
+            smoke.name = "GasCloud_Smoke";
+            GameObject saved = PrefabUtility.SaveAsPrefabAsset(smoke.gameObject, GasSmokePath);
+            Object.DestroyImmediate(smoke.gameObject);
+            return saved;
+        }
+
+        /// <summary>A URP particle material, unlit, alpha blended, green, with the smoke texture.</summary>
+        private static Material GasMaterial(Texture texture, string path)
+        {
+            Shader shader = Shader.Find("Universal Render Pipeline/Particles/Unlit");
+            if (shader == null) { Debug.LogWarning("[InvectorEnemyFactory] no URP particle shader: the gas keeps the vendor smoke."); return null; }
+            var mat = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (mat == null)
+            {
+                mat = new Material(shader);
+                AssetDatabase.CreateAsset(mat, path);
+            }
+            mat.shader = shader;
+            mat.SetTexture("_BaseMap", texture);
+            mat.SetColor("_BaseColor", new Color(0.75f, 1f, 0.35f, 1f)); // the sheet's own alpha (up to 0.56) sets the density
+            mat.SetFloat("_Surface", 1f); // transparent
+            mat.SetFloat("_Blend", 0f);   // alpha
+            mat.SetOverrideTag("RenderType", "Transparent");
+            mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            mat.SetInt("_ZWrite", 0);
+            mat.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+            mat.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+            EditorUtility.SetDirty(mat);
+            return mat;
+        }
+
+        /// <summary>The vendor RPG's missile mesh for the rocket, its long side along +z, 0.6 m long.</summary>
+        private static void ReadRocketMesh(ShotEffects fx)
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(RpgPath);
+            Transform missile = prefab != null ? FindDeep(prefab.transform, "RPG_missel") : null;
+            MeshFilter filter = missile != null ? missile.GetComponentInChildren<MeshFilter>(true) : null;
+            MeshRenderer renderer = filter != null ? filter.GetComponent<MeshRenderer>() : null;
+            if (filter == null || filter.sharedMesh == null)
+            {
+                Debug.LogWarning($"[InvectorEnemyFactory] no missile mesh in {RpgPath}: the rocket is a capsule.");
+                fx.rocketMesh = null;
+                return;
+            }
+            Vector3 size = filter.sharedMesh.bounds.size;
+            Vector3[] axes = { Vector3.right, Vector3.up, Vector3.forward };
+            float[] extents = { size.x, size.y, size.z };
+            int longAxis = 0;
+            for (int i = 1; i < 3; i++) if (extents[i] > extents[longAxis]) longAxis = i;
+            Vector3 up = longAxis == 1 ? Vector3.forward : Vector3.up;
+            fx.rocketMesh = filter.sharedMesh;
+            fx.rocketMaterial = renderer != null ? renderer.sharedMaterial : null;
+            fx.rocketMeshRotation = Quaternion.Inverse(Quaternion.LookRotation(axes[longAxis], up));
+            fx.rocketMeshScale = extents[longAxis] > 0.0001f ? 0.6f / extents[longAxis] : 1f;
+            Debug.Log($"[InvectorEnemyFactory] rocket mesh {filter.sharedMesh.name} size {size}, long axis {longAxis}, scale x{fx.rocketMeshScale:0.00}.");
+        }
+
+        private static AudioClip[] Clips(string folder, params string[] names)
+        {
+            var clips = new List<AudioClip>();
+            foreach (string name in names)
+            {
+                var clip = AssetDatabase.LoadAssetAtPath<AudioClip>(folder + name);
+                if (clip != null) clips.Add(clip);
+                else Debug.LogWarning($"[InvectorEnemyFactory] no clip {folder}{name}.");
+            }
+            return clips.ToArray();
         }
 
         private static Transform FindDeep(Transform root, string name)

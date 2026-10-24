@@ -6,6 +6,8 @@ namespace GlorifiedBody.Enemy
     /// The legs and the eyes of an FSM enemy, as SoldierBrain sees them. The Invector AI body implements it in
     /// GlorifiedBody.Integration.Invector (rule 6: only that namespace uses Invector types).
     /// </summary>
+    public enum MoveSpeed { Walk, Run, Sprint }
+
     public interface IEnemyBody
     {
         bool IsDead { get; }
@@ -18,7 +20,8 @@ namespace GlorifiedBody.Enemy
         /// <summary>The body moves (its speed over a small threshold).</summary>
         bool IsMoving { get; }
         bool IsInDestination { get; }
-        void MoveTo(Vector3 point, bool run);
+        /// <summary>Walk, run or sprint to the point (the run and sprint animations of the vendor set).</summary>
+        void MoveTo(Vector3 point, MoveSpeed speed);
         void Stop();
         /// <summary>Off while a power holds the body (the lift): no navigation, no physics.</summary>
         void Suspend(bool suspended);

@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: ONE-HIT WONDER
   symbol: "\u2622"
   description: 'HP is pinned to 1. Any hit kills. No effect yet: it arrives with
-    the HP and nalcon bars (build order step 3).'
+    the HP and MK bars (build order step 3).'
   difficultyPercent: 80
   moduleType: 5
   isBaseline: 0

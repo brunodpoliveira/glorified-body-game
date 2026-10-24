@@ -157,13 +157,46 @@ namespace GlorifiedBody.Player
             set => showMarker = value;
         }
 
+        /// <summary>The marker floats this far over the top of the target's meshes (PROPOSED).</summary>
+        public const float MarkerClearance = 0.3f;
+        public Vector3 MarkerPosition => marker != null ? marker.position : Vector3.zero;
+        public bool MarkerVisible => marker != null && marker.gameObject.activeSelf;
+
+        private LockOnTargetable markerOwner;
+        private Renderer[] markerRenderers = Array.Empty<Renderer>();
+
         private void UpdateMarker()
         {
             if (marker == null) return;
             bool show = showMarker && CurrentTarget != null;
             if (marker.gameObject.activeSelf != show) marker.gameObject.SetActive(show);
-            // The display point is the chest (1.2 m). The marker floats over the head, not on the face (PROPOSED 0.9).
-            if (show) marker.position = CurrentTarget.GetDisplayPoint() + Vector3.up * 0.9f;
+            if (show) marker.position = MarkerPoint(CurrentTarget);
+        }
+
+        /// <summary>
+        /// Over the head of the target, from its own meshes: a fixed height hid the marker inside the 2.6 m power
+        /// armour (Bruno, 2026-10-24). Without a mesh, 0.9 m over the display point.
+        /// </summary>
+        private Vector3 MarkerPoint(LockOnTargetable target)
+        {
+            if (markerOwner != target)
+            {
+                markerOwner = target;
+                var found = new System.Collections.Generic.List<Renderer>();
+                foreach (Renderer r in target.GetComponentsInChildren<Renderer>())
+                {
+                    if (r is SkinnedMeshRenderer || r is MeshRenderer) found.Add(r);
+                }
+                markerRenderers = found.ToArray();
+            }
+            float top = float.MinValue;
+            foreach (Renderer r in markerRenderers)
+            {
+                if (r != null && r.enabled && r.gameObject.activeInHierarchy) top = Mathf.Max(top, r.bounds.max.y);
+            }
+            Vector3 display = target.GetDisplayPoint();
+            if (top == float.MinValue) return display + Vector3.up * 0.9f;
+            return new Vector3(target.transform.position.x, top + MarkerClearance, target.transform.position.z);
         }
 
         private void OnDestroy()

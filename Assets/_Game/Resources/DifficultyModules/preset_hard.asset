@@ -15,7 +15,7 @@ MonoBehaviour:
   moduleId: preset_hard
   displayName: HARD
   symbol: III
-  description: Every enemy fires.
+  description: Every enemy fires. 0.8 s from the laser to the shot.
   difficultyPercent: 25
   moduleType: 3
   isBaseline: 0
@@ -24,3 +24,7 @@ MonoBehaviour:
   parameters:
   - key: maxSimultaneousShooters
     value: 0
+  - key: attackSeconds
+    value: 0.8
+  - key: restSeconds
+    value: 2

@@ -88,11 +88,11 @@ namespace GlorifiedBody.Integration.Invector
         public bool IsMoving => speed > MovingSpeed;
         public bool IsInDestination => ai != null && ai.isInDestination;
 
-        public void MoveTo(Vector3 point, bool run)
+        public void MoveTo(Vector3 point, MoveSpeed speed)
         {
             if (IsDead || suspended) return;
             stopRequested = false;
-            ai.MoveTo(point, run ? vAIMovementSpeed.Running : vAIMovementSpeed.Walking);
+            ai.MoveTo(point, speed == MoveSpeed.Sprint ? vAIMovementSpeed.Sprinting : speed == MoveSpeed.Run ? vAIMovementSpeed.Running : vAIMovementSpeed.Walking);
         }
 
         public void Stop()

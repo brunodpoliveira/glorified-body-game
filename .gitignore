@@ -126,3 +126,10 @@ InitTestScene*.unity*
 
 # Claude Code session files
 /.claude/
+
+# Built by InvectorEnemyFactory from the paid vendor smoke grenade: local only, never in the public repo.
+/Assets/_Game/Effects/GasCloud_Smoke.prefab
+/Assets/_Game/Effects/GasCloud_Smoke.prefab.meta
+/Assets/_Game/Effects/GasSmoke_*.mat
+/Assets/_Game/Effects/GasSmoke_*.mat.meta
+/Assets/_Game/Effects.meta

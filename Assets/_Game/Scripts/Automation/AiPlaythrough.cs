@@ -20,6 +20,8 @@ namespace GlorifiedBody.Automation
     /// The AI bot: loads the AI test room from the menu, lets the FSM soldiers fight a Lucy who takes no damage,
     /// and shoots the moments: the soldiers walking, a telegraph (the laser and the HUD circle), a soldier in the
     /// lift, "TOO HEAVY" on the power armour, a corpse. It checks the rule "move or shoot, never both".
+    /// The weapons (Bruno, 2026-10-24): a grenade and its floor ring, the attack icons on the HUD (also on the edge
+    /// arrows of attackers out of the frame), "BLOCKED" on the shield, a melee strike when she stands close.
     /// Active only when BotArgs.Bot == "ai". Writes playthrough.json and shots/ai_&lt;n&gt;_&lt;moment&gt;.png.
     /// Batch: tools/unity.sh play AiTest Main_Menu ai 300
     /// </summary>
@@ -90,7 +92,7 @@ namespace GlorifiedBody.Automation
 
             GameObject lucy = GameObject.FindGameObjectWithTag("Player");
             SoldierBrain[] soldiers = FindObjectsByType<SoldierBrain>(FindObjectsSortMode.None).OrderBy(s => s.name).ToArray();
-            Record("ai_loaded", SceneManager.GetActiveScene().name == SceneName && lucy != null && soldiers.Length == 3,
+            Record("ai_loaded", SceneManager.GetActiveScene().name == SceneName && lucy != null && soldiers.Length == 4,
                 $"scene={SceneManager.GetActiveScene().name} soldiers={soldiers.Length}");
             if (lucy == null || soldiers.Length == 0) { Finish(); yield break; }
             lucy.GetComponentInChildren<Health>().SetInvulnerable(true);
@@ -125,9 +127,11 @@ namespace GlorifiedBody.Automation
             if (firing != null) CloseShot(firing.Model.position, firing.transform.right, Path.Combine(shots, "ai_07_flash_close.png"));
             Record("muzzle_flash", firing != null && guns.Sum(g => g.Shots) > before, firing != null ? $"{firing.name} shots={firing.Shots}" : "no shot");
 
-            // A miss: she steps aside during a telegraph, the bullet hits the wall behind her.
+            // A miss: she steps aside during a bullet telegraph, the bullet hits the wall behind her.
+            Func<SoldierBrain, bool> bulletTelegraph = s => s.Gun.Current == DummyShooter.State.Telegraph
+                && (s.Gun.CurrentAttack == DummyShooter.Attack.Shot || s.Gun.CurrentAttack == DummyShooter.Attack.Burst);
             t0 = BotClock.Now;
-            while (!soldiers.Any(s => s.Gun.Current == DummyShooter.State.Telegraph) && BotClock.Now - t0 < 12f) yield return null;
+            while (!soldiers.Any(bulletTelegraph) && BotClock.Now - t0 < 15f) yield return null;
             Vector3 stand = lucy.transform.position;
             lucy.GetComponent<TankController>().Teleport(stand + Vector3.right * 2.5f, 0f);
             Transform impact = null;
@@ -151,6 +155,8 @@ namespace GlorifiedBody.Automation
             int drift = soldiers.Sum(s => s.MovedWhileShootingFrames);
             Record("move_or_shoot", fired >= 2 && drift == 0, $"shots={fired} frames moved while aiming={drift} " +
                 string.Join(" ", soldiers.Select(s => $"{s.name}:moves={s.Moves}/shoots={s.ShootPhases}")));
+
+            yield return Weapons(lucy, soldiers, powers, stats, shots);
 
             // The lift, then a slam.
             SoldierBrain lifted = soldiers.FirstOrDefault(s => s.name.StartsWith("Soldier")) ?? soldiers[0]; // not the heavy armour
@@ -192,6 +198,140 @@ namespace GlorifiedBody.Automation
                 Record("death", victim != null && victim.Body.IsDead && victim.Current == SoldierBrain.Phase.Dead, $"{victim.name} dead={victim.Body.IsDead}");
             }
             Finish();
+        }
+
+        /// <summary>The weapon steps: the grenade, the icons, the shield, the melee.</summary>
+        private IEnumerator Weapons(GameObject lucy, SoldierBrain[] soldiers, PsychicPowers powers, PsychicStats stats, string shots)
+        {
+            TankController tank = lucy.GetComponent<TankController>();
+            PlayerHud hud = FindFirstObjectByType<PlayerHud>();
+            Vector3 home = lucy.transform.position;
+
+            // The grenade: the arc, the red ring on the floor at her feet.
+            EnemyGrenade grenade = null;
+            float t0 = BotClock.Now;
+            while (grenade == null && BotClock.Now - t0 < 25f)
+            {
+                grenade = FindFirstObjectByType<EnemyGrenade>();
+                yield return null;
+            }
+            if (grenade != null)
+            {
+                float wait = BotClock.Now;
+                while (grenade != null && !grenade.Landed && BotClock.Now - wait < 2f) yield return null;
+                Shot(Path.Combine(shots, "ai_09_grenade_ring.png"));
+            }
+            Record("grenade", grenade != null || EnemyGrenade.Bursts > 0, grenade != null ? $"ring at {grenade.Target}" : $"bursts={EnemyGrenade.Bursts}");
+
+            // The power armour's rocket and the gas grenadier's cloud.
+            EnemyRocket rocket = null;
+            t0 = BotClock.Now;
+            while (rocket == null && BotClock.Now - t0 < 30f)
+            {
+                rocket = FindFirstObjectByType<EnemyRocket>();
+                yield return null;
+            }
+            if (rocket != null)
+            {
+                yield return BotClock.Wait(0.2f);
+                if (rocket != null) CloseShot(rocket.transform.position, rocket.transform.right, Path.Combine(shots, "ai_16_rocket.png"), 2.5f);
+            }
+            Record("rocket", rocket != null || EnemyRocket.Bursts > 0, $"bursts={EnemyRocket.Bursts}");
+            GasCloud cloud = null;
+            t0 = BotClock.Now;
+            while (cloud == null && BotClock.Now - t0 < 30f)
+            {
+                cloud = FindFirstObjectByType<GasCloud>();
+                yield return null;
+            }
+            if (cloud != null)
+            {
+                yield return BotClock.Wait(0.8f);
+                Shot(Path.Combine(shots, "ai_17_gas_cloud.png"));
+                // The close look: a harmless cloud in a free corner (the real one often shares her spot with a frag burst).
+                GasCloud look = GasCloud.Spawn(new Vector3(-6.5f, 0f, 3.5f), 2.5f, 3f, 0f, "bot");
+                yield return BotClock.Wait(1.2f);
+                if (look != null) CloseShot(look.transform.position + Vector3.up * 1.0f, new Vector3(1f, 0f, -0.3f), Path.Combine(shots, "ai_18_gas_close.png"), 4.5f);
+            }
+            Record("gas", cloud != null, cloud != null ? $"cloud r={cloud.Radius}" : "no cloud in 30 s");
+
+            // The icon next to the circle.
+            t0 = BotClock.Now;
+            while (!(hud != null && hud.ActiveThreatIcons > 0 && soldiers.Any(s => s.Gun.Current == DummyShooter.State.Telegraph)) && BotClock.Now - t0 < 12f) yield return null;
+            Shot(Path.Combine(shots, "ai_10_icons.png"));
+            Record("attack_icon", hud != null && hud.ActiveThreatIcons > 0, hud != null ? "shown: " + string.Join(",", hud.ShownAttacks) : "no HUD");
+
+            // Attackers out of the frame: she stands in the south-west corner, the north-east camera frames her, the
+            // soldiers in the north are behind it. The edge arrows carry the icons.
+            // The camera turns away from them: it stands between the soldiers and her, and looks past her.
+            Camera main = Camera.main;
+            var director = FindFirstObjectByType<GlorifiedBody.Cameras.FixedCameraDirector>();
+            if (director != null) director.enabled = false;
+            Vector3 keepPos = main != null ? main.transform.position : Vector3.zero;
+            Quaternion keepRot = main != null ? main.transform.rotation : Quaternion.identity;
+            t0 = BotClock.Now;
+            while (!(hud != null && hud.ActiveThreatArrows > 0) && BotClock.Now - t0 < 15f)
+            {
+                if (main != null)
+                {
+                    Vector3 centre = Vector3.zero;
+                    int live = 0;
+                    foreach (SoldierBrain s in soldiers) if (s != null && !s.Body.IsDead) { centre += s.transform.position; live++; }
+                    if (live > 0) centre /= live;
+                    Vector3 away = lucy.transform.position - centre;
+                    away.y = 0f;
+                    away = away.sqrMagnitude > 0.01f ? away.normalized : Vector3.back;
+                    main.transform.position = lucy.transform.position - away * 1.5f + Vector3.up * 3f;
+                    main.transform.LookAt(lucy.transform.position + away * 3f);
+                }
+                yield return null;
+            }
+            yield return null;
+            Shot(Path.Combine(shots, "ai_11_offscreen_icons.png"));
+            if (main != null) main.transform.SetPositionAndRotation(keepPos, keepRot);
+            if (director != null) director.enabled = true;
+            Record("offscreen_icon", hud != null && hud.ActiveThreatArrows > 0, hud != null ? $"arrows={hud.ActiveThreatArrows} shown: {string.Join(",", hud.ShownAttacks)}" : "no HUD");
+            tank.Teleport(home, 0f);
+            yield return BotClock.Wait(1f);
+
+            // The shield: mk_warspite from the front stops on it.
+            SoldierBrain guard = soldiers.FirstOrDefault(s => s.GetComponent<EnemyShield>() != null);
+            if (guard != null)
+            {
+                EnemyShield shield = guard.GetComponent<EnemyShield>();
+                Vector3 front = guard.transform.position + guard.transform.forward * 3.5f;
+                tank.Teleport(new Vector3(front.x, home.y, front.z), guard.transform.eulerAngles.y + 180f);
+                stats.DebugSet(100f, 0f);
+                powers.Select(PowerKind.Blast);
+                float hp = guard.GetComponent<Health>().CurrentHealth;
+                powers.FireAt(powers.Selected, 0.5f, guard.GetComponent<LockOnTargetable>(), 1f);
+                yield return null;
+                yield return null;
+                Shot(Path.Combine(shots, "ai_12_blocked.png"));
+                CloseShot(shield.Model.position, (guard.transform.forward - guard.transform.right * 0.6f).normalized, Path.Combine(shots, "ai_13_shield_close.png"), 2.2f);
+                Record("shield_block", powers.LastResult == "blocked" && guard.GetComponent<Health>().CurrentHealth == hp,
+                    $"result={powers.LastResult} hp={guard.GetComponent<Health>().CurrentHealth:0}/{hp:0} blocks={shield.BlockCount}");
+                tank.Teleport(home, 0f);
+                yield return BotClock.Wait(1f);
+            }
+
+            // Melee: she stands close to a soldier, it strikes with the telegraph.
+            SoldierBrain fighter = soldiers.FirstOrDefault(s => s.name.StartsWith("Soldier")) ?? soldiers[0];
+            t0 = BotClock.Now;
+            while (fighter.Gun.HoldsSlot && BotClock.Now - t0 < 4f) yield return null;
+            Vector3 close = fighter.transform.position + fighter.transform.forward * 1.2f;
+            tank.Teleport(new Vector3(close.x, home.y, close.z), fighter.transform.eulerAngles.y + 180f);
+            t0 = BotClock.Now;
+            while (!(fighter.Gun.Current == DummyShooter.State.Telegraph && fighter.Gun.CurrentAttack == DummyShooter.Attack.Melee) && BotClock.Now - t0 < 8f) yield return null;
+            Shot(Path.Combine(shots, "ai_14_melee_telegraph.png"));
+            int strikes = fighter.Gun.MeleeStrikes;
+            t0 = BotClock.Now;
+            while (fighter.Gun.MeleeStrikes == strikes && BotClock.Now - t0 < 3f) yield return null;
+            yield return BotClock.Wait(0.2f);
+            CloseShot(fighter.transform.position + Vector3.up * 1.2f, fighter.transform.right, Path.Combine(shots, "ai_15_melee_strike.png"), 3f);
+            Record("melee", fighter.Gun.MeleeStrikes > strikes, $"{fighter.name} strikes={fighter.Gun.MeleeStrikes} swings={fighter.GetComponent<EnemyGun>()?.MeleeSwings}");
+            tank.Teleport(home, 0f);
+            yield return BotClock.Wait(1f);
         }
 
         /// <summary>A 1080p shot with the HUD (the telegraph circle, the notice) drawn through the camera.</summary>

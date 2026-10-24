@@ -27,6 +27,10 @@ namespace GlorifiedBody.Combat
         PsychicBlast,
         PsychicFire,
         PsychicTelekinesis,
-        ShortShock
+        ShortShock,
+
+        // ── Appended 2026-10-24 (append only: the gore rules store the numbers) ──
+        EnemyGas,
+        EnemyRocket
     }
 }

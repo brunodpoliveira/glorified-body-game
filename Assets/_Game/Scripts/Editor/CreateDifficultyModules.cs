@@ -31,17 +31,17 @@ namespace GlorifiedBody.Editor
             CreateModule("base", "BASE", "█", "The lab as designed. Always on.", 100,
                 DifficultyModuleDefinition.ModuleType.Base, isBaseline: true, presetGroup: "", parameters: new ModuleParam[] { });
 
-            CreateModule("preset_easy", "EASY", "I", "One enemy fires at a time.", -25,
+            CreateModule("preset_easy", "EASY", "I", "One enemy fires at a time. 1.5 s from the laser to the shot.", -25,
                 DifficultyModuleDefinition.ModuleType.PresetEasy, isBaseline: false, presetGroup: PresetGroup,
-                parameters: new[] { new ModuleParam { key = DifficultyModuleDefinition.ParamMaxSimultaneousShooters, value = 1f } });
+                parameters: Preset(1f, 1.5f));
 
-            CreateModule("preset_normal", "NORMAL", "II", "Two enemies fire at a time.", 0,
+            CreateModule("preset_normal", "NORMAL", "II", "Two enemies fire at a time. 1.0 s from the laser to the shot.", 0,
                 DifficultyModuleDefinition.ModuleType.PresetNormal, isBaseline: false, presetGroup: PresetGroup,
-                parameters: new[] { new ModuleParam { key = DifficultyModuleDefinition.ParamMaxSimultaneousShooters, value = 2f } });
+                parameters: Preset(2f, 1f));
 
-            CreateModule("preset_hard", "HARD", "III", "Every enemy fires.", 25,
+            CreateModule("preset_hard", "HARD", "III", "Every enemy fires. 0.8 s from the laser to the shot.", 25,
                 DifficultyModuleDefinition.ModuleType.PresetHard, isBaseline: false, presetGroup: PresetGroup,
-                parameters: new[] { new ModuleParam { key = DifficultyModuleDefinition.ParamMaxSimultaneousShooters, value = 0f } });
+                parameters: Preset(0f, 0.8f));
 
             CreateModule("fragile", "FRAGILE", "❤", "HP drains twice as fast." + NotYet, 10,
                 DifficultyModuleDefinition.ModuleType.Fragile, isBaseline: false, presetGroup: "",
@@ -58,6 +58,17 @@ namespace GlorifiedBody.Editor
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
             Debug.Log("[CreateDifficultyModules] 7 difficulty module assets created or updated in " + AssetFolder);
+        }
+
+        /// <summary>A preset's numbers: the shooters at a time, the telegraph seconds, the rest after an attack.</summary>
+        private static ModuleParam[] Preset(float shooters, float attackSeconds)
+        {
+            return new[]
+            {
+                new ModuleParam { key = DifficultyModuleDefinition.ParamMaxSimultaneousShooters, value = shooters },
+                new ModuleParam { key = DifficultyModuleDefinition.ParamAttackSeconds, value = attackSeconds },
+                new ModuleParam { key = DifficultyModuleDefinition.ParamRestSeconds, value = 2f }
+            };
         }
 
         private static void CreateModule(

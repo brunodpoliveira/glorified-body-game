@@ -254,7 +254,7 @@ case "$mode" in
       echo "[record] clips in $dest/latest/ and $dest/$stamp/"
     }
     with_lock batch play_batch; rc=$?
-    [ -f "$RUN/playthrough.json" ] && python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print('[play]', 'PASS' if d['pass'] else 'FAIL', d['duration_s'], 's, max frame', d['max_frame_ms'], 'ms'); [print('  ', 'ok  ' if s['ok'] else 'FAIL', s['name'], s['detail']) for s in d['steps']]" "$RUN/playthrough.json"
+    [ -f "$RUN/playthrough.json" ] && python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print('[play]', 'PASS' if d['pass'] else 'FAIL', d.get('duration_s', '?'), 's, max frame', d.get('max_frame_ms', '?'), 'ms'); [print('  ', 'ok  ' if s['ok'] else 'FAIL', s['name'], s['detail']) for s in d['steps']]" "$RUN/playthrough.json"
     [ "$record" = 1 ] && encode_clips
     triage; t=$?; [ $rc -eq 0 ] && rc=$t; exit $rc ;;
   import)

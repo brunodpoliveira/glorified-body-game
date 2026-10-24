@@ -74,6 +74,26 @@ namespace GlorifiedBody.Systems
             }
         }
 
+        /// <summary>Seconds from the laser to the shot. Normal (1.0) without a preset.</summary>
+        public float AttackSeconds
+        {
+            get
+            {
+                var preset = ActivePreset;
+                return preset != null ? preset.GetParam(DifficultyModuleDefinition.ParamAttackSeconds, 1f) : 1f;
+            }
+        }
+
+        /// <summary>Seconds an enemy rests after an attack.</summary>
+        public float RestSeconds
+        {
+            get
+            {
+                var preset = ActivePreset;
+                return preset != null ? preset.GetParam(DifficultyModuleDefinition.ParamRestSeconds, 2f) : 2f;
+            }
+        }
+
         // ── Lifecycle ────────────────────────────────────────────────────
 
         void Awake()

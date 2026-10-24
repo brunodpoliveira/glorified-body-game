@@ -202,6 +202,14 @@ namespace GlorifiedBody.Enemy
             // An enemy bullet that hits a floater drops it, unhurt (Bruno, 2026-10-22).
             TelekinesisLift floater = !returned && !isPlayer ? hit.transform.GetComponentInParent<TelekinesisLift>() : null;
             if (floater != null && floater.CanLaunch) floater.Release(attacker);
+            // A shield from the front stops a returned bullet (Bruno, 2026-10-24).
+            IFrontGuard guard = returned && !isPlayer ? hit.transform.GetComponentInParent<IFrontGuard>() : null;
+            if (guard != null && guard.Blocks(hit.point - transform.forward * 2f))
+            {
+                guard.Blocked(hit.point, "returned_bullet");
+                Destroy(gameObject);
+                return;
+            }
             if (returned && !isPlayer)
             {
                 Health enemy = hit.transform.GetComponentInParent<Health>();

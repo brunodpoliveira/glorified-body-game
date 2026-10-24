@@ -2,6 +2,7 @@
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using GlorifiedBody.Enemy;
 using UnityEngine.SceneManagement;
 using Unity.AI.Navigation;
 using GlorifiedBody.Cameras;
@@ -24,7 +25,7 @@ namespace GlorifiedBody.Editor
         public const string ScenePath = MenuLoopSetup.ScenesFolder + "/" + SceneName + ".unity";
         public const string NavMeshPath = MenuLoopSetup.ScenesFolder + "/AiTest_NavMesh.asset";
         public static readonly Vector3 LucyStart = new Vector3(0f, 0f, -5f);
-        public static readonly string[] SoldierNames = { "Soldier_A", "Guard_B", "Armour_C" };
+        public static readonly string[] SoldierNames = { "Soldier_A", "Guard_B", "Armour_C", "Gasser_D" };
 
         [MenuItem("GlorifiedBody/Build AI Test Room")]
         public static void BuildAiTest()
@@ -65,9 +66,22 @@ namespace GlorifiedBody.Editor
             InvectorEnemyFactory.EnsureShotEffects();
             var fsm = InvectorEnemyFactory.BuildSoldierFsm();
             GameObject enemies = MenuLoopSetup.EnsureRoot("[Enemies]");
-            Place(enemies, InvectorEnemyFactory.BuildSoldier(SoldierNames[0], InvectorEnemyFactory.SpecFor("soldier"), new Vector3(-5f, 0f, 5.5f), 160f, catalog, fsm));
-            Place(enemies, InvectorEnemyFactory.BuildSoldier(SoldierNames[1], InvectorEnemyFactory.SpecFor("guard"), new Vector3(5f, 0f, 5.5f), 200f, catalog, fsm));
-            Place(enemies, InvectorEnemyFactory.BuildSoldier(SoldierNames[2], InvectorEnemyFactory.SpecFor("power_armour"), new Vector3(0f, 0f, 6f), 180f, catalog, fsm));
+            // One of each weapon (Bruno, 2026-10-24): the soldier a rifle (3-round bursts), the guard a shield and a
+            // pistol, the power armour frag grenades and rockets, the gas grenadier poison gas. All strike in melee
+            // when she is close.
+            var rifleman = InvectorEnemyFactory.SpecFor("soldier");
+            rifleman.weapon = DummyShooter.Weapon.Rifle;
+            var shieldGuard = InvectorEnemyFactory.SpecFor("guard");
+            shieldGuard.shield = true;
+            var grenadier = InvectorEnemyFactory.SpecFor("power_armour");
+            grenadier.weapon = DummyShooter.Weapon.ArmourLaunchers; // frag grenades and rockets, one after the other
+            // The gas grenadier (Bruno, 2026-10-24): a soldier with a gas launcher; the cloud is poison.
+            var gasser = InvectorEnemyFactory.SpecFor("soldier");
+            gasser.weapon = DummyShooter.Weapon.GasLauncher;
+            Place(enemies, InvectorEnemyFactory.BuildSoldier(SoldierNames[0], rifleman, new Vector3(-5f, 0f, 5.5f), 160f, catalog, fsm));
+            Place(enemies, InvectorEnemyFactory.BuildSoldier(SoldierNames[1], shieldGuard, new Vector3(5f, 0f, 5.5f), 200f, catalog, fsm));
+            Place(enemies, InvectorEnemyFactory.BuildSoldier(SoldierNames[2], grenadier, new Vector3(0f, 0f, 6f), 180f, catalog, fsm));
+            Place(enemies, InvectorEnemyFactory.BuildSoldier(SoldierNames[3], gasser, new Vector3(-7.5f, 0f, 1f), 120f, catalog, fsm));
 
             // Two cameras: the wide one from over the south wall (the default), a low one from the north-east
             // corner for the south half.

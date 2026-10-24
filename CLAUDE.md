@@ -144,7 +144,18 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   wall impact on every enemy bullet. Awareness: `EnemyAlert` and `SoldierBrain.Alert` (sight, hurt, a power hit
   within 12 m, a shot or an alert within 25 m); alerted soldiers keep a fixed Invector target (Warspite's rule)
   and pick firing spots with a clear line. FSM: Idle <-> Engage on `GbAlertedDecision`.
-  Next: Bruno's test; then the reactions to a colleague's death, the retreat by rank, more weapon types.
+  Bruno's test: 7 of 7 checks passed.
+- 2026-10-24, the weapons (`devlog-notes/2026-10-24_weapons.md`): `DummyShooter` attack kinds (`Weapon`, `Attack`):
+  pistol shot, rifle burst (3 rounds), frag grenade (`EnemyGrenade`, a red floor ring), gas grenade (a green ring,
+  `GasCloud` poison, the masked enemies immune), rocket (`EnemyRocket`), melee within 1.8 m. Every kind takes a
+  slot and the telegraph. The time from the laser to the attack by difficulty (presets' `attackSeconds` 1.5 / 1.0
+  / 0.8, `restSeconds` 2). `EnemyShield` (`IFrontGuard`): the front stops mk_warspite, mk_erebus and returned
+  bullets ("BLOCKED"), the lift tears it away. mk_orzabal's catch takes a rocket (25 MK, it steers back), a
+  grenade (15 MK), a bullet, in that order. HUD attack icons next to the circle and on the edge arrows. Alerted
+  soldiers run or sprint, never walk. The lock marker floats over the target's meshes (the 2.6 m armour hid it).
+  AI TEST: `Soldier_A` rifle, `Guard_B` shield + pistol, `Armour_C` frag + rockets, `Gasser_D` gas.
+  `Assets/_Game/Effects/GasCloud_Smoke.prefab` is vendor data: git-ignored, the factory makes it.
+  Next: Bruno's test; then the reactions to a colleague's death, the retreat by rank.
 
 ## Rules
 

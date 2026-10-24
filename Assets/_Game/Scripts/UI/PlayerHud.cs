@@ -44,8 +44,23 @@ namespace GlorifiedBody.UI
         private DummyShooter[] shooters = System.Array.Empty<DummyShooter>();
         private float shootersRefreshAt;
 
+        // The attack icons (Bruno, 2026-10-24: "an ui symbol for the attack that will come", also when the enemy is
+        // off-screen, so the player has time for a counterplay). One icon next to each circle (from the laser on),
+        // one next to each edge arrow. Pistol, rifle with three dots (the burst), grenade, a starburst (melee), a
+        // cloud (gas), a rocket.
+        private const float IconSize = 44f;
+        private readonly List<RectTransform> threatIcons = new List<RectTransform>();
+        private readonly List<Image> threatIconImages = new List<Image>();
+        private readonly List<RectTransform> arrowIcons = new List<RectTransform>();
+        private readonly List<Image> arrowIconImages = new List<Image>();
+        private readonly Dictionary<DummyShooter.Attack, Sprite> attackIcons = new Dictionary<DummyShooter.Attack, Sprite>();
+
         public int ActiveThreatRings { get; private set; }
         public int ActiveThreatArrows { get; private set; }
+        public int ActiveThreatIcons { get; private set; }
+        /// <summary>The attack kinds the HUD shows now, next to circles and arrows (tests read it).</summary>
+        public readonly List<DummyShooter.Attack> ShownAttacks = new List<DummyShooter.Attack>();
+        public static Sprite IconFor(PlayerHud hud, DummyShooter.Attack attack) => hud.attackIcons.TryGetValue(attack, out Sprite s) ? s : null;
 
         // The bar warnings (Bruno, 2026-10-20): low HP, low NALCON, high SHORT. Each one is an icon shape, an
         // exclamation mark and a word, so a colorblind player reads it, plus one series of three beeps when it
@@ -93,6 +108,12 @@ namespace GlorifiedBody.UI
             white = MakeWhiteSprite();
             ringSprite = MakeRingSprite();
             arrowSprite = MakeArrowSprite();
+            attackIcons[DummyShooter.Attack.Shot] = MakeShapeSprite(PistolIcon, 64);
+            attackIcons[DummyShooter.Attack.Burst] = MakeShapeSprite(RifleIcon, 64);
+            attackIcons[DummyShooter.Attack.Grenade] = MakeShapeSprite(GrenadeIcon, 64);
+            attackIcons[DummyShooter.Attack.Melee] = MakeShapeSprite(MeleeIcon, 64);
+            attackIcons[DummyShooter.Attack.Gas] = MakeShapeSprite(GasIcon, 64);
+            attackIcons[DummyShooter.Attack.Rocket] = MakeShapeSprite(RocketIcon, 64);
             BuildUi();
         }
 
@@ -213,7 +234,28 @@ namespace GlorifiedBody.UI
                 arrowObj.SetActive(false);
                 threatArrows.Add(arrowRect);
                 threatArrowImages.Add(arrowImage);
+
+                threatIcons.Add(IconElement("ThreatIcon" + i, canvasObj.transform, threatIconImages));
+                arrowIcons.Add(IconElement("ArrowIcon" + i, canvasObj.transform, arrowIconImages));
             }
+        }
+
+        private RectTransform IconElement(string name, Transform parent, List<Image> images)
+        {
+            var obj = Element(name, parent);
+            var rect = obj.GetComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0.5f, 0.5f);
+            rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.sizeDelta = new Vector2(IconSize, IconSize);
+            var image = obj.AddComponent<Image>();
+            image.raycastTarget = false;
+            image.preserveAspect = true;
+            var outline = obj.AddComponent<Outline>();
+            outline.effectColor = new Color(0f, 0f, 0f, 0.85f);
+            outline.effectDistance = new Vector2(2f, -2f);
+            obj.SetActive(false);
+            images.Add(image);
+            return rect;
         }
 
         private Image Bar(Transform parent, string label, int row, Color color)
@@ -260,6 +302,7 @@ namespace GlorifiedBody.UI
             {
                 case "too_heavy": return "TOO HEAVY";
                 case "no_nalcon": return "NOT ENOUGH MK";
+                case "blocked": return "BLOCKED";
                 default: return "";
             }
         }
@@ -517,6 +560,53 @@ namespace GlorifiedBody.UI
 
         private static bool InCircle(float x, float y, float cx, float cy, float r) => (x - cx) * (x - cx) + (y - cy) * (y - cy) <= r * r;
 
+        private static bool InRect(float x, float y, float x0, float y0, float x1, float y1) => x >= x0 && x <= x1 && y >= y0 && y <= y1;
+
+        /// <summary>A pistol, the barrel to the right.</summary>
+        private static bool PistolIcon(float x, float y) =>
+            InRect(x, y, 0.12f, 0.56f, 0.9f, 0.76f) ||
+            InPolygon(x, y, new[] { new Vector2(0.16f, 0.6f), new Vector2(0.42f, 0.6f), new Vector2(0.36f, 0.18f), new Vector2(0.12f, 0.18f) }) ||
+            InRect(x, y, 0.42f, 0.48f, 0.5f, 0.56f);
+
+        /// <summary>A rifle over three dots: the 3-round burst.</summary>
+        private static bool RifleIcon(float x, float y) =>
+            InRect(x, y, 0.06f, 0.66f, 0.96f, 0.78f) ||
+            InPolygon(x, y, new[] { new Vector2(0.04f, 0.6f), new Vector2(0.22f, 0.66f), new Vector2(0.22f, 0.78f), new Vector2(0.04f, 0.82f) }) ||
+            InRect(x, y, 0.3f, 0.48f, 0.38f, 0.66f) || InRect(x, y, 0.5f, 0.5f, 0.58f, 0.66f) ||
+            InCircle(x, y, 0.28f, 0.24f, 0.08f) || InCircle(x, y, 0.5f, 0.24f, 0.08f) || InCircle(x, y, 0.72f, 0.24f, 0.08f);
+
+        /// <summary>A grenade: the body, the cap and the lever.</summary>
+        private static bool GrenadeIcon(float x, float y) =>
+            InCircle(x, y, 0.5f, 0.4f, 0.3f) ||
+            InRect(x, y, 0.4f, 0.66f, 0.6f, 0.8f) ||
+            InPolygon(x, y, new[] { new Vector2(0.58f, 0.74f), new Vector2(0.8f, 0.62f), new Vector2(0.84f, 0.68f), new Vector2(0.6f, 0.82f) });
+
+        /// <summary>A cloud of three puffs on a flat base: the poison gas.</summary>
+        private static bool GasIcon(float x, float y) =>
+            InCircle(x, y, 0.3f, 0.42f, 0.2f) || InCircle(x, y, 0.55f, 0.55f, 0.26f) || InCircle(x, y, 0.75f, 0.4f, 0.18f) ||
+            InRect(x, y, 0.12f, 0.22f, 0.9f, 0.4f);
+
+        /// <summary>A rocket flying right: the body, the nose, two fins.</summary>
+        private static bool RocketIcon(float x, float y) =>
+            InRect(x, y, 0.18f, 0.42f, 0.72f, 0.58f) ||
+            InPolygon(x, y, new[] { new Vector2(0.72f, 0.4f), new Vector2(0.95f, 0.5f), new Vector2(0.72f, 0.6f) }) ||
+            InPolygon(x, y, new[] { new Vector2(0.06f, 0.24f), new Vector2(0.3f, 0.42f), new Vector2(0.18f, 0.42f) }) ||
+            InPolygon(x, y, new[] { new Vector2(0.06f, 0.76f), new Vector2(0.18f, 0.58f), new Vector2(0.3f, 0.58f) });
+
+        /// <summary>A starburst: a strike at close range.</summary>
+        private static bool MeleeIcon(float x, float y)
+        {
+            const int spikes = 8;
+            var p = new Vector2[spikes * 2];
+            for (int i = 0; i < p.Length; i++)
+            {
+                float a = i * Mathf.PI / spikes + Mathf.PI / 2f;
+                float r = i % 2 == 0 ? 0.48f : 0.2f;
+                p[i] = new Vector2(0.5f + Mathf.Cos(a) * r, 0.5f + Mathf.Sin(a) * r);
+            }
+            return InPolygon(x, y, p);
+        }
+
         private static bool InPolygon(float x, float y, Vector2[] p)
         {
             bool inside = false;
@@ -527,9 +617,10 @@ namespace GlorifiedBody.UI
             return inside;
         }
 
-        private static Sprite MakeShapeSprite(Func<float, float, bool> inside)
+        private static Sprite MakeShapeSprite(Func<float, float, bool> inside) => MakeShapeSprite(inside, 32);
+
+        private static Sprite MakeShapeSprite(Func<float, float, bool> inside, int size)
         {
-            const int size = 32;
             var tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
             var px = new Color32[size * size];
             for (int y = 0; y < size; y++)
@@ -554,6 +645,8 @@ namespace GlorifiedBody.UI
         {
             int rings = 0;
             int arrows = 0;
+            int icons = 0;
+            ShownAttacks.Clear();
             if (cam != null)
             {
                 if (Time.unscaledTime >= shootersRefreshAt)
@@ -568,6 +661,22 @@ namespace GlorifiedBody.UI
                     bool telegraph = shooter.Current == DummyShooter.State.Telegraph;
                     bool aiming = shooter.Current == DummyShooter.State.Aiming;
                     if (!telegraph && !aiming) continue;
+                    Color threatColour = telegraph ? Color.Lerp(new Color(1f, 0.6f, 0.2f), new Color(1f, 0.15f, 0.1f), shooter.TelegraphProgress) : new Color(1f, 0.6f, 0.2f);
+                    attackIcons.TryGetValue(shooter.CurrentAttack, out Sprite icon);
+
+                    // The icon next to the circle, from the laser on: the circle's upper right, on its edge.
+                    if (icon != null && icons < MaxThreats && ToCanvas(cam, shooter.AimPoint, out Vector2 iconAt))
+                    {
+                        float ringSize = telegraph ? Mathf.Lerp(280f, 60f, shooter.TelegraphProgress) : 280f;
+                        float reachOut = ringSize * 0.5f * 0.75f + IconSize * 0.5f;
+                        RectTransform iconRect = threatIcons[icons];
+                        if (!iconRect.gameObject.activeSelf) iconRect.gameObject.SetActive(true);
+                        iconRect.anchoredPosition = iconAt + new Vector2(reachOut, reachOut);
+                        threatIconImages[icons].sprite = icon;
+                        threatIconImages[icons].color = threatColour;
+                        ShownAttacks.Add(shooter.CurrentAttack);
+                        icons++;
+                    }
 
                     if (telegraph && rings < MaxThreats && ToCanvas(cam, shooter.AimPoint, out Vector2 at))
                     {
@@ -602,12 +711,23 @@ namespace GlorifiedBody.UI
                     arrow.anchoredPosition = local;
                     arrow.localEulerAngles = new Vector3(0f, 0f, Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg - 90f); // the sprite points up
                     threatArrowImages[arrows].color = telegraph ? new Color(1f, 0.15f, 0.1f) : new Color(1f, 0.6f, 0.2f);
+                    // The attack icon on the inner side of the arrow, upright.
+                    RectTransform arrowIcon = arrowIcons[arrows];
+                    arrowIconImages[arrows].enabled = icon != null;
+                    if (!arrowIcon.gameObject.activeSelf) arrowIcon.gameObject.SetActive(true);
+                    arrowIcon.anchoredPosition = local - dir * (32f + IconSize * 0.6f);
+                    arrowIconImages[arrows].sprite = icon;
+                    arrowIconImages[arrows].color = threatColour;
+                    if (icon != null) ShownAttacks.Add(shooter.CurrentAttack);
                     arrows++;
                 }
             }
 
             for (int i = rings; i < MaxThreats; i++) if (threatRings[i].gameObject.activeSelf) threatRings[i].gameObject.SetActive(false);
             for (int i = arrows; i < MaxThreats; i++) if (threatArrows[i].gameObject.activeSelf) threatArrows[i].gameObject.SetActive(false);
+            for (int i = icons; i < MaxThreats; i++) if (threatIcons[i].gameObject.activeSelf) threatIcons[i].gameObject.SetActive(false);
+            for (int i = arrows; i < MaxThreats; i++) if (arrowIcons[i].gameObject.activeSelf) arrowIcons[i].gameObject.SetActive(false);
+            ActiveThreatIcons = icons;
             ActiveThreatRings = rings;
             ActiveThreatArrows = arrows;
         }
