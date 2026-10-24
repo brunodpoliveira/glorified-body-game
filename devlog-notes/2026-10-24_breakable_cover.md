@@ -134,9 +134,9 @@ All numbers here are PROPOSED.
 - The vendor AI stops about 0.8 m short of its point: a soldier counts as at his cover within 1 m.
 - The tutorial drive walked into the parallel bars' south posts on its way back: it goes south of them now.
 
-## Open, for Bruno
+## His answers (2026-10-24, evening)
 
-- The darkness mechanic (your answer 5): the surge already puts lamps out. What does a dark room do?
-- Should the thrown body's arc down to the chest stay? It also changes throws with no cover. The RagdollTests throw
-  still knocks both bodies down.
-- The sounds are placeholders. They need a source (RFab row 14, or a CC0 pack).
+- The darkness: "it is just for sauce/aesthetics; nothing changes, except making it harder to see in the room".
+  No mechanic. The surge of the short still puts out the lamps near her, as a look.
+- The thrown body's arc down to the chest of its target: "yes", it stays.
+- The sounds stay placeholders until a source exists (RFab row 14).

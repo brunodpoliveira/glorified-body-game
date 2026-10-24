@@ -183,7 +183,8 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
     stays broken (`RoomDamageLedger`: kept when she leaves, dropped on a restart). The surge of the short pops the
     lamps near her. A thrown body arcs down to the chest of the target. The COVER TEST room (`CoverTestSetup`, local
     only like the AI test room) and its "cover" bot. Tutorial: 22 steps (cover: break the barricade in front of
-    `Target_3`). OPEN for Bruno: the darkness mechanic, the comic blood sprays, the sound source (RFab gap 14).
+    `Target_3`). His answers: a dark room is only a look (no mechanic), the thrown arc stays, the sprays are the
+    vendor's textured ones (`GoreSprayLook`, smoothness capped at 0.55). OPEN: the sound source (RFab gap 14).
 
 ## Rules
 

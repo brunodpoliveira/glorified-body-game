@@ -50,9 +50,14 @@ never falls). Answer 1 above changes the third choice: a telekinesis kill now bu
   of the gas grenadier: 170 triangles, flew 1.1 m, settled).
 - Shots: `~/glorified-body-renders/game/ai/gore2/`.
 
-## For Bruno
+## The textured sprays (Bruno, 2026-10-24, evening: "change it to the textured sprays")
 
-- The flying sprays are the Warspite "flat comic blood" (a procedural round drop or a full quad, loud red). At 2 m
-  in a close shot they read as red cards (`gore2/20c_arm_flies.png`). From the game cameras (5 to 12 m) they read as
-  blood. They come from the port, not from the work of today. Keep the comic style, or move the sprays to the
-  textured flipbooks of the vendor?
+- The Warspite port drew every spray with its flat comic shader (`GoreSprayUnlit`): a loud red mask, or a round
+  drop with no texture. In a close shot it read as red cards.
+- `Editor/Gore/GoreSprayLook.UseTexturedSprays` gives each `M_TI_Spray_` material the shader and the properties of
+  its vendor material: the URP shader graphs with the blood flipbooks. The procedural drop (`bloodFlying 2`) takes
+  the textured fly shader. The red mist takes URP Particles/Unlit with its picture. The materials stay ours, and
+  they point at the vendor shaders and textures by GUID.
+- The vendor sheets are wet mirrors (smoothness 1). Indoors they showed the blue default sky in the blood. The
+  smoothness is capped at 0.55 (PROPOSED).
+- Shot: `gore2/20c_arm_flies_textured.png` (before: `gore2/20c_arm_flies.png`).
