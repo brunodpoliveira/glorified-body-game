@@ -37,6 +37,8 @@ namespace GlorifiedBody.Gore.ThatIndividual
                 case DamageType.SonicBoom:
                 case DamageType.Explosion:
                 case DamageType.Grenade:
+                case DamageType.EnemyRocket:
+                case DamageType.PsychicTelekinesis: // a slam, a throw, a returned round (THE GLORIFIED BODY)
                 case DamageType.FallingHazard:
                 case DamageType.PropImpact:
                 case DamageType.Debug:
@@ -57,6 +59,17 @@ namespace GlorifiedBody.Gore.ThatIndividual
             if (type == DamageType.AudioPulse && !fatal)
             {
                 return GoreHitWeight.None;
+            }
+
+            // THE GLORIFIED BODY: a burn does not bleed (its ticks would spray every half second); a death by fire
+            // is a plain death. The gas does not bleed. A death by the short is the gruesome one: the full burst.
+            if (type == DamageType.PsychicFire || type == DamageType.EnemyGas)
+            {
+                return fatal ? GoreHitWeight.Fatal : GoreHitWeight.None;
+            }
+            if (type == DamageType.ShortShock && fatal)
+            {
+                return GoreHitWeight.FatalHeavy;
             }
 
             bool heavy = IsHeavyType(type) || damage >= heavyDamageThreshold;

@@ -26,11 +26,14 @@ namespace GlorifiedBody.Enemy
     /// In the fight it runs, never walks, and sprints to a far spot (Bruno, 2026-10-24: "the enemies move too
     /// slowly ... they don't look like they're in combat at all"). When she comes within melee range during a move,
     /// it stops and the gun picks a melee strike (DummyShooter: the same slot and telegraph as a shot).
+    /// Morale (EnemyMorale, design §11.4 and §11.5): a colleague's death shocks it (Shock: it stops, loses its
+    /// aim, flinches, barks) and adds fear; a guard at its limit retreats (Retreat: it sprints away from her, then
+    /// cowers in a crouch and never attacks again). CorpseCare: it tends a dead colleague (Phase.Care).
     /// </summary>
     [RequireComponent(typeof(DummyShooter), typeof(Health))]
     public sealed class SoldierBrain : MonoBehaviour
     {
-        public enum Phase { Idle, Move, Shoot, Hold, Dead }
+        public enum Phase { Idle, Move, Shoot, Hold, Dead, Care, Retreat, Cower }
 
         [SerializeField, Min(1f)] private float preferredRange = 6f;
         [SerializeField] private Vector2 moveSeconds = new Vector2(1.5f, 3f);
@@ -66,6 +69,12 @@ namespace GlorifiedBody.Enemy
         public IEnemyBody Body => body;
         public DummyShooter Gun => gun;
         public bool Alerted { get; private set; }
+        public int ShockCount { get; private set; }
+        public string RetreatReason { get; private set; } = "";
+        /// <summary>Free to tend a body: alive, not retreating or cowering, not held, no aim.</summary>
+        public bool CanCare => Current != Phase.Dead && Current != Phase.Retreat && Current != Phase.Cower
+            && Current != Phase.Hold && Current != Phase.Care && !suspendedByLift && !gun.HoldsSlot;
+        public bool Retreating => Current == Phase.Retreat || Current == Phase.Cower;
         public string AlertReason { get; private set; } = "";
         /// <summary>Where she is: her real position once alerted, else the last seen position.</summary>
         public Vector3 TargetPosition => Alerted && player != null ? player.position : body.TargetPosition;
@@ -159,6 +168,12 @@ namespace GlorifiedBody.Enemy
         public void Hold(float seconds)
         {
             if (Current == Phase.Dead) return;
+            if (Current == Phase.Retreat || Current == Phase.Cower)
+            {
+                gun.HoldFire = true;
+                return; // a frightened one does not come back to the fight
+            }
+            if (Current == Phase.Care) GetComponent<CorpseCare>()?.Stop("held");
             Current = Phase.Hold;
             timer = Mathf.Max(timer, seconds);
             gun.HoldFire = true;
@@ -193,6 +208,27 @@ namespace GlorifiedBody.Enemy
             }
 
             if (!Alerted && body.CanSeeTarget) Alert("sight", callOthers: true);
+
+            if (Current == Phase.Retreat)
+            {
+                gun.HoldFire = true;
+                timer -= dt;
+                if (timer <= 0f || (timer < 7.4f && Flat(transform.position, Spot) <= 1f)) // Invector's own arrival flag lies
+                {
+                    Current = Phase.Cower;
+                    body.Stop();
+                    body.Crouch(true);
+                    RunTelemetry.Event("soldier_cower", name);
+                }
+                return;
+            }
+            if (Current == Phase.Cower)
+            {
+                gun.HoldFire = true;
+                body.Stop();
+                body.Face(transform.position - TargetPosition); // its back to her, head down
+                return;
+            }
 
             if (Current == Phase.Hold)
             {
@@ -230,11 +266,77 @@ namespace GlorifiedBody.Enemy
             }
 
             // Out of the fight state (the FSM searches or idles): the gun holds fire after its shot.
-            if (!Engaged && Current != Phase.Hold)
+            if (!Engaged && Current != Phase.Hold && Current != Phase.Care)
             {
                 gun.HoldFire = true;
                 if (Current != Phase.Idle && !gun.HoldsSlot) Current = Phase.Idle;
             }
+        }
+
+        // ── Morale and care ───────────────────────────────────────────
+
+        /// <summary>A colleague died in sight: it stops, loses its aim, flinches and barks.</summary>
+        public void Shock(float seconds, bool gruesome)
+        {
+            if (Current == Phase.Dead || Retreating) return;
+            ShockCount++;
+            if (Current == Phase.Care) GetComponent<CorpseCare>()?.Stop("shock");
+            gun.Stagger(seconds); // the aim breaks; OnStaggered holds the body for the seconds
+            Hold(seconds);
+            body?.Flinch();
+            // PLACEHOLDER lines: the writer owns the barks.
+            string[] lines = gruesome ? new[] { "OH GOD...", "WHAT DID SHE DO TO HIM?", "JESUS!" } : new[] { "NO!", "MAN DOWN!" };
+            Bark.Say(gameObject, lines[Random.Range(0, lines.Length)]);
+            RunTelemetry.Event("soldier_shocked", $"{name}:{seconds:0.0}s{(gruesome ? ":gruesome" : "")}");
+        }
+
+        /// <summary>Its fear reached its rank's limit: it runs from her and cowers, for the rest of the room.</summary>
+        public void Retreat(string reason)
+        {
+            if (Current == Phase.Dead || Retreating) return;
+            if (Current == Phase.Care) GetComponent<CorpseCare>()?.Stop("retreat");
+            RetreatReason = reason;
+            gun.HoldFire = true;
+            if (gun.HoldsSlot) gun.Stagger(0.1f); // drop the aim
+            Current = Phase.Retreat;
+            Spot = FleeSpot();
+            body.Crouch(false);
+            body.MoveTo(Spot, MoveSpeed.Sprint);
+            timer = 8f;
+            Bark.Say(gameObject, "FALL BACK! FALL BACK!"); // PLACEHOLDER line
+            RunTelemetry.Event("soldier_retreat", $"{name}:{reason} to {Spot.x:0.0},{Spot.z:0.0}");
+        }
+
+        /// <summary>The NavMesh spot farthest from her, within 14 m of it.</summary>
+        private Vector3 FleeSpot()
+        {
+            Vector3 her = TargetPosition;
+            Vector3 best = transform.position;
+            float bestScore = Flat(best, her);
+            for (int i = 0; i < 16; i++)
+            {
+                foreach (float r in new[] { 6f, 10f, 14f })
+                {
+                    Vector3 candidate = transform.position + Quaternion.Euler(0f, i * 22.5f, 0f) * Vector3.forward * r;
+                    if (!NavMesh.SamplePosition(candidate, out NavMeshHit hit, 2f, NavMesh.AllAreas)) continue;
+                    float score = Flat(hit.position, her);
+                    if (score > bestScore) { bestScore = score; best = hit.position; }
+                }
+            }
+            return best;
+        }
+
+        public bool TryBeginCare()
+        {
+            if (!CanCare) return false;
+            Current = Phase.Care;
+            gun.HoldFire = true;
+            return true;
+        }
+
+        public void EndCare()
+        {
+            if (Current == Phase.Care) Current = Phase.Idle;
         }
 
         /// <summary>The FSM fight state calls it every frame.</summary>
@@ -242,6 +344,7 @@ namespace GlorifiedBody.Enemy
         {
             lastEngageFrame = Time.frameCount;
             if (body == null || Current == Phase.Dead || Current == Phase.Hold || suspendedByLift) return;
+            if (Current == Phase.Care || Retreating) { gun.HoldFire = true; return; }
             float dt = Time.deltaTime;
 
             switch (Current)

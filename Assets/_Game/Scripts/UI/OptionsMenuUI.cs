@@ -40,6 +40,7 @@ namespace GlorifiedBody.UI
         private Dropdown vsyncDropdown;
         private Toggle rainToggle;
         private Button lookAuthenticButton;
+        private Dropdown goreDropdown;
         private Button lookClearButton;
 
         // Mouse
@@ -167,6 +168,8 @@ namespace GlorifiedBody.UI
                 vsyncDropdown.SetValueWithoutNotify(SettingsManager.Instance.VSyncCount);
                 if (rainToggle != null)
                     rainToggle.SetIsOnWithoutNotify(SettingsManager.Instance.RainEnabled);
+                if (goreDropdown != null)
+                    goreDropdown.SetValueWithoutNotify(SettingsManager.Instance.GoreLevel);
             }
 
             RefreshResolutionDropdown();
@@ -303,6 +306,11 @@ namespace GlorifiedBody.UI
         private void OnVSyncChanged(int index)
         {
             if (SettingsManager.Instance != null) SettingsManager.Instance.VSyncCount = index;
+        }
+
+        private void OnGoreChanged(int index)
+        {
+            if (SettingsManager.Instance != null) SettingsManager.Instance.GoreLevel = index;
         }
 
         private void OnRainChanged(bool value)
@@ -532,6 +540,9 @@ namespace GlorifiedBody.UI
                 out lookClearButton,
                 firstOptionLabel: "Authentic (1999)",
                 secondOptionLabel: "Clear (anti-aliasing)");
+
+            // The gore (Bruno, 2026-10-24): Off, Low (less blood, no head bursts), Full.
+            goreDropdown = CreateDropdownRow(content, "Gore", new List<string> { "Off", "Low", "Full" }, OnGoreChanged);
 
             return panel;
         }

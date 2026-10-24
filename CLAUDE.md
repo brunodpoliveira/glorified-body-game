@@ -155,7 +155,12 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   soldiers run or sprint, never walk. The lock marker floats over the target's meshes (the 2.6 m armour hid it).
   AI TEST: `Soldier_A` rifle, `Guard_B` shield + pistol, `Armour_C` frag + rockets, `Gasser_D` gas.
   `Assets/_Game/Effects/GasCloud_Smoke.prefab` is vendor data: git-ignored, the factory makes it.
-  Next: Bruno's test; then the reactions to a colleague's death, the retreat by rank.
+- 2026-10-24, night (`devlog-notes/2026-10-24_night.md`): `EnemyMorale` (§11.4 shock with `Bark` lines, §11.5
+  fear by rank: guards retreat and cower at 3, soldiers and heavies never), `CorpseCare` (Bruno: CPR and the drag
+  of a body; a colleague tends a body when he has not seen her for 3 s; placeholder poses, RFab gap 13),
+  `GoreBootstrap` (the GoreManager and the That Individual driver in every gameplay room, their debug keys
+  removed), `GruesomeDeathFx` (a gruesome kill bursts the head, `HeadStump`), the Gore option (Off / Low / Full).
+  Next: Bruno's review.
 
 ## Rules
 

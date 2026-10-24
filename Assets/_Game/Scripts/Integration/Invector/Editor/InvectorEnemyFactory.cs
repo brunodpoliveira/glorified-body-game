@@ -41,14 +41,16 @@ namespace GlorifiedBody.Integration.Invector.Build
             public DummyShooter.Weapon weapon = DummyShooter.Weapon.Pistol;
             public bool shield;
             public bool canMelee = true;
+            /// <summary>Design §11.5: who runs. Guards at a fear of 3, soldiers and heavies never.</summary>
+            public EnemyMorale.Rank rank = EnemyMorale.Rank.Soldier;
         }
 
         public static Spec SpecFor(string classId)
         {
             switch (classId)
             {
-                case "guard": return new Spec { classId = classId, health = 60f };
-                case "power_armour": return new Spec { classId = classId, health = 250f, heavy = true, range = 9f };
+                case "guard": return new Spec { classId = classId, health = 60f, rank = EnemyMorale.Rank.Guard };
+                case "power_armour": return new Spec { classId = classId, health = 250f, heavy = true, range = 9f, rank = EnemyMorale.Rank.Heavy };
                 default: return new Spec { classId = classId };
             }
         }
@@ -228,6 +230,12 @@ namespace GlorifiedBody.Integration.Invector.Build
 
             root.AddComponent<SoldierBrain>();
             root.AddComponent<InvectorEnemyBody>();
+            // What a death does to the others (§11.4, §11.5), and the care of a dead colleague (not the heavies).
+            EnemyMorale morale = root.AddComponent<EnemyMorale>();
+            var moraleSo = new SerializedObject(morale);
+            moraleSo.FindProperty("rank").enumValueIndex = (int)spec.rank;
+            moraleSo.ApplyModifiedPropertiesWithoutUndo();
+            if (spec.rank != EnemyMorale.Rank.Heavy) root.AddComponent<CorpseCare>();
             BuildGun(root, scale, spec.weapon);
             if (spec.shield) BuildShield(root, scale);
             return root;
@@ -469,6 +477,7 @@ namespace GlorifiedBody.Integration.Invector.Build
                 var main = ps.main;
                 main.playOnAwake = true;
                 main.loop = true;
+                main.scalingMode = ParticleSystemScalingMode.Hierarchy; // GasCloud scales it to its ring
             }
             if (!AssetDatabase.IsValidFolder("Assets/_Game/Effects")) AssetDatabase.CreateFolder("Assets/_Game", "Effects");
             // The vendor smoke uses legacy built-in particle shaders: under URP they ignore a tint. Our own URP
@@ -505,7 +514,7 @@ namespace GlorifiedBody.Integration.Invector.Build
             }
             mat.shader = shader;
             mat.SetTexture("_BaseMap", texture);
-            mat.SetColor("_BaseColor", new Color(0.75f, 1f, 0.35f, 1f)); // the sheet's own alpha (up to 0.56) sets the density
+            mat.SetColor("_BaseColor", new Color(0.75f, 1f, 0.35f, 0.6f)); // with the sheet's own alpha (up to 0.56)
             mat.SetFloat("_Surface", 1f); // transparent
             mat.SetFloat("_Blend", 0f);   // alpha
             mat.SetOverrideTag("RenderType", "Transparent");

@@ -95,6 +95,38 @@ namespace GlorifiedBody.Integration.Invector
             ai.MoveTo(point, speed == MoveSpeed.Sprint ? vAIMovementSpeed.Sprinting : speed == MoveSpeed.Run ? vAIMovementSpeed.Running : vAIMovementSpeed.Walking);
         }
 
+        public void Crouch(bool crouched)
+        {
+            if (ai == null || IsDead) return;
+            ai.isCrouching = crouched;
+        }
+
+        public void StrafeTo(Vector3 point, Vector3 facing)
+        {
+            if (IsDead || suspended || ai == null) return;
+            stopRequested = false;
+            ai.StrafeMoveTo(point, facing, vAIMovementSpeed.Walking);
+        }
+
+        public void Face(Vector3 direction)
+        {
+            direction.y = 0f;
+            if (direction.sqrMagnitude < 0.0001f) return;
+            transform.rotation = Quaternion.LookRotation(direction.normalized, Vector3.up);
+        }
+
+        public void Flinch()
+        {
+            if (IsDead || suspended) return;
+            Animator animator = GetComponent<Animator>();
+            if (animator == null) return;
+            foreach (AnimatorControllerParameter p in animator.parameters)
+            {
+                if (p.name == "ReactionID") animator.SetInteger("ReactionID", 0);
+                else if (p.name == "TriggerReaction") animator.SetTrigger("TriggerReaction");
+            }
+        }
+
         public void Stop()
         {
             if (ai == null || IsDead) return;

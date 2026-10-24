@@ -29,5 +29,13 @@ namespace GlorifiedBody.Enemy
         void Brace(bool braced);
         /// <summary>From now on the body keeps her as its target, also out of sight (the alerted soldier).</summary>
         void Track(Transform target);
+        /// <summary>The crouch of the vendor set (a cower, the CPR, the drag).</summary>
+        void Crouch(bool crouched);
+        /// <summary>Walk to the point while it faces the direction (the drag: backward, facing the body).</summary>
+        void StrafeTo(Vector3 point, Vector3 facing);
+        /// <summary>Turn on the spot to face the direction.</summary>
+        void Face(Vector3 direction);
+        /// <summary>A hit reaction of the vendor set (the shock at a colleague's death).</summary>
+        void Flinch();
     }
 }

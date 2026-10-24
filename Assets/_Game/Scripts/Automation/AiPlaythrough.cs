@@ -175,6 +175,8 @@ namespace GlorifiedBody.Automation
             Record("slam", slammed && lifted.transform.position.y < 0.2f && liftedHealth.CurrentHealth < hp,
                 $"slam={slammed} y={lifted.transform.position.y:0.00} hp {hp:0} -> {liftedHealth.CurrentHealth:0} phase={lifted.Current}");
 
+            yield return Morale(lucy, soldiers, lifted, shots);
+
             // The power armour is heavy.
             SoldierBrain armour = soldiers.FirstOrDefault(s => s.name.StartsWith("Armour"));
             if (armour != null)
@@ -198,6 +200,71 @@ namespace GlorifiedBody.Automation
                 Record("death", victim != null && victim.Body.IsDead && victim.Current == SoldierBrain.Phase.Dead, $"{victim.name} dead={victim.Body.IsDead}");
             }
             Finish();
+        }
+
+        /// <summary>
+        /// What a death does (§11.4, §11.5) and the care of a body (Bruno, 2026-10-24): the slam killed the soldier,
+        /// a gruesome death; the witnesses' shock and barks; the head burst of the gore; the guard's retreat (its
+        /// fear raised to the limit); a colleague who drags a body and does CPR while she hides.
+        /// </summary>
+        private IEnumerator Morale(GameObject lucy, SoldierBrain[] soldiers, SoldierBrain corpse, string shots)
+        {
+            EnemyMorale corpseMorale = corpse.GetComponent<EnemyMorale>();
+            var living = soldiers.Where(s => s != corpse && !s.Body.IsDead).ToArray();
+            int shocked = living.Count(s => s.ShockCount > 0 || s.Retreating);
+            Shot(Path.Combine(shots, "ai_19_shock.png"));
+            Record("witness_shock", corpse.Body.IsDead && corpseMorale.DiedGruesome && shocked > 0,
+                $"gruesome={corpseMorale.DiedGruesome} " + string.Join(" ", living.Select(s => $"{s.name}:seen={s.GetComponent<EnemyMorale>().Witnessed}/shocks={s.ShockCount}/{s.Current}")));
+            Animator corpseAnimator = corpse.GetComponent<Animator>();
+            Transform head = corpseAnimator != null ? corpseAnimator.GetBoneTransform(HumanBodyBones.Head) : null;
+            if (head != null) CloseShot(head.position, Camera.main != null ? Camera.main.transform.position - head.position : Vector3.back, Path.Combine(shots, "ai_20_head_burst.png"), 2.2f);
+            Record("gore_head_burst", GlorifiedBody.Gore.GruesomeDeathFx.HeadsBurst > 0 && head != null && head.localScale.x < 0.05f,
+                $"bursts={GlorifiedBody.Gore.GruesomeDeathFx.HeadsBurst} head local scale={(head != null ? head.localScale.x : -1f):0.000}");
+
+            // The guard's fear at its limit: it runs and cowers.
+            SoldierBrain guard = living.FirstOrDefault(s => s.GetComponent<EnemyMorale>().RankOf == EnemyMorale.Rank.Guard);
+            if (guard != null)
+            {
+                EnemyMorale fear = guard.GetComponent<EnemyMorale>();
+                while (!guard.Retreating && fear.Fear < 6) fear.See(corpseMorale, gruesome: true);
+                float t0 = BotClock.Now;
+                while (guard.Current != SoldierBrain.Phase.Cower && BotClock.Now - t0 < 10f) yield return null;
+                yield return BotClock.Wait(0.3f);
+                CloseShot(guard.transform.position + Vector3.up * 0.8f, Camera.main != null ? Camera.main.transform.position - guard.transform.position : Vector3.back, Path.Combine(shots, "ai_21_guard_cowers.png"), 3f);
+                Record("guard_retreat", guard.Current == SoldierBrain.Phase.Cower, $"{guard.name} fear={fear.Fear} phase={guard.Current} reason={guard.RetreatReason}");
+            }
+
+            // She hides: a colleague drags the body away from her and does CPR.
+            CharacterController cc = lucy.GetComponent<CharacterController>();
+            Vector3 home = lucy.transform.position;
+            TankController tank = lucy.GetComponent<TankController>();
+            cc.enabled = false;
+            tank.enabled = false;
+            lucy.transform.position = new Vector3(home.x, -30f, home.z);
+            Physics.SyncTransforms();
+            CorpseCare care = null;
+            float wait = BotClock.Now;
+            while (care == null && BotClock.Now - wait < 12f)
+            {
+                care = FindObjectsByType<CorpseCare>(FindObjectsSortMode.None).FirstOrDefault(c => c.Active);
+                yield return null;
+            }
+            if (care != null)
+            {
+                wait = BotClock.Now;
+                while (care.Current != CorpseCare.Step.Drag && care.Active && BotClock.Now - wait < 8f) yield return null;
+                yield return BotClock.Wait(0.8f);
+                if (care.Active) CloseShot(care.transform.position + Vector3.up * 0.7f, care.transform.right, Path.Combine(shots, "ai_22_drag.png"), 3.2f);
+                wait = BotClock.Now;
+                while (care.Current != CorpseCare.Step.Cpr && care.Active && BotClock.Now - wait < 10f) yield return null;
+                yield return BotClock.Wait(0.6f);
+                if (care.Active) CloseShot(care.transform.position + Vector3.up * 0.6f, care.transform.right, Path.Combine(shots, "ai_23_cpr.png"), 2.6f);
+            }
+            Record("care_drag_cpr", care != null && care.Current == CorpseCare.Step.Cpr && care.Dragged > 1f,
+                care != null ? $"{care.name}>{(care.Patient != null ? care.Patient.name : "-")} step={care.Current} dragged={care.Dragged:0.0} pumps={care.Compressions}" : "no carer in 12 s");
+            tank.enabled = true;
+            tank.Teleport(home, 0f);
+            yield return BotClock.Wait(1f);
         }
 
         /// <summary>The weapon steps: the grenade, the icons, the shield, the melee.</summary>

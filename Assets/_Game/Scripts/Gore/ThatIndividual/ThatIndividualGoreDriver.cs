@@ -98,7 +98,8 @@ namespace GlorifiedBody.Gore.ThatIndividual
 
         private static void OnSceneLoaded(Scene scene, LoadSceneMode mode) => EnsureDriver();
 
-        private static void EnsureDriver()
+        /// <summary>The driver in this room once a GoreManager exists (GoreBootstrap calls it after it adds one).</summary>
+        public static void EnsureDriver()
         {
             if (Instance != null || GoreManager.Instance == null)
             {

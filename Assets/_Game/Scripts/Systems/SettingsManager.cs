@@ -209,6 +209,21 @@ namespace GlorifiedBody.Systems
 
         public event Action<LookQuality> OnLookQualityChanged;
 
+        /// <summary>The Gore option (Bruno, 2026-10-24: the Gore System): 0 Off, 1 Low, 2 Full. GoreBootstrap follows it.</summary>
+        public int GoreLevel
+        {
+            get => goreLevel;
+            set
+            {
+                goreLevel = Mathf.Clamp(value, 0, 2);
+                SaveSettings();
+                OnGoreLevelChanged?.Invoke(goreLevel);
+            }
+        }
+
+        public event Action<int> OnGoreLevelChanged;
+        private int goreLevel = 2;
+
         // ── PlayerPrefs Keys ───────────────────────────────────────────
 
         private const string KEY_MASTER_VOL = "settings_masterVolume";
@@ -223,6 +238,7 @@ namespace GlorifiedBody.Systems
         private const string KEY_VSYNC = "settings_vsync";
         private const string KEY_RAIN_ENABLED = "settings_rainEnabled";
         private const string KEY_LOOK_QUALITY = "settings_lookQuality";
+        private const string KEY_GORE_LEVEL = "settings_goreLevel";
 
         void Awake()
         {
@@ -254,6 +270,7 @@ namespace GlorifiedBody.Systems
             rainEnabled = PlayerPrefs.GetInt(KEY_RAIN_ENABLED, defaultRainEnabled ? 1 : 0) == 1;
             lookQuality = (LookQuality)PlayerPrefs.GetInt(KEY_LOOK_QUALITY, (int)defaultLookQuality);
             if (!Enum.IsDefined(typeof(LookQuality), lookQuality)) lookQuality = defaultLookQuality;
+            goreLevel = Mathf.Clamp(PlayerPrefs.GetInt(KEY_GORE_LEVEL, 2), 0, 2);
 
             ApplyAudioSettings();
             ApplyDisplaySettings();
@@ -274,6 +291,7 @@ namespace GlorifiedBody.Systems
             PlayerPrefs.SetInt(KEY_VSYNC, vSyncCount);
             PlayerPrefs.SetInt(KEY_RAIN_ENABLED, rainEnabled ? 1 : 0);
             PlayerPrefs.SetInt(KEY_LOOK_QUALITY, (int)lookQuality);
+            PlayerPrefs.SetInt(KEY_GORE_LEVEL, goreLevel);
             PlayerPrefs.Save();
         }
 

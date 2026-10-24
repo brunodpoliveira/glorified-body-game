@@ -45,8 +45,8 @@ namespace GlorifiedBody.Enemy
             if (fx != null && fx.gasPrefab != null)
             {
                 GameObject smoke = Instantiate(fx.gasPrefab, centre, Quaternion.identity, obj.transform);
-                smoke.transform.localScale = Vector3.one * Mathf.Max(0.5f, radius / 2.5f);
-                Color gas = new Color(0.75f, 1f, 0.35f, 1f); // the smoke texture's alpha sets the density
+                smoke.transform.localScale = Vector3.one * radius / 6f; // the vendor smoke spreads about 6 m: fit the ring
+                Color gas = new Color(0.75f, 1f, 0.35f, 0.6f); // with the smoke texture's own alpha
                 foreach (ParticleSystem ps in smoke.GetComponentsInChildren<ParticleSystem>())
                 {
                     var main = ps.main;
