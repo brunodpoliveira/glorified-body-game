@@ -108,6 +108,55 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.AreEqual(scale, head2.TransformVector(Vector3.up).magnitude, scale * 0.01f, "the head stays");
         }
 
+        /// <summary>
+        /// Bruno (2026-10-24): "tk bursts head, explosions dismember (same as gruesome warspite kill)", "forearm or
+        /// whole arm, randomized", "blast kill at full charge to cut", "gore low: no cut".
+        /// </summary>
+        [UnityTest]
+        public IEnumerator Gore_TheKillDecides_TheHeadOrAnArm()
+        {
+            Assert.IsTrue(GruesomeDeathFx.BurstsTheHead(DamageType.ShortShock), "the short: the head");
+            Assert.IsTrue(GruesomeDeathFx.BurstsTheHead(DamageType.PsychicTelekinesis), "mk_orzabal: the head");
+            Assert.IsFalse(GruesomeDeathFx.CutsALimb(DamageType.PsychicTelekinesis, 1f), "mk_orzabal cuts nothing");
+            Assert.IsTrue(GruesomeDeathFx.CutsALimb(DamageType.PsychicBlast, 1f), "a full mk_warspite kill cuts");
+            Assert.IsFalse(GruesomeDeathFx.CutsALimb(DamageType.PsychicBlast, 0.9f), "a part charge does not");
+            Assert.IsTrue(GruesomeDeathFx.CutsALimb(DamageType.Grenade, 0f) && GruesomeDeathFx.CutsALimb(DamageType.EnemyRocket, 0f)
+                && GruesomeDeathFx.CutsALimb(DamageType.Explosion, 0f), "an explosion cuts");
+
+            SoldierBrain lifted = soldiers.First(x => x.name == "Soldier_A");
+            SoldierBrain blown = soldiers.First(x => x.name == "Gasser_D");
+            SoldierBrain low = soldiers.First(x => x.name == "Guard_B");
+            int heads = GruesomeDeathFx.HeadsBurst, cuts = GruesomeDeathFx.LimbsCut, pieces = SeveredLimb.Spawned;
+            Kill(lifted, DamageType.PsychicTelekinesis);
+            yield return null;
+            Assert.AreEqual(heads + 1, GruesomeDeathFx.HeadsBurst, "a telekinesis kill bursts the head");
+            Assert.AreEqual(cuts, GruesomeDeathFx.LimbsCut, "and cuts no limb");
+
+            Transform[] arms =
+            {
+                blown.GetComponent<Animator>().GetBoneTransform(HumanBodyBones.LeftLowerArm), blown.GetComponent<Animator>().GetBoneTransform(HumanBodyBones.RightLowerArm),
+                blown.GetComponent<Animator>().GetBoneTransform(HumanBodyBones.LeftUpperArm), blown.GetComponent<Animator>().GetBoneTransform(HumanBodyBones.RightUpperArm),
+            };
+            float[] sizes = arms.Select(a => a.TransformVector(Vector3.up).magnitude).ToArray();
+            Kill(blown, DamageType.Grenade);
+            yield return null;
+            yield return null;
+            Debug.Log($"[GoreTests] the grenade cut {GruesomeDeathFx.LastLimb}, piece {(SeveredLimb.Last != null ? SeveredLimb.Last.Triangles : 0)} tris");
+            Assert.AreEqual(cuts + 1, GruesomeDeathFx.LimbsCut, "a grenade kill cuts a limb");
+            StringAssert.Contains("Arm", GruesomeDeathFx.LastLimb, "a forearm or a whole arm");
+            Assert.AreEqual(pieces + 1, SeveredLimb.Spawned, "the piece flies off");
+            Assert.IsTrue(arms.Where((a, i) => a.TransformVector(Vector3.up).magnitude < sizes[i] * 0.05f).Any(), "an arm is gone on the body");
+
+            SettingsManager.Instance.GoreLevel = 1;
+            yield return null;
+            cuts = GruesomeDeathFx.LimbsCut;
+            pieces = SeveredLimb.Spawned;
+            Kill(low, DamageType.Grenade);
+            yield return null;
+            Assert.AreEqual(cuts, GruesomeDeathFx.LimbsCut, "Gore Low: no cut");
+            Assert.AreEqual(pieces, SeveredLimb.Spawned, "Gore Low: no piece");
+        }
+
         private static void Hit(SoldierBrain s, DamageType type, float amount, bool fatal)
         {
             Health h = s.GetComponent<Health>();

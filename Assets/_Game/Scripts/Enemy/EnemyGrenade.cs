@@ -3,6 +3,7 @@ using GlorifiedBody.Characters;
 using GlorifiedBody.Combat;
 using GlorifiedBody.Core;
 using GlorifiedBody.DebugTools;
+using GlorifiedBody.Destruction;
 using GlorifiedBody.UI;
 
 namespace GlorifiedBody.Enemy
@@ -178,6 +179,7 @@ namespace GlorifiedBody.Enemy
             else
             {
                 ShotEffects.Explosion(centre);
+                Breakables.Splash(centre, radius, damage, DamageType.Grenade); // the room breaks around it
                 if (returned) HurtEnemies(centre);
                 else HurtPlayer(centre);
             }
@@ -230,7 +232,7 @@ namespace GlorifiedBody.Enemy
                     HitPoint = enemy.transform.position + Vector3.up * Body.ChestHeight,
                     HitNormal = (enemy.transform.position - centre).normalized,
                     DamageAmount = amount,
-                    DamageType = DamageType.PsychicTelekinesis,
+                    DamageType = DamageType.Grenade, // an explosion: it cuts a limb (Bruno, 2026-10-24), Attacker is her
                     WasFatal = enemy.IsDead
                 });
                 enemy.GetComponentInParent<IStaggerable>()?.Stagger(1f);

@@ -2,6 +2,7 @@ using System.Collections;
 using UnityEngine;
 using GlorifiedBody.Characters;
 using GlorifiedBody.Combat;
+using GlorifiedBody.Destruction;
 using GlorifiedBody.Enemy;
 using GlorifiedBody.Interaction;
 using GlorifiedBody.Player;
@@ -176,6 +177,37 @@ namespace GlorifiedBody.Automation
                     yield return BotClock.Wait(0.3f);
                     c.Moment?.Invoke("shield_flanked");
                     // Back past the north end of the dummy row: a straight walk to the capsule runs into Target_1.
+                    yield return WalkTo(c, new Vector3(-1.2f, 0f, 15.6f), run: false, radius: 0.5f);
+                    break;
+                }
+                case "cover":
+                {
+                    // Down the lane west of the parallel bars, east past the bars' south posts (z 11.5), then south of
+                    // the barricade: lock Target_3 behind it and blast until the barricade breaks. Back the same way.
+                    Breakable cover = c.Director.Cover;
+                    if (cover == null) { Debug.LogWarning("[TutorialDrive] cover: no barricade."); break; }
+                    yield return WalkTo(c, new Vector3(-1.2f, 0f, 11.0f), run: true, radius: 0.4f);
+                    yield return WalkTo(c, new Vector3(2.2f, 0f, 11.1f), run: false, radius: 0.4f);
+                    LockOnController lockOn = c.Lucy.GetComponent<LockOnController>();
+                    GameObject behindObject = GameObject.Find("Target_3");
+                    LockOnTargetable behind = behindObject != null ? behindObject.GetComponent<LockOnTargetable>() : null;
+                    for (int i = 0; i < 6 && lockOn != null && behind != null && lockOn.CurrentTarget != behind; i++)
+                    {
+                        c.Pad.Tap(InputManager.GameAction.SwitchTarget);
+                        yield return BotClock.Wait(0.15f);
+                    }
+                    if (lockOn != null && lockOn.CurrentTarget != behind) Debug.LogWarning($"[TutorialDrive] cover: the switch did not reach Target_3 (lock {lockOn.TargetName}).");
+                    c.Pad.Tap(InputManager.GameAction.PowerBlast);
+                    yield return null;
+                    for (int i = 0; i < 5 && !cover.IsBroken; i++)
+                    {
+                        yield return WaitForNalcon(c, 25f, 12f);
+                        yield return HoldChargeFull(c);
+                        yield return BotClock.Wait(0.4f);
+                        Debug.Log($"[TutorialDrive] cover: blast {i + 1}, result '{c.Powers?.LastResult}', barricade {cover.Health:0}/{cover.MaxHealth:0}.");
+                    }
+                    c.Moment?.Invoke("cover_broken");
+                    yield return WalkTo(c, new Vector3(-1.2f, 0f, 11.0f), run: false, radius: 0.4f);
                     yield return WalkTo(c, new Vector3(-1.2f, 0f, 15.6f), run: false, radius: 0.5f);
                     break;
                 }
@@ -424,7 +456,13 @@ namespace GlorifiedBody.Automation
             }
             hand.Release();
             float left = Flat(c.Lucy.position, point);
-            if (left > radius) Debug.LogWarning($"[TutorialDrive] WalkTo {point} timed out: from {start} to {c.Lucy.position}, {left:0.00} m left, facing {SignedYawTo(c, point):0}°.");
+            if (left > radius)
+            {
+                var near = new System.Collections.Generic.List<string>();
+                foreach (Collider col in Physics.OverlapSphere(c.Lucy.position + Vector3.up * 0.6f, 0.9f, ~0, QueryTriggerInteraction.Ignore))
+                    if (!col.transform.IsChildOf(c.Lucy)) near.Add($"{col.name}({LayerMask.LayerToName(col.gameObject.layer)})");
+                Debug.LogWarning($"[TutorialDrive] WalkTo {point} timed out: from {start} to {c.Lucy.position}, {left:0.00} m left, facing {SignedYawTo(c, point):0}°, near: {string.Join(", ", near)}.");
+            }
             yield return null;
         }
 

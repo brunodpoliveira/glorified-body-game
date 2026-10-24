@@ -194,6 +194,8 @@ namespace GlorifiedBody.Automation
                 Record("armour_heavy", powers.LastResult == "too_heavy", $"result={powers.LastResult}");
             }
 
+            yield return LimbCut(soldiers, powers, stats, lockOn, shots);
+
             // A corpse.
             SoldierBrain victim = soldiers.FirstOrDefault(s => s.name.StartsWith("Guard"));
             if (victim != null)
@@ -209,7 +211,7 @@ namespace GlorifiedBody.Automation
 
         /// <summary>
         /// What a death does (§11.4, §11.5) and the care of a body (Bruno, 2026-10-24): the slam killed the soldier,
-        /// a gruesome death; the witnesses' shock and barks; the head burst of the gore; the guard's retreat (its
+        /// a gruesome death; the witnesses' shock and barks; the head burst (a telekinesis kill); the guard's retreat (its
         /// fear raised to the limit); a colleague who drags a body and does CPR while she hides.
         /// </summary>
         private IEnumerator Morale(GameObject lucy, SoldierBrain[] soldiers, SoldierBrain corpse, string shots)
@@ -220,16 +222,17 @@ namespace GlorifiedBody.Automation
             Shot(Path.Combine(shots, "ai_19_shock.png"));
             Record("witness_shock", corpse.Body.IsDead && corpseMorale.DiedGruesome && shocked > 0,
                 $"gruesome={corpseMorale.DiedGruesome} " + string.Join(" ", living.Select(s => $"{s.name}:seen={s.GetComponent<EnemyMorale>().Witnessed}/shocks={s.ShockCount}/{s.Current}")));
-            // The slam is a telekinesis kill: a limb comes off (the head burst is for the short, GoreTests).
+            // The slam is a telekinesis kill: the head bursts (Bruno, 2026-10-24: "tk bursts head").
             GlorifiedBody.Gore.BoneStump stump = corpse.GetComponent<GlorifiedBody.Gore.BoneStump>();
-            Transform cut = stump != null ? stump.Bone : null;
+            Transform head = stump != null ? stump.Bone : null;
             float settle = BotClock.Now;
             EnemyRagdoll corpseRagdoll = corpse.GetComponent<EnemyRagdoll>();
             while (corpseRagdoll != null && corpseRagdoll.Current != EnemyRagdoll.State.Corpse && BotClock.Now - settle < 6f) yield return null;
             ClearTheAir();
-            if (cut != null) CloseShot(cut.position, ClearSide(cut.position, 1.8f), Path.Combine(shots, "ai_20_limb_cut.png"), 1.8f, 0.7f);
-            Record("gore_limb_cut", GlorifiedBody.Gore.GruesomeDeathFx.LimbsCut > 0 && cut != null && cut.localScale.x < 0.05f,
-                $"cuts={GlorifiedBody.Gore.GruesomeDeathFx.LimbsCut} limb={GlorifiedBody.Gore.GruesomeDeathFx.LastLimb} ragdoll={(corpseRagdoll != null ? corpseRagdoll.Current.ToString() : "-")}");
+            if (head != null) CloseShot(head.position, ClearSide(head.position, 1.8f), Path.Combine(shots, "ai_20_head_burst.png"), 1.8f, 0.7f);
+            Record("gore_head_burst", GlorifiedBody.Gore.GruesomeDeathFx.HeadsBurst > 0 && head != null && head.localScale.x < 0.05f
+                && head == corpse.GetComponent<Animator>().GetBoneTransform(HumanBodyBones.Head),
+                $"heads={GlorifiedBody.Gore.GruesomeDeathFx.HeadsBurst} bone={(head != null ? head.name : "-")} ragdoll={(corpseRagdoll != null ? corpseRagdoll.Current.ToString() : "-")}");
             float poolWait = BotClock.Now;
             while (GlorifiedBody.Gore.BodyBloodPool.Count == 0 && BotClock.Now - poolWait < 8f) yield return null;
             yield return BotClock.Wait(4f); // it grows
@@ -281,6 +284,37 @@ namespace GlorifiedBody.Automation
             tank.enabled = true;
             tank.Teleport(home, 0f);
             yield return BotClock.Wait(1f);
+        }
+
+        /// <summary>
+        /// A full mk_warspite kill (Bruno, 2026-10-24: "blast kill at full charge to cut", "forearm or whole arm,
+        /// randomized", "flying piece too"): an arm comes off and flies away from her, and the piece stays.
+        /// </summary>
+        private IEnumerator LimbCut(SoldierBrain[] soldiers, PsychicPowers powers, PsychicStats stats, LockOnController lockOn, string shots)
+        {
+            SoldierBrain target = soldiers.FirstOrDefault(s => s != null && !s.Body.IsDead && s.name.StartsWith("Gasser"))
+                ?? soldiers.FirstOrDefault(s => s != null && !s.Body.IsDead && s.GetComponent<EnemyRagdoll>() != null && s.GetComponent<EnemyShield>() == null);
+            if (target == null) { Record("gore_limb_cut", false, "no living soldier without a shield"); yield break; }
+            int cuts = GlorifiedBody.Gore.GruesomeDeathFx.LimbsCut, pieces = GlorifiedBody.Gore.SeveredLimb.Spawned;
+            stats.DebugSet(100f, 0f);
+            powers.Select(PowerKind.Blast);
+            lockOn.SetTarget(target.GetComponent<LockOnTargetable>());
+            powers.FireAt(powers.Selected, 1f, target.GetComponent<LockOnTargetable>(), 100f);
+            GlorifiedBody.Gore.SeveredLimb piece = GlorifiedBody.Gore.SeveredLimb.Spawned > pieces ? GlorifiedBody.Gore.SeveredLimb.Last : null;
+            Vector3 cutAt = piece != null ? piece.transform.position : Vector3.zero;
+            yield return BotClock.Wait(0.25f);
+            if (piece != null) CloseShot(piece.transform.position, ClearSide(piece.transform.position, 2.4f), Path.Combine(shots, "ai_20c_arm_flies.png"), 2.4f, 0.4f);
+            Record("gore_limb_cut", target.Body.IsDead && GlorifiedBody.Gore.GruesomeDeathFx.LimbsCut > cuts && GlorifiedBody.Gore.GruesomeDeathFx.LastLimb.Contains("Arm"),
+                $"{target.name} dead={target.Body.IsDead} limb={GlorifiedBody.Gore.GruesomeDeathFx.LastLimb}");
+            float t0 = BotClock.Now;
+            while (piece != null && !piece.Settled && BotClock.Now - t0 < 8f) yield return null;
+            yield return BotClock.Wait(0.5f);
+            ClearTheAir();
+            if (piece != null) CloseShot(piece.transform.position + Vector3.up * 0.1f, ClearSide(piece.transform.position + Vector3.up * 0.1f, 1.8f), Path.Combine(shots, "ai_20d_arm_lies.png"), 1.8f, 0.8f);
+            Transform stump = target.GetComponent<GlorifiedBody.Gore.BoneStump>()?.Bone;
+            if (stump != null && stump.parent != null) CloseShot(stump.parent.position, ClearSide(stump.parent.position, 1.8f), Path.Combine(shots, "ai_20e_arm_stump.png"), 1.8f, 0.6f);
+            Record("limb_flies", piece != null && piece.Settled && Vector3.Distance(piece.transform.position, cutAt) > 0.5f,
+                piece != null ? $"{piece.Triangles} tris, flew {Vector3.Distance(piece.transform.position, cutAt):0.0} m, settled={piece.Settled}" : "no piece");
         }
 
         /// <summary>

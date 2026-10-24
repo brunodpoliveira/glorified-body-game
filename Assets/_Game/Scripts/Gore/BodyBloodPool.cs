@@ -11,12 +11,11 @@ namespace GlorifiedBody.Gore
     /// Blood pools under a dead body (Bruno, 2026-10-24: "blood should pool on a dead enemy; extra feedback").
     /// After a fatal hit on a figure with an animator, it waits until the hips lie still, then lays a flat stain
     /// (the profile's bodyPoolMaterials, our unlit stain shader) on the floor under the hips and grows it slowly.
-    /// The pool stays for the room; the oldest goes above MaxPools. A dragged body leaves its pool behind. Gore Low:
-    /// a smaller pool. Off: none. Numbers PROPOSED.
+    /// The pool stays for the room, with no limit on the number (Bruno, 2026-10-24: "they stay for the whole room,
+    /// no limits"). A dragged body leaves its pool behind. Gore Low: a smaller pool. Off: none. Sizes PROPOSED.
     /// </summary>
     public sealed class BodyBloodPool : MonoBehaviour
     {
-        public const int MaxPools = 8;
         private const float StartSize = 0.3f;
         private const float GrowSeconds = 5f;
         private const float StillSpeed = 0.05f;   // m/s at the hips
@@ -77,11 +76,6 @@ namespace GlorifiedBody.Gore
             pool.transform.SetPositionAndRotation(floor.point + floor.normal * (0.012f + 0.002f * (pools.Count % 4)),
                 Quaternion.LookRotation(-floor.normal) * Quaternion.Euler(0f, 0f, Random.Range(0f, 360f)));
             pools.Add(pool);
-            while (pools.Count > MaxPools)
-            {
-                if (pools[0] != null) Destroy(pools[0]);
-                pools.RemoveAt(0);
-            }
             float full = (GoreManager.Instance != null && GoreManager.Instance.CurrentTier == GoreTier.Low ? 0.8f : 1.25f) * Random.Range(0.85f, 1.15f);
             RunTelemetry.Event("gore_body_pool", $"{body.name}:{full:0.0}m");
             float t = 0f;

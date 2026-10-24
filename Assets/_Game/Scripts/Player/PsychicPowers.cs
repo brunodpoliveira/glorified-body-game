@@ -5,6 +5,7 @@ using GlorifiedBody.Characters;
 using GlorifiedBody.Combat;
 using GlorifiedBody.Core;
 using GlorifiedBody.DebugTools;
+using GlorifiedBody.Destruction;
 using GlorifiedBody.Enemy;
 using GlorifiedBody.Systems;
 
@@ -219,10 +220,33 @@ namespace GlorifiedBody.Player
                 return;
             }
 
+            // Cover in the way takes the power (Bruno, 2026-10-24: "cover only enemies, on purpose"): a chest-high
+            // barricade stops mk_warspite and mk_erebus until it breaks. mk_orzabal reaches over it. The MK is spent.
+            if (power.kind != PowerKind.Telekinesis)
+            {
+                Vector3 eye = transform.position + Vector3.up * Body.ChestHeight;
+                Breakable cover = Breakables.CoverOnLine(eye, point, out Vector3 coverPoint);
+                if (cover != null)
+                {
+                    Vector3 along = (point - eye).normalized;
+                    float onCover = power.kind == PowerKind.Blast ? damage : charge >= 0.999f ? damage * 0.5f : 0f;
+                    if (onCover > 0f)
+                    {
+                        cover.Damage(onCover, power.kind == PowerKind.Blast ? DamageType.PsychicBlast : DamageType.PsychicFire, coverPoint, along);
+                        Breakables.Splash(coverPoint, CoverSplashRadius, onCover * 0.3f, power.kind == PowerKind.Blast ? DamageType.PsychicBlast : DamageType.PsychicFire, cover);
+                    }
+                    RunTelemetry.Event("cover_took", $"{power.kind}:{charge:0.00}:{cover.Id}:{cover.Health:0}");
+                    Result("cover", charge);
+                    return;
+                }
+            }
+
             switch (power.kind)
             {
                 case PowerKind.Blast:
                     health?.TakeDamage(damage);
+                    // The room around him takes it too: all the destruction is collateral (Bruno, 2026-10-24).
+                    Breakables.Splash(point, BlastSplashRadius + BlastSplashPerCharge * charge, damage * BlastSplashShare, DamageType.PsychicBlast);
                     RaiseHit(victim, health, point, normal, damage, DamageType.PsychicBlast, charge);
                     victim.GetComponentInParent<IStaggerable>()?.Stagger(power.staggerSeconds * charge);
                     // A full circle knocks him down (Bruno, 2026-10-24: "for a while (2.5 seconds)"); not a heavy.
@@ -243,6 +267,7 @@ namespace GlorifiedBody.Player
                         health?.TakeDamage(heat);
                         RaiseHit(victim, health, point, normal, heat, DamageType.PsychicFire, charge);
                         BurningStatus.Ignite(health != null ? health.gameObject : victim, gameObject, power.burnPerSecond * damageScale, power.burnSeconds);
+                        Breakables.Splash(point, CoverSplashRadius, heat * BlastSplashShare, DamageType.PsychicFire);
                     }
                     else
                     {
@@ -269,6 +294,11 @@ namespace GlorifiedBody.Player
 
         public const float BlastKnockdownSeconds = 2.5f; // Bruno, 2026-10-24
         public const float BlastKnockdownPush = 4f;      // m/s away from her, PROPOSED
+        // The collateral damage of a power (the breakable cover, 2026-10-24), PROPOSED.
+        public const float BlastSplashRadius = 1f;       // m around the lock point
+        public const float BlastSplashPerCharge = 0.8f;  // m more at a full circle
+        public const float BlastSplashShare = 0.6f;      // of the power's damage, at the centre
+        public const float CoverSplashRadius = 0.8f;     // m around the point where the cover took it
 
         private void RaiseHit(GameObject victim, Health health, Vector3 point, Vector3 normal, float damage, DamageType type, float charge = 0f)
         {

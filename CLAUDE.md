@@ -171,6 +171,19 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   (`BoneStump`, the vendor `goreLimb-prefab`); `HitInfo.Charge`; `BodyBloodPool` grows a dark pool under a dead
   body (`GoreLimbSetup.Assign` fills the profile). `AiTest.unity` and its NavMesh are git-ignored: build them with
   `AiTestSetup.BuildAiTest`. Studies (not built): `2026-10-24_study_breakable_cover.md`, `2026-10-24_study_gore.md`.
+- 2026-10-24, evening, his answers to both studies:
+  - Gore (`devlog-notes/2026-10-24_gore_answers.md`): the short and mk_orzabal kills burst the head. A full
+    mk_warspite kill and an explosion (a returned grenade or rocket, explosion damage now) cut a forearm or a whole
+    arm at random. The piece flies off (`SeveredLimb`: the skinned mesh baked, the limb's triangles; the character
+    meshes are readable now). Gore Low: no cut. The body pools have no limit.
+  - Breakable cover (`devlog-notes/2026-10-24_breakable_cover.md`), namespace `GlorifiedBody.Destruction`: barricades
+    (1.2 m: they stop her powers, the soldiers shoot over them and take cover behind them), tables with items
+    (`Greeble`), plaster patches, Realtime lamps with a fake bounce. All of it is collateral damage. The pieces are
+    cut in the editor (`BoxFracture`, `BreakableAssets`) and lie on the new Debris layer (slot 19). A broken room
+    stays broken (`RoomDamageLedger`: kept when she leaves, dropped on a restart). The surge of the short pops the
+    lamps near her. A thrown body arcs down to the chest of the target. The COVER TEST room (`CoverTestSetup`, local
+    only like the AI test room) and its "cover" bot. Tutorial: 22 steps (cover: break the barricade in front of
+    `Target_3`). OPEN for Bruno: the darkness mechanic, the comic blood sprays, the sound source (RFab gap 14).
 
 ## Rules
 

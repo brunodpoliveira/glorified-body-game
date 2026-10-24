@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8fdcec89aa4050f258fd2c20b81afeb6, type: 3}
+  m_Name: destruction_fx
+  m_EditorClassIdentifier: Assembly-CSharp::GlorifiedBody.Destruction.DestructionFxSettings
+  woodBreak: {fileID: 8300000, guid: 84b11dc441cdec3ae965afd4a0904cd9, type: 3}
+  metalBreak: {fileID: 8300000, guid: 623b90d44c0a7bd9581c554f7edea1cf, type: 3}
+  glassBreak: {fileID: 8300000, guid: 147a7b4973ccf0eae8985c54d5d9da46, type: 3}
+  plasterBreak: {fileID: 8300000, guid: 1c1ea8cf41fcb1cdbb26e168ac2d04da, type: 3}
+  plasticBreak: {fileID: 8300000, guid: a4aaf660cf6ae040cb314717a99490ad, type: 3}
+  chip: {fileID: 8300000, guid: 2c16b7b7b132a9be9893be2be75a2643, type: 3}
+  sparks: {fileID: 8300000, guid: b659f41a8fef700d7bcfd3103d028e19, type: 3}
+  dust: {fileID: 2100000, guid: bc418a47e6e0dc7828db7c51d69ad112, type: 2}
+  glow: {fileID: 2100000, guid: 1431ef884047c325a89577292e3b3c41, type: 2}
+  volume: 0.9

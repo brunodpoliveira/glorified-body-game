@@ -1,9 +1,11 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 using GlorifiedBody.Characters;
 using GlorifiedBody.Combat;
 using GlorifiedBody.Core;
 using GlorifiedBody.DebugTools;
+using GlorifiedBody.Destruction;
 
 namespace GlorifiedBody.Enemy
 {
@@ -62,6 +64,19 @@ namespace GlorifiedBody.Enemy
         public Phase Current { get; private set; } = Phase.Idle;
         public bool Engaged => Time.frameCount - lastEngageFrame <= 2;
         public Vector3 Spot { get; private set; }
+        /// <summary>The barricade he stands behind, or null.</summary>
+        public Breakable Cover { get; private set; }
+
+        private const float CoverStandOff = 0.9f;    // m behind the barricade's middle
+        private const float CoverMinRange = 2.5f;    // m from her: closer is no cover
+        private const float CoverExtraRange = 4f;    // m beyond the preferred range
+        private const float CoverSearch = 14f;       // m he walks for cover at most
+        private const float CoverWalkSeconds = 6f;   // s the walk to cover may take
+        private const float CoverArriveRadius = 1f;  // m: the vendor AI stops about 0.8 m short of its point
+        private static readonly Dictionary<Breakable, SoldierBrain> coverClaims = new Dictionary<Breakable, SoldierBrain>();
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetCoverClaims() => coverClaims.Clear();
         /// <summary>Frames in which the body moved while the gun held a slot. The rule wants zero.</summary>
         public int MovedWhileShootingFrames { get; private set; }
         public int Moves { get; private set; }
@@ -160,6 +175,7 @@ namespace GlorifiedBody.Enemy
         private void OnDeath()
         {
             Current = Phase.Dead;
+            ReleaseCover();
             gun.HoldFire = true;
             body?.Stop();
         }
@@ -358,13 +374,14 @@ namespace GlorifiedBody.Enemy
                 case Phase.Move:
                     gun.HoldFire = true;
                     timer -= dt;
-                    bool arrived = Time.time - moveStarted >= minMoveSeconds && Flat(transform.position, Spot) <= arriveRadius;
+                    bool arrived = Time.time - moveStarted >= minMoveSeconds && Flat(transform.position, Spot) <= (Cover != null ? CoverArriveRadius : arriveRadius);
                     bool close = gun.CanMelee && Distance() <= gun.MeleeRange;
                     if (close)
                     {
                         StartShoot(); // she came close: stop and strike
                     }
-                    else if (timer <= 0f || arrived)
+                    // A walk to cover runs to the end (CoverWalkSeconds at most): no shot from the open on the way.
+                    else if ((timer <= 0f && (Cover == null || Time.time - moveStarted >= CoverWalkSeconds)) || arrived)
                     {
                         if (ClearLine() && Distance() <= gun.Range) StartShoot();
                         else StartMove();
@@ -423,6 +440,7 @@ namespace GlorifiedBody.Enemy
         {
             Vector3 target = TargetPosition;
             Vector3 chest = target + Vector3.up * GlorifiedBody.Characters.Body.ChestHeight;
+            if (TryCoverSpot(target, chest, out Vector3 covered)) return covered;
             Vector3 away = transform.position - target;
             away.y = 0f;
             if (away.sqrMagnitude < 0.01f) away = -transform.forward;
@@ -451,6 +469,58 @@ namespace GlorifiedBody.Enemy
             Vector3 fallback = target + Quaternion.Euler(0f, start, 0f) * away * preferredRange;
             if (NavMesh.SamplePosition(fallback, out NavMeshHit near, 2.5f, NavMesh.AllAreas)) fallback = near.position;
             return fallback;
+        }
+
+        /// <summary>
+        /// Cover first (Bruno, 2026-10-24: "cover only enemies, on purpose"): a spot behind an intact chest-high
+        /// barricade, on its far side from her, with a line over it from the muzzle to her chest. Her powers stop on
+        /// the barricade until it breaks; then he moves on. One soldier for each barricade. Numbers PROPOSED.
+        /// </summary>
+        private bool TryCoverSpot(Vector3 target, Vector3 chest, out Vector3 spot)
+        {
+            spot = Vector3.zero;
+            int blockers = LayerMask.GetMask("Default");
+            Breakable best = null;
+            float bestCost = float.MaxValue;
+            foreach (Breakable cover in Breakable.All)
+            {
+                if (cover == null || !cover.IsCover) continue;
+                if (coverClaims.TryGetValue(cover, out SoldierBrain owner) && owner != null && owner != this && owner.Current != Phase.Dead) continue;
+                Vector3 centre = cover.Bounds.center;
+                Vector3 away = centre - target;
+                away.y = 0f;
+                float range = away.magnitude;
+                if (range < CoverMinRange || range > preferredRange + CoverExtraRange) continue;
+                away /= range;
+                Vector3 candidate = new Vector3(centre.x, transform.position.y, centre.z) + away * CoverStandOff;
+                if (!NavMesh.SamplePosition(candidate, out NavMeshHit hit, 0.7f, NavMesh.AllAreas)) continue;
+                if (Flat(hit.position, candidate) > 0.6f) continue;
+                if (Physics.Linecast(hit.position + Vector3.up * GlorifiedBody.Characters.Body.MuzzleHeight, chest, blockers, QueryTriggerInteraction.Ignore)) continue;
+                float cost = Flat(transform.position, hit.position);
+                if (cost > CoverSearch || cost >= bestCost) continue;
+                best = cover;
+                bestCost = cost;
+                spot = hit.position;
+            }
+            if (best == null)
+            {
+                ReleaseCover();
+                return false;
+            }
+            if (best != Cover)
+            {
+                ReleaseCover();
+                coverClaims[best] = this;
+                Cover = best;
+                RunTelemetry.Event("soldier_cover", $"{name}:{best.Id}");
+            }
+            return true;
+        }
+
+        private void ReleaseCover()
+        {
+            if (Cover != null && coverClaims.TryGetValue(Cover, out SoldierBrain owner) && owner == this) coverClaims.Remove(Cover);
+            Cover = null;
         }
 
         private void StartShoot()

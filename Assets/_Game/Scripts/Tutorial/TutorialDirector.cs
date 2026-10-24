@@ -1,9 +1,11 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using GlorifiedBody.Combat;
 using GlorifiedBody.DebugTools;
+using GlorifiedBody.Destruction;
 using GlorifiedBody.Enemy;
 using GlorifiedBody.Interaction;
 using GlorifiedBody.Player;
@@ -19,7 +21,8 @@ namespace GlorifiedBody.Tutorial
     /// each faculty in turn, on the padded dummies: the walk, the run, the dodge, the target switch, mk_warspite
     /// (the blast), mk_erebus (the fire), mk_orzabal (the telekinesis) with the throw and the slam, a crate to lift
     /// and throw, the bullet catch, a capsule, a log to take and read, the scan of the door (a picture) and of the
-    /// monitors (a clip), the key and the door, the inventory, the overflow (the short). Each step ends when the
+    /// monitors (a clip), the key and the door, the inventory, the overflow (the short), a barricade to break.
+    /// Each step ends when the
     /// player did the thing. The later features (the enemies) add their steps here.
     /// The lines are placeholders until the writer gives the words. F2 skips a step (debug).
     /// </summary>
@@ -41,6 +44,7 @@ namespace GlorifiedBody.Tutorial
         [SerializeField, Min(0.3f)] private float reachRadius = 1.3f;
         [SerializeField] private string shooterTargetName = "Target_Gun";
         [SerializeField] private KeyCode skipKey = KeyCode.F2;
+        [SerializeField] private string coverName = "Barricade_Gym";
 
         public static TutorialDirector Instance { get; private set; }
 
@@ -62,6 +66,8 @@ namespace GlorifiedBody.Tutorial
         public string MonitorsScanId => monitorsScanId;
         public float ReachRadius => reachRadius;
         public DummyShooter Shooter { get; private set; }
+        /// <summary>The cover step's barricade (off until its step).</summary>
+        public Breakable Cover { get; private set; }
 
         public event Action<TutorialStep> OnStepChanged;
         public event Action OnCompleted;
@@ -127,6 +133,8 @@ namespace GlorifiedBody.Tutorial
             SetGunActive(false);
             shield = FindFirstObjectByType<EnemyShield>(FindObjectsInactive.Include);
             if (shield != null) shield.enabled = false;
+            Cover = FindObjectsByType<Breakable>(FindObjectsInactive.Include, FindObjectsSortMode.None).FirstOrDefault(b => b.name == coverName);
+            if (Cover != null && !Cover.IsBroken) Cover.gameObject.SetActive(false);
             EnemyGrenade.OnBurst += OnGrenadeBurst;
 
             if (tank != null) tank.OnDodge += OnDodge;
@@ -257,6 +265,12 @@ namespace GlorifiedBody.Tutorial
                 () => shieldFlanked,
                 onEnter: () => SetShieldActive(true),
                 onExit: () => SetShieldActive(false)));
+            // Breakable cover (Bruno, 2026-10-24: "cover only enemies, on purpose"; all of it collateral damage).
+            steps.Add(new TutorialStep("cover",
+                "A barricade stands in front of the last dummy. A faculty stops on it. Break it.",
+                "Lock the dummy behind it ({SwitchTarget}). mk_warspite, {PowerBlast}: the barricade takes the blast until it breaks. A thrown body breaks it too.",
+                () => Cover == null || Cover.IsBroken,
+                onEnter: () => { if (Cover != null) Cover.gameObject.SetActive(true); }));
             steps.Add(new TutorialStep("capsule",
                 "A capsule lies by the bars. Take it. Use it.",
                 "Face the capsule. {Interact} asks, {Interact} again takes it. {UseDrug} uses it: the bars refill.",

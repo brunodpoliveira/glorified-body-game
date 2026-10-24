@@ -3,6 +3,7 @@ using GlorifiedBody.Characters;
 using GlorifiedBody.Combat;
 using GlorifiedBody.Core;
 using GlorifiedBody.DebugTools;
+using GlorifiedBody.Destruction;
 using GlorifiedBody.UI;
 
 namespace GlorifiedBody.Enemy
@@ -231,11 +232,17 @@ namespace GlorifiedBody.Enemy
                     enemy.GetComponentInParent<IStaggerable>()?.Stagger(0.8f);
                     RunTelemetry.Event("bullet_returned_hit", $"{enemy.name}:{damage:0}");
                 }
-                else if (enemy == null) ShotEffects.Impact(hit.point, hit.normal);
+                else if (enemy == null)
+                {
+                    Breakables.HitCollider(hit.collider, damage, DamageType.PsychicTelekinesis, hit.point, transform.forward);
+                    ShotEffects.Impact(hit.point, hit.normal);
+                }
             }
             else if (!isPlayer && hit.transform.GetComponentInParent<Health>() == null)
             {
-                ShotEffects.Impact(hit.point, hit.normal); // the room: sparks, dust and the hit sound
+                // The room: a breakable wears down (Bruno, 2026-10-24: their bullets wear down her cover), an item flies.
+                Breakables.HitCollider(hit.collider, damage, DamageType.EnemyProjectile, hit.point, transform.forward);
+                ShotEffects.Impact(hit.point, hit.normal); // sparks, dust and the hit sound
             }
             else if (isPlayer)
             {

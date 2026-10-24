@@ -104,7 +104,7 @@ namespace GlorifiedBody.Editor.Characters
             importer.importLights = false;
             importer.importVisibility = false;
             importer.meshCompression = ModelImporterMeshCompression.Off;
-            importer.isReadable = false;
+            importer.isReadable = true; // SeveredLimb reads the bone weights and the triangles (about 100 KB a class)
             importer.importAnimation = true;
             importer.animationCompression = ModelImporterAnimationCompression.Optimal;
         }

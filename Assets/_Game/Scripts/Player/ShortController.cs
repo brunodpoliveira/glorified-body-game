@@ -4,6 +4,7 @@ using UnityEngine;
 using GlorifiedBody.Combat;
 using GlorifiedBody.Core;
 using GlorifiedBody.DebugTools;
+using GlorifiedBody.Destruction;
 
 namespace GlorifiedBody.Player
 {
@@ -26,6 +27,8 @@ namespace GlorifiedBody.Player
         [SerializeField, Min(1f)] private float shockRadius = 6f;
         [SerializeField, Min(0f)] private float shockDamageToOthers = 12f;
         [SerializeField, Range(0f, 1f)] private float selfHpFraction = 0.5f;
+
+        private const float SurgeRadius = 5f; // the lamps the short's start pops, PROPOSED
 
         private PsychicStats stats;
         private Health health;
@@ -65,6 +68,8 @@ namespace GlorifiedBody.Player
             stats.RegenPaused = true;
             if (tank != null) tank.SetSlowWalk(true);
             RunTelemetry.Event("short_begin", $"hp={health.CurrentHealth:0}");
+            // The surge pops the lamps near her (the breakable cover, 2026-10-24, PROPOSED).
+            Breakables.Surge(transform.position + Vector3.up * 1.5f, SurgeRadius);
             OnShortBegan?.Invoke();
             StartCoroutine(Run());
         }

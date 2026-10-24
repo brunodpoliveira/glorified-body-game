@@ -140,3 +140,9 @@ InitTestScene*.unity*
 /Assets/_Game/Scenes/AiTest.unity.meta
 /Assets/_Game/Scenes/AiTest_NavMesh.asset
 /Assets/_Game/Scenes/AiTest_NavMesh.asset.meta
+# The cover test room holds FSM soldiers with vendor data too (2026-10-24). Build it with
+# GlorifiedBody.Editor.Destruction.CoverTestSetup.BuildCoverTest.
+/Assets/_Game/Scenes/CoverTest.unity
+/Assets/_Game/Scenes/CoverTest.unity.meta
+/Assets/_Game/Scenes/CoverTest_NavMesh.asset
+/Assets/_Game/Scenes/CoverTest_NavMesh.asset.meta

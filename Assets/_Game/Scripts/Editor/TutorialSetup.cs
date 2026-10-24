@@ -40,6 +40,8 @@ namespace GlorifiedBody.Editor
         public static readonly Vector3 KeyPoint = new Vector3(-2.9f, 0f, 15.4f);   // where she stands to take the key
         public static readonly Vector3 KeyStand = new Vector3(-3.72f, 0f, 15.4f);
         public static readonly Vector3 CratePoint = new Vector3(0.4f, 0f, 15.4f);
+        public const string CoverName = "Barricade_Gym";
+        public static readonly Vector3 CoverPoint = new Vector3(2.8f, 0f, 12.7f);
         public static readonly Vector3 DoorPoint = new Vector3(-1.6f, 0f, 10.9f);  // where she stands to scan and open the door
         public static readonly Vector3 DoorFocus = new Vector3(-0.45f, 1.2f, 10.45f); // the west half of the door leaf
         public const string ItemsFolder = MenuLoopSetup.ResourcesFolder + "/Items";
@@ -85,6 +87,12 @@ namespace GlorifiedBody.Editor
             GameObject shieldDummy = PaddedTarget("Target_2", new Vector3(1.8f, 0f, 13.6f), 180f, p, gun: false);
             ShieldFor(shieldDummy, p);
             PaddedTarget("Target_3", new Vector3(2.8f, 0f, 13.6f), 180f, p, gun: false);
+            // The cover step (2026-10-24): a chest-high barricade south of Target_3, off until its step (it would
+            // stop the earlier faculties), and a breakable lamp over it (Realtime: the bake leaves it out).
+            GameObject breakables = MenuLoopSetup.EnsureRoot("[Breakables]");
+            for (int i = breakables.transform.childCount - 1; i >= 0; i--) Object.DestroyImmediate(breakables.transform.GetChild(i).gameObject);
+            Destruction.BreakableAssets.Barricade(breakables, CoverName, CoverPoint, 0f).gameObject.SetActive(false);
+            Destruction.BreakableAssets.Lamp(breakables, "Lamp_Gym", new Vector3(2.6f, LookTestSetup.GymMax.y, 12.4f), new Color(1f, 0.95f, 0.85f), 5f, 80f, 5f);
             // The gun against the west wall by the door: a clear line to the monitors side, no padded target in
             // the way, and no floor behind it for her to vanish into.
             PaddedTarget("Target_Gun", new Vector3(-3.65f, 0f, 11.6f), 30f, p, gun: true);

@@ -93,3 +93,15 @@ Our README and the builder that made these prefabs are still in Warspite: `/home
 5. Gore Low: no cut, or the cut without the meat?
 6. Body pools: do they stay for the whole room, and how many at most?
 7. The ragdoll for mk_orzabal: build it now, before the cut, so both are made once?
+
+## Bruno's answers (2026-10-24, evening), built the same evening
+
+1. "tk bursts head, explosions dismember (same as gruesome warspite kill)".
+2. "flying piece too".
+3. "forearm or whole arm, randomized".
+4. "blast kill at full charge to cut".
+5. "gore low: no cut".
+6. "they stay for the whole room, no limits".
+7. "build it now before cut" (the ragdoll was built that morning).
+
+What was built: `2026-10-24_gore_answers.md`.

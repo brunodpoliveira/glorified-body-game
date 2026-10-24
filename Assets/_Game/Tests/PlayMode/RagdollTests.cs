@@ -19,7 +19,7 @@ namespace GlorifiedBody.Tests.PlayMode
     /// <summary>
     /// The soldiers' ragdoll (Bruno, 2026-10-24): mk_orzabal holds the floater limp and every ending drops it limp,
     /// a thrown body knocks down the one it hits, a full mk_warspite knocks him down for 2.5 s, a full mk_warspite
-    /// kill cuts a limb, and blood pools under the body. They stand up with the vendor's stand-up clips. In the AI
+    /// kill cuts an arm and the piece flies off, and blood pools under the body. They stand up with the vendor's stand-up clips. In the AI
     /// test room. Batch: tools/unity.sh test playmode RagdollTests.
     /// </summary>
     public class RagdollTests
@@ -168,12 +168,22 @@ namespace GlorifiedBody.Tests.PlayMode
             EnemyRagdoll ragdoll = soldier.GetComponent<EnemyRagdoll>();
             Animator animator = soldier.GetComponent<Animator>();
             Transform forearm = animator.GetBoneTransform(HumanBodyBones.LeftLowerArm);
+            Transform hand = animator.GetBoneTransform(HumanBodyBones.LeftHand);
             float size = forearm.TransformVector(Vector3.up).magnitude;
-            int cuts = GruesomeDeathFx.LimbsCut, heads = GruesomeDeathFx.HeadsBurst, pools = BodyBloodPool.Count;
+            int cuts = GruesomeDeathFx.LimbsCut, heads = GruesomeDeathFx.HeadsBurst, pools = BodyBloodPool.Count, pieces = SeveredLimb.Spawned;
             GruesomeDeathFx.ForcedLimb = HumanBodyBones.LeftLowerArm;
             yield return WaitUntil(() => soldier.Engaged, 6f);
             powers.Select(PowerKind.Blast);
+            Vector3 middle = (forearm.position + hand.position) * 0.5f;
+            Vector3 away = Vector3.ProjectOnPlane(soldier.transform.position - lucy.transform.position, Vector3.up).normalized;
             powers.FireAt(powers.Selected, 1f, soldier.GetComponent<LockOnTargetable>(), 100f);
+            SeveredLimb piece = SeveredLimb.Last;
+            Assert.AreEqual(pieces + 1, SeveredLimb.Spawned, "the forearm flies off");
+            Assert.IsNotNull(piece);
+            Debug.Log($"[RagdollTests] piece {piece.Triangles} tris, centre {piece.CutCentre} vs forearm middle {middle} ({Vector3.Distance(piece.CutCentre, middle):0.00} m)");
+            Assert.Greater(piece.Triangles, 20, "the piece has the forearm's triangles");
+            Assert.Less(Vector3.Distance(piece.CutCentre, middle), 0.25f, "the piece is where the forearm was");
+            Vector3 cutAt = piece.transform.position;
             yield return null;
             yield return null;
             Assert.IsTrue(soldier.GetComponent<Health>().IsDead, "the blast killed him");
@@ -185,6 +195,13 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.IsNotNull(forearm.parent.Find("LimbStump"), "the bone ends sit on the cut");
             Assert.IsTrue(soldier.GetComponent<EnemyMorale>().DiedGruesome, "a full mk_warspite kill is gruesome");
             Assert.IsTrue(ragdoll.IsRagdolled, "the corpse flies limp");
+            yield return new WaitForSeconds(0.3f);
+            Vector3 flew = Vector3.ProjectOnPlane(piece.transform.position - cutAt, Vector3.up);
+            Debug.Log($"[RagdollTests] piece flew {flew.magnitude:0.00} m, along her line {Vector3.Dot(flew, away):0.00} m");
+            Assert.Greater(Vector3.Dot(flew, away), 0.4f, "the piece flies away from her");
+            yield return WaitUntil(() => piece.Settled, 8f);
+            Assert.IsTrue(piece.Settled, "the piece lies still and stays");
+            Assert.Less(piece.transform.position.y, 0.5f, "on the floor");
             yield return WaitUntil(() => ragdoll.Current == EnemyRagdoll.State.Corpse, 8f);
             Assert.AreEqual(EnemyRagdoll.State.Corpse, ragdoll.Current, "the body settles and stays");
             yield return WaitUntil(() => BodyBloodPool.Count > pools, 6f);

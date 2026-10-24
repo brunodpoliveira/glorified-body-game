@@ -2,6 +2,7 @@ using System.Collections;
 using UnityEngine;
 using GlorifiedBody.Core;
 using GlorifiedBody.DebugTools;
+using GlorifiedBody.Destruction;
 
 namespace GlorifiedBody.Combat
 {
@@ -28,6 +29,13 @@ namespace GlorifiedBody.Combat
         public const float ThrownDownSeconds = 2.5f;  // the thrown body and the one it hits, PROPOSED
         public const float SlamDownSeconds = 2.5f;    // PROPOSED
         public const float ReleaseDownSeconds = 1.2f; // dropped by another enemy's hit, PROPOSED
+        // The room (the breakable cover, 2026-10-24), PROPOSED.
+        private const float ThroughShare = 2f;         // a thrown body hits a breakable with twice its damage
+        private const float LandingSplashRadius = 1f;
+        private const float SlamSplashRadius = 1.3f;
+        private const float ThrowLowRoot = 0.3f;      // m: the root's height at the target (the hips near his chest)
+        private const float BodySweepLow = 0.25f, BodySweepHigh = 1.4f, BodySweepRadius = 0.25f;
+        private static int DebrisMask => Breakables.DebrisLayer >= 0 ? 1 << Breakables.DebrisLayer : 0;
 
         public bool IsLifted { get; private set; }
         /// <summary>True while it rises or hangs: a throw, a slam or a release is possible.</summary>
@@ -182,6 +190,7 @@ namespace GlorifiedBody.Combat
                 transform.position = floor;
                 ragdoll?.EndHold(Vector3.down * 4f, SlamDownSeconds);
                 Hit(GetComponent<Health>() ?? GetComponentInParent<Health>(), slamDamage, floor, Vector3.up);
+                Breakables.Splash(floor, SlamSplashRadius, slamDamage, DamageType.PsychicTelekinesis);
             }
 
             IsLifted = false;
@@ -233,6 +242,7 @@ namespace GlorifiedBody.Combat
         {
             Health self = GetComponent<Health>() ?? GetComponentInParent<Health>();
             Vector3 start = transform.position;
+            float startY = start.y;
             Vector3 flat = launchDestination - start;
             flat.y = 0f;
             Vector3 direction = flat.sqrMagnitude > 0.001f ? flat.normalized : transform.forward;
@@ -256,18 +266,32 @@ namespace GlorifiedBody.Combat
                     }
                 }
                 Vector3 next = transform.position + direction * step;
-                // A wall stops it.
-                if (Physics.Raycast(transform.position, direction, out RaycastHit wall, step + HitRadius, ~0, QueryTriggerInteraction.Ignore)
-                    && wall.collider.GetComponentInParent<Health>() == null && wall.collider.transform != transform && !wall.collider.transform.IsChildOf(transform))
+                // A thrown body arcs down to the target's chest as it flies, so its legs meet the cover in front of
+                // him (the breakable cover, 2026-10-24), PROPOSED. A throw at nobody flies level.
+                if (launchTarget != null) next.y = Mathf.Lerp(startY, floor.y + ThrowLowRoot, Mathf.Clamp01((flown + step) / Mathf.Max(0.1f, maxMetres)));
+                // A wall stops it, at any height of the body. A breakable in the way takes the hit; when it breaks,
+                // the body flies on through it.
+                if (Obstacle(transform.position, next - transform.position, HitRadius, out RaycastHit wall))
                 {
-                    next = wall.point - direction * HitRadius;
-                    flown = maxMetres;
+                    Breakable piece = wall.collider.GetComponentInParent<Breakable>();
+                    bool through = piece != null && !piece.IsBroken && piece.Damage(slamDamage * ThroughShare, DamageType.PsychicTelekinesis, wall.point, direction);
+                    if (!through)
+                    {
+                        next = transform.position + (next - transform.position).normalized * Mathf.Max(0f, wall.distance - 0.05f);
+                        flown = maxMetres;
+                        Breakables.Splash(wall.point, LandingSplashRadius, slamDamage * 0.5f, DamageType.PsychicTelekinesis);
+                    }
                 }
                 transform.position = next;
                 flown += step;
 
                 foreach (Collider col in Physics.OverlapSphere(transform.position, HitRadius, ~0, QueryTriggerInteraction.Ignore))
                 {
+                    if (col.gameObject.layer == Breakables.DebrisLayer && !col.transform.IsChildOf(transform))
+                    {
+                        Breakables.HitCollider(col, 0f, DamageType.PsychicTelekinesis, col.transform.position, direction); // an item on the way flies
+                        continue;
+                    }
                     Health other = col.GetComponentInParent<Health>();
                     if (other == null || other == self || other.IsDead || other.gameObject.CompareTag("Player")) continue;
                     hit = other;
@@ -289,6 +313,7 @@ namespace GlorifiedBody.Combat
                 RunTelemetry.Event("tk_launch_hit", $"{name}>{hit.name}");
             }
 
+            Breakables.Splash(transform.position, LandingSplashRadius, slamDamage * 0.5f, DamageType.PsychicTelekinesis);
             // A limp body tumbles on with the flight (the ragdoll lands it). Its own damage at once.
             if (ragdoll != null)
             {
@@ -310,6 +335,25 @@ namespace GlorifiedBody.Combat
             }
             transform.position = landing;
             Hit(self, slamDamage, landing, Vector3.up);
+        }
+
+        /// <summary>The first wall or breakable on the move, swept with the body (a capsule from its feet to its chest). Bodies do not count.</summary>
+        private bool Obstacle(Vector3 from, Vector3 move, float reach, out RaycastHit wall)
+        {
+            wall = default;
+            float length = move.magnitude;
+            if (length < 0.0001f) return false;
+            Vector3 direction = move / length;
+            Vector3 low = from + Vector3.up * BodySweepLow, high = from + Vector3.up * BodySweepHigh;
+            float best = float.MaxValue;
+            foreach (RaycastHit hit in Physics.CapsuleCastAll(low, high, BodySweepRadius, direction, length + reach, ~DebrisMask, QueryTriggerInteraction.Ignore))
+            {
+                if (hit.distance <= 0f || hit.distance >= best) continue; // a collider it starts in (its own bones, the floor under it) does not stop it
+                if (hit.collider.transform == transform || hit.collider.transform.IsChildOf(transform) || hit.collider.GetComponentInParent<Health>() != null) continue;
+                best = hit.distance;
+                wall = hit;
+            }
+            return best < float.MaxValue;
         }
 
         private void Hit(Health health, float damage, Vector3 point, Vector3 normal)

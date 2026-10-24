@@ -7,15 +7,17 @@ using GlorifiedBody.Gore.ThatIndividual;
 namespace GlorifiedBody.Gore
 {
     /// <summary>
-    /// The gruesome kill (design §11.4: the others see a colleague die "in a gruesome manner"). Full gore only.
-    /// - A kill by the short's shock bursts the head (Bruno, 2026-10-24: "the head burst is for shock enemy
-    ///   kills"): the head bone shrinks to nothing (the neck is the stump), the vendor skull and meat parts fly from
-    ///   it, and a heavy spray leaves the neck.
-    /// - A full-charge mk_warspite kill takes off a part of the body (Bruno: "mk_warspite should dismember some part
-    ///   of the enemy's body"), and so do the other gruesome kills (the telekinesis, an explosion, a rocket,
-    ///   PROPOSED): a forearm, a whole arm or a shin, at random. The bone shrinks to nothing and the vendor's bone
-    ///   ends and meat (goreLimb) sit on the cut, with a gush. The ragdoll loses that limb's colliders.
-    /// The cheap path of the gore study (2026-10-24): the vendor slicer needs cut models. PROPOSED.
+    /// The gruesome kill (design §11.4: the others see a colleague die "in a gruesome manner"). Full gore only
+    /// (Bruno, 2026-10-24: "gore low: no cut").
+    /// - A kill by the short's shock or by mk_orzabal bursts the head (Bruno: "the head burst is for shock enemy
+    ///   kills", "tk bursts head"): the head bone shrinks to nothing (the neck is the stump), the vendor skull and
+    ///   meat parts fly from it, and a heavy spray leaves the neck.
+    /// - A full-charge mk_warspite kill and an explosion kill (a grenade, a rocket) cut an arm (Bruno: "explosions
+    ///   dismember (same as gruesome warspite kill)", "forearm or whole arm, randomized", "blast kill at full
+    ///   charge to cut"). The piece flies off (SeveredLimb, "flying piece too"), the bone shrinks to nothing, the
+    ///   vendor's bone ends and meat (goreLimb) sit on the cut, with a gush. The ragdoll loses that limb's
+    ///   colliders.
+    /// The vendor slicer needs cut models for each class (the gore study, 2026-10-24): this is the cheap path.
     /// </summary>
     public sealed class GruesomeDeathFx : MonoBehaviour
     {
@@ -26,7 +28,6 @@ namespace GlorifiedBody.Gore
         {
             HumanBodyBones.LeftLowerArm, HumanBodyBones.RightLowerArm,
             HumanBodyBones.LeftUpperArm, HumanBodyBones.RightUpperArm,
-            HumanBodyBones.LeftLowerLeg, HumanBodyBones.RightLowerLeg,
         };
 
         public static int HeadsBurst { get; private set; }
@@ -38,7 +39,7 @@ namespace GlorifiedBody.Gore
         private void OnEnable() => HitEventBus.OnHit += OnHit;
         private void OnDisable() => HitEventBus.OnHit -= OnHit;
 
-        public static bool BurstsTheHead(DamageType type) => type == DamageType.ShortShock;
+        public static bool BurstsTheHead(DamageType type) => type == DamageType.ShortShock || type == DamageType.PsychicTelekinesis;
 
         public static bool CutsALimb(DamageType type, float charge)
         {
@@ -46,7 +47,6 @@ namespace GlorifiedBody.Gore
             {
                 case DamageType.PsychicBlast:
                     return charge >= 0.999f;
-                case DamageType.PsychicTelekinesis:
                 case DamageType.Explosion:
                 case DamageType.Grenade:
                 case DamageType.EnemyRocket:
@@ -100,6 +100,10 @@ namespace GlorifiedBody.Gore
             Vector3 along = joint != null ? bone.position - joint.position : Vector3.up;
             Quaternion outward = Quaternion.LookRotation(along.sqrMagnitude > 0.0001f ? along.normalized : Vector3.up);
 
+            // The piece first: it is baked from the pose before the bone shrinks.
+            // A blast's normal faces her, an explosion's faces out from its centre: the piece flies away from both.
+            bool burst = hit.DamageType != DamageType.PsychicBlast;
+            SeveredLimb.Cut(hit.Victim, bone, burst ? hit.HitNormal : -hit.HitNormal, profile);
             hit.Victim.AddComponent<BoneStump>().Hold(bone, StumpScale);
             hit.Victim.GetComponentInParent<IRagdollBody>()?.Sever(bone);
             LimbsCut++;
@@ -114,8 +118,8 @@ namespace GlorifiedBody.Gore
                     stump.name = "LimbStump";
                     if (joint != null) stump.transform.SetParent(joint, true);
                 }
+                // One gush on the body: the piece carries its own, and the fatal hit already plays the driver's spray.
                 Spawn(profile.limbSprays, at, outward);
-                Spawn(profile.heavySprays, at, outward);
             }
             RunTelemetry.Event("gore_limb_cut", $"{hit.Victim.name}:{pick}:{hit.DamageType}");
         }

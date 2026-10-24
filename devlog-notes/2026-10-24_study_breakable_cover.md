@@ -70,3 +70,15 @@ Total: about 32 h.
 4. For breakable lights: Realtime with a fake bounce, or two bakes?
 5. Can a broken light make a room dark enough to need a mechanic (for example a scan, or a light source)?
 6. Can Lucy use cover at all with tank controls, or does cover only shield enemies?
+
+## Bruno's answers (2026-10-24, evening), built the same evening
+
+1. "broken room stays broken".
+2. "all collateral damage".
+3. "yes" (enemy bullets wear down her cover).
+4. "realtime with a fake bounce".
+5. "yes, we can brainstorm that later".
+6. "cover only enemies, on purpose; the player can reposition itself behind a pillar, etc, but there's no dedicated
+   take cover button".
+
+What was built: `2026-10-24_breakable_cover.md`.
