@@ -133,3 +133,10 @@ InitTestScene*.unity*
 /Assets/_Game/Effects/GasSmoke_*.mat
 /Assets/_Game/Effects/GasSmoke_*.mat.meta
 /Assets/_Game/Effects.meta
+
+# The AI test room holds the unpacked vendor weapons and shield (their particle data). Local only (Bruno,
+# 2026-10-24). Build it with AiTestSetup.BuildAiTest (the batch run: tools/unity.sh exec).
+/Assets/_Game/Scenes/AiTest.unity
+/Assets/_Game/Scenes/AiTest.unity.meta
+/Assets/_Game/Scenes/AiTest_NavMesh.asset
+/Assets/_Game/Scenes/AiTest_NavMesh.asset.meta

@@ -166,7 +166,7 @@ namespace GlorifiedBody.Enemy
             if (dt <= 0f || IsDead) return;
 
             TelekinesisLift lift = GetComponent<TelekinesisLift>();
-            if (lift != null && lift.IsLifted)
+            if ((lift != null && lift.IsLifted) || RagdollBodies.IsDown(this))
             {
                 if (HoldsSlot) CancelAim(State.Cooldown, cooldownSeconds * 0.5f);
                 return;

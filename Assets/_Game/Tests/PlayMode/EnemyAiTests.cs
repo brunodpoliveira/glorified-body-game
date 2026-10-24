@@ -126,6 +126,8 @@ namespace GlorifiedBody.Tests.PlayMode
             TelekinesisLift lift = soldier.GetComponent<TelekinesisLift>();
             Assert.IsTrue(lift.Release(null), "dropped");
             yield return WaitUntil(() => soldier.GetComponent<TelekinesisLift>() == null, 2f);
+            // Since 2026-10-24 he falls limp (EnemyRagdoll) and stands up again first (RagdollTests).
+            yield return WaitUntil(() => !RagdollBodies.IsDown(soldier), 8f);
             yield return new WaitForSeconds(0.5f);
             Assert.Less(soldier.transform.position.y, 0.2f, "back on the floor");
             Assert.IsFalse(body.Suspended || body.FsmStopped, "the body runs again");

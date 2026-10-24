@@ -238,7 +238,63 @@ namespace GlorifiedBody.Integration.Invector.Build
             if (spec.rank != EnemyMorale.Rank.Heavy) root.AddComponent<CorpseCare>();
             BuildGun(root, scale, spec.weapon);
             if (spec.shield) BuildShield(root, scale);
+            // The ragdoll (Bruno, 2026-10-24): the lift, the throw and a full mk_warspite knock him down. A heavy
+            // never falls (it only staggers), so it has none.
+            if (!spec.heavy) BuildRagdoll(root, animator);
             return root;
+        }
+
+        // ── The ragdoll ───────────────────────────────────────────────
+
+        public const float RagdollMass = 60f; // kg, PROPOSED
+
+        /// <summary>
+        /// The ragdoll from HumanoidRagdoll (the parts of Unity's ragdoll wizard, built by our editor code). Then
+        /// every bone body is kinematic with its collider off (EnemyRagdoll turns them on when he goes limp), on the
+        /// BodyPart layer (it hits the room and other ragdolls, not her and not the capsules).
+        /// </summary>
+        public static void BuildRagdoll(GameObject root, Animator animator)
+        {
+            GlorifiedBody.Editor.Characters.HumanoidRagdoll.Result built = GlorifiedBody.Editor.Characters.HumanoidRagdoll.Build(animator, RagdollMass);
+            if (built.Error != "")
+            {
+                Debug.LogError($"[InvectorEnemyFactory] the ragdoll of {root.name}: {built.Error}");
+                return;
+            }
+            Transform Bone(HumanBodyBones b) => animator.GetBoneTransform(b);
+            Transform hips = Bone(HumanBodyBones.Hips);
+            Rigidbody rootBody = root.GetComponent<Rigidbody>();
+            var bones = new List<Rigidbody>();
+            foreach (Rigidbody body in hips.GetComponentsInChildren<Rigidbody>(true))
+            {
+                // Only the builder's bodies: the hips and the bones with a joint (not a gun or a shield part).
+                if (body == rootBody || (body.transform != hips && body.GetComponent<CharacterJoint>() == null)) continue;
+                bones.Add(body);
+            }
+            // Parents before children: EnemyRagdoll puts the bones back in this order.
+            bones.Sort((a, b) => Depth(a.transform).CompareTo(Depth(b.transform)));
+            int bodyPart = LayerMask.NameToLayer("BodyPart");
+            foreach (Rigidbody body in bones)
+            {
+                body.isKinematic = true;
+                body.interpolation = RigidbodyInterpolation.None;
+                body.collisionDetectionMode = CollisionDetectionMode.Discrete;
+                Collider c = body.GetComponent<Collider>();
+                if (c != null) c.enabled = false;
+                if (body.TryGetComponent(out CharacterJoint joint)) joint.enableProjection = true;
+                body.gameObject.layer = bodyPart;
+            }
+            EnemyRagdoll ragdoll = root.GetComponent<EnemyRagdoll>() ?? root.AddComponent<EnemyRagdoll>();
+            ragdoll.Bind(bones.ToArray());
+            EditorUtility.SetDirty(ragdoll);
+            Debug.Log($"[InvectorEnemyFactory] ragdoll of {root.name}: {bones.Count} bones, {RagdollMass} kg.");
+        }
+
+        private static int Depth(Transform t)
+        {
+            int d = 0;
+            for (Transform p = t.parent; p != null; p = p.parent) d++;
+            return d;
         }
 
         // ── The gun and the shot effects ──────────────────────────────

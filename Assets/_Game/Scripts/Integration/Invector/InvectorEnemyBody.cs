@@ -4,6 +4,7 @@ using Invector.vCharacterController.AI;
 using Invector.vCharacterController.AI.FSMBehaviour;
 using UnityEngine;
 using UnityEngine.AI;
+using GlorifiedBody.Combat;
 using GlorifiedBody.Core;
 using GlorifiedBody.Enemy;
 
@@ -193,7 +194,8 @@ namespace GlorifiedBody.Integration.Invector
         private void OnDeath()
         {
             if (ai == null || ai.isDead) return;
-            if (suspended) Suspend(false);
+            // A limp body (EnemyRagdoll) stays as it falls: no agent, no root physics. Else the lift's body lands.
+            if (suspended && !RagdollBodies.IsDown(this)) Suspend(false);
             ai.TakeDamage(new vDamage(int.MaxValue / 2, true));
             StartCoroutine(LayDown());
         }

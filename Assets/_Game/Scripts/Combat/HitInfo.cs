@@ -15,6 +15,8 @@ namespace GlorifiedBody.Combat
         public DamageType DamageType;
         public bool WasFatal;
         public string HitZone;
+        /// <summary>The power's charge, 0..1 (1 = a full circle). 0 for a hit that is not a charged power.</summary>
+        public float Charge;
 
         public HitInfo Clone()
         {

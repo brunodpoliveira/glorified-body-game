@@ -44,6 +44,16 @@ MonoBehaviour:
   - {fileID: 1580736309660429346, guid: 61d8f078e8bef54dda6c038c4727b146, type: 3}
   - {fileID: 4501978001964585686, guid: e011a0e3921261e6882a5ecc49269382, type: 3}
   - {fileID: 4250890502058963705, guid: 5df9bd462e64c7d62aa15363757b7e65, type: 3}
+  limbStumps:
+  - {fileID: 4169042897493978705, guid: 7ca96e7c5eb17f74095483ddab1be3c5, type: 3}
+  - {fileID: 4169042897493978705, guid: 987dbe0b1fb126f4bada05073f3c2013, type: 3}
+  limbSprays:
+  - {fileID: 7091314252022122735, guid: 1d0ade344b59e349297ae34869e5d74b, type: 3}
+  - {fileID: 3049728988941478701, guid: 6391984245089ab1db6b523742043535, type: 3}
+  bodyPoolMaterials:
+  - {fileID: 2100000, guid: 2e74837849f5956cab8af4f4f45142a5, type: 2}
+  - {fileID: 2100000, guid: 1c70c8845508f1d849366cb416b3d200, type: 2}
+  - {fileID: 2100000, guid: b53dc98d4993a5d9e8c35e0566636635, type: 2}
   sprayScale: 1.35
   floorStainScale: {x: 1.1, y: 1.8}
   wallStainScale: {x: 1.4, y: 2.2}

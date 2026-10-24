@@ -10,7 +10,8 @@ namespace GlorifiedBody.Gore
     /// never ran: no scene held the GoreManager. On each scene load with gameplay systems (a GameplayInitializer),
     /// this adds PF_GoreManager from Resources, removes its debug keys (F7, F8, F9, F11, F12 clash with ours), starts
     /// the That Individual driver (the vendor blood sprays, bursts, stains) and the gruesome-kill effects
-    /// (GruesomeDeathFx), and applies the player's Gore option (SettingsManager.GoreLevel: Off, Low, Full).
+    /// (GruesomeDeathFx), the pools under dead bodies (BodyBloodPool), and applies the player's Gore option
+    /// (SettingsManager.GoreLevel: Off, Low, Full).
     /// </summary>
     public static class GoreBootstrap
     {
@@ -43,6 +44,7 @@ namespace GlorifiedBody.Gore
                 foreach (GoreDebugControls keys in manager.GetComponentsInChildren<GoreDebugControls>(true)) Object.Destroy(keys);
                 foreach (DismembermentDebugControls keys in manager.GetComponentsInChildren<DismembermentDebugControls>(true)) Object.Destroy(keys);
                 if (manager.GetComponent<GruesomeDeathFx>() == null) manager.AddComponent<GruesomeDeathFx>();
+                if (manager.GetComponent<BodyBloodPool>() == null) manager.AddComponent<BodyBloodPool>();
             }
             ThatIndividualGoreDriver.EnsureDriver();
             ApplySetting();

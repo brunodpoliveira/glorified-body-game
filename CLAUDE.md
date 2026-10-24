@@ -161,7 +161,16 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   `GoreBootstrap` (the GoreManager and the That Individual driver in every gameplay room, their debug keys
   removed), `GruesomeDeathFx` (a gruesome kill bursts the head, `HeadStump`; only figures with an animator bleed),
   the Gore option (Off / Low / Full). Tutorial: 21 steps (grenade: leave the red ring; shield: flank `Target_2`).
-  Next: Bruno's review.
+- 2026-10-24, his review (`devlog-notes/2026-10-24_ragdoll.md`): `EnemyRagdoll` on every soldier but the heavies
+  (11 bones from `HumanoidRagdoll`, editor code; Unity's ragdoll wizard does not run in batch), on the BodyPart
+  layer, kinematic and colliders off while animated. The lift holds the floater limp by the hips; a throw (it steers
+  to its target) and a slam drop it limp, and the struck enemy falls too (2.5 s); a full mk_warspite knocks a
+  soldier down 2.5 s; he stands up with the vendor `StandUp@FromBack/Belly` clips; a dead body freezes when it
+  settles. `IRagdollBody` / `RagdollBodies.IsDown` suspend the brain, the gun and the shield. Gore: the head burst
+  only for a kill by the short; a full mk_warspite kill (and the telekinesis and explosions, PROPOSED) cuts a limb
+  (`BoneStump`, the vendor `goreLimb-prefab`); `HitInfo.Charge`; `BodyBloodPool` grows a dark pool under a dead
+  body (`GoreLimbSetup.Assign` fills the profile). `AiTest.unity` and its NavMesh are git-ignored: build them with
+  `AiTestSetup.BuildAiTest`. Studies (not built): `2026-10-24_study_breakable_cover.md`, `2026-10-24_study_gore.md`.
 
 ## Rules
 

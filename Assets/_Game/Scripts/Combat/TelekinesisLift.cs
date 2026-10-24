@@ -14,12 +14,20 @@ namespace GlorifiedBody.Combat
     /// hangs it turns with her, so she aims the throw with the tank turn. An enemy with this component does nothing
     /// until it ends (see DummyShooter). A prop (a crate) is single use (Bruno, 2026-10-23: "crate/props thrown are
     /// single-use only"): it breaks where a throw or a slam lands it. A dropped prop (a release) stays whole.
+    /// A body with a ragdoll (IRagdollBody, Bruno, 2026-10-24: "orzabal should ragdoll the floater, and cause the
+    /// people hit by it to ragdoll as well") hangs limp from the hips, falls limp at every ending and stands up
+    /// after the down time; the enemy a thrown body hits falls limp too.
     /// </summary>
     public sealed class TelekinesisLift : MonoBehaviour
     {
         private const float LaunchSpeed = 14f;      // m/s, PROPOSED
         private const float FreeFlightMetres = 8f;  // with nobody to hit
         private const float HitRadius = 0.7f;
+        private const float SteerDegrees = 180f;     // a second, toward the target
+        private const float MaxFlightMetres = 20f;
+        public const float ThrownDownSeconds = 2.5f;  // the thrown body and the one it hits, PROPOSED
+        public const float SlamDownSeconds = 2.5f;    // PROPOSED
+        public const float ReleaseDownSeconds = 1.2f; // dropped by another enemy's hit, PROPOSED
 
         public bool IsLifted { get; private set; }
         /// <summary>True while it rises or hangs: a throw, a slam or a release is possible.</summary>
@@ -42,6 +50,7 @@ namespace GlorifiedBody.Combat
         private bool slamRequested;
         private bool released;
         private Health self;
+        private IRagdollBody ragdoll; // null: the body moves as one piece (a crate, a capsule dummy)
 
         public static TelekinesisLift Apply(GameObject victim, GameObject attacker, float liftHeight, float liftSeconds, float holdSeconds, float slamDamage)
         {
@@ -52,6 +61,8 @@ namespace GlorifiedBody.Combat
             lift.attacker = attacker;
             lift.slamDamage = slamDamage;
             lift.self = victim.GetComponent<Health>() ?? victim.GetComponentInParent<Health>();
+            IRagdollBody ragdoll = victim.GetComponent<IRagdollBody>();
+            lift.ragdoll = ragdoll != null && ragdoll.BeginHold() ? ragdoll : null;
             lift.StartCoroutine(lift.Run(liftHeight, liftSeconds, holdSeconds));
             return lift;
         }
@@ -137,6 +148,13 @@ namespace GlorifiedBody.Combat
             else if (released)
             {
                 Ending = "released";
+                if (ragdoll != null)
+                {
+                    ragdoll.EndHold(Vector3.zero, ReleaseDownSeconds);
+                    IsLifted = false;
+                    Destroy(this);
+                    yield break;
+                }
                 Vector3 from = transform.position;
                 t = 0f;
                 const float dropSeconds = 0.25f;
@@ -162,6 +180,7 @@ namespace GlorifiedBody.Combat
                     yield return null;
                 }
                 transform.position = floor;
+                ragdoll?.EndHold(Vector3.down * 4f, SlamDownSeconds);
                 Hit(GetComponent<Health>() ?? GetComponentInParent<Health>(), slamDamage, floor, Vector3.up);
             }
 
@@ -225,6 +244,17 @@ namespace GlorifiedBody.Combat
             while (flown < maxMetres && hit == null)
             {
                 float step = LaunchSpeed * Time.deltaTime;
+                // It steers to the target as it flies (a running soldier does not step out of the throw), PROPOSED.
+                if (launchTarget != null && !launchTarget.IsDead)
+                {
+                    Vector3 to = launchTarget.transform.position - transform.position;
+                    to.y = 0f;
+                    if (to.sqrMagnitude > 0.01f)
+                    {
+                        direction = Vector3.RotateTowards(direction, to.normalized, SteerDegrees * Mathf.Deg2Rad * Time.deltaTime, 0f);
+                        maxMetres = Mathf.Min(MaxFlightMetres, flown + to.magnitude + 1f);
+                    }
+                }
                 Vector3 next = transform.position + direction * step;
                 // A wall stops it.
                 if (Physics.Raycast(transform.position, direction, out RaycastHit wall, step + HitRadius, ~0, QueryTriggerInteraction.Ignore)
@@ -252,8 +282,19 @@ namespace GlorifiedBody.Combat
                 Vector3 normal = (hit.transform.position - transform.position).normalized;
                 Hit(hit, slamDamage, hitPoint, -normal);
                 hit.GetComponentInParent<IStaggerable>()?.Stagger(0.8f);
+                // The one it hits falls limp too, pushed along the flight (not a heavy: it only staggers).
+                LockOnTargetable struck = hit.GetComponent<LockOnTargetable>();
+                if (struck == null || !struck.IsHeavy) hit.GetComponentInParent<IRagdollBody>()?.KnockDown(ThrownDownSeconds, direction * 4f + Vector3.up * 1.5f);
                 LaunchVictim = hit;
                 RunTelemetry.Event("tk_launch_hit", $"{name}>{hit.name}");
+            }
+
+            // A limp body tumbles on with the flight (the ragdoll lands it). Its own damage at once.
+            if (ragdoll != null)
+            {
+                ragdoll.EndHold(direction * LaunchSpeed * 0.4f + Vector3.up, ThrownDownSeconds);
+                Hit(self, slamDamage, transform.position, Vector3.up);
+                yield break;
             }
 
             // The drop to the floor, the flyer's own damage.

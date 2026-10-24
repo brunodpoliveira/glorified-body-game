@@ -81,7 +81,7 @@ namespace GlorifiedBody.Enemy
         private void LateUpdate()
         {
             if (lift == null) lift = GetComponent<TelekinesisLift>();
-            if (!Dropped && lift != null && lift.IsLifted) Drop();
+            if (!Dropped && ((lift != null && lift.IsLifted) || RagdollBodies.IsDown(this))) Drop(); // a lift or a fall
             if (Dropped || model == null) return;
             float scale = transform.lossyScale.y;
             model.position = transform.position + transform.rotation * (offset * Mathf.Max(1f, scale / 1.8f));

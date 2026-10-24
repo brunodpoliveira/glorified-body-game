@@ -28,6 +28,14 @@ namespace GlorifiedBody.Gore.ThatIndividual
         [Tooltip("URP decal prefabs (animated bleed). Used only when the active renderer has a DecalRendererFeature.")]
         public GameObject[] wallDecals;
 
+        [Header("Gruesome kills (GruesomeDeathFx, BodyBloodPool)")]
+        [Tooltip("At a cut joint: the vendor bone ends and meat (goreLimb). Set by GoreLimbSetup.")]
+        public GameObject[] limbStumps;
+        [Tooltip("The gush and the burst at a cut joint.")]
+        public GameObject[] limbSprays;
+        [Tooltip("The pool that grows under a dead body (flat stain materials).")]
+        public Material[] bodyPoolMaterials;
+
         [Header("Look")]
         [Tooltip("Comic scale on sprays. Above 1 reads louder.")]
         public float sprayScale = 1.35f;

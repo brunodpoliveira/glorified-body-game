@@ -223,8 +223,14 @@ namespace GlorifiedBody.Player
             {
                 case PowerKind.Blast:
                     health?.TakeDamage(damage);
-                    RaiseHit(victim, health, point, normal, damage, DamageType.PsychicBlast);
+                    RaiseHit(victim, health, point, normal, damage, DamageType.PsychicBlast, charge);
                     victim.GetComponentInParent<IStaggerable>()?.Stagger(power.staggerSeconds * charge);
+                    // A full circle knocks him down (Bruno, 2026-10-24: "for a while (2.5 seconds)"); not a heavy.
+                    if (charge >= 0.999f && !target.IsHeavy)
+                    {
+                        Vector3 away = Vector3.ProjectOnPlane(point - transform.position, Vector3.up).normalized;
+                        victim.GetComponentInParent<IRagdollBody>()?.KnockDown(BlastKnockdownSeconds, away * BlastKnockdownPush + Vector3.up * 1.5f);
+                    }
                     break;
 
                 case PowerKind.Fire:
@@ -235,7 +241,7 @@ namespace GlorifiedBody.Player
                     {
                         float heat = damage * 0.5f;
                         health?.TakeDamage(heat);
-                        RaiseHit(victim, health, point, normal, heat, DamageType.PsychicFire);
+                        RaiseHit(victim, health, point, normal, heat, DamageType.PsychicFire, charge);
                         BurningStatus.Ignite(health != null ? health.gameObject : victim, gameObject, power.burnPerSecond * damageScale, power.burnSeconds);
                     }
                     else
@@ -261,7 +267,10 @@ namespace GlorifiedBody.Player
             OnChanged?.Invoke();
         }
 
-        private void RaiseHit(GameObject victim, Health health, Vector3 point, Vector3 normal, float damage, DamageType type)
+        public const float BlastKnockdownSeconds = 2.5f; // Bruno, 2026-10-24
+        public const float BlastKnockdownPush = 4f;      // m/s away from her, PROPOSED
+
+        private void RaiseHit(GameObject victim, Health health, Vector3 point, Vector3 normal, float damage, DamageType type, float charge = 0f)
         {
             HitEventBus.Raise(new HitInfo
             {
@@ -272,7 +281,8 @@ namespace GlorifiedBody.Player
                 HitNormal = normal,
                 DamageAmount = damage,
                 DamageType = type,
-                WasFatal = health != null && health.IsDead
+                WasFatal = health != null && health.IsDead,
+                Charge = charge
             });
         }
 

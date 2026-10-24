@@ -187,15 +187,17 @@ namespace GlorifiedBody.Enemy
             if (dt <= 0f) return;
 
             TelekinesisLift lift = GetComponent<TelekinesisLift>();
-            if (lift != null && lift.IsLifted)
+            // Lifted, or limp on the floor and standing up (EnemyRagdoll): the body does nothing.
+            if ((lift != null && lift.IsLifted) || RagdollBodies.IsDown(this))
             {
                 if (!suspendedByLift)
                 {
                     suspendedByLift = true;
                     body.Suspend(true);
                     gun.HoldFire = true;
-                    Current = Phase.Hold;
-                    RunTelemetry.Event("soldier_lifted", name);
+                    if (Current == Phase.Care) GetComponent<CorpseCare>()?.Stop("down");
+                    if (!Retreating) Current = Phase.Hold; // a frightened one stays frightened after the fall
+                    RunTelemetry.Event(lift != null && lift.IsLifted ? "soldier_lifted" : "soldier_down", name);
                 }
                 timer = recoverSeconds;
                 return;

@@ -167,6 +167,10 @@ namespace GlorifiedBody.Automation
             yield return BotClock.Wait(1f);
             Shot(Path.Combine(shots, "ai_03_lifted.png"));
             Record("lift", lifted.transform.position.y > 1f && lifted.Current == SoldierBrain.Phase.Hold, $"{lifted.name} y={lifted.transform.position.y:0.00} phase={lifted.Current}");
+            EnemyRagdoll liftedRagdoll = lifted.GetComponent<EnemyRagdoll>();
+            if (liftedRagdoll != null) CloseShot(liftedRagdoll.Hips.position, ClearSide(liftedRagdoll.Hips.position, 3.2f), Path.Combine(shots, "ai_03b_lifted_limp.png"), 3.2f);
+            Record("lift_ragdoll", liftedRagdoll != null && liftedRagdoll.Current == EnemyRagdoll.State.Held,
+                liftedRagdoll != null ? $"{lifted.name} {liftedRagdoll.Current}" : "no ragdoll");
             stats.DebugSet(100f, 0f);
             Health liftedHealth = lifted.GetComponent<Health>();
             float hp = liftedHealth.CurrentHealth;
@@ -176,6 +180,7 @@ namespace GlorifiedBody.Automation
                 $"slam={slammed} y={lifted.transform.position.y:0.00} hp {hp:0} -> {liftedHealth.CurrentHealth:0} phase={lifted.Current}");
 
             yield return Morale(lucy, soldiers, lifted, shots);
+            yield return Ragdoll(soldiers, powers, stats, lockOn, shots);
 
             // The power armour is heavy.
             SoldierBrain armour = soldiers.FirstOrDefault(s => s.name.StartsWith("Armour"));
@@ -215,11 +220,22 @@ namespace GlorifiedBody.Automation
             Shot(Path.Combine(shots, "ai_19_shock.png"));
             Record("witness_shock", corpse.Body.IsDead && corpseMorale.DiedGruesome && shocked > 0,
                 $"gruesome={corpseMorale.DiedGruesome} " + string.Join(" ", living.Select(s => $"{s.name}:seen={s.GetComponent<EnemyMorale>().Witnessed}/shocks={s.ShockCount}/{s.Current}")));
-            Animator corpseAnimator = corpse.GetComponent<Animator>();
-            Transform head = corpseAnimator != null ? corpseAnimator.GetBoneTransform(HumanBodyBones.Head) : null;
-            if (head != null) CloseShot(head.position, Camera.main != null ? Camera.main.transform.position - head.position : Vector3.back, Path.Combine(shots, "ai_20_head_burst.png"), 2.2f);
-            Record("gore_head_burst", GlorifiedBody.Gore.GruesomeDeathFx.HeadsBurst > 0 && head != null && head.localScale.x < 0.05f,
-                $"bursts={GlorifiedBody.Gore.GruesomeDeathFx.HeadsBurst} head local scale={(head != null ? head.localScale.x : -1f):0.000}");
+            // The slam is a telekinesis kill: a limb comes off (the head burst is for the short, GoreTests).
+            GlorifiedBody.Gore.BoneStump stump = corpse.GetComponent<GlorifiedBody.Gore.BoneStump>();
+            Transform cut = stump != null ? stump.Bone : null;
+            float settle = BotClock.Now;
+            EnemyRagdoll corpseRagdoll = corpse.GetComponent<EnemyRagdoll>();
+            while (corpseRagdoll != null && corpseRagdoll.Current != EnemyRagdoll.State.Corpse && BotClock.Now - settle < 6f) yield return null;
+            ClearTheAir();
+            if (cut != null) CloseShot(cut.position, ClearSide(cut.position, 1.8f), Path.Combine(shots, "ai_20_limb_cut.png"), 1.8f, 0.7f);
+            Record("gore_limb_cut", GlorifiedBody.Gore.GruesomeDeathFx.LimbsCut > 0 && cut != null && cut.localScale.x < 0.05f,
+                $"cuts={GlorifiedBody.Gore.GruesomeDeathFx.LimbsCut} limb={GlorifiedBody.Gore.GruesomeDeathFx.LastLimb} ragdoll={(corpseRagdoll != null ? corpseRagdoll.Current.ToString() : "-")}");
+            float poolWait = BotClock.Now;
+            while (GlorifiedBody.Gore.BodyBloodPool.Count == 0 && BotClock.Now - poolWait < 8f) yield return null;
+            yield return BotClock.Wait(4f); // it grows
+            GameObject pool = GlorifiedBody.Gore.BodyBloodPool.Count > 0 ? GlorifiedBody.Gore.BodyBloodPool.Pools[GlorifiedBody.Gore.BodyBloodPool.Pools.Count - 1] : null;
+            if (pool != null) CloseShot(pool.transform.position + Vector3.up * 0.2f, ClearSide(pool.transform.position + Vector3.up * 0.2f, 2.6f), Path.Combine(shots, "ai_20b_blood_pool.png"), 2.6f, 1.2f);
+            Record("blood_pool", pool != null, pool != null ? $"size={pool.transform.localScale.x:0.00} m at {pool.transform.position}" : "no pool in 12 s");
 
             // The guard's fear at its limit: it runs and cowers.
             SoldierBrain guard = living.FirstOrDefault(s => s.GetComponent<EnemyMorale>().RankOf == EnemyMorale.Rank.Guard);
@@ -265,6 +281,64 @@ namespace GlorifiedBody.Automation
             tank.enabled = true;
             tank.Teleport(home, 0f);
             yield return BotClock.Wait(1f);
+        }
+
+        /// <summary>
+        /// The ragdoll (Bruno, 2026-10-24): a full mk_warspite knocks a soldier down for 2.5 s and he stands up; a
+        /// held soldier hangs limp, the throw knocks down the one it hits, both stand up. Tiny damage: nobody dies.
+        /// </summary>
+        private IEnumerator Ragdoll(SoldierBrain[] soldiers, PsychicPowers powers, PsychicStats stats, LockOnController lockOn, string shots)
+        {
+            SoldierBrain[] able = soldiers.Where(s => s != null && !s.Body.IsDead && s.GetComponent<EnemyRagdoll>() != null).ToArray();
+            if (able.Length == 0) { Record("blast_knockdown", false, "no living soldier with a ragdoll"); yield break; }
+            SoldierBrain first = able[0];
+            EnemyRagdoll firstRagdoll = first.GetComponent<EnemyRagdoll>();
+            stats.DebugSet(100f, 0f);
+            powers.Select(PowerKind.Blast);
+            lockOn.SetTarget(first.GetComponent<LockOnTargetable>());
+            powers.FireAt(powers.Selected, 1f, first.GetComponent<LockOnTargetable>(), 0.01f);
+            yield return BotClock.Wait(1.2f);
+            bool down = firstRagdoll.Current == EnemyRagdoll.State.Down;
+            Shot(Path.Combine(shots, "ai_24_knockdown_room.png"));
+            ClearTheAir();
+            CloseShot(firstRagdoll.Hips.position, ClearSide(firstRagdoll.Hips.position, 2.6f), Path.Combine(shots, "ai_24b_knockdown_close.png"), 2.6f, 0.9f);
+            float t0 = BotClock.Now;
+            while (firstRagdoll.Current != EnemyRagdoll.State.StandingUp && BotClock.Now - t0 < 6f) yield return null;
+            yield return BotClock.Wait(0.5f);
+            CloseShot(first.transform.position + Vector3.up * 0.6f, ClearSide(first.transform.position + Vector3.up * 0.6f, 3f), Path.Combine(shots, "ai_24c_standing_up.png"), 3f);
+            while (firstRagdoll.Current != EnemyRagdoll.State.Animated && BotClock.Now - t0 < 10f) yield return null;
+            Record("blast_knockdown", down && firstRagdoll.StandUps > 0, $"{first.name} down={down} clip={firstRagdoll.StandUpClip} stands={firstRagdoll.StandUps}");
+
+            if (able.Length < 2) yield break;
+            SoldierBrain thrown = able[0], struck = able[1];
+            EnemyRagdoll a = thrown.GetComponent<EnemyRagdoll>(), b = struck.GetComponent<EnemyRagdoll>();
+            int aDowns = a.Downs, bDowns = b.Downs;
+            // The cowering guard hides behind cover, and a wall stops a throw (the rule): the bot puts him in the open.
+            Vector3 open = OpenSpotNear(thrown.transform.position, 3.5f);
+            UnityEngine.AI.NavMeshAgent struckAgent = struck.GetComponent<UnityEngine.AI.NavMeshAgent>();
+            if (struckAgent != null && struckAgent.enabled) struckAgent.Warp(open);
+            else struck.transform.position = open;
+            yield return BotClock.Wait(0.3f);
+            stats.DebugSet(100f, 0f);
+            powers.Select(PowerKind.Telekinesis);
+            lockOn.SetTarget(thrown.GetComponent<LockOnTargetable>());
+            powers.FireAt(powers.Selected, 1f, thrown.GetComponent<LockOnTargetable>(), 0.01f);
+            yield return BotClock.Wait(0.9f);
+            TelekinesisLift lift = thrown.GetComponent<TelekinesisLift>();
+            if (lift == null) { Record("throw_knockdown", false, "the lift did not take " + thrown.name); yield break; }
+            lift.Launch(struck.GetComponent<LockOnTargetable>().GetLockPoint(), struck.GetComponent<Health>());
+            t0 = BotClock.Now;
+            while (lift != null && lift.LaunchVictim == null && BotClock.Now - t0 < 3f) yield return null;
+            yield return BotClock.Wait(1.3f); // both on the floor
+            Shot(Path.Combine(shots, "ai_25_throw_room.png"));
+            ClearTheAir();
+            Vector3 between = 0.5f * (a.Hips.position + b.Hips.position);
+            CloseShot(between, ClearSide(between, 4f), Path.Combine(shots, "ai_25b_throw_both_down.png"), 4f, 1.2f);
+            Record("throw_knockdown", a.Downs > aDowns && b.Downs > bDowns, $"{thrown.name}>{struck.name} downs {a.Downs - aDowns}/{b.Downs - bDowns}");
+            t0 = BotClock.Now;
+            while ((a.Current != EnemyRagdoll.State.Animated || b.Current != EnemyRagdoll.State.Animated) && BotClock.Now - t0 < 10f) yield return null;
+            Record("stand_up", a.Current == EnemyRagdoll.State.Animated && b.Current == EnemyRagdoll.State.Animated,
+                $"{thrown.name}={a.Current}/{a.StandUpClip} {struck.name}={b.Current}/{b.StandUpClip}");
         }
 
         /// <summary>The weapon steps: the grenade, the icons, the shield, the melee.</summary>
@@ -437,7 +511,42 @@ namespace GlorifiedBody.Automation
         }
 
         /// <summary>A close shot from a temporary camera: it stands back from the point and looks at it.</summary>
-        private static void CloseShot(Vector3 point, Vector3 facing, string path, float distance = 1.4f)
+        /// <summary>A side to look from with nothing between the camera and the point (a pillar, the armour).</summary>
+        private static Vector3 ClearSide(Vector3 point, float distance)
+        {
+            Vector3 preferred = Camera.main != null ? Camera.main.transform.position - point : Vector3.back;
+            preferred.y = 0f;
+            if (preferred.sqrMagnitude < 0.001f) preferred = Vector3.back;
+            int mask = ~LayerMask.GetMask("BodyPart");
+            for (int i = 0; i < 16; i++)
+            {
+                Vector3 side = Quaternion.Euler(0f, (i % 2 == 0 ? 1 : -1) * (i + 1) / 2 * 22.5f, 0f) * preferred.normalized;
+                Vector3 from = point + side * distance + Vector3.up * 0.5f;
+                if (!Physics.Linecast(from, point, out RaycastHit hit, mask, QueryTriggerInteraction.Ignore) || Vector3.Distance(hit.point, point) < 0.45f) return side;
+            }
+            return preferred;
+        }
+
+        /// <summary>A NavMesh point about the distance away with a clear line to the origin (for a staged throw).</summary>
+        private static Vector3 OpenSpotNear(Vector3 origin, float distance)
+        {
+            for (int i = 0; i < 16; i++)
+            {
+                Vector3 candidate = origin + Quaternion.Euler(0f, i * 22.5f, 0f) * Vector3.forward * distance;
+                if (!UnityEngine.AI.NavMesh.SamplePosition(candidate, out UnityEngine.AI.NavMeshHit hit, 1f, UnityEngine.AI.NavMesh.AllAreas)) continue;
+                if (Physics.Linecast(origin + Vector3.up * 1.5f, hit.position + Vector3.up * 1.2f, LayerMask.GetMask("Default"), QueryTriggerInteraction.Ignore)) continue;
+                return hit.position;
+            }
+            return origin + Vector3.forward * distance;
+        }
+
+        /// <summary>The gas grenadier keeps firing: the bot removes the clouds before a close shot of a body.</summary>
+        private static void ClearTheAir()
+        {
+            foreach (GasCloud cloud in FindObjectsByType<GasCloud>(FindObjectsSortMode.None)) Destroy(cloud.gameObject);
+        }
+
+        private static void CloseShot(Vector3 point, Vector3 facing, string path, float distance = 1.4f, float height = 0.25f)
         {
             facing.y = 0f;
             if (facing.sqrMagnitude < 0.001f) facing = Vector3.forward;
@@ -451,7 +560,7 @@ namespace GlorifiedBody.Automation
                 cam.clearFlags = main.clearFlags;
                 cam.backgroundColor = main.backgroundColor;
             }
-            go.transform.position = point + facing.normalized * distance + Vector3.up * 0.25f;
+            go.transform.position = point + facing.normalized * distance + Vector3.up * height;
             go.transform.LookAt(point);
             try
             {

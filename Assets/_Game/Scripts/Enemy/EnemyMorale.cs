@@ -18,7 +18,8 @@ namespace GlorifiedBody.Enemy
     ///   - Fear: +1 for a death, +2 for a gruesome one. At its rank's limit it retreats (SoldierBrain.Retreat):
     ///     it runs away from Lucy and cowers, and never attacks again. An unarmed civilian runs at once.
     /// Gruesome: the short's shocks, the fire, the telekinesis (the slam, a throw, a returned bullet, grenade or
-    /// rocket), an explosion. A plain mk_warspite kill is not. All numbers and the gruesome list are PROPOSED.
+    /// rocket), an explosion, a full-charge mk_warspite (it cuts a limb). A part-charge mk_warspite kill is not.
+    /// All numbers and the gruesome list are PROPOSED.
     /// </summary>
     [RequireComponent(typeof(Health))]
     public sealed class EnemyMorale : MonoBehaviour
@@ -37,6 +38,7 @@ namespace GlorifiedBody.Enemy
         private Health health;
         private SoldierBrain brain;
         private DamageType lastType = DamageType.Unknown;
+        private float lastCharge;
         private int deathFrame = -1;
         private bool announced;
 
@@ -51,8 +53,10 @@ namespace GlorifiedBody.Enemy
 
         public void SetRank(Rank value) => rank = value;
 
-        public static bool IsGruesome(DamageType type)
+        /// <summary>A gruesome death. A full-charge mk_warspite kill cuts a limb (Bruno, 2026-10-24): gruesome too.</summary>
+        public static bool IsGruesome(DamageType type, float charge = 0f)
         {
+            if (type == DamageType.PsychicBlast) return charge >= 0.999f;
             switch (type)
             {
                 case DamageType.ShortShock:
@@ -90,7 +94,9 @@ namespace GlorifiedBody.Enemy
 
         private void OnHit(HitInfo hit)
         {
-            if (hit.Victim == gameObject) lastType = hit.DamageType;
+            if (hit.Victim != gameObject) return;
+            lastType = hit.DamageType;
+            lastCharge = hit.Charge;
         }
 
         private void OnDeath()
@@ -103,7 +109,7 @@ namespace GlorifiedBody.Enemy
             // The frame after the death: the hit event of the killing blow arrived, so the cause is known.
             if (announced || deathFrame < 0 || Time.frameCount <= deathFrame) return;
             announced = true;
-            DiedGruesome = IsGruesome(lastType);
+            DiedGruesome = IsGruesome(lastType, lastCharge);
             Vector3 chest = transform.position + Vector3.up * GlorifiedBody.Characters.Body.ChestHeight;
             RunTelemetry.Event("enemy_death_seen_by_room", $"{name}:{lastType}{(DiedGruesome ? ":gruesome" : "")}");
             OnColleagueDied?.Invoke(this, chest, DiedGruesome);
