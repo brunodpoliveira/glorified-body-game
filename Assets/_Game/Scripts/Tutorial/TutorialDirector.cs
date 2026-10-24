@@ -79,7 +79,9 @@ namespace GlorifiedBody.Tutorial
         private PsychicScanner scanner;
 
         // The flags of the current step, reset on enter.
-        private bool slammed, propThrown;
+        private bool slammed, propThrown, grenadeLeft, shieldFlanked;
+        private EnemyShield shield;
+        public EnemyShield Shield => shield;
         private bool ranInStep, dodgedSide, launched, caught, drugUsed, shortBegan, shortEnded, logRead, doorScanned, monitorsScanned, inventoryOpened, inventoryClosed;
         private ItemInventory items;
         private int targetChanges;
@@ -123,6 +125,9 @@ namespace GlorifiedBody.Tutorial
             // The gun waits for its step, out of the lock too: the faculty steps must not lift or burn it (the
             // first bot run threw it east of the bars, and its bullets hit the rails).
             SetGunActive(false);
+            shield = FindFirstObjectByType<EnemyShield>(FindObjectsInactive.Include);
+            if (shield != null) shield.enabled = false;
+            EnemyGrenade.OnBurst += OnGrenadeBurst;
 
             if (tank != null) tank.OnDodge += OnDodge;
             if (lockOn != null) lockOn.OnTargetChanged += OnTargetChanged;
@@ -163,6 +168,26 @@ namespace GlorifiedBody.Tutorial
             if (scanner != null) scanner.OnScanEnded -= OnScanEnded;
             InventoryUI.OnOpened -= OnInventoryOpened;
             InventoryUI.OnClosed -= OnInventoryClosed;
+            EnemyGrenade.OnBurst -= OnGrenadeBurst;
+        }
+
+        /// <summary>A frag grenade of the step burst with her outside its ring.</summary>
+        private void OnGrenadeBurst(EnemyGrenade grenade, Vector3 centre)
+        {
+            if (grenade == null || grenade.IsGas || grenade.Returned || lucy == null) return;
+            Vector3 her = lucy.position;
+            her.y = centre.y;
+            if (Vector3.Distance(her, centre) > grenade.Radius) grenadeLeft = true;
+        }
+
+        private void SetGunWeapon(DummyShooter.Weapon weapon)
+        {
+            if (Shooter != null) Shooter.WeaponKind = weapon;
+        }
+
+        private void SetShieldActive(bool active)
+        {
+            if (shield != null) shield.enabled = active;
         }
 
         private void OnInventoryOpened() => inventoryOpened = true;
@@ -219,6 +244,19 @@ namespace GlorifiedBody.Tutorial
                 () => caught,
                 onEnter: () => SetGunActive(true),
                 onExit: () => SetGunActive(false)));
+            // The attacks (Bruno, 2026-10-24): the icon names the attack; a red ring is a grenade.
+            steps.Add(new TutorialStep("grenade",
+                "The dummy by the door has a new toy. When the ring is under you, do not stay.",
+                "The icon by the circle names the attack. A red ring on the floor: a grenade lands there. Walk, run or {Dodge} out of it before it bursts.",
+                () => grenadeLeft,
+                onEnter: () => { SetGunWeapon(DummyShooter.Weapon.GrenadeLauncher); SetGunActive(true); },
+                onExit: () => { SetGunActive(false); SetGunWeapon(DummyShooter.Weapon.Pistol); }));
+            steps.Add(new TutorialStep("shield",
+                "That one holds a shield. It stops a faculty from the front. Go around it.",
+                "Walk to its side or its back. Then mk_warspite: {PowerBlast}, hold {Charge} to the full circle, release.",
+                () => shieldFlanked,
+                onEnter: () => SetShieldActive(true),
+                onExit: () => SetShieldActive(false)));
             steps.Add(new TutorialStep("capsule",
                 "A capsule lies by the bars. Take it. Use it.",
                 "Face the capsule. {Interact} asks, {Interact} again takes it. {UseDrug} uses it: the bars refill.",
@@ -346,6 +384,8 @@ namespace GlorifiedBody.Tutorial
         {
             firedKind = power.kind;
             firedCharge = charge;
+            // FireAt raises this only when the shield did not stop the power: a hit from the side or the back.
+            if (shield != null && shield.enabled && target != null && target.gameObject == shield.gameObject && power.kind == PowerKind.Blast) shieldFlanked = true;
         }
 
         private void OnPowersChanged()

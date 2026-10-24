@@ -43,6 +43,8 @@ namespace GlorifiedBody.Enemy
         public static readonly Color GasColour = new Color(0.55f, 0.9f, 0.2f);
 
         public static int Bursts { get; private set; }
+        /// <summary>A grenade burst: the grenade and its centre (the tutorial's "leave the ring" step).</summary>
+        public static event System.Action<EnemyGrenade, Vector3> OnBurst;
         public bool Catchable => !returned && !landed && !burst;
         public bool Returned => returned;
         public bool Landed => landed;
@@ -167,6 +169,7 @@ namespace GlorifiedBody.Enemy
             burst = true;
             Bursts++;
             Vector3 centre = transform.position;
+            OnBurst?.Invoke(this, centre);
             RunTelemetry.Event("grenade_burst", $"{killerId}{(returned ? ":returned" : "")}@{centre.x:0.0},{centre.z:0.0}");
             if (gas)
             {

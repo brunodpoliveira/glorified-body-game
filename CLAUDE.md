@@ -159,7 +159,8 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   fear by rank: guards retreat and cower at 3, soldiers and heavies never), `CorpseCare` (Bruno: CPR and the drag
   of a body; a colleague tends a body when he has not seen her for 3 s; placeholder poses, RFab gap 13),
   `GoreBootstrap` (the GoreManager and the That Individual driver in every gameplay room, their debug keys
-  removed), `GruesomeDeathFx` (a gruesome kill bursts the head, `HeadStump`), the Gore option (Off / Low / Full).
+  removed), `GruesomeDeathFx` (a gruesome kill bursts the head, `HeadStump`; only figures with an animator bleed),
+  the Gore option (Off / Low / Full). Tutorial: 21 steps (grenade: leave the red ring; shield: flank `Target_2`).
   Next: Bruno's review.
 
 ## Rules

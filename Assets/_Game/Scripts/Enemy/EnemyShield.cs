@@ -24,7 +24,7 @@ namespace GlorifiedBody.Enemy
         private Health health;
         private TelekinesisLift lift;
 
-        public bool IsUp => model != null && !Dropped && health != null && !health.IsDead && !(lift != null && lift.IsLifted);
+        public bool IsUp => isActiveAndEnabled && model != null && !Dropped && health != null && !health.IsDead && !(lift != null && lift.IsLifted);
         public bool Dropped { get; private set; }
         public int BlockCount { get; private set; }
         public string LastBlocked { get; private set; } = "";
@@ -45,11 +45,14 @@ namespace GlorifiedBody.Enemy
         {
             health.OnDeath ??= new UnityEngine.Events.UnityEvent();
             health.OnDeath.AddListener(Drop);
+            if (model != null && !Dropped) model.gameObject.SetActive(true);
         }
 
         private void OnDisable()
         {
             health.OnDeath?.RemoveListener(Drop);
+            // Off (the tutorial dummy before its step): the shield is not in the hands.
+            if (model != null && !Dropped) model.gameObject.SetActive(false);
         }
 
         public bool Blocks(Vector3 from)

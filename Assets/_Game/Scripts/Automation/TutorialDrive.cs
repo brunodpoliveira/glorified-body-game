@@ -137,6 +137,48 @@ namespace GlorifiedBody.Automation
                     yield return null;
                     yield return CatchOneBullet(c, 20f);
                     break;
+                case "grenade":
+                {
+                    // Stand 4.6 m from the gun (it lobs no grenade closer than 3.5 m), wait for the grenade, run 3.4 m.
+                    yield return WalkTo(c, c.Director.MonitorsPoint, run: true, radius: 0.4f);
+                    float t0 = BotClock.Now;
+                    EnemyGrenade grenade = null;
+                    while (grenade == null && BotClock.Now - t0 < 20f)
+                    {
+                        grenade = System.Linq.Enumerable.FirstOrDefault(Object.FindObjectsByType<EnemyGrenade>(FindObjectsSortMode.None), g => g.Catchable && !g.IsGas);
+                        yield return null;
+                    }
+                    if (grenade == null) { Debug.LogWarning("[TutorialDrive] grenade: no grenade in 20 s."); break; }
+                    c.Moment?.Invoke("grenade_ring");
+                    yield return WalkTo(c, new Vector3(-2.6f, 0f, 12.6f), run: true, radius: 0.4f, timeout: 3f);
+                    yield return BotClock.Wait(1.2f);
+                    break;
+                }
+                case "shield":
+                {
+                    // Behind the shield dummy (it faces south), lock it, a full blast.
+                    EnemyShield shield = c.Director.Shield;
+                    if (shield == null) { Debug.LogWarning("[TutorialDrive] shield: no shield dummy."); break; }
+                    Vector3 behind = shield.transform.position - shield.transform.forward * 2.4f;
+                    yield return WalkTo(c, behind, run: true, radius: 0.4f);
+                    LockOnController lockOn = c.Lucy.GetComponent<LockOnController>();
+                    LockOnTargetable target = shield.GetComponent<LockOnTargetable>();
+                    for (int i = 0; i < 6 && lockOn != null && lockOn.CurrentTarget != target; i++)
+                    {
+                        c.Pad.Tap(InputManager.GameAction.SwitchTarget);
+                        yield return BotClock.Wait(0.15f);
+                    }
+                    if (lockOn != null && lockOn.CurrentTarget != target) Debug.LogWarning($"[TutorialDrive] shield: the switch did not reach it (lock {lockOn.TargetName}).");
+                    c.Pad.Tap(InputManager.GameAction.PowerBlast);
+                    yield return null;
+                    yield return WaitForNalcon(c, 25f, 12f);
+                    yield return HoldChargeFull(c);
+                    yield return BotClock.Wait(0.3f);
+                    c.Moment?.Invoke("shield_flanked");
+                    // Back past the north end of the dummy row: a straight walk to the capsule runs into Target_1.
+                    yield return WalkTo(c, new Vector3(-1.2f, 0f, 15.6f), run: false, radius: 0.5f);
+                    break;
+                }
                 case "capsule":
                 {
                     // The capsule asks first now (Bruno, 2026-10-22: pills are grabbables, not walk-over).

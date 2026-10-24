@@ -82,7 +82,8 @@ namespace GlorifiedBody.Editor
             // A row across the middle of the gym, 3 m or more from every lens and off the lines from the cameras
             // to the step points (the first places hid Lucy from the north-east camera).
             PaddedTarget("Target_1", new Vector3(0.8f, 0f, 13.6f), 180f, p, gun: false);
-            PaddedTarget("Target_2", new Vector3(1.8f, 0f, 13.6f), 180f, p, gun: false);
+            GameObject shieldDummy = PaddedTarget("Target_2", new Vector3(1.8f, 0f, 13.6f), 180f, p, gun: false);
+            ShieldFor(shieldDummy, p);
             PaddedTarget("Target_3", new Vector3(2.8f, 0f, 13.6f), 180f, p, gun: false);
             // The gun against the west wall by the door: a clear line to the monitors side, no padded target in
             // the way, and no floor behind it for her to vanish into.
@@ -254,6 +255,26 @@ namespace GlorifiedBody.Editor
         /// Enemy layer and tag, so every power lands on it; the body is canvas and a vest from primitives (no
         /// colliders of their own). With a gun it carries a DummyShooter, off until its step.
         /// </summary>
+        /// <summary>The shield step's dummy: a riot shield (a flat steel slab) in front of its left side, off until its step.</summary>
+        private static void ShieldFor(GameObject dummy, LookTestSetup.Palette p)
+        {
+            Transform old = dummy.transform.Find("Shield");
+            if (old != null) Object.DestroyImmediate(old.gameObject);
+            var slab = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            slab.name = "Shield";
+            Object.DestroyImmediate(slab.GetComponent<Collider>());
+            slab.transform.SetParent(dummy.transform, false);
+            slab.transform.localScale = new Vector3(0.6f, 1.0f, 0.05f);
+            slab.transform.localPosition = new Vector3(-0.18f, 1.05f, 0.42f);
+            slab.GetComponent<Renderer>().sharedMaterial = p.DarkSteel;
+            slab.layer = LayerMask.NameToLayer("Enemy");
+            slab.SetActive(false); // EnemyShield shows it when its step turns the shield on
+            GlorifiedBody.Enemy.EnemyShield guard = MenuLoopSetup.EnsureComponent<GlorifiedBody.Enemy.EnemyShield>(dummy);
+            guard.Bind(slab.transform, Quaternion.identity);
+            guard.enabled = false;
+            EditorUtility.SetDirty(guard);
+        }
+
         private static GameObject PaddedTarget(string name, Vector3 position, float yaw, LookTestSetup.Palette p, bool gun)
         {
             GameObject root = MenuLoopSetup.EnsureRoot(name);

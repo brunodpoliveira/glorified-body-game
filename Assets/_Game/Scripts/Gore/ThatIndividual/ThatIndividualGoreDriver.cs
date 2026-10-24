@@ -331,6 +331,13 @@ namespace GlorifiedBody.Gore.ThatIndividual
                 return GoreHitWeight.None;
             }
 
+            // THE GLORIFIED BODY: only a body bleeds (a figure with an animator). The padded training dummies of
+            // the gym and the crates do not.
+            if (hit.Victim.GetComponentInChildren<Animator>() == null)
+            {
+                return GoreHitWeight.None;
+            }
+
             GoreTier tier = CurrentTier;
             if (tier == GoreTier.Off || !HitClassifier.IsActorHit(hit))
             {
