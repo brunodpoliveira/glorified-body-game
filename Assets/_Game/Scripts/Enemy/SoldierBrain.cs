@@ -33,7 +33,7 @@ namespace GlorifiedBody.Enemy
     /// cowers in a crouch and never attacks again). CorpseCare: it tends a dead colleague (Phase.Care).
     /// </summary>
     [RequireComponent(typeof(DummyShooter), typeof(Health))]
-    public sealed class SoldierBrain : MonoBehaviour
+    public sealed class SoldierBrain : MonoBehaviour, IFearful
     {
         public enum Phase { Idle, Move, Shoot, Hold, Dead, Care, Retreat, Cower }
 
@@ -333,23 +333,7 @@ namespace GlorifiedBody.Enemy
         }
 
         /// <summary>The NavMesh spot farthest from her, within 14 m of it.</summary>
-        private Vector3 FleeSpot()
-        {
-            Vector3 her = TargetPosition;
-            Vector3 best = transform.position;
-            float bestScore = Flat(best, her);
-            for (int i = 0; i < 16; i++)
-            {
-                foreach (float r in new[] { 6f, 10f, 14f })
-                {
-                    Vector3 candidate = transform.position + Quaternion.Euler(0f, i * 22.5f, 0f) * Vector3.forward * r;
-                    if (!NavMesh.SamplePosition(candidate, out NavMeshHit hit, 2f, NavMesh.AllAreas)) continue;
-                    float score = Flat(hit.position, her);
-                    if (score > bestScore) { bestScore = score; best = hit.position; }
-                }
-            }
-            return best;
-        }
+        private Vector3 FleeSpot() => EnemyNav.FarthestFrom(transform.position, TargetPosition);
 
         public bool TryBeginCare()
         {

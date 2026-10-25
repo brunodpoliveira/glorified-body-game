@@ -15,10 +15,102 @@ MonoBehaviour:
   fallback:
     killerId: 
     picture: {fileID: 0}
-    hint: PLACEHOLDER HINT
+    pictureNote: 'PLACEHOLDER: the room from the floor'
+    hint: 'PLACEHOLDER HINT: watch the red line and the ring. Step out before it
+      closes.'
     voiceLine: {fileID: 0}
+    voiceText: 
   entries:
   - killerId: dummy_shooter
     picture: {fileID: 0}
+    pictureNote: 
     hint: 'PLACEHOLDER HINT: step back when the circle closes, then charge.'
     voiceLine: {fileID: 0}
+    voiceText: 
+  - killerId: guard
+    picture: {fileID: 0}
+    pictureNote: the guard lowering the pistol, the goggles and the respirator filling
+      the frame, the laser line going dark
+    hint: The red line is where the shot goes. Step out of it before the ring closes.
+      Once he has aimed, he cannot aim again.
+    voiceLine: {fileID: 0}
+    voiceText: 'COMPUTER: Subject contained. Log the time.'
+  - killerId: scientist
+    picture: {fileID: 0}
+    pictureNote: the blue hood from below, the knife, the collar piece with its green
+      light
+    hint: He aims slowly and his hands shake. Close the distance, or make him come
+      to you. The knife is only a knife.
+    voiceLine: {fileID: 0}
+    voiceText: 'COMPUTER: Subject contained. Return the tray to the dispensary.'
+  - killerId: scientist_group
+    picture: {fileID: 0}
+    pictureNote: four blue suits around her on the tiles, the ampoules on the floor
+    hint: The third light was full. One ampoule before the fight empties it. One
+      ampoule during a short ends it.
+    voiceLine: {fileID: 0}
+    voiceText: 'COMPUTER: Subject contained. Four personnel to the infirmary.'
+  - killerId: soldier
+    picture: {fileID: 0}
+    pictureNote: the shield from the floor, the gas mask above it, the SMG resting
+      on the shield's edge
+    hint: Behind the shield he is safe. Lift the shield with telekinesis, or stagger
+      his aim with a blast, then fire.
+    voiceLine: {fileID: 0}
+    voiceText: 'SOLDIER: Target down. Clear. (then, quieter) Was that a kid?'
+  - killerId: soldier_pair
+    picture: {fileID: 0}
+    pictureNote: two shields, two masks, the lobby, the gear on the wall behind them
+    hint: Two aim at once on normal. Watch for two rings. Dodge the first. Blast
+      the second before his ring closes.
+    voiceLine: {fileID: 0}
+    voiceText: 'SOLDIER: Target down. Both of you, check Miller.'
+  - killerId: fire
+    picture: {fileID: 0}
+    pictureNote: the records room burning, her own hand in the flame
+    hint: Fire spreads. Start it, leave the room, and come back when it is out. The
+      firemen will not shoot.
+    voiceLine: {fileID: 0}
+    voiceText: 'STEVENS: Not the fire. Not like that.'
+  - killerId: short
+    picture: {fileID: 0}
+    pictureNote: the corridor from the floor, four bodies, the lights flickering
+    hint: A short does not kill you. The shooters do, while you cannot move. Keep
+      the third light low. Use an ampoule before it fills.
+    voiceLine: {fileID: 0}
+    voiceText: 'STEVENS: It''s over. Lie still. I''m sorry.'
+  - killerId: soldier_rifle
+    picture: {fileID: 0}
+    pictureNote: 'PLACEHOLDER: the soldier with the rifle, the laser on her'
+    hint: 'PLACEHOLDER HINT: three rounds follow the laser, 0.1 s apart. One dodge
+      to the side clears the burst.'
+    voiceLine: {fileID: 0}
+    voiceText: 'SOLDIER: Target down. Clear. (then, quieter) Was that a kid?'
+  - killerId: soldier_gas
+    picture: {fileID: 0}
+    pictureNote: 'PLACEHOLDER: the green cloud, the gas mask in it'
+    hint: 'PLACEHOLDER HINT: a green ring is gas. Leave it before the grenade lands,
+      and stay out of the cloud.'
+    voiceLine: {fileID: 0}
+    voiceText: 'SOLDIER: Target down. Clear. (then, quieter) Was that a kid?'
+  - killerId: soldier_grenades
+    picture: {fileID: 0}
+    pictureNote: 'PLACEHOLDER: the red ring on the floor, her feet in it'
+    hint: 'PLACEHOLDER HINT: a red ring is a grenade. Leave the ring before it closes,
+      or catch the grenade with mk_orzabal.'
+    voiceLine: {fileID: 0}
+    voiceText: 'SOLDIER: Target down. Clear. (then, quieter) Was that a kid?'
+  - killerId: power_armour
+    picture: {fileID: 0}
+    pictureNote: 'PLACEHOLDER: the power armour from the floor'
+    hint: 'PLACEHOLDER HINT: it is too heavy to lift. Break its aim with mk_warspite,
+      then burn it with mk_erebus.'
+    voiceLine: {fileID: 0}
+    voiceText: 
+  - killerId: power_armour_launchers
+    picture: {fileID: 0}
+    pictureNote: 'PLACEHOLDER: the rocket''s trail, the armour behind it'
+    hint: 'PLACEHOLDER HINT: a rocket follows the laser. Dodge to the side, or catch
+      it with mk_orzabal and send it back.'
+    voiceLine: {fileID: 0}
+    voiceText: 

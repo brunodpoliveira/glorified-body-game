@@ -146,3 +146,9 @@ InitTestScene*.unity*
 /Assets/_Game/Scenes/CoverTest.unity.meta
 /Assets/_Game/Scenes/CoverTest_NavMesh.asset
 /Assets/_Game/Scenes/CoverTest_NavMesh.asset.meta
+# The civilian test room (2026-10-25): its figures carry vendor data, like the AI test room. Build it with
+# GlorifiedBody.Editor.CivilianTestSetup.BuildCivilianTest.
+/Assets/_Game/Scenes/CivilianTest.unity
+/Assets/_Game/Scenes/CivilianTest.unity.meta
+/Assets/_Game/Scenes/CivilianTest_NavMesh.asset
+/Assets/_Game/Scenes/CivilianTest_NavMesh.asset.meta

@@ -36,7 +36,7 @@ namespace GlorifiedBody.Enemy
         public static event Action<EnemyMorale, Vector3, bool> OnColleagueDied;
 
         private Health health;
-        private SoldierBrain brain;
+        private IFearful brain;
         private DamageType lastType = DamageType.Unknown;
         private float lastCharge;
         private int deathFrame = -1;
@@ -74,7 +74,7 @@ namespace GlorifiedBody.Enemy
         private void Awake()
         {
             health = GetComponent<Health>();
-            brain = GetComponent<SoldierBrain>();
+            brain = GetComponent<IFearful>();
         }
 
         private void OnEnable()

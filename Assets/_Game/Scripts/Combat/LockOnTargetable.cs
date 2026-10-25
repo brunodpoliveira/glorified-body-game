@@ -32,6 +32,8 @@ namespace GlorifiedBody.Combat
         [SerializeField] private bool heavy;
         [Tooltip("The short's shocks pass it by (the bosses, Bruno 2026-10-23).")]
         [SerializeField] private bool shockImmune;
+        [Tooltip("An unarmed civilian: the auto-lock never picks it, the target switch does (a kill is her choice). PROPOSED.")]
+        [SerializeField] private bool civilian;
 
         private Health cachedHealth;
         private bool registered;
@@ -42,6 +44,7 @@ namespace GlorifiedBody.Combat
         public bool IsProp => isProp;
         public bool IsHeavy => heavy;
         public bool IsShockImmune => shockImmune;
+        public bool IsCivilian => civilian;
 
         private void Awake()
         {
@@ -129,6 +132,11 @@ namespace GlorifiedBody.Combat
         public void SetProp(bool value)
         {
             isProp = value;
+        }
+
+        public void SetCivilian(bool value)
+        {
+            civilian = value;
         }
 
         public void SetHeavy(bool value)

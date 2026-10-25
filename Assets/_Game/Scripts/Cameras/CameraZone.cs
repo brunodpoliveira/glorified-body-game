@@ -24,6 +24,11 @@ namespace GlorifiedBody.Cameras
         private void Awake()
         {
             box = GetComponent<BoxCollider>();
+            // Off the Default layer: queries hit triggers in this project, and Invector's sight line (a Linecast on
+            // Default) hit the zone around her, so no enemy saw her while she stood in a zone (2026-10-25). The
+            // director tests containment itself, so the zone needs no trigger events.
+            int ignore = LayerMask.NameToLayer("Ignore Raycast");
+            if (ignore >= 0) gameObject.layer = ignore;
         }
 
         private void OnEnable()

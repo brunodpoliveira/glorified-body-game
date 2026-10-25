@@ -271,24 +271,8 @@ namespace GlorifiedBody.Editor
 
         internal static void EnsureDeathContent()
         {
-            var content = AssetDatabase.LoadAssetAtPath<DeathScreenContent>(DeathContentPath);
-            if (content == null)
-            {
-                content = ScriptableObject.CreateInstance<DeathScreenContent>();
-                AssetDatabase.CreateAsset(content, DeathContentPath);
-                Debug.Log($"[MenuLoopSetup] placeholder death screen content created at {DeathContentPath}.");
-            }
-
-            // One entry per enemy, placeholder words until the writer delivers them.
-            if (content.Find("dummy_shooter") == content.fallback)
-            {
-                content.entries.Add(new DeathScreenContent.Entry
-                {
-                    killerId = "dummy_shooter",
-                    hint = "PLACEHOLDER HINT: step back when the circle closes, then charge."
-                });
-                EditorUtility.SetDirty(content);
-            }
+            // The writer's rows and one placeholder for each killer id of the test rooms (DeathScreenSetup).
+            DeathScreenSetup.Build();
         }
 
         // ── Build settings ────────────────────────────────────────────
@@ -309,6 +293,7 @@ namespace GlorifiedBody.Editor
             if (File.Exists(TutorialSetup.ScenePath)) EnsureBuildScene(scenes, TutorialSetup.ScenePath);
             if (File.Exists(AiTestSetup.ScenePath)) EnsureBuildScene(scenes, AiTestSetup.ScenePath);
             if (File.Exists(Destruction.CoverTestSetup.ScenePath)) EnsureBuildScene(scenes, Destruction.CoverTestSetup.ScenePath);
+            if (File.Exists(CivilianTestSetup.ScenePath)) EnsureBuildScene(scenes, CivilianTestSetup.ScenePath);
 
             // The main menu loads first.
             scenes.Sort((a, b) =>

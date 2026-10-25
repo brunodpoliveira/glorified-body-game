@@ -195,6 +195,15 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   two-bone IK with the elbows down). The retreat releases the aim's brace (a braced guard ran in place). The
   tutorial's log step counts a read on the inventory screen, and the capsule step gives a capsule when hers is
   gone. FOR LATER (Bruno): the gun floats during the CPR (sling it on the back).
+- 2026-10-25, the civilians and the death screen (`devlog-notes/2026-10-25_civilians_death_screen.md`):
+  `CivilianBrain` (unarmed `labworker` and `nurse`, no gun): it runs from her with a scream (the scream alerts the
+  armed ones), cowers, begs when she comes near or when every route out passes her (`EnemyNav.TryEscape`).
+  `EnemyMorale` talks to `IFearful` (the soldier and the civilian brains). The auto-lock skips a civilian, the switch
+  reaches one (`LockOnTargetable.IsCivilian`, PROPOSED). CIVILIAN TEST room (`CivilianTestSetup`, local only) and the
+  "civilians" bot. Killer ids are `<class>_<weapon>` (`DummyShooter.KillerIdFor`); the death screen looks up the
+  whole id, then the class, then the fallback; `DeathScreenSetup` fills it from the writer's `death_screens.csv` plus
+  placeholders; a grey card shows the picture note and the killer id, the voice line is a caption. Camera zones are
+  on "Ignore Raycast": on Default they blocked the Invector sight line (no enemy saw her inside a zone).
 
 ## Rules
 

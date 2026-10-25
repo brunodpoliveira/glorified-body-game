@@ -108,6 +108,23 @@ namespace GlorifiedBody.Enemy
         /// <summary>A grenade of either kind: it arcs to the floor, and it needs room.</summary>
         public static bool IsLobbed(Attack a) => a == Attack.Grenade || a == Attack.Gas;
         public string EnemyId => enemyId;
+
+        /// <summary>
+        /// The killer id of a class with a weapon: "guard_pistol", "soldier_rifle", "soldier_grenades", "soldier_gas",
+        /// "power_armour_launchers". The death screen looks for this id first, then the class alone.
+        /// </summary>
+        public static string KillerIdFor(string classId, Weapon weapon)
+        {
+            string w = weapon switch
+            {
+                Weapon.Rifle => "rifle",
+                Weapon.GrenadeLauncher => "grenades",
+                Weapon.GasLauncher => "gas",
+                Weapon.ArmourLaunchers => "launchers",
+                _ => "pistol"
+            };
+            return classId + "_" + w;
+        }
         public float Range => range;
         /// <summary>No new aim while true (the soldier moves). An aim already started goes on to its shot.</summary>
         public bool HoldFire { get; set; }

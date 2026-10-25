@@ -43,6 +43,8 @@ namespace GlorifiedBody.Integration.Invector.Build
             public bool canMelee = true;
             /// <summary>Design §11.5: who runs. Guards at a fear of 3, soldiers and heavies never.</summary>
             public EnemyMorale.Rank rank = EnemyMorale.Rank.Soldier;
+            /// <summary>An unarmed civilian (CivilianBrain): no gun, it runs, cowers and begs.</summary>
+            public bool civilian;
         }
 
         public static Spec SpecFor(string classId)
@@ -51,6 +53,9 @@ namespace GlorifiedBody.Integration.Invector.Build
             {
                 case "guard": return new Spec { classId = classId, health = 60f, rank = EnemyMorale.Rank.Guard };
                 case "power_armour": return new Spec { classId = classId, health = 250f, heavy = true, range = 9f, rank = EnemyMorale.Rank.Heavy };
+                // The unarmed civilians (design §3.3): the lab workers and the nurses. PROPOSED health.
+                case "labworker":
+                case "nurse": return new Spec { classId = classId, health = 30f, canMelee = false, civilian = true, rank = EnemyMorale.Rank.UnarmedCivilian };
                 default: return new Spec { classId = classId };
             }
         }
@@ -217,11 +222,26 @@ namespace GlorifiedBody.Integration.Invector.Build
             // The chest of a 1.8 m soldier is 1.2 m; a taller class (the 2.6 m power armour) has a higher chest.
             SetFloat(targetSo, "fallbackHeight", Body.ChestHeight * Mathf.Max(1f, entry.height / 1.8f));
             SetBool(targetSo, "heavy", spec.heavy);
+            SetBool(targetSo, "civilian", spec.civilian);
             targetSo.ApplyModifiedPropertiesWithoutUndo();
+
+            if (spec.civilian)
+            {
+                // No gun, no fight: it runs, cowers and begs. Its death still shocks the others (EnemyMorale).
+                root.AddComponent<CivilianBrain>();
+                root.AddComponent<InvectorEnemyBody>();
+                EnemyMorale civilianMorale = root.AddComponent<EnemyMorale>();
+                var civilianSo = new SerializedObject(civilianMorale);
+                civilianSo.FindProperty("rank").enumValueIndex = (int)spec.rank;
+                civilianSo.ApplyModifiedPropertiesWithoutUndo();
+                BuildRagdoll(root, animator);
+                return root;
+            }
 
             DummyShooter gun = root.AddComponent<DummyShooter>();
             var gunSo = new SerializedObject(gun);
-            gunSo.FindProperty("enemyId").stringValue = spec.classId;
+            // The killer id names the class and the weapon (the death screen: "soldier_rifle", then "soldier").
+            gunSo.FindProperty("enemyId").stringValue = DummyShooter.KillerIdFor(spec.classId, spec.weapon);
             SetFloat(gunSo, "range", spec.range);
             SetBool(gunSo, "requireLineOfSight", true);
             gunSo.FindProperty("weapon").enumValueIndex = (int)spec.weapon;

@@ -25,6 +25,7 @@ namespace GlorifiedBody.UI
         [SerializeField] private string tutorialScene = "Tutorial"; // the therapy gym demonstration (Bruno, 2026-10-22)
         [SerializeField] private string aiTestScene = "AiTest";     // the FSM soldiers' hall (Bruno, 2026-10-23)
         [SerializeField] private string coverTestScene = "CoverTest"; // the breakable cover (Bruno, 2026-10-24)
+        [SerializeField] private string civilianTestScene = "CivilianTest"; // the unarmed civilians (Bruno, 2026-10-25)
         [SerializeField] private string subtitleLabel = "WORK IN PROGRESS";
 
         private Canvas canvas;
@@ -38,6 +39,7 @@ namespace GlorifiedBody.UI
         private Button tutorialBtn;
         private Button aiTestBtn;
         private Button coverTestBtn;
+        private Button civilianTestBtn;
         private Button howToBtn;
         private Button optionsBtn;
         private Button creditsBtn;
@@ -152,6 +154,11 @@ namespace GlorifiedBody.UI
         private void OnCoverTestClicked()
         {
             GameManager.Instance?.LoadLevel(coverTestScene);
+        }
+
+        private void OnCivilianTestClicked()
+        {
+            GameManager.Instance?.LoadLevel(civilianTestScene);
         }
 
         private void OnStartClicked()
@@ -395,18 +402,20 @@ namespace GlorifiedBody.UI
                 new Color(0.62f, 0.1f, 0.12f, 0.95f), new Color(0.85f, 0.2f, 0.22f, 1f), new Color(0.96f, 0.93f, 0.9f));
             nav.Add(startBtn);
             CreateSpacer(column.transform, 10f);
-            tutorialBtn = CreateButton(column.transform, "TUTORIAL", 420, OnTutorialClicked, 52);
+            tutorialBtn = CreateButton(column.transform, "TUTORIAL", 420, OnTutorialClicked, 48);
             nav.Add(tutorialBtn);
-            aiTestBtn = CreateButton(column.transform, "AI TEST", 420, OnAiTestClicked, 52);
+            aiTestBtn = CreateButton(column.transform, "AI TEST", 420, OnAiTestClicked, 48);
             nav.Add(aiTestBtn);
-            coverTestBtn = CreateButton(column.transform, "COVER TEST", 420, OnCoverTestClicked, 52);
+            coverTestBtn = CreateButton(column.transform, "COVER TEST", 420, OnCoverTestClicked, 48);
             nav.Add(coverTestBtn);
-            howToBtn = CreateButton(column.transform, "HOW TO PLAY", 420, OnHowToPlayClicked, 52);
-            modifiersBtn = CreateButton(column.transform, "DIFFICULTY", 420, OnModifiersClicked, 52);
+            civilianTestBtn = CreateButton(column.transform, "CIVILIAN TEST", 420, OnCivilianTestClicked, 48);
+            nav.Add(civilianTestBtn);
+            howToBtn = CreateButton(column.transform, "HOW TO PLAY", 420, OnHowToPlayClicked, 48);
+            modifiersBtn = CreateButton(column.transform, "DIFFICULTY", 420, OnModifiersClicked, 48);
             modifiersLabel = modifiersBtn.GetComponentInChildren<Text>();
-            optionsBtn = CreateButton(column.transform, "OPTIONS", 420, OnOptionsClicked, 52);
-            creditsBtn = CreateButton(column.transform, "CREDITS", 420, OnCreditsClicked, 52);
-            quitBtn = CreateButton(column.transform, "QUIT", 420, OnQuitClicked, 52);
+            optionsBtn = CreateButton(column.transform, "OPTIONS", 420, OnOptionsClicked, 48);
+            creditsBtn = CreateButton(column.transform, "CREDITS", 420, OnCreditsClicked, 48);
+            quitBtn = CreateButton(column.transform, "QUIT", 420, OnQuitClicked, 48);
             nav.Add(howToBtn);
             nav.Add(modifiersBtn);
             nav.Add(optionsBtn);
