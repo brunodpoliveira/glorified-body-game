@@ -101,6 +101,7 @@ namespace GlorifiedBody.Automation
             LockOnController lockOn = lucy.GetComponent<LockOnController>();
             string shots = Path.Combine(BotArgs.RunDir, "shots");
 
+            Clip("ai_engage");
             yield return BotClock.Wait(3f);
             Shot(Path.Combine(shots, "ai_01_soldiers_move.png"));
             Record("soldiers_engage", soldiers.All(s => s.Body.HasTarget) && soldiers.Any(s => s.Moves > 0),
@@ -138,6 +139,8 @@ namespace GlorifiedBody.Automation
             }
 
             Record("alerted", soldiers.All(s => s.Alerted), string.Join(" ", soldiers.Select(s => $"{s.name}={s.AlertReason}")));
+            EndClip();
+            Clip("ai_gunfire");
 
             // The gun: a close shot on the next muzzle flash.
             EnemyGun[] guns = soldiers.Select(s => s.GetComponent<EnemyGun>()).Where(g => g != null).ToArray();
@@ -180,7 +183,11 @@ namespace GlorifiedBody.Automation
             Record("move_or_shoot", fired >= 2 && drift == 0, $"shots={fired} frames moved while aiming={drift} " +
                 string.Join(" ", soldiers.Select(s => $"{s.name}:moves={s.Moves}/shoots={s.ShootPhases}")));
 
+            EndClip();
+            Clip("ai_weapons");
             yield return Weapons(lucy, soldiers, powers, stats, shots);
+            EndClip();
+            Clip("ai_lift_slam");
 
             // The lift, then a slam.
             SoldierBrain lifted = soldiers.FirstOrDefault(s => s.name.StartsWith("Soldier")) ?? soldiers[0]; // not the heavy armour
@@ -203,33 +210,46 @@ namespace GlorifiedBody.Automation
             Record("slam", slammed && lifted.transform.position.y < 0.2f && liftedHealth.CurrentHealth < hp,
                 $"slam={slammed} y={lifted.transform.position.y:0.00} hp {hp:0} -> {liftedHealth.CurrentHealth:0} phase={lifted.Current}");
 
+            yield return Linger(1.5f);
+            EndClip();
             yield return Morale(lucy, soldiers, lifted, shots);
+            Clip("ai_knockdown");
             yield return Ragdoll(soldiers, powers, stats, lockOn, shots);
+            yield return Linger(1f);
+            EndClip();
 
             // The power armour is heavy.
             SoldierBrain armour = soldiers.FirstOrDefault(s => s.name.StartsWith("Armour"));
             if (armour != null)
             {
+                Clip("ai_too_heavy");
                 lockOn.SetTarget(armour.GetComponent<LockOnTargetable>());
                 powers.Release(1f);
                 yield return null;
                 yield return null;
                 Shot(Path.Combine(shots, "ai_04_too_heavy.png"));
                 Record("armour_heavy", powers.LastResult == "too_heavy", $"result={powers.LastResult}");
+                yield return Linger(1.5f);
+                EndClip();
             }
 
+            Clip("ai_limb_cut");
             yield return LimbCut(soldiers, powers, stats, lockOn, shots);
+            yield return Linger(1.5f);
+            EndClip();
 
             // A corpse.
             SoldierBrain victim = soldiers.FirstOrDefault(s => s.name.StartsWith("Guard"));
             if (victim != null)
             {
+                Clip("ai_death");
                 Health health = victim.GetComponent<Health>();
                 health.TakeDamage(health.MaxHealth * 10f);
                 yield return BotClock.Wait(2.5f);
                 Shot(Path.Combine(shots, "ai_05_corpse.png"));
                 Record("death", victim != null && victim.Body.IsDead && victim.Current == SoldierBrain.Phase.Dead, $"{victim.name} dead={victim.Body.IsDead}");
             }
+            EndClip();
             Finish();
         }
 
@@ -243,6 +263,7 @@ namespace GlorifiedBody.Automation
             EnemyMorale corpseMorale = corpse.GetComponent<EnemyMorale>();
             var living = soldiers.Where(s => s != corpse && !s.Body.IsDead).ToArray();
             int shocked = living.Count(s => s.ShockCount > 0 || s.Retreating);
+            Clip("ai_witnesses");
             Shot(Path.Combine(shots, "ai_19_shock.png"));
             Record("witness_shock", corpse.Body.IsDead && corpseMorale.DiedGruesome && shocked > 0,
                 $"gruesome={corpseMorale.DiedGruesome} " + string.Join(" ", living.Select(s => $"{s.name}:seen={s.GetComponent<EnemyMorale>().Witnessed}/shocks={s.ShockCount}/{s.Current}")));
@@ -264,10 +285,12 @@ namespace GlorifiedBody.Automation
             if (pool != null) CloseShot(pool.transform.position + Vector3.up * 0.2f, ClearSide(pool.transform.position + Vector3.up * 0.2f, 2.6f), Path.Combine(shots, "ai_20b_blood_pool.png"), 2.6f, 1.2f);
             Record("blood_pool", pool != null, pool != null ? $"size={pool.transform.localScale.x:0.00} m at {pool.transform.position}" : "no pool in 12 s");
 
+            EndClip();
             // The guard's fear at its limit: it runs and cowers.
             SoldierBrain guard = living.FirstOrDefault(s => s.GetComponent<EnemyMorale>().RankOf == EnemyMorale.Rank.Guard);
             if (guard != null)
             {
+                Clip("ai_guard_runs");
                 EnemyMorale fear = guard.GetComponent<EnemyMorale>();
                 while (!guard.Retreating && fear.Fear < 6) fear.See(corpseMorale, gruesome: true);
                 float t0 = BotClock.Now;
@@ -275,6 +298,10 @@ namespace GlorifiedBody.Automation
                 yield return BotClock.Wait(0.3f);
                 CloseShot(guard.transform.position + Vector3.up * 0.8f, Camera.main != null ? Camera.main.transform.position - guard.transform.position : Vector3.back, Path.Combine(shots, "ai_21_guard_cowers.png"), 3f);
                 Record("guard_retreat", guard.Current == SoldierBrain.Phase.Cower, $"{guard.name} fear={fear.Fear} phase={guard.Current} reason={guard.RetreatReason}");
+                EndClip();
+                CloseClip("ai_guard_cowers", () => guard.transform, t => Camera.main != null ? Camera.main.transform.position - t.position : Vector3.back, 3f, 0.8f);
+                yield return Linger(3f);
+                EndClip();
             }
 
             // She hides: a colleague drags the body away from her and does CPR.
@@ -294,6 +321,8 @@ namespace GlorifiedBody.Automation
             }
             if (care != null)
             {
+                CorpseCare carer = care;
+                CloseClip("ai_drag_cpr", () => carer != null ? carer.transform : null, t => t.right, 3.2f, 0.7f);
                 wait = BotClock.Now;
                 while (care.Current != CorpseCare.Step.Drag && care.Active && BotClock.Now - wait < 8f) yield return null;
                 yield return BotClock.Wait(0.8f);
@@ -302,6 +331,8 @@ namespace GlorifiedBody.Automation
                 while (care.Current != CorpseCare.Step.Cpr && care.Active && BotClock.Now - wait < 10f) yield return null;
                 yield return BotClock.Wait(0.6f);
                 if (care.Active) CloseShot(care.transform.position + Vector3.up * 0.6f, care.transform.right, Path.Combine(shots, "ai_23_cpr.png"), 2.6f);
+                yield return Linger(5f);
+                EndClip();
             }
             Record("care_drag_cpr", care != null && care.Current == CorpseCare.Step.Cpr && care.Dragged > 1f,
                 care != null ? $"{care.name}>{(care.Patient != null ? care.Patient.name : "-")} step={care.Current} dragged={care.Dragged:0.0} pumps={care.Compressions}" : "no carer in 12 s");
@@ -602,6 +633,63 @@ namespace GlorifiedBody.Automation
         private static void ClearTheAir()
         {
             foreach (GasCloud cloud in FindObjectsByType<GasCloud>(FindObjectsSortMode.None)) Destroy(cloud.gameObject);
+        }
+
+        // ---- Video clips (tools/unity.sh record AiTest Main_Menu ai): nothing happens in a normal run.
+
+        private static Camera closeClipCamera;
+
+        /// <summary>Starts a clip through the room cameras, with the HUD.</summary>
+        private static void Clip(string name)
+        {
+            if (!FrameRecorder.Enabled) return;
+            FrameRecorder.CameraProvider = null;
+            FrameRecorder.Ensure().Begin(name);
+        }
+
+        /// <summary>Starts a clip through a close camera that follows a target each frame (no HUD).</summary>
+        private static void CloseClip(string name, Func<Transform> target, Func<Transform, Vector3> facing, float distance, float height)
+        {
+            if (!FrameRecorder.Enabled) return;
+            if (closeClipCamera == null)
+            {
+                var go = new GameObject("[CloseClipCamera]");
+                closeClipCamera = go.AddComponent<Camera>();
+                closeClipCamera.fieldOfView = 40f;
+                closeClipCamera.nearClipPlane = 0.05f;
+                closeClipCamera.enabled = false; // rendered only by the recorder
+            }
+            Camera main = Camera.main;
+            if (main != null)
+            {
+                closeClipCamera.clearFlags = main.clearFlags;
+                closeClipCamera.backgroundColor = main.backgroundColor;
+            }
+            FrameRecorder.CameraProvider = () =>
+            {
+                Transform t = target();
+                if (t == null) return null;
+                Vector3 point = t.position + Vector3.up * height;
+                Vector3 side = facing(t);
+                side.y = 0f;
+                if (side.sqrMagnitude < 0.001f) side = Vector3.back;
+                closeClipCamera.transform.position = point + side.normalized * distance + Vector3.up * 0.3f;
+                closeClipCamera.transform.LookAt(point);
+                return closeClipCamera;
+            };
+            FrameRecorder.Ensure().Begin(name);
+        }
+
+        private static void EndClip()
+        {
+            if (FrameRecorder.Instance != null) FrameRecorder.Instance.End();
+            FrameRecorder.CameraProvider = null;
+        }
+
+        /// <summary>A hold on the bot clock, only on video, so a clip shows the moment.</summary>
+        private static IEnumerator Linger(float seconds)
+        {
+            if (FrameRecorder.Enabled) yield return BotClock.Wait(seconds);
         }
 
         private static void CloseShot(Vector3 point, Vector3 facing, string path, float distance = 1.4f, float height = 0.25f)

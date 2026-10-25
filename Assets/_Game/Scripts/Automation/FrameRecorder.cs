@@ -27,6 +27,10 @@ namespace GlorifiedBody.Automation
         /// item questions). Null: the player HUD only.</summary>
         public static Func<List<Canvas>> OverlayProvider;
 
+        /// <summary>A bot can film a clip with its own camera (the AI bot: a close camera that follows the CPR).
+        /// Null, or a null return: the main camera. The provider may move its camera on each call.</summary>
+        public static Func<Camera> CameraProvider;
+
         private readonly List<string> manifest = new List<string>();
         private string clip;
         private string dir;
@@ -98,10 +102,12 @@ namespace GlorifiedBody.Automation
                 End();
                 return;
             }
-            Camera cam = Camera.main;
+            Camera own = CameraProvider != null ? CameraProvider() : null;
+            Camera cam = own != null ? own : Camera.main;
             if (cam == null) return;
             var canvases = new List<Canvas>();
-            if (overlay != null) canvases.Add(overlay);
+            if (own != null) { } // a bot camera (a close-up): no HUD
+            else if (overlay != null) canvases.Add(overlay);
             else if (OverlayProvider != null) canvases.AddRange(OverlayProvider() ?? new List<Canvas>());
             else
             {
