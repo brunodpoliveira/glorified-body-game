@@ -12,10 +12,12 @@ namespace GlorifiedBody.Enemy
     /// her (crouched, walking backward, the body pulled by the shoulders), then kneels at its chest and does CPR
     /// (a crouch held, the upper body pumps at 110 a minute). The CPR never brings the colleague back (PROPOSED).
     /// When it sees her, or anything hurts it, it drops the body and fights. One carer per body.
+    /// The unarmed civilians tend bodies too (Bruno, 2026-10-25): a lab worker by the same rule, a nurse even with
+    /// her in plain sight (ICarer.CareIgnoresHer). Only a hurt stops the nurse.
     /// The clips are placeholders: no CPR or drag clip exists in the vendor set or in RFab's motion presets (RFAB
     /// gap 13). Numbers PROPOSED.
     /// </summary>
-    [RequireComponent(typeof(SoldierBrain), typeof(Health))]
+    [RequireComponent(typeof(Health))]
     public sealed class CorpseCare : MonoBehaviour
     {
         public enum Step { None, GoToBody, Drag, Cpr }
@@ -28,7 +30,7 @@ namespace GlorifiedBody.Enemy
         [SerializeField, Min(0.5f)] private float compressionsPerMinute = 110f;
         [SerializeField, Range(0f, 40f)] private float compressionDegrees = 14f;
 
-        private SoldierBrain brain;
+        private ICarer brain;
         private Health health;
         private Transform player;
         private float lastSeen;
@@ -44,10 +46,12 @@ namespace GlorifiedBody.Enemy
         public float Dragged { get; private set; }
         public int Compressions { get; private set; }
         public bool Active => Current != Step.None;
+        /// <summary>The sight rule allows a start now: she is unseen long enough, or the carer does not mind her.</summary>
+        private bool MayStart => brain.CareIgnoresHer || Time.time - lastSeen >= unseenSeconds;
 
         private void Awake()
         {
-            brain = GetComponent<SoldierBrain>();
+            brain = GetComponent<ICarer>();
             health = GetComponent<Health>();
             Animator animator = GetComponent<Animator>();
             if (animator != null && animator.isHuman)
@@ -90,7 +94,7 @@ namespace GlorifiedBody.Enemy
             stepTimer = 8f;
             brain.Body.MoveTo(BodySide(), MoveSpeed.Run);
             RunTelemetry.Event("care_start", $"{name}>{body.name}");
-            Bark.Say(gameObject, "MAN DOWN!"); // PLACEHOLDER line (the writer owns the barks)
+            if (brain.CareStartLine != null) Bark.Say(gameObject, brain.CareStartLine);
             return true;
         }
 
@@ -119,10 +123,10 @@ namespace GlorifiedBody.Enemy
 
             if (!Active)
             {
-                if (Time.time - lastSeen >= unseenSeconds && brain.CanCare) TryFindPatient();
+                if (MayStart && brain.CanCare) TryFindPatient();
                 return;
             }
-            if (sees) { Stop("saw her"); return; }
+            if (sees && !brain.CareIgnoresHer) { Stop("saw her"); return; }
             if (patient == null) { Stop("no body"); return; }
 
             float dt = Time.deltaTime;
@@ -191,7 +195,7 @@ namespace GlorifiedBody.Enemy
         {
             foreach (CorpseCare other in FindObjectsByType<CorpseCare>(FindObjectsSortMode.None))
             {
-                if (other == this || other.health.IsDead || other.Active || !other.brain.CanCare) continue;
+                if (other == this || other.health.IsDead || other.Active || !other.brain.CanCare || !other.MayStart) continue;
                 if (Flat(other.transform.position, body.position) < myDistance - 0.01f) return true;
             }
             return false;
@@ -245,6 +249,7 @@ namespace GlorifiedBody.Enemy
             stepTimer = dragDistance / dragSpeed + 3f;
             restrafeAt = 0f;
             RunTelemetry.Event("care_drag", $"{name}>{patient.name} to {dragTarget.x:0.0},{dragTarget.z:0.0}");
+            if (brain.DragLine != null) Bark.Say(gameObject, brain.DragLine);
         }
 
         private void DragTick(float dt)
@@ -282,7 +287,7 @@ namespace GlorifiedBody.Enemy
             brain.Body.Crouch(true);
             brain.Body.Face(PatientChest() - transform.position);
             RunTelemetry.Event("care_cpr", $"{name}>{patient.name} dragged {Dragged:0.0} m");
-            Bark.Say(gameObject, "STAY WITH ME!"); // PLACEHOLDER line
+            if (brain.CprLine != null) Bark.Say(gameObject, brain.CprLine);
         }
 
         /// <summary>Debug (F12): the care counts her as unseen, so a colleague tends a body in an open room (Bruno, 2026-10-24: "B9 is really hard to test").</summary>

@@ -204,6 +204,14 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   whole id, then the class, then the fallback; `DeathScreenSetup` fills it from the writer's `death_screens.csv` plus
   placeholders; a grey card shows the picture note and the killer id, the voice line is a caption. Camera zones are
   on "Ignore Raycast": on Default they blocked the Invector sight line (no enemy saw her inside a zone).
+  His answers: keep the lock skip, the 25 m scream, the id form; the writer's lines may go public.
+- 2026-10-25, afternoon (`devlog-notes/2026-10-25_civilians2_sounds_short.md`): civilians are Wary first (they walk
+  backward, facing her, to 6 m), and run and cower only after a kill they see or a hurt (`CivilianBrain.Panic`).
+  `Tremble` (noise turns over the clip) when wary, cowering, begging. `CorpseCare` takes any `ICarer`: the nurse
+  tends a body in her sight, a lab worker only unseen. The care barks are the writer's. One sound per event:
+  `ShotEffects.SpawnSilent` turns off the vendor prefabs' own sources (the impact clip opens with a gunshot), one
+  family of shots per gun. The short starts when the bar fills during a held charge. STUDIES (not built):
+  `2026-10-25_study_wall_lean_shock_pain.md`. FOR LATER: replace the placeholder fire and shock effects.
 
 ## Rules
 

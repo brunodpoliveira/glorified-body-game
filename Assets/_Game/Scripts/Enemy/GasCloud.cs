@@ -44,7 +44,8 @@ namespace GlorifiedBody.Enemy
             ShotEffects fx = ShotEffects.Load();
             if (fx != null && fx.gasPrefab != null)
             {
-                GameObject smoke = Instantiate(fx.gasPrefab, centre, Quaternion.identity, obj.transform);
+                // The vendor smoke grenade's own burst (Explosion_A) stays off: the gas sound below is the only one.
+                GameObject smoke = ShotEffects.SpawnSilent(fx.gasPrefab, centre, Quaternion.identity, obj.transform);
                 smoke.transform.localScale = Vector3.one * radius / 6f; // the vendor smoke spreads about 6 m: fit the ring
                 Color gas = new Color(0.75f, 1f, 0.35f, 0.6f); // with the smoke texture's own alpha
                 foreach (ParticleSystem ps in smoke.GetComponentsInChildren<ParticleSystem>())

@@ -13,12 +13,15 @@ MonoBehaviour:
   m_Name: shot_effects
   m_EditorClassIdentifier: Assembly-CSharp::GlorifiedBody.Enemy.ShotEffects
   fireClips:
-  - {fileID: 8300000, guid: 4912d5c56ce571e4fbad7af6de655772, type: 3}
   - {fileID: 8300000, guid: ef1015be63ea9a94e9842b72298f9a5f, type: 3}
   - {fileID: 8300000, guid: dab4dfa00ed487b44bf0f2c9115a3da3, type: 3}
   - {fileID: 8300000, guid: 2b6a41a7e8f643b4293751cf8f5b5e07, type: 3}
   aimClip: {fileID: 8300000, guid: f00ac47e5c7659440a21afd1175d8f20, type: 3}
   impactPrefab: {fileID: 100000, guid: 623c02857372d0e4c9a8dc809104498c, type: 3}
+  impactClips:
+  - {fileID: 8300000, guid: 3bc8b33abc1b51d4badb229b61e36e33, type: 3}
+  - {fileID: 8300000, guid: f0dad368bc2d5944ca75a821ad024ce2, type: 3}
+  - {fileID: 8300000, guid: bfa1063bd08a3d54595a731677875059, type: 3}
   impactScale: 1
   impactLifetime: 3
   tracerColour: {r: 1, g: 0.85, b: 0.45, a: 1}
@@ -26,7 +29,6 @@ MonoBehaviour:
   - {fileID: 8300000, guid: a1d3b6d76325cf747be2333e91108aaf, type: 3}
   - {fileID: 8300000, guid: b4bc1655997cd78488375e6627dbd4dd, type: 3}
   - {fileID: 8300000, guid: bb9f8df4580fca94eb4ec5149f83cd86, type: 3}
-  - {fileID: 8300000, guid: 097e8235e0162d64ba53da9ef4ab8d61, type: 3}
   rifleAimClip: {fileID: 8300000, guid: a3c47d05e2db5d2469c40c5304cdb283, type: 3}
   launcherFireClips:
   - {fileID: 8300000, guid: 80e63cbc50e5b9646a825374aaf68fb0, type: 3}

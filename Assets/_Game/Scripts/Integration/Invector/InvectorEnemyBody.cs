@@ -146,8 +146,9 @@ namespace GlorifiedBody.Integration.Invector
                 if (agent != null) agent.enabled = false;
                 if (body != null)
                 {
+                    // A kinematic body takes no velocity: a braced one (the aim) is kinematic already.
+                    if (!body.isKinematic) body.linearVelocity = Vector3.zero;
                     body.isKinematic = true;
-                    body.linearVelocity = Vector3.zero;
                 }
             }
             else
@@ -186,8 +187,8 @@ namespace GlorifiedBody.Integration.Invector
         {
             if (suspended || IsDead || body == null || braced == braced_) return;
             braced_ = braced;
+            if (braced) body.linearVelocity = Vector3.zero; // before the switch: a kinematic body takes no velocity
             body.isKinematic = braced;
-            if (braced) body.linearVelocity = Vector3.zero;
         }
 
 

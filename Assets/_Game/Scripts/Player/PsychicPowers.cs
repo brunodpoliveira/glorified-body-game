@@ -125,6 +125,15 @@ namespace GlorifiedBody.Player
                 catchPressUntil = -1f;
             }
 
+            // The bar filled during a held charge (a hit): the short starts now, not at the release (Bruno,
+            // 2026-10-25: "shock should trigger the moment player presses attack"). The charge is lost.
+            if (wasCharging && TryStartShort(Charge))
+            {
+                Charge = 0f;
+                wasCharging = false;
+                OnChanged?.Invoke();
+            }
+
             bool charging = IsCharging;
             if (charging)
             {

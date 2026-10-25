@@ -75,16 +75,107 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator Sight_TheyRunFromHer_ThenCower()
+        public IEnumerator Sight_TheyBackAwaySlowly_FacingHer_AndTremble()
         {
+            // Bruno, 2026-10-25: "initially, the civvies walk back slowly"; "they'll only run and cower if the player
+            // kills one"; "a tremble to their animation".
             CivilianBrain lab = Find("Lab_A");
+            Teleport(lab.transform.position + Away(lab) * 4f);
             yield return WaitUntil(() => lab.Alerted, 8f);
             Assert.IsTrue(lab.Alerted, "Lab_A sees her");
+            yield return new WaitForSeconds(0.3f);
+            Assert.AreEqual(CivilianBrain.Phase.Wary, lab.Current, "it backs away, it does not run");
             float startGap = Gap(lab);
-            yield return WaitUntil(() => lab.Current == CivilianBrain.Phase.Cower, 12f);
-            Debug.Log($"[CivilianTests] Lab_A: {lab.AlertReason}, gap {startGap:0.0} -> {Gap(lab):0.0} m, phase {lab.Current}");
-            Assert.AreEqual(CivilianBrain.Phase.Cower, lab.Current, "it reached its spot and cowers");
-            Assert.Greater(Gap(lab), startGap + 2f, "it ran away from her");
+            Vector3 start = lab.transform.position;
+            float maxSpeed = 0f;
+            Vector3 last = start;
+            float dot = 1f;
+            float trembled = 0f;
+            for (float t = 0f; t < 2.5f; t += Time.deltaTime)
+            {
+                yield return null;
+                if (Time.deltaTime > 0f) maxSpeed = Mathf.Max(maxSpeed, Flat(last, lab.transform.position) / Mathf.Max(Time.deltaTime, 0.02f));
+                last = lab.transform.position;
+                Vector3 toHer = lucy.transform.position - lab.transform.position;
+                toHer.y = 0f;
+                dot = Mathf.Min(dot, Vector3.Dot(lab.transform.forward, toHer.normalized));
+                trembled = Mathf.Max(trembled, lab.Tremble.LastDegrees);
+            }
+            Debug.Log($"[CivilianTests] Lab_A wary: gap {startGap:0.0} -> {Gap(lab):0.0} m, max speed {maxSpeed:0.00} m/s, min facing dot {dot:0.00}, tremble {trembled:0.0} deg");
+            Assert.AreEqual(CivilianBrain.Phase.Wary, lab.Current, "still wary: no kill, no run");
+            Assert.IsFalse(lab.Panicked, "no panic without a kill");
+            Assert.Greater(Gap(lab), startGap + 0.8f, "it walked back from her");
+            Assert.Less(Flat(start, lab.transform.position) / 2.5f, 2.2f, "slowly: a walk, not a run");
+            Assert.Greater(dot, 0.3f, "it faces her while it backs away");
+            Assert.Greater(trembled, 0.5f, "it trembles");
+        }
+
+        [UnityTest]
+        public IEnumerator AKillInTheirSight_TheyRun_ThenCower()
+        {
+            // Bruno, 2026-10-25: "they'll only run and cower if the player kills one (guard, civvie doesn't matter)".
+            CivilianBrain witness = Find("Lab_A");
+            CivilianBrain victim = Find("Lab_B");
+            Teleport(new Vector3(-2.5f, 0f, 0.5f));
+            yield return WaitUntil(() => witness.Current == CivilianBrain.Phase.Wary, 8f);
+            Assert.AreEqual(CivilianBrain.Phase.Wary, witness.Current, "wary first");
+            float startGap = Gap(witness);
+            Kill(victim);
+            yield return WaitUntil(() => witness.Current == CivilianBrain.Phase.Flee, 1.5f);
+            Assert.IsTrue(witness.Panicked, "the kill panics it");
+            Assert.AreEqual(CivilianBrain.Phase.Flee, witness.Current, "it runs now");
+            yield return WaitUntil(() => witness.Current == CivilianBrain.Phase.Cower, 12f);
+            Debug.Log($"[CivilianTests] witness: {witness.PanicReason}, gap {startGap:0.0} -> {Gap(witness):0.0} m, tremble {witness.Tremble.LastDegrees:0.0}");
+            Assert.AreEqual(CivilianBrain.Phase.Cower, witness.Current, "it reached its spot and cowers");
+            Assert.Greater(Gap(witness), startGap + 2f, "it ran away from her");
+            yield return new WaitForSeconds(0.8f); // the tremble eases in over half a second
+            Assert.Greater(witness.Tremble.LastDegrees, 0.5f, "it trembles in its corner");
+        }
+
+        [UnityTest]
+        public IEnumerator TheNurse_TendsABody_InHerSight()
+        {
+            // Bruno, 2026-10-25: "a nurse'll drag and cpr even if player on sight".
+            guard.gameObject.SetActive(false);
+            Find("Lab_B").gameObject.SetActive(false);
+            CivilianBrain nurse = Find("Nurse_C");
+            CivilianBrain victim = Find("Lab_A");
+            Teleport(new Vector3(-2.5f, 0f, 0.5f));
+            yield return new WaitForSeconds(0.5f);
+            Kill(victim);
+            CorpseCare care = nurse.GetComponent<CorpseCare>();
+            yield return WaitUntil(() => care.Active, 6f);
+            Assert.IsTrue(care.Active, "the nurse goes to the body");
+            Assert.AreEqual(victim.transform, care.Patient, "the body of Lab_A");
+            yield return WaitUntil(() => care.Current == CorpseCare.Step.Cpr || !care.Active, 25f);
+            Vector3 eye = nurse.transform.position + Vector3.up * 1.6f;
+            Vector3 her = lucy.transform.position + Vector3.up * GlorifiedBody.Characters.Body.ChestHeight;
+            bool inSight = !Physics.Linecast(eye, her, LayerMask.GetMask("Default"), QueryTriggerInteraction.Ignore);
+            Debug.Log($"[CivilianTests] nurse care: {care.Current}, dragged {care.Dragged:0.0} m, in sight {inSight}, gap {Gap(nurse):0.0} m");
+            Assert.AreEqual(CorpseCare.Step.Cpr, care.Current, "it dragged the body and does CPR");
+            Assert.Greater(care.Dragged, 1f, "it dragged the body");
+            Assert.IsTrue(inSight, "with her in plain sight");
+        }
+
+        [UnityTest]
+        public IEnumerator TheLabWorker_TendsABody_OnlyWhenSheIsGone()
+        {
+            // Bruno, 2026-10-25: "a scientist will do this if player away same as the others".
+            guard.gameObject.SetActive(false);
+            Find("Nurse_C").gameObject.SetActive(false);
+            CivilianBrain lab = Find("Lab_B");
+            CivilianBrain victim = Find("Lab_A");
+            Teleport(new Vector3(-2.5f, 0f, 0.5f));
+            yield return new WaitForSeconds(0.5f);
+            Kill(victim);
+            CorpseCare care = lab.GetComponent<CorpseCare>();
+            yield return new WaitForSeconds(5f);
+            Debug.Log($"[CivilianTests] lab worker in her sight: phase {lab.Current}, care {care.Current}");
+            Assert.IsFalse(care.Active, "no care while she is there");
+            Hide();
+            yield return WaitUntil(() => care.Active, 6f);
+            Assert.IsTrue(care.Active, "she is gone: it goes to the body");
+            Assert.AreEqual(victim.transform, care.Patient);
         }
 
         [UnityTest]
@@ -97,11 +188,11 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator SheComesClose_TheyBeg_SheLeaves_TheyCower()
+        public IEnumerator SheComesClose_TheyBeg_SheLeaves_TheyBackAway_OrCower()
         {
             CivilianBrain lab = Find("Lab_A");
-            yield return WaitUntil(() => lab.Current == CivilianBrain.Phase.Cower, 16f);
-            Assert.AreEqual(CivilianBrain.Phase.Cower, lab.Current, "it cowers first");
+            yield return WaitUntil(() => lab.Current == CivilianBrain.Phase.Wary, 8f);
+            Assert.AreEqual(CivilianBrain.Phase.Wary, lab.Current, "wary first");
             int begs = lab.Begs;
             int barks = Bark.Count;
             Teleport(lab.transform.position + Away(lab) * 1.6f);
@@ -109,6 +200,17 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.AreEqual(CivilianBrain.Phase.Beg, lab.Current, "she is near: it begs");
             Assert.Greater(lab.Begs, begs);
             Assert.Greater(Bark.Count, barks, "a begging line");
+            Teleport(lab.transform.position + Away(lab) * 8f);
+            yield return WaitUntil(() => lab.Current != CivilianBrain.Phase.Beg, 2f);
+            Assert.AreEqual(CivilianBrain.Phase.Wary, lab.Current, "she left, and nobody died: it backs away again");
+
+            // After a panic the same walk ends in its corner.
+            lab.Panic("test");
+            yield return WaitUntil(() => lab.Current == CivilianBrain.Phase.Cower, 12f);
+            Assert.AreEqual(CivilianBrain.Phase.Cower, lab.Current, "panicked: it runs and cowers");
+            Teleport(lab.transform.position + Away(lab) * 1.6f);
+            yield return WaitUntil(() => lab.Current == CivilianBrain.Phase.Beg, 2f);
+            Assert.AreEqual(CivilianBrain.Phase.Beg, lab.Current, "she is near: it begs");
             Teleport(lab.transform.position + Away(lab) * 8f);
             yield return WaitUntil(() => lab.Current == CivilianBrain.Phase.Cower, 2f);
             Assert.AreEqual(CivilianBrain.Phase.Cower, lab.Current, "she left: it cowers again");
@@ -150,14 +252,30 @@ namespace GlorifiedBody.Tests.PlayMode
             CivilianBrain victim = Find("Lab_A");
             Hide();
             yield return new WaitForSeconds(0.3f);
-            // The death as the game reports it, then the witness's reaction through EnemyMorale.
-            Health h = victim.GetComponent<Health>();
-            h.TakeDamage(h.MaxHealth * 10f);
-            HitEventBus.Raise(new HitInfo { Victim = h.gameObject, HitTransform = victim.transform, HitPoint = victim.transform.position + Vector3.up, DamageAmount = h.MaxHealth * 10f, DamageType = DamageType.PsychicBlast, WasFatal = true });
+            Kill(victim);
             yield return WaitUntil(() => witness.Retreating, 2f);
             Debug.Log($"[CivilianTests] witness: {witness.AlertReason}, phase {witness.Current}, seen {witness.GetComponent<EnemyMorale>().Witnessed}");
             Assert.IsTrue(witness.Retreating, "the witness runs");
             Assert.GreaterOrEqual(witness.GetComponent<EnemyMorale>().Witnessed, 1, "it saw the death");
+        }
+
+        [UnityTest]
+        public IEnumerator TheShort_HurtsACivilian()
+        {
+            // Bruno, 2026-10-25: "it should also dmg civilians". The shocks pick the nearest live target in 6 m.
+            guard.gameObject.SetActive(false);
+            CivilianBrain lab = Find("Lab_B");
+            Teleport(lab.transform.position + Away(lab) * 2.5f);
+            yield return null;
+            ShortController shortController = lucy.GetComponent<ShortController>();
+            shortController.Begin();
+            yield return new WaitForSeconds(0.5f);
+            Health victim = shortController.Victim;
+            Debug.Log($"[CivilianTests] short victim: {(victim != null ? victim.name : "none")}");
+            Assert.IsNotNull(victim, "the short found a victim");
+            Assert.IsNotNull(victim.GetComponent<CivilianBrain>(), "the victim is a civilian");
+            Assert.Less(victim.CurrentHealth, victim.MaxHealth, "the shocks hurt it");
+            shortController.End(byDrug: false);
         }
 
         // ── Helpers ───────────────────────────────────────────────────
@@ -170,6 +288,14 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         private float Gap(CivilianBrain c) => Flat(c.transform.position, lucy.transform.position);
+
+        /// <summary>The death as the game reports it (a blast from her); the room reacts through EnemyMorale.</summary>
+        private void Kill(CivilianBrain victim)
+        {
+            Health h = victim.GetComponent<Health>();
+            h.TakeDamage(h.MaxHealth * 10f);
+            HitEventBus.Raise(new HitInfo { Attacker = lucy, Victim = h.gameObject, HitTransform = victim.transform, HitPoint = victim.transform.position + Vector3.up, DamageAmount = h.MaxHealth * 10f, DamageType = DamageType.PsychicBlast, WasFatal = true });
+        }
 
         /// <summary>From the civilian toward the middle of the room, flat: a clear side to stand on.</summary>
         private static Vector3 Away(CivilianBrain c)

@@ -227,13 +227,19 @@ namespace GlorifiedBody.Integration.Invector.Build
 
             if (spec.civilian)
             {
-                // No gun, no fight: it runs, cowers and begs. Its death still shocks the others (EnemyMorale).
-                root.AddComponent<CivilianBrain>();
+                // No gun, no fight: it backs away, runs after a kill, cowers, begs and trembles. Its death still
+                // shocks the others (EnemyMorale). It tends bodies (CorpseCare): the nurse even in her sight.
+                root.AddComponent<Tremble>();
+                CivilianBrain civilianBrain = root.AddComponent<CivilianBrain>();
+                var brainSo = new SerializedObject(civilianBrain);
+                SetBool(brainSo, "nurse", spec.classId == "nurse");
+                brainSo.ApplyModifiedPropertiesWithoutUndo();
                 root.AddComponent<InvectorEnemyBody>();
                 EnemyMorale civilianMorale = root.AddComponent<EnemyMorale>();
                 var civilianSo = new SerializedObject(civilianMorale);
                 civilianSo.FindProperty("rank").enumValueIndex = (int)spec.rank;
                 civilianSo.ApplyModifiedPropertiesWithoutUndo();
+                root.AddComponent<CorpseCare>();
                 BuildRagdoll(root, animator);
                 return root;
             }
@@ -492,17 +498,15 @@ namespace GlorifiedBody.Integration.Invector.Build
                 fx = ScriptableObject.CreateInstance<ShotEffects>();
                 AssetDatabase.CreateAsset(fx, EffectsPath);
             }
-            var clips = new List<AudioClip>();
-            foreach (string name in new[] { "Handgun@Fire.wav", "NewWeaponSounds/LightWeaponShot.mp3", "NewWeaponSounds/LightWeaponShot2.mp3", "NewWeaponSounds/LightWeaponShot3.mp3" })
-            {
-                var clip = AssetDatabase.LoadAssetAtPath<AudioClip>(WeaponAudio + name);
-                if (clip != null) clips.Add(clip);
-                else Debug.LogWarning($"[InvectorEnemyFactory] no clip {name}.");
-            }
-            fx.fireClips = clips.ToArray();
+            // One family of shots for each gun (Bruno, 2026-10-25: "the pistol has two sound effects?"): the old
+            // Handgun@Fire and Rifle@Fire sound like other guns next to the new sets.
+            fx.fireClips = Clips(WeaponAudio, "NewWeaponSounds/LightWeaponShot.mp3", "NewWeaponSounds/LightWeaponShot2.mp3", "NewWeaponSounds/LightWeaponShot3.mp3");
             fx.aimClip = AssetDatabase.LoadAssetAtPath<AudioClip>(WeaponAudio + "NewWeaponSounds/LightWeaponAim.mp3");
             fx.impactPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(ImpactPath);
-            fx.rifleFireClips = Clips(WeaponAudio, "NewWeaponSounds/MediumWeaponShot1.mp3", "NewWeaponSounds/MediumWeaponShot2.mp3", "NewWeaponSounds/MediumWeaponShot3.mp3", "Rifle@Fire.wav");
+            // The impact prefab's own clip (pistol-shot-ricochet, from the FSM package) opens with a gunshot. ShotEffects
+            // removes the prefab's sources and plays a hit on the wall instead.
+            fx.impactClips = Clips(MeleeAudio, "Knife Hit Wall 1.wav", "Knife Hit Wall 2.wav", "Knife Hit Wall 3.wav");
+            fx.rifleFireClips = Clips(WeaponAudio, "NewWeaponSounds/MediumWeaponShot1.mp3", "NewWeaponSounds/MediumWeaponShot2.mp3", "NewWeaponSounds/MediumWeaponShot3.mp3");
             fx.rifleAimClip = AssetDatabase.LoadAssetAtPath<AudioClip>(WeaponAudio + "NewWeaponSounds/MediumWeaponAim.mp3");
             fx.launcherAimClip = AssetDatabase.LoadAssetAtPath<AudioClip>(WeaponAudio + "NewWeaponSounds/MediumWeaponAimB.mp3");
             fx.meleeSwingClips = Clips(MeleeAudio, "slash_A.wav", "slash_B.wav", "slash_C.wav");
@@ -548,7 +552,12 @@ namespace GlorifiedBody.Integration.Invector.Build
             }
             GameObjectUtility.RemoveMonoBehavioursWithMissingScript(smoke.gameObject);
             foreach (Collider collider in smoke.GetComponentsInChildren<Collider>(true)) Object.DestroyImmediate(collider);
-            foreach (AudioSource audio in smoke.GetComponentsInChildren<AudioSource>(true)) Object.DestroyImmediate(audio);
+            // The vendor burst sound (Explosion_A) goes off. The source stays: an audio filter needs it.
+            foreach (AudioSource audio in smoke.GetComponentsInChildren<AudioSource>(true))
+            {
+                audio.playOnAwake = false;
+                audio.enabled = false;
+            }
             foreach (ParticleSystem ps in smoke.GetComponentsInChildren<ParticleSystem>(true))
             {
                 var main = ps.main;

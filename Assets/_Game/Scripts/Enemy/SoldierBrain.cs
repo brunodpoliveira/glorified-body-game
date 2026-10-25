@@ -33,7 +33,7 @@ namespace GlorifiedBody.Enemy
     /// cowers in a crouch and never attacks again). CorpseCare: it tends a dead colleague (Phase.Care).
     /// </summary>
     [RequireComponent(typeof(DummyShooter), typeof(Health))]
-    public sealed class SoldierBrain : MonoBehaviour, IFearful
+    public sealed class SoldierBrain : MonoBehaviour, IFearful, ICarer
     {
         public enum Phase { Idle, Move, Shoot, Hold, Dead, Care, Retreat, Cower }
 
@@ -90,6 +90,13 @@ namespace GlorifiedBody.Enemy
         public bool CanCare => Current != Phase.Dead && Current != Phase.Retreat && Current != Phase.Cower
             && Current != Phase.Hold && Current != Phase.Care && !suspendedByLift && !gun.HoldsSlot;
         public bool Retreating => Current == Phase.Retreat || Current == Phase.Cower;
+        /// <summary>A soldier tends a body only while he does not see her (CorpseCare).</summary>
+        public bool CareIgnoresHer => false;
+        // The care barks (barks.csv, the writer, 2026-10-25): the guard's and the soldier's own.
+        public string CareStartLine => IsGuard ? "Hey. Hey buddy. Look at me. Look at me." : "Casualty. I'm on it.";
+        public string DragLine => IsGuard ? "Come on. I'm getting you out of here. I'm getting you out." : "Pulling out. Cover me. Cover me.";
+        public string CprLine => IsGuard ? "One. Two. Three. Four. Five. Come on. Come on." : "Come on. Come on, breathe. Don't you do this.";
+        private bool IsGuard => GetComponent<EnemyMorale>() is EnemyMorale m && m.RankOf == EnemyMorale.Rank.Guard;
         public string AlertReason { get; private set; } = "";
         /// <summary>Where she is: her real position once alerted, else the last seen position.</summary>
         public Vector3 TargetPosition => Alerted && player != null ? player.position : body.TargetPosition;

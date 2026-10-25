@@ -14,8 +14,10 @@ namespace GlorifiedBody.Enemy
 
         public AudioClip[] fireClips;
         public AudioClip aimClip;
-        [Tooltip("Spawned where a bullet hits the room: particles and its own sound.")]
+        [Tooltip("Spawned where a bullet hits the room: the particles. Its own sources are removed (a gunshot).")]
         public GameObject impactPrefab;
+        [Tooltip("The hit on the wall, one per impact.")]
+        public AudioClip[] impactClips;
         [Min(0f)] public float impactScale = 1f;
         [Min(0.1f)] public float impactLifetime = 3f;
         public Color tracerColour = new Color(1f, 0.85f, 0.45f);
@@ -58,15 +60,16 @@ namespace GlorifiedBody.Enemy
             return cached;
         }
 
-        /// <summary>The impact on a wall or the floor, facing out of the surface.</summary>
-        public static void Impact(Vector3 point, Vector3 normal)
+        /// <summary>The impact on a wall or the floor, facing out of the surface. A shield block plays its own sound.</summary>
+        public static void Impact(Vector3 point, Vector3 normal, bool withSound = true)
         {
             ShotEffects fx = Load();
             if (fx == null || fx.impactPrefab == null) return;
             Quaternion facing = Quaternion.LookRotation(normal.sqrMagnitude > 0.001f ? normal : Vector3.up);
-            GameObject impact = Instantiate(fx.impactPrefab, point + normal * 0.02f, facing);
+            GameObject impact = SpawnSilent(fx.impactPrefab, point + normal * 0.02f, facing);
             impact.transform.localScale *= fx.impactScale;
             Destroy(impact, fx.impactLifetime);
+            if (withSound) PlayAt(fx.impactClips, point, 0.6f);
         }
 
         /// <summary>The grenade burst: the vendor explosion and a sound at the point.</summary>
@@ -76,11 +79,35 @@ namespace GlorifiedBody.Enemy
             if (fx == null) return;
             if (fx.explosionPrefab != null)
             {
-                GameObject boom = Instantiate(fx.explosionPrefab, point + Vector3.up * 0.1f, Quaternion.identity);
+                GameObject boom = SpawnSilent(fx.explosionPrefab, point + Vector3.up * 0.1f, Quaternion.identity);
                 Destroy(boom, fx.explosionLifetime);
             }
             if (fx.explosionClip != null) PlayAt(fx.explosionClip, point, 1f);
         }
+
+        /// <summary>
+        /// A vendor effect without its own sound: one sound for one event (Bruno, 2026-10-25). The copy is made
+        /// under an inactive holder, so no source plays on awake before it is off. The sources are turned off, not
+        /// removed: a vendor audio filter needs its source.
+        /// </summary>
+        public static GameObject SpawnSilent(GameObject prefab, Vector3 position, Quaternion rotation, Transform parent = null)
+        {
+            if (holder == null)
+            {
+                holder = new GameObject("ShotEffects_Holder");
+                holder.SetActive(false);
+                holder.hideFlags = HideFlags.HideAndDontSave;
+            }
+            GameObject copy = Instantiate(prefab, position, rotation, holder.transform);
+            foreach (AudioSource source in copy.GetComponentsInChildren<AudioSource>(true))
+            {
+                source.playOnAwake = false;
+                source.enabled = false;
+            }
+            copy.transform.SetParent(parent, true);
+            return copy;
+        }
+        private static GameObject holder;
 
         /// <summary>A random clip of the set at the point (a 3D one-shot).</summary>
         public static void PlayAt(AudioClip[] clips, Vector3 point, float volume = 1f)
@@ -111,6 +138,7 @@ namespace GlorifiedBody.Enemy
         {
             cached = null;
             loaded = false;
+            holder = null;
         }
     }
 }

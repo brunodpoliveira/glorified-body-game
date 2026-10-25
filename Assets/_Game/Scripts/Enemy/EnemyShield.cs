@@ -71,7 +71,7 @@ namespace GlorifiedBody.Enemy
             Vector3 face = model != null ? model.position : point;
             Vector3 normal = (point - transform.position);
             normal.y = 0f;
-            ShotEffects.Impact(face, normal.sqrMagnitude > 0.001f ? normal.normalized : transform.forward);
+            ShotEffects.Impact(face, normal.sqrMagnitude > 0.001f ? normal.normalized : transform.forward, withSound: false);
             ShotEffects fx = ShotEffects.Load();
             if (fx != null) ShotEffects.PlayAt(fx.blockClips, face);
             GetComponent<SoldierBrain>()?.Alert("blocked", callOthers: true);

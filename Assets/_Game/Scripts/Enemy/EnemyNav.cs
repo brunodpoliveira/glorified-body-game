@@ -58,6 +58,31 @@ namespace GlorifiedBody.Enemy
             return false;
         }
 
+        /// <summary>
+        /// A short step back from her with a clear NavMesh line (the wary civilian walks backward, facing her).
+        /// Straight away first, then up to 90 degrees to each side. False when a wall is behind it on every side.
+        /// </summary>
+        public static bool TryBackStep(Vector3 start, Vector3 her, float distance, out Vector3 step)
+        {
+            step = start;
+            if (NavMesh.SamplePosition(start, out NavMeshHit onMesh, 1f, NavMesh.AllAreas)) start = onMesh.position;
+            Vector3 away = start - her;
+            away.y = 0f;
+            if (away.sqrMagnitude < 0.0001f) away = Vector3.forward;
+            away.Normalize();
+            float startGap = Flat(start, her);
+            foreach (float angle in new[] { 0f, 30f, -30f, 60f, -60f, 90f, -90f })
+            {
+                Vector3 candidate = start + Quaternion.Euler(0f, angle, 0f) * away * distance;
+                if (NavMesh.Raycast(start, candidate, out NavMeshHit blocked, NavMesh.AllAreas)) candidate = blocked.position;
+                if (Flat(candidate, start) < distance * 0.5f) continue; // a wall right behind on this side
+                if (Flat(candidate, her) < startGap + distance * 0.25f) continue; // no real gain
+                step = candidate;
+                return true;
+            }
+            return false;
+        }
+
         private static bool PassesNear(Vector3[] corners, Vector3 her, float radius)
         {
             her.y = 0f;

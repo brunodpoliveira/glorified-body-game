@@ -721,6 +721,31 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator FullShort_TheBarFillsDuringACharge_TheShortStartsAtOnce()
+        {
+            // Bruno, 2026-10-25: "shock should trigger the moment player presses attack; as of now, the player can
+            // charge fully and only when they release the button the shock is triggered". A hit during a held charge
+            // fills the bar: the short starts then, not at the release.
+            powers.Select(PowerKind.Blast);
+            stats.DebugSet(100f, 90f);
+            pad.SetHeld(InputManager.GameAction.Charge, true);
+            yield return new WaitForSeconds(0.3f);
+            Assert.Greater(powers.Charge, 0f, "she charges");
+            Assert.IsFalse(shortController.IsActive, "no short yet");
+            stats.AddShort(20f); // the hit that fills the bar
+            yield return null;
+            yield return null;
+            Assert.IsTrue(shortController.IsActive, "the short starts while she still holds the key");
+            Assert.AreEqual(0f, powers.Charge, 0.001f, "the charge is gone");
+            pad.ReleaseAll();
+            yield return null;
+            yield return null;
+            Assert.IsTrue(shortController.IsActive, "the release changes nothing");
+            Assert.AreEqual("short", powers.LastResult, "the release fires no power");
+            shortController.End(byDrug: false);
+        }
+
+        [UnityTest]
         public IEnumerator FullShort_Holds_UntilAShortOrADrug()
         {
             // Bruno, 2026-10-20: a full SHORT bar does not drain. Only a short or a drug empties it.

@@ -26,8 +26,11 @@ namespace GlorifiedBody.Enemy
 
         private void Show(string line, float seconds)
         {
-            if (text == null)
+            if (text == null || shadow == null)
             {
+                // The two texts are scene roots: a scene unload can destroy one before the other.
+                if (text != null) Destroy(text.gameObject);
+                if (shadow != null) Destroy(shadow.gameObject);
                 shadow = MakeText("BarkShadow", new Color(0f, 0f, 0f, 0.85f));
                 text = MakeText("Bark", Color.white);
             }

@@ -18,8 +18,9 @@ namespace GlorifiedBody.Automation
     /// <summary>
     /// The civilian bot (Bruno, 2026-10-25: "another test room to test the unarmed civvies, then put in code for the
     /// game over screen"): loads the civilian test room from the menu and shoots the moments: the office at work,
-    /// the civilians running from her, a civilian cowering, a civilian begging at her feet, the nurse cornered in the
-    /// alcove, the guard called by the scream. Then the guard kills her, and the death screen shows his entry
+    /// the civilians backing away from her, the guard called by the scream, a civilian begging at her feet, the nurse
+    /// cornered in the alcove. Then she kills a lab worker: the others run and cower, and the nurse drags the body and
+    /// does CPR in her sight (Bruno, 2026-10-25). Then the guard kills her, and the death screen shows his entry
     /// (death_ui.png). Active only when BotArgs.Bot == "civilians". Writes playthrough.json and
     /// shots/civ_&lt;n&gt;_&lt;moment&gt;.png. Batch: tools/unity.sh play CivilianTest Main_Menu civilians 300
     /// </summary>
@@ -100,20 +101,19 @@ namespace GlorifiedBody.Automation
             TankController tank = lucy.GetComponent<TankController>();
             Shot(Path.Combine(shots, "civ_01_office.png"));
 
-            // They see her and run.
+            // She steps in: they back away slowly, facing her, and tremble (Bruno, 2026-10-25). Nobody runs yet.
             CivilianBrain lab = civilians.First(c => c.name == "Lab_A");
+            CivilianBrain victim = civilians.First(c => c.name == "Lab_B");
+            CivilianBrain nurse = civilians.First(c => c.name == "Nurse_C");
+            Vector3 middle = new Vector3(-2.5f, 0f, 0.5f);
+            tank.Teleport(middle, 0f);
             t0 = BotClock.Now;
-            while (!civilians.Any(c => c.Current == CivilianBrain.Phase.Flee) && BotClock.Now - t0 < 8f) yield return null;
-            yield return BotClock.Wait(0.6f);
-            Shot(Path.Combine(shots, "civ_02_they_run.png"));
-            Record("civ_run", civilians.Count(c => c.Alerted) >= 2, string.Join(" ", civilians.Select(c => $"{c.name}:{c.Current}/{c.AlertReason}")));
-
-            t0 = BotClock.Now;
-            while (lab.Current != CivilianBrain.Phase.Cower && BotClock.Now - t0 < 12f) yield return null;
-            yield return BotClock.Wait(0.5f);
+            while (lab.Current != CivilianBrain.Phase.Wary && BotClock.Now - t0 < 8f) yield return null;
+            yield return BotClock.Wait(1.2f);
             Vector3 chest = lab.transform.position + Vector3.up * 0.9f;
-            CloseShot(chest, ToMiddle(lab.transform.position), Path.Combine(shots, "civ_03_cower.png"), 2.4f, 0.4f);
-            Record("civ_cower", lab.Current == CivilianBrain.Phase.Cower, $"{lab.name} {lab.Current} at {lab.transform.position.x:0.0},{lab.transform.position.z:0.0}");
+            CloseShot(chest, Quaternion.Euler(0f, -50f, 0f) * ToMiddle(lab.transform.position), Path.Combine(shots, "civ_02_wary.png"), 3.2f, 0.6f);
+            Record("civ_wary", lab.Current == CivilianBrain.Phase.Wary && !civilians.Any(c => c.Panicked) && lab.Tremble.LastDegrees > 0f,
+                string.Join(" ", civilians.Select(c => $"{c.name}:{c.Current}/{c.AlertReason}")) + $" tremble={lab.Tremble.LastDegrees:0.0}");
 
             // The guard heard the scream.
             t0 = BotClock.Now;
@@ -126,15 +126,54 @@ namespace GlorifiedBody.Automation
             while (lab.Current != CivilianBrain.Phase.Beg && BotClock.Now - t0 < 3f) yield return null;
             yield return BotClock.Wait(0.4f);
             chest = lab.transform.position + Vector3.up * 0.9f;
-            CloseShot(chest, Quaternion.Euler(0f, 60f, 0f) * ToMiddle(lab.transform.position), Path.Combine(shots, "civ_04_beg.png"), 2.6f, 0.6f);
+            CloseShot(chest, Quaternion.Euler(0f, 60f, 0f) * ToMiddle(lab.transform.position), Path.Combine(shots, "civ_03_beg.png"), 2.6f, 0.6f);
             Record("civ_beg", lab.Current == CivilianBrain.Phase.Beg && lab.Begs > 0, $"{lab.name} {lab.Current} begs={lab.Begs}");
 
-            // The nurse in the alcove: she stands at its mouth, and it has nowhere to run.
-            CivilianBrain nurse = civilians.First(c => c.name == "Nurse_C");
+            // The nurse in the alcove: she stands at its mouth, and it has nowhere to go.
             tank.Teleport(new Vector3(5.4f, 0f, 2.1f), 0f);
             yield return BotClock.Wait(1.5f);
-            CloseShot(nurse.transform.position + Vector3.up * 0.9f, Vector3.back + Vector3.left * 0.6f, Path.Combine(shots, "civ_05_cornered.png"), 2.4f, 0.6f);
-            Record("civ_cornered", nurse.Current == CivilianBrain.Phase.Beg || nurse.Current == CivilianBrain.Phase.Cower, $"{nurse.name} {nurse.Current} begs={nurse.Begs}");
+            CloseShot(nurse.transform.position + Vector3.up * 0.9f, Vector3.back + Vector3.left * 0.6f, Path.Combine(shots, "civ_04_cornered.png"), 2.4f, 0.6f);
+            Record("civ_cornered", nurse.Current == CivilianBrain.Phase.Beg, $"{nurse.name} {nurse.Current} begs={nurse.Begs}");
+
+            // She kills Lab_B with a full mk_warspite: the witnesses panic, run and cower.
+            tank.Teleport(middle, 0f);
+            yield return BotClock.Wait(0.8f);
+            PsychicPowers powers = lucy.GetComponent<PsychicPowers>();
+            PsychicStats stats = lucy.GetComponent<PsychicStats>();
+            LockOnController lockOn = lucy.GetComponent<LockOnController>();
+            stats.DebugSet(PsychicStats.MaxNalcon, 0f);
+            powers.Select(PowerKind.Blast);
+            lockOn.SetTarget(victim.GetComponent<GlorifiedBody.Combat.LockOnTargetable>());
+            powers.Release(1f);
+            yield return BotClock.Wait(0.2f);
+            Health victimHealth = victim.GetComponent<Health>();
+            string how = victimHealth.IsDead ? "blast" : "forced";
+            if (!victimHealth.IsDead) victimHealth.TakeDamage(victimHealth.MaxHealth * 10f);
+            t0 = BotClock.Now;
+            while (lab.Current != CivilianBrain.Phase.Flee && BotClock.Now - t0 < 2f) yield return null;
+            yield return BotClock.Wait(0.4f);
+            Shot(Path.Combine(shots, "civ_05_they_run.png"));
+            Record("civ_panic", lab.Panicked && victimHealth.IsDead, $"kill={how} {lab.name} {lab.Current}/{lab.PanicReason}");
+
+            t0 = BotClock.Now;
+            while (lab.Current != CivilianBrain.Phase.Cower && BotClock.Now - t0 < 12f) yield return null;
+            yield return BotClock.Wait(0.8f);
+            chest = lab.transform.position + Vector3.up * 0.9f;
+            CloseShot(chest, ToMiddle(lab.transform.position), Path.Combine(shots, "civ_06_cower.png"), 2.4f, 0.4f);
+            Record("civ_cower", lab.Current == CivilianBrain.Phase.Cower, $"{lab.name} {lab.Current} at {lab.transform.position.x:0.0},{lab.transform.position.z:0.0}");
+
+            // The nurse tends the body with her in plain sight: the drag, then the CPR.
+            CorpseCare care = nurse.GetComponent<CorpseCare>();
+            t0 = BotClock.Now;
+            while (care.Current != CorpseCare.Step.Drag && BotClock.Now - t0 < 15f) yield return null;
+            yield return BotClock.Wait(0.8f);
+            if (care.Patient != null) CloseShot(care.Patient.position + Vector3.up * 0.5f, Vector3.left + Vector3.back, Path.Combine(shots, "civ_07_nurse_drag.png"), 3.2f, 1.2f);
+            t0 = BotClock.Now;
+            while (care.Current != CorpseCare.Step.Cpr && BotClock.Now - t0 < 15f) yield return null;
+            yield return BotClock.Wait(1f);
+            if (care.Patient != null) CloseShot(care.Patient.position + Vector3.up * 0.5f, Vector3.left + Vector3.back, Path.Combine(shots, "civ_08_nurse_cpr.png"), 3.2f, 1.2f);
+            Record("civ_nurse_care", care.Current == CorpseCare.Step.Cpr && care.Patient == victim.transform && care.Dragged > 1f,
+                $"{nurse.name} {care.Current} dragged={care.Dragged:0.0} m patient={(care.Patient != null ? care.Patient.name : "none")}");
 
             // The guard kills her: the death screen shows his entry.
             tank.Teleport(new Vector3(2f, 0f, -4f), 90f);
