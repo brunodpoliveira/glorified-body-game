@@ -283,6 +283,8 @@ namespace GlorifiedBody.Automation
                     break;
                 case "short":
                     c.Pad.Tap(InputManager.GameAction.Charge);
+                    yield return BotClock.Wait(0.2f);
+                    yield return BotClock.WaitWorld(); // the start's freeze: the pain and the scream
                     yield return BotClock.Wait(1.2f);
                     yield return DrugPress.TakeFirst(c.Pad);
                     yield return BotClock.Wait(0.3f);

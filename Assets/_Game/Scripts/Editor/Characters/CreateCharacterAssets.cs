@@ -119,11 +119,13 @@ namespace GlorifiedBody.Editor.Characters
 
         public const string PoseClipsPath = "Assets/_Game/Resources/" + PoseClips.ResourcePath + ".asset";
         public const string FearClipsFbx = ModelsFolder + "/labworker_fear.fbx";
+        public const string PainClipsFbx = ModelsFolder + "/lucy_pain.fbx";
 
         /// <summary>
         /// The clips of PoseOverride (Resources/Characters/pose_clips): the RFab fear presets from
-        /// labworker_fear.fbx (tools/characters_export.py on the 3D Studio file with the motions afraid, scared_01,
-        /// scared_02), and the vendor hit clip for Lucy's pain at the start of the short.
+        /// labworker_fear.fbx (afraid, scared_01, scared_02) and the presets on Lucy from lucy_pain.fbx
+        /// (frustrated_02 for the head pain at the start of the short, hurt for the sit). Both files come from
+        /// tools/characters_export.py on the 3D Studio file with the motions.
         /// </summary>
         [MenuItem("GlorifiedBody/Build Pose Clips")]
         public static void BuildPoseClips()
@@ -131,7 +133,8 @@ namespace GlorifiedBody.Editor.Characters
             EnsureFolder("Assets/_Game/Resources", "Characters");
             if (File.Exists(FearClipsFbx)) AssetDatabase.ImportAsset(FearClipsFbx, ImportAssetOptions.ForceUpdate);
             Dictionary<string, AnimationClip> fear = File.Exists(FearClipsFbx) ? ClipsOf(FearClipsFbx) : new Dictionary<string, AnimationClip>();
-            Dictionary<string, AnimationClip> invector = LoadInvectorClips();
+            if (File.Exists(PainClipsFbx)) AssetDatabase.ImportAsset(PainClipsFbx, ImportAssetOptions.ForceUpdate);
+            Dictionary<string, AnimationClip> pain = File.Exists(PainClipsFbx) ? ClipsOf(PainClipsFbx) : new Dictionary<string, AnimationClip>();
             var clips = AssetDatabase.LoadAssetAtPath<PoseClips>(PoseClipsPath);
             if (clips == null)
             {
@@ -141,13 +144,15 @@ namespace GlorifiedBody.Editor.Characters
             fear.TryGetValue("afraid", out clips.afraid);
             fear.TryGetValue("scared_01", out clips.scared01);
             fear.TryGetValue("scared_02", out clips.scared02);
-            invector.TryGetValue("Hit Big Front", out clips.lucyPain);
+            pain.TryGetValue("frustrated_02", out clips.lucyPain);
+            pain.TryGetValue("hurt", out clips.sit);
             if (clips.afraid == null || clips.scared01 == null || clips.scared02 == null)
                 Debug.LogWarning($"[CreateCharacterAssets] {FearClipsFbx}: a fear clip is missing ({string.Join(", ", fear.Keys)}).");
-            if (clips.lucyPain == null) Debug.LogWarning("[CreateCharacterAssets] no vendor 'Hit Big Front' clip for Lucy's pain.");
+            if (clips.lucyPain == null || clips.sit == null)
+                Debug.LogWarning($"[CreateCharacterAssets] {PainClipsFbx}: a clip is missing ({string.Join(", ", pain.Keys)}).");
             EditorUtility.SetDirty(clips);
             AssetDatabase.SaveAssets();
-            Debug.Log($"[CreateCharacterAssets] pose clips: afraid={clips.afraid != null} scared_01={clips.scared01 != null} scared_02={clips.scared02 != null} pain={(clips.lucyPain != null ? clips.lucyPain.name : "none")}");
+            Debug.Log($"[CreateCharacterAssets] pose clips: afraid={clips.afraid != null} scared_01={clips.scared01 != null} scared_02={clips.scared02 != null} pain={(clips.lucyPain != null ? clips.lucyPain.name : "none")} sit={(clips.sit != null ? clips.sit.name : "none")}");
         }
 
         private static string TexturePath(string id)

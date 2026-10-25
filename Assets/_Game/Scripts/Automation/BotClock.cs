@@ -32,6 +32,16 @@ namespace GlorifiedBody.Automation
             }
         }
 
+        /// <summary>
+        /// Waits while the world stands still (Time.timeScale under 1): the 2.5 s freeze at the start of the short
+        /// (Bruno, 2026-10-25). A key press during the freeze is lost, so a bot waits for the world first.
+        /// </summary>
+        public static IEnumerator WaitWorld(float maxSeconds = 5f)
+        {
+            float t0 = Now;
+            while (Time.timeScale < 0.999f && Now - t0 < maxSeconds) yield return null;
+        }
+
         /// <summary>The bot-clock wait: WaitForSecondsRealtime in a normal run.</summary>
         public static IEnumerator Wait(float seconds)
         {

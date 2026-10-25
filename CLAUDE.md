@@ -219,6 +219,11 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   find the wall, the skeleton moves back to it), self-hug, shaking stance. The short's start freezes the game 0.6 s
   while Lucy plays a pain clip; each shock arcs to its victim (`ShockArc`), zaps (`Resources/Audio/short_zap.wav`,
   placeholder), stuns it (`IStaggerable`, civilians too) and jolts it (`Tremble.Jolt`).
+- 2026-10-25, late (`devlog-notes/2026-10-25_slide_and_migraine.md`): a civilian on its wall slides down to the floor
+  within 5 m (the RFab `hurt` sit, a 0.8 s blend) and begs from there within 3 m. The short's start: the world freezes
+  2.5 s (`ShortController.StartFreeze`), Lucy holds her head (RFab `frustrated_02` on Lucy, 0.5 s to 3.0 s, from
+  `Models/lucy_pain.fbx`) and screams (`Resources/Audio/lucy_scream.wav`, placeholder), and the shocks start after the
+  freeze. Bots wait for the world before a key press (`BotClock.WaitWorld`).
 
 ## Rules
 

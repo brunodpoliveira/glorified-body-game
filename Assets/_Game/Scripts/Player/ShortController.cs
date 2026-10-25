@@ -23,8 +23,11 @@ namespace GlorifiedBody.Player
     /// a victim.
     /// Bruno, 2026-10-25: "the freeze/pain anim on the player is only at the start of the shock, to indicate to the
     /// player that the shock status has commenced"; "the shock should also stun the victim"; "placeholder zap, then
-    /// real sound". So the start freezes the game for a moment while Lucy plays a pain clip (unscaled time), and
-    /// every shock draws an arc from her to the victim, plays the zap there, stuns it and jolts its body.
+    /// real sound". Then: "it should be 2.5 s; the world freezes as the main character plays an anim of pain on the
+    /// head; the player char will also play a scream sound. the shock is their power going out of their control".
+    /// So the start freezes the world for 2.5 s while Lucy holds her head (unscaled time) and screams. The shocks
+    /// start after the freeze. Every shock draws an arc from her to the victim, plays the zap there, stuns it and
+    /// jolts its body.
     /// </summary>
     [RequireComponent(typeof(PsychicStats))]
     public sealed class ShortController : MonoBehaviour
@@ -36,8 +39,9 @@ namespace GlorifiedBody.Player
         [SerializeField, Range(0f, 1f)] private float selfHpFraction = 0.5f;
 
         private const float SurgeRadius = 5f; // the lamps the short's start pops, PROPOSED
-        private const float StartFreeze = 0.6f;    // s of frozen game at the start, PROPOSED
+        public const float StartFreeze = 2.5f;     // s of frozen world at the start (Bruno, 2026-10-25)
         private const float StartRecovery = 0.2f;  // s back to full speed
+        public const string ScreamPath = "Audio/lucy_scream"; // Resources: the placeholder scream (ffmpeg, 2026-10-25)
         public const string ZapPath = "Audio/short_zap"; // Resources: the placeholder zap (ffmpeg, 2026-10-25)
         /// <summary>A shock stuns its victim a little longer than the gap to the next shock: a stun with no break.</summary>
         public float StunSeconds => shockInterval + 0.2f;
@@ -56,6 +60,10 @@ namespace GlorifiedBody.Player
         /// <summary>The start's freeze and pain ran this many times (the tests).</summary>
         public int StartPains { get; private set; }
         public int Zaps { get; private set; }
+        public int Screams { get; private set; }
+        /// <summary>The pain of the start goes on (unscaled time): no shock yet.</summary>
+        public bool InPain => IsActive && Time.unscaledTime < painUntil;
+        private float painUntil;
         public int Arcs { get; private set; }
 
         public event Action OnShortBegan;
@@ -95,12 +103,14 @@ namespace GlorifiedBody.Player
         private void StartPain()
         {
             StartPains++;
+            painUntil = Time.unscaledTime + StartFreeze;
             ImpactFrameController.Instance?.RequestImpactFrame(StartFreeze, StartRecovery);
+            if (PlayOnce(ref scream, ref screamLoaded, ScreamPath, transform.position + Vector3.up * 1.6f, 1f, 1f)) Screams++;
             PoseClips clips = PoseClips.Load();
             Animator animator = GetComponentInChildren<Animator>();
             if (clips == null || clips.lucyPain == null || animator == null) return;
             PoseOverride pose = animator.GetComponent<PoseOverride>() ?? animator.gameObject.AddComponent<PoseOverride>();
-            pose.Play(clips.lucyPain, loop: false, unscaledTime: true);
+            pose.Play(clips.lucyPain, loop: false, unscaledTime: true, from: PoseClips.PainFrom, length: StartFreeze);
         }
 
         /// <summary>Ends the short. A drug ends it early and refills her (the caller refills).</summary>
@@ -120,6 +130,8 @@ namespace GlorifiedBody.Player
         {
             int shocks = Mathf.Max(1, Mathf.RoundToInt(duration / shockInterval));
             float selfPerShock = health.MaxHealth * selfHpFraction / shocks;
+            // The pain first: the world stands still while she holds her head. Then the power goes out of control.
+            while (IsActive && InPain) yield return null;
             while (IsActive && Remaining > 0f)
             {
                 Shock(selfPerShock);
@@ -155,7 +167,7 @@ namespace GlorifiedBody.Player
                 Vector3 victimChest = other.transform.position + Vector3.up * GlorifiedBody.Characters.Body.ChestHeight;
                 ShockArc.Show(origin + Vector3.up * GlorifiedBody.Characters.Body.ChestHeight, victimChest);
                 Arcs++;
-                if (PlayZap(victimChest)) Zaps++;
+                if (PlayOnce(ref zap, ref zapLoaded, ZapPath, victimChest, UnityEngine.Random.Range(0.9f, 1.1f), 0.8f)) Zaps++;
                 if (!other.IsDead)
                 {
                     other.GetComponentInParent<IStaggerable>()?.Stagger(StunSeconds);
@@ -211,37 +223,38 @@ namespace GlorifiedBody.Player
             return best;
         }
 
-        private static AudioClip zap;
-        private static bool zapLoaded;
+        private static AudioClip zap, scream;
+        private static bool zapLoaded, screamLoaded;
 
-        /// <summary>The zap at the victim (a 3D one-shot). False when the clip is missing.</summary>
-        private static bool PlayZap(Vector3 at)
+        /// <summary>A 3D one-shot of a Resources clip (the zap, the scream). False when the clip is missing.</summary>
+        private static bool PlayOnce(ref AudioClip clip, ref bool loaded, string path, Vector3 at, float pitch, float blend)
         {
-            if (!zapLoaded)
+            if (!loaded)
             {
-                zap = Resources.Load<AudioClip>(ZapPath);
-                zapLoaded = true;
+                clip = Resources.Load<AudioClip>(path);
+                loaded = true;
             }
-            if (zap == null) return false;
-            var obj = new GameObject("ShortZap");
+            if (clip == null) return false;
+            var obj = new GameObject("Short_" + clip.name);
             obj.transform.position = at;
             var source = obj.AddComponent<AudioSource>();
-            source.clip = zap;
-            source.spatialBlend = 1f;
+            source.clip = clip;
+            source.spatialBlend = blend;
             source.dopplerLevel = 0f;
             source.minDistance = 1.5f;
             source.maxDistance = 30f;
-            source.pitch = UnityEngine.Random.Range(0.9f, 1.1f);
+            source.pitch = pitch;
+            source.ignoreListenerPause = true;
             source.Play();
-            Destroy(obj, zap.length + 0.1f);
+            Destroy(obj, clip.length / Mathf.Max(0.1f, pitch) + 0.1f);
             return true;
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void ResetZap()
+        private static void ResetSounds()
         {
-            zap = null;
-            zapLoaded = false;
+            zap = scream = null;
+            zapLoaded = screamLoaded = false;
         }
 
         private static void Spark(Vector3 at)

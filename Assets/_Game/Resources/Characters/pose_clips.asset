@@ -12,7 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 25a3beafa02117edcbf54a6933e51ef7, type: 3}
   m_Name: pose_clips
   m_EditorClassIdentifier: Assembly-CSharp::GlorifiedBody.Characters.PoseClips
-  lucyPain: {fileID: 7400016, guid: 71a860de405aaeb44ace152c21808003, type: 3}
+  lucyPain: {fileID: -6579889284813844109, guid: 108621250368970e0a023c434aabce25, type: 3}
+  sit: {fileID: 1323920681783110427, guid: 108621250368970e0a023c434aabce25, type: 3}
   afraid: {fileID: 1755930496671420996, guid: 96bc9abb866b4dfc0a0915be01ea901b, type: 3}
   scared01: {fileID: -4564349846851156138, guid: 96bc9abb866b4dfc0a0915be01ea901b, type: 3}
   scared02: {fileID: -5853832591952546868, guid: 96bc9abb866b4dfc0a0915be01ea901b, type: 3}

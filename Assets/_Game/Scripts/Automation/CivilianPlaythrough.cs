@@ -186,21 +186,46 @@ namespace GlorifiedBody.Automation
             Record("civ_nurse_care", care.Current == CorpseCare.Step.Cpr && care.Patient == victim.transform && care.Dragged > 1f,
                 $"{nurse.name} {care.Current} dragged={care.Dragged:0.0} m patient={(care.Patient != null ? care.Patient.name : "none")}");
 
+            // She walks up to Lab_A on its wall: it slides down to the floor, then begs from there (Bruno, 2026-10-25).
+            bool sat = false, begFloor = false;
+            if (lab.CurrentPose == CivilianBrain.Pose.Lean)
+            {
+                Vector3 wallOut = lab.Lean.WallNormal;
+                tank.Teleport(OnMesh(lab.transform.position + wallOut * 4.2f), Quaternion.LookRotation(-wallOut).eulerAngles.y);
+                t0 = BotClock.Now;
+                while (lab.CurrentPose != CivilianBrain.Pose.Sit && BotClock.Now - t0 < 3f) yield return null;
+                sat = lab.CurrentPose == CivilianBrain.Pose.Sit;
+                yield return BotClock.Wait(1.2f);
+                CloseShot(lab.transform.position + Vector3.up * 0.6f, Quaternion.Euler(0f, 35f, 0f) * wallOut, Path.Combine(shots, "civ_08b_slide_down.png"), 2.4f, 0.5f);
+                tank.Teleport(OnMesh(lab.transform.position + wallOut * 2.2f), Quaternion.LookRotation(-wallOut).eulerAngles.y);
+                t0 = BotClock.Now;
+                while (lab.Current != CivilianBrain.Phase.Beg && BotClock.Now - t0 < 3f) yield return null;
+                yield return BotClock.Wait(0.8f);
+                begFloor = lab.Current == CivilianBrain.Phase.Beg && lab.CurrentPose == CivilianBrain.Pose.Sit;
+                CloseShot(lab.transform.position + Vector3.up * 0.6f, Quaternion.Euler(0f, -35f, 0f) * wallOut, Path.Combine(shots, "civ_08c_beg_on_floor.png"), 2.4f, 0.5f);
+            }
+            Record("civ_slide_beg", sat && begFloor, $"{lab.name} sat={sat} beg on the floor={begFloor} now {lab.Current}/{lab.CurrentPose}");
+
             // The short near the nurse: the start freezes the game while Lucy shows pain, then each shock arcs to its
             // victim, zaps and stuns it (Bruno, 2026-10-25).
             ShortController shortController = lucy.GetComponent<ShortController>();
-            Vector3 toNurse = nurse.transform.position - lucy.transform.position;
+            // On the room side of the nurse, so the camera from the middle of the room sees her.
+            Vector3 stand = OnMesh(nurse.transform.position + ToMiddle(nurse.transform.position) * 2.5f);
+            Vector3 toNurse = nurse.transform.position - stand;
             toNurse.y = 0f;
-            tank.Teleport(nurse.transform.position - toNurse.normalized * 2.5f, Quaternion.LookRotation(toNurse).eulerAngles.y);
+            tank.Teleport(stand, Quaternion.LookRotation(toNurse).eulerAngles.y);
             yield return BotClock.Wait(0.3f);
             stats.DebugSet(stats.Nalcon, PsychicStats.MaxShort);
             shortController.Begin();
             yield return new WaitForSecondsRealtime(0.25f);
             bool frozen = Time.timeScale < 0.01f;
-            CloseShot(lucy.transform.position + Vector3.up * 1.1f, lucy.transform.forward + lucy.transform.right * 0.5f, Path.Combine(shots, "civ_09_short_pain.png"), 2.4f, 0.3f);
+            CloseShot(lucy.transform.position + Vector3.up * 1.1f, Quaternion.Euler(0f, 25f, 0f) * ToMiddle(lucy.transform.position), Path.Combine(shots, "civ_09_short_pain.png"), 2.4f, 0.3f);
+            bool screamed = shortController.Screams > 0;
+            yield return new WaitForSecondsRealtime(1.6f);
+            CloseShot(lucy.transform.position + Vector3.up * 1.1f, Quaternion.Euler(0f, 25f, 0f) * ToMiddle(lucy.transform.position), Path.Combine(shots, "civ_09b_short_pain_late.png"), 2.4f, 0.3f);
+            bool noShockInPain = shortController.ShocksFired == 0;
+            yield return BotClock.WaitWorld();
             float r0 = Time.realtimeSinceStartup;
-            while (Time.timeScale < 0.999f && Time.realtimeSinceStartup - r0 < 3f) yield return null;
-            r0 = Time.realtimeSinceStartup;
             while (ShockArc.Alive == 0 && Time.realtimeSinceStartup - r0 < 2f) yield return null;
             Shot(Path.Combine(shots, "civ_10_short_arc.png"));
             Health shocked = shortController.Victim;
@@ -208,8 +233,8 @@ namespace GlorifiedBody.Automation
             bool stunned = shocked != null && (shocked.IsDead
                 || (shocked.GetComponent<CivilianBrain>() is CivilianBrain sc && sc.Stunned)
                 || (shocked.GetComponent<DummyShooter>() is DummyShooter gun && gun.Current == DummyShooter.State.Staggered));
-            Record("short_start_and_arc", frozen && shortController.StartPains > 0 && shortController.Arcs > 0 && shortController.Zaps > 0 && stunned,
-                $"frozen={frozen} pains={shortController.StartPains} arcs={shortController.Arcs} zaps={shortController.Zaps} victim={(shocked != null ? shocked.name : "none")} stunned={stunned}");
+            Record("short_start_and_arc", frozen && screamed && noShockInPain && shortController.StartPains > 0 && shortController.Arcs > 0 && shortController.Zaps > 0 && stunned,
+                $"frozen={frozen} scream={screamed} no shock in the pain={noShockInPain} pains={shortController.StartPains} arcs={shortController.Arcs} zaps={shortController.Zaps} victim={(shocked != null ? shocked.name : "none")} stunned={stunned}");
             shortController.End(byDrug: false);
             yield return BotClock.Wait(0.5f);
 
@@ -226,6 +251,12 @@ namespace GlorifiedBody.Automation
             Record("death_screen", GameManager.Instance != null && GameManager.Instance.IsGameOver && shown && DeathMenuUI.LastKillerId == "guard_pistol",
                 $"killer={DeathMenuUI.LastKillerId} entry={(shown ? screen.Shown.killerId : "none")} caption='{(screen != null ? screen.CaptionShown : "")}'");
             Finish();
+        }
+
+        /// <summary>The nearest NavMesh point: a teleport target never inside a wall.</summary>
+        private static Vector3 OnMesh(Vector3 point)
+        {
+            return UnityEngine.AI.NavMesh.SamplePosition(point, out UnityEngine.AI.NavMeshHit hit, 2f, UnityEngine.AI.NavMesh.AllAreas) ? hit.position : point;
         }
 
         private static Vector3 ToMiddle(Vector3 from)

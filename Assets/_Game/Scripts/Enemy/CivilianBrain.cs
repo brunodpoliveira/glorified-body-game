@@ -25,6 +25,8 @@ namespace GlorifiedBody.Enemy
     ///        away again.
     ///   Care: CorpseCare drags a body and does CPR (ICarer).
     /// A wary one that stands gives a startle, then a fear stance; with a wall behind it, it leans on the wall.
+    /// A leaning one slides down the wall to the floor when she comes near, and begs from there (Bruno, 2026-10-25:
+    /// "yes"). It stands up into the lean again when she leaves.
     /// A shock of the short stuns it (IStaggerable). It trembles while wary, cowering and begging (Tremble). The lift and the ragdoll suspend the body as they do
     /// a soldier's. The bark lines are the writer's (barks.csv). The poses are placeholders: the vendor crouch for the
     /// kneel and the cower (RFab gap 13). All numbers are PROPOSED.
@@ -67,7 +69,7 @@ namespace GlorifiedBody.Enemy
         private float stunUntil;
 
         /// <summary>The pose over the controller (PoseOverride, WallLean).</summary>
-        public enum Pose { Controller, Crouch, Startle, Shake, Hug, Lean }
+        public enum Pose { Controller, Crouch, Startle, Shake, Hug, Lean, Sit }
         private PoseOverride poseOverride;
         private WallLean lean;
         private bool startled;
@@ -297,9 +299,11 @@ namespace GlorifiedBody.Enemy
             Current = Phase.Beg;
             Begs++;
             backing = false;
-            SetPose(Pose.Crouch);
             body.Stop();
-            body.Crouch(true);
+            // On a wall it begs from the floor; else it kneels.
+            if (OnWall) SetPose(Pose.Sit);
+            else SetPose(Pose.Crouch);
+            body.Crouch(CurrentPose == Pose.Crouch);
             tremble.Amount = 1f;
             Bark.Say(gameObject, LineBeg);
             nextBark = Time.time + begBarkSeconds;
@@ -363,13 +367,21 @@ namespace GlorifiedBody.Enemy
                     // The crouch: the back to her, the face to the wall. The lean keeps its back on the wall. The
                     // stances watch her.
                     if (CurrentPose == Pose.Crouch || CurrentPose == Pose.Controller) body.Face(transform.position - Her);
-                    else if (CurrentPose != Pose.Lean) body.Face(Her - transform.position);
+                    else if (!OnWall) body.Face(Her - transform.position);
+                    WallSlide(gap);
                     if (gap <= begRange) Beg("near");
                     break;
                 case Phase.Beg:
                     body.Stop();
-                    body.Face(Her - transform.position);
-                    if (gap > begLeaveRange)
+                    if (!OnWall) body.Face(Her - transform.position);
+                    if (gap > begLeaveRange && OnWall)
+                    {
+                        // Back up the wall into the lean, and the phase it came from.
+                        SetPose(Pose.Lean);
+                        Current = Panicked ? Phase.Cower : Phase.Wary;
+                        backing = false;
+                    }
+                    else if (gap > begLeaveRange)
                     {
                         if (Panicked) Cower();
                         else Wary();
@@ -381,6 +393,17 @@ namespace GlorifiedBody.Enemy
                     }
                     break;
             }
+        }
+
+        private const float SlideSeconds = 0.8f; // the slide down the wall, PROPOSED
+
+        /// <summary>On the wall, standing or on the floor: it slides down as she comes near, up as she leaves.</summary>
+        private bool OnWall => CurrentPose == Pose.Lean || CurrentPose == Pose.Sit;
+
+        private void WallSlide(float gap)
+        {
+            if (CurrentPose == Pose.Lean && gap <= begLeaveRange) SetPose(Pose.Sit);
+            else if (CurrentPose == Pose.Sit && gap > begLeaveRange + 0.5f) SetPose(Pose.Lean);
         }
 
         /// <summary>The standing fear stance of this civilian: the shaking one or the self-hug.</summary>
@@ -407,14 +430,16 @@ namespace GlorifiedBody.Enemy
         {
             if (next == CurrentPose || poseOverride == null) return;
             CurrentPose = next;
-            if (next != Pose.Lean) lean.End();
+            if (next != Pose.Lean && next != Pose.Sit) lean.End();
             PoseClips clips = PoseClips.Load();
             switch (next)
             {
                 case Pose.Startle: poseOverride.Play(clips != null ? clips.afraid : null, loop: false); break;
                 case Pose.Shake: poseOverride.Play(clips != null ? clips.scared01 : null, loop: true); break;
-                case Pose.Hug:
-                case Pose.Lean: poseOverride.Play(clips != null ? clips.scared02 : null, loop: true); break;
+                case Pose.Hug: poseOverride.Play(clips != null ? clips.scared02 : null, loop: true); break;
+                // The slide down the wall and back up: a blend between the self-hug and the sit.
+                case Pose.Lean: poseOverride.Play(clips != null ? clips.scared02 : null, loop: true, fade: SlideSeconds); break;
+                case Pose.Sit: poseOverride.Play(clips != null ? clips.sit : null, loop: true, fade: SlideSeconds); break;
                 default: poseOverride.Stop(); break;
             }
         }
@@ -423,6 +448,7 @@ namespace GlorifiedBody.Enemy
         private void WaryTick(float gap)
         {
             if (gap <= begRange) { Beg("near"); return; }
+            if (OnWall) { body.Stop(); WallSlide(gap); return; } // on the wall it stays: no step back is left
             Vector3 toHer = Her - transform.position;
             if (backing && gap >= waryDistance + 1f) backing = false;
             else if (!backing && gap < waryDistance) backing = true;

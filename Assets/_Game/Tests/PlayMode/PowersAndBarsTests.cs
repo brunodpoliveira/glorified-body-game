@@ -370,29 +370,38 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator ShortStart_FreezesTheGame_WhileLucyShowsPain()
+        public IEnumerator ShortStart_FreezesTheWorld_2_5s_LucyHoldsHerHead_AndScreams_ThenTheShocks()
         {
-            // Bruno, 2026-10-25: "the freeze/pain anim on the player is only at the start of the shock, to indicate
-            // to the player that the shock status has commenced".
+            // Bruno, 2026-10-25: "it should be 2.5 s; the world freezes as the main character plays an anim of pain on
+            // the head; the player char will also play a scream sound. the shock is their power going out of their
+            // control".
+            Assert.AreEqual(2.5f, ShortController.StartFreeze, 0.001f, "2.5 s");
             int before = shortController.StartPains;
+            int screams = shortController.Screams;
             shortController.Begin();
             yield return null;
             Assert.AreEqual(before + 1, shortController.StartPains, "one start, one pain");
-            Assert.AreEqual(0f, Time.timeScale, 0.001f, "the game freezes at the start");
+            Assert.AreEqual(screams + 1, shortController.Screams, "she screams");
+            Assert.AreEqual(0f, Time.timeScale, 0.001f, "the world freezes at the start");
             var pose = player.GetComponentInChildren<GlorifiedBody.Characters.PoseOverride>();
+            var clips = GlorifiedBody.Characters.PoseClips.Load();
             Assert.IsNotNull(pose, "Lucy has the pose player");
             Assert.IsTrue(pose.Playing, "the pain plays during the freeze");
-            Assert.AreEqual(GlorifiedBody.Characters.PoseClips.Load().lucyPain, pose.Current, "the pain clip");
-            yield return new WaitForSecondsRealtime(0.3f);
-            Assert.AreEqual(0f, Time.timeScale, 0.001f, "still frozen at 0.3 s");
+            Assert.AreEqual(clips.lucyPain, pose.Current, "the head pain clip (frustrated_02)");
+            yield return new WaitForSecondsRealtime(2.0f);
+            Assert.AreEqual(0f, Time.timeScale, 0.001f, "still frozen at 2 s");
             Assert.IsTrue(pose.Playing, "the pain goes on through the freeze (unscaled time)");
+            Assert.That(pose.Time, Is.InRange(GlorifiedBody.Characters.PoseClips.PainFrom + 1.6, GlorifiedBody.Characters.PoseClips.PainFrom + 2.5), "the head-holding part of the clip");
+            Assert.AreEqual(0, shortController.ShocksFired, "no shock during the pain");
+            Assert.IsTrue(shortController.InPain);
             float t0 = Time.realtimeSinceStartup;
-            while (Time.timeScale < 0.999f && Time.realtimeSinceStartup - t0 < 2f) yield return null;
-            Assert.AreEqual(1f, Time.timeScale, 0.001f, "the game runs again");
-            int shocks = shortController.ShocksFired;
+            while (Time.timeScale < 0.999f && Time.realtimeSinceStartup - t0 < 3f) yield return null;
+            Debug.Log($"[PowersAndBarsTests] the freeze lasted {Time.realtimeSinceStartup - t0 + 2.0f:0.00} s");
+            Assert.AreEqual(1f, Time.timeScale, 0.001f, "the world runs again");
+            Assert.IsFalse(pose.Playing, "the pain clip ended: the controller has her back");
             yield return new WaitForSeconds(1f);
+            Assert.Greater(shortController.ShocksFired, 0, "then the power goes out of control");
             Assert.AreEqual(before + 1, shortController.StartPains, "the shocks freeze nothing");
-            Assert.Greater(shortController.ShocksFired, shocks, "the shocks go on");
             Assert.AreEqual(1f, Time.timeScale, 0.001f, "no freeze at a shock");
             shortController.End(byDrug: false);
         }
@@ -404,7 +413,7 @@ namespace GlorifiedBody.Tests.PlayMode
             // is not clear who the shock is damaging)"; "the shock should also stun the victim".
             DummyShooter gun = dummyA.GetComponent<DummyShooter>();
             shortController.Begin();
-            yield return new WaitForSecondsRealtime(1.0f); // the start's freeze (0.6 s, then 0.2 s back)
+            yield return new WaitForSecondsRealtime(ShortController.StartFreeze + 0.3f); // the start's freeze, then 0.2 s back
             yield return new WaitForSeconds(0.3f); // Dummy_A has 50 HP: 12 a shock, so the checks stay under 4 shocks
             Assert.AreEqual(dummyA.GetComponent<Health>(), shortController.Victim, "Dummy_A is the victim");
             Assert.Greater(shortController.Arcs, 0, "an arc for each shock");
@@ -720,7 +729,7 @@ namespace GlorifiedBody.Tests.PlayMode
             pad.ReleaseAll();
             // The start freezes the game for a moment (Bruno, 2026-10-25): the release counts when it runs again.
             float frozenAt = Time.realtimeSinceStartup;
-            while (Time.timeScale < 0.999f && Time.realtimeSinceStartup - frozenAt < 2f) yield return null;
+            while (Time.timeScale < 0.999f && Time.realtimeSinceStartup - frozenAt < 4f) yield return null;
             yield return null;
             yield return null;
             Assert.IsTrue(shortController.IsActive, "the release changes nothing");

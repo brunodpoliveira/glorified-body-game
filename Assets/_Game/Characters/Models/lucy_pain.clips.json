@@ -1,0 +1,36 @@
+{
+  "source": "lucy_pain_anim_2.glb",
+  "hips": "mixamorig:Hips",
+  "chain": [
+    "Armature",
+    "Root",
+    "mixamorig:Hips"
+  ],
+  "travelMin": 0.1,
+  "clips": [
+    {
+      "name": "frustrated_01",
+      "duration": 3.5333,
+      "keys": 107,
+      "travel": 0.0001,
+      "reach": 0.0743,
+      "travels": false
+    },
+    {
+      "name": "frustrated_02",
+      "duration": 10.7667,
+      "keys": 324,
+      "travel": 0.0,
+      "reach": 0.043,
+      "travels": false
+    },
+    {
+      "name": "hurt",
+      "duration": 13.8333,
+      "keys": 416,
+      "travel": 0.0138,
+      "reach": 0.0171,
+      "travels": false
+    }
+  ]
+}

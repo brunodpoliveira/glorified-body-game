@@ -269,7 +269,8 @@ namespace GlorifiedBody.Tests.PlayMode
             yield return null;
             ShortController shortController = lucy.GetComponent<ShortController>();
             shortController.Begin();
-            yield return new WaitForSecondsRealtime(0.3f); // the first shock lands before the start's freeze
+            float t0 = Time.realtimeSinceStartup; // the shocks start after the pain (2.5 s)
+            while (shortController.Victim == null && Time.realtimeSinceStartup - t0 < ShortController.StartFreeze + 2f) yield return null;
             Health victim = shortController.Victim;
             Debug.Log($"[CivilianTests] short victim: {(victim != null ? victim.name : "none")}");
             Assert.IsNotNull(victim, "the short found a victim");
@@ -318,6 +319,38 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator OnTheWall_SheComesNear_ItSlidesDown_ThenBegsFromTheFloor()
+        {
+            // Bruno, 2026-10-25: "yes" to the slide down the wall before the beg.
+            guard.gameObject.SetActive(false);
+            CivilianBrain a = Find("Lab_A");
+            Find("Lab_B").gameObject.SetActive(false);
+            a.SetVariant(1);
+            Teleport(new Vector3(-2.5f, 0f, 0.5f));
+            yield return new WaitForSeconds(0.5f);
+            a.Panic("test");
+            yield return WaitUntil(() => a.CurrentPose == CivilianBrain.Pose.Lean, 16f);
+            Assert.AreEqual(CivilianBrain.Pose.Lean, a.CurrentPose, "on its wall");
+            Vector3 wallOut = a.Lean.WallNormal;
+            Teleport(OnMesh(a.transform.position + wallOut * 4.2f));
+            yield return WaitUntil(() => a.CurrentPose == CivilianBrain.Pose.Sit, 2f);
+            Assert.AreEqual(CivilianBrain.Pose.Sit, a.CurrentPose, "within 5 m: it slides down the wall");
+            Assert.AreEqual(CivilianBrain.Phase.Cower, a.Current, "no beg yet");
+            Assert.IsTrue(a.PoseOverride.Fading, "the slide blends, it does not snap");
+            Assert.AreEqual(GlorifiedBody.Characters.PoseClips.Load().sit, a.PoseOverride.Current, "the sit clip (hurt)");
+            Teleport(OnMesh(a.transform.position + wallOut * 2.2f));
+            yield return WaitUntil(() => a.Current == CivilianBrain.Phase.Beg, 2f);
+            Assert.AreEqual(CivilianBrain.Phase.Beg, a.Current, "within 3 m: it begs");
+            Assert.AreEqual(CivilianBrain.Pose.Sit, a.CurrentPose, "from the floor");
+            Assert.IsTrue(a.Lean.Leaning, "its back still on the wall");
+            Teleport(OnMesh(a.transform.position + wallOut * 8f));
+            yield return WaitUntil(() => a.CurrentPose == CivilianBrain.Pose.Lean, 2f);
+            Debug.Log($"[CivilianTests] slide: {a.Current}/{a.CurrentPose}, gap {Gap(a):0.0} m");
+            Assert.AreEqual(CivilianBrain.Pose.Lean, a.CurrentPose, "she left: it stands up into the lean");
+            Assert.AreEqual(CivilianBrain.Phase.Cower, a.Current);
+        }
+
+        [UnityTest]
         public IEnumerator Panicked_TheyTakeDifferentPoses_OneLeansOnTheWall()
         {
             // Bruno, 2026-10-25: "the lean should be added; the multiple poses is to add more dynamicism to the
@@ -352,6 +385,11 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         private float Gap(CivilianBrain c) => Flat(c.transform.position, lucy.transform.position);
+
+        private static Vector3 OnMesh(Vector3 point)
+        {
+            return UnityEngine.AI.NavMesh.SamplePosition(point, out UnityEngine.AI.NavMeshHit hit, 2f, UnityEngine.AI.NavMesh.AllAreas) ? hit.position : point;
+        }
 
         /// <summary>The death as the game reports it (a blast from her); the room reacts through EnemyMorale.</summary>
         private void Kill(CivilianBrain victim)

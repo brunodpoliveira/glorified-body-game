@@ -202,6 +202,7 @@ namespace GlorifiedBody.Automation
             shortController.Begin();
             yield return BotClock.Wait(0.08f);
             CloseShot(lamp.Bounds.center, Vector3.back + Vector3.right * 0.3f, Path.Combine(shots, "cover_12_lamp_sparks.png"), 1.6f, -0.9f);
+            yield return BotClock.WaitWorld(); // the start's freeze (2.5 s)
             yield return BotClock.Wait(0.6f);
             int dark = Breakable.All.OfType<BreakableLight>().Count(l => l.IsDark);
             Shot(Path.Combine(shots, "cover_13_lamps_out.png"));
