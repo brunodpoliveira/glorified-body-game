@@ -316,6 +316,13 @@ namespace GlorifiedBody.Enemy
             RetreatReason = reason;
             gun.HoldFire = true;
             if (gun.HoldsSlot) gun.Stagger(0.1f); // drop the aim
+            // The aim braced the body (kinematic): the retreat phase skips the release, and a braced body runs in
+            // place (Bruno, 2026-10-24).
+            if (aimStarted)
+            {
+                aimStarted = false;
+                body.Brace(false);
+            }
             Current = Phase.Retreat;
             Spot = FleeSpot();
             body.Crouch(false);

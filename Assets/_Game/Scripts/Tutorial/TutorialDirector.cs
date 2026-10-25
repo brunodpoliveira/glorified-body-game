@@ -83,6 +83,7 @@ namespace GlorifiedBody.Tutorial
         private PsychicStats stats;
         private ShortController shortController;
         private DrugInventory drugs;
+        private ItemPickup capsule;
         private LockOnTargetable shooterTarget;
         private Interactor interactor;
         private PsychicScanner scanner;
@@ -171,6 +172,9 @@ namespace GlorifiedBody.Tutorial
             if (scanner != null) scanner.OnScanEnded += OnScanEnded;
             InventoryUI.OnOpened += OnInventoryOpened;
             InventoryUI.OnClosed += OnInventoryClosed;
+            InventoryUI.OnLogRead += OnInventoryLogRead;
+            capsule = FindObjectsByType<ItemPickup>(FindObjectsSortMode.None).Where(p => p.item != null && p.item.kind == ItemKind.Drug)
+                .OrderBy(p => Vector3.Distance(p.transform.position, capsulePoint)).FirstOrDefault();
 
             BuildSteps();
             Enter(0);
@@ -194,6 +198,7 @@ namespace GlorifiedBody.Tutorial
             if (scanner != null) scanner.OnScanEnded -= OnScanEnded;
             InventoryUI.OnOpened -= OnInventoryOpened;
             InventoryUI.OnClosed -= OnInventoryClosed;
+            InventoryUI.OnLogRead -= OnInventoryLogRead;
             EnemyGrenade.OnBurst -= OnGrenadeBurst;
         }
 
@@ -217,6 +222,11 @@ namespace GlorifiedBody.Tutorial
         }
 
         private void OnInventoryOpened() => inventoryOpened = true;
+
+        private void OnInventoryLogRead(ItemDefinition item)
+        {
+            if (item != null && item.itemId == logItemId) logRead = true;
+        }
 
         private void OnInventoryClosed()
         {
@@ -295,7 +305,7 @@ namespace GlorifiedBody.Tutorial
                 () => drugUsed));
             steps.Add(new TutorialStep("log",
                 "A record was left by the wall. Take it. Read it.",
-                "Face the record. {Interact} asks to take it, {Interact} again takes it, {Back} leaves it. {Interact} closes the page.",
+                "Face the record. {Interact} asks to take it, {Interact} again takes it, {Back} leaves it. {Interact} closes the page. Taken already? {Inventory}, select it, {Interact} reads it.",
                 () => logRead));
             steps.Add(new TutorialStep("scan_image",
                 "Look at the door without your hands. Tell us what opens it.",
@@ -362,6 +372,7 @@ namespace GlorifiedBody.Tutorial
             }
             if (stats != null && stats.Nalcon < PsychicStats.MaxNalcon) stats.DebugSet(PsychicStats.MaxNalcon, stats.Short);
             if (Current.Id == "short") RearmShort();
+            if (Current.Id == "capsule") RearmCapsule();
             if (Current.IsDone != null && Current.IsDone()) Advance();
         }
 
@@ -374,6 +385,18 @@ namespace GlorifiedBody.Tutorial
             if (stats != null && !shortBegan && !stats.IsShortFull && (shortController == null || !shortController.IsActive))
                 stats.DebugSet(stats.Nalcon, PsychicStats.MaxShort);
             if (drugs != null && !shortEnded && drugs.Count(DrugType.Nalcon) == 0) drugs.Add(DrugType.Nalcon, 1);
+        }
+
+        /// <summary>
+        /// The capsule step keeps what it needs too: the capsule taken and used before its step left her no drug
+        /// (Bruno, 2026-10-24: the log taken early soft-locked the log step, the same trap).
+        /// </summary>
+        private void RearmCapsule()
+        {
+            if (drugs == null || (capsule != null && capsule.Available)) return;
+            foreach (DrugType type in (DrugType[])System.Enum.GetValues(typeof(DrugType)))
+                if (drugs.Count(type) > 0) return;
+            drugs.Add(DrugType.Nalcon, 1);
         }
 
         /// <summary>Every dummy back at its place, lift dropped; only one shown in a weapon step.</summary>
@@ -409,7 +432,7 @@ namespace GlorifiedBody.Tutorial
             StepIndex = index;
             StepStartTime = Time.time;
             slammed = propThrown = false;
-            ranInStep = dodgedSide = launched = caught = drugUsed = shortBegan = shortEnded = logRead = doorScanned = monitorsScanned = inventoryOpened = inventoryClosed = false;
+            ranInStep = dodgedSide = launched = caught = drugUsed = shortBegan = shortEnded = doorScanned = monitorsScanned = inventoryOpened = inventoryClosed = false;
             targetChanges = 0;
             firedKind = null;
             firedCharge = 0f;

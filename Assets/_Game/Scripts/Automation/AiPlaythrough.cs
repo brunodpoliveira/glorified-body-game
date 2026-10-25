@@ -123,6 +123,18 @@ namespace GlorifiedBody.Automation
                 while (g.Gun.Current != DummyShooter.State.Telegraph && g.Gun.Current != DummyShooter.State.Aiming && BotClock.Now - w < 10f) yield return null;
                 Vector3 chest = g.transform.position + Vector3.up * 1.2f;
                 CloseShot(chest, g.transform.right + g.transform.forward * 0.8f, Path.Combine(shots, $"ai_02b_pose_{gunner}.png"), 2.2f, 0.2f);
+                CloseShot(chest, -g.transform.right + g.transform.forward * 0.8f, Path.Combine(shots, $"ai_02b_pose_{gunner}_left.png"), 2.2f, 0.2f);
+            }
+            // And while they run (Bruno, 2026-10-24: "incorrect when running"): the gun at a low ready.
+            foreach (string gunner in new[] { "Soldier_A", "Gasser_D" })
+            {
+                SoldierBrain g = soldiers.FirstOrDefault(s => s.name == gunner);
+                if (g == null) continue;
+                float w = BotClock.Now;
+                while (!(g.Body.IsMoving && !g.Gun.HoldsSlot) && BotClock.Now - w < 12f) yield return null;
+                Vector3 chest = g.transform.position + Vector3.up * 1.2f;
+                CloseShot(chest, g.transform.right + g.transform.forward * 0.8f, Path.Combine(shots, $"ai_02c_run_{gunner}.png"), 2.4f, 0.2f);
+                RunTelemetry.Event("pose_run_shot", $"{gunner} moving={g.Body.IsMoving} aim={g.Gun.HoldsSlot}");
             }
 
             Record("alerted", soldiers.All(s => s.Alerted), string.Join(" ", soldiers.Select(s => $"{s.name}={s.AlertReason}")));

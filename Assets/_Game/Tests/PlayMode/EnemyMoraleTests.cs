@@ -114,6 +114,29 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.AreEqual(SoldierBrain.Phase.Cower, guard.Current, "it stays down");
         }
 
+        /// <summary>
+        /// Bruno's report (2026-10-24): "the guard runs away but doesn't actually leave the place; he tries to
+        /// retreat but runs in place". The fear reaches its limit while the guard aims.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator Fear_TheGuardRetreatsDuringHisAim_AndLeavesHisPlace()
+        {
+            yield return WaitUntil(() => soldiers.All(s => s.Alerted), 8f);
+            SoldierBrain guard = Find("Guard_B");
+            EnemyMorale corpseA = Find("Soldier_A").GetComponent<EnemyMorale>();
+            yield return WaitUntil(() => guard.Gun.HoldsSlot && guard.Gun.Current == DummyShooter.State.Telegraph, 20f);
+            Assert.IsTrue(guard.Gun.HoldsSlot, "the guard aims");
+            yield return new WaitForSeconds(0.1f);
+            guard.GetComponent<EnemyMorale>().See(corpseA, gruesome: true);
+            guard.GetComponent<EnemyMorale>().See(corpseA, gruesome: false);
+            Assert.IsTrue(guard.Retreating, "fear 3: the guard runs");
+            Vector3 start = guard.transform.position;
+            yield return new WaitForSeconds(2.5f);
+            float moved = Flat(start, guard.transform.position);
+            Debug.Log($"[EnemyMoraleTests] retreat during the aim: moved {moved:0.00} m in 2.5 s, phase {guard.Current}, kinematic {guard.GetComponent<Rigidbody>().isKinematic}");
+            Assert.Greater(moved, 2f, "he left his place");
+        }
+
         [UnityTest]
         public IEnumerator Care_ACollegueDragsTheBodyAway_ThenDoesCpr_AndStopsWhenHeSeesHer()
         {

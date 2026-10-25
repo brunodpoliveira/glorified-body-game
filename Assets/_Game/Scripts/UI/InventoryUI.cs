@@ -20,6 +20,8 @@ namespace GlorifiedBody.UI
     {
         public static event Action OnOpened;
         public static event Action OnClosed;
+        /// <summary>A log read on the inventory screen (the tutorial's log step counts it).</summary>
+        public static event Action<ItemDefinition> OnLogRead;
 
         public sealed class Entry
         {
@@ -224,6 +226,8 @@ namespace GlorifiedBody.UI
             };
         }
 
+        public void SelectIndex(int index) => Select(index);
+
         private void Select(int index)
         {
             if (entries.Count == 0)
@@ -275,6 +279,7 @@ namespace GlorifiedBody.UI
                 readerTitle.text = e.Item.displayName;
                 readerBody.text = e.Item.logText;
                 readerPanel.SetActive(true);
+                OnLogRead?.Invoke(e.Item);
                 return "read:" + e.Item.itemId;
             }
             wordsText.text = e.Item != null && e.Item.kind == ItemKind.Key ? "Use it at the door it opens: face the door and press " + Key(InputManager.GameAction.Interact) + "." : e.Words;

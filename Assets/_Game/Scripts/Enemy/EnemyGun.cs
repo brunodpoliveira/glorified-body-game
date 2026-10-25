@@ -45,7 +45,18 @@ namespace GlorifiedBody.Enemy
         private const float SwingSeconds = 0.35f;
         private bool hasUpperBody, hasAiming, hasCanAim, hasShotId, hasShoot, hasWeakAttack;
         private Transform leftGrip, leftUpper, leftLower, leftHand;
+        private Transform rightUpper, rightLower, rightKnuckle, leftKnuckle;
+        private Vector3 stockLocal; // the butt of a long gun, in the gun's space
+        private bool shouldered;
+        private Vector3 heldAim;
+        private const float RaiseRate = 14f; // per second
         private IRagdollBody ragdoll;
+        private SoldierBrain brain;
+
+        // A long gun sits on the right shoulder (Bruno, 2026-10-24: "the right arm is clearly misaligned ... the left
+        // arm is too high up"): the butt in the shoulder pocket, then both hands go to the gun. PROPOSED numbers.
+        private const float PocketIn = 0.08f, PocketForward = 0.07f, PocketDown = 0.05f; // metres from the shoulder joint
+        private const float LowReadyDown = 35f, LowReadyIn = 20f; // degrees: the gun ahead and down, across the body
 
         public int Shots { get; private set; }
         public float LastFireTime { get; private set; } = -10f;
@@ -103,8 +114,14 @@ namespace GlorifiedBody.Enemy
                 leftUpper = animator.GetBoneTransform(HumanBodyBones.LeftUpperArm);
                 leftLower = animator.GetBoneTransform(HumanBodyBones.LeftLowerArm);
                 leftHand = animator.GetBoneTransform(HumanBodyBones.LeftHand);
+                leftKnuckle = animator.GetBoneTransform(HumanBodyBones.LeftMiddleProximal);
+                rightUpper = animator.GetBoneTransform(HumanBodyBones.RightUpperArm);
+                rightLower = animator.GetBoneTransform(HumanBodyBones.RightLowerArm);
+                rightKnuckle = animator.GetBoneTransform(HumanBodyBones.RightMiddleProximal);
+                shouldered = rightUpper != null && rightLower != null && hand != null && muzzle != null && FindStock(out stockLocal);
             }
             ragdoll = GetComponent<IRagdollBody>();
+            brain = GetComponent<SoldierBrain>();
         }
 
         private static Transform FindDeep(Transform root, string name)
@@ -118,27 +135,62 @@ namespace GlorifiedBody.Enemy
             return null;
         }
 
-        /// <summary>
-        /// Two-bone reach: the elbow bends to the distance, then the upper arm turns the hand onto the grip. The
-        /// elbow keeps the plane of the animated pose.
-        /// </summary>
-        private void HoldWithLeftHand()
+        /// <summary>The butt of the gun: the rear end of its meshes along the barrel, at the meshes' middle.</summary>
+        private bool FindStock(out Vector3 stock)
         {
-            if (leftGrip == null || leftUpper == null || leftLower == null || leftHand == null) return;
-            if (ragdoll != null && ragdoll.IsRagdolled) return;
-            if (health != null && health.IsDead) return;
-            Vector3 target = leftGrip.position;
-            Vector3 a = leftUpper.position, b = leftLower.position, c = leftHand.position;
-            float upper = (b - a).magnitude, lower = (c - b).magnitude;
-            if (upper < 0.0001f || lower < 0.0001f) return;
-            float reach = Mathf.Clamp((target - a).magnitude, Mathf.Abs(upper - lower) + 0.001f, upper + lower - 0.001f);
-            float now = Vector3.Angle(a - b, c - b);
-            float want = Mathf.Acos(Mathf.Clamp((upper * upper + lower * lower - reach * reach) / (2f * upper * lower), -1f, 1f)) * Mathf.Rad2Deg;
-            Vector3 axis = Vector3.Cross(a - b, c - b);
-            if (axis.sqrMagnitude < 0.000001f) axis = transform.up;
-            leftLower.rotation = Quaternion.AngleAxis(want - now, axis.normalized) * leftLower.rotation;
-            leftUpper.rotation = Quaternion.FromToRotation(leftHand.position - a, target - a) * leftUpper.rotation;
+            stock = Vector3.zero;
+            Vector3 barrel = Quaternion.Inverse(gun.rotation) * muzzle.forward;
+            bool any = false;
+            float rear = float.MaxValue;
+            Vector3 min = Vector3.one * float.MaxValue, max = Vector3.one * float.MinValue;
+            foreach (MeshFilter filter in gun.GetComponentsInChildren<MeshFilter>(true))
+            {
+                if (filter.sharedMesh == null || filter.GetComponent<Renderer>() == null) continue;
+                Bounds b = filter.sharedMesh.bounds;
+                for (int i = 0; i < 8; i++)
+                {
+                    Vector3 corner = b.center + Vector3.Scale(b.extents, new Vector3((i & 1) == 0 ? -1 : 1, (i & 2) == 0 ? -1 : 1, (i & 4) == 0 ? -1 : 1));
+                    Vector3 local = gun.InverseTransformPoint(filter.transform.TransformPoint(corner));
+                    min = Vector3.Min(min, local);
+                    max = Vector3.Max(max, local);
+                    rear = Mathf.Min(rear, Vector3.Dot(local, barrel));
+                    any = true;
+                }
+            }
+            if (!any) return false;
+            Vector3 middle = (min + max) * 0.5f;
+            stock = middle + barrel * (rear - Vector3.Dot(middle, barrel));
+            return true;
         }
+
+        /// <summary>
+        /// Two-bone reach with a bend hint: the elbow goes to the side of the hint, the hand to the target (or as
+        /// near as the arm reaches). Then the hand turns so its knuckles point along the wanted line.
+        /// </summary>
+        private static void Reach(Transform upper, Transform lower, Transform hand, Transform knuckle, Vector3 target, Vector3 bendHint, Vector3 fingers)
+        {
+            if (upper == null || lower == null || hand == null) return;
+            Vector3 a = upper.position, b = lower.position, c = hand.position;
+            float l1 = (b - a).magnitude, l2 = (c - b).magnitude;
+            if (l1 < 0.0001f || l2 < 0.0001f) return;
+            Vector3 toTarget = target - a;
+            if (toTarget.sqrMagnitude < 0.000001f) return;
+            float d = Mathf.Clamp(toTarget.magnitude, Mathf.Abs(l1 - l2) + 0.001f, l1 + l2 - 0.001f);
+            Vector3 dir = toTarget.normalized;
+            Vector3 bend = bendHint - Vector3.Dot(bendHint, dir) * dir;
+            if (bend.sqrMagnitude < 0.000001f) bend = (b - a) - Vector3.Dot(b - a, dir) * dir;
+            bend.Normalize();
+            float along = (l1 * l1 - l2 * l2 + d * d) / (2f * d);
+            Vector3 elbow = a + dir * along + bend * Mathf.Sqrt(Mathf.Max(0f, l1 * l1 - along * along));
+            upper.rotation = Quaternion.FromToRotation(b - a, elbow - a) * upper.rotation;
+            b = lower.position;
+            lower.rotation = Quaternion.FromToRotation(hand.position - b, a + dir * d - b) * lower.rotation;
+            if (knuckle != null && fingers.sqrMagnitude > 0.0001f)
+                hand.rotation = Quaternion.FromToRotation(knuckle.position - hand.position, fingers) * hand.rotation;
+        }
+
+        private bool HandsFree => (ragdoll != null && ragdoll.IsRagdolled) || (health != null && health.IsDead)
+            || (brain != null && brain.Current == SoldierBrain.Phase.Care);
 
         private void OnEnable()
         {
@@ -186,23 +238,57 @@ namespace GlorifiedBody.Enemy
                 float up = shooter.Current == DummyShooter.State.Telegraph ? shooter.TelegraphProgress : 0f;
                 aim = Vector3.Slerp(flatForward, Vector3.up * 0.9f + flatForward * 0.1f, 0.3f + 0.7f * up);
             }
+            else if (shouldered && !HandsFree)
+            {
+                Shoulder(flatForward);
+                return;
+            }
             else if (shooter.HoldsSlot && shooter.CurrentAttack != DummyShooter.Attack.Melee && !(health != null && health.IsDead))
             {
                 aim = shooter.AimPoint - hand.position;
             }
             else
             {
-                Vector3 ahead = transform.forward;
-                ahead.y = 0f;
-                aim = Quaternion.AngleAxis(restDownDegrees, Vector3.Cross(Vector3.up, ahead.normalized)) * ahead.normalized;
+                aim = Quaternion.AngleAxis(restDownDegrees, Vector3.Cross(Vector3.up, flatForward)) * flatForward;
             }
             if (aim.sqrMagnitude < 0.0001f) aim = transform.forward;
-            // The vendor model's barrel is not its own forward: the muzzle's forward is the barrel (Invector shoots
-            // along it). Turn the gun so the muzzle looks along the aim.
+            Point(aim);
+            gun.position = hand.position + aim.normalized * gripForward;
+            if (leftGrip != null && !HandsFree) Reach(leftUpper, leftLower, leftHand, null, leftGrip.position, -transform.up - transform.right * 0.3f, Vector3.zero);
+        }
+
+        /// <summary>
+        /// The vendor model's barrel is not its own forward: the muzzle's forward is the barrel (Invector shoots
+        /// along it). Turn the gun so the muzzle looks along the aim.
+        /// </summary>
+        private void Point(Vector3 aim)
+        {
             Quaternion muzzleLocal = muzzle != null ? Quaternion.Inverse(gun.rotation) * muzzle.rotation : Quaternion.identity;
             gun.rotation = Quaternion.LookRotation(aim.normalized, Vector3.up) * Quaternion.Inverse(muzzleLocal);
-            gun.position = hand.position + aim.normalized * gripForward;
-            HoldWithLeftHand();
+        }
+
+        /// <summary>
+        /// A long gun on the shoulder: the butt in the right shoulder pocket, the barrel along the aim (or at a low
+        /// ready, ahead, down and across the body), the right hand on the grip (the vendor gun's root), the left
+        /// hand on the vendor's grip point. The elbows hang down. The animation keeps the legs and the body.
+        /// </summary>
+        private void Shoulder(Vector3 flatForward)
+        {
+            Vector3 right = Vector3.Cross(Vector3.up, flatForward);
+            Vector3 pocket = rightUpper.position - right * PocketIn + flatForward * PocketForward - Vector3.up * PocketDown;
+            Vector3 aim = shooter.HoldsSlot ? shooter.AimPoint - pocket
+                : Quaternion.AngleAxis(-LowReadyIn, Vector3.up) * Quaternion.AngleAxis(LowReadyDown, right) * flatForward;
+            if (aim.sqrMagnitude < 0.0001f) aim = flatForward;
+            // The gun rises to the aim and drops to the low ready in about a fifth of a second, not in one frame.
+            heldAim = heldAim.sqrMagnitude < 0.5f ? aim.normalized : Vector3.Slerp(heldAim, aim.normalized, 1f - Mathf.Exp(-RaiseRate * Time.deltaTime));
+            aim = heldAim;
+            Point(aim);
+            gun.position += pocket - gun.TransformPoint(stockLocal);
+            Vector3 gunRight = Vector3.Cross(Vector3.up, aim).normalized;
+            Vector3 gunUp = Vector3.Cross(aim, gunRight);
+            Reach(rightUpper, rightLower, hand, rightKnuckle, gun.position - aim * gripForward, -Vector3.up + right * 0.5f - flatForward * 0.2f, aim * 0.8f - gunUp * 0.5f);
+            if (leftGrip != null)
+                Reach(leftUpper, leftLower, leftHand, leftKnuckle, leftGrip.position, -Vector3.up - right * 0.4f, aim * 0.7f + gunRight * 0.5f + gunUp * 0.2f);
         }
 
         private void OnAimStarted()

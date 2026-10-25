@@ -86,6 +86,52 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.Greater(drugs.Count(GlorifiedBody.Player.DrugType.Nalcon), 0, "a drug to end it");
         }
 
+        /// <summary>
+        /// Bruno's report (2026-10-24): he took the log in the capsule step (the two stand 1.1 m apart), and the log
+        /// step could not end: its pickup was gone. A log read in the inventory ends the step.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator LogStep_TheLogTakenEarly_ReadInTheInventory_EndsTheStep()
+        {
+            while (director.Current != null && director.Current.Id != "capsule") director.Advance();
+            GameObject lucy = GameObject.FindGameObjectWithTag("Player");
+            Interactor interactor = lucy.GetComponent<Interactor>();
+            ItemPickup log = UnityEngine.Object.FindObjectsByType<ItemPickup>(FindObjectsSortMode.None).FirstOrDefault(p => p.item != null && p.item.itemId == director.LogItemId);
+            Assert.IsNotNull(log, "the log pickup");
+            StringAssert.StartsWith("taken:", log.Confirm(interactor), "she takes the log in the capsule step");
+            yield return null;
+            director.Advance();
+            Assert.AreEqual("log", director.Current.Id);
+            yield return null;
+            InventoryUI ui = UnityEngine.Object.FindFirstObjectByType<InventoryUI>();
+            ui.Open();
+            yield return null;
+            int index = ui.Entries.ToList().FindIndex(e => e.Item != null && e.Item.itemId == director.LogItemId);
+            Assert.GreaterOrEqual(index, 0, "the log is in the inventory");
+            ui.SelectIndex(index);
+            StringAssert.StartsWith("read:", ui.Act(), "she reads it in the inventory");
+            ui.Close();
+            yield return new WaitForSeconds(0.3f);
+            Assert.AreNotEqual("log", director.Current.Id, "the log step ended");
+        }
+
+        /// <summary>The capsule used before its step: the step gives a drug, so it can still end.</summary>
+        [UnityTest]
+        public IEnumerator CapsuleStep_TheCapsuleUsedEarly_DoesNotSoftLockTheStep()
+        {
+            GameObject lucy = GameObject.FindGameObjectWithTag("Player");
+            var drugs = lucy.GetComponent<GlorifiedBody.Player.DrugInventory>();
+            var powers = lucy.GetComponent<GlorifiedBody.Player.PsychicPowers>();
+            foreach (ItemPickup capsule in UnityEngine.Object.FindObjectsByType<ItemPickup>(FindObjectsSortMode.None).Where(p => p.item != null && p.item.kind == ItemKind.Drug).ToArray())
+                capsule.Confirm(lucy.GetComponent<Interactor>());
+            foreach (GlorifiedBody.Player.DrugType type in (GlorifiedBody.Player.DrugType[])Enum.GetValues(typeof(GlorifiedBody.Player.DrugType)))
+                while (drugs.Count(type) > 0 && powers.UseDrug(type)) { }
+            while (director.Current != null && director.Current.Id != "capsule") director.Advance();
+            yield return new WaitForSeconds(0.3f);
+            int held = ((GlorifiedBody.Player.DrugType[])Enum.GetValues(typeof(GlorifiedBody.Player.DrugType))).Sum(t => drugs.Count(t));
+            Assert.Greater(held, 0, "the step gives a drug to use");
+        }
+
         [UnityTest]
         public IEnumerator TheGym_Loads_WithTheDirectorThePromptTheTargetsAndTheBakedLight()
         {
