@@ -36,6 +36,8 @@ namespace GlorifiedBody.Editor.Destruction
         public const float TableHeight = 0.78f;
         public static readonly Vector3 BarricadePanel = new Vector3(1.6f, 1.08f, 0.08f);
         public const float BarricadeHeight = 1.2f; // chest high: her power at 1.2 m stops on it, their muzzle at 1.3 m shoots over
+        public static readonly Vector3 ScreenPanel = new Vector3(1.6f, 1.75f, 0.08f);
+        public const float ScreenHeight = 1.9f;
         public static readonly Vector3 LampPanel = new Vector3(0.6f, 0.025f, 0.24f);
         public const float PlasterThickness = 0.035f;
 
@@ -68,6 +70,7 @@ namespace GlorifiedBody.Editor.Destruction
             Fragments("barricade_panel", BarricadePanel, 10, 23);
             Fragments("lamp_panel", LampPanel, 6, 37);
             Fragments("plaster_patch", new Vector3(1.2f, 1f, PlasterThickness), 7, 41);
+            Fragments("screen_panel", ScreenPanel, 12, 29);
             AssetDatabase.SaveAssets();
         }
 
@@ -335,7 +338,7 @@ namespace GlorifiedBody.Editor.Destruction
             Obstacle(root, new Vector3(0f, TableHeight * 0.5f, 0f), new Vector3(TableTop.x, TableHeight, TableTop.z));
             HideUntilBroken(debris, null);
             var b = root.AddComponent<Breakable>();
-            b.Bind(id, Breakable.Kind.Wood, 30f, false, intact, debris, null, onTop, 3.5f); // a full blast with the MK boost beside it breaks it
+            b.Bind(id, Breakable.Kind.Wood, 15f, false, intact, debris, null, onTop, 3.5f); // a full blast beside it breaks it (Bruno, 2026-10-24: "can't break tables reliably")
             return b;
         }
 
@@ -356,6 +359,31 @@ namespace GlorifiedBody.Editor.Destruction
             for (int i = 0; i < feet.Length; i++) AddWholePiece(debris.transform, $"Foot_{i}", feet[i], footSize, Steel, 7800f * 0.2f);
 
             Obstacle(root, new Vector3(0f, BarricadeHeight * 0.5f, 0f), new Vector3(BarricadePanel.x, BarricadeHeight, 0.5f));
+            HideUntilBroken(debris, null);
+            var b = root.AddComponent<Breakable>();
+            b.Bind(id, Breakable.Kind.Wood, 90f, true, intact, debris, null, new Greeble[0], 4f);
+            return b;
+        }
+
+        /// <summary>
+        /// A tall office screen (1.9 m): cover for her (Bruno, 2026-10-24: the enemy bullets wear down her cover; the
+        /// 1.2 m barricade let them shoot over it). It stops their bullets and her powers alike, so the soldiers never
+        /// pick it (they need a line over their cover). PROPOSED.
+        /// </summary>
+        public static Breakable Screen(GameObject parent, string id, Vector3 floor, float yaw)
+        {
+            GameObject root = Root(parent, id, floor, yaw);
+            GameObject intact = Child(root.transform, "Intact");
+            GameObject debris = Child(root.transform, "Debris");
+            int room = LayerMask.NameToLayer("Default");
+            Vector3 panel = new Vector3(0f, ScreenHeight - ScreenPanel.y * 0.5f, 0f);
+            Block(intact.transform, "Panel", panel, ScreenPanel, Plywood, room);
+            Vector3 footSize = new Vector3(0.08f, 0.1f, 0.6f);
+            Vector3[] feet = { new Vector3(-0.7f, 0.05f, 0f), new Vector3(0.7f, 0.05f, 0f) };
+            for (int i = 0; i < feet.Length; i++) Block(intact.transform, $"Foot_{i}", feet[i], footSize, Steel, room);
+            AddPieces(debris.transform, Fragments("screen_panel", ScreenPanel, 12, 29), panel, Quaternion.identity, Plywood, WoodInside, WoodDensity);
+            for (int i = 0; i < feet.Length; i++) AddWholePiece(debris.transform, $"Foot_{i}", feet[i], footSize, Steel, 7800f * 0.2f);
+            Obstacle(root, new Vector3(0f, ScreenHeight * 0.5f, 0f), new Vector3(ScreenPanel.x, ScreenHeight, 0.5f));
             HideUntilBroken(debris, null);
             var b = root.AddComponent<Breakable>();
             b.Bind(id, Breakable.Kind.Wood, 90f, true, intact, debris, null, new Greeble[0], 4f);

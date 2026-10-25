@@ -274,7 +274,11 @@ namespace GlorifiedBody.Combat
                 if (Obstacle(transform.position, next - transform.position, HitRadius, out RaycastHit wall))
                 {
                     Breakable piece = wall.collider.GetComponentInParent<Breakable>();
-                    bool through = piece != null && !piece.IsBroken && piece.Damage(slamDamage * ThroughShare, DamageType.PsychicTelekinesis, wall.point, direction);
+                    // A thrown body smashes through any breakable (Bruno, 2026-10-24: a part-charge lift stopped at
+                    // the barricade, and the soldier behind it never fell). A thrown prop does its damage.
+                    bool body = self != null && (GetComponent<LockOnTargetable>() == null || !GetComponent<LockOnTargetable>().IsProp);
+                    bool through = piece != null && !piece.IsBroken
+                        && (body ? BreakPiece(piece, wall.point, direction) : piece.Damage(slamDamage * ThroughShare, DamageType.PsychicTelekinesis, wall.point, direction));
                     if (!through)
                     {
                         next = transform.position + (next - transform.position).normalized * Mathf.Max(0f, wall.distance - 0.05f);
@@ -335,6 +339,12 @@ namespace GlorifiedBody.Combat
             }
             transform.position = landing;
             Hit(self, slamDamage, landing, Vector3.up);
+        }
+
+        private static bool BreakPiece(Breakable piece, Vector3 point, Vector3 direction)
+        {
+            piece.Break(point, direction);
+            return true;
         }
 
         /// <summary>The first wall or breakable on the move, swept with the body (a capsule from its feet to its chest). Bodies do not count.</summary>

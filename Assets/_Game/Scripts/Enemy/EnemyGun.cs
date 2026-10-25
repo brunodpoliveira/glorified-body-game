@@ -1,5 +1,6 @@
 using UnityEngine;
 using GlorifiedBody.Core;
+using GlorifiedBody.Combat;
 
 namespace GlorifiedBody.Enemy
 {
@@ -43,6 +44,8 @@ namespace GlorifiedBody.Enemy
         private float swingStart = -10f;
         private const float SwingSeconds = 0.35f;
         private bool hasUpperBody, hasAiming, hasCanAim, hasShotId, hasShoot, hasWeakAttack;
+        private Transform leftGrip, leftUpper, leftLower, leftHand;
+        private IRagdollBody ragdoll;
 
         public int Shots { get; private set; }
         public float LastFireTime { get; private set; } = -10f;
@@ -83,6 +86,58 @@ namespace GlorifiedBody.Enemy
             }
             if (muzzle != null) shooter.MuzzleOverride = muzzle;
             if (flashLight != null) flashLight.enabled = false;
+            // One flash for each shot: the vendor rifle's first flash loops (its own script stopped it), so it
+            // stayed on after the first burst (Bruno, 2026-10-24).
+            if (flashes != null)
+                foreach (ParticleSystem flash in flashes)
+                    if (flash != null)
+                        foreach (ParticleSystem ps in flash.GetComponentsInChildren<ParticleSystem>(true))
+                        {
+                            ParticleSystem.MainModule main = ps.main;
+                            main.loop = false;
+                        }
+            // A long gun is held with both hands: the left hand goes to the vendor's grip point on the gun.
+            if (animator != null && animator.isHuman && upperBodyId != 1 && gun != null)
+            {
+                leftGrip = FindDeep(gun, "leftHandIK");
+                leftUpper = animator.GetBoneTransform(HumanBodyBones.LeftUpperArm);
+                leftLower = animator.GetBoneTransform(HumanBodyBones.LeftLowerArm);
+                leftHand = animator.GetBoneTransform(HumanBodyBones.LeftHand);
+            }
+            ragdoll = GetComponent<IRagdollBody>();
+        }
+
+        private static Transform FindDeep(Transform root, string name)
+        {
+            if (root.name == name) return root;
+            foreach (Transform child in root)
+            {
+                Transform found = FindDeep(child, name);
+                if (found != null) return found;
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Two-bone reach: the elbow bends to the distance, then the upper arm turns the hand onto the grip. The
+        /// elbow keeps the plane of the animated pose.
+        /// </summary>
+        private void HoldWithLeftHand()
+        {
+            if (leftGrip == null || leftUpper == null || leftLower == null || leftHand == null) return;
+            if (ragdoll != null && ragdoll.IsRagdolled) return;
+            if (health != null && health.IsDead) return;
+            Vector3 target = leftGrip.position;
+            Vector3 a = leftUpper.position, b = leftLower.position, c = leftHand.position;
+            float upper = (b - a).magnitude, lower = (c - b).magnitude;
+            if (upper < 0.0001f || lower < 0.0001f) return;
+            float reach = Mathf.Clamp((target - a).magnitude, Mathf.Abs(upper - lower) + 0.001f, upper + lower - 0.001f);
+            float now = Vector3.Angle(a - b, c - b);
+            float want = Mathf.Acos(Mathf.Clamp((upper * upper + lower * lower - reach * reach) / (2f * upper * lower), -1f, 1f)) * Mathf.Rad2Deg;
+            Vector3 axis = Vector3.Cross(a - b, c - b);
+            if (axis.sqrMagnitude < 0.000001f) axis = transform.up;
+            leftLower.rotation = Quaternion.AngleAxis(want - now, axis.normalized) * leftLower.rotation;
+            leftUpper.rotation = Quaternion.FromToRotation(leftHand.position - a, target - a) * leftUpper.rotation;
         }
 
         private void OnEnable()
@@ -147,6 +202,7 @@ namespace GlorifiedBody.Enemy
             Quaternion muzzleLocal = muzzle != null ? Quaternion.Inverse(gun.rotation) * muzzle.rotation : Quaternion.identity;
             gun.rotation = Quaternion.LookRotation(aim.normalized, Vector3.up) * Quaternion.Inverse(muzzleLocal);
             gun.position = hand.position + aim.normalized * gripForward;
+            HoldWithLeftHand();
         }
 
         private void OnAimStarted()

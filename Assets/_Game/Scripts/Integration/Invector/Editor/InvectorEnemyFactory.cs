@@ -325,7 +325,8 @@ namespace GlorifiedBody.Integration.Invector.Build
             int animatorId = weapon == DummyShooter.Weapon.Rifle ? 2 : launcher ? 3 : 1;
             GameObject gun = StrippedVendorModel(path, "Gun", root, rootScale);
             if (gun == null) return;
-            foreach (string unused in new[] { "AimReference", "leftHandIK" })
+            // The left-hand grip stays on the long guns (EnemyGun holds the gun with both hands).
+            foreach (string unused in weapon == DummyShooter.Weapon.Pistol ? new[] { "AimReference", "leftHandIK" } : new[] { "AimReference" })
             {
                 Transform t = FindDeep(gun.transform, unused);
                 if (t != null) Object.DestroyImmediate(t.gameObject);

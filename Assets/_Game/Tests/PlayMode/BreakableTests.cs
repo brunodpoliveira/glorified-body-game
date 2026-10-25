@@ -142,6 +142,26 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.AreEqual(health - 45f, barricade.Health, 0.5f, "three bullets of 15");
         }
 
+        /// <summary>Bruno (2026-10-24, C3): the soldiers shot over the barricade at her. A tall screen stops their bullets.</summary>
+        [UnityTest]
+        public IEnumerator TallScreen_StopsTheirBullets_AndWearsDown()
+        {
+            Breakable screen = Piece("Screen_1");
+            Assert.IsNotNull(screen, "a tall screen on her side");
+            Vector3 centre = screen.Bounds.center;
+            Vector3 behind = screen.transform.position - screen.transform.forward * 0.8f;
+            Vector3 muzzle = screen.transform.position + screen.transform.forward * 6f + Vector3.up * Body.MuzzleHeight;
+            Vector3 chest = behind + Vector3.up * Body.ChestHeight;
+            float health = screen.Health;
+            for (int i = 0; i < 3; i++)
+            {
+                EnemyProjectile.Launch(muzzle, chest - muzzle, 40f, 15f, null, "test");
+                yield return new WaitForSeconds(0.3f);
+            }
+            Debug.Log($"[BreakableTests] three shots at her chest behind the screen: {health:0} -> {screen.Health:0}");
+            Assert.AreEqual(health - 45f, screen.Health, 0.5f, "the screen took the three bullets");
+        }
+
         [UnityTest]
         public IEnumerator Grenade_BreaksTheTable_ThePlaster_AndTheLampAbove()
         {

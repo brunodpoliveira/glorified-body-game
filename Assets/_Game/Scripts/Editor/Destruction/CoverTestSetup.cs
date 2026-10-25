@@ -15,8 +15,8 @@ namespace GlorifiedBody.Editor.Destruction
     /// <summary>
     /// The cover test room (Bruno, 2026-10-24: breakable cover "for more kinetic scenarios"): a dark office hall of
     /// 16 x 12 m, 3.2 m high, lit only by six breakable ceiling lamps (Realtime, hard shadows, a fake bounce each)
-    /// and a weak blue fill. Three chest-high barricades (two of them the soldiers' cover), three tables with items,
-    /// four plaster patches on the walls. Two FSM soldiers (a rifleman and a soldier) and Lucy at the south end.
+    /// and a weak blue fill. Three chest-high barricades (two of them the soldiers' cover), two tall screens on her
+    /// side, three tables with items (two beside the soldiers' barricades), four plaster patches on the walls. Two FSM soldiers (a rifleman and a soldier) and Lucy at the south end.
     /// Two fixed cameras under the ceiling. Local only, as the AI test room: the soldiers carry vendor data
     /// (.gitignore). The main menu's COVER TEST button opens it.
     /// Batch: tools/unity.sh exec GlorifiedBody.Editor.Destruction.CoverTestSetup.BuildCoverTest
@@ -64,10 +64,14 @@ namespace GlorifiedBody.Editor.Destruction
             for (int i = breakables.transform.childCount - 1; i >= 0; i--) Object.DestroyImmediate(breakables.transform.GetChild(i).gameObject);
             BreakableAssets.Barricade(breakables, "Barricade_1", new Vector3(-3.5f, 0f, 2f), 0f);
             BreakableAssets.Barricade(breakables, "Barricade_2", new Vector3(3f, 0f, 2.5f), 8f);
+            // Her side: two tall screens (their bullets wear them down, Bruno's C3) and a low barricade.
             BreakableAssets.Barricade(breakables, "Barricade_3", new Vector3(-1f, 0f, -2f), -6f);
-            BreakableAssets.Table(breakables, "Table_1", new Vector3(-5.5f, 0f, -1.5f), 90f);
+            BreakableAssets.Screen(breakables, "Screen_1", new Vector3(-3.6f, 0f, -3.2f), 10f);
+            BreakableAssets.Screen(breakables, "Screen_2", new Vector3(2.4f, 0f, -3.4f), -8f);
+            // The tables stand beside the soldiers' barricades: a blast at a soldier in cover reaches them (C4).
+            BreakableAssets.Table(breakables, "Table_1", new Vector3(-5.4f, 0f, 2.8f), 90f);
             BreakableAssets.Table(breakables, "Table_2", new Vector3(2.5f, 0f, -0.8f), 0f);
-            BreakableAssets.Table(breakables, "Table_3", new Vector3(-0.5f, 0f, 4.6f), 0f);
+            BreakableAssets.Table(breakables, "Table_3", new Vector3(4.9f, 0f, 3.2f), 90f);
             float inner = hd;
             BreakableAssets.Plaster(breakables, "Plaster_N1", new Vector3(-4.5f, 1.5f, inner), Vector3.back, new Vector2(1.4f, 1.1f));
             BreakableAssets.Plaster(breakables, "Plaster_N2", new Vector3(2f, 1.4f, inner), Vector3.back, new Vector2(1.2f, 1f));

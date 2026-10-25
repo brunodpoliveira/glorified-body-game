@@ -23,6 +23,7 @@ namespace GlorifiedBody.DebugTools
         [SerializeField] private KeyCode refillKey = KeyCode.F7;
         [SerializeField] private KeyCode removeNalconKey = KeyCode.F8;
         [SerializeField] private KeyCode addNalconKey = KeyCode.F9;
+        [SerializeField] private KeyCode careTestKey = KeyCode.F12; // the soldiers' care counts her as unseen (toggle)
         [SerializeField] private KeyCode lookTestKey = KeyCode.F11;
 
         private void Update()
@@ -34,6 +35,11 @@ namespace GlorifiedBody.DebugTools
             if (Input.GetKeyDown(refillKey)) Refill();
             if (Input.GetKeyDown(removeNalconKey)) RemoveNalcon();
             if (Input.GetKeyDown(addNalconKey)) AddNalcon();
+            if (Input.GetKeyDown(careTestKey))
+            {
+                GlorifiedBody.Enemy.CorpseCare.DebugHidden = !GlorifiedBody.Enemy.CorpseCare.DebugHidden;
+                Debug.Log($"[DebugCheatKeys] F12: the care counts her as {(GlorifiedBody.Enemy.CorpseCare.DebugHidden ? "unseen" : "seen")}.");
+            }
             if (Input.GetKeyDown(lookTestKey) && GameManager.Instance != null) GameManager.Instance.LoadLevel(NextLookScene(SceneManager.GetActiveScene().name));
         }
 

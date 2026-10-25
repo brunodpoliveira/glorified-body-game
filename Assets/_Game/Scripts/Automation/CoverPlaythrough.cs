@@ -105,7 +105,7 @@ namespace GlorifiedBody.Automation
             GameObject lucy = GameObject.FindGameObjectWithTag("Player");
             SoldierBrain[] soldiers = FindObjectsByType<SoldierBrain>(FindObjectsSortMode.None).OrderBy(s => s.name).ToArray();
             int barricades = Breakable.All.Count(b => b.IsCover), lamps = Breakable.All.OfType<BreakableLight>().Count();
-            Record("cover_loaded", SceneManager.GetActiveScene().name == SceneName && lucy != null && soldiers.Length == 2 && barricades == 3 && lamps == 6,
+            Record("cover_loaded", SceneManager.GetActiveScene().name == SceneName && lucy != null && soldiers.Length == 2 && barricades == 5 && lamps == 6, // 3 barricades and 2 tall screens
                 $"soldiers={soldiers.Length} breakables={Breakable.All.Count} barricades={barricades} lamps={lamps} items={Greeble.All.Count}");
             if (lucy == null || soldiers.Length == 0) { Finish(); yield break; }
             lucy.GetComponentInChildren<Health>().SetInvulnerable(true);

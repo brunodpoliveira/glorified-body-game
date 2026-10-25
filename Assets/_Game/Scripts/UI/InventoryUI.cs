@@ -51,6 +51,7 @@ namespace GlorifiedBody.UI
         private PsychicScanner scanner;
         private readonly List<Entry> entries = new List<Entry>();
         private int openFrame = -1;
+        private bool drugMode; // opened by the drug key: a taken drug closes it
         private int pendingDrug = -1; // the drug the question "Use the ...?" is about (Bruno, 2026-10-22: ask first)
 
         public bool AskingDrug => pendingDrug >= 0;
@@ -77,6 +78,30 @@ namespace GlorifiedBody.UI
             interactor = player.GetComponent<Interactor>();
             scanner = player.GetComponent<PsychicScanner>();
             Build();
+            PsychicPowers.OpenDrugMenu = OpenDrugs;
+        }
+
+        private void OnDestroy()
+        {
+            if (PsychicPowers.OpenDrugMenu == (System.Func<bool>)OpenDrugs) PsychicPowers.OpenDrugMenu = null;
+        }
+
+        /// <summary>
+        /// The drug key opens the overlay on the drugs (Bruno, 2026-10-24: "Q can't use the pills straight away ...
+        /// a submenu so the player can choose which to take (or take none)"). The interact key asks and takes, the
+        /// drug key or the inventory key closes it with none taken. A taken drug closes it.
+        /// </summary>
+        public bool OpenDrugs()
+        {
+            GameManager gm = GameManager.Instance;
+            if (gm == null || !gm.IsPlaying || IsOpen || inventory == null) return false;
+            if ((interactor != null && interactor.Current != Interactor.State.Free) || (scanner != null && scanner.IsViewing)) return false;
+            Open();
+            if (!IsOpen) return false;
+            drugMode = true;
+            for (int i = 0; i < entries.Count; i++)
+                if (entries[i].Drug.HasValue) { Select(i); break; }
+            return true;
         }
 
         private void Update()
@@ -96,7 +121,8 @@ namespace GlorifiedBody.UI
                 return;
             }
             if (Time.frameCount == openFrame) return;
-            bool toggle = GameInput.GetActionDown(InputManager.GameAction.Inventory, KeyCode.I);
+            bool toggle = GameInput.GetActionDown(InputManager.GameAction.Inventory, KeyCode.I)
+                || GameInput.GetActionDown(InputManager.GameAction.UseDrug, KeyCode.Q);
             bool back = GameInput.GetActionDown(InputManager.GameAction.Back, KeyCode.S);
             bool use = GameInput.GetActionDown(InputManager.GameAction.Interact, KeyCode.E);
             if (ReaderOpen)
@@ -106,7 +132,7 @@ namespace GlorifiedBody.UI
             }
             if (AskingDrug)
             {
-                if (use) Act();
+                if (use && Act().StartsWith("used:") && drugMode) Close();
                 else if (back || toggle) { pendingDrug = -1; Select(Selected); }
                 return;
             }
@@ -142,6 +168,7 @@ namespace GlorifiedBody.UI
         {
             if (!IsOpen) return;
             openFrame = Time.frameCount;
+            drugMode = false;
             root.SetActive(false);
             OnClosed?.Invoke();
         }

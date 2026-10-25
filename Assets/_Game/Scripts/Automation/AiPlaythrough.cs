@@ -107,11 +107,23 @@ namespace GlorifiedBody.Automation
                 string.Join(" ", soldiers.Select(s => $"{s.name}:{s.Current}/target={s.Body.HasTarget}/moves={s.Moves}")));
 
             t0 = BotClock.Now;
-            while (!soldiers.Any(s => s.Gun.Current == DummyShooter.State.Telegraph) && BotClock.Now - t0 < 12f) yield return null;
+            // 16 s: one run of 12 s saw the soldiers fire but missed the circle (2026-10-24).
+            while (!soldiers.Any(s => s.Gun.Current == DummyShooter.State.Telegraph) && BotClock.Now - t0 < 16f) yield return null;
             yield return null;
             SoldierBrain aiming = soldiers.FirstOrDefault(s => s.Gun.Current == DummyShooter.State.Telegraph);
             Shot(Path.Combine(shots, "ai_02_telegraph.png"));
-            Record("telegraph", aiming != null, aiming != null ? $"{aiming.name} counts down" : "no telegraph in 12 s");
+            Record("telegraph", aiming != null, aiming != null ? $"{aiming.name} counts down" : "no telegraph in 16 s");
+            // The long guns in both hands (Bruno, 2026-10-24: "the animation for the shotgunner + assault rifle is
+            // incorrect"): a close shot of each while it aims.
+            foreach (string gunner in new[] { "Soldier_A", "Gasser_D" })
+            {
+                SoldierBrain g = soldiers.FirstOrDefault(s => s.name == gunner);
+                if (g == null) continue;
+                float w = BotClock.Now;
+                while (g.Gun.Current != DummyShooter.State.Telegraph && g.Gun.Current != DummyShooter.State.Aiming && BotClock.Now - w < 10f) yield return null;
+                Vector3 chest = g.transform.position + Vector3.up * 1.2f;
+                CloseShot(chest, g.transform.right + g.transform.forward * 0.8f, Path.Combine(shots, $"ai_02b_pose_{gunner}.png"), 2.2f, 0.2f);
+            }
 
             Record("alerted", soldiers.All(s => s.Alerted), string.Join(" ", soldiers.Select(s => $"{s.name}={s.AlertReason}")));
 

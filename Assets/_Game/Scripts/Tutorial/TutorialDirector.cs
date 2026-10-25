@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using GlorifiedBody.Combat;
+using GlorifiedBody.Core;
 using GlorifiedBody.DebugTools;
 using GlorifiedBody.Destruction;
 using GlorifiedBody.Enemy;
@@ -24,7 +25,8 @@ namespace GlorifiedBody.Tutorial
     /// monitors (a clip), the key and the door, the inventory, the overflow (the short), a barricade to break.
     /// Each step ends when the
     /// player did the thing. The later features (the enemies) add their steps here.
-    /// The lines are placeholders until the writer gives the words. F2 skips a step (debug).
+    /// The lines are placeholders until the writer gives the words. F2 skips a step (debug). A safe room: she takes
+    /// no damage and her MK stays full (Bruno, 2026-10-24).
     /// </summary>
     public sealed class TutorialDirector : MonoBehaviour
     {
@@ -45,6 +47,7 @@ namespace GlorifiedBody.Tutorial
         [SerializeField] private string shooterTargetName = "Target_Gun";
         [SerializeField] private KeyCode skipKey = KeyCode.F2;
         [SerializeField] private string coverName = "Barricade_Gym";
+        [SerializeField] private string[] dummyNames = { "Target_1", "Target_2", "Target_3", "Target_Gun" };
 
         public static TutorialDirector Instance { get; private set; }
 
@@ -90,6 +93,13 @@ namespace GlorifiedBody.Tutorial
         public EnemyShield Shield => shield;
         private bool ranInStep, dodgedSide, launched, caught, drugUsed, shortBegan, shortEnded, logRead, doorScanned, monitorsScanned, inventoryOpened, inventoryClosed;
         private ItemInventory items;
+        private readonly List<(LockOnTargetable target, Vector3 position, Quaternion rotation)> dummies = new List<(LockOnTargetable, Vector3, Quaternion)>();
+        // The weapon steps show only their own dummy (Bruno, 2026-10-24: "once the grenade steps start we should have
+        // only the one dummy, not all four of them").
+        private static readonly Dictionary<string, string> OnlyDummy = new Dictionary<string, string>
+        {
+            { "grenade", "Target_Gun" }, { "shield", "Target_2" }, { "cover", "Target_3" },
+        };
         private int targetChanges;
         private PowerKind? firedKind;
         private float firedCharge;
@@ -124,6 +134,8 @@ namespace GlorifiedBody.Tutorial
             interactor = player.GetComponent<Interactor>();
             scanner = player.GetComponent<PsychicScanner>();
             items = player.GetComponent<ItemInventory>();
+            // The tutorial is a safe room (Bruno, 2026-10-24: no damage, and the MK never runs out).
+            player.GetComponentInChildren<Health>()?.SetInvulnerable(true);
             Door = FindFirstObjectByType<LockedDoor>();
             GameObject shooterObject = GameObject.Find(shooterTargetName);
             Shooter = shooterObject != null ? shooterObject.GetComponent<DummyShooter>() : null;
@@ -133,6 +145,12 @@ namespace GlorifiedBody.Tutorial
             SetGunActive(false);
             shield = FindFirstObjectByType<EnemyShield>(FindObjectsInactive.Include);
             if (shield != null) shield.enabled = false;
+            foreach (string dummyName in dummyNames)
+            {
+                GameObject d = GameObject.Find(dummyName);
+                LockOnTargetable t = d != null ? d.GetComponent<LockOnTargetable>() : null;
+                if (t != null) dummies.Add((t, t.transform.position, t.transform.rotation));
+            }
             Cover = FindObjectsByType<Breakable>(FindObjectsInactive.Include, FindObjectsSortMode.None).FirstOrDefault(b => b.name == coverName);
             if (Cover != null && !Cover.IsBroken) Cover.gameObject.SetActive(false);
             EnemyGrenade.OnBurst += OnGrenadeBurst;
@@ -273,7 +291,7 @@ namespace GlorifiedBody.Tutorial
                 onEnter: () => { if (Cover != null) Cover.gameObject.SetActive(true); }));
             steps.Add(new TutorialStep("capsule",
                 "A capsule lies by the bars. Take it. Use it.",
-                "Face the capsule. {Interact} asks, {Interact} again takes it. {UseDrug} uses it: the bars refill.",
+                "Face the capsule. {Interact} asks, {Interact} again takes it. {UseDrug} opens your drugs: {Interact} asks, {Interact} again uses it, the bars refill.",
                 () => drugUsed));
             steps.Add(new TutorialStep("log",
                 "A record was left by the wall. Take it. Read it.",
@@ -301,7 +319,7 @@ namespace GlorifiedBody.Tutorial
                 () => monitorsScanned));
             steps.Add(new TutorialStep("short",
                 "The overflow. Your bar is full: the next faculty shorts. A capsule ends it.",
-                "{Charge} starts the short. {UseDrug} ends it.",
+                "{Charge} starts the short. {UseDrug} opens your drugs: {Interact} twice ends it.",
                 () => shortBegan && shortEnded,
                 onEnter: () =>
                 {
@@ -342,7 +360,34 @@ namespace GlorifiedBody.Tutorial
                 Advance();
                 return;
             }
+            if (stats != null && stats.Nalcon < PsychicStats.MaxNalcon) stats.DebugSet(PsychicStats.MaxNalcon, stats.Short);
+            if (Current.Id == "short") RearmShort();
             if (Current.IsDone != null && Current.IsDone()) Advance();
+        }
+
+        /// <summary>
+        /// The short step keeps what it needs (Bruno, 2026-10-24: a drug before the short soft-locked it: the drug
+        /// empties the bar and was the only one). Before the short: a full bar. Until the short ends: a drug.
+        /// </summary>
+        private void RearmShort()
+        {
+            if (stats != null && !shortBegan && !stats.IsShortFull && (shortController == null || !shortController.IsActive))
+                stats.DebugSet(stats.Nalcon, PsychicStats.MaxShort);
+            if (drugs != null && !shortEnded && drugs.Count(DrugType.Nalcon) == 0) drugs.Add(DrugType.Nalcon, 1);
+        }
+
+        /// <summary>Every dummy back at its place, lift dropped; only one shown in a weapon step.</summary>
+        private void ResetDummies(string only)
+        {
+            foreach ((LockOnTargetable target, Vector3 position, Quaternion rotation) in dummies)
+            {
+                if (target == null) continue;
+                TelekinesisLift lift = target.GetComponent<TelekinesisLift>();
+                if (lift != null) DestroyImmediate(lift);
+                target.transform.SetPositionAndRotation(position, rotation);
+                target.gameObject.SetActive(only == null || target.name == only);
+            }
+            Physics.SyncTransforms();
         }
 
         /// <summary>The current step ends now (done, or skipped by the debug key). Tests and the bot do not call it: they do the thing.</summary>
@@ -368,6 +413,7 @@ namespace GlorifiedBody.Tutorial
             targetChanges = 0;
             firedKind = null;
             firedCharge = 0f;
+            ResetDummies(OnlyDummy.TryGetValue(Current.Id, out string only) ? only : null);
             Current.OnEnter?.Invoke();
             RunTelemetry.Event("tutorial_step", Current.Id);
             OnStepChanged?.Invoke(Current);

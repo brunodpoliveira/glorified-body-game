@@ -48,6 +48,44 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.IsNotNull(director, "the TutorialDirector in the gym");
         }
 
+        /// <summary>Bruno (2026-10-24): the tutorial is a safe room: no damage, and the MK never runs out.</summary>
+        [UnityTest]
+        public IEnumerator TheGym_NoDamage_AndTheMkStaysFull()
+        {
+            GameObject lucy = GameObject.FindGameObjectWithTag("Player");
+            var health = lucy.GetComponentInChildren<GlorifiedBody.Core.Health>();
+            var stats = lucy.GetComponent<GlorifiedBody.Player.PsychicStats>();
+            float hp = health.CurrentHealth;
+            health.TakeDamage(30f);
+            stats.DebugSet(10f, stats.Short);
+            yield return null;
+            yield return null;
+            Assert.AreEqual(hp, health.CurrentHealth, 0.01f, "no damage in the tutorial");
+            Assert.AreEqual(GlorifiedBody.Player.PsychicStats.MaxNalcon, stats.Nalcon, 0.01f, "the MK is full again");
+        }
+
+        /// <summary>
+        /// Bruno's report (2026-10-24): in the short step, a drug used before the short soft-locks the step (the drug
+        /// empties the SHORT bar and was the only one). The step must still end.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator ShortStep_ADrugFirst_DoesNotSoftLockTheStep()
+        {
+            while (director.Current != null && director.Current.Id != "short") director.Advance();
+            Assert.AreEqual("short", director.Current.Id);
+            yield return null;
+            GameObject lucy = GameObject.FindGameObjectWithTag("Player");
+            var powers = lucy.GetComponent<GlorifiedBody.Player.PsychicPowers>();
+            var stats = lucy.GetComponent<GlorifiedBody.Player.PsychicStats>();
+            var drugs = lucy.GetComponent<GlorifiedBody.Player.DrugInventory>();
+            Assert.IsTrue(stats.IsShortFull, "the step fills the bar");
+            Assert.IsTrue(powers.UseDrug(GlorifiedBody.Player.DrugType.Nalcon), "the drug before the short");
+            yield return new WaitForSeconds(0.5f);
+            Debug.Log($"[TutorialTests] after the drug: short {stats.Short:0}, nalcon drugs {drugs.Count(GlorifiedBody.Player.DrugType.Nalcon)}");
+            Assert.IsTrue(stats.IsShortFull, "the bar is full again: the short can start");
+            Assert.Greater(drugs.Count(GlorifiedBody.Player.DrugType.Nalcon), 0, "a drug to end it");
+        }
+
         [UnityTest]
         public IEnumerator TheGym_Loads_WithTheDirectorThePromptTheTargetsAndTheBakedLight()
         {

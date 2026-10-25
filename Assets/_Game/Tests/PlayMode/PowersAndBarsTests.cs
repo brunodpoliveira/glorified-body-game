@@ -614,9 +614,7 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.IsFalse(health.IsSecondWindAvailable, "the second wind is used up");
 
             drugs.DebugSet(DrugType.Nalcon, 1);
-            pad.Tap(InputManager.GameAction.UseDrug);
-            yield return null;
-            yield return null;
+            yield return DrugPress.TakeFirst(pad); // the drug key opens the choice: it asks, then it takes
             Assert.AreEqual(health.MaxHealth, health.CurrentHealth, 0.01f, "the drug refills her");
             Assert.IsFalse(health.IsSecondWindAvailable, "but the second wind stays used");
 
@@ -696,9 +694,7 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.Less(health.CurrentHealth, hpMax - 2f, "the shocks hurt her");
             Assert.GreaterOrEqual(health.CurrentHealth, 1f, "the short never kills her");
 
-            pad.Tap(InputManager.GameAction.UseDrug);
-            yield return null;
-            yield return null;
+            yield return DrugPress.TakeFirst(pad); // the drug key opens the choice: it asks, then it takes
             Assert.IsFalse(shortController.IsActive, "the drug ends the short");
             Assert.AreEqual(hpMax, health.CurrentHealth, 0.01f, "HP refilled");
             Assert.AreEqual(PsychicStats.MaxNalcon, stats.Nalcon, 0.01f, "nalcon refilled");
@@ -743,9 +739,7 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.AreEqual(PsychicStats.MaxShort, stats.Short, 0.001f, "damage keeps it full");
 
             drugs.DebugSet(DrugType.Red, 1);
-            pad.Tap(InputManager.GameAction.UseDrug);
-            yield return null;
-            yield return null;
+            yield return DrugPress.TakeFirst(pad); // the drug key opens the choice: it asks, then it takes
             Assert.AreEqual(0f, stats.Short, 0.01f, "a drug empties the full bar, short or not");
             Assert.IsFalse(shortController.IsActive, "no short ran");
 

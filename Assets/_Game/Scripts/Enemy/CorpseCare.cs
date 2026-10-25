@@ -285,9 +285,15 @@ namespace GlorifiedBody.Enemy
             Bark.Say(gameObject, "STAY WITH ME!"); // PLACEHOLDER line
         }
 
+        /// <summary>Debug (F12): the care counts her as unseen, so a colleague tends a body in an open room (Bruno, 2026-10-24: "B9 is really hard to test").</summary>
+        public static bool DebugHidden;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetDebugHidden() => DebugHidden = false;
+
         private bool SeesHer()
         {
-            if (player == null) return false;
+            if (player == null || DebugHidden) return false;
             Vector3 eye = transform.position + Vector3.up * 1.6f;
             Vector3 her = player.position + Vector3.up * GlorifiedBody.Characters.Body.ChestHeight;
             if (Vector3.Distance(eye, her) > 20f) return false;

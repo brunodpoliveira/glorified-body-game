@@ -454,8 +454,28 @@ namespace GlorifiedBody.Gore.ThatIndividual
             }
 
             float scale = Random.Range(profile.floorStainScale.x, profile.floorStainScale.y) * sizeBoost;
+            // The floor blood stays for the room (Bruno, 2026-10-24): a flat stain, not a pooled particle that dies
+            // in 6 s. A pool prefab takes the dark body-pool look, a splatter keeps its own stain.
+            GameObject prefab = Pick(profile.floorStains);
+            Material material = StainMaterial(prefab);
+            if (material != null)
+            {
+                FloorStains.Lay(material, surface.point, surface.normal, scale * FloorStainMetres);
+                return;
+            }
             Quaternion rot = ThatIndividualGoreRules.StainRotation(surface.normal, Random.Range(0f, 360f));
             SpawnStain(profile.floorStains, surface.point + surface.normal * profile.surfaceOffset, rot, scale);
+        }
+
+        private const float FloorStainMetres = 0.45f; // a stain of scale 1 is about 0.45 m across, PROPOSED
+
+        private Material StainMaterial(GameObject prefab)
+        {
+            if (prefab == null) return null;
+            if (prefab.name.Contains("Pool") && profile.bodyPoolMaterials != null && profile.bodyPoolMaterials.Length > 0)
+                return profile.bodyPoolMaterials[Random.Range(0, profile.bodyPoolMaterials.Length)];
+            ParticleSystemRenderer renderer = prefab.GetComponentInChildren<ParticleSystemRenderer>(true);
+            return renderer != null ? renderer.sharedMaterial : null;
         }
 
         private void TryWallStain(Vector3 point, Vector3 sprayDir, Transform victimRoot, float chance)

@@ -34,6 +34,7 @@ namespace GlorifiedBody.Enemy
         [SerializeField, Min(1f)] private float range = 10f;
         [SerializeField, Min(0f)] private float aimSeconds = 0.5f;
         [SerializeField, Min(0.1f)] private float telegraphSeconds = 1.0f;
+        public const float MeleeWindowShare = 0.5f; // a strike's warning is half a shot's, PROPOSED
         [SerializeField, Min(0f)] private float cooldownSeconds = 2.5f;
         [SerializeField, Min(0.1f)] private float projectileSpeed = 12f;
         [SerializeField, Min(0f)] private float projectileDamage = 15f;
@@ -191,6 +192,13 @@ namespace GlorifiedBody.Enemy
                     {
                         CurrentAttack = next;
                         SplitTiming(out float aim, out telegraphLength);
+                        if (next == Attack.Melee)
+                        {
+                            // A strike gives less warning than a shot (Bruno, 2026-10-24: "melee attack should have
+                            // smaller window than projectile attack").
+                            aim *= MeleeWindowShare;
+                            telegraphLength = Mathf.Max(0.1f, telegraphLength * MeleeWindowShare);
+                        }
                         Current = State.Aiming;
                         timer = aim;
                         aimPoint = AimFor(next, chest);

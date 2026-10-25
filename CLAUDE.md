@@ -185,6 +185,11 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
     only like the AI test room) and its "cover" bot. Tutorial: 22 steps (cover: break the barricade in front of
     `Target_3`). His answers: a dark room is only a look (no mechanic), the thrown arc stays, the sprays are the
     vendor's textured ones (`GoreSprayLook`, smoothness capped at 0.55). OPEN: the sound source (RFab gap 14).
+- 2026-10-24, late, his first manual test of the day (`devlog-notes/2026-10-24_test_feedback.md`): long guns in both
+  hands (`EnemyGun.HoldWithLeftHand`), one flash per shot, melee warning half a shot's, floor blood that stays
+  (`FloorStains`), F12 makes the care count her as unseen, tall screens for her cover, weaker tables beside the
+  barricades, a thrown body breaks any cover, the tutorial is a safe room (no damage, MK full) with one dummy per
+  weapon step, Q opens the drug choice (E asks, E takes), the short step cannot soft-lock.
 
 ## Rules
 

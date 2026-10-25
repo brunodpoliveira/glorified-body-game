@@ -99,7 +99,8 @@ namespace GlorifiedBody.Player
             if (GameInput.GetActionDown(InputManager.GameAction.PowerBlast, KeyCode.Alpha1)) Select(PowerKind.Blast);
             if (GameInput.GetActionDown(InputManager.GameAction.PowerFire, KeyCode.Alpha2)) Select(PowerKind.Fire);
             if (GameInput.GetActionDown(InputManager.GameAction.PowerTelekinesis, KeyCode.Alpha3)) Select(PowerKind.Telekinesis);
-            if (GameInput.GetActionDown(InputManager.GameAction.UseDrug, KeyCode.Q)) UseDrug();
+            // The drug key opens the drug choice where the room has one (InventoryUI); else it takes a drug.
+            if (GameInput.GetActionDown(InputManager.GameAction.UseDrug, KeyCode.Q) && (OpenDrugMenu == null || !OpenDrugMenu())) UseDrug();
 
             // A full SHORT bar (Bruno, 2026-10-20): the attack press or the defend press starts the short at once.
             // That press does nothing else: no charge, no throw, no catch.
@@ -292,10 +293,16 @@ namespace GlorifiedBody.Player
             OnChanged?.Invoke();
         }
 
+        /// <summary>The drug choice of the room (InventoryUI sets it). True when it opened.</summary>
+        public static Func<bool> OpenDrugMenu;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetDrugMenu() => OpenDrugMenu = null;
+
         public const float BlastKnockdownSeconds = 2.5f; // Bruno, 2026-10-24
         public const float BlastKnockdownPush = 4f;      // m/s away from her, PROPOSED
         // The collateral damage of a power (the breakable cover, 2026-10-24), PROPOSED.
-        public const float BlastSplashRadius = 1f;       // m around the lock point
+        public const float BlastSplashRadius = 1.2f;     // m around the lock point
         public const float BlastSplashPerCharge = 0.8f;  // m more at a full circle
         public const float BlastSplashShare = 0.6f;      // of the power's damage, at the centre
         public const float CoverSplashRadius = 0.8f;     // m around the point where the cover took it

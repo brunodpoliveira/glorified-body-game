@@ -222,7 +222,7 @@ namespace GlorifiedBody.Automation
                     }
                     yield return BotClock.Wait(0.2f);
                     int before = c.Drugs != null ? c.Drugs.Count(DrugType.Nalcon) : -1;
-                    c.Pad.Tap(InputManager.GameAction.UseDrug);
+                    yield return DrugPress.TakeFirst(c.Pad);
                     yield return BotClock.Wait(0.2f);
                     Debug.Log($"[TutorialDrive] capsule: at {c.Lucy.position}, capsule {(GameObject.Find("Capsule") != null ? "still there" : "taken")}, nalcon drugs before the use {before}, result '{c.Powers?.LastResult}'.");
                     break;
@@ -284,7 +284,7 @@ namespace GlorifiedBody.Automation
                 case "short":
                     c.Pad.Tap(InputManager.GameAction.Charge);
                     yield return BotClock.Wait(1.2f);
-                    c.Pad.Tap(InputManager.GameAction.UseDrug);
+                    yield return DrugPress.TakeFirst(c.Pad);
                     yield return BotClock.Wait(0.3f);
                     break;
                 default:

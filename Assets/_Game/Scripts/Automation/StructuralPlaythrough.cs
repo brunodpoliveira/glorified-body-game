@@ -496,9 +496,7 @@ namespace GlorifiedBody.Automation
             PlayerHud hud = FindFirstObjectByType<PlayerHud>();
             if (hud != null && hud.Canvas != null) yield return OverlayShot.Capture(hud.Canvas, "hud_short.png", 0.1f);
             float hpDuring = playerHealth.CurrentHealth;
-            pad.Tap(InputManager.GameAction.UseDrug);
-            yield return null;
-            yield return null;
+            yield return DrugPress.TakeFirst(pad); // the drug key opens the choice: it asks, then it takes
             Record("short_and_drug", shortBegan && hpDuring < hpBefore - 2f && !shortController.IsActive && !tank.SlowWalk && playerHealth.CurrentHealth >= playerHealth.MaxHealth - 0.5f,
                 $"began={shortBegan} hp {hpBefore:0} -> {hpDuring:0} -> {playerHealth.CurrentHealth:0} ended={!shortController.IsActive} slow={tank.SlowWalk} drugs={drugs.Count(DrugType.Nalcon)}");
             if (hud != null && hud.Canvas != null) yield return OverlayShot.Capture(hud.Canvas, "hud.png", 0.2f);
