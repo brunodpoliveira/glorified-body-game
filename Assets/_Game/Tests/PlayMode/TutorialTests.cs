@@ -115,6 +115,36 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.AreNotEqual("log", director.Current.Id, "the log step ended");
         }
 
+        /// <summary>
+        /// Bruno's question (2026-10-25): must she lock the gun dummy to catch its bullet? The lock stays on another
+        /// dummy, and the catch press (the same call as the defend key) must still end the step.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator CatchStep_TheLockOnAnotherDummy_TheCatchStillWorks()
+        {
+            while (director.Current != null && director.Current.Id != "catch") director.Advance();
+            GameObject lucy = GameObject.FindGameObjectWithTag("Player");
+            var powers = lucy.GetComponent<GlorifiedBody.Player.PsychicPowers>();
+            var lockOn = lucy.GetComponent<GlorifiedBody.Player.LockOnController>();
+            powers.Select(GlorifiedBody.Player.PowerKind.Telekinesis);
+            LockOnTargetable other = GameObject.Find("Target_1").GetComponent<LockOnTargetable>();
+            Vector3 chest = lucy.transform.position + Vector3.up * GlorifiedBody.Characters.Body.ChestHeight;
+            EnemyProjectile near = null;
+            float t0 = Time.time;
+            while (near == null && Time.time - t0 < 15f)
+            {
+                lockOn.SetTarget(other);
+                chest = lucy.transform.position + Vector3.up * GlorifiedBody.Characters.Body.ChestHeight;
+                near = UnityEngine.Object.FindObjectsByType<EnemyProjectile>(FindObjectsSortMode.None).FirstOrDefault(b => b.Catchable && Vector3.Distance(b.transform.position, chest) < 2f);
+                yield return null;
+            }
+            Assert.IsNotNull(near, "a bullet came within 2 m of her");
+            Assert.AreSame(other, lockOn.CurrentTarget, "the lock is on Target_1, not on the gun");
+            Assert.IsTrue(powers.TryCatchBullet(), "the catch works with the lock on another dummy");
+            yield return null;
+            Assert.AreNotEqual("catch", director.Current.Id, "the catch step ended");
+        }
+
         /// <summary>The capsule used before its step: the step gives a drug, so it can still end.</summary>
         [UnityTest]
         public IEnumerator CapsuleStep_TheCapsuleUsedEarly_DoesNotSoftLockTheStep()
