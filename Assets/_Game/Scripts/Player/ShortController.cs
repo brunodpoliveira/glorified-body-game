@@ -1,10 +1,13 @@
 using System;
 using System.Collections;
 using UnityEngine;
+using GlorifiedBody.Characters;
 using GlorifiedBody.Combat;
 using GlorifiedBody.Core;
 using GlorifiedBody.DebugTools;
 using GlorifiedBody.Destruction;
+using GlorifiedBody.Enemy;
+using GlorifiedBody.Systems;
 
 namespace GlorifiedBody.Player
 {
@@ -18,6 +21,10 @@ namespace GlorifiedBody.Player
     /// a gruesome manner"): every shock hits one victim, the nearest live enemy in the radius, and stays on it
     /// until it dies or leaves the radius. Then the next nearest. A shock-immune target (the bosses) is never
     /// a victim.
+    /// Bruno, 2026-10-25: "the freeze/pain anim on the player is only at the start of the shock, to indicate to the
+    /// player that the shock status has commenced"; "the shock should also stun the victim"; "placeholder zap, then
+    /// real sound". So the start freezes the game for a moment while Lucy plays a pain clip (unscaled time), and
+    /// every shock draws an arc from her to the victim, plays the zap there, stuns it and jolts its body.
     /// </summary>
     [RequireComponent(typeof(PsychicStats))]
     public sealed class ShortController : MonoBehaviour
@@ -29,6 +36,11 @@ namespace GlorifiedBody.Player
         [SerializeField, Range(0f, 1f)] private float selfHpFraction = 0.5f;
 
         private const float SurgeRadius = 5f; // the lamps the short's start pops, PROPOSED
+        private const float StartFreeze = 0.6f;    // s of frozen game at the start, PROPOSED
+        private const float StartRecovery = 0.2f;  // s back to full speed
+        public const string ZapPath = "Audio/short_zap"; // Resources: the placeholder zap (ffmpeg, 2026-10-25)
+        /// <summary>A shock stuns its victim a little longer than the gap to the next shock: a stun with no break.</summary>
+        public float StunSeconds => shockInterval + 0.2f;
 
         private PsychicStats stats;
         private Health health;
@@ -41,6 +53,10 @@ namespace GlorifiedBody.Player
         /// <summary>The enemy the shocks hit now. Null when nobody is in the radius.</summary>
         public Health Victim { get; private set; }
         public float Duration => duration;
+        /// <summary>The start's freeze and pain ran this many times (the tests).</summary>
+        public int StartPains { get; private set; }
+        public int Zaps { get; private set; }
+        public int Arcs { get; private set; }
 
         public event Action OnShortBegan;
         public event Action OnShortEnded;
@@ -70,8 +86,21 @@ namespace GlorifiedBody.Player
             RunTelemetry.Event("short_begin", $"hp={health.CurrentHealth:0}");
             // The surge pops the lamps near her (the breakable cover, 2026-10-24, PROPOSED).
             Breakables.Surge(transform.position + Vector3.up * 1.5f, SurgeRadius);
+            StartPain();
             OnShortBegan?.Invoke();
             StartCoroutine(Run());
+        }
+
+        /// <summary>The migraine hits: the game freezes for a moment, and Lucy's pain clip plays through it.</summary>
+        private void StartPain()
+        {
+            StartPains++;
+            ImpactFrameController.Instance?.RequestImpactFrame(StartFreeze, StartRecovery);
+            PoseClips clips = PoseClips.Load();
+            Animator animator = GetComponentInChildren<Animator>();
+            if (clips == null || clips.lucyPain == null || animator == null) return;
+            PoseOverride pose = animator.GetComponent<PoseOverride>() ?? animator.gameObject.AddComponent<PoseOverride>();
+            pose.Play(clips.lucyPain, loop: false, unscaledTime: true);
         }
 
         /// <summary>Ends the short. A drug ends it early and refills her (the caller refills).</summary>
@@ -121,6 +150,22 @@ namespace GlorifiedBody.Player
                     DamageType = DamageType.ShortShock,
                     WasFatal = other.IsDead
                 });
+                // Who it hits (Bruno: "as of now it is not clear who the shock is damaging"): the arc, the zap, the
+                // stun, the jolt.
+                Vector3 victimChest = other.transform.position + Vector3.up * GlorifiedBody.Characters.Body.ChestHeight;
+                ShockArc.Show(origin + Vector3.up * GlorifiedBody.Characters.Body.ChestHeight, victimChest);
+                Arcs++;
+                if (PlayZap(victimChest)) Zaps++;
+                if (!other.IsDead)
+                {
+                    other.GetComponentInParent<IStaggerable>()?.Stagger(StunSeconds);
+                    Animator body = other.GetComponentInChildren<Animator>();
+                    if (body != null && body.isHuman)
+                    {
+                        Tremble tremble = body.GetComponent<Tremble>() ?? body.gameObject.AddComponent<Tremble>();
+                        tremble.Jolt(StunSeconds);
+                    }
+                }
             }
 
             // The migraine: it never kills her by itself, it stops at 1 HP. Invulnerable frames (the second wind)
@@ -164,6 +209,39 @@ namespace GlorifiedBody.Player
                 bestDistance = distance;
             }
             return best;
+        }
+
+        private static AudioClip zap;
+        private static bool zapLoaded;
+
+        /// <summary>The zap at the victim (a 3D one-shot). False when the clip is missing.</summary>
+        private static bool PlayZap(Vector3 at)
+        {
+            if (!zapLoaded)
+            {
+                zap = Resources.Load<AudioClip>(ZapPath);
+                zapLoaded = true;
+            }
+            if (zap == null) return false;
+            var obj = new GameObject("ShortZap");
+            obj.transform.position = at;
+            var source = obj.AddComponent<AudioSource>();
+            source.clip = zap;
+            source.spatialBlend = 1f;
+            source.dopplerLevel = 0f;
+            source.minDistance = 1.5f;
+            source.maxDistance = 30f;
+            source.pitch = UnityEngine.Random.Range(0.9f, 1.1f);
+            source.Play();
+            Destroy(obj, zap.length + 0.1f);
+            return true;
+        }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetZap()
+        {
+            zap = null;
+            zapLoaded = false;
         }
 
         private static void Spark(Vector3 at)

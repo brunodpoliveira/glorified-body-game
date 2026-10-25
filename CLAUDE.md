@@ -212,6 +212,13 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   `ShotEffects.SpawnSilent` turns off the vendor prefabs' own sources (the impact clip opens with a gunshot), one
   family of shots per gun. The short starts when the bar fills during a held charge. STUDIES (not built):
   `2026-10-25_study_wall_lean_shock_pain.md`. FOR LATER: replace the placeholder fire and shock effects.
+- 2026-10-25, evening (`devlog-notes/2026-10-25_poses_short_pain.md`): only a kill makes a civilian run (a hurt alerts).
+  No collars on lab workers. RFab fear presets (`afraid`, `scared_01`, `scared_02`) on the lab worker:
+  `Models/labworker_fear.fbx`, played over the controller by `PoseOverride` from `Resources/Characters/pose_clips`
+  (`CreateCharacterAssets.BuildPoseClips`). Each civilian has a pose variant: crouch, wall lean (`WallLean`: level rays
+  find the wall, the skeleton moves back to it), self-hug, shaking stance. The short's start freezes the game 0.6 s
+  while Lucy plays a pain clip; each shock arcs to its victim (`ShockArc`), zaps (`Resources/Audio/short_zap.wav`,
+  placeholder), stuns it (`IStaggerable`, civilians too) and jolts it (`Tremble.Jolt`).
 
 ## Rules
 

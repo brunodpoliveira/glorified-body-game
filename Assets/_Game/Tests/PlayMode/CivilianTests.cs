@@ -269,13 +269,77 @@ namespace GlorifiedBody.Tests.PlayMode
             yield return null;
             ShortController shortController = lucy.GetComponent<ShortController>();
             shortController.Begin();
-            yield return new WaitForSeconds(0.5f);
+            yield return new WaitForSecondsRealtime(0.3f); // the first shock lands before the start's freeze
             Health victim = shortController.Victim;
             Debug.Log($"[CivilianTests] short victim: {(victim != null ? victim.name : "none")}");
             Assert.IsNotNull(victim, "the short found a victim");
-            Assert.IsNotNull(victim.GetComponent<CivilianBrain>(), "the victim is a civilian");
+            CivilianBrain civilian = victim.GetComponent<CivilianBrain>();
+            Assert.IsNotNull(civilian, "the victim is a civilian");
             Assert.Less(victim.CurrentHealth, victim.MaxHealth, "the shocks hurt it");
+            // Bruno, 2026-10-25: "the shock should also stun the victim".
+            Assert.IsTrue(civilian.Stunned, "the shock stuns it");
+            Assert.IsTrue(civilian.Tremble.Jolting, "its body jolts");
             shortController.End(byDrug: false);
+        }
+
+        [UnityTest]
+        public IEnumerator AHurt_AlertsThem_OnlyAKillMakesThemRun()
+        {
+            // Bruno, 2026-10-25: "after a kill; the civvies will have low enough health that a direct hit will kill a
+            // civvie anyway".
+            guard.gameObject.SetActive(false);
+            CivilianBrain lab = Find("Lab_A");
+            Hide();
+            yield return new WaitForSeconds(0.3f);
+            lab.GetComponent<Health>().TakeDamage(5f);
+            yield return new WaitForSeconds(0.5f);
+            Debug.Log($"[CivilianTests] hurt: {lab.AlertReason}, phase {lab.Current}, panicked {lab.Panicked}");
+            Assert.IsTrue(lab.Alerted, "the hurt alerts it");
+            Assert.IsFalse(lab.Panicked, "a hurt is no kill: no panic");
+            Assert.AreEqual(CivilianBrain.Phase.Wary, lab.Current, "it stays wary");
+        }
+
+        [UnityTest]
+        public IEnumerator Wary_Standing_Startles_ThenTakesAFearStance()
+        {
+            // The RFab presets on the lab worker (2026-10-25): afraid once, then scared_01 or scared_02 in a loop.
+            CivilianBrain lab = Find("Lab_A");
+            Hide();
+            yield return null;
+            lab.Alert("test", callOthers: false);
+            yield return WaitUntil(() => lab.CurrentPose == CivilianBrain.Pose.Startle, 2f);
+            var clips = GlorifiedBody.Characters.PoseClips.Load();
+            Assert.AreEqual(CivilianBrain.Pose.Startle, lab.CurrentPose, "a startle first");
+            Assert.AreEqual(clips.afraid, lab.PoseOverride.Current, "the afraid clip");
+            yield return new WaitForSeconds(clips.afraid.length + 0.5f);
+            Debug.Log($"[CivilianTests] wary stance: {lab.CurrentPose}, clip {(lab.PoseOverride.Current != null ? lab.PoseOverride.Current.name : "none")}");
+            Assert.That(lab.CurrentPose, Is.EqualTo(CivilianBrain.Pose.Shake).Or.EqualTo(CivilianBrain.Pose.Hug), "then a fear stance");
+            Assert.IsTrue(lab.PoseOverride.Current == clips.scared01 || lab.PoseOverride.Current == clips.scared02, "a scared clip in a loop");
+        }
+
+        [UnityTest]
+        public IEnumerator Panicked_TheyTakeDifferentPoses_OneLeansOnTheWall()
+        {
+            // Bruno, 2026-10-25: "the lean should be added; the multiple poses is to add more dynamicism to the
+            // scene, to avoid multiple npcs of being in exact same pose".
+            guard.gameObject.SetActive(false);
+            CivilianBrain a = Find("Lab_A");
+            CivilianBrain b = Find("Lab_B");
+            a.SetVariant(1);
+            b.SetVariant(2);
+            Teleport(new Vector3(-2.5f, 0f, 0.5f));
+            yield return new WaitForSeconds(0.5f);
+            a.Panic("test");
+            b.Panic("test");
+            yield return WaitUntil(() => a.Current == CivilianBrain.Phase.Cower && b.Current == CivilianBrain.Phase.Cower, 15f);
+            yield return new WaitForSeconds(1f);
+            Debug.Log($"[CivilianTests] poses: {a.name} {a.Current}/{a.CurrentPose} lean {a.Lean.Weight:0.00} hips gap {a.Lean.LastHipsGap:0.00} m at {a.transform.position.x:0.0},{a.transform.position.z:0.0}; {b.name} {b.Current}/{b.CurrentPose}");
+            Assert.AreEqual(CivilianBrain.Phase.Cower, a.Current);
+            Assert.AreEqual(CivilianBrain.Pose.Lean, a.CurrentPose, "the lean variant: its back on the wall");
+            Assert.AreEqual(1f, a.Lean.Weight, 0.01f, "fully leaning");
+            Assert.Less(a.Lean.LastHipsGap, 0.3f, "the hips at the wall");
+            Assert.AreEqual(CivilianBrain.Pose.Hug, b.CurrentPose, "the self-hug variant");
+            Assert.AreEqual(GlorifiedBody.Characters.PoseClips.Load().scared02, b.PoseOverride.Current, "the scared_02 clip");
         }
 
         // ── Helpers ───────────────────────────────────────────────────

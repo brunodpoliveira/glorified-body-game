@@ -5,7 +5,9 @@ profile but have no cover available, kinda like the guy in white on the screenca
 have an anim of the char in pain (time freezes, the anim plays out) and a shock sfx from the player going onto the
 enemy/entity it is damaging (as of now it is not clear who the shock is damaging)".
 
-These are studies only. Each part waits for his go.
+These were studies. Bruno answered the same evening, and the build is in `2026-10-25_poses_short_pain.md`. In
+short: the lean is one more pose, made by code. The RFab fear presets are bought. The freeze and the pain play on Lucy
+at the start of the short only. The shock stuns its victim. The zap is a placeholder for now.
 
 ## Study A: the wall lean
 

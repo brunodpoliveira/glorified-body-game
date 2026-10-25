@@ -135,6 +135,15 @@ namespace GlorifiedBody.Automation
             CloseShot(nurse.transform.position + Vector3.up * 0.9f, Vector3.back + Vector3.left * 0.6f, Path.Combine(shots, "civ_04_cornered.png"), 2.4f, 0.6f);
             Record("civ_cornered", nurse.Current == CivilianBrain.Phase.Beg, $"{nurse.name} {nurse.Current} begs={nurse.Begs}");
 
+            // She is 10 m from Lab_A now: it stands and watches her in a fear stance (an RFab preset).
+            t0 = BotClock.Now;
+            while (!(lab.CurrentPose == CivilianBrain.Pose.Shake || lab.CurrentPose == CivilianBrain.Pose.Hug) && BotClock.Now - t0 < 6f) yield return null;
+            yield return BotClock.Wait(0.8f);
+            CloseShot(lab.transform.position + Vector3.up * 0.9f, Quaternion.Euler(0f, -40f, 0f) * ToMiddle(lab.transform.position), Path.Combine(shots, "civ_04b_wary_stance.png"), 2.6f, 0.4f);
+            Record("civ_stance", lab.CurrentPose == CivilianBrain.Pose.Shake || lab.CurrentPose == CivilianBrain.Pose.Hug,
+                $"{lab.name} {lab.Current}/{lab.CurrentPose} clip={(lab.PoseOverride.Current != null ? lab.PoseOverride.Current.name : "none")}");
+            lab.SetVariant(1); // its cower: the back flat on a wall
+
             // She kills Lab_B with a full mk_warspite: the witnesses panic, run and cower.
             tank.Teleport(middle, 0f);
             yield return BotClock.Wait(0.8f);
@@ -159,8 +168,10 @@ namespace GlorifiedBody.Automation
             while (lab.Current != CivilianBrain.Phase.Cower && BotClock.Now - t0 < 12f) yield return null;
             yield return BotClock.Wait(0.8f);
             chest = lab.transform.position + Vector3.up * 0.9f;
-            CloseShot(chest, ToMiddle(lab.transform.position), Path.Combine(shots, "civ_06_cower.png"), 2.4f, 0.4f);
-            Record("civ_cower", lab.Current == CivilianBrain.Phase.Cower, $"{lab.name} {lab.Current} at {lab.transform.position.x:0.0},{lab.transform.position.z:0.0}");
+            Vector3 view = lab.CurrentPose == CivilianBrain.Pose.Lean ? Quaternion.Euler(0f, 35f, 0f) * lab.Lean.WallNormal : ToMiddle(lab.transform.position);
+            CloseShot(chest, view, Path.Combine(shots, "civ_06_cower.png"), 2.6f, 0.4f);
+            Record("civ_cower", lab.Current == CivilianBrain.Phase.Cower && lab.CurrentPose == CivilianBrain.Pose.Lean,
+                $"{lab.name} {lab.Current}/{lab.CurrentPose} lean={lab.Lean.Weight:0.00} hips gap={lab.Lean.LastHipsGap:0.00} m at {lab.transform.position.x:0.0},{lab.transform.position.z:0.0}");
 
             // The nurse tends the body with her in plain sight: the drag, then the CPR.
             CorpseCare care = nurse.GetComponent<CorpseCare>();
@@ -174,6 +185,33 @@ namespace GlorifiedBody.Automation
             if (care.Patient != null) CloseShot(care.Patient.position + Vector3.up * 0.5f, Vector3.left + Vector3.back, Path.Combine(shots, "civ_08_nurse_cpr.png"), 3.2f, 1.2f);
             Record("civ_nurse_care", care.Current == CorpseCare.Step.Cpr && care.Patient == victim.transform && care.Dragged > 1f,
                 $"{nurse.name} {care.Current} dragged={care.Dragged:0.0} m patient={(care.Patient != null ? care.Patient.name : "none")}");
+
+            // The short near the nurse: the start freezes the game while Lucy shows pain, then each shock arcs to its
+            // victim, zaps and stuns it (Bruno, 2026-10-25).
+            ShortController shortController = lucy.GetComponent<ShortController>();
+            Vector3 toNurse = nurse.transform.position - lucy.transform.position;
+            toNurse.y = 0f;
+            tank.Teleport(nurse.transform.position - toNurse.normalized * 2.5f, Quaternion.LookRotation(toNurse).eulerAngles.y);
+            yield return BotClock.Wait(0.3f);
+            stats.DebugSet(stats.Nalcon, PsychicStats.MaxShort);
+            shortController.Begin();
+            yield return new WaitForSecondsRealtime(0.25f);
+            bool frozen = Time.timeScale < 0.01f;
+            CloseShot(lucy.transform.position + Vector3.up * 1.1f, lucy.transform.forward + lucy.transform.right * 0.5f, Path.Combine(shots, "civ_09_short_pain.png"), 2.4f, 0.3f);
+            float r0 = Time.realtimeSinceStartup;
+            while (Time.timeScale < 0.999f && Time.realtimeSinceStartup - r0 < 3f) yield return null;
+            r0 = Time.realtimeSinceStartup;
+            while (ShockArc.Alive == 0 && Time.realtimeSinceStartup - r0 < 2f) yield return null;
+            Shot(Path.Combine(shots, "civ_10_short_arc.png"));
+            Health shocked = shortController.Victim;
+            // The nearest one is the victim: the nurse, or the guard when he comes closer.
+            bool stunned = shocked != null && (shocked.IsDead
+                || (shocked.GetComponent<CivilianBrain>() is CivilianBrain sc && sc.Stunned)
+                || (shocked.GetComponent<DummyShooter>() is DummyShooter gun && gun.Current == DummyShooter.State.Staggered));
+            Record("short_start_and_arc", frozen && shortController.StartPains > 0 && shortController.Arcs > 0 && shortController.Zaps > 0 && stunned,
+                $"frozen={frozen} pains={shortController.StartPains} arcs={shortController.Arcs} zaps={shortController.Zaps} victim={(shocked != null ? shocked.name : "none")} stunned={stunned}");
+            shortController.End(byDrug: false);
+            yield return BotClock.Wait(0.5f);
 
             // The guard kills her: the death screen shows his entry.
             tank.Teleport(new Vector3(2f, 0f, -4f), 90f);

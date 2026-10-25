@@ -370,6 +370,54 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator ShortStart_FreezesTheGame_WhileLucyShowsPain()
+        {
+            // Bruno, 2026-10-25: "the freeze/pain anim on the player is only at the start of the shock, to indicate
+            // to the player that the shock status has commenced".
+            int before = shortController.StartPains;
+            shortController.Begin();
+            yield return null;
+            Assert.AreEqual(before + 1, shortController.StartPains, "one start, one pain");
+            Assert.AreEqual(0f, Time.timeScale, 0.001f, "the game freezes at the start");
+            var pose = player.GetComponentInChildren<GlorifiedBody.Characters.PoseOverride>();
+            Assert.IsNotNull(pose, "Lucy has the pose player");
+            Assert.IsTrue(pose.Playing, "the pain plays during the freeze");
+            Assert.AreEqual(GlorifiedBody.Characters.PoseClips.Load().lucyPain, pose.Current, "the pain clip");
+            yield return new WaitForSecondsRealtime(0.3f);
+            Assert.AreEqual(0f, Time.timeScale, 0.001f, "still frozen at 0.3 s");
+            Assert.IsTrue(pose.Playing, "the pain goes on through the freeze (unscaled time)");
+            float t0 = Time.realtimeSinceStartup;
+            while (Time.timeScale < 0.999f && Time.realtimeSinceStartup - t0 < 2f) yield return null;
+            Assert.AreEqual(1f, Time.timeScale, 0.001f, "the game runs again");
+            int shocks = shortController.ShocksFired;
+            yield return new WaitForSeconds(1f);
+            Assert.AreEqual(before + 1, shortController.StartPains, "the shocks freeze nothing");
+            Assert.Greater(shortController.ShocksFired, shocks, "the shocks go on");
+            Assert.AreEqual(1f, Time.timeScale, 0.001f, "no freeze at a shock");
+            shortController.End(byDrug: false);
+        }
+
+        [UnityTest]
+        public IEnumerator Short_EachShock_ArcsToTheVictim_Zaps_AndStunsIt()
+        {
+            // Bruno, 2026-10-25: "a shock sfx from the player going onto the enemy/entity it is damaging (as of now it
+            // is not clear who the shock is damaging)"; "the shock should also stun the victim".
+            DummyShooter gun = dummyA.GetComponent<DummyShooter>();
+            shortController.Begin();
+            yield return new WaitForSecondsRealtime(1.0f); // the start's freeze (0.6 s, then 0.2 s back)
+            yield return new WaitForSeconds(0.3f); // Dummy_A has 50 HP: 12 a shock, so the checks stay under 4 shocks
+            Assert.AreEqual(dummyA.GetComponent<Health>(), shortController.Victim, "Dummy_A is the victim");
+            Assert.Greater(shortController.Arcs, 0, "an arc for each shock");
+            Assert.Greater(shortController.Zaps, 0, "a zap for each shock");
+            Assert.AreEqual(DummyShooter.State.Staggered, gun.Current, "the victim is stunned");
+            int arcs = shortController.Arcs;
+            yield return new WaitForSeconds(shortController.StunSeconds - 0.15f);
+            Assert.Greater(shortController.Arcs, arcs, "the next shock");
+            Assert.AreEqual(DummyShooter.State.Staggered, gun.Current, "the stun holds from shock to shock");
+            shortController.End(byDrug: false);
+        }
+
+        [UnityTest]
         public IEnumerator Short_PassesAShockImmuneTarget()
         {
             // Bruno, 2026-10-23: the bosses are heavy and immune to the shocks.
@@ -670,6 +718,9 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.AreEqual("short", powers.LastResult);
             Assert.AreEqual(0f, powers.Charge, 0.001f, "that press starts no charge");
             pad.ReleaseAll();
+            // The start freezes the game for a moment (Bruno, 2026-10-25): the release counts when it runs again.
+            float frozenAt = Time.realtimeSinceStartup;
+            while (Time.timeScale < 0.999f && Time.realtimeSinceStartup - frozenAt < 2f) yield return null;
             yield return null;
             yield return null;
             Assert.IsTrue(shortController.IsActive, "the release changes nothing");

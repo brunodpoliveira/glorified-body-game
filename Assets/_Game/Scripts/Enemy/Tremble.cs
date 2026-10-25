@@ -34,6 +34,15 @@ namespace GlorifiedBody.Enemy
         public float Amount { get; set; }
         /// <summary>The largest turn of the last frame, in degrees (0 when still). For the tests.</summary>
         public float LastDegrees { get; private set; }
+        /// <summary>A jolt runs now (a shock of the short).</summary>
+        public bool Jolting => Time.time < joltUntil;
+
+        private const float JoltAmount = 3f;     // 3 x maxDegrees: the body seizes
+        private const float JoltFrequency = 2.5f; // x frequency
+        private float joltUntil;
+
+        /// <summary>The body seizes for the seconds: a shock of the short stuns it (Bruno, 2026-10-25). No ease-in.</summary>
+        public void Jolt(float seconds) => joltUntil = Mathf.Max(joltUntil, Time.time + seconds);
 
         private void Awake()
         {
@@ -62,15 +71,17 @@ namespace GlorifiedBody.Enemy
             if (dt <= 0f) return;
             current = Mathf.MoveTowards(current, Mathf.Clamp01(Amount), dt * easePerSecond);
             LastDegrees = 0f;
-            if (current <= 0.001f || bones.Length == 0) return;
+            bool jolt = Jolting;
+            float amount = jolt ? JoltAmount : current;
+            if (amount <= 0.001f || bones.Length == 0) return;
             if ((health != null && health.IsDead) || RagdollBodies.IsDown(this)) return;
             TelekinesisLift lift = GetComponent<TelekinesisLift>();
             if (lift != null && lift.IsLifted) return;
 
-            float t = Time.time * frequency;
+            float t = Time.time * frequency * (jolt ? JoltFrequency : 1f);
             for (int i = 0; i < bones.Length; i++)
             {
-                float degrees = maxDegrees * weights[i] * current;
+                float degrees = maxDegrees * weights[i] * amount;
                 float x = (Mathf.PerlinNoise(seed + i * 7.1f, t) - 0.5f) * 2f * degrees;
                 float y = (Mathf.PerlinNoise(seed + i * 3.3f + 50f, t) - 0.5f) * 2f * degrees;
                 float z = (Mathf.PerlinNoise(seed + i * 5.7f + 90f, t) - 0.5f) * 2f * degrees;

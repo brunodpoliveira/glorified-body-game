@@ -1,0 +1,36 @@
+{
+  "source": "labworker_fear_anim_2.glb",
+  "hips": "mixamorig:Hips",
+  "chain": [
+    "Armature",
+    "Root",
+    "mixamorig:Hips"
+  ],
+  "travelMin": 0.1,
+  "clips": [
+    {
+      "name": "afraid",
+      "duration": 2.5667,
+      "keys": 78,
+      "travel": 0.0002,
+      "reach": 0.1181,
+      "travels": false
+    },
+    {
+      "name": "scared_01",
+      "duration": 3.2667,
+      "keys": 99,
+      "travel": 0.002,
+      "reach": 0.0706,
+      "travels": false
+    },
+    {
+      "name": "scared_02",
+      "duration": 3.2667,
+      "keys": 99,
+      "travel": 0.0057,
+      "reach": 0.0392,
+      "travels": false
+    }
+  ]
+}
