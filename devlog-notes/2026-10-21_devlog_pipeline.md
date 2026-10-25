@@ -87,3 +87,12 @@ markers), `Assets/_Game/Scripts/Editor/Automation/PlaythroughRunner.cs` (`-gbRec
   `/status` first and stops with a clear message.
 - Renders: ep02 long 7:02, short 1:10. ep03 long 6:34, short 1:09. Narration 37,388 tokens. Packets in
   `~/glorified-body-renders/devlog/ep02/v1/` and `ep03/v1/`.
+
+## Episode 4 (2026-10-25, 01:20 to 02:10)
+
+- The AI bot records 12 clips (commit `50189bf`). `FrameRecorder.CameraProvider` lets a bot film with its own
+  camera: a close camera follows the carer through the drag and the CPR, and the guard who cowers (no HUD).
+- Record run `runs/20261025-013936-record-603053`: AI bot 29/29, CLEAN. The batch slot was shared by message
+  with the session that builds the civilians.
+- Ep04 v1: long 7:09 (22 sections), short 1:03 (7 sections), 19,728 tokens of narration. One gore shot, the
+  limb cut, 3.4 s, wide and low detail, long video only. A "This is a work of fiction" card at the end.
