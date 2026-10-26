@@ -83,8 +83,9 @@ namespace GlorifiedBody.Audio
         /// <summary>The pause, the inventory and the death screen stop the world sounds. Music and UI go on.</summary>
         private static void OnStateChanged(GameManager.GameState state)
         {
+            // A cutscene stops the world's sounds too; its own lines and music play through (CutscenePlayer).
             AudioListener.pause = state == GameManager.GameState.Paused || state == GameManager.GameState.Inventory
-                                  || state == GameManager.GameState.GameOver;
+                                  || state == GameManager.GameState.GameOver || state == GameManager.GameState.Cutscene;
             if (state == GameManager.GameState.GameOver) Sfx.Ui(Sfx.DeathSting, 0.9f);
         }
     }

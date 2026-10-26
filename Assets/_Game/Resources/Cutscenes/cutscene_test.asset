@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4b009882ac86ab7df88ae9f6a98ca8d5, type: 3}
+  m_Name: cutscene_test
+  m_EditorClassIdentifier: Assembly-CSharp::GlorifiedBody.Story.CutsceneAsset
+  cutsceneId: test
+  shots:
+  - still: {fileID: 2800000, guid: 6ff666d7a87b2f85399be06bc0fee79a, type: 3}
+    video: {fileID: 0}
+    seconds: 2.5
+    panFrom: {x: 0, y: 0, z: 1}
+    panTo: {x: 0.04, y: 0.02, z: 1.08}
+    speaker: STEVENS
+    lineId: stevens.test_can_you_hear_me
+    text: Lucy. Can you hear me? We do not have much time.
+  - still: {fileID: 2800000, guid: 82b18578e134f959ebdcbb2cca52e4d7, type: 3}
+    video: {fileID: 0}
+    seconds: 1.5
+    panFrom: {x: 0.1, y: 0.1, z: 1.3}
+    panTo: {x: 0, y: 0, z: 1}
+    speaker: LUCY
+    lineId: test.voice_check
+    text: Who are you?
+  - still: {fileID: 0}
+    video: {fileID: 32900000, guid: a0c3927e2898aaa25af6ba9e3dbf3f7b, type: 3}
+    seconds: 1
+    panFrom: {x: 0, y: 0, z: 1}
+    panTo: {x: 0.04, y: 0.02, z: 1.08}
+    speaker: STEVENS
+    lineId: stevens.test_go_now
+    text: Go. Now.
+  music: {fileID: 0}
+  doneFlag: 

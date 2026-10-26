@@ -21,7 +21,8 @@ namespace GlorifiedBody.Systems
             Paused,
             Inventory, // the inventory overlay: time stops, only its keys pass (Bruno, 2026-10-22)
             GameOver,
-            LevelComplete
+            LevelComplete,
+            Cutscene // a cutscene plays: time stops, no game key passes (2026-10-26)
         }
 
         public static GameManager Instance { get; private set; }
@@ -48,6 +49,7 @@ namespace GlorifiedBody.Systems
         public bool AllowsAction(InputManager.GameAction action)
         {
             if (currentState == GameState.Paused || currentState == GameState.GameOver) return false;
+            if (currentState == GameState.Cutscene) return action == InputManager.GameAction.Interact; // the skip key
             if (currentState == GameState.Inventory) return IsInventoryAction(action);
             return true;
         }
@@ -66,6 +68,28 @@ namespace GlorifiedBody.Systems
         public void CloseInventory()
         {
             if (currentState != GameState.Inventory) return;
+            Time.timeScale = storedTimeScale;
+            Time.fixedDeltaTime = storedFixedDeltaTime;
+            SetState(GameState.Playing);
+        }
+
+        public bool IsCutscene => currentState == GameState.Cutscene;
+
+        /// <summary>A cutscene starts: the world stops as in the pause, and no game key passes. False when the game is not playing.</summary>
+        public bool BeginCutscene()
+        {
+            if (currentState != GameState.Playing) return false;
+            storedTimeScale = Time.timeScale;
+            storedFixedDeltaTime = Time.fixedDeltaTime;
+            Time.timeScale = 0f;
+            Time.fixedDeltaTime = 0f;
+            SetState(GameState.Cutscene);
+            return true;
+        }
+
+        public void EndCutscene()
+        {
+            if (currentState != GameState.Cutscene) return;
             Time.timeScale = storedTimeScale;
             Time.fixedDeltaTime = storedFixedDeltaTime;
             SetState(GameState.Playing);
@@ -292,6 +316,10 @@ namespace GlorifiedBody.Systems
 
                 case GameState.LevelComplete:
                     SetCursor(true);
+                    break;
+
+                case GameState.Cutscene:
+                    SetCursor(false);
                     break;
             }
         }

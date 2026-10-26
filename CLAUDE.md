@@ -273,6 +273,11 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   `SaveData.rooms`; the menu clears it), `ScreenFade`. `SaveSystem.CapturePlayer/CaptureRoom/ApplyPlayer/ApplyRoom`.
   Test rooms in git: `TravelTest_A`, `TravelTest_B` (`TravelTestSetup`), `TravelTests` (4). A builder must load the
   character catalog after it opens a new scene (the new scene unloads the prefab links).
+- 2026-10-26, night, SCRIPTED EVENTS AND CUTSCENES (`devlog-notes/2026-10-26_scripted_events_cutscenes.md`,
+  `Scripts/Story/`): `ScriptedSequence` (steps: wait, say, PA, flags, show/hide, alert, wait dead, SHORT, music, cutscene,
+  hold her; once, by its done flag), `ScriptTrigger`, `FlagGate`, `StoryFlags.OnChanged`, `CutsceneAsset` (stills with
+  a pan, video, one line a shot) and `CutscenePlayer` (`GameState.Cutscene`: time stops, only Interact passes = skip).
+  Test room in git: `ScriptTest` (the ultimatum of §9.3, a gate, the test cutscene), `ScriptTests` (5).
 
 ## Rules
 

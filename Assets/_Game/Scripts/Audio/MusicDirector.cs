@@ -8,7 +8,7 @@ using GlorifiedBody.Systems;
 
 namespace GlorifiedBody.Audio
 {
-    public enum MusicState { Silent, Menu, Ambient, Tension, Combat }
+    public enum MusicState { Silent, Menu, Ambient, Tension, Combat, Score }
 
     /// <summary>
     /// The music (Bruno, 2026-10-26: "music for combat, tension, ambient for sectors/environments, and placeholders in
@@ -46,6 +46,7 @@ namespace GlorifiedBody.Audio
         private bool hunting;
         private MusicState? hold;
         private float voiceDuckUntil;
+        private AudioClip score;
         private readonly HashSet<string> warned = new HashSet<string>();
 
         public MusicState State { get; private set; } = MusicState.Silent;
@@ -94,7 +95,17 @@ namespace GlorifiedBody.Audio
         /// <summary>A cutscene or a scripted beat holds a state (Silent for a cutscene); null lets the room decide.</summary>
         public static void Hold(MusicState? state)
         {
-            if (Instance != null) Instance.hold = state;
+            if (Instance == null) return;
+            Instance.hold = state;
+            if (state != MusicState.Score) Instance.score = null;
+        }
+
+        /// <summary>A cutscene's own track (Score) until Hold(null); a null clip holds the silence.</summary>
+        public static void Score(AudioClip clip)
+        {
+            if (Instance == null) return;
+            Instance.score = clip;
+            Instance.hold = clip != null ? MusicState.Score : MusicState.Silent;
         }
 
         private void OnHit(HitInfo hit)
@@ -133,7 +144,7 @@ namespace GlorifiedBody.Audio
                 State = target;
             }
             bool placeholder = false;
-            AudioClip clip = target == MusicState.Silent ? null : Resolve(target == MusicState.Menu ? MenuKey : RoomKey, target.ToString().ToLowerInvariant(), out placeholder);
+            AudioClip clip = target == MusicState.Silent ? null : target == MusicState.Score ? score : Resolve(target == MusicState.Menu ? MenuKey : RoomKey, target.ToString().ToLowerInvariant(), out placeholder);
             if (clip != CurrentClip || (clip == null && current.isPlaying))
             {
                 StartTrack(clip);
@@ -175,6 +186,7 @@ namespace GlorifiedBody.Audio
                 case GameManager.GameState.MainMenu: return MusicState.Menu;
                 case GameManager.GameState.Loading: return State;
                 case GameManager.GameState.GameOver: return MusicState.Silent;
+                case GameManager.GameState.Cutscene: return MusicState.Silent;
             }
             if (GameObject.FindGameObjectWithTag("Player") == null) return MusicState.Silent;
             if (ShooterScheduler.ActiveCount > 0 || Time.time - lastThreat < CombatHoldSeconds) return MusicState.Combat;

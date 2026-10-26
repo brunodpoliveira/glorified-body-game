@@ -299,6 +299,7 @@ namespace GlorifiedBody.Editor
             if (File.Exists(ExteriorLookSetup.ScenePath)) EnsureBuildScene(scenes, ExteriorLookSetup.ScenePath);
             if (File.Exists(TravelTestSetup.PathA)) EnsureBuildScene(scenes, TravelTestSetup.PathA);
             if (File.Exists(TravelTestSetup.PathB)) EnsureBuildScene(scenes, TravelTestSetup.PathB);
+            if (File.Exists(ScriptTestSetup.ScenePath)) EnsureBuildScene(scenes, ScriptTestSetup.ScenePath);
             if (File.Exists(TutorialSetup.ScenePath)) EnsureBuildScene(scenes, TutorialSetup.ScenePath);
             if (File.Exists(AiTestSetup.ScenePath)) EnsureBuildScene(scenes, AiTestSetup.ScenePath);
             if (File.Exists(Destruction.CoverTestSetup.ScenePath)) EnsureBuildScene(scenes, Destruction.CoverTestSetup.ScenePath);

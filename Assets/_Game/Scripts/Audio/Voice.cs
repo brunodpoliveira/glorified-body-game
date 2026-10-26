@@ -48,6 +48,16 @@ namespace GlorifiedBody.Audio
             return Play(speaker, id, clip, mode, seconds);
         }
 
+        /// <summary>A line of a speaker with no object in the room (a radio, a collar's computer, Stevens on the speaker): 2D.</summary>
+        public static AudioSource SayAs(string speakerName, string id, string text, VoiceMode mode = VoiceMode.Radio, float minSeconds = 1.6f)
+        {
+            if (string.IsNullOrEmpty(id)) id = Slug(speakerName, 4) + "." + Slug(text, 6);
+            AudioClip clip = Clip(id);
+            float seconds = clip != null ? Mathf.Max(minSeconds, clip.length + 0.25f) : minSeconds;
+            SubtitleService.Say("voice:" + (speakerName ?? "") , string.IsNullOrEmpty(speakerName) ? SubtitleService.UnknownSpeaker : speakerName, text, seconds);
+            return Play(null, id, clip, mode == VoiceMode.World ? VoiceMode.Radio : mode, seconds);
+        }
+
         /// <summary>The clip of a line whose words another panel shows (the tutorial prompt): no subtitle. Null when not recorded.</summary>
         public static AudioSource PlayOnly(string id, VoiceMode mode = VoiceMode.Radio, GameObject speaker = null)
         {
