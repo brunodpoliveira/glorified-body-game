@@ -161,6 +161,7 @@ namespace GlorifiedBody.Saving
                 p.nalcon = stats.Nalcon;
                 p.shortBar = stats.Short;
                 p.kills = stats.Kills;
+                p.exp = stats.Exp;
                 p.outfit = stats.Outfit != null ? stats.Outfit.outfitId : "";
             }
             ItemInventory items = lucy.GetComponentInChildren<ItemInventory>();
@@ -204,6 +205,13 @@ namespace GlorifiedBody.Saving
         {
             SaveData data = Read(slot);
             if (data == null || GameManager.Instance == null) return false;
+            // A save of a room that is not in the build (a renamed room) must not replace the checkpoint or hang in
+            // the load (found 2026-10-26).
+            if (!Application.CanStreamedLevelBeLoaded(data.scene))
+            {
+                Debug.LogWarning($"[SaveSystem] slot {slot}: the room '{data.scene}' is not in the build.");
+                return false;
+            }
             if (slot != CheckpointSlot) Write(CheckpointSlot, data); // a death after a load restarts from the load
             pending = data;
             HasSessionCheckpoint = true;
@@ -251,7 +259,7 @@ namespace GlorifiedBody.Saving
                     health.SetMaxHealth(p.maxHealth, fillToMax: false);
                     health.SetHealth(p.health);
                 }
-                if (stats != null) stats.Restore(p.nalcon, p.shortBar, p.kills);
+                if (stats != null) stats.Restore(p.nalcon, p.shortBar, p.kills, p.exp);
                 if (items != null)
                 {
                     items.Clear();

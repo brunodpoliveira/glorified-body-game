@@ -45,6 +45,8 @@ namespace GlorifiedBody.Core
         public float CurrentHealth => currentHealth;
         public float HealthPercent => currentHealth / maxHealth;
         public bool IsDead { get; private set; }
+        /// <summary>The frame of the death: a "fatal" hit on a body dead before that frame is not the kill.</summary>
+        public int DeathFrame { get; private set; } = -1;
         public bool IsInvulnerable => invulnerable || runtimeInvulnerable || IsSecondWindInvulnerable;
         public bool IsSecondWindEnabled => enableSecondWind;
         public bool IsSecondWindAvailable => secondWindAvailable;
@@ -140,6 +142,7 @@ namespace GlorifiedBody.Core
             secondWindActive = false;
             secondWindInvulnerableUntil = -1f;
             IsDead = true;
+            DeathFrame = Time.frameCount;
             OnDeath?.Invoke();
 
             bool shouldDestroy = destroyOnDeath && !isPlayerHealth;

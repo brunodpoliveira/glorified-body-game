@@ -482,6 +482,24 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.AreEqual(GlorifiedBody.Characters.PoseClips.Load().scared02, b.PoseOverride.Current, "the scared_02 clip");
         }
 
+        /// <summary>The exp (design §11.2, 2026-10-26): "civvies may give more exp than soldiers". Her kill of a lab worker pays more than her kill of the guard.</summary>
+        [UnityTest]
+        public IEnumerator HerKillOfACivilian_PaysMoreExpThanTheGuard()
+        {
+            yield return null;
+            PsychicStats stats = lucy.GetComponent<PsychicStats>();
+            Assert.AreEqual(0, stats.Exp);
+            Kill(Find("Lab_A"));
+            int civilian = stats.Exp;
+            Assert.AreEqual(ExperienceRules.ValueOf(EnemyMorale.Rank.UnarmedCivilian), civilian, "a lab worker pays the civilian rate");
+            Health g = guard.GetComponent<Health>();
+            g.TakeDamage(g.MaxHealth * 10f);
+            HitEventBus.Raise(new HitInfo { Attacker = lucy, Victim = g.gameObject, HitTransform = guard.transform, HitPoint = guard.transform.position + Vector3.up, DamageAmount = g.MaxHealth * 10f, DamageType = DamageType.PsychicBlast, WasFatal = true });
+            int guardPay = stats.Exp - civilian;
+            Assert.AreEqual(ExperienceRules.ValueOf(EnemyMorale.Rank.Guard), guardPay, "the guard pays the guard rate");
+            Assert.Greater(civilian, guardPay, "the civilian pays more");
+        }
+
         // ── Helpers ───────────────────────────────────────────────────
 
         private CivilianBrain Find(string name)

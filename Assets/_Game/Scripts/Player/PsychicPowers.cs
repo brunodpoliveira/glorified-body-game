@@ -42,6 +42,8 @@ namespace GlorifiedBody.Player
         public const float BoostThreshold = 0.5f;
         public const float BoostMultiplier = 2f;
         public bool IsBoosted => stats != null && stats.Nalcon >= PsychicStats.MaxNalcon * BoostThreshold - 0.001f;
+        /// <summary>The damage scale of a power now: the MK boost times her level's (ExperienceRules).</summary>
+        public float DamageScale => (IsBoosted ? BoostMultiplier : 1f) * (stats != null ? stats.LevelDamageScale : 1f);
         public bool IsCharging => lockOn != null && lockOn.IsCharging && !holdAfterLaunch && !(shortController != null && shortController.IsActive);
         /// <summary>The enemy she holds in the air with telekinesis, while a launch is possible.</summary>
         public TelekinesisLift HeldLift => activeLift != null && activeLift.CanLaunch ? activeLift : null;
@@ -178,7 +180,7 @@ namespace GlorifiedBody.Player
             }
 
             float cost = power.nalconCost * charge;
-            float scale = IsBoosted ? BoostMultiplier : 1f; // the boost is read before the cost lowers the bar
+            float scale = DamageScale; // the boost is read before the cost lowers the bar
             if (!stats.TrySpendNalcon(cost))
             {
                 return Result("no_nalcon", charge);
@@ -207,9 +209,9 @@ namespace GlorifiedBody.Player
         }
 
         /// <summary>Applies the power to a target with a charge in 0..1, with the MK boost of the moment. Tests call this directly.</summary>
-        public void FireAt(PowerDefinition power, float charge, LockOnTargetable target) => FireAt(power, charge, target, IsBoosted ? BoostMultiplier : 1f);
+        public void FireAt(PowerDefinition power, float charge, LockOnTargetable target) => FireAt(power, charge, target, DamageScale);
 
-        /// <summary>Applies the power with a damage scale (2 under the MK boost, 1 without).</summary>
+        /// <summary>Applies the power with a damage scale (DamageScale: 2 under the MK boost, times her level's).</summary>
         public void FireAt(PowerDefinition power, float charge, LockOnTargetable target, float damageScale)
         {
             charge = Mathf.Clamp01(charge);
@@ -342,6 +344,8 @@ namespace GlorifiedBody.Player
         /// <summary>Uses a drug of the type (or any other when that one is empty): the inventory screen calls it.</summary>
         public bool UseDrug(DrugType wanted)
         {
+            // In the beat between her death and the death screen a drug must not bring her back (found 2026-10-26).
+            if (stats.Health.IsDead) return Result("dead", 0f);
             if (!drugs.TryUse(wanted, out DrugType used))
             {
                 return Result("drug_none", 0f);
@@ -366,7 +370,7 @@ namespace GlorifiedBody.Player
             TelekinesisLift lift = HeldLift;
             PowerDefinition power = Selected;
             if (lift == null || power == null) return false;
-            float scale = IsBoosted ? BoostMultiplier : 1f;
+            float scale = DamageScale;
             if (!stats.TrySpendNalcon(power.nalconCost)) return Result("no_nalcon", 1f);
             if (!lift.Slam(power.baseDamage * scale)) return false;
             LastScale = scale;

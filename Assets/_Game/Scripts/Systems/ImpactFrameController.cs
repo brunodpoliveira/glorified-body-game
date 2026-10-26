@@ -63,21 +63,23 @@ namespace GlorifiedBody.Systems
 
         /// <summary>
         /// Hit-stop. Time.timeScale drops to 0 for freezeDuration (unscaled time), then returns to 1 over
-        /// recoveryDuration. The routine stops the moment the game leaves the Playing state, so a pause or a
-        /// game over keeps its own timeScale. GameManager owns timeScale outside this routine.
+        /// recoveryDuration. A pause or the inventory holds the routine: its clock waits and it leaves timeScale to
+        /// them (found 2026-10-26: the pause stored the frozen 0, the routine quit, and the resume put back 0 for
+        /// good). A game over, a load or a menu ends it, and they keep their own timeScale.
         /// </summary>
         private IEnumerator FreezeRoutine(float freezeDuration, float recoveryDuration)
         {
             Time.timeScale = 0f;
-            float holdUntil = Time.unscaledTime + freezeDuration;
-            while (Time.unscaledTime < holdUntil)
+            float held = 0f;
+            while (held < freezeDuration)
             {
-                if (!IsPlaying())
+                if (IsEnded())
                 {
                     freezeRoutine = null;
                     yield break;
                 }
 
+                if (IsPlaying()) held += Time.unscaledDeltaTime;
                 yield return null;
             }
 
@@ -85,14 +87,17 @@ namespace GlorifiedBody.Systems
             float recovery = Mathf.Max(0.01f, recoveryDuration);
             while (elapsed < recovery)
             {
-                if (!IsPlaying())
+                if (IsEnded())
                 {
                     freezeRoutine = null;
                     yield break;
                 }
 
-                elapsed += Time.unscaledDeltaTime;
-                Time.timeScale = Mathf.Lerp(0f, 1f, Mathf.Clamp01(elapsed / recovery));
+                if (IsPlaying())
+                {
+                    elapsed += Time.unscaledDeltaTime;
+                    Time.timeScale = Mathf.Lerp(0f, 1f, Mathf.Clamp01(elapsed / recovery));
+                }
                 yield return null;
             }
 
@@ -103,6 +108,15 @@ namespace GlorifiedBody.Systems
 
             freezeRoutine = null;
         }
+
+        /// <summary>The pause and the inventory stop the game for a moment: the freeze waits for them.</summary>
+        private static bool IsHeld()
+        {
+            GameManager gm = GameManager.Instance;
+            return gm != null && (gm.CurrentState == GameManager.GameState.Paused || gm.CurrentState == GameManager.GameState.Inventory);
+        }
+
+        private static bool IsEnded() => !IsPlaying() && !IsHeld();
 
         private static bool IsPlaying()
         {

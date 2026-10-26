@@ -86,6 +86,18 @@ namespace GlorifiedBody.UI
         private const int BeepsPerTrigger = 3;
         private const float BeepSpacing = 0.15f;
         private Text secondWindText;
+        // The exp level (design §11.2): "LV n" and a thin exp bar over the bars, "LEVEL n" for a moment at a level up.
+        private Text levelText;
+        private Image expFill;
+        private Text levelUpText;
+        private float levelUpUntil = -1f;
+        private AudioClip levelUpLow;
+        private AudioClip levelUpHigh;
+        private bool levelUpHighPending;
+        private float levelUpHighAt;
+        public const float LevelUpSeconds = 2.5f;
+        public string LevelShown => levelText != null ? levelText.text : "";
+        public bool LevelUpShown => levelUpText != null && levelUpText.gameObject.activeSelf;
 
         public bool LowHpWarning { get; private set; }
         public bool LowNalconWarning { get; private set; }
@@ -175,6 +187,40 @@ namespace GlorifiedBody.UI
             secondWindText.color = new Color(1f, 0.95f, 0.6f);
             secondWindText.fontStyle = FontStyle.Bold;
             secondWindText.gameObject.SetActive(false);
+
+            // The level and the exp to the next one, over the HP bar.
+            levelText = Label(bars.transform, "Level", 18, TextAnchor.MiddleLeft, new Vector2(0f, 1f), new Vector2(0f, 32f), new Vector2(90f, 24f));
+            levelText.fontStyle = FontStyle.Bold;
+            levelText.color = new Color(0.8f, 0.95f, 0.75f);
+            var expBg = Element("ExpBg", bars.transform);
+            var expBgRect = expBg.GetComponent<RectTransform>();
+            expBgRect.anchorMin = expBgRect.anchorMax = new Vector2(0f, 1f);
+            expBgRect.pivot = new Vector2(0f, 1f);
+            expBgRect.anchoredPosition = new Vector2(96f, 24f);
+            expBgRect.sizeDelta = new Vector2(320f, 10f);
+            var expBgImage = expBg.AddComponent<Image>();
+            expBgImage.sprite = white;
+            expBgImage.color = new Color(0.08f, 0.08f, 0.1f, 0.85f);
+            expBgImage.raycastTarget = false;
+            var expObj = Element("ExpFill", expBg.transform);
+            var expRect = expObj.GetComponent<RectTransform>();
+            expRect.anchorMin = Vector2.zero;
+            expRect.anchorMax = Vector2.one;
+            expRect.offsetMin = new Vector2(2f, 2f);
+            expRect.offsetMax = new Vector2(-2f, -2f);
+            expFill = expObj.AddComponent<Image>();
+            expFill.sprite = white;
+            expFill.color = new Color(0.55f, 0.9f, 0.45f);
+            expFill.type = Image.Type.Filled;
+            expFill.fillMethod = Image.FillMethod.Horizontal;
+            expFill.fillOrigin = (int)Image.OriginHorizontal.Left;
+            expFill.raycastTarget = false;
+            levelUpText = Label(canvasObj.transform, "LevelUp", 40, TextAnchor.UpperCenter, new Vector2(0.5f, 1f), new Vector2(0f, -190f), new Vector2(800f, 50f));
+            levelUpText.color = new Color(0.7f, 1f, 0.6f);
+            levelUpText.fontStyle = FontStyle.Bold;
+            levelUpText.gameObject.SetActive(false);
+            levelUpLow = MakeBeep("level_up_low", 660f, 0.12f);
+            levelUpHigh = MakeBeep("level_up_high", 990f, 0.18f);
 
             // Power and drugs, bottom-right.
             powerText = Label(canvasObj.transform, "Power", 24, TextAnchor.LowerRight, new Vector2(1f, 0f), new Vector2(-32f, 64f), new Vector2(700f, 36f));
@@ -379,7 +425,41 @@ namespace GlorifiedBody.UI
             drugs = playerObject.GetComponent<DrugInventory>();
             shortController = playerObject.GetComponent<ShortController>();
             lockOn = playerObject.GetComponent<LockOnController>();
+            if (stats != null) stats.OnLevelUp += ShowLevelUp;
             return true;
+        }
+
+        private void OnDestroy()
+        {
+            if (stats != null) stats.OnLevelUp -= ShowLevelUp;
+        }
+
+        private void ShowLevelUp(int level)
+        {
+            if (levelUpText == null) return;
+            levelUpText.text = $"LEVEL {level}";
+            levelUpText.gameObject.SetActive(true);
+            levelUpUntil = Time.unscaledTime + LevelUpSeconds;
+            // A placeholder rising pair of tones, like the warning beeps.
+            if (beepSource != null && levelUpLow != null) beepSource.PlayOneShot(levelUpLow);
+            levelUpHighPending = true;
+            levelUpHighAt = Time.unscaledTime + 0.14f;
+        }
+
+        private void UpdateLevel()
+        {
+            if (stats == null || levelText == null) return;
+            int level = stats.Level;
+            levelText.text = $"LV {level}";
+            int from = ExperienceRules.Threshold(level);
+            int to = ExperienceRules.Threshold(level + 1);
+            expFill.fillAmount = level >= ExperienceRules.MaxLevel || to <= from ? 1f : Mathf.Clamp01((stats.Exp - from) / (float)(to - from));
+            if (levelUpText.gameObject.activeSelf && Time.unscaledTime >= levelUpUntil) levelUpText.gameObject.SetActive(false);
+            if (levelUpHighPending && Time.unscaledTime >= levelUpHighAt)
+            {
+                levelUpHighPending = false;
+                if (beepSource != null && levelUpHigh != null) beepSource.PlayOneShot(levelUpHigh);
+            }
         }
 
         private void Update()
@@ -441,6 +521,7 @@ namespace GlorifiedBody.UI
 
             UpdateThreats(Camera.main);
             UpdateWarnings();
+            UpdateLevel();
         }
 
         private void UpdateWarnings()

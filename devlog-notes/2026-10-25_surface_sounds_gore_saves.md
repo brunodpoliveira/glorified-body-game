@@ -44,7 +44,7 @@ The fix:
 - It keeps a shield that fell, the cut arms on the floor, the floor stains and the pools under the bodies (`RoomGore`).
 - A load kills the figure again, quietly:
   - No one sees or fears the death (`EnemyMorale.MarkOldDeath`).
-  - No one tends the body (`CorpseCare.MarkTended`, PROPOSED).
+  - No one tends the body (`CorpseCare.MarkTended`). Bruno, 2026-10-26: "keep it".
   - No pool grows, and no spray flies. The particles of a restored stump stay still.
 - Then the bones take the saved pose. A ragdoll freezes in it, or it falls from that pose if the save caught it in a
   fall or a drag.
@@ -77,7 +77,9 @@ The fix:
   count is random: 1023 to 3202 over 16 runs, and the bar is 1152. It failed at 15:08 and 15:15 too, before this
   work. Alone, it passed three times (2172 to 2618).
 
-## Open for Bruno
+## Bruno's answers (2026-10-26)
 
-1. A body that a load puts back is never tended again (PROPOSED). The care would do the CPR a second time.
-2. The dropped shield lies still after a load (kinematic): a blast does not move it any more (PROPOSED).
+1. A body that a load puts back is never tended again: "keep it".
+2. The dropped shield lies still after a load (kinematic): "keep it".
+3. A save machine in AI TEST for a manual check: "no need".
+4. A steady gas cloud test: "no need".

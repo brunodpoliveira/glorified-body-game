@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
+using GlorifiedBody.Combat;
 using GlorifiedBody.Core;
 using GlorifiedBody.DebugTools;
 
@@ -27,6 +29,14 @@ namespace GlorifiedBody.Player
         public float Short { get; private set; }
         public bool IsShortFull => Short >= MaxShort - 0.001f;
         public int Kills { get; private set; }
+        /// <summary>The exp of her kills (ExperienceRules) and the level it gives.</summary>
+        public int Exp { get; private set; }
+        public int Level { get; private set; } = 1;
+        /// <summary>The power damage of her level (1 at level 1).</summary>
+        public float LevelDamageScale => ExperienceRules.DamageScale(Level);
+        public event Action<int> OnLevelUp;
+
+        private readonly HashSet<int> credited = new HashSet<int>();
 
         /// <summary>While true the bars stop their passive change (a short, a cutscene).</summary>
         public bool RegenPaused { get; set; }
@@ -44,11 +54,13 @@ namespace GlorifiedBody.Player
         {
             health.OnDamaged ??= new UnityEngine.Events.UnityEvent<float>();
             health.OnDamaged.AddListener(OnDamaged);
+            HitEventBus.OnHit += OnHit;
         }
 
         private void OnDisable()
         {
             health.OnDamaged?.RemoveListener(OnDamaged);
+            HitEventBus.OnHit -= OnHit;
         }
 
         public void SetOutfit(OutfitProfile profile)
@@ -63,7 +75,7 @@ namespace GlorifiedBody.Player
         private void ApplyOutfit()
         {
             if (outfit == null) return;
-            health.SetMaxHealth(outfit.maxHp, fillToMax: true);
+            health.SetMaxHealth(outfit.maxHp + ExperienceRules.BonusHp(Level), fillToMax: true);
         }
 
         private void Update()
@@ -134,10 +146,46 @@ namespace GlorifiedBody.Player
             AddShort(amount * shortPerDamagePoint);
         }
 
-        /// <summary>A loaded save: the bars and the kill count as they were.</summary>
-        public void Restore(float nalcon, float shortValue, int kills)
+        /// <summary>
+        /// The exp of a kill (design §11.2): the hit that killed, in the frame of the death, from her or from
+        /// something she sent (a thrown body, a fire she lit, a returned grenade). Each body pays once.
+        /// </summary>
+        private void OnHit(HitInfo hit)
+        {
+            if (hit == null || !hit.WasFatal || hit.Victim == null || !IsMine(hit.Attacker)) return;
+            Health victim = hit.Victim.GetComponentInParent<Health>();
+            if (victim == null || victim == health || victim.DeathFrame != Time.frameCount) return;
+            if (!credited.Add(victim.GetInstanceID())) return;
+            int value = ExperienceRules.ValueOf(victim.gameObject);
+            if (value > 0) AddExp(value, victim.name);
+        }
+
+        private bool IsMine(GameObject attacker) => attacker != null && (attacker == gameObject || attacker.transform.IsChildOf(transform));
+
+        /// <summary>Exp, and a level for each threshold it passes: more maximum HP (given at once) and more power damage.</summary>
+        public void AddExp(int amount, string source = "")
+        {
+            if (amount <= 0) return;
+            Exp += amount;
+            RunTelemetry.Event("exp", $"{source}:+{amount}={Exp}");
+            int target = ExperienceRules.LevelFor(Exp);
+            while (Level < target)
+            {
+                Level++;
+                health.SetMaxHealth(health.MaxHealth + ExperienceRules.HpPerLevel, fillToMax: false);
+                health.Heal(ExperienceRules.HpPerLevel);
+                RunTelemetry.Event("level_up", $"{Level}:hp={health.MaxHealth:0}:damage=x{LevelDamageScale:0.00}");
+                OnLevelUp?.Invoke(Level);
+            }
+            OnChanged?.Invoke();
+        }
+
+        /// <summary>A loaded save: the bars, the kill count and the exp as they were. The saved maximum HP already holds the level's.</summary>
+        public void Restore(float nalcon, float shortValue, int kills, int exp = 0)
         {
             Kills = Mathf.Max(0, kills);
+            Exp = Mathf.Max(0, exp);
+            Level = ExperienceRules.LevelFor(Exp);
             DebugSet(nalcon, shortValue);
         }
 

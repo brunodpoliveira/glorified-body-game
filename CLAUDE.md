@@ -243,6 +243,15 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   and a load count as the checkpoint (kept), no tutorial save step. BODIES AND GORE IN THE SAVES (`RoomGore`): the
   dead keep their pose, stumps, dropped shield, cut arms, floor stains and pools; a load kills them again quietly
   (no witness, no care, no new pool), the Gore option of the moment applies. Training dummies vanish at death.
+- 2026-10-26 (`devlog-notes/2026-10-26_exp_and_sweeps.md`): EXP LEVELS (design §11.2): `ExperienceRules` (PROPOSED:
+  civilians pay most), `PsychicStats` credits her kills from the hit bus (the hit in the frame of the death,
+  `Health.DeathFrame`; each body once), a level adds 10 HP and 10 % power damage (`PsychicPowers.DamageScale`), "LV n"
+  and "LEVEL n" on the HUD, the exp in the save. Three sweeps (`devlog-notes/2026-10-26_sweeps/`): no music and no voice
+  system yet, the demo lacks room travel, scripted events, voice, cutscenes and a room kit, 39 seams between systems.
+  Seam fixes with tests (`SystemSeamTests`): a pause or the inventory during the short's freeze stopped the game for
+  good (the freeze now waits), a drug in the death beat revived her, a save of a missing room hung the load. The
+  exterior light: the same method with a Mixed directional sun (study only). His answers to the 2026-10-25 points:
+  keep, keep, no, no.
 
 ## Rules
 

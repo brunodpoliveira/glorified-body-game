@@ -34,6 +34,8 @@ namespace GlorifiedBody.Saving
         public float nalcon;
         public float shortBar;
         public int kills;
+        /// <summary>Her exp (2026-10-26); the level comes from it. An older file has none: level 1.</summary>
+        public int exp;
         public string outfit = "";
         public List<string> critical = new List<string>();
         public List<string> carried = new List<string>();
