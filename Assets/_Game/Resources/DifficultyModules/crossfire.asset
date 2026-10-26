@@ -10,21 +10,19 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4f43226abc344609aaf6175fda0ff1bf, type: 3}
-  m_Name: preset_hard
+  m_Name: crossfire
   m_EditorClassIdentifier: Assembly-CSharp::GlorifiedBody.Systems.DifficultyModuleDefinition
-  moduleId: preset_hard
-  displayName: HARD
-  symbol: III
-  description: Every enemy fires. 0.8 s from the laser to the shot.
+  moduleId: crossfire
+  displayName: CROSSFIRE
+  symbol: II
+  description: Two enemies fire at a time.
   difficultyPercent: 25
-  moduleType: 3
+  moduleType: 1
+  section: 1
   isBaseline: 0
   hideInUI: 0
-  presetGroup: preset
+  exclusiveGroup: guns
+  presets: 96000000
   parameters:
   - key: maxSimultaneousShooters
-    value: 0
-  - key: attackSeconds
-    value: 0.8
-  - key: restSeconds
     value: 2

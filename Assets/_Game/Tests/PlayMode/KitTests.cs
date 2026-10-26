@@ -105,6 +105,7 @@ namespace GlorifiedBody.Tests.PlayMode
         public IEnumerator ASaveAndALoad_KeepTheDead_AndSpawnNoSecondFigure()
         {
             Kill("Soldier_K1");
+            Hurt("Guard_K3");
             UnityEngine.Object.Destroy(GameObject.Find("Drug_Nalcon"));
             yield return new WaitForSeconds(1.5f);
             SavePoint point = UnityEngine.Object.FindFirstObjectByType<SavePoint>();
@@ -116,6 +117,7 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.IsTrue(GameObject.Find("Soldier_K1").GetComponent<Health>().IsDead, "the dead soldier stays dead");
             Assert.IsFalse(GameObject.Find("Soldier_K2").GetComponent<Health>().IsDead, "the others live");
             Assert.AreEqual(3, UnityEngine.Object.FindObjectsByType<SoldierBrain>(FindObjectsSortMode.None).Length, "no second figure");
+            AssertFullAndCalm("Guard_K3");
             GameObject pill = GameObject.Find("Drug_Nalcon");
             Assert.IsTrue(pill == null || !pill.activeInHierarchy, "the pill stays taken");
         }
@@ -124,6 +126,7 @@ namespace GlorifiedBody.Tests.PlayMode
         public IEnumerator ATripToAnotherRoom_AndBack_KeepsTheDead()
         {
             Kill("Soldier_K2");
+            Hurt("Guard_K3");
             yield return new WaitForSeconds(1.5f);
             int arrivals = SaveSystem.Arrivals;
             Assert.IsTrue(GameObject.Find("Exit_KitWest").GetComponent<RoomExit>().Use());
@@ -135,6 +138,7 @@ namespace GlorifiedBody.Tests.PlayMode
             yield return InRoom();
             Assert.IsTrue(GameObject.Find("Soldier_K2").GetComponent<Health>().IsDead, "dead, as she left him");
             Assert.AreEqual(3, UnityEngine.Object.FindObjectsByType<SoldierBrain>(FindObjectsSortMode.None).Length, "no second figure");
+            AssertFullAndCalm("Guard_K3");
         }
 
         private const string KitTestSetupMusicKey = "kit_hall";
@@ -144,6 +148,24 @@ namespace GlorifiedBody.Tests.PlayMode
             Health h = GameObject.Find(name).GetComponent<Health>();
             h.TakeDamage(h.MaxHealth * 10f);
             HitEventBus.Raise(new HitInfo { Attacker = lucy, Victim = h.gameObject, HitTransform = h.transform, HitPoint = h.transform.position + Vector3.up, DamageAmount = 999f, DamageType = DamageType.PsychicBlast, WasFatal = true });
+        }
+
+        /// <summary>A live enemy she hurt, alerted. Bruno, 2026-10-26: after a load or a return he is at full HP and calm.</summary>
+        private void Hurt(string name)
+        {
+            Health h = GameObject.Find(name).GetComponent<Health>();
+            h.TakeDamage(h.MaxHealth * 0.5f);
+            GameObject.Find(name).GetComponent<SoldierBrain>().Alert("test", callOthers: false);
+            Assert.Less(h.CurrentHealth, h.MaxHealth, "hurt");
+            Assert.IsTrue(GameObject.Find(name).GetComponent<SoldierBrain>().Alerted, "alerted");
+        }
+
+        private static void AssertFullAndCalm(string name)
+        {
+            Health h = GameObject.Find(name).GetComponent<Health>();
+            Assert.IsFalse(h.IsDead, name + " lives");
+            Assert.AreEqual(h.MaxHealth, h.CurrentHealth, 0.01f, name + " is at full HP again");
+            Assert.IsFalse(GameObject.Find(name).GetComponent<SoldierBrain>().Alerted, name + " is calm again");
         }
 
         private IEnumerator InRoom()

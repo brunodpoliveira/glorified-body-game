@@ -123,6 +123,33 @@ namespace GlorifiedBody.Automation
                 }
                 Record("how_to_play_ui", howTo != null && howToShown && !howTo.IsVisible, $"found={howTo != null} shown={howToShown}");
 
+                // 1c. The difficulty screen (Bruno, 2026-10-26): the presets, then a custom set. Saved as difficulty_ui.png
+                // and difficulty_custom_ui.png. It leaves the default preset on.
+                DifficultyMenuUI difficultyUi = FindFirstObjectByType<MainMenuUI>()?.GetComponent<DifficultyMenuUI>();
+                bool difficultyShown = false;
+                string presetText = "", customText = "";
+                if (difficultyUi != null && DifficultyManager.Instance != null)
+                {
+                    difficultyUi.Show();
+                    yield return null;
+                    yield return null;
+                    difficultyShown = difficultyUi.IsVisible;
+                    Canvas difficultyCanvas = difficultyUi.transform.Find("DifficultyMenuCanvas")?.GetComponent<Canvas>();
+                    presetText = difficultyUi.TotalText;
+                    if (difficultyShown && difficultyCanvas != null) yield return OverlayShot.Capture(difficultyCanvas, "difficulty_ui.png", 0.2f);
+                    difficultyUi.PressModule("thick_skin");
+                    difficultyUi.PressModule("one_hit_wonder");
+                    yield return null;
+                    customText = difficultyUi.TotalText;
+                    if (difficultyShown && difficultyCanvas != null) yield return OverlayShot.Capture(difficultyCanvas, "difficulty_custom_ui.png", 0.2f);
+                    difficultyUi.PressPreset(DifficultyManager.DefaultPreset);
+                    difficultyUi.Close();
+                    yield return null;
+                }
+                Record("difficulty_ui", difficultyShown && presetText.Contains("PRESET") && customText.Contains("CUSTOM")
+                    && DifficultyManager.Instance.ActivePresetPercent == DifficultyManager.DefaultPreset && difficultyUi != null && !difficultyUi.IsVisible,
+                    $"shown={difficultyShown} preset='{presetText}' custom='{customText}'");
+
                 if (gm != null) gm.LoadLevel(level);
                 else SceneManager.LoadScene(level);
                 yield return WaitForScene(level, 30f);

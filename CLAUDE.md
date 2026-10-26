@@ -282,12 +282,21 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   (eight kinds in `Resources/Enemies/`, git-ignored, vendor data), `EnemySpawn` markers (the figure replaces the marker
   at load, same name and path: a room with enemies holds no vendor data), `RoomKit` (boxes, NavMesh, spawns, exits,
   entries, sequences, triggers), `CameraCoverage` reads box floors. `KitTest` in git: 3 armed, 2 civilians, cover,
-  items, save, checkpoint, a door to TRAVEL B; `KitTests` (5). AI/COVER/CIVILIAN TEST use markers now (0 vendor refs);
-  they stay git-ignored until Bruno says they may go in. AFTER A VENDOR IMPORT: run `BuildEnemyPrefabs` once.
+  items, save, checkpoint, a door to TRAVEL B; `KitTests` (5). AI/COVER/CIVILIAN TEST use markers now (0 vendor refs)
+  and are in git since 2026-10-26 (Bruno). AFTER A VENDOR IMPORT: run `BuildEnemyPrefabs` once.
 - 2026-10-26, night, five more seams (`devlog-notes/2026-10-26_seams_part2.md`): the second wind on game time,
   subtitles hidden under the pause and the inventory, the scream caption only for the freeze, per-room statics reset,
   the URP asset's MSAA restored at the end of play. The main menu: the test rooms in their own right column (KIT,
   SCRIPT, TRAVEL TEST added).
+- 2026-10-26, day, his answers (`devlog-notes/2026-10-26_answers_difficulty.md`): the AI/COVER/CIVILIAN rooms in git; a
+  short drops the floater at once; a hurt soldier comes back full and calm after a load or a return (only the dead are
+  saved); a log page or a scan stops the world (`GameState.Reading`: only Interact, Back, Scan pass, the clip plays on
+  real time). THE DIFFICULTY: presets 100 / 150 / 200 % (no easy/normal/hard) or a custom set of modules in two
+  sections, HARDER and EASIER (`DifficultyModuleDefinition.section`, `exclusiveGroup`, `presets`; 16 assets from
+  `CreateDifficultyModules`). The total is 100 plus the modules; 150 % (the old normal) is the default. One screen
+  (`DifficultyMenuUI`) for the main menu and the pause. Enemy damage on her goes through `DifficultyManager.EnemyDamage`;
+  `PsychicStats` reads the HP, MK and SHORT scales and ONE-HIT WONDER. Batch runs ignore the saved choice (150 %).
+  On screen the drug NALCON is the MK CAPSULE (code ids stay `Nalcon`/`nalcon`).
 
 ## Rules
 

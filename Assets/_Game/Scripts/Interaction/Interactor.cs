@@ -11,7 +11,8 @@ namespace GlorifiedBody.Interaction
     /// separate keys). The focus is the nearest Interactable in its range inside the cone of her facing.
     /// Interact on it asks the question ("Take the test log?", "Use the test key?"): Interact again says yes,
     /// Back says no. A door without its key only shows "It is locked.". A taken log opens for reading;
-    /// Interact or Back closes it. She stands still while she answers, reads or sees a message.
+    /// Interact or Back closes it. She stands still while she answers, reads or sees a message. The page stops the
+    /// world (GameState.Reading, Bruno, 2026-10-26).
     /// </summary>
     public sealed class Interactor : MonoBehaviour
     {
@@ -52,7 +53,8 @@ namespace GlorifiedBody.Interaction
 
         private void Update()
         {
-            if (GameManager.Instance != null && !GameManager.Instance.IsPlaying) return;
+            GameManager gm = GameManager.Instance;
+            if (gm != null && !gm.IsPlaying && !(gm.IsReading && Current == State.Reading)) return;
             bool interact = GameInput.GetActionDown(InputManager.GameAction.Interact, KeyCode.E);
             bool back = GameInput.GetActionDown(InputManager.GameAction.Back, KeyCode.S);
             bool sameFrame = Time.frameCount == stateFrame;
@@ -144,6 +146,7 @@ namespace GlorifiedBody.Interaction
             if (item == null || item.kind != ItemKind.Log) return;
             Reading = item;
             SetState(State.Reading);
+            GameManager.Instance?.BeginReading();
             Result("read:" + item.itemId);
         }
 
@@ -152,6 +155,7 @@ namespace GlorifiedBody.Interaction
             string id = Reading != null ? Reading.itemId : "none";
             Reading = null;
             SetState(State.Free);
+            GameManager.Instance?.EndReading();
             Result("closed:" + id);
         }
 

@@ -176,7 +176,7 @@ namespace GlorifiedBody.Enemy
             if (health != null && !health.IsDead)
             {
                 DeathMenuUI.LastKillerId = killerId;
-                health.TakeDamage(damage);
+                health.TakeDamage(GlorifiedBody.Systems.DifficultyManager.EnemyDamage(damage));
                 HitEventBus.Raise(new HitInfo
                 {
                     Attacker = attacker,
@@ -261,7 +261,7 @@ namespace GlorifiedBody.Enemy
                 if (health != null && !health.IsDead)
                 {
                     DeathMenuUI.LastKillerId = killerId;
-                    health.TakeDamage(damage);
+                    health.TakeDamage(GlorifiedBody.Systems.DifficultyManager.EnemyDamage(damage));
                     HitEventBus.Raise(new HitInfo
                     {
                         Attacker = attacker,

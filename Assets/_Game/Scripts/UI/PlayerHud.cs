@@ -10,7 +10,7 @@ using GlorifiedBody.Systems;
 namespace GlorifiedBody.UI
 {
     /// <summary>
-    /// The greybox HUD: the three bars (HP, NALCON, SHORT), the selected power and the drug counts, the
+    /// The greybox HUD: the three bars (HP, MK, SHORT), the selected power and the drug counts, the
     /// charge circle over the target, and the SHORT warning. Built in code like the menus. The final art
     /// comes with the look test.
     /// </summary>
@@ -491,7 +491,7 @@ namespace GlorifiedBody.UI
 
             if (drugs != null)
             {
-                drugText.text = $"NALCON {drugs.Count(DrugType.Nalcon)}   RED {drugs.Count(DrugType.Red)}   D-FELON {drugs.Count(DrugType.DFelon)}";
+                drugText.text = $"MK CAPSULE {drugs.Count(DrugType.Nalcon)}   RED {drugs.Count(DrugType.Red)}   D-FELON {drugs.Count(DrugType.DFelon)}";
             }
 
             bool shortActive = shortController != null && shortController.IsActive;

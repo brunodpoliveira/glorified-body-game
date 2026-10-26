@@ -14,7 +14,7 @@ namespace GlorifiedBody.Interaction
 
         public override bool Available => base.Available && item != null;
 
-        public string Name => item != null ? "the " + item.displayName.ToLowerInvariant() : "it";
+        public string Name => item != null ? "the " + ItemDefinition.Spoken(item.displayName) : "it";
 
         public override string Hint => "take " + Name;
 

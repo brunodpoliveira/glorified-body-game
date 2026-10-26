@@ -90,11 +90,13 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.IsTrue(ui.ReaderShown, "the page on screen");
             Assert.IsTrue(ui.ReaderTextShown.Contains("PLACEHOLDER"), "the log's text");
             Assert.IsTrue(log == null, "the log left the room");
+            AssertWorldStopped("the page");
 
             yield return Press(InputManager.GameAction.Interact);
             Assert.AreEqual(Interactor.State.Free, interactor.Current, "Interact closes the page");
             Assert.IsFalse(ui.ReaderShown);
             Assert.IsFalse(tank.MovementLocked, "she walks again");
+            AssertWorldRuns("the page closed");
             Assert.AreEqual(Scans0, scanner.Scans, "Interact never scans");
         }
 
@@ -167,12 +169,14 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.IsTrue(ui.ScanShown, "the scan view on screen");
             Assert.AreSame(door.image, ui.ScanTextureShown, "the door's picture");
             Assert.IsTrue(tank.MovementLocked, "she stands still while she sees it");
+            AssertWorldStopped("the picture");
             yield return new WaitForSecondsRealtime(PsychicScanner.MinViewSeconds + 0.1f);
             yield return Press(InputManager.GameAction.Scan);
             Assert.IsFalse(scanner.IsViewing, "Scan again closes it");
             Assert.IsFalse(ui.ScanShown);
             Assert.AreEqual(door.scanId, scanner.LastClosedId);
             Assert.IsFalse(tank.MovementLocked);
+            AssertWorldRuns("the picture closed");
         }
 
         [UnityTest]
@@ -184,13 +188,15 @@ namespace GlorifiedBody.Tests.PlayMode
             yield return StandFacing(director.MonitorsPoint, monitors.FocusPoint);
             yield return Press(InputManager.GameAction.Scan);
             Assert.IsTrue(scanner.IsViewing, "Scan reads the monitors");
+            AssertWorldStopped("the clip");
             float t0 = Time.realtimeSinceStartup;
             while (ui.VideoFramesSeen < 30 && Time.realtimeSinceStartup - t0 < 5f) yield return null;
-            Assert.GreaterOrEqual(ui.VideoFramesSeen, 30, "the clip plays (frames seen)");
+            Assert.GreaterOrEqual(ui.VideoFramesSeen, 30, "the clip plays in the stopped world (frames seen)");
             while (scanner.IsViewing && Time.realtimeSinceStartup - t0 < 10f) yield return null;
             Assert.IsFalse(scanner.IsViewing, "the view closes at the end of the clip");
             Assert.IsTrue(scanner.LastClosedWasVideo);
             Assert.IsTrue(scanner.LastResult.StartsWith("ended:"), "it ended by itself: " + scanner.LastResult);
+            AssertWorldRuns("the clip ended");
         }
 
         [UnityTest]
@@ -319,6 +325,21 @@ namespace GlorifiedBody.Tests.PlayMode
         // ── Helpers ───────────────────────────────────────────────────
 
         private int Scans0 => 0;
+
+        /// <summary>Bruno, 2026-10-26: reading a log or watching a scan stops the world; only the close keys pass.</summary>
+        private static void AssertWorldStopped(string what)
+        {
+            Assert.AreEqual(0f, Time.timeScale, 0.001f, what + " stops the world");
+            Assert.IsFalse(GameManager.Instance.IsPlaying, what + ": the game state is not Playing");
+            Assert.IsFalse(GameManager.Instance.AllowsAction(InputManager.GameAction.Charge), what + ": no power key passes");
+            Assert.IsTrue(GameManager.Instance.AllowsAction(InputManager.GameAction.Back), what + ": the close key passes");
+        }
+
+        private static void AssertWorldRuns(string what)
+        {
+            Assert.AreEqual(1f, Time.timeScale, 0.001f, what + ": the world runs again");
+            Assert.IsTrue(GameManager.Instance.IsPlaying, what + ": Playing again");
+        }
 
         private IEnumerator StandFacing(Vector3 point, Vector3 target)
         {

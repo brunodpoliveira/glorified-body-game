@@ -134,25 +134,6 @@ InitTestScene*.unity*
 /Assets/_Game/Effects/GasSmoke_*.mat.meta
 /Assets/_Game/Effects.meta
 
-# The AI test room holds the unpacked vendor weapons and shield (their particle data). Local only (Bruno,
-# 2026-10-24). Build it with AiTestSetup.BuildAiTest (the batch run: tools/unity.sh exec).
-/Assets/_Game/Scenes/AiTest.unity
-/Assets/_Game/Scenes/AiTest.unity.meta
-/Assets/_Game/Scenes/AiTest_NavMesh.asset
-/Assets/_Game/Scenes/AiTest_NavMesh.asset.meta
-# The cover test room holds FSM soldiers with vendor data too (2026-10-24). Build it with
-# GlorifiedBody.Editor.Destruction.CoverTestSetup.BuildCoverTest.
-/Assets/_Game/Scenes/CoverTest.unity
-/Assets/_Game/Scenes/CoverTest.unity.meta
-/Assets/_Game/Scenes/CoverTest_NavMesh.asset
-/Assets/_Game/Scenes/CoverTest_NavMesh.asset.meta
-# The civilian test room (2026-10-25): its figures carry vendor data, like the AI test room. Build it with
-# GlorifiedBody.Editor.CivilianTestSetup.BuildCivilianTest.
-/Assets/_Game/Scenes/CivilianTest.unity
-/Assets/_Game/Scenes/CivilianTest.unity.meta
-/Assets/_Game/Scenes/CivilianTest_NavMesh.asset
-/Assets/_Game/Scenes/CivilianTest_NavMesh.asset.meta
-
 # The enemy prefabs of the room kit (2026-10-26): the figures with the unpacked vendor weapons and shields. Local only;
 # a room in git holds EnemySpawn markers. Build them with InvectorEnemyFactory.BuildEnemyPrefabs.
 /Assets/_Game/Resources/Enemies/

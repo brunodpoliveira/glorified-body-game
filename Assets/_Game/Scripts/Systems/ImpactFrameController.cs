@@ -109,12 +109,12 @@ namespace GlorifiedBody.Systems
             freezeRoutine = null;
         }
 
-        /// <summary>The pause, the inventory and a cutscene stop the game for a moment: the freeze waits for them.</summary>
+        /// <summary>The pause, the inventory, a cutscene and a log or a scan stop the game for a moment: the freeze waits for them.</summary>
         private static bool IsHeld()
         {
             GameManager gm = GameManager.Instance;
             return gm != null && (gm.CurrentState == GameManager.GameState.Paused || gm.CurrentState == GameManager.GameState.Inventory
-                                  || gm.CurrentState == GameManager.GameState.Cutscene);
+                                  || gm.CurrentState == GameManager.GameState.Cutscene || gm.CurrentState == GameManager.GameState.Reading);
         }
 
         private static bool IsEnded() => !IsPlaying() && !IsHeld();

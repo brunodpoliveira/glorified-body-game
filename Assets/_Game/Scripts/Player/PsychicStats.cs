@@ -4,12 +4,15 @@ using UnityEngine;
 using GlorifiedBody.Combat;
 using GlorifiedBody.Core;
 using GlorifiedBody.DebugTools;
+using GlorifiedBody.Systems;
 
 namespace GlorifiedBody.Player
 {
     /// <summary>
     /// The three bars (design §2.7): HP lives in Health. NALCON is the psychic energy the powers spend.
     /// SHORT rises with every kill and with damage taken. The outfit sets the maximums and the passive recharge.
+    /// The difficulty scales them (Bruno, 2026-10-26): her maximum HP, the MK and HP recharge, the SHORT gain, and
+    /// ONE-HIT WONDER (1 HP, no second wind).
     /// </summary>
     [RequireComponent(typeof(Health))]
     public sealed class PsychicStats : MonoBehaviour
@@ -37,6 +40,8 @@ namespace GlorifiedBody.Player
         public event Action<int> OnLevelUp;
 
         private readonly HashSet<int> credited = new HashSet<int>();
+        private bool secondWindByDefault;
+        private bool oneHitApplied;
 
         /// <summary>While true the bars stop their passive change (a short, a cutscene).</summary>
         public bool RegenPaused { get; set; }
@@ -46,8 +51,10 @@ namespace GlorifiedBody.Player
         private void Awake()
         {
             health = GetComponent<Health>();
+            secondWindByDefault = health.IsSecondWindEnabled;
             if (outfit == null) outfit = Resources.Load<OutfitProfile>("Outfits/outfit_nude");
             ApplyOutfit();
+            ApplyOneHit();
         }
 
         private void OnEnable()
@@ -55,12 +62,50 @@ namespace GlorifiedBody.Player
             health.OnDamaged ??= new UnityEngine.Events.UnityEvent<float>();
             health.OnDamaged.AddListener(OnDamaged);
             HitEventBus.OnHit += OnHit;
+            DifficultyManager.OnChanged += OnDifficultyChanged;
         }
 
         private void OnDisable()
         {
             health.OnDamaged?.RemoveListener(OnDamaged);
             HitEventBus.OnHit -= OnHit;
+            DifficultyManager.OnChanged -= OnDifficultyChanged;
+        }
+
+        /// <summary>Her maximum HP: the outfit and the level, scaled by the difficulty. 1 with ONE-HIT WONDER.</summary>
+        public float MaxHpTarget
+        {
+            get
+            {
+                DifficultyManager difficulty = DifficultyManager.Instance;
+                if (difficulty != null && difficulty.OneHitKills) return 1f;
+                float hp = (outfit != null ? outfit.maxHp : health.MaxHealth) + ExperienceRules.BonusHp(Level);
+                return Mathf.Max(1f, Mathf.Round(hp * (difficulty != null ? difficulty.PlayerMaxHpScale : 1f)));
+            }
+        }
+
+        private static float Scale(Func<DifficultyManager, float> read) => DifficultyManager.Instance != null ? read(DifficultyManager.Instance) : 1f;
+
+        /// <summary>A module went on or off: the new maximum HP (she keeps her HP up to it), and the second wind.</summary>
+        private void OnDifficultyChanged()
+        {
+            RefreshMaxHp();
+            ApplyOneHit();
+            OnChanged?.Invoke();
+        }
+
+        private void RefreshMaxHp()
+        {
+            if (outfit != null) health.SetMaxHealth(MaxHpTarget, fillToMax: false);
+        }
+
+        /// <summary>ONE-HIT WONDER takes the second wind away; off again, she has the second wind of her setup.</summary>
+        private void ApplyOneHit()
+        {
+            bool oneHit = DifficultyManager.Instance != null && DifficultyManager.Instance.OneHitKills;
+            if (oneHit == oneHitApplied) return;
+            oneHitApplied = oneHit;
+            health.SetSecondWindEnabled(!oneHit && secondWindByDefault);
         }
 
         public void SetOutfit(OutfitProfile profile)
@@ -75,7 +120,7 @@ namespace GlorifiedBody.Player
         private void ApplyOutfit()
         {
             if (outfit == null) return;
-            health.SetMaxHealth(outfit.maxHp + ExperienceRules.BonusHp(Level), fillToMax: true);
+            health.SetMaxHealth(MaxHpTarget, fillToMax: true);
         }
 
         private void Update()
@@ -85,7 +130,7 @@ namespace GlorifiedBody.Player
             bool changed = false;
             if (outfit.nalconRegenPerSecond > 0f && Nalcon < MaxNalcon)
             {
-                Nalcon = Mathf.Min(MaxNalcon, Nalcon + outfit.nalconRegenPerSecond * dt);
+                Nalcon = Mathf.Min(MaxNalcon, Nalcon + outfit.nalconRegenPerSecond * Scale(d => d.MkRegenScale) * dt);
                 changed = true;
             }
             // A full SHORT bar holds (Bruno, 2026-10-20). Only the short (ResetShort at its end) or a drug
@@ -97,7 +142,7 @@ namespace GlorifiedBody.Player
             }
             if (outfit.hpRegenPerSecond > 0f && !health.IsDead && health.CurrentHealth < health.MaxHealth)
             {
-                health.Heal(outfit.hpRegenPerSecond * dt);
+                health.Heal(outfit.hpRegenPerSecond * Scale(d => d.HpRegenScale) * dt);
                 changed = true;
             }
             if (changed) OnChanged?.Invoke();
@@ -137,13 +182,13 @@ namespace GlorifiedBody.Player
         public void NotifyKill(string enemyId)
         {
             Kills++;
-            AddShort(shortPerKill);
+            AddShort(shortPerKill * Scale(d => d.ShortGainScale));
             RunTelemetry.Event("enemy_killed", enemyId);
         }
 
         private void OnDamaged(float amount)
         {
-            AddShort(amount * shortPerDamagePoint);
+            AddShort(amount * shortPerDamagePoint * Scale(d => d.ShortGainScale));
         }
 
         /// <summary>
@@ -172,8 +217,9 @@ namespace GlorifiedBody.Player
             while (Level < target)
             {
                 Level++;
-                health.SetMaxHealth(health.MaxHealth + ExperienceRules.HpPerLevel, fillToMax: false);
-                health.Heal(ExperienceRules.HpPerLevel);
+                float before = health.MaxHealth;
+                health.SetMaxHealth(MaxHpTarget, fillToMax: false);
+                health.Heal(health.MaxHealth - before);
                 RunTelemetry.Event("level_up", $"{Level}:hp={health.MaxHealth:0}:damage=x{LevelDamageScale:0.00}");
                 OnLevelUp?.Invoke(Level);
             }
@@ -186,6 +232,7 @@ namespace GlorifiedBody.Player
             Kills = Mathf.Max(0, kills);
             Exp = Mathf.Max(0, exp);
             Level = ExperienceRules.LevelFor(Exp);
+            RefreshMaxHp(); // the difficulty of now, not of the save
             DebugSet(nalcon, shortValue);
         }
 

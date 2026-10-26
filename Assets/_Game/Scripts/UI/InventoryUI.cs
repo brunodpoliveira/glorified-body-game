@@ -264,7 +264,7 @@ namespace GlorifiedBody.UI
                 {
                     // The first press asks (Bruno, 2026-10-22): "Use the RED?".
                     pendingDrug = (int)e.Drug.Value;
-                    wordsText.text = $"Use the {e.Name.ToLowerInvariant()}?";
+                    wordsText.text = $"Use the {ItemDefinition.Spoken(e.Name)}?";
                     keysText.text = $"{Key(InputManager.GameAction.Interact)}  yes      {Key(InputManager.GameAction.Back)}  no";
                     return "ask:" + e.Drug.Value;
                 }

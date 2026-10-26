@@ -10,21 +10,19 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4f43226abc344609aaf6175fda0ff1bf, type: 3}
-  m_Name: preset_normal
+  m_Name: mending
   m_EditorClassIdentifier: Assembly-CSharp::GlorifiedBody.Systems.DifficultyModuleDefinition
-  moduleId: preset_normal
-  displayName: NORMAL
-  symbol: II
-  description: Two enemies fire at a time. 1.0 s from the laser to the shot.
-  difficultyPercent: 0
-  moduleType: 2
+  moduleId: mending
+  displayName: MENDING
+  symbol: "\u2719"
+  description: HP recharges twice as fast (the outfits that recharge HP).
+  difficultyPercent: -10
+  moduleType: 15
+  section: 2
   isBaseline: 0
   hideInUI: 0
-  presetGroup: preset
+  exclusiveGroup: hp
+  presets: 
   parameters:
-  - key: maxSimultaneousShooters
-    value: 2
-  - key: attackSeconds
-    value: 1
-  - key: restSeconds
+  - key: hpRegenScale
     value: 2

@@ -27,6 +27,17 @@ namespace GlorifiedBody.Interaction
     {
         public string itemId = "item";
         public string displayName = "ITEM";
+
+        /// <summary>A name inside a question ("Take the MK capsule?"): lower case, but MK stays MK.</summary>
+        public static string Spoken(string name)
+        {
+            string[] words = (name ?? "").ToLowerInvariant().Split(' ');
+            for (int i = 0; i < words.Length; i++)
+            {
+                if (words[i] == "mk") words[i] = "MK";
+            }
+            return string.Join(" ", words);
+        }
         public ItemKind kind = ItemKind.Object;
         public DrugType drugType = DrugType.Nalcon;
         [Tooltip("The colour of the item's cell in the inventory and of its unlit material in the room.")]

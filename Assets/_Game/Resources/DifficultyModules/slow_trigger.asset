@@ -10,21 +10,19 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4f43226abc344609aaf6175fda0ff1bf, type: 3}
-  m_Name: preset_easy
+  m_Name: slow_trigger
   m_EditorClassIdentifier: Assembly-CSharp::GlorifiedBody.Systems.DifficultyModuleDefinition
-  moduleId: preset_easy
-  displayName: EASY
-  symbol: I
-  description: One enemy fires at a time. 1.5 s from the laser to the shot.
-  difficultyPercent: -25
-  moduleType: 1
+  moduleId: slow_trigger
+  displayName: SLOW TRIGGER
+  symbol: "\xAB"
+  description: 2.0 s from the laser to the attack.
+  difficultyPercent: -20
+  moduleType: 10
+  section: 2
   isBaseline: 0
   hideInUI: 0
-  presetGroup: preset
+  exclusiveGroup: trigger
+  presets: 
   parameters:
-  - key: maxSimultaneousShooters
-    value: 1
   - key: attackSeconds
-    value: 1.5
-  - key: restSeconds
     value: 2

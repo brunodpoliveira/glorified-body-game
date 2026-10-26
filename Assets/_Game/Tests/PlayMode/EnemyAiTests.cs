@@ -215,11 +215,10 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator EasyDifficulty_OnlyOneSoldierAimsAtATime()
+        public IEnumerator Difficulty100_OnlyOneSoldierAimsAtATime()
         {
-            DifficultyModuleDefinition previous = DifficultyManager.Instance.ActivePreset;
-            DifficultyManager.Instance.SetPreset(DifficultyModuleDefinition.ModuleType.PresetEasy);
-            Assert.AreEqual(1, ShooterScheduler.MaxSlots, "easy: one shooter at a time");
+            DifficultyManager.Instance.SetPreset(100);
+            Assert.AreEqual(1, ShooterScheduler.MaxSlots, "100 %: one shooter at a time");
             int maxAiming = 0, shots = 0;
             float t0 = Time.time;
             while (Time.time - t0 < 18f)
@@ -228,10 +227,9 @@ namespace GlorifiedBody.Tests.PlayMode
                 yield return null;
             }
             shots = soldiers.Sum(s => s.Gun.ShotsFired);
-            // Back to the player's own preset (ResetToDefaults would also clear the modifiers).
-            DifficultyManager.Instance.SetPreset(previous != null ? previous.moduleType : DifficultyModuleDefinition.ModuleType.PresetNormal);
+            DifficultyManager.Instance.SetPreset(DifficultyManager.DefaultPreset);
             Debug.Log($"[EnemyAiTests] easy: max aiming at once {maxAiming}, shots {shots}");
-            Assert.AreEqual(1, maxAiming, "never two aims at once on easy");
+            Assert.AreEqual(1, maxAiming, "never two aims at once at 100 %");
             Assert.GreaterOrEqual(shots, 2, "they still shoot, one after the other");
         }
 
@@ -309,27 +307,26 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator Telegraph_FollowsTheDifficulty_Hard08_Easy15()
+        public IEnumerator Telegraph_FollowsTheDifficulty_200At08_100At15()
         {
-            DifficultyModuleDefinition previous = DifficultyManager.Instance.ActivePreset;
             try
             {
-                DifficultyManager.Instance.SetPreset(DifficultyModuleDefinition.ModuleType.PresetHard);
-                Assert.AreEqual(0.8f, DifficultyManager.Instance.AttackSeconds, 0.001f, "hard: 0.8 s");
+                DifficultyManager.Instance.SetPreset(200);
+                Assert.AreEqual(0.8f, DifficultyManager.Instance.AttackSeconds, 0.001f, "200 %: 0.8 s");
                 float hard = -1f;
                 yield return MeasureAttack(v => hard = v);
-                DifficultyManager.Instance.SetPreset(DifficultyModuleDefinition.ModuleType.PresetEasy);
-                Assert.AreEqual(1.5f, DifficultyManager.Instance.AttackSeconds, 0.001f, "easy: 1.5 s");
+                DifficultyManager.Instance.SetPreset(100);
+                Assert.AreEqual(1.5f, DifficultyManager.Instance.AttackSeconds, 0.001f, "100 %: 1.5 s");
                 float easy = -1f;
                 yield return MeasureAttack(v => easy = v);
                 Debug.Log($"[EnemyAiTests] laser to attack: hard {hard:0.00} s, easy {easy:0.00} s");
-                Assert.AreEqual(0.8f, hard, 0.08f, "hard: 0.8 s from the laser to the attack");
-                Assert.AreEqual(1.5f, easy, 0.08f, "easy: 1.5 s from the laser to the attack");
+                Assert.AreEqual(0.8f, hard, 0.08f, "200 %: 0.8 s from the laser to the attack");
+                Assert.AreEqual(1.5f, easy, 0.08f, "100 %: 1.5 s from the laser to the attack");
                 Assert.AreEqual(2f, DifficultyManager.Instance.RestSeconds, 0.001f, "2 s rest");
             }
             finally
             {
-                DifficultyManager.Instance.SetPreset(previous != null ? previous.moduleType : DifficultyModuleDefinition.ModuleType.PresetNormal);
+                DifficultyManager.Instance.SetPreset(DifficultyManager.DefaultPreset);
             }
         }
 

@@ -98,6 +98,9 @@ namespace GlorifiedBody.Player
             pendingSelf = 0f;
             stats.RegenPaused = true;
             if (tank != null) tank.SetSlowWalk(true);
+            // Her powers leave her control: a held floater drops at once, unhurt (Bruno, 2026-10-26).
+            PsychicPowers powers = GetComponent<PsychicPowers>();
+            if (powers != null && powers.HeldLift != null) powers.HeldLift.Release(gameObject);
             RunTelemetry.Event("short_begin", $"hp={health.CurrentHealth:0}");
             // The surge pops the lamps near her (the breakable cover, 2026-10-24, PROPOSED).
             Breakables.Surge(transform.position + Vector3.up * 1.5f, SurgeRadius);

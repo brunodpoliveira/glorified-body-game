@@ -105,7 +105,7 @@ namespace GlorifiedBody.Enemy
                 playerHealth = p.GetComponentInChildren<Health>();
             }
             if (playerHealth == null || playerHealth.IsDead || !Inside(player.position)) return;
-            float amount = damagePerSecond * Tick;
+            float amount = GlorifiedBody.Systems.DifficultyManager.EnemyDamage(damagePerSecond * Tick);
             if (playerHealth.IsInvulnerable) return;
             DeathMenuUI.LastKillerId = killerId;
             playerHealth.TakeDamage(amount);

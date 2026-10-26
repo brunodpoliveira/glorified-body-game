@@ -14,8 +14,8 @@ namespace GlorifiedBody.Editor
     /// The civilian test room (Bruno, 2026-10-25: "another test room to test the unarmed civvies"): a lab office of
     /// 16 x 12 m with desks, a pillar and a dead-end alcove in the north-east corner. Three unarmed civilians at
     /// their desks (two lab workers and a nurse, CivilianBrain), one guard with a pistol at the east door (the
-    /// civilians' scream calls him), Lucy at the south end. Two fixed cameras. Local only, as the AI test room: the
-    /// figures carry vendor data (.gitignore). The main menu's CIVILIAN TEST button opens it.
+    /// civilians' scream calls him), Lucy at the south end. Two fixed cameras. The figures are spawn markers, so the
+    /// scene holds no vendor data and is in git (Bruno, 2026-10-26). The main menu's CIVILIAN TEST button opens it.
     /// Batch: tools/unity.sh exec GlorifiedBody.Editor.CivilianTestSetup.BuildCivilianTest
     /// </summary>
     public static class CivilianTestSetup

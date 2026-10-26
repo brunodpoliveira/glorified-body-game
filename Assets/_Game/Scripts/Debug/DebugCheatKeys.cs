@@ -85,7 +85,7 @@ namespace GlorifiedBody.DebugTools
                 drugs.DebugSet(DrugType.Red, 2);
                 drugs.DebugSet(DrugType.DFelon, 2);
             }
-            Debug.Log("[DebugCheatKeys] HP and nalcon refilled, two drugs of each.");
+            Debug.Log("[DebugCheatKeys] HP and MK refilled, two drugs of each.");
             return true;
         }
 
@@ -100,7 +100,7 @@ namespace GlorifiedBody.DebugTools
             PsychicStats stats = FindStats(out _);
             if (stats == null) return false;
             stats.DebugSet(stats.Nalcon + delta, stats.Short);
-            Debug.Log($"[DebugCheatKeys] Nalcon {(delta < 0f ? "-" : "+")}{Mathf.Abs(delta):0}: now {stats.Nalcon:0}.");
+            Debug.Log($"[DebugCheatKeys] MK {(delta < 0f ? "-" : "+")}{Mathf.Abs(delta):0}: now {stats.Nalcon:0}.");
             return true;
         }
 

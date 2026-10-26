@@ -196,9 +196,12 @@ namespace GlorifiedBody.UI
             video.playOnAwake = false;
             video.isLooping = false;
             video.renderMode = VideoRenderMode.RenderTexture;
+            // The world stops during a scan (GameState.Reading): the clip runs on real time and its sound passes the listener pause.
+            video.timeUpdateMode = VideoTimeUpdateMode.UnscaledGameTime;
             // The clip's own sound on the Voice channel (a memory speaks; muted before 2026-10-26).
             scanAudio = root.AddComponent<AudioSource>();
             GlorifiedBody.Audio.GameAudio.Bind(scanAudio, GlorifiedBody.Audio.SoundChannel.Voice, 1f, spatial: false);
+            scanAudio.ignoreListenerPause = true;
             video.audioOutputMode = VideoAudioOutputMode.AudioSource;
             video.SetTargetAudioSource(0, scanAudio);
             video.waitForFirstFrame = true;

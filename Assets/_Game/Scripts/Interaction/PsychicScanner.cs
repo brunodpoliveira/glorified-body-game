@@ -10,8 +10,8 @@ namespace GlorifiedBody.Interaction
     /// The psychic scan (design §2.9, round 8 and 9; Bruno 2026-10-22: its own key, separate from Interact).
     /// The Scan key reads the nearest Scannable in range inside the cone of her facing: a picture or a short
     /// clip fills the screen (InteractionUI). A picture closes with Scan, Interact or Back; a clip closes at
-    /// its end or with one of those keys. She stands still while she sees it, and the room goes on: the scan costs
-    /// nothing but that time (Bruno, 2026-10-22). The reach is close, 1.5 m (Scannable.DefaultRange).
+    /// its end or with one of those keys. The world stops while she sees it (GameState.Reading, Bruno, 2026-10-26;
+    /// on 2026-10-22 the room went on). The reach is close, 1.5 m (Scannable.DefaultRange).
     /// </summary>
     public sealed class PsychicScanner : MonoBehaviour
     {
@@ -51,7 +51,8 @@ namespace GlorifiedBody.Interaction
 
         private void Update()
         {
-            if (GameManager.Instance != null && !GameManager.Instance.IsPlaying) return;
+            GameManager gm = GameManager.Instance;
+            if (gm != null && !gm.IsPlaying && !(gm.IsReading && Viewing != null)) return;
             bool scan = GameInput.GetActionDown(InputManager.GameAction.Scan, KeyCode.F);
             if (Viewing == null)
             {
@@ -96,6 +97,7 @@ namespace GlorifiedBody.Interaction
             startFrame = Time.frameCount;
             Scans++;
             SetLock(true);
+            GameManager.Instance?.BeginReading();
             Result((target.IsVideo ? "video:" : "image:") + target.scanId);
             OnScanStarted?.Invoke(target);
         }
@@ -110,6 +112,7 @@ namespace GlorifiedBody.Interaction
             Viewing = null;
             EndFrame = Time.frameCount;
             SetLock(false);
+            GameManager.Instance?.EndReading();
             Result($"{why}:{ended.scanId}:{Time.unscaledTime - ViewStartTime:0.0}s");
             OnScanEnded?.Invoke(ended);
         }

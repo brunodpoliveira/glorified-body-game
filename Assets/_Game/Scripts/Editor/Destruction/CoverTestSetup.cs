@@ -17,8 +17,8 @@ namespace GlorifiedBody.Editor.Destruction
     /// 16 x 12 m, 3.2 m high, lit only by six breakable ceiling lamps (Realtime, hard shadows, a fake bounce each)
     /// and a weak blue fill. Three chest-high barricades (two of them the soldiers' cover), two tall screens on her
     /// side, three tables with items (two beside the soldiers' barricades), four plaster patches on the walls. Two FSM soldiers (a rifleman and a soldier) and Lucy at the south end.
-    /// Two fixed cameras under the ceiling. Local only, as the AI test room: the soldiers carry vendor data
-    /// (.gitignore). The main menu's COVER TEST button opens it.
+    /// Two fixed cameras under the ceiling. The soldiers are spawn markers, so the scene holds no vendor data and is in
+    /// git (Bruno, 2026-10-26). The main menu's COVER TEST button opens it.
     /// Batch: tools/unity.sh exec GlorifiedBody.Editor.Destruction.CoverTestSetup.BuildCoverTest
     /// </summary>
     public static class CoverTestSetup

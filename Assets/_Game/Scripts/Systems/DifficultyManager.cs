@@ -1,20 +1,28 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace GlorifiedBody.Systems
 {
     /// <summary>
-    /// Central manager for the modular difficulty system.
-    /// Tracks which difficulty modules are active, computes total difficulty,
-    /// and provides query methods for other systems.
-    /// Presets (Easy, Normal, Hard) are exclusive: EnableModule on a preset turns the other presets of
-    /// its group off. One preset is always active (PresetNormal by default).
-    /// Persists across scenes via DontDestroyOnLoad.
-    /// Selections are saved to PlayerPrefs.
+    /// The difficulty (Bruno, 2026-10-26): three presets, 100 %, 150 % and 200 %, or a custom set of modules in two
+    /// sections, harder and easier. The total is the base 100 % plus the percent of every active module. A preset is a
+    /// set of modules (DifficultyModuleDefinition.presets); a set that matches no preset is CUSTOM. The other systems
+    /// read the numbers here: the shooters at a time, the telegraph, the rest, and the scales of damage, HP, MK and
+    /// SHORT. Persists across scenes (DontDestroyOnLoad), and the selection is saved to PlayerPrefs.
     /// </summary>
     public class DifficultyManager : MonoBehaviour
     {
         public static DifficultyManager Instance { get; private set; }
+
+        /// <summary>The three presets, in percent.</summary>
+        public static readonly int[] PresetPercents = { 100, 150, 200 };
+
+        /// <summary>A new game starts at 150 % (the old NORMAL: two enemies fire at a time, 1.0 s telegraph), PROPOSED.</summary>
+        public const int DefaultPreset = 150;
+
+        /// <summary>A module went on or off, or a preset was chosen.</summary>
+        public static event Action OnChanged;
 
         [Header("Module Registry")]
         [Tooltip("All available difficulty modules. Populate in inspector or auto-loaded from Resources/DifficultyModules/.")]
@@ -25,24 +33,25 @@ namespace GlorifiedBody.Systems
         private Dictionary<string, DifficultyModuleDefinition> moduleById = new Dictionary<string, DifficultyModuleDefinition>();
         private Dictionary<DifficultyModuleDefinition.ModuleType, DifficultyModuleDefinition> moduleByType = new Dictionary<DifficultyModuleDefinition.ModuleType, DifficultyModuleDefinition>();
 
-        private const string PREFS_PREFIX = "difficulty_";
-        private const string PREFS_ACTIVE_LIST = "difficulty_activeModules";
+        // v2 (2026-10-26): the old list held the EASY / NORMAL / HARD preset ids.
+        private const string PREFS_ACTIVE_LIST = "difficulty_modules_v2";
 
         // ── Public Properties ────────────────────────────────────────────
 
-        public int BaseDifficultyPercent => 0;
-
+        /// <summary>The base 100 % plus every active module.</summary>
         public int TotalDifficultyPercent
         {
             get
             {
-                int total = BaseDifficultyPercent;
+                int total = 0;
+                bool hasBase = false;
                 foreach (var mod in allModules)
                 {
-                    if (IsModuleActive(mod))
-                        total += mod.difficultyPercent;
+                    if (mod == null || !IsModuleActive(mod)) continue;
+                    total += mod.difficultyPercent;
+                    if (mod.isBaseline) hasBase = true;
                 }
-                return total;
+                return hasBase ? total : 100 + total;
             }
         }
 
@@ -50,49 +59,50 @@ namespace GlorifiedBody.Systems
 
         public int ActiveModuleCount => activeModuleIds.Count;
 
-        /// <summary>The active preset (Easy, Normal or Hard), or null before Awake.</summary>
-        public DifficultyModuleDefinition ActivePreset
+        /// <summary>The preset that the active set matches (100, 150 or 200), or 0 for a custom set.</summary>
+        public int ActivePresetPercent
         {
             get
             {
-                foreach (var mod in allModules)
+                foreach (int percent in PresetPercents)
                 {
-                    if (mod != null && mod.IsPreset && activeModuleIds.Contains(mod.moduleId))
-                        return mod;
+                    if (MatchesPreset(percent)) return percent;
                 }
-                return null;
+                return 0;
             }
         }
 
-        /// <summary>How many enemies may fire at the same time. 0 = every enemy (design: easy 1, normal 2, hard all).</summary>
-        public int MaxSimultaneousShooters
-        {
-            get
-            {
-                var preset = ActivePreset;
-                return preset != null ? Mathf.RoundToInt(preset.GetParam(DifficultyModuleDefinition.ParamMaxSimultaneousShooters, 0f)) : 0;
-            }
-        }
+        public bool IsCustom => ActivePresetPercent == 0;
 
-        /// <summary>Seconds from the laser to the shot. Normal (1.0) without a preset.</summary>
-        public float AttackSeconds
-        {
-            get
-            {
-                var preset = ActivePreset;
-                return preset != null ? preset.GetParam(DifficultyModuleDefinition.ParamAttackSeconds, 1f) : 1f;
-            }
-        }
+        /// <summary>"150 %", or "CUSTOM 135 %".</summary>
+        public string Label => IsCustom ? $"CUSTOM {TotalDifficultyPercent}%" : $"{ActivePresetPercent}%";
+
+        /// <summary>How many enemies may fire at the same time. 0 = every enemy.</summary>
+        public int MaxSimultaneousShooters => Mathf.RoundToInt(Override(DifficultyModuleDefinition.ParamMaxSimultaneousShooters, 1f));
+
+        /// <summary>Seconds from the laser to the attack.</summary>
+        public float AttackSeconds => Override(DifficultyModuleDefinition.ParamAttackSeconds, 1.5f);
 
         /// <summary>Seconds an enemy rests after an attack.</summary>
-        public float RestSeconds
-        {
-            get
-            {
-                var preset = ActivePreset;
-                return preset != null ? preset.GetParam(DifficultyModuleDefinition.ParamRestSeconds, 2f) : 2f;
-            }
-        }
+        public float RestSeconds => Override(DifficultyModuleDefinition.ParamRestSeconds, 2f);
+
+        /// <summary>The damage of every enemy attack on her.</summary>
+        public float EnemyDamageScale => Product(DifficultyModuleDefinition.ParamEnemyDamageScale);
+
+        /// <summary>Her maximum HP.</summary>
+        public float PlayerMaxHpScale => Product(DifficultyModuleDefinition.ParamPlayerMaxHpScale);
+
+        /// <summary>Any hit kills her, and she has no second wind.</summary>
+        public bool OneHitKills => IsModuleActive(DifficultyModuleDefinition.ModuleType.OneHitWonder);
+
+        public float MkRegenScale => Product(DifficultyModuleDefinition.ParamMkRegenScale);
+
+        public float ShortGainScale => Product(DifficultyModuleDefinition.ParamShortGainScale);
+
+        public float HpRegenScale => Product(DifficultyModuleDefinition.ParamHpRegenScale);
+
+        /// <summary>An enemy attack's damage on her at the active difficulty (no manager: unchanged).</summary>
+        public static float EnemyDamage(float amount) => Instance != null ? amount * Instance.EnemyDamageScale : amount;
 
         // ── Lifecycle ────────────────────────────────────────────────────
 
@@ -120,8 +130,7 @@ namespace GlorifiedBody.Systems
 
             BuildLookups();
             ActivateBaselineModules();
-            LoadSelections();
-            EnsureDefaultPreset();
+            if (!LoadSelections()) ApplyPreset(DefaultPreset);
         }
 
         // ── Query API ────────────────────────────────────────────────────
@@ -160,34 +169,69 @@ namespace GlorifiedBody.Systems
             return mod;
         }
 
+        /// <summary>The value of the last active module (in type order) that carries the key, else the fallback.</summary>
+        public float Override(string key, float fallback)
+        {
+            float value = fallback;
+            foreach (var mod in allModules)
+            {
+                if (mod != null && IsModuleActive(mod) && mod.HasParam(key)) value = mod.GetParam(key, value);
+            }
+            return value;
+        }
+
+        /// <summary>The product of the key over the active modules (1 when none carries it).</summary>
+        public float Product(string key)
+        {
+            float value = 1f;
+            foreach (var mod in allModules)
+            {
+                if (mod != null && IsModuleActive(mod) && mod.HasParam(key)) value *= mod.GetParam(key, 1f);
+            }
+            return value;
+        }
+
+        /// <summary>True when the active set is the set of this preset.</summary>
+        public bool MatchesPreset(int percent)
+        {
+            bool any = false;
+            foreach (var mod in allModules)
+            {
+                if (mod == null || mod.isBaseline) continue;
+                any = true;
+                if (IsModuleActive(mod) != mod.InPreset(percent)) return false;
+            }
+            return any || percent == 100;
+        }
+
         // ── Module Activation ────────────────────────────────────────────
 
+        /// <summary>Turns a module on. The other modules of its exclusive group go off.</summary>
         public void EnableModule(DifficultyModuleDefinition mod)
         {
             if (mod == null) return;
             if (activeModuleIds.Contains(mod.moduleId)) return;
 
             Activate(mod);
-            SaveSelections();
+            Changed();
         }
 
-        /// <summary>A preset cannot be turned off, only replaced by another preset of its group.</summary>
         public void DisableModule(DifficultyModuleDefinition mod)
         {
             if (mod == null) return;
-            if (mod.isBaseline || mod.IsPreset) return;
+            if (mod.isBaseline) return;
             if (!activeModuleIds.Contains(mod.moduleId)) return;
 
             activeModuleIds.Remove(mod.moduleId);
-            SaveSelections();
+            Changed();
         }
 
-        /// <summary>Selects the preset of the given type. Returns false when no such preset is registered.</summary>
-        public bool SetPreset(DifficultyModuleDefinition.ModuleType type)
+        /// <summary>Selects a preset (100, 150 or 200): exactly its modules are on. False for any other number.</summary>
+        public bool SetPreset(int percent)
         {
-            var mod = GetModuleByType(type);
-            if (mod == null || !mod.IsPreset) return false;
-            EnableModule(mod);
+            if (Array.IndexOf(PresetPercents, percent) < 0) return false;
+            ApplyPreset(percent);
+            Changed();
             return true;
         }
 
@@ -195,11 +239,6 @@ namespace GlorifiedBody.Systems
         {
             if (mod == null) return false;
             if (mod.isBaseline) return true;
-            if (mod.IsPreset)
-            {
-                EnableModule(mod);
-                return true;
-            }
 
             if (activeModuleIds.Contains(mod.moduleId))
             {
@@ -215,18 +254,7 @@ namespace GlorifiedBody.Systems
 
         public void ResetToDefaults()
         {
-            activeModuleIds.Clear();
-            ActivateBaselineModules();
-            EnsureDefaultPreset();
-            SaveSelections();
-        }
-
-        public void PromoteToBaseline(DifficultyModuleDefinition mod)
-        {
-            if (mod == null) return;
-            mod.isBaseline = true;
-            if (!activeModuleIds.Contains(mod.moduleId))
-                activeModuleIds.Add(mod.moduleId);
+            SetPreset(DefaultPreset);
         }
 
         public void RegisterModule(DifficultyModuleDefinition mod)
@@ -235,6 +263,7 @@ namespace GlorifiedBody.Systems
             if (moduleById.ContainsKey(mod.moduleId)) return;
 
             allModules.Add(mod);
+            allModules.Sort((a, b) => a.moduleType.CompareTo(b.moduleType));
             moduleById[mod.moduleId] = mod;
             moduleByType[mod.moduleType] = mod;
 
@@ -244,8 +273,15 @@ namespace GlorifiedBody.Systems
 
         // ── Persistence ──────────────────────────────────────────────────
 
+        private void Changed()
+        {
+            SaveSelections();
+            OnChanged?.Invoke();
+        }
+
         private void SaveSelections()
         {
+            if (Application.isBatchMode) return; // tests and bots: Bruno's own choice stays as it is
             var nonBaseline = new List<string>();
             foreach (var id in activeModuleIds)
             {
@@ -253,25 +289,30 @@ namespace GlorifiedBody.Systems
                     nonBaseline.Add(id);
             }
 
-            string serialized = string.Join(",", nonBaseline);
-            PlayerPrefs.SetString(PREFS_ACTIVE_LIST, serialized);
+            PlayerPrefs.SetString(PREFS_ACTIVE_LIST, string.Join(",", nonBaseline));
             PlayerPrefs.Save();
         }
 
-        private void LoadSelections()
+        /// <summary>The saved set. False when nothing is saved (a first start): the default preset applies.</summary>
+        private bool LoadSelections()
         {
+            // Tests and bots run at the default preset, whatever the editor saved.
+            if (Application.isBatchMode || !PlayerPrefs.HasKey(PREFS_ACTIVE_LIST)) return false;
             string serialized = PlayerPrefs.GetString(PREFS_ACTIVE_LIST, "");
-            if (string.IsNullOrEmpty(serialized)) return;
-
-            string[] ids = serialized.Split(',');
-            foreach (string id in ids)
+            int saved = 0, known = 0;
+            foreach (string id in serialized.Split(','))
             {
                 string trimmed = id.Trim();
-                if (!string.IsNullOrEmpty(trimmed) && moduleById.TryGetValue(trimmed, out var mod))
+                if (string.IsNullOrEmpty(trimmed)) continue;
+                saved++;
+                if (moduleById.TryGetValue(trimmed, out var mod))
                 {
                     Activate(mod);
+                    known++;
                 }
             }
+            // A list of ids that no module carries (a test's own modules, an old build): the default preset.
+            return saved == 0 || known > 0;
         }
 
         // ── Internal ─────────────────────────────────────────────────────
@@ -301,41 +342,29 @@ namespace GlorifiedBody.Systems
             }
         }
 
-        /// <summary>Adds a module to the active set. For a preset, the other presets of its group leave the set.</summary>
+        private void ApplyPreset(int percent)
+        {
+            activeModuleIds.Clear();
+            ActivateBaselineModules();
+            foreach (var mod in allModules)
+            {
+                if (mod != null && !mod.isBaseline && mod.InPreset(percent)) Activate(mod);
+            }
+        }
+
+        /// <summary>Adds a module to the active set. The other modules of its exclusive group leave the set.</summary>
         private void Activate(DifficultyModuleDefinition mod)
         {
-            if (mod.IsPreset)
+            if (!string.IsNullOrEmpty(mod.exclusiveGroup))
             {
                 foreach (var other in allModules)
                 {
-                    if (other != null && other != mod && other.IsPreset && other.presetGroup == mod.presetGroup)
+                    if (other != null && other != mod && other.exclusiveGroup == mod.exclusiveGroup)
                         activeModuleIds.Remove(other.moduleId);
                 }
             }
 
             activeModuleIds.Add(mod.moduleId);
-        }
-
-        /// <summary>One preset is always active. PresetNormal is the default, else the first preset found.</summary>
-        private void EnsureDefaultPreset()
-        {
-            if (ActivePreset != null) return;
-
-            var normal = GetModuleByType(DifficultyModuleDefinition.ModuleType.PresetNormal);
-            if (normal != null && normal.IsPreset)
-            {
-                Activate(normal);
-                return;
-            }
-
-            foreach (var mod in allModules)
-            {
-                if (mod != null && mod.IsPreset)
-                {
-                    Activate(mod);
-                    return;
-                }
-            }
         }
     }
 }

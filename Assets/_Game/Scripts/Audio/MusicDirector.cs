@@ -164,7 +164,8 @@ namespace GlorifiedBody.Audio
             float voice = Time.unscaledTime < voiceDuckUntil ? VoiceDuckLevel : 1f;
             GameManager gm = GameManager.Instance;
             if (gm == null) return voice;
-            bool stopped = gm.CurrentState == GameManager.GameState.Paused || gm.CurrentState == GameManager.GameState.Inventory;
+            bool stopped = gm.CurrentState == GameManager.GameState.Paused || gm.CurrentState == GameManager.GameState.Inventory
+                           || gm.CurrentState == GameManager.GameState.Reading;
             return Mathf.Min(voice, stopped ? DuckLevel : 1f);
         }
 

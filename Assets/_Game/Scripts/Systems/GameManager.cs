@@ -22,7 +22,8 @@ namespace GlorifiedBody.Systems
             Inventory, // the inventory overlay: time stops, only its keys pass (Bruno, 2026-10-22)
             GameOver,
             LevelComplete,
-            Cutscene // a cutscene plays: time stops, no game key passes (2026-10-26)
+            Cutscene, // a cutscene plays: time stops, no game key passes (2026-10-26)
+            Reading // a log or a scan fills the screen: time stops, only its close keys pass (Bruno, 2026-10-26)
         }
 
         public static GameManager Instance { get; private set; }
@@ -51,7 +52,35 @@ namespace GlorifiedBody.Systems
             if (currentState == GameState.Paused || currentState == GameState.GameOver) return false;
             if (currentState == GameState.Cutscene) return action == InputManager.GameAction.Interact; // the skip key
             if (currentState == GameState.Inventory) return IsInventoryAction(action);
+            if (currentState == GameState.Reading) return IsReadingAction(action);
             return true;
+        }
+
+        /// <summary>The keys that close a log or a scan.</summary>
+        public static bool IsReadingAction(InputManager.GameAction action) =>
+            action == InputManager.GameAction.Interact || action == InputManager.GameAction.Back
+            || action == InputManager.GameAction.Scan;
+
+        public bool IsReading => currentState == GameState.Reading;
+
+        /// <summary>A log or a scan opens: the world stops as in the pause. False when the game is not playing.</summary>
+        public bool BeginReading()
+        {
+            if (currentState != GameState.Playing) return false;
+            storedTimeScale = Time.timeScale;
+            storedFixedDeltaTime = Time.fixedDeltaTime;
+            Time.timeScale = 0f;
+            Time.fixedDeltaTime = 0f;
+            SetState(GameState.Reading);
+            return true;
+        }
+
+        public void EndReading()
+        {
+            if (currentState != GameState.Reading) return;
+            Time.timeScale = storedTimeScale;
+            Time.fixedDeltaTime = storedFixedDeltaTime;
+            SetState(GameState.Playing);
         }
 
         /// <summary>Opens the inventory overlay: the game stops as in the pause, the overlay owns the keys.</summary>

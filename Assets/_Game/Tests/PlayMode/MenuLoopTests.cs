@@ -114,13 +114,13 @@ namespace GlorifiedBody.Tests.PlayMode
         {
             yield return null;
             DifficultyManager dm = DifficultyManager.Instance;
-            Assert.IsTrue(dm.SetPreset(DifficultyModuleDefinition.ModuleType.PresetEasy), "easy preset asset");
-            Assert.AreEqual(1, dm.MaxSimultaneousShooters, "easy: one shooter");
-            Assert.IsTrue(dm.SetPreset(DifficultyModuleDefinition.ModuleType.PresetHard), "hard preset asset");
-            Assert.AreEqual(0, dm.MaxSimultaneousShooters, "hard: every enemy fires");
-            Assert.IsTrue(dm.SetPreset(DifficultyModuleDefinition.ModuleType.PresetNormal), "normal preset asset");
-            Assert.AreEqual(2, dm.MaxSimultaneousShooters, "normal: two shooters");
-            Assert.AreEqual(DifficultyModuleDefinition.ModuleType.PresetNormal, dm.ActivePreset.moduleType);
+            Assert.IsTrue(dm.SetPreset(100), "the 100 % preset");
+            Assert.AreEqual(1, dm.MaxSimultaneousShooters, "100 %: one shooter");
+            Assert.IsTrue(dm.SetPreset(200), "the 200 % preset");
+            Assert.AreEqual(0, dm.MaxSimultaneousShooters, "200 %: every enemy fires");
+            Assert.IsTrue(dm.SetPreset(150), "the 150 % preset");
+            Assert.AreEqual(2, dm.MaxSimultaneousShooters, "150 %: two shooters");
+            Assert.AreEqual(150, dm.ActivePresetPercent);
         }
 
         [UnityTest]

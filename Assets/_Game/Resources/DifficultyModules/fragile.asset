@@ -15,13 +15,14 @@ MonoBehaviour:
   moduleId: fragile
   displayName: FRAGILE
   symbol: "\u2764"
-  description: 'HP drains twice as fast. No effect yet: it arrives with the HP and
-    MK bars (build order step 3).'
-  difficultyPercent: 10
-  moduleType: 4
+  description: Her maximum HP is halved.
+  difficultyPercent: 20
+  moduleType: 6
+  section: 1
   isBaseline: 0
   hideInUI: 0
-  presetGroup: 
+  exclusiveGroup: 
+  presets: 
   parameters:
-  - key: degenMultiplier
-    value: 2
+  - key: playerMaxHpScale
+    value: 0.5

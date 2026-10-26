@@ -45,7 +45,7 @@ namespace GlorifiedBody.Tests.PlayMode
             shooter = GameObject.Find("Dummy_A").GetComponent<DummyShooter>();
             Assert.IsNotNull(shooter, "Dummy_A shoots");
             shooter.enabled = false; // each test switches it on and watches a full cycle from Idle
-            DifficultyManager.Instance.SetPreset(DifficultyModuleDefinition.ModuleType.PresetNormal);
+            DifficultyManager.Instance.SetPreset(150);
             tank.Teleport(new Vector3(0f, 1f, 0f), 0f);
             yield return new WaitForSecondsRealtime(0.5f);
             yield return new WaitForSeconds(0.2f);
@@ -181,33 +181,40 @@ namespace GlorifiedBody.Tests.PlayMode
         [UnityTest]
         public IEnumerator Difficulty_LimitsHowManyAimAtOnce()
         {
-            // Easy: one slot. Two shooters start together, so only one of them may aim at a time.
-            DifficultyManager.Instance.SetPreset(DifficultyModuleDefinition.ModuleType.PresetEasy);
-            Assert.AreEqual(1, ShooterScheduler.MaxSlots);
-            DummyShooter second = GameObject.Find("Dummy_B").AddComponent<DummyShooter>();
-            shooter.enabled = true;
-            int maxSeen = 0;
-            bool secondAimedUnderEasy = false;
-            float t0 = Time.realtimeSinceStartup;
-            while (Time.realtimeSinceStartup - t0 < 1.2f)
+            try
             {
-                maxSeen = Mathf.Max(maxSeen, ShooterScheduler.ActiveCount);
-                if (second.HoldsSlot && shooter.HoldsSlot) secondAimedUnderEasy = true;
-                yield return null;
-            }
-            Assert.AreEqual(1, maxSeen, "easy: one shooter aims at a time");
-            Assert.IsFalse(secondAimedUnderEasy, "easy: never both at once");
+                // 100 %: one slot. Two shooters start together, so only one of them may aim at a time.
+                DifficultyManager.Instance.SetPreset(100);
+                Assert.AreEqual(1, ShooterScheduler.MaxSlots);
+                DummyShooter second = GameObject.Find("Dummy_B").AddComponent<DummyShooter>();
+                shooter.enabled = true;
+                int maxSeen = 0;
+                bool secondAimedAt100 = false;
+                float t0 = Time.realtimeSinceStartup;
+                while (Time.realtimeSinceStartup - t0 < 1.2f)
+                {
+                    maxSeen = Mathf.Max(maxSeen, ShooterScheduler.ActiveCount);
+                    if (second.HoldsSlot && shooter.HoldsSlot) secondAimedAt100 = true;
+                    yield return null;
+                }
+                Assert.AreEqual(1, maxSeen, "100 %: one shooter aims at a time");
+                Assert.IsFalse(secondAimedAt100, "100 %: never both at once");
 
-            // Hard: no limit. Both start a fresh cycle together and both aim at once.
-            shooter.enabled = false;
-            second.enabled = false;
-            DifficultyManager.Instance.SetPreset(DifficultyModuleDefinition.ModuleType.PresetHard);
-            Assert.AreEqual(int.MaxValue, ShooterScheduler.MaxSlots, "hard: no limit");
-            yield return null;
-            shooter.enabled = true;
-            second.enabled = true;
-            yield return WaitUntil(() => ShooterScheduler.ActiveCount >= 2, 4f);
-            Assert.GreaterOrEqual(ShooterScheduler.ActiveCount, 2, "hard: both aim at once");
+                // 200 %: no limit. Both start a fresh cycle together and both aim at once.
+                shooter.enabled = false;
+                second.enabled = false;
+                DifficultyManager.Instance.SetPreset(200);
+                Assert.AreEqual(int.MaxValue, ShooterScheduler.MaxSlots, "200 %: no limit");
+                yield return null;
+                shooter.enabled = true;
+                second.enabled = true;
+                yield return WaitUntil(() => ShooterScheduler.ActiveCount >= 2, 4f);
+                Assert.GreaterOrEqual(ShooterScheduler.ActiveCount, 2, "200 %: both aim at once");
+            }
+            finally
+            {
+                DifficultyManager.Instance.SetPreset(DifficultyManager.DefaultPreset);
+            }
         }
 
         private static IEnumerator WaitUntil(Func<bool> condition, float timeoutSeconds)

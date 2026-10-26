@@ -15,11 +15,12 @@ MonoBehaviour:
   moduleId: one_hit_wonder
   displayName: ONE-HIT WONDER
   symbol: "\u2622"
-  description: 'HP is pinned to 1. Any hit kills. No effect yet: it arrives with
-    the HP and MK bars (build order step 3).'
+  description: Any hit kills her. No second wind.
   difficultyPercent: 80
-  moduleType: 5
+  moduleType: 7
+  section: 1
   isBaseline: 0
   hideInUI: 0
-  presetGroup: 
+  exclusiveGroup: 
+  presets: 
   parameters: []

@@ -15,10 +15,19 @@ MonoBehaviour:
   moduleId: base
   displayName: BASE
   symbol: "\u2588"
-  description: The lab as designed. Always on.
+  description: 'The lab as designed: one enemy fires at a time, 1.5 s from the laser
+    to the attack, 2 s rest. Always on.'
   difficultyPercent: 100
   moduleType: 0
+  section: 0
   isBaseline: 1
   hideInUI: 0
-  presetGroup: 
-  parameters: []
+  exclusiveGroup: 
+  presets: 
+  parameters:
+  - key: maxSimultaneousShooters
+    value: 1
+  - key: attackSeconds
+    value: 1.5
+  - key: restSeconds
+    value: 2

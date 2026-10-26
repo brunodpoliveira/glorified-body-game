@@ -247,6 +247,31 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator Telekinesis_TheShortsStart_DropsTheFloater_AtOnce()
+        {
+            // Bruno, 2026-10-26: a short that starts while she holds an enemy in the air drops it at once.
+            powers.Select(PowerKind.Telekinesis);
+            PowerDefinition tk = powers.Selected;
+            float y0 = dummyB.transform.position.y;
+            powers.FireAt(tk, 1f, dummyB);
+            yield return new WaitForSeconds(tk.liftSeconds + 0.3f);
+            TelekinesisLift lift = dummyB.GetComponent<TelekinesisLift>();
+            Assert.IsNotNull(powers.HeldLift, "she holds Dummy_B in the air");
+
+            stats.DebugSet(stats.Nalcon, PsychicStats.MaxShort);
+            shortController.Begin();
+            Assert.IsTrue(shortController.IsActive, "the short started");
+            Assert.IsNull(powers.HeldLift, "she lets go at the start of the short");
+            Assert.IsFalse(lift.CanLaunch, "the lift is released at once");
+            // The lift names its ending when the world runs again (the frozen start of the short).
+            yield return WaitUntil(() => lift == null || lift.Ending != "", ShortController.StartFreeze + 2f);
+            Assert.IsTrue(lift != null && lift.Ending == "released", "a release, not a throw or a slam: " + (lift != null ? lift.Ending : "gone"));
+            yield return WaitUntil(() => dummyB.GetComponent<TelekinesisLift>() == null, ShortController.StartFreeze + 3f);
+            Assert.AreEqual(y0, dummyB.transform.position.y, 0.05f, "it dropped to the floor after the frozen start");
+            shortController.End(byDrug: false);
+        }
+
+        [UnityTest]
         public IEnumerator Props_TheAutoLockSkipsThem_TheSwitchReachesThemOnlyWithMkOrzabal()
         {
             // Bruno, 2026-10-22: mk_orzabal lifts the enemy directly; the props are a choice, not the default.

@@ -27,7 +27,7 @@ namespace GlorifiedBody.Editor
         public static void CreateAll()
         {
             Directory.CreateDirectory(ItemsFolder);
-            Drug(DrugType.Nalcon, "NALCON", NalconColour);
+            Drug(DrugType.Nalcon, "MK CAPSULE", NalconColour); // NALCON before 2026-10-26 (Bruno: no "nalcon" on screen)
             Drug(DrugType.Red, "RED", RedColour);
             Drug(DrugType.DFelon, "D-FELON", DFelonColour);
             TestLog();

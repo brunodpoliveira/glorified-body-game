@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: item_nalcon
   m_EditorClassIdentifier: Assembly-CSharp::GlorifiedBody.Interaction.ItemDefinition
   itemId: nalcon
-  displayName: NALCON
+  displayName: MK CAPSULE
   kind: 3
   drugType: 0
   colour: {r: 0.35, g: 0.95, b: 0.45, a: 1}

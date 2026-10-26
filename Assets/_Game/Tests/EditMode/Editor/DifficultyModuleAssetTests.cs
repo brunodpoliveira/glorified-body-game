@@ -3,23 +3,28 @@ using NUnit.Framework;
 using UnityEngine;
 using GlorifiedBody.Systems;
 using ModuleType = GlorifiedBody.Systems.DifficultyModuleDefinition.ModuleType;
+using Section = GlorifiedBody.Systems.DifficultyModuleDefinition.Section;
 
 namespace GlorifiedBody.Tests.EditMode
 {
     /// <summary>
-    /// Validates the generated difficulty assets (Resources/DifficultyModules): three presets with
-    /// maxSimultaneousShooters 1 / 2 / 0 (the design: easy one, normal two, hard all) and the modifiers.
+    /// Validates the generated difficulty assets (Resources/DifficultyModules, CreateDifficultyModules.CreateAll):
+    /// one asset per module, the base 100 %, the presets 100 / 150 / 200 % as sums of their harder modules, and the
+    /// old numbers of the presets (one, two, every shooter; 1.5, 1.0, 0.8 s).
     /// </summary>
     public class DifficultyModuleAssetTests
     {
         private Dictionary<ModuleType, DifficultyModuleDefinition> byType;
+        private DifficultyModuleDefinition[] all;
 
         [SetUp]
         public void SetUp()
         {
+            all = Resources.LoadAll<DifficultyModuleDefinition>("DifficultyModules");
             byType = new Dictionary<ModuleType, DifficultyModuleDefinition>();
-            foreach (DifficultyModuleDefinition module in Resources.LoadAll<DifficultyModuleDefinition>("DifficultyModules"))
+            foreach (DifficultyModuleDefinition module in all)
             {
+                Assert.IsFalse(byType.ContainsKey(module.moduleType), $"Two assets for {module.moduleType}.");
                 byType[module.moduleType] = module;
             }
         }
@@ -31,49 +36,76 @@ namespace GlorifiedBody.Tests.EditMode
             {
                 Assert.IsTrue(byType.ContainsKey(type), $"Missing difficulty module asset for {type}.");
             }
+            Assert.AreEqual(System.Enum.GetValues(typeof(ModuleType)).Length, all.Length, "no stale asset");
         }
 
         [Test]
-        public void Base_IsBaseline_AndNotAPreset()
+        public void Base_Is100Percent_OneShooter_AndTheSlowTelegraph()
         {
-            Assert.IsTrue(byType[ModuleType.Base].isBaseline);
-            Assert.IsFalse(byType[ModuleType.Base].IsPreset);
+            DifficultyModuleDefinition b = byType[ModuleType.Base];
+            Assert.IsTrue(b.isBaseline);
+            Assert.AreEqual(Section.Base, b.section);
+            Assert.AreEqual(100, b.difficultyPercent);
+            Assert.AreEqual(1f, b.GetParam(DifficultyModuleDefinition.ParamMaxSimultaneousShooters, -1f), 0.001f);
+            Assert.AreEqual(1.5f, b.GetParam(DifficultyModuleDefinition.ParamAttackSeconds, -1f), 0.001f);
+            Assert.AreEqual(2f, b.GetParam(DifficultyModuleDefinition.ParamRestSeconds, -1f), 0.001f);
         }
 
         [Test]
-        public void Presets_ShareOneGroup_AndCarryTheShooterCount()
+        public void HarderModulesAdd_EasierModulesTake()
         {
-            AssertPreset(ModuleType.PresetEasy, 1f);
-            AssertPreset(ModuleType.PresetNormal, 2f);
-            AssertPreset(ModuleType.PresetHard, 0f);
-            Assert.AreEqual(byType[ModuleType.PresetEasy].presetGroup, byType[ModuleType.PresetHard].presetGroup);
-        }
-
-        [Test]
-        public void Modifiers_AreFreeToggles_WithTheirParams()
-        {
-            foreach (ModuleType type in new[] { ModuleType.Fragile, ModuleType.OneHitWonder, ModuleType.Scarcity })
+            foreach (DifficultyModuleDefinition module in all)
             {
-                Assert.IsFalse(byType[type].IsPreset, $"{type} must be a free toggle.");
-                Assert.IsFalse(byType[type].isBaseline, $"{type} must not be baseline.");
+                if (module.section == Section.Harder) Assert.Greater(module.difficultyPercent, 0, module.moduleId);
+                if (module.section == Section.Easier) Assert.Less(module.difficultyPercent, 0, module.moduleId);
+                Assert.IsFalse(string.IsNullOrEmpty(module.description), module.moduleId + " has a description");
             }
-
-            AssertParam(ModuleType.Fragile, "degenMultiplier", 2f);
-            AssertParam(ModuleType.Scarcity, "drainMultiplier", 1.5f);
         }
 
-        private void AssertPreset(ModuleType type, float shooters)
+        [TestCase(100)]
+        [TestCase(150)]
+        [TestCase(200)]
+        public void EachPreset_SumsToItsPercent_FromHarderModulesOnly(int percent)
         {
-            Assert.IsTrue(byType.ContainsKey(type), $"Missing preset {type}.");
-            Assert.IsTrue(byType[type].IsPreset, $"{type} must carry a presetGroup.");
-            AssertParam(type, DifficultyModuleDefinition.ParamMaxSimultaneousShooters, shooters);
+            int total = 0;
+            var groups = new HashSet<string>();
+            foreach (DifficultyModuleDefinition module in all)
+            {
+                if (module.isBaseline) { total += module.difficultyPercent; continue; }
+                if (!module.InPreset(percent)) continue;
+                Assert.AreEqual(Section.Harder, module.section, $"{module.moduleId}: a preset uses harder modules only");
+                if (!string.IsNullOrEmpty(module.exclusiveGroup))
+                    Assert.IsTrue(groups.Add(module.exclusiveGroup), $"{percent}: two modules of the group {module.exclusiveGroup}");
+                total += module.difficultyPercent;
+            }
+            Assert.AreEqual(percent, total, $"the {percent} % preset");
         }
 
-        private void AssertParam(ModuleType type, string key, float expected)
+        [TestCase(100, 1, 1.5f, 1f)]
+        [TestCase(150, 2, 1.0f, 1f)]
+        [TestCase(200, 0, 0.8f, 1.5f)]
+        public void EachPreset_GivesItsNumbers(int percent, int shooters, float attackSeconds, float damage)
         {
-            Assert.IsTrue(byType.ContainsKey(type), $"Missing module {type}.");
-            float value = byType[type].GetParam(key, float.NaN);
-            Assert.AreEqual(expected, value, 0.001f, $"{type}.{key} expected {expected} but was {value}.");
+            var go = new GameObject("DifficultyManager");
+            var savedPrefs = PlayerPrefs.HasKey("difficulty_modules_v2") ? PlayerPrefs.GetString("difficulty_modules_v2") : null;
+            try
+            {
+                var manager = go.AddComponent<DifficultyManager>();
+                foreach (DifficultyModuleDefinition module in all) manager.RegisterModule(module);
+                Assert.IsTrue(manager.SetPreset(percent));
+                Assert.AreEqual(percent, manager.ActivePresetPercent);
+                Assert.AreEqual(percent, manager.TotalDifficultyPercent);
+                Assert.AreEqual(shooters, manager.MaxSimultaneousShooters, "the shooters at a time");
+                Assert.AreEqual(attackSeconds, manager.AttackSeconds, 0.001f, "the telegraph");
+                Assert.AreEqual(2f, manager.RestSeconds, 0.001f, "the rest");
+                Assert.AreEqual(damage, manager.EnemyDamageScale, 0.001f, "the enemy damage");
+            }
+            finally
+            {
+                Object.DestroyImmediate(go);
+                if (savedPrefs != null) PlayerPrefs.SetString("difficulty_modules_v2", savedPrefs);
+                else PlayerPrefs.DeleteKey("difficulty_modules_v2");
+            }
         }
     }
 }

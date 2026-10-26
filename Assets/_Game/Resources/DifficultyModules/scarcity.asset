@@ -15,13 +15,14 @@ MonoBehaviour:
   moduleId: scarcity
   displayName: SCARCITY
   symbol: "\u26A0"
-  description: 'MK drains 50% faster. No effect yet: it arrives with the HP and MK
-    bars (build order step 3).'
-  difficultyPercent: 10
-  moduleType: 6
+  description: MK recharges at half speed.
+  difficultyPercent: 15
+  moduleType: 8
+  section: 1
   isBaseline: 0
   hideInUI: 0
-  presetGroup: 
+  exclusiveGroup: mk
+  presets: 
   parameters:
-  - key: drainMultiplier
-    value: 1.5
+  - key: mkRegenScale
+    value: 0.5
