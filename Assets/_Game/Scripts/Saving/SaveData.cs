@@ -22,6 +22,8 @@ namespace GlorifiedBody.Saving
         public float playSeconds;
         public PlayerState player = new PlayerState();
         public RoomState room = new RoomState();
+        /// <summary>The other rooms she left behind (WorldState, 2026-10-26). An older file has none.</summary>
+        public List<RoomState> rooms = new List<RoomState>();
         public LedgerState ledger = new LedgerState();
         public List<string> flags = new List<string>();
     }

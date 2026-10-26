@@ -32,5 +32,11 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/_Game/Scenes/LookTestExterior.unity
     guid: 9a5b3d7fbaa62b233bf4d064c638a43d
+  - enabled: 1
+    path: Assets/_Game/Scenes/TravelTest_A.unity
+    guid: 70e6e9f06bd919961b2eacb2e10da3b1
+  - enabled: 1
+    path: Assets/_Game/Scenes/TravelTest_B.unity
+    guid: 7f76706c193f11f40a73f3bf8f20a056
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0

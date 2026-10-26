@@ -55,6 +55,8 @@ namespace GlorifiedBody.Saving
         public static int Saves { get; private set; }
         /// <summary>Loads applied to a room so far (tests wait for it).</summary>
         public static int Applies { get; private set; }
+        /// <summary>Room crossings ended in a room so far (tests wait for it).</summary>
+        public static int Arrivals { get; private set; }
         /// <summary>The last load's state applied to the room (tests).</summary>
         public static SaveData LastApplied { get; private set; }
         public static event Action<string> OnToast;
@@ -139,13 +141,13 @@ namespace GlorifiedBody.Saving
             return true;
         }
 
-        /// <summary>The game as it is now, with her at the spot.</summary>
+        /// <summary>The game as it is now, with her at the spot: her, this room, and the rooms she left (WorldState).</summary>
         public static SaveData Capture(string spot)
         {
             GameObject lucy = GameObject.FindWithTag("Player");
             if (lucy == null) return null;
             Scene scene = SceneManager.GetActiveScene();
-            var data = new SaveData
+            return new SaveData
             {
                 scene = scene.name,
                 spot = spot ?? "",
@@ -153,8 +155,16 @@ namespace GlorifiedBody.Saving
                 playSeconds = PlaySeconds,
                 ledger = RoomDamageLedger.Export(),
                 flags = StoryFlags.All.ToList(),
+                player = CapturePlayer(lucy),
+                room = CaptureRoom(scene),
+                rooms = WorldState.Export(scene.name),
             };
-            PlayerState p = data.player;
+        }
+
+        /// <summary>Her state: the bars, the exp, the outfit, the items and the pills (a save, a room crossing).</summary>
+        public static PlayerState CapturePlayer(GameObject lucy)
+        {
+            var p = new PlayerState();
             Health health = lucy.GetComponentInChildren<Health>();
             if (health != null) { p.health = health.CurrentHealth; p.maxHealth = health.MaxHealth; }
             PsychicStats stats = lucy.GetComponentInChildren<PsychicStats>();
@@ -174,9 +184,13 @@ namespace GlorifiedBody.Saving
             }
             DrugInventory drugs = lucy.GetComponentInChildren<DrugInventory>();
             if (drugs != null) for (int i = 0; i < 3; i++) p.drugs.Add(drugs.Count((DrugType)i));
+            return p;
+        }
 
-            RoomState room = data.room;
-            room.scene = scene.name;
+        /// <summary>The room as it is: the dead (with their bodies and blood), the taken items, the open doors.</summary>
+        public static RoomState CaptureRoom(Scene scene)
+        {
+            var room = new RoomState { scene = scene.name };
             var aliveFigures = new HashSet<string>();
             var deadBodies = new List<Health>();
             foreach (Health h in UnityEngine.Object.FindObjectsByType<Health>(FindObjectsInactive.Include, FindObjectsSortMode.None))
@@ -197,7 +211,7 @@ namespace GlorifiedBody.Saving
                 if (!presentItems.Contains(path)) room.taken.Add(path);
             foreach (LockedDoor door in UnityEngine.Object.FindObjectsByType<LockedDoor>(FindObjectsSortMode.None))
                 if (door.gameObject.scene == scene && door.IsOpen) room.opened.Add(ScenePaths.Of(door.transform));
-            return data;
+            return room;
         }
 
         // ── Load ──────────────────────────────────────────────────────
@@ -220,6 +234,8 @@ namespace GlorifiedBody.Saving
             PlaySeconds = data.playSeconds;
             StoryFlags.Set(data.flags);
             RoomDamageLedger.Import(data.ledger);
+            WorldState.Clear();
+            WorldState.Import(data.rooms);
             Loads++;
             RunTelemetry.Event("load", $"slot {slot}: {data.scene} at {data.spot}");
             EnsureRunner();
@@ -233,9 +249,25 @@ namespace GlorifiedBody.Saving
         private static void Apply(SaveData data)
         {
             Scene scene = SceneManager.GetActiveScene();
-            // The bodies first: each quiet death counts a kill, and her saved numbers below overwrite that.
-            HashSet<string> bodies = RoomGore.Restore(scene, data.room);
-            foreach (string path in data.room.dead)
+            // The room first: each quiet death counts a kill, and her saved numbers overwrite that.
+            int bodies = ApplyRoom(scene, data.room);
+            GameObject lucy = GameObject.FindWithTag("Player");
+            if (lucy != null)
+            {
+                ApplyPlayer(lucy, data.player);
+                PlaceAt(lucy, data.spot);
+            }
+            LastApplied = data;
+            Applies++;
+            RunTelemetry.Event("load_applied", $"{data.scene}: {data.room.dead.Count} dead ({bodies} bodies), {data.room.stains.Count} stains, {data.room.limbs.Count} limbs, {data.room.taken.Count} taken, {data.room.opened.Count} open, {data.rooms.Count} other rooms");
+        }
+
+        /// <summary>A room as it was: the bodies where they lay (RoomGore), the other dead gone, the taken items gone, the doors open. Returns the bodies.</summary>
+        public static int ApplyRoom(Scene scene, RoomState room)
+        {
+            if (room == null) return 0;
+            HashSet<string> bodies = RoomGore.Restore(scene, room);
+            foreach (string path in room.dead)
             {
                 if (bodies.Contains(path)) continue;
                 GameObject figure = ScenePaths.Find(scene, path);
@@ -243,53 +275,51 @@ namespace GlorifiedBody.Saving
                 figure.SetActive(false); // a dead one with no saved body (an older file, a destroyed figure) stays gone
                 goneByLoad.Add(path);
             }
-            GameObject lucy = GameObject.FindWithTag("Player");
-            if (lucy != null)
-            {
-                Health health = lucy.GetComponentInChildren<Health>();
-                PsychicStats stats = lucy.GetComponentInChildren<PsychicStats>();
-                ItemInventory items = lucy.GetComponentInChildren<ItemInventory>();
-                DrugInventory drugs = lucy.GetComponentInChildren<DrugInventory>();
-                PlayerState p = data.player;
-                if (stats != null && !string.IsNullOrEmpty(p.outfit))
-                {
-                    OutfitProfile outfit = Resources.Load<OutfitProfile>("Outfits/outfit_" + p.outfit);
-                    if (outfit != null && stats.Outfit != outfit) stats.SetOutfit(outfit);
-                }
-                if (health != null && p.maxHealth > 0f)
-                {
-                    health.SetMaxHealth(p.maxHealth, fillToMax: false);
-                    health.SetHealth(p.health);
-                }
-                if (stats != null) stats.Restore(p.nalcon, p.shortBar, p.kills, p.exp);
-                if (items != null)
-                {
-                    items.Clear();
-                    foreach (string id in p.critical.Concat(p.carried))
-                    {
-                        ItemDefinition item = ItemDefinition.Find(id);
-                        if (item != null) items.TryAdd(item);
-                        else Debug.LogWarning($"[SaveSystem] no item '{id}'");
-                    }
-                }
-                if (drugs != null) for (int i = 0; i < 3 && i < p.drugs.Count; i++) drugs.DebugSet((DrugType)i, p.drugs[i]);
-                PlaceAt(lucy, data.spot);
-            }
-            foreach (string path in data.room.taken)
+            foreach (string path in room.taken)
             {
                 GameObject item = ScenePaths.Find(scene, path);
                 if (item == null) continue;
                 item.SetActive(false);
                 UnityEngine.Object.Destroy(item);
             }
-            foreach (string path in data.room.opened)
+            foreach (string path in room.opened)
             {
                 GameObject door = ScenePaths.Find(scene, path);
                 if (door != null && door.TryGetComponent(out LockedDoor locked)) locked.Open(instant: true);
             }
-            LastApplied = data;
-            Applies++;
-            RunTelemetry.Event("load_applied", $"{data.scene}: {data.room.dead.Count} dead ({bodies.Count} bodies), {data.room.stains.Count} stains, {data.room.limbs.Count} limbs, {data.room.taken.Count} taken, {data.room.opened.Count} open");
+            return bodies.Count;
+        }
+
+        /// <summary>Her state on her: the outfit, the HP, the bars, the exp, the items, the pills.</summary>
+        public static void ApplyPlayer(GameObject lucy, PlayerState p)
+        {
+            if (lucy == null || p == null) return;
+            Health health = lucy.GetComponentInChildren<Health>();
+            PsychicStats stats = lucy.GetComponentInChildren<PsychicStats>();
+            ItemInventory items = lucy.GetComponentInChildren<ItemInventory>();
+            DrugInventory drugs = lucy.GetComponentInChildren<DrugInventory>();
+            if (stats != null && !string.IsNullOrEmpty(p.outfit))
+            {
+                OutfitProfile outfit = Resources.Load<OutfitProfile>("Outfits/outfit_" + p.outfit);
+                if (outfit != null && stats.Outfit != outfit) stats.SetOutfit(outfit);
+            }
+            if (health != null && p.maxHealth > 0f)
+            {
+                health.SetMaxHealth(p.maxHealth, fillToMax: false);
+                health.SetHealth(p.health);
+            }
+            if (stats != null) stats.Restore(p.nalcon, p.shortBar, p.kills, p.exp);
+            if (items != null)
+            {
+                items.Clear();
+                foreach (string id in p.critical.Concat(p.carried))
+                {
+                    ItemDefinition item = ItemDefinition.Find(id);
+                    if (item != null) items.TryAdd(item);
+                    else Debug.LogWarning($"[SaveSystem] no item '{id}'");
+                }
+            }
+            if (drugs != null) for (int i = 0; i < 3 && i < p.drugs.Count; i++) drugs.DebugSet((DrugType)i, p.drugs[i]);
         }
 
         private static void PlaceAt(GameObject lucy, string spot)
@@ -323,6 +353,7 @@ namespace GlorifiedBody.Saving
                 PlaySeconds = 0f;
                 pending = null;
                 StoryFlags.Set(null);
+                WorldState.Clear();
                 return;
             }
             Baseline(scene);
@@ -333,6 +364,24 @@ namespace GlorifiedBody.Saving
                 EnsureRunner();
                 runner.StartCoroutine(ApplyNextFrame(data));
             }
+            else if (WorldState.TakeArrival(scene.name, out PlayerState player, out RoomState room, out string entry))
+            {
+                EnsureRunner();
+                runner.StartCoroutine(ArriveNextFrame(scene, player, room, entry));
+            }
+        }
+
+        /// <summary>A room crossing ends: the room as she left it (when she was here before), her state, her place at the entry.</summary>
+        private static IEnumerator ArriveNextFrame(Scene scene, PlayerState player, RoomState room, string entry)
+        {
+            yield return null; // every Awake and Start of the room has run
+            int bodies = ApplyRoom(scene, room);
+            GameObject lucy = GameObject.FindWithTag("Player");
+            ApplyPlayer(lucy, player);
+            if (lucy != null) PlaceAt(lucy, entry);
+            Arrivals++;
+            RunTelemetry.Event("arrived", $"{scene.name}:{entry} {(room != null ? $"again ({room.dead.Count} dead, {bodies} bodies, {room.taken.Count} taken)" : "first visit")}");
+            WorldState.Arrived();
         }
 
         private static IEnumerator ApplyNextFrame(SaveData data)
@@ -370,6 +419,7 @@ namespace GlorifiedBody.Saving
             Loads = 0;
             Saves = 0;
             Applies = 0;
+            Arrivals = 0;
             LastApplied = null;
             OnToast = null;
             baselineFigures.Clear();

@@ -267,6 +267,12 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   and the bounce baked at 4 texels a metre (`GB_ExteriorBake.lighting`), fog, seven fixed cameras (an open area needs
   one per 10 m cell), `FixedCamera.shadowDistance` (`Rendering/ShadowDistance` restores the asset's 40 m on a new
   room). A room face shows its front to -z at no rotation.
+- 2026-10-26, night, ROOM TRAVEL (`devlog-notes/2026-10-26_room_travel.md`): `RoomExit` (a trigger past a doorway:
+  the next scene and the entry id, an optional story flag), `RoomEntry` (an ISpot), `WorldState` (her state crosses,
+  each room she leaves keeps its dead with their bodies, taken items, open doors; a save holds every room,
+  `SaveData.rooms`; the menu clears it), `ScreenFade`. `SaveSystem.CapturePlayer/CaptureRoom/ApplyPlayer/ApplyRoom`.
+  Test rooms in git: `TravelTest_A`, `TravelTest_B` (`TravelTestSetup`), `TravelTests` (4). A builder must load the
+  character catalog after it opens a new scene (the new scene unloads the prefab links).
 
 ## Rules
 
