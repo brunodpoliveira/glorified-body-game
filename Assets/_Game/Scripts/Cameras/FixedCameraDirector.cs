@@ -160,6 +160,7 @@ namespace GlorifiedBody.Cameras
             targetCamera.transform.SetPositionAndRotation(Current.transform.position, Current.transform.rotation);
             targetCamera.fieldOfView = Current.fieldOfView;
             baseRotation = Current.transform.rotation;
+            GlorifiedBody.Rendering.ShadowDistance.Set(Current.shadowDistance);
         }
 
         private void LateUpdate()

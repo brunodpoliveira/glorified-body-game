@@ -15,6 +15,8 @@ namespace GlorifiedBody.Cameras
         public bool followPlayerYaw;
         [Min(0f)] public float followMaxYaw = 20f;
         [Min(0f)] public float followSpeed = 60f;
+        [Tooltip("The sun's shadow distance while this camera is on, in metres (0 = the pipeline's own). An exterior camera sets what it sees, so the shadow map is sharp there.")]
+        [Min(0f)] public float shadowDistance;
 
         private void OnDrawGizmos()
         {

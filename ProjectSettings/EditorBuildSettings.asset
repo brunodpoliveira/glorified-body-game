@@ -29,5 +29,8 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/_Game/Scenes/CivilianTest.unity
     guid: 39e5237926e458bf5b4f6758a4ca93fb
+  - enabled: 1
+    path: Assets/_Game/Scenes/LookTestExterior.unity
+    guid: 9a5b3d7fbaa62b233bf4d064c638a43d
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0

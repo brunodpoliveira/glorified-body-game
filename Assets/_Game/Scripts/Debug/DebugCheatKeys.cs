@@ -16,7 +16,7 @@ namespace GlorifiedBody.DebugTools
     public sealed class DebugCheatKeys : MonoBehaviour
     {
         public const float NalconStep = 25f;
-        public static readonly string[] LookScenes = { "LookTest", "LookTest2" };
+        public static readonly string[] LookScenes = { "LookTest", "LookTest2", "LookTestExterior" };
 
         [SerializeField] private KeyCode fillShortKey = KeyCode.F5;
         [SerializeField] private KeyCode startShortKey = KeyCode.F6;

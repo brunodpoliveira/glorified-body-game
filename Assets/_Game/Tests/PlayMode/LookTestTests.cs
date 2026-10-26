@@ -35,6 +35,8 @@ namespace GlorifiedBody.Tests.PlayMode
         protected abstract string SecondCamera { get; }
         /// <summary>The share of floor points that may fall out of the frame of their camera.</summary>
         protected virtual float CoverageTolerance => 0.03f;
+        /// <summary>The yard (2026-10-26): a sun and a sky in place of the spots and the black corners.</summary>
+        protected virtual bool Exterior => false;
 
         protected LookDirector look;
         protected FixedCameraDirector director;
@@ -85,11 +87,23 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.GreaterOrEqual(UnityEngine.Object.FindObjectsByType<Health>(FindObjectsSortMode.None).Length, 1 + ExpectedFigures.Length, "Lucy and the figures carry Health");
 
             Light[] lights = UnityEngine.Object.FindObjectsByType<Light>(FindObjectsSortMode.None);
-            Light[] spots = lights.Where(l => l.type == LightType.Spot).ToArray();
-            Assert.GreaterOrEqual(spots.Length, 5, "the pools of light");
-            Assert.IsTrue(lights.Where(l => l.type != LightType.Directional).All(l => l.shadows == LightShadows.Hard), "hard shadows on every light (ART_LESSONS 1.3)");
-            Assert.IsFalse(lights.Any(l => l.type == LightType.Directional), "no sun indoors");
-            Assert.Less(RenderSettings.ambientLight.maxColorComponent, 0.05f, "near-black corners: no ambient");
+            Assert.IsTrue(lights.All(l => l.shadows == LightShadows.Hard), "hard shadows on every light (ART_LESSONS 1.3)");
+            if (Exterior)
+            {
+                Light[] suns = lights.Where(l => l.type == LightType.Directional).ToArray();
+                Assert.AreEqual(1, suns.Length, "one sun");
+                Assert.AreEqual(LightmapBakeType.Mixed, suns[0].lightmapBakeType, "the sun is live, its bounce baked");
+                Assert.AreEqual(UnityEngine.Rendering.AmbientMode.Skybox, RenderSettings.ambientMode, "the sky lights the yard");
+                Assert.IsNotNull(RenderSettings.skybox, "a sky");
+                Assert.IsTrue(RenderSettings.fog, "fog for the distance");
+            }
+            else
+            {
+                Light[] spots = lights.Where(l => l.type == LightType.Spot).ToArray();
+                Assert.GreaterOrEqual(spots.Length, 5, "the pools of light");
+                Assert.IsFalse(lights.Any(l => l.type == LightType.Directional), "no sun indoors");
+                Assert.Less(RenderSettings.ambientLight.maxColorComponent, 0.05f, "near-black corners: no ambient");
+            }
             Assert.GreaterOrEqual(look.RoomRendererCount, 20, "the room surfaces the director dresses");
             Assert.IsNotNull(UnityEngine.Object.FindFirstObjectByType<LightProbeGroup>(), "the light probes of the bake");
             Assert.AreEqual(LookDressing.RealTimeBaked, look.Dressing, "the room opens in Bruno's pick: real time with the baked bounce");
@@ -208,7 +222,8 @@ namespace GlorifiedBody.Tests.PlayMode
                 yield return null;
                 Color32[] pixels = RenderFrame(960, 540);
                 float mean = pixels.Average(p => (p.r + p.g + p.b) / (3f * 255f));
-                int distinct = pixels.Take(20000).Select(p => (p.r / 8) * 1000 + (p.g / 8) * 32 + p.b / 8).Distinct().Count();
+                // Every 25th pixel over the whole frame (the first 20000 were the bottom rows only: a flat yard floor).
+                int distinct = pixels.Where((p, i) => i % 25 == 0).Select(p => (p.r / 8) * 1000 + (p.g / 8) * 32 + p.b / 8).Distinct().Count();
                 Assert.That(mean, Is.InRange(0.02f, 0.9f), $"{dressing}: the frame shows the room (mean {mean:0.000})");
                 Assert.Greater(distinct, 30, $"{dressing}: the frame has shading ({distinct} colour bins)");
             }
@@ -226,7 +241,14 @@ namespace GlorifiedBody.Tests.PlayMode
             yield return null;
             yield return null;
             float baked = RenderFrame(960, 540).Average(p => (p.r + p.g + p.b) / (3f * 255f));
-            Assert.Greater(baked, realTime * 1.02f, $"the bounce adds light: real time {realTime:0.000}, baked {baked:0.000}");
+            Debug.Log($"[LookTestTests] {Room}: real time {realTime:0.000}, baked {baked:0.000}");
+            if (Exterior)
+            {
+                // Outdoors the live sky light already lights the real-time frame. The bake replaces it with the
+                // bounce of the sun and the ambient occlusion: the picture changes, it is not brighter on the whole.
+                Assert.Greater(Mathf.Abs(baked - realTime), realTime * 0.01f, $"the bake changes the picture: real time {realTime:0.000}, baked {baked:0.000}");
+            }
+            else Assert.Greater(baked, realTime * 1.02f, $"the bounce adds light: real time {realTime:0.000}, baked {baked:0.000}");
         }
 
         [UnityTest]
@@ -285,6 +307,44 @@ namespace GlorifiedBody.Tests.PlayMode
         protected override string FloorObject => "Floor";
         protected override string FloorDressedMaterial => "GB_ConcreteFloor";
         protected override string SecondCamera => "Cam_Door";
+    }
+
+    /// <summary>
+    /// The yard (LookTestExterior, 2026-10-26): the rooms' method with a sun. Every camera sets the sun's shadow
+    /// distance to what it sees, and a room with no setting gets the pipeline's own value back.
+    /// </summary>
+    public class LookTestExteriorTests : LookRoomTests
+    {
+        protected override string Room => "LookTestExterior";
+        protected override string[] ExpectedCameras => new[] { "Cam_SW", "Cam_SC", "Cam_SE", "Cam_NW", "Cam_NC", "Cam_NE", "Cam_Van" };
+        protected override string[] ExpectedFigures => new[] { "Figure_Soldier", "Figure_Guard" };
+        protected override string FloorObject => "Yard_Floor";
+        protected override string FloorDressedMaterial => "GB_Asphalt";
+        protected override string SecondCamera => "Cam_SE";
+        protected override bool Exterior => true;
+
+        [UnityTest]
+        public IEnumerator EveryCamera_SetsTheSunsShadowDistance_AndTheNextRoomGetsTheOwnBack()
+        {
+            foreach (FixedCamera cam in cameras)
+            {
+                director.Override(cam);
+                yield return null;
+                Assert.Greater(cam.shadowDistance, 0f, cam.cameraName + " has a distance");
+                Assert.AreEqual(cam.shadowDistance, GlorifiedBody.Rendering.ShadowDistance.Current, 0.01f, cam.cameraName);
+            }
+            director.Override(null);
+            GameManager.Instance.LoadLevel("TrainingRoom");
+            yield return WaitUntilLoaded("TrainingRoom");
+            Assert.AreEqual(40f, GlorifiedBody.Rendering.ShadowDistance.Current, 0.01f, "the asset's own 40 m again");
+        }
+
+        private static IEnumerator WaitUntilLoaded(string scene)
+        {
+            float t0 = Time.realtimeSinceStartup;
+            while ((SceneManager.GetActiveScene().name != scene || !GameManager.Instance.IsPlaying) && Time.realtimeSinceStartup - t0 < 10f) yield return null;
+            yield return null;
+        }
     }
 
     /// <summary>The skylight corridor, the recovery room and the therapy gym (LookTest2).</summary>

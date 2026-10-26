@@ -133,7 +133,10 @@ namespace GlorifiedBody.Editor
 
         public static void BakeScene2() => Bake(Scene2Path);
 
-        internal static void Bake(string scenePath)
+        internal static void Bake(string scenePath) => Bake(scenePath, EnsureLightingSettings());
+
+        /// <summary>A scene's bake with its settings (the rooms: GB_LookBake, the yard: GB_ExteriorBake).</summary>
+        internal static void Bake(string scenePath, LightingSettings settings)
         {
             if (!File.Exists(scenePath))
             {
@@ -141,7 +144,6 @@ namespace GlorifiedBody.Editor
                 return;
             }
             Scene scene = EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);
-            LightingSettings settings = EnsureLightingSettings();
             Lightmapping.SetLightingSettingsForScene(scene, settings);
             double t0 = EditorApplication.timeSinceStartup;
             // The LightBaker process crashed at random on 2026-10-22 (a general protection fault in the kernel
@@ -441,7 +443,7 @@ namespace GlorifiedBody.Editor
         /// the picture (the seams, the chips, the stains). An emission makes a light or a screen (and feeds the
         /// bake). A cutout makes a leaf card, drawn on both sides.
         /// </summary>
-        private static Material SurfaceMaterial(string name, string textureName, Color tint, float smoothness, Color specular, Color? emission = null, bool cutout = false)
+        internal static Material SurfaceMaterial(string name, string textureName, Color tint, float smoothness, Color specular, Color? emission = null, bool cutout = false)
         {
             Texture2D texture = textureName != null ? AssetDatabase.LoadAssetAtPath<Texture2D>($"{TexturesFolder}/{textureName}.png") : null;
             if (textureName != null && texture == null) Debug.LogWarning($"[LookTestSetup] no texture {textureName}.png (tools/look_textures.sh): {name} gets its tint only.");
@@ -585,7 +587,7 @@ namespace GlorifiedBody.Editor
         }
 
         /// <summary>The cast, the cameras, the systems, the UI, the probes and the LookDirector of a look scene.</summary>
-        private static void FinishScene(Scene scene, Palette palette, FixedCamera[] cameras, string summary)
+        internal static void FinishScene(Scene scene, Palette palette, FixedCamera[] cameras, string summary)
         {
             MenuLoopSetup.EnsureShotPoints(cameras);
             MenuLoopSetup.EnsureGameplaySystems();

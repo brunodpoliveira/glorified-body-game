@@ -262,6 +262,11 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   `tools/audio_placeholders.py` (numpy music and hums, Kenney CC0 packs). Tests: `SoundSystemTests` (7), the AI room's
   Tension test. Bruno's answers: exp numbers yes, a civilian kill does not fill SHORT, build the sound system, the
   exterior test and the demo ranks 1 to 5 next ("all isolated systems ... tested and fine-tuned").
+- 2026-10-26, night, THE EXTERIOR LOOK (`devlog-notes/2026-10-26_exterior_look.md`): `LookTestExterior.unity`
+  (`ExteriorLookSetup.BuildExterior`, `BakeExterior`, F11): the yard, one Mixed directional sun (live, hard), the sky
+  and the bounce baked at 4 texels a metre (`GB_ExteriorBake.lighting`), fog, seven fixed cameras (an open area needs
+  one per 10 m cell), `FixedCamera.shadowDistance` (`Rendering/ShadowDistance` restores the asset's 40 m on a new
+  room). A room face shows its front to -z at no rotation.
 
 ## Rules
 
