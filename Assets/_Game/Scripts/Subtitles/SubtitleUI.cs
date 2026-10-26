@@ -103,7 +103,10 @@ namespace GlorifiedBody.Subtitles
         {
             SubtitleService.Tick();
             SettingsManager settings = SettingsManager.Instance;
-            canvas.enabled = settings == null || settings.SubtitlesOn;
+            // Hidden under the pause menu and the inventory (2026-10-26: a line drew over the pause menu).
+            GameManager gm = GameManager.Instance;
+            bool stopped = gm != null && (gm.IsPaused || gm.IsInventory);
+            canvas.enabled = (settings == null || settings.SubtitlesOn) && !stopped;
             int size = Sizes[Mathf.Clamp(settings != null ? settings.SubtitleSize : 1, 0, Sizes.Length - 1)];
             if (SubtitleService.Version == drawnVersion && size == drawnSize) return;
             drawnVersion = SubtitleService.Version;

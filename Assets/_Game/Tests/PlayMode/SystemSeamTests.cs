@@ -2,6 +2,7 @@
 using System;
 using System.Collections;
 using System.IO;
+using System.Linq;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -121,6 +122,80 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.IsTrue(GameManager.Instance.IsPlaying, "the game goes on");
             Assert.AreEqual("TrainingRoom", SceneManager.GetActiveScene().name);
             Assert.AreEqual(checkpoint, File.ReadAllText(SaveSystem.PathOf(SaveSystem.CheckpointSlot)), "the checkpoint stays");
+        }
+
+        /// <summary>The second wind's 2.5 s of invulnerability must not run out during a pause (the gaps sweep, row 25).</summary>
+        [UnityTest]
+        public IEnumerator TheSecondWind_OutlastsAPause()
+        {
+            health.SetInvulnerable(false);
+            health.SetSecondWindEnabled(true);
+            health.RearmSecondWind();
+            health.TakeDamage(health.MaxHealth * 10f);
+            Assert.IsTrue(health.IsSecondWindActive, "the second wind");
+            GameManager.Instance.Pause();
+            yield return new WaitForSecondsRealtime(3f);
+            GameManager.Instance.Resume();
+            yield return null;
+            Assert.IsTrue(health.IsSecondWindInvulnerable, "still protected after a 3 s pause");
+            Assert.Greater(health.SecondWindInvulnerabilityRemaining, 2f, "almost all of its 2.5 s left");
+        }
+
+        /// <summary>A line must not show over the pause menu (the gaps sweep, row 29).</summary>
+        [UnityTest]
+        public IEnumerator Subtitles_HideUnderThePauseMenu()
+        {
+            GlorifiedBody.Enemy.Bark.Say(GameObject.Find("Dummy_B"), "A line during the pause.");
+            yield return null;
+            GlorifiedBody.Subtitles.SubtitleUI ui = UnityEngine.Object.FindFirstObjectByType<GlorifiedBody.Subtitles.SubtitleUI>();
+            Assert.IsNotNull(ui, "the subtitle screen");
+            Assert.IsTrue(ui.Visible, "the line shows in play");
+            GameManager.Instance.Pause();
+            yield return null;
+            Assert.IsFalse(ui.Visible, "hidden under the pause menu");
+            GameManager.Instance.Resume();
+            yield return null;
+            Assert.IsTrue(ui.Visible, "back after the pause");
+        }
+
+        /// <summary>The "[screams]" caption ends with the scream, not 2.5 s after the freeze (the gaps sweep, row 29).</summary>
+        [UnityTest]
+        public IEnumerator TheScreamCaption_EndsWithTheFrozenStart()
+        {
+            yield return FrozenShort();
+            Assert.IsTrue(GlorifiedBody.Subtitles.SubtitleService.Lines.Any(l => l.Text == "[screams]"), "the caption during the scream");
+            yield return new WaitForSecondsRealtime(ShortController.StartFreeze);
+            yield return null;
+            Assert.IsFalse(GlorifiedBody.Subtitles.SubtitleService.Lines.Any(l => l.Text == "[screams]"), "gone when the world moves again");
+        }
+
+        /// <summary>Per-room statics: the civilians' pose turn and the F12 care flag start again in each room (the gaps sweep, row 39).</summary>
+        [UnityTest]
+        public IEnumerator TheRoomStatics_StartAgainInTheNextRoom()
+        {
+            System.Reflection.FieldInfo next = typeof(GlorifiedBody.Enemy.CivilianBrain).GetField("nextVariant", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
+            Assert.IsNotNull(next);
+            next.SetValue(null, 5);
+            GlorifiedBody.Enemy.CorpseCare.DebugHidden = true;
+            GameManager.Instance.LoadGameplay();
+            yield return WaitUntil(() => SceneManager.GetActiveScene().name == "TrainingRoom" && GameManager.Instance.IsPlaying, 10f);
+            yield return null;
+            Assert.AreEqual(0, (int)next.GetValue(null), "the pose turn starts at 0");
+            Assert.IsFalse(GlorifiedBody.Enemy.CorpseCare.DebugHidden, "the debug flag is off");
+        }
+
+        /// <summary>The Clear look must not leave the shared URP asset changed (the gaps sweep, row 32).</summary>
+        [UnityTest]
+        public IEnumerator TheClearLook_GivesTheUrpAssetItsOwnSettingBack()
+        {
+            var asset = UnityEngine.Rendering.Universal.UniversalRenderPipeline.asset;
+            int own = asset.msaaSampleCount;
+            GlorifiedBody.Rendering.LookQualityApplier.Apply(GlorifiedBody.Rendering.LookQuality.Clear);
+            yield return null;
+            Assert.AreEqual(GlorifiedBody.Rendering.LookQualityApplier.ClearMsaa, asset.msaaSampleCount, "Clear: MSAA 4x");
+            GlorifiedBody.Rendering.LookQualityApplier.RestoreAsset();
+            Assert.AreEqual(own, asset.msaaSampleCount, "the asset's own value back (the end of play does this)");
+            GlorifiedBody.Rendering.LookQualityApplier.Apply(GlorifiedBody.Rendering.LookQuality.Authentic);
         }
 
         private IEnumerator FrozenShort()

@@ -121,8 +121,19 @@ namespace GlorifiedBody.Enemy
             variant = nextVariant++ % 4;
         }
 
+        // The pose turn starts again in each room (2026-10-26: after a RETRY the wall leaner could be another civilian).
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void ResetVariants() => nextVariant = 0;
+        private static void ResetVariants()
+        {
+            nextVariant = 0;
+            UnityEngine.SceneManagement.SceneManager.sceneLoaded -= OnRoomLoaded;
+            UnityEngine.SceneManagement.SceneManager.sceneLoaded += OnRoomLoaded;
+        }
+
+        private static void OnRoomLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
+        {
+            if (mode == UnityEngine.SceneManagement.LoadSceneMode.Single) nextVariant = 0;
+        }
 
         private void OnEnable()
         {

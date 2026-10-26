@@ -26,6 +26,9 @@ namespace GlorifiedBody.UI
         [SerializeField] private string aiTestScene = "AiTest";     // the FSM soldiers' hall (Bruno, 2026-10-23)
         [SerializeField] private string coverTestScene = "CoverTest"; // the breakable cover (Bruno, 2026-10-24)
         [SerializeField] private string civilianTestScene = "CivilianTest"; // the unarmed civilians (Bruno, 2026-10-25)
+        [SerializeField] private string kitTestScene = "KitTest";       // every system in one room (2026-10-26)
+        [SerializeField] private string scriptTestScene = "ScriptTest"; // the ultimatum, a gate, a cutscene (2026-10-26)
+        [SerializeField] private string travelTestScene = "TravelTest_A"; // two rooms and a door (2026-10-26)
         [SerializeField] private string subtitleLabel = "WORK IN PROGRESS";
 
         private Canvas canvas;
@@ -170,6 +173,10 @@ namespace GlorifiedBody.UI
         {
             GameManager.Instance?.LoadLevel(civilianTestScene);
         }
+
+        private void OnKitTestClicked() => GameManager.Instance?.LoadLevel(kitTestScene);
+        private void OnScriptTestClicked() => GameManager.Instance?.LoadLevel(scriptTestScene);
+        private void OnTravelTestClicked() => GameManager.Instance?.LoadLevel(travelTestScene);
 
         private void OnStartClicked()
         {
@@ -420,12 +427,6 @@ namespace GlorifiedBody.UI
             CreateSpacer(column.transform, 10f);
             tutorialBtn = CreateButton(column.transform, "TUTORIAL", 420, OnTutorialClicked, 48);
             nav.Add(tutorialBtn);
-            aiTestBtn = CreateButton(column.transform, "AI TEST", 420, OnAiTestClicked, 48);
-            nav.Add(aiTestBtn);
-            coverTestBtn = CreateButton(column.transform, "COVER TEST", 420, OnCoverTestClicked, 48);
-            nav.Add(coverTestBtn);
-            civilianTestBtn = CreateButton(column.transform, "CIVILIAN TEST", 420, OnCivilianTestClicked, 48);
-            nav.Add(civilianTestBtn);
             howToBtn = CreateButton(column.transform, "HOW TO PLAY", 420, OnHowToPlayClicked, 48);
             modifiersBtn = CreateButton(column.transform, "DIFFICULTY", 420, OnModifiersClicked, 48);
             modifiersLabel = modifiersBtn.GetComponentInChildren<Text>();
@@ -437,6 +438,34 @@ namespace GlorifiedBody.UI
             nav.Add(optionsBtn);
             nav.Add(creditsBtn);
             nav.Add(quitBtn);
+
+            // ── The test rooms (right): one column of their own, so the main column fits the screen (2026-10-26:
+            // with the three new rooms the column ran past the bottom) ──
+            var tests = CreateUIElement("TestColumn", menuPanel.transform);
+            var testsRect = tests.GetComponent<RectTransform>();
+            testsRect.anchorMin = new Vector2(0.84f, 0.62f);
+            testsRect.anchorMax = new Vector2(0.84f, 0.62f);
+            testsRect.pivot = new Vector2(0.5f, 1f);
+            testsRect.sizeDelta = new Vector2(320f, 0f);
+            var testsLayout = tests.AddComponent<VerticalLayoutGroup>();
+            testsLayout.spacing = 10;
+            testsLayout.childAlignment = TextAnchor.UpperCenter;
+            testsLayout.childControlWidth = false;
+            testsLayout.childControlHeight = true;
+            testsLayout.childForceExpandWidth = false;
+            testsLayout.childForceExpandHeight = false;
+            tests.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            Text testsHeader = CreateLabel(tests.transform, "TEST ROOMS", 22, TextAnchor.MiddleCenter, 36, FontStyle.Bold, new Color(0.6f, 0.6f, 0.7f));
+            testsHeader.rectTransform.sizeDelta = new Vector2(300f, testsHeader.rectTransform.sizeDelta.y); // the column does not size its children
+            aiTestBtn = CreateButton(tests.transform, "AI TEST", 300, OnAiTestClicked, 44);
+            coverTestBtn = CreateButton(tests.transform, "COVER TEST", 300, OnCoverTestClicked, 44);
+            civilianTestBtn = CreateButton(tests.transform, "CIVILIAN TEST", 300, OnCivilianTestClicked, 44);
+            nav.Add(aiTestBtn);
+            nav.Add(coverTestBtn);
+            nav.Add(civilianTestBtn);
+            nav.Add(CreateButton(tests.transform, "KIT TEST", 300, OnKitTestClicked, 44));
+            nav.Add(CreateButton(tests.transform, "SCRIPT TEST", 300, OnScriptTestClicked, 44));
+            nav.Add(CreateButton(tests.transform, "TRAVEL TEST", 300, OnTravelTestClicked, 44));
 
             // ── Wire keyboard navigation (up/down) ──
             for (int i = 0; i < nav.Count; i++)

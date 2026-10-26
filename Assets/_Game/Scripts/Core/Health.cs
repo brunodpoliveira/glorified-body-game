@@ -51,8 +51,9 @@ namespace GlorifiedBody.Core
         public bool IsSecondWindEnabled => enableSecondWind;
         public bool IsSecondWindAvailable => secondWindAvailable;
         public bool IsSecondWindActive => secondWindActive;
-        public bool IsSecondWindInvulnerable => secondWindInvulnerableUntil > Time.unscaledTime;
-        public float SecondWindInvulnerabilityRemaining => Mathf.Max(0f, secondWindInvulnerableUntil - Time.unscaledTime);
+        // Game time (2026-10-26): a pause or the short's freeze must not use up the 2.5 s (they ran on real time).
+        public bool IsSecondWindInvulnerable => secondWindInvulnerableUntil > Time.time;
+        public float SecondWindInvulnerabilityRemaining => Mathf.Max(0f, secondWindInvulnerableUntil - Time.time);
 
         void Awake()
         {
@@ -83,7 +84,7 @@ namespace GlorifiedBody.Core
                     currentHealth = 1f;
                     secondWindAvailable = false;
                     secondWindActive = true;
-                    secondWindInvulnerableUntil = Time.unscaledTime + secondWindInvulnerabilityDuration;
+                    secondWindInvulnerableUntil = Time.time + secondWindInvulnerabilityDuration;
                     OnSecondWind?.Invoke();
                     return;
                 }

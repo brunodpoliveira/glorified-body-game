@@ -40,6 +40,13 @@ namespace GlorifiedBody.Player
 
         private const float SurgeRadius = 5f; // the lamps the short's start pops, PROPOSED
         public const float StartFreeze = 2.5f;     // s of frozen world at the start (Bruno, 2026-10-25)
+        public const string ScreamCaptionKey = "short_scream";
+
+        private static System.Collections.IEnumerator EndScreamCaption()
+        {
+            yield return new WaitForSecondsRealtime(StartFreeze);
+            GlorifiedBody.Subtitles.SubtitleService.Hide(ScreamCaptionKey);
+        }
         private const float StartRecovery = 0.2f;  // s back to full speed
         public const string ScreamPath = "Audio/lucy_scream"; // Resources: the placeholder scream (ffmpeg, 2026-10-25)
         public const string ZapPath = "Audio/short_zap"; // Resources: the placeholder zap (ffmpeg, 2026-10-25)
@@ -106,7 +113,9 @@ namespace GlorifiedBody.Player
             painUntil = Time.unscaledTime + StartFreeze;
             ImpactFrameController.Instance?.RequestImpactFrame(StartFreeze, StartRecovery);
             if (PlayOnce(ref scream, ref screamLoaded, ScreamPath, transform.position + Vector3.up * 1.6f, 1f, GlorifiedBody.Audio.SoundChannel.Voice)) Screams++;
-            GlorifiedBody.Subtitles.SubtitleService.Say(gameObject, "[screams]", StartFreeze); // the sound has a caption too
+            // The sound has a caption too, for the frozen start only (a game-time line outlived the freeze by 2.5 s).
+            GlorifiedBody.Subtitles.SubtitleService.Show(ScreamCaptionKey, GlorifiedBody.Subtitles.Speaker.NameOf(gameObject), "[screams]");
+            StartCoroutine(EndScreamCaption());
             PoseClips clips = PoseClips.Load();
             Animator animator = GetComponentInChildren<Animator>();
             if (clips == null || clips.lucyPain == null || animator == null) return;

@@ -46,11 +46,34 @@ namespace GlorifiedBody.Rendering
             if (SettingsManager.Instance != null) SettingsManager.Instance.OnLookQualityChanged -= Apply;
         }
 
+        // The asset is a shared file: the first change keeps its own value, the end of play puts it back (2026-10-26:
+        // the editor kept the Clear look's MSAA on disk).
+        private static int? ownMsaa;
+
+        public static void RestoreAsset()
+        {
+            UniversalRenderPipelineAsset asset = UniversalRenderPipeline.asset;
+            if (asset != null && ownMsaa.HasValue) asset.msaaSampleCount = ownMsaa.Value;
+            ownMsaa = null;
+        }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void HookQuit()
+        {
+            ownMsaa = null;
+            Application.quitting -= RestoreAsset;
+            Application.quitting += RestoreAsset;
+        }
+
         public static void Apply(LookQuality quality)
         {
             bool clear = quality == LookQuality.Clear;
             UniversalRenderPipelineAsset asset = UniversalRenderPipeline.asset;
-            if (asset != null) asset.msaaSampleCount = clear ? ClearMsaa : 1;
+            if (asset != null)
+            {
+                if (!ownMsaa.HasValue) ownMsaa = asset.msaaSampleCount;
+                asset.msaaSampleCount = clear ? ClearMsaa : 1;
+            }
             Camera cam = Camera.main;
             if (cam == null) return;
             UniversalAdditionalCameraData data = cam.GetUniversalAdditionalCameraData();

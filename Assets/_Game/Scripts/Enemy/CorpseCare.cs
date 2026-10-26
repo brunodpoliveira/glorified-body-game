@@ -338,8 +338,19 @@ namespace GlorifiedBody.Enemy
         /// <summary>Debug (F12): the care counts her as unseen, so a colleague tends a body in an open room (Bruno, 2026-10-24: "B9 is really hard to test").</summary>
         public static bool DebugHidden;
 
+        // Off again in each room (2026-10-26: the debug flag followed her into the next room).
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void ResetDebugHidden() => DebugHidden = false;
+        private static void ResetDebugHidden()
+        {
+            DebugHidden = false;
+            UnityEngine.SceneManagement.SceneManager.sceneLoaded -= OnRoomLoaded;
+            UnityEngine.SceneManagement.SceneManager.sceneLoaded += OnRoomLoaded;
+        }
+
+        private static void OnRoomLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
+        {
+            if (mode == UnityEngine.SceneManagement.LoadSceneMode.Single) DebugHidden = false;
+        }
 
         private bool SeesHer()
         {

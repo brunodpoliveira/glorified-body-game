@@ -284,6 +284,10 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   entries, sequences, triggers), `CameraCoverage` reads box floors. `KitTest` in git: 3 armed, 2 civilians, cover,
   items, save, checkpoint, a door to TRAVEL B; `KitTests` (5). AI/COVER/CIVILIAN TEST use markers now (0 vendor refs);
   they stay git-ignored until Bruno says they may go in. AFTER A VENDOR IMPORT: run `BuildEnemyPrefabs` once.
+- 2026-10-26, night, five more seams (`devlog-notes/2026-10-26_seams_part2.md`): the second wind on game time,
+  subtitles hidden under the pause and the inventory, the scream caption only for the freeze, per-room statics reset,
+  the URP asset's MSAA restored at the end of play. The main menu: the test rooms in their own right column (KIT,
+  SCRIPT, TRAVEL TEST added).
 
 ## Rules
 
