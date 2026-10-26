@@ -178,6 +178,7 @@ namespace GlorifiedBody.UI
             beepSource = canvasObj.AddComponent<AudioSource>();
             beepSource.playOnAwake = false;
             beepSource.spatialBlend = 0f;
+            beepSource.ignoreListenerPause = true;
             hpBeep = MakeBeep("hp_warning", 880f, 0.09f);
             nalconBeep = MakeBeep("nalcon_warning", 620f, 0.09f);
             shortBeep = MakeBeep("short_warning", 1180f, 0.07f);
@@ -441,7 +442,7 @@ namespace GlorifiedBody.UI
             levelUpText.gameObject.SetActive(true);
             levelUpUntil = Time.unscaledTime + LevelUpSeconds;
             // A placeholder rising pair of tones, like the warning beeps.
-            if (beepSource != null && levelUpLow != null) beepSource.PlayOneShot(levelUpLow);
+            if (beepSource != null && levelUpLow != null) beepSource.PlayOneShot(levelUpLow, 0.5f * GlorifiedBody.Audio.GameAudio.Volume(GlorifiedBody.Audio.SoundChannel.Ui));
             levelUpHighPending = true;
             levelUpHighAt = Time.unscaledTime + 0.14f;
         }
@@ -458,7 +459,7 @@ namespace GlorifiedBody.UI
             if (levelUpHighPending && Time.unscaledTime >= levelUpHighAt)
             {
                 levelUpHighPending = false;
-                if (beepSource != null && levelUpHigh != null) beepSource.PlayOneShot(levelUpHigh);
+                if (beepSource != null && levelUpHigh != null) beepSource.PlayOneShot(levelUpHigh, 0.5f * GlorifiedBody.Audio.GameAudio.Volume(GlorifiedBody.Audio.SoundChannel.Ui));
             }
         }
 
@@ -568,10 +569,8 @@ namespace GlorifiedBody.UI
         {
             WarningBeeps++;
             if (beepSource == null || clip == null) return;
-            float volume = 0.5f;
-            SettingsManager settings = SettingsManager.Instance;
-            if (settings != null) volume *= settings.MasterVolume * settings.SFXVolume;
-            beepSource.PlayOneShot(clip, volume);
+            // The UI channel: the listener's volume is Master already (it was applied twice before 2026-10-26).
+            beepSource.PlayOneShot(clip, 0.5f * GlorifiedBody.Audio.GameAudio.Volume(GlorifiedBody.Audio.SoundChannel.Ui));
         }
 
         private GameObject WarningBadge(Transform parent, string name, int row, Sprite icon, string word, Color color, out Text text)

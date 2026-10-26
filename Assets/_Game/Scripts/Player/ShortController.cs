@@ -105,7 +105,7 @@ namespace GlorifiedBody.Player
             StartPains++;
             painUntil = Time.unscaledTime + StartFreeze;
             ImpactFrameController.Instance?.RequestImpactFrame(StartFreeze, StartRecovery);
-            if (PlayOnce(ref scream, ref screamLoaded, ScreamPath, transform.position + Vector3.up * 1.6f, 1f, 1f)) Screams++;
+            if (PlayOnce(ref scream, ref screamLoaded, ScreamPath, transform.position + Vector3.up * 1.6f, 1f, GlorifiedBody.Audio.SoundChannel.Voice)) Screams++;
             GlorifiedBody.Subtitles.SubtitleService.Say(gameObject, "[screams]", StartFreeze); // the sound has a caption too
             PoseClips clips = PoseClips.Load();
             Animator animator = GetComponentInChildren<Animator>();
@@ -168,7 +168,7 @@ namespace GlorifiedBody.Player
                 Vector3 victimChest = other.transform.position + Vector3.up * GlorifiedBody.Characters.Body.ChestHeight;
                 ShockArc.Show(origin + Vector3.up * GlorifiedBody.Characters.Body.ChestHeight, victimChest);
                 Arcs++;
-                if (PlayOnce(ref zap, ref zapLoaded, ZapPath, victimChest, UnityEngine.Random.Range(0.9f, 1.1f), 0.8f)) Zaps++;
+                if (PlayOnce(ref zap, ref zapLoaded, ZapPath, victimChest, UnityEngine.Random.Range(0.9f, 1.1f), GlorifiedBody.Audio.SoundChannel.Sfx)) Zaps++;
                 if (!other.IsDead)
                 {
                     other.GetComponentInParent<IStaggerable>()?.Stagger(StunSeconds);
@@ -227,8 +227,8 @@ namespace GlorifiedBody.Player
         private static AudioClip zap, scream;
         private static bool zapLoaded, screamLoaded;
 
-        /// <summary>A 3D one-shot of a Resources clip (the zap, the scream). False when the clip is missing.</summary>
-        private static bool PlayOnce(ref AudioClip clip, ref bool loaded, string path, Vector3 at, float pitch, float blend)
+        /// <summary>A 3D one-shot of a Resources clip on a channel (the zap: SFX, her scream: Voice). False when the clip is missing.</summary>
+        private static bool PlayOnce(ref AudioClip clip, ref bool loaded, string path, Vector3 at, float pitch, GlorifiedBody.Audio.SoundChannel channel)
         {
             if (!loaded)
             {
@@ -236,19 +236,7 @@ namespace GlorifiedBody.Player
                 loaded = true;
             }
             if (clip == null) return false;
-            var obj = new GameObject("Short_" + clip.name);
-            obj.transform.position = at;
-            var source = obj.AddComponent<AudioSource>();
-            source.clip = clip;
-            source.spatialBlend = blend;
-            source.dopplerLevel = 0f;
-            source.minDistance = 1.5f;
-            source.maxDistance = 30f;
-            source.pitch = pitch;
-            source.ignoreListenerPause = true;
-            source.Play();
-            Destroy(obj, clip.length / Mathf.Max(0.1f, pitch) + 0.1f);
-            return true;
+            return GlorifiedBody.Audio.GameAudio.PlayClip(clip, at, channel, 1f, true, pitch) != null;
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]

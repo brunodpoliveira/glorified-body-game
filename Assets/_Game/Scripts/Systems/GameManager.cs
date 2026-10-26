@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using GlorifiedBody.UI;
@@ -125,7 +126,11 @@ namespace GlorifiedBody.Systems
             currentState = newState;
 
             ApplyStateSettings(newState);
+            OnStateChanged?.Invoke(newState);
         }
+
+        /// <summary>Each change of the game state (the sound pauses with the game, 2026-10-26).</summary>
+        public static event Action<GameState> OnStateChanged;
 
         public void Pause()
         {

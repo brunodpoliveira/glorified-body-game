@@ -146,6 +146,9 @@ namespace GlorifiedBody.UI
 
             if (voice != null && entry != null && entry.voiceLine != null)
             {
+                // The Voice channel. The death screen pauses the world sounds, not its own line.
+                GlorifiedBody.Audio.GameAudio.Configure(voice, GlorifiedBody.Audio.SoundChannel.Voice, 1f, false);
+                voice.ignoreListenerPause = true;
                 voice.PlayOneShot(entry.voiceLine);
             }
 

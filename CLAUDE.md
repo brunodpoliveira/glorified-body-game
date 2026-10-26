@@ -252,6 +252,16 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   good (the freeze now waits), a drug in the death beat revived her, a save of a missing room hung the load. The
   exterior light: the same method with a Mixed directional sun (study only). His answers to the 2026-10-25 points:
   keep, keep, no, no.
+- 2026-10-26, night, THE SOUND SYSTEM (`devlog-notes/2026-10-26_sound_system.md`, `Scripts/Audio/`, no scene change:
+  `AudioHost` "[GameAudio]" starts with the game): channels SFX / Music / Voice / UI with their sliders (Voice is
+  new), one 3D curve, the pause and the inventory and the death screen pause the world sounds, the listener on Lucy
+  (`ListenerRig`), `MusicDirector` (Ambient / Tension / Combat / Menu, crossfades, `Resources/Audio/Music/<room key>/`
+  else `_placeholder/`, `RoomMusic` for a sector key, a room tone), `Voice.Say` / `Voice.PA` (`Resources/Voice/<id>`
+  or the subtitle alone, `voice_missing` in the log; barks go through it), `Sfx` events (one folder each in
+  `Resources/Audio/Sfx/`; steps, dodge, powers, hits, falls, UI, doors, pickups, scan, saves). Placeholders:
+  `tools/audio_placeholders.py` (numpy music and hums, Kenney CC0 packs). Tests: `SoundSystemTests` (7), the AI room's
+  Tension test. Bruno's answers: exp numbers yes, a civilian kill does not fill SHORT, build the sound system, the
+  exterior test and the demo ranks 1 to 5 next ("all isolated systems ... tested and fine-tuned").
 
 ## Rules
 

@@ -33,6 +33,7 @@ namespace GlorifiedBody.UI
         private Slider masterSlider;
         private Slider sfxSlider;
         private Slider musicSlider;
+        private Slider voiceSlider;
 
         // Display controls
         private Dropdown resolutionDropdown;
@@ -163,6 +164,7 @@ namespace GlorifiedBody.UI
                 masterSlider.SetValueWithoutNotify(SettingsManager.Instance.MasterVolume);
                 sfxSlider.SetValueWithoutNotify(SettingsManager.Instance.SFXVolume);
                 musicSlider.SetValueWithoutNotify(SettingsManager.Instance.MusicVolume);
+                voiceSlider.SetValueWithoutNotify(SettingsManager.Instance.VoiceVolume);
                 sensitivitySlider.SetValueWithoutNotify(SettingsManager.Instance.MouseSensitivity);
                 UpdateSensitivityLabel(SettingsManager.Instance.MouseSensitivity);
                 RefreshModeButtons();
@@ -258,6 +260,11 @@ namespace GlorifiedBody.UI
         private void OnSFXVolumeChanged(float value)
         {
             if (SettingsManager.Instance != null) SettingsManager.Instance.SFXVolume = value;
+        }
+
+        private void OnVoiceVolumeChanged(float value)
+        {
+            if (SettingsManager.Instance != null) SettingsManager.Instance.VoiceVolume = value;
         }
 
         private void OnMusicVolumeChanged(float value)
@@ -480,6 +487,7 @@ namespace GlorifiedBody.UI
             masterSlider = CreateSliderRow(content, "Master Volume", 0f, 1f, OnMasterVolumeChanged);
             sfxSlider = CreateSliderRow(content, "SFX Volume", 0f, 1f, OnSFXVolumeChanged);
             musicSlider = CreateSliderRow(content, "Music Volume", 0f, 1f, OnMusicVolumeChanged);
+            voiceSlider = CreateSliderRow(content, "Voice Volume", 0f, 1f, OnVoiceVolumeChanged);
 
             return panel;
         }

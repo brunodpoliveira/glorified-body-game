@@ -120,6 +120,7 @@ namespace GlorifiedBody.Saving
             HasSessionCheckpoint = true;
             Saves++;
             RunTelemetry.Event("save", $"slot {slot} at {spot}");
+            GlorifiedBody.Audio.Sfx.Ui(GlorifiedBody.Audio.Sfx.Save, 0.8f);
             OnToast?.Invoke($"SAVED IN SLOT {slot}");
             return true;
         }
@@ -133,6 +134,7 @@ namespace GlorifiedBody.Saving
             HasSessionCheckpoint = true;
             Saves++;
             RunTelemetry.Event("checkpoint", spot);
+            GlorifiedBody.Audio.Sfx.Ui(GlorifiedBody.Audio.Sfx.Checkpoint, 0.7f);
             OnToast?.Invoke("CHECKPOINT");
             return true;
         }

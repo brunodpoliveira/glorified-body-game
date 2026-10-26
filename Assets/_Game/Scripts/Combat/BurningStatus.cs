@@ -38,12 +38,21 @@ namespace GlorifiedBody.Combat
             burn.damagePerSecond = Mathf.Max(burn.IsBurning ? burn.damagePerSecond : 0f, damagePerSecond);
             burn.remaining = Mathf.Max(burn.remaining, seconds);
             burn.ApplyTint();
+            // The flames crackle while it burns (placeholder, 2026-10-26).
+            if (burn.crackle == null) burn.crackle = GlorifiedBody.Audio.Sfx.Loop(GlorifiedBody.Audio.Sfx.BurnLoop, victim, 0.5f);
+            else if (!burn.crackle.isPlaying) burn.crackle.Play();
             return burn;
         }
 
+        private AudioSource crackle;
+
         private void Update()
         {
-            if (!IsBurning) return;
+            if (!IsBurning)
+            {
+                if (crackle != null && crackle.isPlaying) crackle.Stop();
+                return;
+            }
             float dt = Time.deltaTime;
             remaining -= dt;
             tickTimer += dt;

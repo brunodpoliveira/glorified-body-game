@@ -8,7 +8,7 @@ see if there's any issues with audio and music (i.e voice acting, and we'll have
 ambient for sectors/environments, and placeholders in case there's a gap), as well as sweep to see if there's
 anything left to prototype from the design document to here. we'll likely to have exterior envs. is the method
 we're doing for illuminating scenes work for them fine? and then verify gaps between systems that can be done in
-isolation, so we can verify it all and start doing the actual production demo".
+isolation, so we can verify it all and start doing the actual production demo
 ```
 
 His answers to the four points of 2026-10-25: keep, keep, no need, no need (see that note).

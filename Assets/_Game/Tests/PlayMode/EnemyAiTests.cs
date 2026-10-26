@@ -54,6 +54,29 @@ namespace GlorifiedBody.Tests.PlayMode
             yield return null;
         }
 
+        /// <summary>
+        /// The music (2026-10-26): Ambient while no one hunts her, Tension while alerted soldiers hunt her (their guns
+        /// off here, so no aim turns it to Combat), and their boots make steps as they run.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator HuntingSoldiers_TurnTheMusicToTension_AndTheirBootsSound()
+        {
+            GlorifiedBody.Audio.MusicDirector music = GlorifiedBody.Audio.MusicDirector.Instance;
+            Assert.IsNotNull(music, "the music director");
+            foreach (DummyShooter gun in UnityEngine.Object.FindObjectsByType<DummyShooter>(FindObjectsSortMode.None)) gun.enabled = false;
+            yield return WaitUntil(() => music.State == GlorifiedBody.Audio.MusicState.Ambient, 4f);
+            Assert.AreEqual(GlorifiedBody.Audio.MusicState.Ambient, music.State, "no one hunts her yet");
+            foreach (SoldierBrain s in soldiers) s.Alert("test", callOthers: false);
+            yield return WaitUntil(() => music.State == GlorifiedBody.Audio.MusicState.Tension, 3f);
+            Assert.AreEqual(GlorifiedBody.Audio.MusicState.Tension, music.State, "they hunt her");
+            Assert.AreEqual("tension", music.CurrentClip.name, "the placeholder tension track");
+            int steps0 = soldiers.Sum(s => s.GetComponent<GlorifiedBody.Audio.Footsteps>()?.Steps ?? 0);
+            yield return new WaitForSeconds(3f);
+            int steps1 = soldiers.Sum(s => s.GetComponent<GlorifiedBody.Audio.Footsteps>()?.Steps ?? 0);
+            Assert.Greater(steps1 - steps0, 2, "their boots as they move");
+            Assert.AreEqual(GlorifiedBody.Audio.MusicState.Tension, music.State, "still hunting, no aim");
+        }
+
         /// <summary>The weapon events in the log: the bursts, the catches, the hits.</summary>
         private static void LogWeaponEvent(string name, string detail)
         {

@@ -72,6 +72,7 @@ namespace GlorifiedBody.Enemy
             trail.endColor = new Color(0.6f, 0.6f, 0.6f, 0f);
 
             var rocket = obj.AddComponent<EnemyRocket>();
+            GlorifiedBody.Audio.Sfx.Loop(GlorifiedBody.Audio.Sfx.RocketLoop, obj, 0.6f);
             rocket.speed = speed;
             rocket.damage = damage;
             rocket.radius = radius;

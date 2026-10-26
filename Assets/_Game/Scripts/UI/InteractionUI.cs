@@ -26,6 +26,7 @@ namespace GlorifiedBody.UI
         private RawImage scanImage;
         private Text scanCaption;
         private VideoPlayer video;
+        private AudioSource scanAudio;
         private RenderTexture videoTexture;
 
         private Interactor interactor;
@@ -195,7 +196,11 @@ namespace GlorifiedBody.UI
             video.playOnAwake = false;
             video.isLooping = false;
             video.renderMode = VideoRenderMode.RenderTexture;
-            video.audioOutputMode = VideoAudioOutputMode.None;
+            // The clip's own sound on the Voice channel (a memory speaks; muted before 2026-10-26).
+            scanAudio = root.AddComponent<AudioSource>();
+            GlorifiedBody.Audio.GameAudio.Bind(scanAudio, GlorifiedBody.Audio.SoundChannel.Voice, 1f, spatial: false);
+            video.audioOutputMode = VideoAudioOutputMode.AudioSource;
+            video.SetTargetAudioSource(0, scanAudio);
             video.waitForFirstFrame = true;
             video.skipOnDrop = true;
             video.loopPointReached += OnClipEnded;

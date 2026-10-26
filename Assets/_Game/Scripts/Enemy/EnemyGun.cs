@@ -79,6 +79,8 @@ namespace GlorifiedBody.Enemy
 
         private void Awake()
         {
+            // The gun follows the SFX slider and the shared 3D curve (2026-10-26).
+            if (source != null) GlorifiedBody.Audio.GameAudio.Bind(source, GlorifiedBody.Audio.SoundChannel.Sfx, 1f);
             shooter = GetComponent<DummyShooter>();
             health = GetComponent<Health>();
             animator = GetComponent<Animator>();

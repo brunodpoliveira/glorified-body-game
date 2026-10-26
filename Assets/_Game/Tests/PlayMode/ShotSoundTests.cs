@@ -171,7 +171,7 @@ namespace GlorifiedBody.Tests.PlayMode
         {
             return UnityEngine.Object.FindObjectsByType<AudioSource>(FindObjectsSortMode.None)
                 .Where(s => s.enabled && s.gameObject.activeInHierarchy && s.clip != null && (s.isPlaying || s.playOnAwake)
-                    && Vector3.Distance(s.transform.position, point) <= 3f)
+                    && s.spatialBlend > 0.5f && Vector3.Distance(s.transform.position, point) <= 3f) // world sounds: not the music or the room tone
                 .Select(s => s.clip.name).ToList();
         }
     }

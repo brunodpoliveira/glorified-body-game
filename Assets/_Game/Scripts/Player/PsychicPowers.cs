@@ -47,7 +47,19 @@ namespace GlorifiedBody.Player
         public bool IsCharging => lockOn != null && lockOn.IsCharging && !holdAfterLaunch && !(shortController != null && shortController.IsActive);
         /// <summary>The enemy she holds in the air with telekinesis, while a launch is possible.</summary>
         public TelekinesisLift HeldLift => activeLift != null && activeLift.CanLaunch ? activeLift : null;
-        public string LastResult { get; private set; } = "";
+        private string lastResult = "";
+        /// <summary>The last result: "fired", "slam", "launch:...", "catch...", "drug:...", "too_heavy", "no_nalcon"...</summary>
+        public string LastResult
+        {
+            get => lastResult;
+            private set
+            {
+                lastResult = value ?? "";
+                OnResult?.Invoke(lastResult);
+            }
+        }
+        /// <summary>Each result as it happens (the power sounds, GlorifiedBody.Audio.PowerSounds).</summary>
+        public event Action<string> OnResult;
         /// <summary>Time.time of the last result (the HUD shows "TOO HEAVY" for a moment).</summary>
         public float LastResultTime { get; private set; } = -10f;
 

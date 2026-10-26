@@ -49,6 +49,7 @@ namespace GlorifiedBody.Interaction
                 else StartCoroutine(Slide());
             }
             RunTelemetry.Event("door_opened", name);
+            if (!instant) GlorifiedBody.Audio.Sfx.Play(GlorifiedBody.Audio.Sfx.DoorOpen, transform.position + Vector3.up * 1.2f, 0.9f);
         }
 
         private IEnumerator Slide()

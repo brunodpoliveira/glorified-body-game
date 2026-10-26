@@ -159,7 +159,7 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.Greater(ShotEffects.Impacts, before, "the bullet hit the barricade");
             string[] sounds = UnityEngine.Object.FindObjectsByType<AudioSource>(FindObjectsSortMode.None)
                 .Where(s => s.enabled && s.gameObject.activeInHierarchy && s.clip != null && (s.isPlaying || s.playOnAwake)
-                    && Vector3.Distance(s.transform.position, centre) <= 3f)
+                    && s.spatialBlend > 0.5f && Vector3.Distance(s.transform.position, centre) <= 3f) // world sounds: not the music or the room tone
                 .Select(s => s.clip.name).ToArray();
             Debug.Log($"[BreakableTests] a bullet on the barricade: surface {ShotEffects.LastSurface}, sounds {string.Join(", ", sounds)}");
             Assert.AreEqual(SurfaceKind.Wood, ShotEffects.LastSurface);

@@ -23,7 +23,8 @@ namespace GlorifiedBody.Enemy
             Bark bark = who.GetComponent<Bark>() ?? who.AddComponent<Bark>();
             bark.line = line;
             bark.hideAt = Time.time + seconds;
-            SubtitleService.Say(who, line, seconds);
+            // The voice player shows the subtitle, and plays Resources/Voice/<id> when the line has a clip (2026-10-26).
+            GlorifiedBody.Audio.Voice.Say(who, GlorifiedBody.Audio.Voice.IdFor(who, line), line, GlorifiedBody.Audio.VoiceMode.World, seconds);
             Count++;
         }
 

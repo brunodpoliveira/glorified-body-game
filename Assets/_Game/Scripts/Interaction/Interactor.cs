@@ -107,7 +107,7 @@ namespace GlorifiedBody.Interaction
             {
                 messageUntil = Time.time + MessageSeconds;
                 SetState(State.Message);
-                Result("message:" + target.name);
+                Result((target is LockedDoor ? "locked:" : "message:") + target.name);
                 return;
             }
             Pending = target;
@@ -180,6 +180,7 @@ namespace GlorifiedBody.Interaction
         {
             LastResult = what;
             RunTelemetry.Event("interact", what);
+            GlorifiedBody.Audio.InteractionSounds.OnResult(what, transform.position);
             OnChanged?.Invoke();
         }
     }

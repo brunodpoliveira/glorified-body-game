@@ -125,6 +125,7 @@ namespace GlorifiedBody.Interaction
         {
             LastResult = what;
             RunTelemetry.Event("scan", what);
+            GlorifiedBody.Audio.InteractionSounds.OnResult(what, transform.position);
         }
     }
 }

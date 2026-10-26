@@ -179,20 +179,10 @@ namespace GlorifiedBody.Enemy
             return clip;
         }
 
+        /// <summary>A 3D one-shot on the SFX channel (GameAudio). A missing clip is silent (a clone without the vendor clips).</summary>
         public static void PlayAt(AudioClip clip, Vector3 point, float volume)
         {
-            var obj = new GameObject("OneShot_" + clip.name);
-            obj.transform.position = point;
-            var source = obj.AddComponent<AudioSource>();
-            source.clip = clip;
-            source.volume = volume;
-            source.spatialBlend = 1f;
-            source.dopplerLevel = 0f;
-            source.minDistance = 1.5f;
-            source.maxDistance = 40f;
-            source.rolloffMode = AudioRolloffMode.Logarithmic;
-            source.Play();
-            Destroy(obj, clip.length + 0.1f);
+            GlorifiedBody.Audio.GameAudio.PlayClip(clip, point, GlorifiedBody.Audio.SoundChannel.Sfx, volume);
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]

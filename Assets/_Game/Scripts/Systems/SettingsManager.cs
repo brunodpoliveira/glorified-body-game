@@ -37,10 +37,15 @@ namespace GlorifiedBody.Systems
         [SerializeField] private float defaultMasterVolume = 1f;
         [SerializeField] private float defaultSFXVolume = 1f;
         [SerializeField] private float defaultMusicVolume = 1f;
+        [SerializeField] private float defaultVoiceVolume = 1f;
 
         private float masterVolume;
         private float sfxVolume;
         private float musicVolume;
+        private float voiceVolume;
+
+        /// <summary>A volume changed (the sound channels follow it, GlorifiedBody.Audio.GameAudio).</summary>
+        public event Action OnAudioChanged;
 
         public float MasterVolume
         {
@@ -70,6 +75,18 @@ namespace GlorifiedBody.Systems
             set
             {
                 musicVolume = Mathf.Clamp01(value);
+                ApplyAudioSettings();
+                SaveSettings();
+            }
+        }
+
+        /// <summary>The spoken lines: barks, the PA, the cutscenes, the death screen (2026-10-26).</summary>
+        public float VoiceVolume
+        {
+            get => voiceVolume;
+            set
+            {
+                voiceVolume = Mathf.Clamp01(value);
                 ApplyAudioSettings();
                 SaveSettings();
             }
@@ -253,6 +270,7 @@ namespace GlorifiedBody.Systems
         private const string KEY_MASTER_VOL = "settings_masterVolume";
         private const string KEY_SFX_VOL = "settings_sfxVolume";
         private const string KEY_MUSIC_VOL = "settings_musicVolume";
+        private const string KEY_VOICE_VOL = "settings_voiceVolume";
         private const string KEY_MOUSE_SENS = "settings_mouseSensitivity";
         private const string KEY_WALLRUN_MODE = "settings_wallRunMode";
         private const string KEY_SLIDE_MODE = "settings_slideMode";
@@ -286,6 +304,7 @@ namespace GlorifiedBody.Systems
             masterVolume = PlayerPrefs.GetFloat(KEY_MASTER_VOL, defaultMasterVolume);
             sfxVolume = PlayerPrefs.GetFloat(KEY_SFX_VOL, defaultSFXVolume);
             musicVolume = PlayerPrefs.GetFloat(KEY_MUSIC_VOL, defaultMusicVolume);
+            voiceVolume = PlayerPrefs.GetFloat(KEY_VOICE_VOL, defaultVoiceVolume);
             mouseSensitivity = PlayerPrefs.GetFloat(KEY_MOUSE_SENS, defaultMouseSensitivity);
             wallRunMode = ClampWallRunMode((WallRunInputMode)PlayerPrefs.GetInt(KEY_WALLRUN_MODE, (int)defaultWallRunMode));
             slideMode = (SlideInputMode)PlayerPrefs.GetInt(KEY_SLIDE_MODE, (int)defaultSlideMode);
@@ -310,6 +329,7 @@ namespace GlorifiedBody.Systems
             PlayerPrefs.SetFloat(KEY_MASTER_VOL, masterVolume);
             PlayerPrefs.SetFloat(KEY_SFX_VOL, sfxVolume);
             PlayerPrefs.SetFloat(KEY_MUSIC_VOL, musicVolume);
+            PlayerPrefs.SetFloat(KEY_VOICE_VOL, voiceVolume);
             PlayerPrefs.SetFloat(KEY_MOUSE_SENS, mouseSensitivity);
             PlayerPrefs.SetInt(KEY_WALLRUN_MODE, (int)wallRunMode);
             PlayerPrefs.SetInt(KEY_SLIDE_MODE, (int)slideMode);
@@ -330,6 +350,7 @@ namespace GlorifiedBody.Systems
         private void ApplyAudioSettings()
         {
             AudioListener.volume = masterVolume;
+            OnAudioChanged?.Invoke();
         }
 
         private void ApplyDisplaySettings()
@@ -366,6 +387,7 @@ namespace GlorifiedBody.Systems
             masterVolume = defaultMasterVolume;
             sfxVolume = defaultSFXVolume;
             musicVolume = defaultMusicVolume;
+            voiceVolume = defaultVoiceVolume;
             mouseSensitivity = defaultMouseSensitivity;
             wallRunMode = ClampWallRunMode(defaultWallRunMode);
             slideMode = defaultSlideMode;

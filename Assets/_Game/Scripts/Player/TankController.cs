@@ -169,6 +169,7 @@ namespace GlorifiedBody.Player
                 StartCoroutine(EndInvulnerability(dodgeInvulnerableTime));
             }
             RunTelemetry.Event("dodge", direction.ToString().ToLowerInvariant());
+            GlorifiedBody.Audio.Sfx.Play(GlorifiedBody.Audio.Sfx.Dodge, transform.position + Vector3.up * 0.8f, 0.7f);
             OnDodge?.Invoke();
             return true;
         }

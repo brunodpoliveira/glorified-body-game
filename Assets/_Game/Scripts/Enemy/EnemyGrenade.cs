@@ -146,6 +146,7 @@ namespace GlorifiedBody.Enemy
                 {
                     landed = true;
                     transform.position = target + Vector3.up * 0.06f;
+                    GlorifiedBody.Audio.Sfx.Play(GlorifiedBody.Audio.Sfx.GrenadeBounce, transform.position, 0.8f);
                 }
             }
             else

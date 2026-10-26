@@ -98,7 +98,8 @@ namespace GlorifiedBody.Destruction
         {
             if (clip == null) return;
             DestructionFxSettings s = Settings;
-            AudioSource.PlayClipAtPoint(clip, at, volume * (s != null ? s.volume : 1f));
+            // The SFX channel and the shared 3D curve (GameAudio), not PlayClipAtPoint's own 500 m curve.
+            GlorifiedBody.Audio.GameAudio.PlayClip(clip, at, GlorifiedBody.Audio.SoundChannel.Sfx, volume * (s != null ? s.volume : 1f));
         }
 
         private static void Burst(Vector3 at, Color colour, int count, float size, float speed, float life, bool glow)

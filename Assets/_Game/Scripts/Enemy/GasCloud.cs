@@ -70,10 +70,17 @@ namespace GlorifiedBody.Enemy
             return cloud;
         }
 
+        // The hiss starts after the pop (one sound per event, Bruno, 2026-10-25) and loops while the cloud lasts.
+        public const float HissDelay = 1f;
+        private float age;
+        private AudioSource hiss;
+
         private void Update()
         {
             float dt = Time.deltaTime;
             if (dt <= 0f) return;
+            age += dt;
+            if (hiss == null && age >= HissDelay) hiss = GlorifiedBody.Audio.Sfx.Loop(GlorifiedBody.Audio.Sfx.GasHiss, gameObject, 0.45f);
             seconds -= dt;
             if (seconds <= 0f)
             {

@@ -439,6 +439,8 @@ namespace GlorifiedBody.Tutorial
             ResetDummies(OnlyDummy.TryGetValue(Current.Id, out string only) ? only : null);
             Current.OnEnter?.Invoke();
             RunTelemetry.Event("tutorial_step", Current.Id);
+            // The presenter on the PA speakers: Resources/Voice/presenter.<step> when it is recorded. The prompt shows the words.
+            GlorifiedBody.Audio.Voice.PlayOnly("presenter." + Current.Id, GlorifiedBody.Audio.VoiceMode.Radio);
             OnStepChanged?.Invoke(Current);
         }
 
