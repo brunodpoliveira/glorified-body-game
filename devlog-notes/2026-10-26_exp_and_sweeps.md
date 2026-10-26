@@ -1,11 +1,15 @@
 # 2026-10-26: the experience levels, three sweeps, the exterior light
 
-Bruno's words: "we'll need to test out experience points; program them in and test. we also need another sweep to
+Bruno's words (verbatim):
+
+```text
+we'll need to test out experience points; program them in and test. we also need another sweep to
 see if there's any issues with audio and music (i.e voice acting, and we'll have a music for combat, tension,
 ambient for sectors/environments, and placeholders in case there's a gap), as well as sweep to see if there's
 anything left to prototype from the design document to here. we'll likely to have exterior envs. is the method
 we're doing for illuminating scenes work for them fine? and then verify gaps between systems that can be done in
 isolation, so we can verify it all and start doing the actual production demo".
+```
 
 His answers to the four points of 2026-10-25: keep, keep, no need, no need (see that note).
 
@@ -27,10 +31,14 @@ The firemen of §11.3 are unarmed civilians, so the farm pays the civilian rate 
 A rough count for the 40-minute demo: about 25 soldiers and guards and 10 civilians. Kill all of them: about 1,000
 exp, level 6. Kill only the ones who fight: about 450 to 500 exp, level 4. Tune the numbers when the rooms exist.
 
-Code: `Player/ExperienceRules.cs` (the numbers), `PsychicStats` (the exp, the level, the credit from the hit bus),
-`PsychicPowers.DamageScale` (the MK boost times the level), `Health.DeathFrame` (the hit in the frame of the death is
-the kill), `PlayerState.exp`, `PlayerHud` (the level line and the banner). No scene changed: every room already has
-`PsychicStats` on Lucy.
+Code:
+
+- `Player/ExperienceRules.cs`: the numbers.
+- `PsychicStats`: the exp, the level, the credit from the hit bus.
+- `PsychicPowers.DamageScale`: the MK boost times the level.
+- `Health.DeathFrame`: the hit in the frame of the death is the kill.
+- `PlayerState.exp`, and `PlayerHud` (the level line and the banner).
+- No scene changed. Every room already has `PsychicStats` on Lucy.
 
 Proof:
 
@@ -139,10 +147,12 @@ Not fixed, they need a ruling or the travel system (see the report for the evide
 - After the seam fixes: PlayMode 197/197, the six bots CLEAN (the tutorial bot uses the short's freeze). The cover
   bot's two warnings are the soldier drift warning, also in the runs of 2026-10-24 and 2026-10-25.
 
-## Open for Bruno
+## Bruno's answers (2026-10-26, night)
 
-1. The exp numbers (section 1), PROPOSED.
-2. Should a civilian kill fill the SHORT bar? Design §2.7 says "every kill".
-3. The sound system of section 3: build it now with placeholders? About 1 day.
-4. The exterior look test of section 2: build it now? About half a day.
-5. The order for the demo: section 4, ranks 1 to 5 first?
+1. The exp numbers: "yes" (they stay as built).
+2. A civilian kill fills the SHORT bar: "it should not". The code stays as it is.
+3. The sound system: "yes".
+4. The exterior look test: "yes".
+5. The demo order, ranks 1 to 5 first: "yes".
+6. His rule for the demo: "the demo build assumes that all isolated systems have been tested and fine-tuned to a
+   reasonable degree and confirmed works".
