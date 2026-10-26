@@ -188,6 +188,26 @@ namespace GlorifiedBody.Automation
             bool pauseHidden = gm.IsPlaying && (pauseCanvas == null || !pauseCanvas.activeSelf);
             Record("pause_roundtrip", pauseShown && pauseHidden, $"shown={pauseShown} hidden={pauseHidden} timeScale={Time.timeScale:0.00}");
 
+            // 3a. The save machine (Bruno, 2026-10-25): the slot menu over the stopped game, a save into slot 1, the
+            // note. Saved as save_menu_ui.png and save_note.png. The bot's saves go to saves_batch.
+            GlorifiedBody.Saving.SavePoint machine = FindFirstObjectByType<GlorifiedBody.Saving.SavePoint>();
+            bool saveMenu = false, saved = false;
+            string note = "";
+            if (machine != null)
+            {
+                GlorifiedBody.Saving.SaveSystem.Delete(1);
+                SaveMenuUI.OpenSave(machine);
+                yield return null;
+                saveMenu = SaveMenuUI.Instance.IsOpen && gm.IsInventory;
+                yield return OverlayShot.Capture(SaveMenuUI.Instance.GetComponent<Canvas>(), "save_menu_ui.png", 0.1f);
+                SaveMenuUI.Instance.Choose(0);
+                saved = GlorifiedBody.Saving.SaveSystem.Exists(1) && gm.IsPlaying && !SaveMenuUI.Instance.IsOpen;
+                yield return null;
+                note = SaveMenuUI.Instance.ToastShown;
+                yield return OverlayShot.Capture(SaveMenuUI.Instance.GetComponent<Canvas>(), "save_note.png", 0.05f);
+            }
+            Record("save_slot", saveMenu && saved && note == "SAVED IN SLOT 1", $"machine={machine != null} menu={saveMenu} saved={saved} note='{note}'");
+
             // 3b. Options, Controls tab: the remap rows, one per GameAction. Saved as options_controls.png.
             OptionsMenuUI options = FindFirstObjectByType<OptionsMenuUI>();
             bool optionsShown = false;

@@ -9,7 +9,10 @@ namespace GlorifiedBody.Enemy
     /// <summary>
     /// The soldier's ragdoll (Bruno, 2026-10-24): the lift holds him by the hips with the limbs loose, a throw and
     /// a full mk_warspite knock him down, and he stands up with the vendor's stand-up clips. A dead body stays down
-    /// and freezes when it settles, so the drag of CorpseCare still moves it as one piece. The bones (rigidbodies,
+    /// and freezes when it settles. The drag of CorpseCare makes it limp again: a hand holds it by the shoulders and
+    /// the legs trail on the floor; when the drag ends it falls, settles and freezes again (Bruno, 2026-10-25: "when
+    /// dragging the body, the ragdoll should reactivate, and once the body is setup to cpr mode, freeze the ragdoll
+    /// again"). The bones (rigidbodies,
     /// colliders, CharacterJoints) come from InvectorEnemyFactory (Unity's ragdoll builder) on the BodyPart layer,
     /// which hits the room and other ragdolls but not her or the capsules. While he is animated the bones are
     /// kinematic and their colliders are off, so nothing changes for the rest of the game.
@@ -23,9 +26,10 @@ namespace GlorifiedBody.Enemy
     [RequireComponent(typeof(Health))]
     public sealed class EnemyRagdoll : MonoBehaviour, IRagdollBody
     {
-        public enum State { Animated, Held, Down, StandingUp, Corpse }
+        public enum State { Animated, Held, Down, StandingUp, Corpse, Dragged }
 
         private const float SettleSpeed = 0.4f;     // m/s at the hips: the body lies still
+        private const float HandSpeed = 3f;         // m/s: the drag hand goes to the carer's grip, no jerk
         private const float SnapSeconds = 0.2f;     // how often the root follows the lying body
         private const float BlendSeconds = 0.3f;    // from the ragdoll pose to the stand-up clip
         private const float DefaultStandSeconds = 1.6f;
@@ -40,12 +44,16 @@ namespace GlorifiedBody.Enemy
 
         public State Current { get; private set; } = State.Animated;
         public bool IsDown => Current != State.Animated;
-        public bool IsRagdolled => Current == State.Held || Current == State.Down || Current == State.Corpse;
+        public bool IsRagdolled => Current == State.Held || Current == State.Down || Current == State.Corpse || Current == State.Dragged;
         public bool Available => parts != null && parts.Length > 1 && hips != null && animator != null;
         public string StandUpClip { get; private set; } = "";
         public int Downs { get; private set; }
         public int StandUps { get; private set; }
         public Transform Hips => hips;
+        /// <summary>The chest part (the drag holds it), or null.</summary>
+        public Rigidbody Torso => torso;
+        /// <summary>The point the drag hand holds now (between the shoulders).</summary>
+        public Vector3 GripPoint => dragJoint != null ? torso.transform.TransformPoint(dragJoint.anchor) : ShoulderPoint();
         public IReadOnlyList<Rigidbody> Parts => parts;
         public static int TotalDowns { get; private set; }
 
@@ -53,7 +61,11 @@ namespace GlorifiedBody.Enemy
         private Health health;
         private CapsuleCollider capsule;
         private Rigidbody rootBody;
-        private Transform hips, head, leftFoot, rightFoot;
+        private Transform hips, head, leftFoot, rightFoot, leftShoulder, rightShoulder;
+        private Rigidbody torso;
+        private Rigidbody hand;              // the drag: a kinematic point the torso hangs on
+        private ConfigurableJoint dragJoint;
+        private Vector3 handGoal;
         private Collider[] colliders;
         private Vector3 hipsForwardLocal;   // the root's forward in the hips' frame: up means he lies on his back
         private float downStart, downUntil, nextSnap, settled;
@@ -80,8 +92,14 @@ namespace GlorifiedBody.Enemy
                 head = animator.GetBoneTransform(HumanBodyBones.Head);
                 leftFoot = animator.GetBoneTransform(HumanBodyBones.LeftFoot);
                 rightFoot = animator.GetBoneTransform(HumanBodyBones.RightFoot);
+                leftShoulder = animator.GetBoneTransform(HumanBodyBones.LeftUpperArm);
+                rightShoulder = animator.GetBoneTransform(HumanBodyBones.RightUpperArm);
             }
             if (parts == null) parts = new Rigidbody[0];
+            // The torso is the part on the chest bone (HumanoidRagdoll puts it there, else on the spine).
+            Transform chestBone = animator != null && animator.isHuman
+                ? animator.GetBoneTransform(HumanBodyBones.Chest) ?? animator.GetBoneTransform(HumanBodyBones.Spine) : null;
+            foreach (Rigidbody part in parts) if (part != null && part.transform == chestBone) torso = part;
             colliders = new Collider[parts.Length];
             for (int i = 0; i < parts.Length; i++) colliders[i] = parts[i] != null ? parts[i].GetComponent<Collider>() : null;
             storedPosition = new Vector3[parts.Length];
@@ -94,7 +112,7 @@ namespace GlorifiedBody.Enemy
 
         public bool KnockDown(float seconds, Vector3 velocity)
         {
-            if (!Available || Current == State.Held || Current == State.Corpse) return false;
+            if (!Available || Current == State.Held || Current == State.Corpse || Current == State.Dragged) return false;
             GoLimp(hipsHeld: false);
             SetVelocity(velocity);
             EnterDown(seconds);
@@ -133,15 +151,79 @@ namespace GlorifiedBody.Enemy
             }
         }
 
+        // ── The drag (CorpseCare) ─────────────────────────────────────
+
+        /// <summary>
+        /// A carer takes the dead body: the bones go limp from the pose they have, and a hand holds the torso
+        /// between the shoulders where they lie. DragTo moves the hand, EndDrag lets the body fall.
+        /// </summary>
+        public bool BeginDrag()
+        {
+            if (!Available || torso == null || health == null || !health.IsDead) return false;
+            if (Current == State.Held || Current == State.Dragged) return false;
+            SnapRootToHips();
+            GoLimp(hipsHeld: false);
+            Vector3 grip = ShoulderPoint();
+            if (hand == null)
+            {
+                hand = new GameObject(name + "_DragHand").AddComponent<Rigidbody>();
+                hand.isKinematic = true;
+            }
+            hand.transform.position = grip;
+            hand.position = grip;
+            handGoal = grip;
+            dragJoint = torso.gameObject.AddComponent<ConfigurableJoint>();
+            dragJoint.autoConfigureConnectedAnchor = false;
+            dragJoint.connectedBody = hand;
+            dragJoint.anchor = torso.transform.InverseTransformPoint(grip);
+            dragJoint.connectedAnchor = Vector3.zero;
+            dragJoint.xMotion = dragJoint.yMotion = dragJoint.zMotion = ConfigurableJointMotion.Locked;
+            Current = State.Dragged;
+            nextSnap = Time.time + SnapSeconds;
+            RunTelemetry.Event("ragdoll_dragged", name);
+            return true;
+        }
+
+        /// <summary>The hand goes to this point (the carer's grip) at HandSpeed.</summary>
+        public void DragTo(Vector3 grip) => handGoal = grip;
+
+        /// <summary>The carer lets go: the body falls, settles and freezes again.</summary>
+        public void EndDrag()
+        {
+            if (Current != State.Dragged) return;
+            if (dragJoint != null) Destroy(dragJoint);
+            dragJoint = null;
+            EnterDown(0f, knockdown: false);
+            RunTelemetry.Event("ragdoll_drag_end", name);
+        }
+
+        private void FixedUpdate()
+        {
+            if (Current != State.Dragged || hand == null) return;
+            hand.MovePosition(Vector3.MoveTowards(hand.position, handGoal, HandSpeed * Time.fixedDeltaTime));
+        }
+
+        private void OnDestroy()
+        {
+            if (hand != null) Destroy(hand.gameObject);
+        }
+
+        private Vector3 ShoulderPoint()
+        {
+            if (leftShoulder != null && rightShoulder != null) return 0.5f * (leftShoulder.position + rightShoulder.position);
+            return torso != null ? torso.position : transform.position;
+        }
+
         // ── The states ────────────────────────────────────────────────
 
-        private void EnterDown(float seconds)
+        private void EnterDown(float seconds, bool knockdown = true)
         {
             Current = State.Down;
             downStart = Time.time;
             downUntil = Time.time + Mathf.Max(0f, seconds);
             nextSnap = Time.time + SnapSeconds;
             settled = 0f;
+            if (!knockdown) return;
             Downs++;
             TotalDowns++;
         }
@@ -170,6 +252,14 @@ namespace GlorifiedBody.Enemy
                     }
                     break;
                 }
+                case State.Dragged:
+                    // The root follows the body, so the lock point and CorpseCare find it where it is.
+                    if (Time.time >= nextSnap)
+                    {
+                        nextSnap = Time.time + SnapSeconds;
+                        SnapRootToHips();
+                    }
+                    break;
                 case State.StandingUp:
                     if (health != null && health.IsDead) { Current = State.Animated; break; } // the death clip takes over
                     if (aligned && Time.time - standStart >= standSeconds) Finish();

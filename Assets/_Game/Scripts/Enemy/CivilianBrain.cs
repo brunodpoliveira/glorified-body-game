@@ -27,6 +27,8 @@ namespace GlorifiedBody.Enemy
     /// A wary one that stands gives a startle, then a fear stance; with a wall behind it, it leans on the wall.
     /// A leaning one slides down the wall to the floor when she comes near, and begs from there (Bruno, 2026-10-25:
     /// "yes"). It stands up into the lean again when she leaves.
+    /// Every second civilian (the lean and the shaking variants) begs with both hands up, the palms to her (PleaHands;
+    /// Bruno, 2026-10-25: "hands raised in a plea could be one of the poses"). The others keep the hands low.
     /// A shock of the short stuns it (IStaggerable). It trembles while wary, cowering and begging (Tremble). The lift and the ragdoll suspend the body as they do
     /// a soldier's. The bark lines are the writer's (barks.csv). The poses are placeholders: the vendor crouch for the
     /// kneel and the cower (RFab gap 13). All numbers are PROPOSED.
@@ -72,6 +74,7 @@ namespace GlorifiedBody.Enemy
         public enum Pose { Controller, Crouch, Startle, Shake, Hug, Lean, Sit }
         private PoseOverride poseOverride;
         private WallLean lean;
+        private PleaHands plea;
         private bool startled;
         private int variant;
         private static int nextVariant;
@@ -90,6 +93,9 @@ namespace GlorifiedBody.Enemy
         public Tremble Tremble => tremble;
         public WallLean Lean => lean;
         public PoseOverride PoseOverride => poseOverride;
+        public PleaHands Plea => plea;
+        /// <summary>It begs with both hands up (the lean and the shaking variants), else with the hands low.</summary>
+        public bool PleadsWithHands => variant % 2 == 1;
         public Pose CurrentPose { get; private set; } = Pose.Controller;
         /// <summary>The cower of this civilian: 0 crouch, 1 wall lean, 2 self-hug, 3 shaking stance.</summary>
         public int Variant => variant;
@@ -110,6 +116,8 @@ namespace GlorifiedBody.Enemy
             if (poseOverride == null) poseOverride = gameObject.AddComponent<PoseOverride>();
             lean = GetComponent<WallLean>();
             if (lean == null) lean = gameObject.AddComponent<WallLean>();
+            plea = GetComponent<PleaHands>();
+            if (plea == null) plea = gameObject.AddComponent<PleaHands>();
             variant = nextVariant++ % 4;
         }
 
@@ -210,6 +218,7 @@ namespace GlorifiedBody.Enemy
         {
             Current = Phase.Dead;
             tremble.Amount = 0f;
+            plea.On = false;
             SetPose(Pose.Controller);
             body?.Stop();
         }
@@ -393,6 +402,12 @@ namespace GlorifiedBody.Enemy
                     }
                     break;
             }
+        }
+
+        // After Update's phase change, before PleaHands (order 10) poses the arms.
+        private void LateUpdate()
+        {
+            plea.On = Current == Phase.Beg && PleadsWithHands && !suspended && !Stunned;
         }
 
         private const float SlideSeconds = 0.8f; // the slide down the wall, PROPOSED

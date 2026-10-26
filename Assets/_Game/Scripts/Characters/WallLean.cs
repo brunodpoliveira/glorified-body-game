@@ -94,6 +94,15 @@ namespace GlorifiedBody.Characters
         {
             float dt = Time.deltaTime;
             if (dt <= 0f || hips == null) return;
+            // Only over a playing Animator: it resets the pose every frame. On a limp body (the ragdoll) the moves
+            // added up, 8 cm down a frame, and the body sank through the floor and into the wall (found 2026-10-25).
+            if (animator == null || !animator.enabled)
+            {
+                on = false;
+                weight = 0f;
+                LastHipsGap = float.MaxValue;
+                return;
+            }
             weight = Mathf.MoveTowards(weight, on ? 1f : 0f, dt * EasePerSecond);
             if (weight <= 0f) { LastHipsGap = float.MaxValue; return; }
 

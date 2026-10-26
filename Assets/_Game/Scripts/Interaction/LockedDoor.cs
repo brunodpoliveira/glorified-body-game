@@ -37,15 +37,16 @@ namespace GlorifiedBody.Interaction
 
         private bool HasKey(Interactor who) => who != null && who.Inventory != null && who.Inventory.Has(keyItemId);
 
-        /// <summary>Opens the door now (the key path, and tests).</summary>
-        public void Open()
+        /// <summary>Opens the door now (the key path, and tests). Instant: no slide (a load of a save).</summary>
+        public void Open(bool instant = false)
         {
             if (IsOpen) return;
             IsOpen = true;
             if (leaf != null)
             {
                 foreach (Collider c in leaf.GetComponentsInChildren<Collider>()) c.enabled = false;
-                StartCoroutine(Slide());
+                if (instant) leaf.position += openOffset;
+                else StartCoroutine(Slide());
             }
             RunTelemetry.Event("door_opened", name);
         }

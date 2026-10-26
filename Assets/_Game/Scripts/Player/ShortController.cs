@@ -106,6 +106,7 @@ namespace GlorifiedBody.Player
             painUntil = Time.unscaledTime + StartFreeze;
             ImpactFrameController.Instance?.RequestImpactFrame(StartFreeze, StartRecovery);
             if (PlayOnce(ref scream, ref screamLoaded, ScreamPath, transform.position + Vector3.up * 1.6f, 1f, 1f)) Screams++;
+            GlorifiedBody.Subtitles.SubtitleService.Say(gameObject, "[screams]", StartFreeze); // the sound has a caption too
             PoseClips clips = PoseClips.Load();
             Animator animator = GetComponentInChildren<Animator>();
             if (clips == null || clips.lucyPain == null || animator == null) return;

@@ -224,6 +224,17 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   2.5 s (`ShortController.StartFreeze`), Lucy holds her head (RFab `frustrated_02` on Lucy, 0.5 s to 3.0 s, from
   `Models/lucy_pain.fbx`) and screams (`Resources/Audio/lucy_scream.wav`, placeholder), and the shocks start after the
   freeze. Bots wait for the world before a key press (`BotClock.WaitWorld`).
+- 2026-10-25, night (`devlog-notes/2026-10-25_night_drag_plea_subtitles_saves.md`): the drag makes the dead body limp
+  (`EnemyRagdoll.BeginDrag`, a hand at the shoulders, the legs trail) and it freezes again at the CPR. Half the
+  civilians beg with both hands up (`PleaHands`, humanoid muscles, numbers from `PoseProbe` sheets; it keeps the hips
+  in place: `SetHumanPose` moves the body). `WallLean` acts only over a playing Animator (on a limp body it sank the
+  hips through the floor). NavMesh step height 0.4 m (`NavAgentSettings.Ensure` before every room bake; 0.75 m made
+  desks into steps). SUBTITLES (`Scripts/Subtitles/`): every spoken line at the bottom, yellow with a black outline,
+  "SPEAKER: words" (`Speaker` from the cast names), barks and the death line included, a Timeline track for
+  cutscenes, Options > Display on/off and size. SAVES (`Scripts/Saving/`): save machines (`SavePoint`, 3 manual
+  slots, `SaveMenuUI`), checkpoints (`CheckpointPoint`, 1 auto slot; a manual save and a load count too, PROPOSED),
+  RETRY loads this game's checkpoint, CONTINUE / LOAD GAME on the main menu, JSON files with a version, batch runs
+  write to `saves_batch`. Rooms place them with `SaveAssets`; the training room has one of each.
 
 ## Rules
 

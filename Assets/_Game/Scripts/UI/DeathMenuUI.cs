@@ -16,6 +16,7 @@ namespace GlorifiedBody.UI
 
         /// <summary>Set by whoever deals the lethal hit (an enemy type id, a hazard id). Empty = fallback.</summary>
         public static string LastKillerId { get; set; } = "";
+        public const string SubtitleKey = "death_screen";
 
         // A new room starts with no killer: an id from the last run must not name the next death.
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -127,6 +128,15 @@ namespace GlorifiedBody.UI
             if (caption != null)
             {
                 caption.text = entry != null ? entry.voiceText : "";
+                caption.gameObject.SetActive(false); // the line shows as a subtitle (Bruno, 2026-10-25)
+            }
+
+            // The voice line as a subtitle with its speaker ("COMPUTER: Subject contained."), until the screen goes.
+            GlorifiedBody.Subtitles.SubtitleService.Clear();
+            if (entry != null && !string.IsNullOrEmpty(entry.voiceText))
+            {
+                (string speaker, string words) = GlorifiedBody.Subtitles.SubtitleService.Split(entry.voiceText, GlorifiedBody.Subtitles.SubtitleService.UnknownSpeaker);
+                GlorifiedBody.Subtitles.SubtitleService.Show(SubtitleKey, speaker, words);
             }
 
             if (hint != null)

@@ -224,6 +224,9 @@ namespace GlorifiedBody.Integration.Invector.Build
             SetBool(targetSo, "heavy", spec.heavy);
             SetBool(targetSo, "civilian", spec.civilian);
             targetSo.ApplyModifiedPropertiesWithoutUndo();
+            // The subtitles name the speaker by the cast name: NURSE, LAB WORKER, SECURITY GUARD (Bruno, 2026-10-25).
+            var speaker = root.GetComponent<GlorifiedBody.Subtitles.Speaker>() ?? root.AddComponent<GlorifiedBody.Subtitles.Speaker>();
+            speaker.DisplayName = entry != null && !string.IsNullOrEmpty(entry.displayName) ? entry.displayName : spec.classId.ToUpperInvariant();
 
             if (spec.civilian)
             {

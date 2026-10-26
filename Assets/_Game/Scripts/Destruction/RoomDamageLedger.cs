@@ -9,7 +9,7 @@ namespace GlorifiedBody.Destruction
     /// pending. When she leaves for another room, the pending damage becomes the room's state, and the next visit
     /// starts from it: the broken pieces lie where they fell, the items where they settled. A restart of the same
     /// room (after a death) drops the pending damage: the room comes back as she found it. The main menu ends the
-    /// session and clears the ledger. The save game reads it later. Keys: the scene name and the builder's id.
+    /// session and clears the ledger. A save takes every room (Export), a load gives them back (Import). Keys: the scene name and the builder's id.
     /// </summary>
     public static class RoomDamageLedger
     {
@@ -140,5 +140,73 @@ namespace GlorifiedBody.Destruction
         }
 
         public static void NoteGreeble(Greeble g, Pose pose) => Get(pending, RoomOf(g)).greebles[g.Id] = pose;
+
+        // ── The save game ─────────────────────────────────────────────
+
+        /// <summary>
+        /// Every room as it is now, for a save: what the rooms kept, with this visit's damage on top (the visit
+        /// counts at a save, as if she left the room).
+        /// </summary>
+        public static GlorifiedBody.Saving.LedgerState Export()
+        {
+            var state = new GlorifiedBody.Saving.LedgerState();
+            var names = new HashSet<string>(committed.Keys);
+            names.UnionWith(pending.Keys);
+            foreach (string name in names)
+            {
+                var merged = new Room();
+                if (committed.TryGetValue(name, out Room kept)) Merge(merged, kept);
+                if (pending.TryGetValue(name, out Room visit)) Merge(merged, visit);
+                var room = new GlorifiedBody.Saving.LedgerRoom { room = name };
+                foreach (var pair in merged.breakables)
+                {
+                    var b = new GlorifiedBody.Saving.LedgerBreakable { id = pair.Key, broken = pair.Value.broken, health = pair.Value.health };
+                    if (pair.Value.pieces != null)
+                        foreach (Pose? p in pair.Value.pieces) b.pieces.Add(ToSaved("", p));
+                    room.breakables.Add(b);
+                }
+                foreach (var pair in merged.greebles) room.greebles.Add(ToSaved(pair.Key, pair.Value));
+                state.rooms.Add(room);
+            }
+            return state;
+        }
+
+        /// <summary>A load: the rooms become what the save kept, and no visit is open (the next scene load enters fresh).</summary>
+        public static void Import(GlorifiedBody.Saving.LedgerState state)
+        {
+            committed.Clear();
+            pending.Clear();
+            current = null;
+            if (state == null) return;
+            foreach (GlorifiedBody.Saving.LedgerRoom saved in state.rooms)
+            {
+                Room room = Get(committed, saved.room);
+                foreach (GlorifiedBody.Saving.LedgerBreakable b in saved.breakables)
+                {
+                    var record = new Record { broken = b.broken, health = b.health };
+                    if (b.pieces.Count > 0)
+                    {
+                        record.pieces = new List<Pose?>();
+                        foreach (GlorifiedBody.Saving.LedgerPose p in b.pieces) record.pieces.Add(p.has ? new Pose(p.position, p.rotation) : (Pose?)null);
+                    }
+                    room.breakables[b.id] = record;
+                }
+                foreach (GlorifiedBody.Saving.LedgerPose g in saved.greebles) room.greebles[g.id] = new Pose(g.position, g.rotation);
+            }
+        }
+
+        private static void Merge(Room into, Room from)
+        {
+            foreach (var pair in from.breakables) into.breakables[pair.Key] = pair.Value;
+            foreach (var pair in from.greebles) into.greebles[pair.Key] = pair.Value;
+        }
+
+        private static GlorifiedBody.Saving.LedgerPose ToSaved(string id, Pose? pose) => new GlorifiedBody.Saving.LedgerPose
+        {
+            id = id,
+            has = pose.HasValue,
+            position = pose.HasValue ? pose.Value.position : Vector3.zero,
+            rotation = pose.HasValue ? pose.Value.rotation : Quaternion.identity,
+        };
     }
 }

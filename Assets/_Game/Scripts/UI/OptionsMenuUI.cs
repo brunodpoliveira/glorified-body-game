@@ -41,6 +41,8 @@ namespace GlorifiedBody.UI
         private Toggle rainToggle;
         private Button lookAuthenticButton;
         private Dropdown goreDropdown;
+        private Toggle subtitlesToggle;
+        private Dropdown subtitleSizeDropdown;
         private Button lookClearButton;
 
         // Mouse
@@ -170,6 +172,10 @@ namespace GlorifiedBody.UI
                     rainToggle.SetIsOnWithoutNotify(SettingsManager.Instance.RainEnabled);
                 if (goreDropdown != null)
                     goreDropdown.SetValueWithoutNotify(SettingsManager.Instance.GoreLevel);
+                if (subtitlesToggle != null)
+                    subtitlesToggle.SetIsOnWithoutNotify(SettingsManager.Instance.SubtitlesOn);
+                if (subtitleSizeDropdown != null)
+                    subtitleSizeDropdown.SetValueWithoutNotify(SettingsManager.Instance.SubtitleSize);
             }
 
             RefreshResolutionDropdown();
@@ -543,6 +549,11 @@ namespace GlorifiedBody.UI
 
             // The gore (Bruno, 2026-10-24): Off, Low (less blood, no head bursts), Full.
             goreDropdown = CreateDropdownRow(content, "Gore", new List<string> { "Off", "Low", "Full" }, OnGoreChanged);
+
+            // The subtitles (Bruno, 2026-10-25): on by default, at the bottom, yellow, the speaker named.
+            subtitlesToggle = CreateToggleRow(content, "Subtitles", value => { if (SettingsManager.Instance != null) SettingsManager.Instance.SubtitlesOn = value; });
+            subtitleSizeDropdown = CreateDropdownRow(content, "Subtitle Size", new List<string> { "Small", "Medium", "Large" },
+                index => { if (SettingsManager.Instance != null) SettingsManager.Instance.SubtitleSize = index; });
 
             return panel;
         }

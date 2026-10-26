@@ -224,6 +224,30 @@ namespace GlorifiedBody.Systems
         public event Action<int> OnGoreLevelChanged;
         private int goreLevel = 2;
 
+        /// <summary>The subtitles (Bruno, 2026-10-25: "on by default"). SubtitleUI follows it.</summary>
+        public bool SubtitlesOn
+        {
+            get => subtitlesOn;
+            set
+            {
+                subtitlesOn = value;
+                SaveSettings();
+            }
+        }
+        private bool subtitlesOn = true;
+
+        /// <summary>The subtitle size: 0 Small, 1 Medium (the default), 2 Large.</summary>
+        public int SubtitleSize
+        {
+            get => subtitleSize;
+            set
+            {
+                subtitleSize = Mathf.Clamp(value, 0, 2);
+                SaveSettings();
+            }
+        }
+        private int subtitleSize = 1;
+
         // ── PlayerPrefs Keys ───────────────────────────────────────────
 
         private const string KEY_MASTER_VOL = "settings_masterVolume";
@@ -239,6 +263,8 @@ namespace GlorifiedBody.Systems
         private const string KEY_RAIN_ENABLED = "settings_rainEnabled";
         private const string KEY_LOOK_QUALITY = "settings_lookQuality";
         private const string KEY_GORE_LEVEL = "settings_goreLevel";
+        private const string KEY_SUBTITLES = "settings_subtitles";
+        private const string KEY_SUBTITLE_SIZE = "settings_subtitleSize";
 
         void Awake()
         {
@@ -271,6 +297,8 @@ namespace GlorifiedBody.Systems
             lookQuality = (LookQuality)PlayerPrefs.GetInt(KEY_LOOK_QUALITY, (int)defaultLookQuality);
             if (!Enum.IsDefined(typeof(LookQuality), lookQuality)) lookQuality = defaultLookQuality;
             goreLevel = Mathf.Clamp(PlayerPrefs.GetInt(KEY_GORE_LEVEL, 2), 0, 2);
+            subtitlesOn = PlayerPrefs.GetInt(KEY_SUBTITLES, 1) == 1;
+            subtitleSize = Mathf.Clamp(PlayerPrefs.GetInt(KEY_SUBTITLE_SIZE, 1), 0, 2);
 
             ApplyAudioSettings();
             ApplyDisplaySettings();
@@ -292,6 +320,8 @@ namespace GlorifiedBody.Systems
             PlayerPrefs.SetInt(KEY_RAIN_ENABLED, rainEnabled ? 1 : 0);
             PlayerPrefs.SetInt(KEY_LOOK_QUALITY, (int)lookQuality);
             PlayerPrefs.SetInt(KEY_GORE_LEVEL, goreLevel);
+            PlayerPrefs.SetInt(KEY_SUBTITLES, subtitlesOn ? 1 : 0);
+            PlayerPrefs.SetInt(KEY_SUBTITLE_SIZE, subtitleSize);
             PlayerPrefs.Save();
         }
 

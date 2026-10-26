@@ -343,6 +343,8 @@ MonoBehaviour:
   startLabel: START
   tutorialScene: Tutorial
   aiTestScene: AiTest
+  coverTestScene: CoverTest
+  civilianTestScene: CivilianTest
   subtitleLabel: WORK IN PROGRESS
 --- !u!4 &1100764176
 Transform:

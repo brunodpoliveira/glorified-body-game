@@ -178,11 +178,11 @@ namespace GlorifiedBody.Automation
             t0 = BotClock.Now;
             while (care.Current != CorpseCare.Step.Drag && BotClock.Now - t0 < 15f) yield return null;
             yield return BotClock.Wait(0.8f);
-            if (care.Patient != null) CloseShot(care.Patient.position + Vector3.up * 0.5f, Vector3.left + Vector3.back, Path.Combine(shots, "civ_07_nurse_drag.png"), 3.2f, 1.2f);
+            if (care.Patient != null) { Where(care.Patient, "drag patient"); Where(nurse.transform, "drag nurse"); CloseShot(BodyPoint(care.Patient), ToMiddle(BodyPoint(care.Patient)), Path.Combine(shots, "civ_07_nurse_drag.png"), 3.2f, 1.2f); }
             t0 = BotClock.Now;
             while (care.Current != CorpseCare.Step.Cpr && BotClock.Now - t0 < 15f) yield return null;
             yield return BotClock.Wait(1f);
-            if (care.Patient != null) CloseShot(care.Patient.position + Vector3.up * 0.5f, Vector3.left + Vector3.back, Path.Combine(shots, "civ_08_nurse_cpr.png"), 3.2f, 1.2f);
+            if (care.Patient != null) CloseShot(BodyPoint(care.Patient), ToMiddle(BodyPoint(care.Patient)), Path.Combine(shots, "civ_08_nurse_cpr.png"), 3.2f, 1.2f);
             Record("civ_nurse_care", care.Current == CorpseCare.Step.Cpr && care.Patient == victim.transform && care.Dragged > 1f,
                 $"{nurse.name} {care.Current} dragged={care.Dragged:0.0} m patient={(care.Patient != null ? care.Patient.name : "none")}");
 
@@ -202,9 +202,18 @@ namespace GlorifiedBody.Automation
                 while (lab.Current != CivilianBrain.Phase.Beg && BotClock.Now - t0 < 3f) yield return null;
                 yield return BotClock.Wait(0.8f);
                 begFloor = lab.Current == CivilianBrain.Phase.Beg && lab.CurrentPose == CivilianBrain.Pose.Sit;
+                Where(lab.transform, "beg on the floor");
                 CloseShot(lab.transform.position + Vector3.up * 0.6f, Quaternion.Euler(0f, -35f, 0f) * wallOut, Path.Combine(shots, "civ_08c_beg_on_floor.png"), 2.4f, 0.5f);
             }
             Record("civ_slide_beg", sat && begFloor, $"{lab.name} sat={sat} beg on the floor={begFloor} now {lab.Current}/{lab.CurrentPose}");
+
+            // Its plea as a subtitle at the bottom, with the speaker's name (Bruno, 2026-10-25).
+            Bark.Say(lab.gameObject, CivilianBrain.LineBeg);
+            yield return null;
+            string subtitle = GlorifiedBody.Subtitles.SubtitleUI.Instance != null ? string.Join(" | ", GlorifiedBody.Subtitles.SubtitleUI.Instance.Shown) : "";
+            if (GlorifiedBody.Subtitles.SubtitleUI.Instance != null)
+                yield return OverlayShot.Capture(GlorifiedBody.Subtitles.SubtitleUI.Instance.GetComponent<Canvas>(), "civ_08d_subtitle.png", 0.05f);
+            Record("civ_subtitle", subtitle.Contains("LAB WORKER: " + CivilianBrain.LineBeg), $"'{subtitle}'");
 
             // The short near the nurse: the start freezes the game while Lucy shows pain, then each shock arcs to its
             // victim, zaps and stuns it (Bruno, 2026-10-25).
@@ -248,6 +257,8 @@ namespace GlorifiedBody.Automation
             yield return new WaitForSecondsRealtime(1.2f); // the screen's own shot (death_ui.png) takes 0.3 s
             DeathMenuUI screen = FindFirstObjectByType<DeathMenuUI>();
             bool shown = screen != null && screen.Shown != null;
+            if (GlorifiedBody.Subtitles.SubtitleUI.Instance != null)
+                yield return OverlayShot.Capture(GlorifiedBody.Subtitles.SubtitleUI.Instance.GetComponent<Canvas>(), "death_subtitle.png", 0.05f);
             Record("death_screen", GameManager.Instance != null && GameManager.Instance.IsGameOver && shown && DeathMenuUI.LastKillerId == "guard_pistol",
                 $"killer={DeathMenuUI.LastKillerId} entry={(shown ? screen.Shown.killerId : "none")} caption='{(screen != null ? screen.CaptionShown : "")}'");
             Finish();
@@ -257,6 +268,25 @@ namespace GlorifiedBody.Automation
         private static Vector3 OnMesh(Vector3 point)
         {
             return UnityEngine.AI.NavMesh.SamplePosition(point, out UnityEngine.AI.NavMeshHit hit, 2f, UnityEngine.AI.NavMesh.AllAreas) ? hit.position : point;
+        }
+
+        /// <summary>Where a figure is (the log, for the shots): its root, its hips, the middle of its mesh, a civilian's plea.</summary>
+        private static void Where(Transform figure, string what)
+        {
+            Animator a = figure.GetComponent<Animator>();
+            Transform hips = a != null && a.isHuman ? a.GetBoneTransform(HumanBodyBones.Hips) : null;
+            var skin = figure.GetComponentInChildren<SkinnedMeshRenderer>();
+            CivilianBrain brain = figure.GetComponent<CivilianBrain>();
+            if (brain != null && a != null) Debug.Log($"[CivilianBot] {figure.name}: {brain.Current}/{brain.CurrentPose} variant {brain.Variant} pleads {brain.PleadsWithHands} plea on {brain.Plea.On} weight {brain.Plea.Weight:0.00} hand y {a.GetBoneTransform(HumanBodyBones.RightHand).position.y:0.00} elbow y {a.GetBoneTransform(HumanBodyBones.RightLowerArm).position.y:0.00} shoulder y {a.GetBoneTransform(HumanBodyBones.RightUpperArm).position.y:0.00} frame {Time.frameCount}");
+            Debug.Log($"[CivilianBot] where {what}: {figure.name} root {figure.position} hips {(hips != null ? hips.position.ToString() : "-")} mesh {(skin != null ? skin.bounds.center.ToString() : "-")} shown {(skin != null && skin.isVisible)} active {figure.gameObject.activeInHierarchy}");
+        }
+
+        /// <summary>The body's hips (a ragdoll lies where its bones are), half a metre up.</summary>
+        private static Vector3 BodyPoint(Transform body)
+        {
+            EnemyRagdoll ragdoll = body.GetComponent<EnemyRagdoll>();
+            Vector3 at = ragdoll != null && ragdoll.Hips != null ? ragdoll.Hips.position : body.position;
+            return new Vector3(at.x, body.position.y + 0.5f, at.z);
         }
 
         private static Vector3 ToMiddle(Vector3 from)
@@ -301,6 +331,22 @@ namespace GlorifiedBody.Automation
             }
         }
 
+        /// <summary>
+        /// The camera spot: the wanted side first, then turned more and more, until no wall stands between it and
+        /// the point (a corner put the camera behind the side wall, 2026-10-25).
+        /// </summary>
+        private static Vector3 ClearSpot(Vector3 point, Vector3 facing, float distance, float height)
+        {
+            int walls = LayerMask.GetMask("Default");
+            int solid = LayerMask.GetMask("Default", "Enemy", "Player"); // not inside a wall or a figure
+            foreach (float turn in new[] { 0f, 35f, -35f, 70f, -70f, 110f, -110f, 180f })
+            {
+                Vector3 spot = point + Quaternion.Euler(0f, turn, 0f) * facing * distance + Vector3.up * height;
+                if (!Physics.Linecast(spot, point, walls, QueryTriggerInteraction.Ignore) && !Physics.CheckSphere(spot, 0.35f, solid, QueryTriggerInteraction.Ignore)) return spot;
+            }
+            return point + facing * distance + Vector3.up * height;
+        }
+
         /// <summary>A close shot from a temporary camera: it stands back from the point and looks at it.</summary>
         private static void CloseShot(Vector3 point, Vector3 facing, string path, float distance = 1.4f, float height = 0.25f)
         {
@@ -316,7 +362,7 @@ namespace GlorifiedBody.Automation
                 cam.clearFlags = main.clearFlags;
                 cam.backgroundColor = main.backgroundColor;
             }
-            go.transform.position = point + facing.normalized * distance + Vector3.up * height;
+            go.transform.position = ClearSpot(point, facing.normalized, distance, height);
             go.transform.LookAt(point);
             try
             {

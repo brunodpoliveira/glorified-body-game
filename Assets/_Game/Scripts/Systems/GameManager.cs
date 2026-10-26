@@ -224,14 +224,14 @@ namespace GlorifiedBody.Systems
         }
 
         /// <summary>
-        /// Restart at the latest checkpoint. Build-order step 1 has no checkpoints, so this returns false
-        /// and the caller falls back to RestartLevel(). The checkpoint path returns with the rooms (step 2).
+        /// Restart at the checkpoint of this game (SaveSystem: a checkpoint point, a manual save or a load). False
+        /// when this game has none: the caller falls back to RestartLevel().
         /// </summary>
         public bool RestartFromLatestCheckpoint()
         {
             Time.timeScale = 1f;
             Time.fixedDeltaTime = storedFixedDeltaTime;
-            return false;
+            return GlorifiedBody.Saving.SaveSystem.RestartFromCheckpoint();
         }
 
         public void QuitGame()

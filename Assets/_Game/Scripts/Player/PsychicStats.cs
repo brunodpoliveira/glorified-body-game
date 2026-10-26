@@ -134,6 +134,13 @@ namespace GlorifiedBody.Player
             AddShort(amount * shortPerDamagePoint);
         }
 
+        /// <summary>A loaded save: the bars and the kill count as they were.</summary>
+        public void Restore(float nalcon, float shortValue, int kills)
+        {
+            Kills = Mathf.Max(0, kills);
+            DebugSet(nalcon, shortValue);
+        }
+
         /// <summary>Tests and bots: set the bars directly.</summary>
         public void DebugSet(float nalcon, float shortValue)
         {

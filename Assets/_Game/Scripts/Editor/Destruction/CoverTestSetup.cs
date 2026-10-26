@@ -56,6 +56,7 @@ namespace GlorifiedBody.Editor.Destruction
             surface.useGeometry = UnityEngine.AI.NavMeshCollectGeometry.PhysicsColliders;
             surface.layerMask = LayerMask.GetMask("Default");
             AssetDatabase.DeleteAsset(NavMeshPath);
+            GlorifiedBody.Editor.NavAgentSettings.Ensure(); // the desk is no step
             surface.BuildNavMesh();
             if (surface.navMeshData != null) AssetDatabase.CreateAsset(surface.navMeshData, NavMeshPath);
             else Debug.LogError("[CoverTestSetup] the NavMesh did not build.");

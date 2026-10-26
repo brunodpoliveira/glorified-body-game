@@ -10,6 +10,7 @@ namespace GlorifiedBody.Enemy
     /// pose, every frame. The brain sets the amount (0 = still, 1 = full). It eases in and out. Off on a dead, limp
     /// or lifted body. Numbers PROPOSED.
     /// </summary>
+    [DefaultExecutionOrder(20)] // after the pose scripts (WallLean, PleaHands): it shakes the pose they make
     public sealed class Tremble : MonoBehaviour
     {
         [SerializeField, Min(0.1f)] private float frequency = 9f;   // noise steps per second

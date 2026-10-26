@@ -37,6 +37,8 @@ namespace GlorifiedBody.UI
         private Button startBtn;
         private Button modifiersBtn;
         private Button tutorialBtn;
+        private Button continueBtn;
+        private Button loadBtn;
         private Button aiTestBtn;
         private Button coverTestBtn;
         private Button civilianTestBtn;
@@ -140,6 +142,14 @@ namespace GlorifiedBody.UI
         }
 
         // ── Button Callbacks ─────────────────────────────────────────────
+
+        private void OnContinueClicked()
+        {
+            int slot = GlorifiedBody.Saving.SaveSystem.Newest();
+            if (slot >= 0) GlorifiedBody.Saving.SaveSystem.Load(slot);
+        }
+
+        private void OnLoadClicked() => SaveMenuUI.OpenLoad();
 
         private void OnTutorialClicked()
         {
@@ -401,6 +411,12 @@ namespace GlorifiedBody.UI
             startBtn = CreateButton(column.transform, startLabel, 760, OnStartClicked, 84, 34,
                 new Color(0.62f, 0.1f, 0.12f, 0.95f), new Color(0.85f, 0.2f, 0.22f, 1f), new Color(0.96f, 0.93f, 0.9f));
             nav.Add(startBtn);
+            // The saves (Bruno, 2026-10-25): CONTINUE takes the newest file, LOAD GAME lists the slots.
+            continueBtn = CreateButton(column.transform, "CONTINUE", 420, OnContinueClicked, 48);
+            continueBtn.interactable = GlorifiedBody.Saving.SaveSystem.Newest() >= 0;
+            nav.Add(continueBtn);
+            loadBtn = CreateButton(column.transform, "LOAD GAME", 420, OnLoadClicked, 48);
+            nav.Add(loadBtn);
             CreateSpacer(column.transform, 10f);
             tutorialBtn = CreateButton(column.transform, "TUTORIAL", 420, OnTutorialClicked, 48);
             nav.Add(tutorialBtn);

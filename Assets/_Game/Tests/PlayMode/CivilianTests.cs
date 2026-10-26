@@ -158,6 +158,47 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator TheDraggedBody_GoesLimp_ThenFreezesAgainForTheCpr()
+        {
+            // Bruno, 2026-10-25: "when dragging the body, the ragdoll should reactivate, and once the body is setup
+            // to cpr mode, freeze the ragdoll again".
+            guard.gameObject.SetActive(false);
+            Find("Lab_B").gameObject.SetActive(false);
+            CivilianBrain nurse = Find("Nurse_C");
+            CivilianBrain victim = Find("Lab_A");
+            Teleport(new Vector3(-2.5f, 0f, 0.5f));
+            yield return new WaitForSeconds(0.5f);
+            Kill(victim);
+            EnemyRagdoll ragdoll = victim.GetComponent<EnemyRagdoll>();
+            Assert.IsNotNull(ragdoll, "the lab worker has a ragdoll");
+            CorpseCare care = nurse.GetComponent<CorpseCare>();
+            yield return WaitUntil(() => care.Current == CorpseCare.Step.Drag, 12f);
+            Assert.AreEqual(CorpseCare.Step.Drag, care.Current, "the nurse drags the body");
+            Assert.IsTrue(care.LimpDrag, "a limp drag");
+            Assert.AreEqual(EnemyRagdoll.State.Dragged, ragdoll.Current, "the ragdoll is on again");
+            Assert.IsFalse(ragdoll.Torso.isKinematic, "the bones follow the physics");
+            Assert.IsTrue(ragdoll.Parts.Skip(1).All(p => !p.isKinematic), "every bone hangs loose");
+            yield return new WaitForSeconds(1.2f);
+            if (care.Current == CorpseCare.Step.Drag)
+            {
+                Vector3 hands = nurse.transform.position + nurse.transform.forward * 0.6f + Vector3.up * 0.5f;
+                Vector3 feet = 0.5f * (Bone(victim, HumanBodyBones.LeftFoot).position + Bone(victim, HumanBodyBones.RightFoot).position);
+                Debug.Log($"[CivilianTests] limp drag: grip {ragdoll.GripPoint} hands {hands}, grip height {ragdoll.GripPoint.y - nurse.transform.position.y:0.00} m, feet {feet.y - nurse.transform.position.y:0.00} m");
+                Assert.Less(Vector3.Distance(ragdoll.GripPoint, hands), 0.4f, "the shoulders are in her hands");
+                Assert.Greater(ragdoll.GripPoint.y - nurse.transform.position.y, 0.3f, "the shoulders come up off the floor");
+                Assert.Less(feet.y - nurse.transform.position.y, 0.3f, "the feet trail on the floor");
+            }
+            yield return WaitUntil(() => care.Current == CorpseCare.Step.Cpr || !care.Active, 20f);
+            Assert.AreEqual(CorpseCare.Step.Cpr, care.Current, "the CPR starts");
+            Assert.IsFalse(care.LimpDrag, "she let go");
+            Assert.Greater(care.Dragged, 1f, "it dragged the body");
+            yield return WaitUntil(() => ragdoll.Current == EnemyRagdoll.State.Corpse, 7f);
+            Debug.Log($"[CivilianTests] after the drag: {ragdoll.Current}, dragged {care.Dragged:0.0} m");
+            Assert.AreEqual(EnemyRagdoll.State.Corpse, ragdoll.Current, "the body settles and freezes for the CPR");
+            Assert.IsTrue(ragdoll.Parts.All(p => p.isKinematic), "every bone is still");
+        }
+
+        [UnityTest]
         public IEnumerator TheLabWorker_TendsABody_OnlyWhenSheIsGone()
         {
             // Bruno, 2026-10-25: "a scientist will do this if player away same as the others".
@@ -343,11 +384,77 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.AreEqual(CivilianBrain.Phase.Beg, a.Current, "within 3 m: it begs");
             Assert.AreEqual(CivilianBrain.Pose.Sit, a.CurrentPose, "from the floor");
             Assert.IsTrue(a.Lean.Leaning, "its back still on the wall");
+            // The lean variant begs with both hands up (Bruno, 2026-10-25: "hands raised in a plea could be one of
+            // the poses").
+            Assert.IsTrue(a.PleadsWithHands, "the lean variant pleads with its hands");
+            yield return new WaitForSeconds(0.6f);
+            Transform hand = Bone(a, HumanBodyBones.RightHand), elbow = Bone(a, HumanBodyBones.RightLowerArm);
+            Transform shoulder = Bone(a, HumanBodyBones.RightUpperArm);
+            Vector3 across = shoulder.position - Bone(a, HumanBodyBones.LeftUpperArm).position;
+            across.y = 0f;
+            Vector3 front = Vector3.Cross(across.normalized, Vector3.up); // where the chest faces
+            float ahead = Vector3.Dot(hand.position - shoulder.position, front);
+            Debug.Log($"[CivilianTests] plea: weight {a.Plea.Weight:0.00}, hand {ahead:0.00} m in front, {hand.position.y - elbow.position.y:0.00} m over the elbow");
+            Assert.AreEqual(1f, a.Plea.Weight, 0.01f, "the hands are up");
+            Assert.Greater(ahead, 0.25f, "the hand is out in front of the chest");
+            Assert.Greater(hand.position.y, elbow.position.y + 0.05f, "the hand is up over the elbow");
+            Transform hips = Bone(a, HumanBodyBones.Hips);
+            Assert.Less(Flat(hips.position, a.transform.position), GlorifiedBody.Characters.WallLean.MaxWallGap + 0.1f, "the body stays at its place (the plea moves only the arms and the head)");
             Teleport(OnMesh(a.transform.position + wallOut * 8f));
             yield return WaitUntil(() => a.CurrentPose == CivilianBrain.Pose.Lean, 2f);
             Debug.Log($"[CivilianTests] slide: {a.Current}/{a.CurrentPose}, gap {Gap(a):0.0} m");
             Assert.AreEqual(CivilianBrain.Pose.Lean, a.CurrentPose, "she left: it stands up into the lean");
             Assert.AreEqual(CivilianBrain.Phase.Cower, a.Current);
+            yield return null; // the brain sets the plea in LateUpdate, after this test's check in the frame
+            Assert.IsFalse(a.Plea.On, "no plea out of the beg");
+        }
+
+        [UnityTest]
+        public IEnumerator ALeaningCivilian_KnockedDownDead_FallsOnTheFloor_NotThroughIt()
+        {
+            // Found 2026-10-25: the lean kept moving the hips of the limp body (8 cm down a frame), and the body sank
+            // through the floor and into the wall.
+            guard.gameObject.SetActive(false);
+            CivilianBrain a = Find("Lab_A");
+            Find("Lab_B").gameObject.SetActive(false);
+            a.SetVariant(1);
+            Teleport(new Vector3(-2.5f, 0f, 0.5f));
+            yield return new WaitForSeconds(0.5f);
+            a.Panic("test");
+            yield return WaitUntil(() => a.CurrentPose == CivilianBrain.Pose.Lean, 16f);
+            Assert.AreEqual(CivilianBrain.Pose.Lean, a.CurrentPose, "on its wall");
+            Vector3 intoWall = -a.Lean.WallNormal;
+            Kill(a);
+            Assert.IsTrue(a.GetComponent<EnemyRagdoll>().KnockDown(2.5f, intoWall * 6f + Vector3.up * 1.5f), "a full blast throws it at the wall");
+            yield return new WaitForSeconds(2.5f);
+            Vector3 hips = Bone(a, HumanBodyBones.Hips).position;
+            Debug.Log($"[CivilianTests] lean knockdown: hips {hips}, root {a.transform.position}, lean weight {a.Lean.Weight:0.00}");
+            Assert.AreEqual(0f, a.Lean.Weight, 0.001f, "no lean on a limp body");
+            Assert.Greater(hips.y, -0.1f, "on the floor, not under it");
+            Assert.Less(hips.y, 1.0f, "down");
+            Assert.Less(Mathf.Abs(hips.x), CivilianTestWidth * 0.5f, "inside the room (x)");
+            Assert.Less(Mathf.Abs(hips.z), CivilianTestDepth * 0.5f, "inside the room (z)");
+        }
+
+        private const float CivilianTestWidth = 16f, CivilianTestDepth = 12f; // CivilianTestSetup's room
+
+        [UnityTest]
+        public IEnumerator TheSelfHugVariant_BegsWithTheHandsLow()
+        {
+            guard.gameObject.SetActive(false);
+            CivilianBrain a = Find("Lab_A");
+            Find("Lab_B").gameObject.SetActive(false);
+            a.SetVariant(2);
+            Teleport(new Vector3(-2.5f, 0f, 0.5f));
+            yield return new WaitForSeconds(0.5f);
+            a.Panic("test");
+            yield return WaitUntil(() => a.Current == CivilianBrain.Phase.Cower || a.Current == CivilianBrain.Phase.Beg, 16f);
+            if (a.Current != CivilianBrain.Phase.Beg) Teleport(OnMesh(a.transform.position + Away(a) * 2f));
+            yield return WaitUntil(() => a.Current == CivilianBrain.Phase.Beg, 3f);
+            Assert.AreEqual(CivilianBrain.Phase.Beg, a.Current, "it begs");
+            yield return new WaitForSeconds(0.6f);
+            Assert.IsFalse(a.PleadsWithHands, "the self-hug variant");
+            Assert.AreEqual(0f, a.Plea.Weight, 0.001f, "the hands stay low");
         }
 
         [UnityTest]
@@ -385,6 +492,8 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         private float Gap(CivilianBrain c) => Flat(c.transform.position, lucy.transform.position);
+
+        private static Transform Bone(Component c, HumanBodyBones bone) => c.GetComponent<Animator>().GetBoneTransform(bone);
 
         private static Vector3 OnMesh(Vector3 point)
         {

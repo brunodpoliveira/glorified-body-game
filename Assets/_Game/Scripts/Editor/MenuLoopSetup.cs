@@ -106,6 +106,12 @@ namespace GlorifiedBody.Editor
             EnsurePickup("Drug_Red", DrugType.Red, new Vector3(-3.5f, 0.4f, 1.2f));
             EnsurePickup("Drug_DFelon", DrugType.DFelon, new Vector3(-2.5f, 0.4f, -1.2f));
 
+            // A save machine and a checkpoint (Bruno, 2026-10-25: saves "only in save rooms", checkpoints "only at
+            // specific save points"). The machine stands on the east wall in the wide camera's frame, its screen to
+            // the room; the checkpoint is a 1.6 m box in the south-west corner.
+            SaveAssets.SavePoint("SavePoint_Training", new Vector3(4.55f, 0f, -2.0f), -90f);
+            SaveAssets.Checkpoint("Checkpoint_Training", new Vector3(-4.0f, 0f, -4.0f), 45f, new Vector3(1.6f, 2.5f, 1.6f));
+
             // Fixed cameras: the wide default, plus two corner cameras with their zones.
             // Cam_SouthWest sits in the south-east corner and looks west along the south wall (Bruno, 2026-10-20:
             // "no camera angle cuts the dummy target"). From its zone both dummies are outside the frame at 16:9

@@ -36,5 +36,24 @@ namespace GlorifiedBody.Interaction
 
         /// <summary>Keys, logs and the critical items take no slot (Bruno, 2026-10-22).</summary>
         public bool IsCritical => kind == ItemKind.Log || kind == ItemKind.Key || kind == ItemKind.Critical;
+
+        public const string ResourceFolder = "Items";
+        private static System.Collections.Generic.Dictionary<string, ItemDefinition> byId;
+
+        /// <summary>The item with the id, from Resources/Items (a loaded save names its items by id), or null.</summary>
+        public static ItemDefinition Find(string id)
+        {
+            if (string.IsNullOrEmpty(id)) return null;
+            if (byId == null)
+            {
+                byId = new System.Collections.Generic.Dictionary<string, ItemDefinition>();
+                foreach (ItemDefinition item in Resources.LoadAll<ItemDefinition>(ResourceFolder))
+                    if (item != null && !byId.ContainsKey(item.itemId)) byId[item.itemId] = item;
+            }
+            return byId.TryGetValue(id, out ItemDefinition found) ? found : null;
+        }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetOnLoad() => byId = null;
     }
 }

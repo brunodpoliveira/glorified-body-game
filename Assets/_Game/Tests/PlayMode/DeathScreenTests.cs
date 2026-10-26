@@ -51,6 +51,15 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.AreEqual(screen.Shown.hint, screen.HintShown, "its hint on the screen");
             StringAssert.Contains("killer: soldier_rifle", screen.PictureNoteShown, "the card names the killer until the picture exists");
             if (ClassEntry("soldier") != null) Assert.AreEqual(ClassEntry("soldier").voiceText, screen.CaptionShown, "the soldier's voice line as the caption");
+            // The voice line shows as a subtitle with its speaker (Bruno, 2026-10-25).
+            if (!string.IsNullOrEmpty(screen.Shown.voiceText))
+            {
+                (string speaker, string words) = GlorifiedBody.Subtitles.SubtitleService.Split(screen.Shown.voiceText, GlorifiedBody.Subtitles.SubtitleService.UnknownSpeaker);
+                yield return null;
+                var shown = GlorifiedBody.Subtitles.SubtitleUI.Instance.Shown.ToList();
+                Debug.Log($"[DeathScreenTests] subtitle: {string.Join(" | ", shown)}");
+                Assert.Contains($"{speaker}: {words}", shown, "the voice line as a subtitle, with its speaker");
+            }
         }
 
         [UnityTest]

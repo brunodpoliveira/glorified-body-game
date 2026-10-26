@@ -14,6 +14,8 @@ namespace GlorifiedBody.Enemy
     /// When it sees her, or anything hurts it, it drops the body and fights. One carer per body.
     /// The unarmed civilians tend bodies too (Bruno, 2026-10-25): a lab worker by the same rule, a nurse even with
     /// her in plain sight (ICarer.CareIgnoresHer). Only a hurt stops the nurse.
+    /// A body with a ragdoll goes limp for the drag (EnemyRagdoll.BeginDrag): the carer holds it by the shoulders
+    /// and the legs trail. At the CPR it lets go, and the body settles and freezes again (Bruno, 2026-10-25).
     /// The clips are placeholders: no CPR or drag clip exists in the vendor set or in RFab's motion presets (RFAB
     /// gap 13). Numbers PROPOSED.
     /// </summary>
@@ -37,6 +39,8 @@ namespace GlorifiedBody.Enemy
         private Transform patient;
         private Vector3 dragTarget;
         private Quaternion patientTurn;
+        private EnemyRagdoll patientRagdoll; // set while the body hangs limp from his hands
+        private Vector3 lastGrip;
         private float stepTimer;
         private Transform spine, chest, leftArm, rightArm, leftFore, rightFore;
         private static readonly System.Collections.Generic.HashSet<Transform> tended = new System.Collections.Generic.HashSet<Transform>();
@@ -44,6 +48,8 @@ namespace GlorifiedBody.Enemy
         public Step Current { get; private set; } = Step.None;
         public Transform Patient => patient;
         public float Dragged { get; private set; }
+        /// <summary>True while the body hangs limp from his hands (a ragdoll drag), false for the rigid drag.</summary>
+        public bool LimpDrag => patientRagdoll != null;
         public int Compressions { get; private set; }
         public bool Active => Current != Step.None;
         /// <summary>The sight rule allows a start now: she is unseen long enough, or the carer does not mind her.</summary>
@@ -103,6 +109,7 @@ namespace GlorifiedBody.Enemy
         {
             if (!Active) return;
             RunTelemetry.Event("care_stop", $"{name}:{Current}:{why}");
+            LetGo();
             Current = Step.None;
             if (patient != null) tended.Remove(patient);
             patient = null;
@@ -134,8 +141,14 @@ namespace GlorifiedBody.Enemy
             switch (Current)
             {
                 case Step.GoToBody:
-                    if (Flat(transform.position, BodySide()) <= 0.8f || stepTimer <= 0f) StartDrag();
+                {
+                    float gap = Flat(transform.position, BodySide());
+                    if (gap <= 0.8f) StartDrag();
+                    // No way to the body in time: the care ends. A drag from far off pulled the body across the
+                    // room (found 2026-10-25: a desk on the path, the nurse 5 m short).
+                    else if (stepTimer <= 0f) { if (gap <= ReachGap) StartDrag(); else Stop($"no way to the body: {gap:0.0} m short at {transform.position.x:0.0},{transform.position.z:0.0}, the spot {BodySide().x:0.0},{BodySide().z:0.0}"); }
                     break;
+                }
                 case Step.Drag:
                     DragTick(dt);
                     break;
@@ -210,6 +223,8 @@ namespace GlorifiedBody.Enemy
             if (to.sqrMagnitude < 0.01f) to = Vector3.forward;
             Vector3 spot = chestPoint + to.normalized * 0.65f;
             spot.y = patient.position.y;
+            // On the walkable floor: a body against a wall or a desk has its near side off the NavMesh.
+            if (NavMesh.SamplePosition(spot, out NavMeshHit hit, 0.8f, NavMesh.AllAreas)) spot = hit.position;
             return spot;
         }
 
@@ -244,7 +259,11 @@ namespace GlorifiedBody.Enemy
                 float score = player != null ? Flat(hit.position, player.position) : 0f;
                 if (score > best) { best = score; dragTarget = hit.position; }
             }
-            // He holds the body by its chest: it keeps its turn from the grab, its chest follows his hands.
+            // A ragdoll body goes limp and hangs from his hands by the shoulders. Else he holds it rigid by its
+            // chest: it keeps its turn from the grab, its chest follows his hands.
+            EnemyRagdoll ragdoll = patient.GetComponent<EnemyRagdoll>();
+            patientRagdoll = ragdoll != null && ragdoll.BeginDrag() ? ragdoll : null;
+            if (patientRagdoll != null) lastGrip = patientRagdoll.GripPoint;
             patientTurn = Quaternion.Inverse(transform.rotation) * patient.rotation;
             stepTimer = dragDistance / dragSpeed + 3f;
             restrafeAt = 0f;
@@ -271,6 +290,15 @@ namespace GlorifiedBody.Enemy
                 brain.Body.StrafeTo(dragTarget, facing.sqrMagnitude > 0.01f ? facing.normalized : transform.forward);
             }
             Vector3 grip = transform.position + transform.forward * 0.6f;
+            if (patientRagdoll != null)
+            {
+                // His hands at the crouch: the shoulders come up off the floor, the hips and legs drag.
+                patientRagdoll.DragTo(grip + Vector3.up * LimpGripHeight);
+                Vector3 now = patientRagdoll.GripPoint;
+                Dragged += Flat(lastGrip, now);
+                lastGrip = now;
+                return;
+            }
             Vector3 before = patient.position;
             patient.rotation = transform.rotation * patientTurn;
             Vector3 pull = grip - PatientChest();
@@ -279,8 +307,19 @@ namespace GlorifiedBody.Enemy
             Dragged += Flat(before, patient.position);
         }
 
+        private const float LimpGripHeight = 0.5f; // metres over his feet: the hands of a crouched carer
+        private const float ReachGap = 1.5f;       // metres from the kneeling spot: near enough to take the body
+
+        /// <summary>A limp body falls from his hands; it settles and freezes again (EnemyRagdoll).</summary>
+        private void LetGo()
+        {
+            if (patientRagdoll != null) patientRagdoll.EndDrag();
+            patientRagdoll = null;
+        }
+
         private void StartCpr()
         {
+            LetGo();
             Current = Step.Cpr;
             stepTimer = cprSeconds;
             brain.Body.Stop();
