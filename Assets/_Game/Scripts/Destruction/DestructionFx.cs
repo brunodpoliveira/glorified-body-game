@@ -1,3 +1,5 @@
+using GlorifiedBody.Combat;
+using GlorifiedBody.Enemy;
 using UnityEngine;
 
 namespace GlorifiedBody.Destruction
@@ -58,11 +60,11 @@ namespace GlorifiedBody.Destruction
             }
         }
 
-        /// <summary>A hit that does not break it: a small puff and a knock.</summary>
+        /// <summary>A hit that does not break it: a small puff and the hit sound of its surface (the old knock as a fallback).</summary>
         public static void Chip(Breakable.Kind kind, Vector3 at, Vector3 direction)
         {
             DestructionFxSettings s = Settings;
-            Play(s != null ? s.chip : null, at, 0.6f);
+            if (!ShotEffects.SurfaceSound(Surfaces.Of(kind), at)) Play(s != null ? s.chip : null, at, 0.6f);
             Color colour = kind == Breakable.Kind.Plaster ? PlasterDust : kind == Breakable.Kind.Metal ? Grey : WoodDust;
             Burst(at - direction * 0.05f, colour, 6, 0.15f, 0.8f, 0.6f, false);
         }

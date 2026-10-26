@@ -142,6 +142,31 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.AreEqual(health - 45f, barricade.Health, 0.5f, "three bullets of 15");
         }
 
+        /// <summary>
+        /// One sound for one hit (2026-10-25): the chip of an intact breakable plays its surface's hit, and the
+        /// bullet's impact stays silent. Before, the generic chip and the knife clip both played.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator ABulletOnTheBarricade_PlaysOneWoodHit()
+        {
+            Breakable barricade = Piece("Barricade_3");
+            Vector3 centre = barricade.Bounds.center;
+            Vector3 from = centre + barricade.transform.forward * 4f;
+            int before = ShotEffects.Impacts;
+            EnemyProjectile.Launch(from, centre - from, 40f, 15f, null, "test");
+            float t0 = Time.realtimeSinceStartup;
+            while (ShotEffects.Impacts == before && Time.realtimeSinceStartup - t0 < 3f) yield return null;
+            Assert.Greater(ShotEffects.Impacts, before, "the bullet hit the barricade");
+            string[] sounds = UnityEngine.Object.FindObjectsByType<AudioSource>(FindObjectsSortMode.None)
+                .Where(s => s.enabled && s.gameObject.activeInHierarchy && s.clip != null && (s.isPlaying || s.playOnAwake)
+                    && Vector3.Distance(s.transform.position, centre) <= 3f)
+                .Select(s => s.clip.name).ToArray();
+            Debug.Log($"[BreakableTests] a bullet on the barricade: surface {ShotEffects.LastSurface}, sounds {string.Join(", ", sounds)}");
+            Assert.AreEqual(SurfaceKind.Wood, ShotEffects.LastSurface);
+            Assert.AreEqual(1, sounds.Length, "one sound: " + string.Join(", ", sounds));
+            StringAssert.StartsWith("impactWood", sounds[0]);
+        }
+
         /// <summary>Bruno (2026-10-24, C3): the soldiers shot over the barricade at her. A tall screen stops their bullets.</summary>
         [UnityTest]
         public IEnumerator TallScreen_StopsTheirBullets_AndWearsDown()

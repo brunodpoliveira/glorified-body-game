@@ -235,6 +235,14 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   slots, `SaveMenuUI`), checkpoints (`CheckpointPoint`, 1 auto slot; a manual save and a load count too, PROPOSED),
   RETRY loads this game's checkpoint, CONTINUE / LOAD GAME on the main menu, JSON files with a version, batch runs
   write to `saves_batch`. Rooms place them with `SaveAssets`; the training room has one of each.
+- 2026-10-25, late night (`devlog-notes/2026-10-25_surface_sounds_gore_saves.md`): SURFACE SOUNDS (Bruno: the bullet
+  hit "sounds like metal-on-metal"; it was Invector's knife clip on every surface). `Surfaces.Of(collider)`: an intact
+  breakable's kind, else the material name (concrete words first), default Concrete; `ShotEffects.surfaces` holds
+  Invector's five impact prefabs and the sounds (concrete made by `tools/impact_sfx.py`, the rest Kenney CC0 in
+  `Assets/_Game/Audio/Impacts/`). One sound per hit: an intact breakable's chip plays its surface. His answers: a save
+  and a load count as the checkpoint (kept), no tutorial save step. BODIES AND GORE IN THE SAVES (`RoomGore`): the
+  dead keep their pose, stumps, dropped shield, cut arms, floor stains and pools; a load kills them again quietly
+  (no witness, no care, no new pool), the Gore option of the moment applies. Training dummies vanish at death.
 
 ## Rules
 

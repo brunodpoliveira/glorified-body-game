@@ -88,6 +88,21 @@ namespace GlorifiedBody.Gore
             }
         }
 
+        /// <summary>A pool that a load puts back, at its full size. The body has its pool: no hit grows another.</summary>
+        public static GameObject Restore(Material material, Vector3 position, Quaternion rotation, Vector3 scale)
+        {
+            if (material == null) return null;
+            GameObject pool = FloorStains.Make(material, position, rotation, scale, "BodyBloodPool");
+            pools.Add(pool);
+            return pool;
+        }
+
+        /// <summary>A body that a load puts back already has its pool.</summary>
+        public static void MarkPooled(GameObject body)
+        {
+            if (body != null) bodies.Add(body);
+        }
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetOnLoad()
         {

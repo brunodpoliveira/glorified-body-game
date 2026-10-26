@@ -51,6 +51,60 @@ namespace GlorifiedBody.Saving
         public List<string> dead = new List<string>();
         public List<string> taken = new List<string>();
         public List<string> opened = new List<string>();
+        /// <summary>The bodies of the dead, as they lie (Bruno, 2026-10-25: "stay on the floor"). A dead one with no body here is hidden.</summary>
+        public List<BodyState> bodies = new List<BodyState>();
+        /// <summary>The floor blood and the pools under the bodies (Bruno: "gore should be saved as well").</summary>
+        public List<StainState> stains = new List<StainState>();
+        /// <summary>The cut limbs on the floor.</summary>
+        public List<LimbState> limbs = new List<LimbState>();
+    }
+
+    /// <summary>A dead body: the root, the humanoid bones (local), and the gore on it.</summary>
+    [Serializable]
+    public sealed class BodyState
+    {
+        public string path = "";
+        public Vector3 position;
+        public Quaternion rotation = Quaternion.identity;
+        /// <summary>It lay still (a frozen ragdoll or the end of the death clip). Else a ragdoll falls from the pose.</summary>
+        public bool settled = true;
+        public Vector3 hipsLocal;
+        public List<BonePose> bones = new List<BonePose>();
+        /// <summary>The bones that are stumps (HumanBodyBones names): Head for a burst head, an arm for a cut.</summary>
+        public List<string> stumps = new List<string>();
+        /// <summary>The shield it dropped, where it lies.</summary>
+        public bool shield;
+        public Vector3 shieldPosition;
+        public Quaternion shieldRotation = Quaternion.identity;
+    }
+
+    [Serializable]
+    public sealed class BonePose
+    {
+        public string bone = "";
+        public Quaternion local = Quaternion.identity;
+    }
+
+    [Serializable]
+    public sealed class StainState
+    {
+        /// <summary>True for the pool under a body, false for a floor stain.</summary>
+        public bool pool;
+        public string material = "";
+        public Vector3 position;
+        public Quaternion rotation = Quaternion.identity;
+        public Vector3 scale = Vector3.one;
+    }
+
+    [Serializable]
+    public sealed class LimbState
+    {
+        /// <summary>The body it came from and its bone (HumanBodyBones name): the piece is cut again from that body.</summary>
+        public string body = "";
+        public string bone = "";
+        public Vector3 position;
+        /// <summary>The turn of the cut bone in the piece (SeveredLimb.BoneTurn), not the piece's own turn.</summary>
+        public Quaternion boneTurn = Quaternion.identity;
     }
 
     /// <summary>The breakage of every room she saw (RoomDamageLedger): a broken room stays broken after a load.</summary>

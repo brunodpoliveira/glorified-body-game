@@ -23,8 +23,8 @@ namespace GlorifiedBody.Saving
     /// persistentDataPath/saves (tests and bots set Folder to their own place).
     ///
     /// A load: the file's breakage goes into RoomDamageLedger, the scene loads, and one frame after it (every Awake and
-    /// Start done) Apply puts her at the spot with her bars and items, and the room as it was (the dead gone, the taken
-    /// items gone, the doors open).
+    /// Start done) Apply puts her at the spot with her bars and items, and the room as it was: the bodies where they
+    /// lay with their gore, the blood on the floor (RoomGore), the taken items gone, the doors open.
     /// </summary>
     public static class SaveSystem
     {
@@ -175,13 +175,16 @@ namespace GlorifiedBody.Saving
             RoomState room = data.room;
             room.scene = scene.name;
             var aliveFigures = new HashSet<string>();
+            var deadBodies = new List<Health>();
             foreach (Health h in UnityEngine.Object.FindObjectsByType<Health>(FindObjectsInactive.Include, FindObjectsSortMode.None))
             {
                 if (h.gameObject.scene != scene || IsHers(h)) continue;
                 string path = ScenePaths.Of(h.transform);
                 if (h.IsDead || goneByLoad.Contains(path)) room.dead.Add(path);
                 else aliveFigures.Add(path);
+                if (h.IsDead) deadBodies.Add(h);
             }
+            RoomGore.Capture(scene, room, deadBodies);
             foreach (string path in baselineFigures)
                 if (!aliveFigures.Contains(path) && !room.dead.Contains(path)) room.dead.Add(path); // destroyed since
             var presentItems = new HashSet<string>();
@@ -220,6 +223,16 @@ namespace GlorifiedBody.Saving
         private static void Apply(SaveData data)
         {
             Scene scene = SceneManager.GetActiveScene();
+            // The bodies first: each quiet death counts a kill, and her saved numbers below overwrite that.
+            HashSet<string> bodies = RoomGore.Restore(scene, data.room);
+            foreach (string path in data.room.dead)
+            {
+                if (bodies.Contains(path)) continue;
+                GameObject figure = ScenePaths.Find(scene, path);
+                if (figure == null) continue;
+                figure.SetActive(false); // a dead one with no saved body (an older file, a destroyed figure) stays gone
+                goneByLoad.Add(path);
+            }
             GameObject lucy = GameObject.FindWithTag("Player");
             if (lucy != null)
             {
@@ -252,13 +265,6 @@ namespace GlorifiedBody.Saving
                 if (drugs != null) for (int i = 0; i < 3 && i < p.drugs.Count; i++) drugs.DebugSet((DrugType)i, p.drugs[i]);
                 PlaceAt(lucy, data.spot);
             }
-            foreach (string path in data.room.dead)
-            {
-                GameObject figure = ScenePaths.Find(scene, path);
-                if (figure == null) continue;
-                figure.SetActive(false); // the dead do not come back; their bodies are gone (PROPOSED)
-                goneByLoad.Add(path);
-            }
             foreach (string path in data.room.taken)
             {
                 GameObject item = ScenePaths.Find(scene, path);
@@ -273,7 +279,7 @@ namespace GlorifiedBody.Saving
             }
             LastApplied = data;
             Applies++;
-            RunTelemetry.Event("load_applied", $"{data.scene}: {data.room.dead.Count} dead, {data.room.taken.Count} taken, {data.room.opened.Count} open");
+            RunTelemetry.Event("load_applied", $"{data.scene}: {data.room.dead.Count} dead ({bodies.Count} bodies), {data.room.stains.Count} stains, {data.room.limbs.Count} limbs, {data.room.taken.Count} taken, {data.room.opened.Count} open");
         }
 
         private static void PlaceAt(GameObject lucy, string spot)

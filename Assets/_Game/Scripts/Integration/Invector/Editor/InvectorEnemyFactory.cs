@@ -339,7 +339,9 @@ namespace GlorifiedBody.Integration.Invector.Build
         public const string GasSmokePath = "Assets/_Game/Effects/GasCloud_Smoke.prefab";
         public const string EffectsPath = "Assets/_Game/Resources/Effects/shot_effects.asset";
         private const string WeaponAudio = "Assets/Invector-3rdPersonController/Shooter/Audio/Weapons/";
-        private const string ImpactPath = "Assets/Invector-3rdPersonController/Shooter/Scripts/DecalManager/BulletEffect/Resources/prefabs/impactConcrete.prefab";
+        private const string ImpactFolder = "Assets/Invector-3rdPersonController/Shooter/Scripts/DecalManager/BulletEffect/Resources/prefabs/";
+        private const string ImpactPath = ImpactFolder + "impactConcrete.prefab";
+        private const string ImpactAudio = "Assets/_Game/Audio/Impacts/";
 
         /// <summary>
         /// The vendor AI handgun without its scripts and colliders: the mesh, the flash and smoke particles, the
@@ -491,6 +493,9 @@ namespace GlorifiedBody.Integration.Invector.Build
             EditorUtility.SetDirty(guard);
         }
 
+        /// <summary>Batch entry: tools/unity.sh exec GlorifiedBody.Integration.Invector.Build.InvectorEnemyFactory.BuildShotEffects</summary>
+        public static void BuildShotEffects() => EnsureShotEffects();
+
         /// <summary>The fire and aim sounds and the impact, from the vendor's shooter assets.</summary>
         public static ShotEffects EnsureShotEffects()
         {
@@ -506,9 +511,23 @@ namespace GlorifiedBody.Integration.Invector.Build
             fx.fireClips = Clips(WeaponAudio, "NewWeaponSounds/LightWeaponShot.mp3", "NewWeaponSounds/LightWeaponShot2.mp3", "NewWeaponSounds/LightWeaponShot3.mp3");
             fx.aimClip = AssetDatabase.LoadAssetAtPath<AudioClip>(WeaponAudio + "NewWeaponSounds/LightWeaponAim.mp3");
             fx.impactPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(ImpactPath);
-            // The impact prefab's own clip (pistol-shot-ricochet, from the FSM package) opens with a gunshot. ShotEffects
-            // removes the prefab's sources and plays a hit on the wall instead.
-            fx.impactClips = Clips(MeleeAudio, "Knife Hit Wall 1.wav", "Knife Hit Wall 2.wav", "Knife Hit Wall 3.wav");
+            // The impact prefabs' own clip (pistol-shot-ricochet, from the FSM package, the same on every surface) opens
+            // with a gunshot. ShotEffects turns the prefab's sources off and plays the surface's hit instead. The knife
+            // clips that played here before rang like metal on a concrete wall (Bruno, 2026-10-25). The sounds come
+            // from tools/impact_sfx.py: concrete synthesised, the rest Kenney's CC0 Impact Sounds.
+            fx.impactClips = Clips(ImpactAudio, "concrete_hit_0.wav", "concrete_hit_1.wav", "concrete_hit_2.wav", "concrete_hit_3.wav");
+            fx.surfaces = new[]
+            {
+                Surface(SurfaceKind.Concrete, "impactConcrete", fx.impactClips),
+                Surface(SurfaceKind.Metal, "impactMetal", Clips(ImpactAudio, "impactMetal_light_000.ogg", "impactMetal_light_001.ogg", "impactMetal_light_002.ogg")),
+                Surface(SurfaceKind.Wood, "impactWood", Clips(ImpactAudio, "impactWood_light_000.ogg", "impactWood_light_001.ogg", "impactWood_light_002.ogg")),
+                Surface(SurfaceKind.Glass, "impactGlass", Clips(ImpactAudio, "impactGlass_light_000.ogg", "impactGlass_light_001.ogg", "impactGlass_light_002.ogg")),
+                Surface(SurfaceKind.Soft, "impactDirt", Clips(ImpactAudio, "impactSoft_medium_000.ogg", "impactSoft_medium_001.ogg", "impactSoft_medium_002.ogg")),
+            };
+            foreach (ShotEffects.SurfaceImpact s in fx.surfaces)
+            {
+                if (s.prefab == null || s.clips.Length == 0) Debug.LogError($"[InvectorEnemyFactory] surface {s.kind}: prefab {(s.prefab != null)}, {s.clips.Length} clips. Run python3 tools/impact_sfx.py.");
+            }
             fx.rifleFireClips = Clips(WeaponAudio, "NewWeaponSounds/MediumWeaponShot1.mp3", "NewWeaponSounds/MediumWeaponShot2.mp3", "NewWeaponSounds/MediumWeaponShot3.mp3");
             fx.rifleAimClip = AssetDatabase.LoadAssetAtPath<AudioClip>(WeaponAudio + "NewWeaponSounds/MediumWeaponAim.mp3");
             fx.launcherAimClip = AssetDatabase.LoadAssetAtPath<AudioClip>(WeaponAudio + "NewWeaponSounds/MediumWeaponAimB.mp3");
@@ -640,6 +659,16 @@ namespace GlorifiedBody.Integration.Invector.Build
             fx.rocketMeshRotation = Quaternion.Inverse(Quaternion.LookRotation(axes[longAxis], up));
             fx.rocketMeshScale = extents[longAxis] > 0.0001f ? 0.6f / extents[longAxis] : 1f;
             Debug.Log($"[InvectorEnemyFactory] rocket mesh {filter.sharedMesh.name} size {size}, long axis {longAxis}, scale x{fx.rocketMeshScale:0.00}.");
+        }
+
+        private static ShotEffects.SurfaceImpact Surface(SurfaceKind kind, string prefab, AudioClip[] clips)
+        {
+            return new ShotEffects.SurfaceImpact
+            {
+                kind = kind,
+                prefab = AssetDatabase.LoadAssetAtPath<GameObject>(ImpactFolder + prefab + ".prefab"),
+                clips = clips,
+            };
         }
 
         private static AudioClip[] Clips(string folder, params string[] names)

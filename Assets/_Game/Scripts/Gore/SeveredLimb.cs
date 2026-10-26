@@ -28,6 +28,17 @@ namespace GlorifiedBody.Gore
 
         public static int Spawned { get; private set; }
         public static SeveredLimb Last { get; private set; }
+        /// <summary>Every piece in the room (the save keeps where each lies).</summary>
+        public static IReadOnlyList<SeveredLimb> All { get { all.RemoveAll(l => l == null); return all; } }
+        private static readonly List<SeveredLimb> all = new List<SeveredLimb>();
+
+        /// <summary>The body it came from and the cut bone.</summary>
+        public GameObject Victim { get; private set; }
+        public Transform Bone { get; private set; }
+        /// <summary>The bone's turn in the world when the mesh was baked: the piece's vertices lie in that frame.</summary>
+        public Quaternion BakedBoneTurn { get; private set; }
+        /// <summary>The bone's turn that the piece carries now (a save keeps it, a load turns the new piece to it).</summary>
+        public Quaternion BoneTurn => transform.rotation * BakedBoneTurn;
 
         public bool Settled { get; private set; }
         public int Triangles { get; private set; }
@@ -44,13 +55,36 @@ namespace GlorifiedBody.Gore
             if (victim == null || bone == null) return null;
             foreach (SkinnedMeshRenderer skin in victim.GetComponentsInChildren<SkinnedMeshRenderer>())
             {
-                SeveredLimb limb = Cut(skin, bone, away, profile);
-                if (limb != null) return limb;
+                SeveredLimb limb = Cut(skin, bone, away, profile, false);
+                if (limb != null)
+                {
+                    limb.Victim = victim;
+                    return limb;
+                }
             }
             return null;
         }
 
-        private static SeveredLimb Cut(SkinnedMeshRenderer skin, Transform bone, Vector3 away, ThatIndividualGoreProfile profile)
+        /// <summary>
+        /// A piece that a load puts back: cut again from the body (its bone not yet a stump), laid at the saved
+        /// place, still, with its meat end and no gush. The body lies in its death pose now, so the piece is turned
+        /// to carry its bone as the saved piece did (boneTurn). The bend at the elbow or the wrist can still differ.
+        /// </summary>
+        public static SeveredLimb Restore(GameObject victim, Transform bone, Vector3 position, Quaternion boneTurn, ThatIndividualGoreProfile profile)
+        {
+            if (victim == null || bone == null) return null;
+            foreach (SkinnedMeshRenderer skin in victim.GetComponentsInChildren<SkinnedMeshRenderer>())
+            {
+                SeveredLimb limb = Cut(skin, bone, Vector3.zero, profile, true);
+                if (limb == null) continue;
+                limb.Victim = victim;
+                limb.transform.SetPositionAndRotation(position, boneTurn * Quaternion.Inverse(limb.BakedBoneTurn));
+                return limb;
+            }
+            return null;
+        }
+
+        private static SeveredLimb Cut(SkinnedMeshRenderer skin, Transform bone, Vector3 away, ThatIndividualGoreProfile profile, bool restored)
         {
             Mesh source = skin.sharedMesh;
             if (source == null || !source.isReadable) return null;
@@ -165,9 +199,10 @@ namespace GlorifiedBody.Gore
                 {
                     GameObject end = Instantiate(meat, pivot, inward, root.transform);
                     end.name = "LimbEnd";
+                    if (restored) GruesomeDeathFx.Still(end);
                     foreach (Collider c in end.GetComponentsInChildren<Collider>()) Destroy(c);
                 }
-                GameObject gush = Pick(profile.limbSprays);
+                GameObject gush = restored ? null : Pick(profile.limbSprays);
                 if (gush != null)
                 {
                     GameObject fx = Instantiate(gush, pivot, inward, root.transform);
@@ -182,6 +217,19 @@ namespace GlorifiedBody.Gore
             limb.born = Time.time;
             limb.Triangles = triangles;
             limb.CutCentre = pivot + bounds.center;
+            limb.Bone = bone;
+            limb.BakedBoneTurn = bone.rotation;
+            all.Add(limb);
+            if (restored)
+            {
+                rb.linearVelocity = Vector3.zero;
+                rb.angularVelocity = Vector3.zero;
+                rb.isKinematic = true;
+                collider.enabled = false;
+                limb.Settled = true;
+                RunTelemetry.Event("gore_limb_restored", $"{bone.name}:{triangles} tris");
+                return limb;
+            }
             Spawned++;
             Last = limb;
             RunTelemetry.Event("gore_limb_flies", $"{bone.name}:{triangles} tris");
@@ -209,6 +257,7 @@ namespace GlorifiedBody.Gore
         {
             Spawned = 0;
             Last = null;
+            all.Clear();
         }
     }
 }

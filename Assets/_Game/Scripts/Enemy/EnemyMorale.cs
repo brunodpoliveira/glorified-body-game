@@ -99,6 +99,9 @@ namespace GlorifiedBody.Enemy
             lastCharge = hit.Charge;
         }
 
+        /// <summary>A body that a load puts back (SaveSystem): its death is old, so no one sees it or fears it again.</summary>
+        public void MarkOldDeath() => announced = true;
+
         private void OnDeath()
         {
             if (deathFrame < 0) deathFrame = Time.frameCount;

@@ -195,6 +195,19 @@ namespace GlorifiedBody.Enemy
             Destroy(gameObject);
         }
 
+        /// <summary>
+        /// A hit on the room: the particles and the sound of its surface. An intact breakable plays its own chip or
+        /// break, so the impact stays silent there (one sound for one hit). The surface is read before the hit breaks it.
+        /// </summary>
+        private void HitRoom(RaycastHit hit, DamageType type)
+        {
+            SurfaceKind surface = Surfaces.Of(hit.collider);
+            Breakable piece = hit.collider.GetComponentInParent<Breakable>();
+            bool ownSound = piece != null && !piece.IsBroken;
+            Breakables.HitCollider(hit.collider, damage, type, hit.point, transform.forward);
+            ShotEffects.Impact(hit.point, hit.normal, surface, withSound: !ownSound);
+        }
+
         private void Impact(RaycastHit hit)
         {
             Transform root = hit.transform.root;
@@ -234,15 +247,13 @@ namespace GlorifiedBody.Enemy
                 }
                 else if (enemy == null)
                 {
-                    Breakables.HitCollider(hit.collider, damage, DamageType.PsychicTelekinesis, hit.point, transform.forward);
-                    ShotEffects.Impact(hit.point, hit.normal);
+                    HitRoom(hit, DamageType.PsychicTelekinesis);
                 }
             }
             else if (!isPlayer && hit.transform.GetComponentInParent<Health>() == null)
             {
                 // The room: a breakable wears down (Bruno, 2026-10-24: their bullets wear down her cover), an item flies.
-                Breakables.HitCollider(hit.collider, damage, DamageType.EnemyProjectile, hit.point, transform.forward);
-                ShotEffects.Impact(hit.point, hit.normal); // sparks, dust and the hit sound
+                HitRoom(hit, DamageType.EnemyProjectile);
             }
             else if (isPlayer)
             {

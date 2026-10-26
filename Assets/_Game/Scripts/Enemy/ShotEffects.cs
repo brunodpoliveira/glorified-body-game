@@ -1,3 +1,4 @@
+using GlorifiedBody.Combat;
 using UnityEngine;
 
 namespace GlorifiedBody.Enemy
@@ -16,8 +17,10 @@ namespace GlorifiedBody.Enemy
         public AudioClip aimClip;
         [Tooltip("Spawned where a bullet hits the room: the particles. Its own sources are removed (a gunshot).")]
         public GameObject impactPrefab;
-        [Tooltip("The hit on the wall, one per impact.")]
+        [Tooltip("The hit on the wall, one per impact. The fallback for a surface with no set.")]
         public AudioClip[] impactClips;
+        [Tooltip("The particles and the sound per surface (Bruno, 2026-10-25: concrete must not ring like metal).")]
+        public SurfaceImpact[] surfaces;
         [Min(0f)] public float impactScale = 1f;
         [Min(0.1f)] public float impactLifetime = 3f;
         public Color tracerColour = new Color(1f, 0.85f, 0.45f);
@@ -60,16 +63,74 @@ namespace GlorifiedBody.Enemy
             return cached;
         }
 
+        [System.Serializable]
+        public struct SurfaceImpact
+        {
+            public SurfaceKind kind;
+            [Tooltip("Invector's impact prefab for this surface; its own ricochet source is turned off.")]
+            public GameObject prefab;
+            public AudioClip[] clips;
+        }
+
+        /// <summary>The set for a surface, or false when the asset has none (the old single set then plays).</summary>
+        public bool TryGetSurface(SurfaceKind kind, out SurfaceImpact set)
+        {
+            if (surfaces != null)
+            {
+                foreach (SurfaceImpact s in surfaces)
+                {
+                    if (s.kind == kind) { set = s; return true; }
+                }
+            }
+            set = default;
+            return false;
+        }
+
+        /// <summary>The surface of the last impact, for the tests and the telemetry.</summary>
+        public static SurfaceKind LastSurface { get; private set; }
+        public static AudioClip LastClip { get; private set; }
+        public static int Impacts { get; private set; }
+
         /// <summary>The impact on a wall or the floor, facing out of the surface. A shield block plays its own sound.</summary>
         public static void Impact(Vector3 point, Vector3 normal, bool withSound = true)
         {
+            Impact(point, normal, SurfaceKind.Concrete, withSound);
+        }
+
+        /// <summary>The impact on what the ray struck: the surface picks the particles and the sound.</summary>
+        public static void Impact(Vector3 point, Vector3 normal, Collider struck, bool withSound = true)
+        {
+            Impact(point, normal, Surfaces.Of(struck), withSound);
+        }
+
+        public static void Impact(Vector3 point, Vector3 normal, SurfaceKind surface, bool withSound = true)
+        {
             ShotEffects fx = Load();
-            if (fx == null || fx.impactPrefab == null) return;
-            Quaternion facing = Quaternion.LookRotation(normal.sqrMagnitude > 0.001f ? normal : Vector3.up);
-            GameObject impact = SpawnSilent(fx.impactPrefab, point + normal * 0.02f, facing);
-            impact.transform.localScale *= fx.impactScale;
-            Destroy(impact, fx.impactLifetime);
-            if (withSound) PlayAt(fx.impactClips, point, 0.6f);
+            if (fx == null) return;
+            bool hasSet = fx.TryGetSurface(surface, out SurfaceImpact set);
+            GameObject prefab = hasSet && set.prefab != null ? set.prefab : fx.impactPrefab;
+            AudioClip[] clips = hasSet && set.clips != null && set.clips.Length > 0 ? set.clips : fx.impactClips;
+            LastSurface = surface;
+            LastClip = null;
+            Impacts++;
+            if (prefab != null)
+            {
+                Quaternion facing = Quaternion.LookRotation(normal.sqrMagnitude > 0.001f ? normal : Vector3.up);
+                GameObject impact = SpawnSilent(prefab, point + normal * 0.02f, facing);
+                impact.transform.localScale *= fx.impactScale;
+                Destroy(impact, fx.impactLifetime);
+            }
+            if (withSound) LastClip = PlayAt(clips, point, 0.6f);
+        }
+
+        /// <summary>Only the sound of a surface hit (a chip on a breakable). False when the asset has no set for it.</summary>
+        public static bool SurfaceSound(SurfaceKind surface, Vector3 point, float volume = 0.6f)
+        {
+            ShotEffects fx = Load();
+            if (fx == null || !fx.TryGetSurface(surface, out SurfaceImpact set)) return false;
+            LastSurface = surface;
+            LastClip = PlayAt(set.clips, point, volume);
+            return LastClip != null;
         }
 
         /// <summary>The grenade burst: the vendor explosion and a sound at the point.</summary>
@@ -110,11 +171,12 @@ namespace GlorifiedBody.Enemy
         private static GameObject holder;
 
         /// <summary>A random clip of the set at the point (a 3D one-shot).</summary>
-        public static void PlayAt(AudioClip[] clips, Vector3 point, float volume = 1f)
+        public static AudioClip PlayAt(AudioClip[] clips, Vector3 point, float volume = 1f)
         {
-            if (clips == null || clips.Length == 0) return;
+            if (clips == null || clips.Length == 0) return null;
             AudioClip clip = clips[Random.Range(0, clips.Length)];
             if (clip != null) PlayAt(clip, point, volume);
+            return clip;
         }
 
         public static void PlayAt(AudioClip clip, Vector3 point, float volume)
@@ -139,6 +201,9 @@ namespace GlorifiedBody.Enemy
             cached = null;
             loaded = false;
             holder = null;
+            LastSurface = SurfaceKind.Concrete;
+            LastClip = null;
+            Impacts = 0;
         }
     }
 }

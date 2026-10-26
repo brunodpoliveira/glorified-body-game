@@ -86,6 +86,12 @@ namespace GlorifiedBody.Enemy
 
         private void OnHurt(float amount) => Stop("hurt");
 
+        /// <summary>A body that a load puts back: no one tends it again (PROPOSED).</summary>
+        public static void MarkTended(Transform body)
+        {
+            if (body != null) tended.Add(body);
+        }
+
         /// <summary>Starts the care of this body now (the rule calls it; tests call it directly).</summary>
         public bool Begin(Transform body)
         {

@@ -216,6 +216,32 @@ namespace GlorifiedBody.Enemy
 
         // ── The states ────────────────────────────────────────────────
 
+        /// <summary>
+        /// A dead body that a load puts back (SaveSystem): the bones already hold the saved pose. A body that lay
+        /// still freezes at once. One saved in its fall (a drag, a throw) goes limp and settles from that pose.
+        /// </summary>
+        public bool RestoreCorpse(bool settled)
+        {
+            if (!Available || health == null || !health.IsDead) return false;
+            GoLimp(hipsHeld: false);
+            if (settled)
+            {
+                for (int i = 0; i < parts.Length; i++)
+                {
+                    if (parts[i] == null) continue;
+                    parts[i].isKinematic = true;
+                    if (colliders[i] != null) colliders[i].enabled = false;
+                }
+                Current = State.Corpse;
+            }
+            else
+            {
+                EnterDown(0f, knockdown: false);
+            }
+            RunTelemetry.Event("ragdoll_restored", $"{name}:{(settled ? "corpse" : "falls")}");
+            return true;
+        }
+
         private void EnterDown(float seconds, bool knockdown = true)
         {
             Current = State.Down;

@@ -88,6 +88,8 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.IsTrue(items.Has("test_key"), "her key item");
             Assert.AreEqual(2, drugs.Count(DrugType.Red), "her pills");
             Assert.Less(Flat(lucy.transform.position, point.SpawnPose.position), 0.3f, "she starts at the machine");
+            // The training dummy vanishes at its death (Health.destroyOnDeath), so it has no body to keep: it stays
+            // gone. The bodies that stay on the floor are in SaveGoreTests.
             GameObject dummy = ScenePaths.Find(SceneManager.GetActiveScene(), "Dummy_B");
             Assert.IsTrue(dummy == null || !dummy.activeInHierarchy, "the dead dummy stays dead");
             GameObject pill = GameObject.Find("Drug_Nalcon");

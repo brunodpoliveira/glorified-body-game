@@ -18,6 +18,8 @@ namespace GlorifiedBody.Gore
         private static readonly List<GameObject> stains = new List<GameObject>();
 
         public static int Count { get { stains.RemoveAll(s => s == null); return stains.Count; } }
+        /// <summary>Every stain in the room (the save keeps them).</summary>
+        public static IReadOnlyList<GameObject> All { get { stains.RemoveAll(s => s == null); return stains; } }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetOnLoad() => stains.Clear();
@@ -27,16 +29,9 @@ namespace GlorifiedBody.Gore
         {
             if (material == null) return null;
             stains.RemoveAll(s => s == null);
-            var stain = GameObject.CreatePrimitive(PrimitiveType.Quad);
-            stain.name = "FloorStain";
-            Object.Destroy(stain.GetComponent<Collider>());
-            Renderer renderer = stain.GetComponent<Renderer>();
-            renderer.sharedMaterial = material;
-            renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-            renderer.receiveShadows = true;
-            stain.transform.SetPositionAndRotation(point + normal * (Lift + 0.0015f * (stains.Count % 5)),
-                Quaternion.LookRotation(-normal) * Quaternion.Euler(0f, 0f, Random.Range(0f, 360f)));
-            stain.transform.localScale = new Vector3(size, size * Random.Range(0.75f, 1f), 1f);
+            GameObject stain = Make(material, point + normal * (Lift + 0.0015f * (stains.Count % 5)),
+                Quaternion.LookRotation(-normal) * Quaternion.Euler(0f, 0f, Random.Range(0f, 360f)),
+                new Vector3(size, size * Random.Range(0.75f, 1f), 1f));
             stains.Add(stain);
             while (stains.Count > MaxStains)
             {
@@ -44,6 +39,30 @@ namespace GlorifiedBody.Gore
                 stains.RemoveAt(0);
             }
             RunTelemetry.Event("gore_floor_stain", $"{size:0.00}m");
+            return stain;
+        }
+
+        /// <summary>A stain that a load puts back, where it lay.</summary>
+        public static GameObject Restore(Material material, Vector3 position, Quaternion rotation, Vector3 scale)
+        {
+            if (material == null) return null;
+            GameObject stain = Make(material, position, rotation, scale);
+            stains.Add(stain);
+            return stain;
+        }
+
+        /// <summary>A flat quad with the stain material, no collider, no shadow (the pools use it too).</summary>
+        public static GameObject Make(Material material, Vector3 position, Quaternion rotation, Vector3 scale, string name = "FloorStain")
+        {
+            var stain = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            stain.name = name;
+            Object.Destroy(stain.GetComponent<Collider>());
+            Renderer renderer = stain.GetComponent<Renderer>();
+            renderer.sharedMaterial = material;
+            renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            renderer.receiveShadows = true;
+            stain.transform.SetPositionAndRotation(position, rotation);
+            stain.transform.localScale = scale;
             return stain;
         }
     }

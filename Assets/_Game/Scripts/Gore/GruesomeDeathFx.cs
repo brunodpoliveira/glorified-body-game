@@ -124,6 +124,41 @@ namespace GlorifiedBody.Gore
             RunTelemetry.Event("gore_limb_cut", $"{hit.Victim.name}:{pick}:{hit.DamageType}");
         }
 
+        /// <summary>
+        /// The gore on a body that a load puts back: the stump holds the bone at nothing, a cut arm gets its bone
+        /// ends and meat and loses its ragdoll colliders. No sprays, no flying parts: the kill is old.
+        /// </summary>
+        public static void RestoreStump(GameObject victim, Animator animator, HumanBodyBones which)
+        {
+            if (victim == null || animator == null || !animator.isHuman) return;
+            Transform bone = animator.GetBoneTransform(which);
+            if (bone == null) return;
+            if (which != HumanBodyBones.Head)
+            {
+                victim.GetComponentInParent<IRagdollBody>()?.Sever(bone);
+                ThatIndividualGoreProfile profile = ThatIndividualGoreDriver.Instance != null ? ThatIndividualGoreDriver.Instance.Profile : null;
+                GameObject stumpPrefab = profile != null ? Pick(profile.limbStumps) : null;
+                Transform joint = bone.parent;
+                if (stumpPrefab != null)
+                {
+                    Vector3 along = joint != null ? bone.position - joint.position : Vector3.up;
+                    GameObject stump = Instantiate(stumpPrefab, bone.position, Quaternion.LookRotation(along.sqrMagnitude > 0.0001f ? along.normalized : Vector3.up));
+                    stump.name = "LimbStump";
+                    Still(stump);
+                    if (joint != null) stump.transform.SetParent(joint, true);
+                }
+            }
+            victim.AddComponent<BoneStump>().Hold(bone, StumpScale);
+        }
+
+        /// <summary>A gore copy that a load puts back: its particles and sounds ended long ago (the gush, the mist).</summary>
+        public static void Still(GameObject copy)
+        {
+            foreach (ParticleSystem ps in copy.GetComponentsInChildren<ParticleSystem>(true))
+                ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            foreach (AudioSource source in copy.GetComponentsInChildren<AudioSource>(true)) source.enabled = false;
+        }
+
         private static GameObject Pick(GameObject[] set) => set == null || set.Length == 0 ? null : set[Random.Range(0, set.Length)];
 
         private static void Spawn(GameObject[] set, Vector3 at, Quaternion rotation)

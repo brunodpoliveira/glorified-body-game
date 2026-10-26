@@ -469,6 +469,22 @@ namespace GlorifiedBody.Gore.ThatIndividual
 
         private const float FloorStainMetres = 0.45f; // a stain of scale 1 is about 0.45 m across, PROPOSED
 
+        /// <summary>A stain or pool material of the profile by its name (a load puts the blood back), or null.</summary>
+        public Material FindStainMaterial(string materialName)
+        {
+            if (profile == null || string.IsNullOrEmpty(materialName)) return null;
+            if (profile.bodyPoolMaterials != null)
+                foreach (Material m in profile.bodyPoolMaterials)
+                    if (m != null && m.name == materialName) return m;
+            if (profile.floorStains != null)
+                foreach (GameObject prefab in profile.floorStains)
+                {
+                    ParticleSystemRenderer renderer = prefab != null ? prefab.GetComponentInChildren<ParticleSystemRenderer>(true) : null;
+                    if (renderer != null && renderer.sharedMaterial != null && renderer.sharedMaterial.name == materialName) return renderer.sharedMaterial;
+                }
+            return null;
+        }
+
         private Material StainMaterial(GameObject prefab)
         {
             if (prefab == null) return null;
