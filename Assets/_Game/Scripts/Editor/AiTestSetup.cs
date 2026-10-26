@@ -64,25 +64,15 @@ namespace GlorifiedBody.Editor
             CharacterCatalog catalog = MenuLoopSetup.LoadCatalog();
             MenuLoopSetup.EnsureLucy(catalog, LucyStart, 0f);
 
-            InvectorEnemyFactory.EnsureShotEffects();
-            var fsm = InvectorEnemyFactory.BuildSoldierFsm();
             GameObject enemies = MenuLoopSetup.EnsureRoot("[Enemies]");
             // One of each weapon (Bruno, 2026-10-24): the soldier a rifle (3-round bursts), the guard a shield and a
             // pistol, the power armour frag grenades and rockets, the gas grenadier poison gas. All strike in melee
-            // when she is close.
-            var rifleman = InvectorEnemyFactory.SpecFor("soldier");
-            rifleman.weapon = DummyShooter.Weapon.Rifle;
-            var shieldGuard = InvectorEnemyFactory.SpecFor("guard");
-            shieldGuard.shield = true;
-            var grenadier = InvectorEnemyFactory.SpecFor("power_armour");
-            grenadier.weapon = DummyShooter.Weapon.ArmourLaunchers; // frag grenades and rockets, one after the other
-            // The gas grenadier (Bruno, 2026-10-24): a soldier with a gas launcher; the cloud is poison.
-            var gasser = InvectorEnemyFactory.SpecFor("soldier");
-            gasser.weapon = DummyShooter.Weapon.GasLauncher;
-            Place(enemies, InvectorEnemyFactory.BuildSoldier(SoldierNames[0], rifleman, new Vector3(-5f, 0f, 5.5f), 160f, catalog, fsm));
-            Place(enemies, InvectorEnemyFactory.BuildSoldier(SoldierNames[1], shieldGuard, new Vector3(5f, 0f, 5.5f), 200f, catalog, fsm));
-            Place(enemies, InvectorEnemyFactory.BuildSoldier(SoldierNames[2], grenadier, new Vector3(0f, 0f, 6f), 180f, catalog, fsm));
-            Place(enemies, InvectorEnemyFactory.BuildSoldier(SoldierNames[3], gasser, new Vector3(-7.5f, 0f, 1f), 120f, catalog, fsm));
+            // when she is close. Spawn markers since 2026-10-26: the figures are the local prefabs of the room kit
+            // (InvectorEnemyFactory.BuildEnemyPrefabs), so the scene holds no vendor data.
+            RoomKit.Spawn(enemies, SoldierNames[0], "soldier_rifle", new Vector3(-5f, 0f, 5.5f), 160f);
+            RoomKit.Spawn(enemies, SoldierNames[1], "guard_shield", new Vector3(5f, 0f, 5.5f), 200f);
+            RoomKit.Spawn(enemies, SoldierNames[2], "power_armour", new Vector3(0f, 0f, 6f), 180f);
+            RoomKit.Spawn(enemies, SoldierNames[3], "soldier_gas", new Vector3(-7.5f, 0f, 1f), 120f);
 
             // Two cameras: the wide one from over the south wall (the default), a low one from the north-east
             // corner for the south half.

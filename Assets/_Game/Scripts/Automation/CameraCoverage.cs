@@ -44,13 +44,19 @@ namespace GlorifiedBody.Automation
             var report = new Report();
             int roomLayers = 1 << LayerMask.NameToLayer("Default");
             CameraZone[] zones = Object.FindObjectsByType<CameraZone>(FindObjectsSortMode.None);
-            foreach (RoomFace floor in Object.FindObjectsByType<RoomFace>(FindObjectsSortMode.None).Where(f => f.name.EndsWith("Floor")))
+            // The floors: the RoomFace floors of the look rooms; a room of the kit (boxes, 2026-10-26) has none, so its
+            // box colliders named "...Floor" stand in. Each floor is a centre and a size on the ground.
+            var floors = new List<(Vector3 centre, float width, float depth)>();
+            foreach (RoomFace face in Object.FindObjectsByType<RoomFace>(FindObjectsSortMode.None).Where(f => f.name.EndsWith("Floor")))
+                floors.Add((face.transform.position, face.width, face.height)); // a floor face: local x along world x, local y along world z
+            if (floors.Count == 0)
+                foreach (BoxCollider box in Object.FindObjectsByType<BoxCollider>(FindObjectsSortMode.None).Where(b => b.name.EndsWith("Floor") && !b.isTrigger))
+                    floors.Add((new Vector3(box.bounds.center.x, 0f, box.bounds.center.z), box.bounds.size.x, box.bounds.size.z));
+            foreach ((Vector3 c, float width, float depth) in floors)
             {
-                // A floor face lies flat: its local x runs along the world x, its local y along the world z.
-                Vector3 c = floor.transform.position;
-                for (float dx = -floor.width * 0.5f + 0.45f; dx <= floor.width * 0.5f - 0.45f; dx += 0.5f)
+                for (float dx = -width * 0.5f + 0.45f; dx <= width * 0.5f - 0.45f; dx += 0.5f)
                 {
-                    for (float dz = -floor.height * 0.5f + 0.45f; dz <= floor.height * 0.5f - 0.45f; dz += 0.5f)
+                    for (float dz = -depth * 0.5f + 0.45f; dz <= depth * 0.5f - 0.45f; dz += 0.5f)
                     {
                         Vector3 p = new Vector3(c.x + dx, 0f, c.z + dz);
                         // The camera zones are trigger boxes on the same layer: both queries ignore triggers.

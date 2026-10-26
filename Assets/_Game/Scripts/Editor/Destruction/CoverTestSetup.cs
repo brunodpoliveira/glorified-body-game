@@ -99,14 +99,10 @@ namespace GlorifiedBody.Editor.Destruction
             CharacterCatalog catalog = MenuLoopSetup.LoadCatalog();
             MenuLoopSetup.EnsureLucy(catalog, LucyStart, 0f);
 
-            InvectorEnemyFactory.EnsureShotEffects();
-            var fsm = InvectorEnemyFactory.BuildSoldierFsm();
             GameObject enemies = MenuLoopSetup.EnsureRoot("[Enemies]");
-            var rifleman = InvectorEnemyFactory.SpecFor("soldier");
-            rifleman.weapon = DummyShooter.Weapon.Rifle;
-            var soldier = InvectorEnemyFactory.SpecFor("soldier");
-            Place(enemies, InvectorEnemyFactory.BuildSoldier(SoldierNames[0], rifleman, new Vector3(-4f, 0f, 4.2f), 180f, catalog, fsm));
-            Place(enemies, InvectorEnemyFactory.BuildSoldier(SoldierNames[1], soldier, new Vector3(4.5f, 0f, 4.4f), 190f, catalog, fsm));
+            // Spawn markers since 2026-10-26 (the room kit): the scene holds no vendor data.
+            RoomKit.Spawn(enemies, SoldierNames[0], "soldier_rifle", new Vector3(-4f, 0f, 4.2f), 180f);
+            RoomKit.Spawn(enemies, SoldierNames[1], "soldier_pistol", new Vector3(4.5f, 0f, 4.4f), 190f);
 
             // Two cameras under the ceiling: from the south-west corner (the default) and from the north-east one
             // for the south half.

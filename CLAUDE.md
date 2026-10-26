@@ -278,6 +278,12 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   hold her; once, by its done flag), `ScriptTrigger`, `FlagGate`, `StoryFlags.OnChanged`, `CutsceneAsset` (stills with
   a pan, video, one line a shot) and `CutscenePlayer` (`GameState.Cutscene`: time stops, only Interact passes = skip).
   Test room in git: `ScriptTest` (the ultimatum of §9.3, a gate, the test cutscene), `ScriptTests` (5).
+- 2026-10-26, night, THE ROOM KIT (`devlog-notes/2026-10-26_room_kit.md`): `InvectorEnemyFactory.BuildEnemyPrefabs`
+  (eight kinds in `Resources/Enemies/`, git-ignored, vendor data), `EnemySpawn` markers (the figure replaces the marker
+  at load, same name and path: a room with enemies holds no vendor data), `RoomKit` (boxes, NavMesh, spawns, exits,
+  entries, sequences, triggers), `CameraCoverage` reads box floors. `KitTest` in git: 3 armed, 2 civilians, cover,
+  items, save, checkpoint, a door to TRAVEL B; `KitTests` (5). AI/COVER/CIVILIAN TEST use markers now (0 vendor refs);
+  they stay git-ignored until Bruno says they may go in. AFTER A VENDOR IMPORT: run `BuildEnemyPrefabs` once.
 
 ## Rules
 

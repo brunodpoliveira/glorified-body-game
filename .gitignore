@@ -152,3 +152,8 @@ InitTestScene*.unity*
 /Assets/_Game/Scenes/CivilianTest.unity.meta
 /Assets/_Game/Scenes/CivilianTest_NavMesh.asset
 /Assets/_Game/Scenes/CivilianTest_NavMesh.asset.meta
+
+# The enemy prefabs of the room kit (2026-10-26): the figures with the unpacked vendor weapons and shields. Local only;
+# a room in git holds EnemySpawn markers. Build them with InvectorEnemyFactory.BuildEnemyPrefabs.
+/Assets/_Game/Resources/Enemies/
+/Assets/_Game/Resources/Enemies.meta

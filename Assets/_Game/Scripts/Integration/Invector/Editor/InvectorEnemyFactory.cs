@@ -8,6 +8,7 @@ using UnityEngine.AI;
 using GlorifiedBody.Characters;
 using GlorifiedBody.Combat;
 using GlorifiedBody.Core;
+using GlorifiedBody.Editor.Characters;
 using GlorifiedBody.Enemy;
 
 namespace GlorifiedBody.Integration.Invector.Build
@@ -58,6 +59,65 @@ namespace GlorifiedBody.Integration.Invector.Build
                 case "nurse": return new Spec { classId = classId, health = 30f, canMelee = false, civilian = true, rank = EnemyMorale.Rank.UnarmedCivilian };
                 default: return new Spec { classId = classId };
             }
+        }
+
+        // ── The enemy prefabs of the room kit (2026-10-26) ────────────
+
+        /// <summary>The folder of the enemy prefabs: Resources, so EnemySpawn loads them; git-ignored (vendor data).</summary>
+        public const string PrefabFolder = "Assets/_Game/Resources/Enemies";
+
+        /// <summary>The kinds a room can place (EnemySpawn.kind): a class and its weapon.</summary>
+        public static readonly string[] Kinds =
+        {
+            "soldier_pistol", "soldier_rifle", "soldier_gas", "guard_pistol", "guard_shield", "power_armour", "labworker", "nurse",
+        };
+
+        /// <summary>The spec of a kind: the class's spec with the kind's weapon and shield.</summary>
+        public static Spec SpecForKind(string kind)
+        {
+            switch (kind)
+            {
+                case "soldier_rifle": { Spec s = SpecFor("soldier"); s.weapon = DummyShooter.Weapon.Rifle; return s; }
+                case "soldier_gas": { Spec s = SpecFor("soldier"); s.weapon = DummyShooter.Weapon.GasLauncher; return s; }
+                case "guard_pistol": return SpecFor("guard");
+                case "guard_shield": { Spec s = SpecFor("guard"); s.shield = true; return s; }
+                case "power_armour": { Spec s = SpecFor("power_armour"); s.weapon = DummyShooter.Weapon.ArmourLaunchers; return s; }
+                case "labworker": return SpecFor("labworker");
+                case "nurse": return SpecFor("nurse");
+                default: return SpecFor("soldier");
+            }
+        }
+
+        /// <summary>
+        /// Builds every kind as a prefab in Resources/Enemies, in a scratch scene: the FSM and the shot effects first,
+        /// then each figure as BuildSoldier makes it, saved and removed. A room's EnemySpawn markers load them at run time.
+        /// Batch: tools/unity.sh exec GlorifiedBody.Integration.Invector.Build.InvectorEnemyFactory.BuildEnemyPrefabs
+        /// </summary>
+        [MenuItem("GlorifiedBody/Build Enemy Prefabs (the room kit)")]
+        public static void BuildEnemyPrefabs()
+        {
+            if (!AssetDatabase.IsValidFolder(PrefabFolder))
+            {
+                System.IO.Directory.CreateDirectory(PrefabFolder);
+                AssetDatabase.Refresh();
+            }
+            UnityEditor.SceneManagement.EditorSceneManager.NewScene(UnityEditor.SceneManagement.NewSceneSetup.EmptyScene, UnityEditor.SceneManagement.NewSceneMode.Single);
+            EnsureShotEffects();
+            vFSMBehaviour fsm = BuildSoldierFsm();
+            CharacterCatalog catalog = AssetDatabase.LoadAssetAtPath<CharacterCatalog>(CreateCharacterAssets.CatalogPath);
+            int built = 0;
+            foreach (string kind in Kinds)
+            {
+                GameObject figure = BuildSoldier(kind, SpecForKind(kind), Vector3.zero, 0f, catalog, fsm);
+                if (figure == null) continue;
+                string path = $"{PrefabFolder}/{kind}.prefab";
+                PrefabUtility.SaveAsPrefabAsset(figure, path, out bool ok);
+                Object.DestroyImmediate(figure);
+                if (ok) built++;
+                else Debug.LogError($"[InvectorEnemyFactory] the prefab {path} did not save.");
+            }
+            AssetDatabase.SaveAssets();
+            Debug.Log($"[InvectorEnemyFactory] built {built} of {Kinds.Length} enemy prefabs in {PrefabFolder}.");
         }
 
         // ── The FSM ───────────────────────────────────────────────────

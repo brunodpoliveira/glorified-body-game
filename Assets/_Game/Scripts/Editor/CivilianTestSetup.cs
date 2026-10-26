@@ -71,15 +71,14 @@ namespace GlorifiedBody.Editor
             CharacterCatalog catalog = MenuLoopSetup.LoadCatalog();
             MenuLoopSetup.EnsureLucy(catalog, LucyStart, 0f);
 
-            InvectorEnemyFactory.EnsureShotEffects();
-            var fsm = InvectorEnemyFactory.BuildSoldierFsm();
             GameObject figures = MenuLoopSetup.EnsureRoot("[Enemies]");
-            Place(figures, InvectorEnemyFactory.BuildSoldier(CivilianNames[0], InvectorEnemyFactory.SpecFor("labworker"), new Vector3(-4.5f, 0f, 3.4f), 180f, catalog, fsm));
-            Place(figures, InvectorEnemyFactory.BuildSoldier(CivilianNames[1], InvectorEnemyFactory.SpecFor("labworker"), new Vector3(-0.5f, 0f, 3.4f), 170f, catalog, fsm));
+            // Spawn markers since 2026-10-26 (the room kit): the scene holds no vendor data.
+            RoomKit.Spawn(figures, CivilianNames[0], "labworker", new Vector3(-4.5f, 0f, 3.4f), 180f);
+            RoomKit.Spawn(figures, CivilianNames[1], "labworker", new Vector3(-0.5f, 0f, 3.4f), 170f);
             // The nurse works in the alcove, her back to the room.
-            Place(figures, InvectorEnemyFactory.BuildSoldier(CivilianNames[2], InvectorEnemyFactory.SpecFor("nurse"), new Vector3(6.6f, 0f, 4.7f), 20f, catalog, fsm));
+            RoomKit.Spawn(figures, CivilianNames[2], "nurse", new Vector3(6.6f, 0f, 4.7f), 20f);
             // The guard at the east wall faces the wall: he cannot see her, so the civilians' scream calls him.
-            Place(figures, InvectorEnemyFactory.BuildSoldier(GuardName, InvectorEnemyFactory.SpecFor("guard"), new Vector3(6.8f, 0f, -3.5f), 90f, catalog, fsm));
+            RoomKit.Spawn(figures, GuardName, "guard_pistol", new Vector3(6.8f, 0f, -3.5f), 90f);
 
             GameObject camerasRoot = MenuLoopSetup.EnsureRoot("[Cameras]");
             FixedCameraDirector director = MenuLoopSetup.EnsureComponent<FixedCameraDirector>(camerasRoot);
