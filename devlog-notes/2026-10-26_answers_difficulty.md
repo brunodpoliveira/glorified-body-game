@@ -112,3 +112,13 @@ Shots, checked at full size: `~/glorified-body-renders/game/menu/2026-10-26_diff
 
 The design file (`03_GAME_DESIGN.md` §2 and §12) still names the drug NALCON and says that it keeps its name. Bruno
 now wants no "nalcon" on screen. The drug needs its final name.
+
+## His answers to the three decisions
+
+```text
+1: keep it
+2: no changes atm
+3: mk capsule; design file is outdated in many ways
+```
+
+So 150 % stays the default, the modules and the percents stay, and the drug is the MK CAPSULE.
