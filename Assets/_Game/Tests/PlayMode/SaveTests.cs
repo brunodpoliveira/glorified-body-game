@@ -116,7 +116,7 @@ namespace GlorifiedBody.Tests.PlayMode
             health.SetInvulnerable(false);
             health.SetSecondWindEnabled(false);
             health.TakeDamage(health.MaxHealth * 10f);
-            yield return WaitUntil(() => GameManager.Instance.IsGameOver, 3f);
+            yield return WaitUntil(() => GameManager.Instance.IsGameOver, 5f);
             Assert.IsTrue(GameManager.Instance.IsGameOver, "she died");
             int applied = SaveSystem.Applies;
             Assert.IsTrue(GameManager.Instance.RestartFromLatestCheckpoint(), "the retry goes to the checkpoint");

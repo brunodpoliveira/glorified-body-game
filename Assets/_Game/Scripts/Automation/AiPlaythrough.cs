@@ -348,7 +348,7 @@ namespace GlorifiedBody.Automation
         private IEnumerator LimbCut(SoldierBrain[] soldiers, PsychicPowers powers, PsychicStats stats, LockOnController lockOn, string shots)
         {
             SoldierBrain target = soldiers.FirstOrDefault(s => s != null && !s.Body.IsDead && s.name.StartsWith("Gasser"))
-                ?? soldiers.FirstOrDefault(s => s != null && !s.Body.IsDead && s.GetComponent<EnemyRagdoll>() != null && s.GetComponent<EnemyShield>() == null);
+                ?? soldiers.FirstOrDefault(s => s != null && !s.Body.IsDead && s.GetComponent<EnemyRagdoll>() != null && !s.GetComponent<EnemyRagdoll>().DeathOnly && s.GetComponent<EnemyShield>() == null);
             if (target == null) { Record("gore_limb_cut", false, "no living soldier without a shield"); yield break; }
             int cuts = GlorifiedBody.Gore.GruesomeDeathFx.LimbsCut, pieces = GlorifiedBody.Gore.SeveredLimb.Spawned;
             stats.DebugSet(100f, 0f);
@@ -378,7 +378,7 @@ namespace GlorifiedBody.Automation
         /// </summary>
         private IEnumerator Ragdoll(SoldierBrain[] soldiers, PsychicPowers powers, PsychicStats stats, LockOnController lockOn, string shots)
         {
-            SoldierBrain[] able = soldiers.Where(s => s != null && !s.Body.IsDead && s.GetComponent<EnemyRagdoll>() != null).ToArray();
+            SoldierBrain[] able = soldiers.Where(s => s != null && !s.Body.IsDead && s.GetComponent<EnemyRagdoll>() != null && !s.GetComponent<EnemyRagdoll>().DeathOnly).ToArray();
             if (able.Length == 0) { Record("blast_knockdown", false, "no living soldier with a ragdoll"); yield break; }
             SoldierBrain first = able[0];
             EnemyRagdoll firstRagdoll = first.GetComponent<EnemyRagdoll>();

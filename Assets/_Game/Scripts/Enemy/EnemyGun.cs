@@ -52,6 +52,7 @@ namespace GlorifiedBody.Enemy
         private const float RaiseRate = 14f; // per second
         private IRagdollBody ragdoll;
         private SoldierBrain brain;
+        private HitReactions reactions;
 
         // A long gun sits on the right shoulder (Bruno, 2026-10-24: "the right arm is clearly misaligned ... the left
         // arm is too high up"): the butt in the shoulder pocket, then both hands go to the gun. PROPOSED numbers.
@@ -124,6 +125,7 @@ namespace GlorifiedBody.Enemy
             }
             ragdoll = GetComponent<IRagdollBody>();
             brain = GetComponent<SoldierBrain>();
+            reactions = GetComponent<HitReactions>();
         }
 
         private static Transform FindDeep(Transform root, string name)
@@ -169,7 +171,7 @@ namespace GlorifiedBody.Enemy
         /// Two-bone reach with a bend hint: the elbow goes to the side of the hint, the hand to the target (or as
         /// near as the arm reaches). Then the hand turns so its knuckles point along the wanted line.
         /// </summary>
-        private static void Reach(Transform upper, Transform lower, Transform hand, Transform knuckle, Vector3 target, Vector3 bendHint, Vector3 fingers)
+        public static void Reach(Transform upper, Transform lower, Transform hand, Transform knuckle, Vector3 target, Vector3 bendHint, Vector3 fingers)
         {
             if (upper == null || lower == null || hand == null) return;
             Vector3 a = upper.position, b = lower.position, c = hand.position;
@@ -191,8 +193,9 @@ namespace GlorifiedBody.Enemy
                 hand.rotation = Quaternion.FromToRotation(knuckle.position - hand.position, fingers) * hand.rotation;
         }
 
+        // The fire panic (HitReactions.Writhing): the hands leave the gun to beat at the flames, the gun stays in the right hand.
         private bool HandsFree => (ragdoll != null && ragdoll.IsRagdolled) || (health != null && health.IsDead)
-            || (brain != null && brain.Current == SoldierBrain.Phase.Care);
+            || (brain != null && brain.Current == SoldierBrain.Phase.Care) || (reactions != null && reactions.Writhing);
 
         private void OnEnable()
         {

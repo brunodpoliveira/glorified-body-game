@@ -13,7 +13,8 @@ namespace GlorifiedBody.Integration.Invector
     /// <summary>
     /// The Invector AI body (vControlAI: NavMeshAgent, root motion, sight) behind IEnemyBody, for SoldierBrain.
     /// Our Health is the real one (the powers hit it): the Invector health is kept out of reach, and our death
-    /// kills the Invector body (its death animation, then the corpse lies still). The lift suspends the body: the
+    /// kills the Invector body (the AI stops; EnemyRagdoll takes the body in the same frame: every death plays out
+    /// physically, 2026-10-27, so the vendor death clip never shows). The lift suspends the body: the
     /// FSM stops, the agent and the physics go off, and the drop puts it back on the NavMesh. Track: the alerted
     /// soldier keeps her as a fixed target (Warspite's rule), so Invector never forgets her.
     /// </summary>
@@ -116,16 +117,35 @@ namespace GlorifiedBody.Integration.Invector
             transform.rotation = Quaternion.LookRotation(direction.normalized, Vector3.up);
         }
 
-        public void Flinch()
+        /// <summary>
+        /// The vendor's own path (vAIMotor.TriggerDamageRection): HitDirection from the side of the point (vendor
+        /// HitAngle: 0 the front, 90 the right, -90 the left, 180 the back), ReactionID 0 small (the UpperBody layer)
+        /// or 1 big (the FullBody layer), then TriggerReaction and ResetState.
+        /// </summary>
+        public void Flinch(Vector3 from, bool big)
         {
             if (IsDead || suspended) return;
             Animator animator = GetComponent<Animator>();
-            if (animator == null) return;
+            if (animator == null || !animator.enabled) return;
+            int direction = (int)transform.HitAngle(from);
             foreach (AnimatorControllerParameter p in animator.parameters)
             {
-                if (p.name == "ReactionID") animator.SetInteger("ReactionID", 0);
-                else if (p.name == "TriggerReaction") animator.SetTrigger("TriggerReaction");
+                if (p.name == "HitDirection") animator.SetInteger("HitDirection", direction);
+                else if (p.name == "ReactionID") animator.SetInteger("ReactionID", big ? 1 : 0);
             }
+            foreach (AnimatorControllerParameter p in animator.parameters)
+            {
+                if (p.name == "TriggerReaction") animator.SetTrigger("TriggerReaction");
+                else if (p.name == "ResetState") animator.SetTrigger("ResetState");
+            }
+        }
+
+        /// <summary>The vendor motor writes animator.speed from its animatorSpeed in every frame (vAIMotor.UpdateAnimator).</summary>
+        public void SetAnimatorSpeed(float speed)
+        {
+            if (ai != null) ai.animatorSpeed = speed;
+            Animator animator = GetComponent<Animator>();
+            if (animator != null) animator.speed = speed;
         }
 
         public void Stop()

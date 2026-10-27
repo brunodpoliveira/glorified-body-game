@@ -97,7 +97,7 @@ namespace GlorifiedBody.Tests.PlayMode
             powers.UseDrug();
             Assert.IsTrue(health.IsDead, "she stays dead");
             Assert.AreEqual(1, drugs.Count(DrugType.Nalcon), "the drug is not spent");
-            yield return WaitUntil(() => GameManager.Instance.IsGameOver, 3f);
+            yield return WaitUntil(() => GameManager.Instance.IsGameOver, 5f);
             Assert.IsTrue(GameManager.Instance.IsGameOver, "the death screen comes");
             Assert.IsTrue(health.IsDead, "she is dead under the death screen");
         }

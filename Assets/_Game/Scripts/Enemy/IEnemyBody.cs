@@ -35,7 +35,12 @@ namespace GlorifiedBody.Enemy
         void StrafeTo(Vector3 point, Vector3 facing);
         /// <summary>Turn on the spot to face the direction.</summary>
         void Face(Vector3 direction);
-        /// <summary>A hit reaction of the vendor set (the shock at a colleague's death).</summary>
-        void Flinch();
+        /// <summary>
+        /// A hit reaction of the vendor set: small (the upper body) or big (the whole body), from the side of the point
+        /// (the attacker). A hit, the shock at a colleague's death, the panic of a fire.
+        /// </summary>
+        void Flinch(Vector3 from, bool big);
+        /// <summary>The speed of the whole animation (1 normal): a limp slows it, a spasm stops it.</summary>
+        void SetAnimatorSpeed(float speed);
     }
 }

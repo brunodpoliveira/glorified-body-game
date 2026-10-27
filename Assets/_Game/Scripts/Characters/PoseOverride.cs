@@ -101,6 +101,9 @@ namespace GlorifiedBody.Characters
             fadeLeft = 0f;
         }
 
+        /// <summary>Stops at once: a ragdoll takes the body (EnemyRagdoll, PlayerDeathFall).</summary>
+        public void Halt() => Stop();
+
         private void Update()
         {
             if (!Playing) return;

@@ -17,6 +17,7 @@ namespace GlorifiedBody.Systems
 
         public static event Action OnPlayerDeathBeat;
         private Coroutine deathRoutine;
+        private bool fell;
         private Health subscribedHealth;
 
         private void OnEnable()
@@ -85,13 +86,15 @@ namespace GlorifiedBody.Systems
 
             OnPlayerDeathBeat?.Invoke();
             Debug.Log("[DeathFlow] Player death beat triggered.");
+            // Her death plays out physically (Bruno, 2026-10-27): she falls, and the death screen waits for the fall.
+            fell = GlorifiedBody.Player.PlayerDeathFall.Begin(subscribedHealth) is GlorifiedBody.Player.PlayerDeathFall f && f.Fallen;
             impactFrameController?.RequestImpactFrame(freezeDuration, recoveryDuration);
             deathRoutine = StartCoroutine(GameOverAfterBeat());
         }
 
         private IEnumerator GameOverAfterBeat()
         {
-            float endAt = Time.unscaledTime + gameOverDelay;
+            float endAt = Time.unscaledTime + (fell ? Mathf.Max(gameOverDelay, GlorifiedBody.Player.PlayerDeathFall.FallSeconds) : gameOverDelay);
             while (Time.unscaledTime < endAt)
             {
                 yield return null;

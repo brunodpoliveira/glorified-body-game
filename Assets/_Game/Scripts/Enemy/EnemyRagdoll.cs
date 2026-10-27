@@ -22,11 +22,19 @@ namespace GlorifiedBody.Enemy
     /// The stand-up is Invector's method (vRagdoll): play the clip, turn the root to match the lying body, and
     /// blend from the ragdoll pose to the clip. SoldierBrain suspends the Invector body while IsDown.
     /// Numbers PROPOSED.
+    ///
+    /// Every death plays out physically (Bruno, 2026-10-27: no death clip). The body goes limp in the frame of the
+    /// death, keeps its speed, takes the push of the hit that killed it at the hit bone, and its muscles hold the last
+    /// pose for a moment and fade (the legs first, so the knees buckle). A shock convulses the body, a fire makes it
+    /// writhe. A heavy has a ragdoll for its death only (DeathOnly).
     /// </summary>
     [RequireComponent(typeof(Health))]
     public sealed class EnemyRagdoll : MonoBehaviour, IRagdollBody
     {
         public enum State { Animated, Held, Down, StandingUp, Corpse, Dragged }
+
+        /// <summary>The kind of a physical death: the push and the throes follow it.</summary>
+        public enum DeathKind { Plain, Blast, Shock, Burn }
 
         private const float SettleSpeed = 0.4f;     // m/s at the hips: the body lies still
         private const float HandSpeed = 3f;         // m/s: the drag hand goes to the carer's grip, no jerk
@@ -37,10 +45,22 @@ namespace GlorifiedBody.Enemy
         private const float GraceSeconds = 3f;      // he stands up after this even if the body still moves
         private const int FloorMask = 1;            // Default: the room
 
+        // The physical death (PROPOSED numbers): rad/s² of a muscle for each radian off its pose, the seconds the
+        // muscles take to fade (the legs in LegFadeShare of it), the throes of a shock and a fire.
+        private const float MuscleStrength = 380f;
+        private const float MuscleFadeSeconds = 1.0f;
+        private const float BlastFadeSeconds = 0.3f;
+        private const float LegFadeShare = 0.55f;
+        private const float ShockSeconds = 1.6f;
+        private const float BurnSeconds = 3.2f;
+        private const float ShockTorque = 260f;
+        private const float BurnTorque = 120f;
+
         public const string StandFromBack = "StandUp@FromBack";
         public const string StandFromBelly = "StandUp@FromBelly";
 
         [SerializeField] private Rigidbody[] parts = new Rigidbody[0]; // the hips first, parents before children
+        [SerializeField] private bool deathOnly; // a heavy: it never falls alive, its death falls (Bruno, 2026-10-27)
 
         public State Current { get; private set; } = State.Animated;
         public bool IsDown => Current != State.Animated;
@@ -56,6 +76,17 @@ namespace GlorifiedBody.Enemy
         public Vector3 GripPoint => dragJoint != null ? torso.transform.TransformPoint(dragJoint.anchor) : ShoulderPoint();
         public IReadOnlyList<Rigidbody> Parts => parts;
         public static int TotalDowns { get; private set; }
+        /// <summary>A heavy: no knockdown, no lift, no drag. Only its death goes limp.</summary>
+        public bool DeathOnly => deathOnly;
+        /// <summary>The death went limp from the living pose (not a body that was already down).</summary>
+        public bool DiedFalling { get; private set; }
+        public DeathKind LastDeath { get; private set; } = DeathKind.Plain;
+        /// <summary>The push of the killing hit, m/s at the hit bone.</summary>
+        public float LastDeathPush { get; private set; }
+        public string LastDeathBone { get; private set; } = "";
+        /// <summary>The muscles or the throes still act.</summary>
+        public bool InThroes => Current == State.Down && Time.time < throesUntil;
+        public static int FallingDeaths { get; private set; }
 
         private Animator animator;
         private Health health;
@@ -76,9 +107,24 @@ namespace GlorifiedBody.Enemy
         private Quaternion[] storedRotation;
         private Vector3 storedHead, storedFeet;
         private readonly HashSet<int> severed = new HashSet<int>();
+        // The physical death.
+        private int[] parentIndex;
+        private bool[] legPart;
+        private Quaternion[] muscleTarget;
+        private Vector3[] throeAxis;
+        private bool[] hinge; // a knee or an elbow
+        private float throesStart, throesUntil, muscleFade, nextThroe;
+        private DeathKind throesKind;
+        private HitInfo lastHit;
+        private int lastHitFrame = -10;
+        private bool deathPending;
+        private Vector3 lastRootPosition, rootVelocity;
 
         /// <summary>The factory sets the bones (editor code).</summary>
         public void Bind(Rigidbody[] bones) => parts = bones;
+
+        /// <summary>The factory marks a heavy (editor code).</summary>
+        public void SetDeathOnly(bool value) => deathOnly = value;
 
         private void Awake()
         {
@@ -105,14 +151,65 @@ namespace GlorifiedBody.Enemy
             storedPosition = new Vector3[parts.Length];
             storedRotation = new Quaternion[parts.Length];
             if (hips != null) hipsForwardLocal = hips.InverseTransformDirection(transform.forward);
+            BuildMuscles();
             SetBones(limp: false, hipsHeld: false);
+            lastRootPosition = transform.position;
+        }
+
+        private void OnEnable()
+        {
+            HitEventBus.OnHit += OnHit;
+            if (health != null)
+            {
+                health.OnDeath ??= new UnityEngine.Events.UnityEvent();
+                health.OnDeath.AddListener(OnDied);
+            }
+        }
+
+        private void OnDisable()
+        {
+            HitEventBus.OnHit -= OnHit;
+            if (health != null) health.OnDeath?.RemoveListener(OnDied);
+        }
+
+        /// <summary>The parent part of each part, and which parts are legs (they fade first).</summary>
+        private void BuildMuscles()
+        {
+            parentIndex = new int[parts.Length];
+            legPart = new bool[parts.Length];
+            muscleTarget = new Quaternion[parts.Length];
+            throeAxis = new Vector3[parts.Length];
+            hinge = new bool[parts.Length];
+            var legs = new HashSet<Transform>();
+            if (animator != null && animator.isHuman)
+            {
+                foreach (HumanBodyBones b in new[] { HumanBodyBones.LeftUpperLeg, HumanBodyBones.LeftLowerLeg, HumanBodyBones.LeftFoot,
+                                                     HumanBodyBones.RightUpperLeg, HumanBodyBones.RightLowerLeg, HumanBodyBones.RightFoot })
+                {
+                    Transform t = animator.GetBoneTransform(b);
+                    if (t != null) legs.Add(t);
+                }
+            }
+            for (int i = 0; i < parts.Length; i++)
+            {
+                parentIndex[i] = -1;
+                if (parts[i] == null) continue;
+                legPart[i] = legs.Contains(parts[i].transform);
+                // HumanoidRagdoll gives a hinge (a knee, an elbow) a swing of a few degrees only.
+                hinge[i] = parts[i].TryGetComponent(out CharacterJoint joint) && joint.swing1Limit.limit <= 10f;
+                for (Transform t = parts[i].transform.parent; t != null && parentIndex[i] < 0; t = t.parent)
+                {
+                    for (int j = 0; j < i; j++) if (parts[j] != null && parts[j].transform == t) { parentIndex[i] = j; break; }
+                }
+            }
         }
 
         // ── IRagdollBody ───────────────────────────────────────────────
 
         public bool KnockDown(float seconds, Vector3 velocity)
         {
-            if (!Available || Current == State.Held || Current == State.Corpse || Current == State.Dragged) return false;
+            // A dead body falls by DieFalling (the physical death), not by a knockdown.
+            if (!Available || deathOnly || (health != null && health.IsDead) || Current == State.Held || Current == State.Corpse || Current == State.Dragged) return false;
             GoLimp(hipsHeld: false);
             SetVelocity(velocity);
             EnterDown(seconds);
@@ -122,7 +219,7 @@ namespace GlorifiedBody.Enemy
 
         public bool BeginHold()
         {
-            if (!Available || Current == State.Corpse || (health != null && health.IsDead)) return false;
+            if (!Available || deathOnly || Current == State.Corpse || (health != null && health.IsDead)) return false;
             if (Current != State.Animated) SnapRootToHips(); // the lift starts where the body lies
             GoLimp(hipsHeld: true);
             Current = State.Held;
@@ -159,8 +256,8 @@ namespace GlorifiedBody.Enemy
         /// </summary>
         public bool BeginDrag()
         {
-            if (!Available || torso == null || health == null || !health.IsDead) return false;
-            if (Current == State.Held || Current == State.Dragged) return false;
+            if (!Available || deathOnly || torso == null || health == null || !health.IsDead) return false;
+            if (Current == State.Held || Current == State.Dragged || InThroes) return false;
             SnapRootToHips();
             GoLimp(hipsHeld: false);
             Vector3 grip = ShoulderPoint();
@@ -199,6 +296,7 @@ namespace GlorifiedBody.Enemy
 
         private void FixedUpdate()
         {
+            Throes();
             if (Current != State.Dragged || hand == null) return;
             hand.MovePosition(Vector3.MoveTowards(hand.position, handGoal, HandSpeed * Time.fixedDeltaTime));
         }
@@ -270,7 +368,8 @@ namespace GlorifiedBody.Enemy
                     bool dead = health != null && health.IsDead;
                     if (dead)
                     {
-                        if (settled > 0.6f || Time.time - downStart > 6f) Freeze();
+                        // A body in its throes does not freeze yet.
+                        if (Time.time >= throesUntil && (settled > 0.6f || Time.time - downStart > 6f + (throesUntil - downStart))) Freeze();
                     }
                     else if (Time.time >= downUntil && (settled > 0.15f || Time.time > downUntil + GraceSeconds))
                     {
@@ -295,6 +394,17 @@ namespace GlorifiedBody.Enemy
 
         private void LateUpdate()
         {
+            // The death: in LateUpdate, so the muscles keep the pose the animator gave in this frame.
+            if (deathPending)
+            {
+                deathPending = false;
+                if (Current == State.Animated || Current == State.StandingUp) DieFalling(Time.frameCount - lastHitFrame <= 1 ? lastHit : null);
+            }
+            if (Current == State.Animated && Time.deltaTime > 0f)
+            {
+                rootVelocity = (transform.position - lastRootPosition) / Time.deltaTime;
+                lastRootPosition = transform.position;
+            }
             if (Current != State.StandingUp) return;
             if (!aligned)
             {
@@ -365,10 +475,168 @@ namespace GlorifiedBody.Enemy
             RunTelemetry.Event("ragdoll_corpse", name);
         }
 
+        // ── The physical death ────────────────────────────────────────
+
+        private void OnHit(HitInfo hit)
+        {
+            if (hit == null || hit.Victim == null) return;
+            if (hit.Victim != gameObject && !hit.Victim.transform.IsChildOf(transform)) return;
+            lastHit = hit;
+            lastHitFrame = Time.frameCount;
+        }
+
+        private void OnDied() => deathPending = true;
+
+        /// <summary>
+        /// The figure dies standing: the bones go limp from the living pose, keep the walk's speed, and the hit bone
+        /// takes the push of the killing hit. The muscles hold the pose and fade, the legs first.
+        /// </summary>
+        private void DieFalling(HitInfo hit)
+        {
+            if (!Available) return;
+            for (int i = 0; i < parts.Length; i++)
+            {
+                if (parts[i] == null) continue;
+                int p = parentIndex[i];
+                muscleTarget[i] = p >= 0 ? Quaternion.Inverse(parts[p].rotation) * parts[i].rotation : parts[i].rotation;
+            }
+            GoLimp(hipsHeld: false);
+            Vector3 carried = Vector3.ClampMagnitude(new Vector3(rootVelocity.x, 0f, rootVelocity.z), 6f);
+            foreach (Rigidbody part in parts)
+            {
+                if (part == null || part.isKinematic) continue;
+                part.linearVelocity = carried;
+                part.angularVelocity = Vector3.zero;
+            }
+
+            DeathKind kind = KindOf(hit);
+            Vector3 direction = PushDirection(hit);
+            float speed = PushSpeed(hit, kind);
+            Vector3 point = hit != null ? hit.HitPoint : (torso != null ? torso.worldCenterOfMass : hips.position);
+            Rigidbody hitPart = NearestPart(point);
+            // The whole body takes a share; the hit bone takes the rest at the hit point (it turns the body).
+            float bodyShare = kind == DeathKind.Blast ? 0.75f : 0.3f;
+            Vector3 lift = kind == DeathKind.Blast ? Vector3.up * (0.25f * speed) : Vector3.zero;
+            foreach (Rigidbody part in parts)
+                if (part != null && !part.isKinematic) part.linearVelocity += direction * (speed * bodyShare) + lift;
+            if (hitPart != null)
+                hitPart.AddForceAtPosition(direction * (speed * (1f - bodyShare) * hitPart.mass * 2f), point, ForceMode.Impulse);
+
+            throesKind = kind;
+            throesStart = Time.time;
+            muscleFade = kind == DeathKind.Blast ? BlastFadeSeconds : MuscleFadeSeconds;
+            throesUntil = Time.time + (kind == DeathKind.Burn ? BurnSeconds : kind == DeathKind.Shock ? ShockSeconds : muscleFade);
+            nextThroe = 0f;
+            EnterDown(0f, knockdown: false);
+            DiedFalling = true;
+            LastDeath = kind;
+            LastDeathPush = speed;
+            LastDeathBone = hitPart != null ? hitPart.name : "";
+            FallingDeaths++;
+            RunTelemetry.Event("death_fall", $"{name}:{kind}:{speed:0.0}m/s@{LastDeathBone}");
+        }
+
+        private DeathKind KindOf(HitInfo hit)
+        {
+            BurningStatus burn = GetComponent<BurningStatus>();
+            if (hit == null) return burn != null && burn.IsBurning ? DeathKind.Burn : DeathKind.Plain;
+            switch (hit.DamageType)
+            {
+                case DamageType.ShortShock: return DeathKind.Shock;
+                case DamageType.PsychicFire: return DeathKind.Burn;
+                case DamageType.Explosion:
+                case DamageType.Grenade:
+                case DamageType.EnemyRocket: return DeathKind.Blast;
+                case DamageType.PsychicBlast: return hit.Charge >= 0.999f ? DeathKind.Blast : DeathKind.Plain;
+            }
+            return burn != null && burn.IsBurning ? DeathKind.Burn : DeathKind.Plain;
+        }
+
+        /// <summary>Away from the attacker, else against the hit normal, else backward.</summary>
+        private Vector3 PushDirection(HitInfo hit)
+        {
+            Vector3 d = Vector3.zero;
+            if (hit != null && hit.Attacker != null) d = Flat(transform.position - hit.Attacker.transform.position);
+            if (d.sqrMagnitude < 0.01f && hit != null) d = Flat(-hit.HitNormal);
+            if (d.sqrMagnitude < 0.01f) d = -transform.forward;
+            return d.normalized;
+        }
+
+        /// <summary>The push in m/s by the kind of hit (PROPOSED).</summary>
+        private static float PushSpeed(HitInfo hit, DeathKind kind)
+        {
+            if (kind == DeathKind.Blast) return hit != null && hit.DamageType == DamageType.PsychicBlast ? 6f : 7f;
+            if (kind == DeathKind.Shock || kind == DeathKind.Burn) return 0.6f;
+            if (hit == null) return 0.8f;
+            switch (hit.DamageType)
+            {
+                case DamageType.PsychicBlast: return 2.5f + 2f * Mathf.Clamp01(hit.Charge);
+                case DamageType.PsychicTelekinesis:
+                case DamageType.Throw:
+                case DamageType.PropImpact: return 3.5f;
+                case DamageType.EnemyMelee:
+                case DamageType.PlayerMelee: return 2.5f;
+                default: return 1.8f; // a bullet
+            }
+        }
+
+        private Rigidbody NearestPart(Vector3 point)
+        {
+            Rigidbody best = null;
+            float bestDistance = float.MaxValue;
+            for (int i = 0; i < parts.Length; i++)
+            {
+                if (parts[i] == null || severed.Contains(i)) continue;
+                float d = (parts[i].worldCenterOfMass - point).sqrMagnitude;
+                if (d < bestDistance) { bestDistance = d; best = parts[i]; }
+            }
+            return best;
+        }
+
+        /// <summary>The muscles hold the death pose and fade; a shock convulses, a fire writhes.</summary>
+        private void Throes()
+        {
+            if (Current != State.Down || Time.time >= throesUntil || muscleTarget == null) return;
+            float t = Time.time - throesStart;
+            bool newThroe = Time.time >= nextThroe;
+            if (newThroe) nextThroe = Time.time + (throesKind == DeathKind.Shock ? 0.07f : 0.45f);
+            for (int i = 1; i < parts.Length; i++)
+            {
+                int p = parentIndex[i];
+                Rigidbody body = parts[i];
+                if (p < 0 || body == null || body.isKinematic || severed.Contains(i)) continue;
+                Rigidbody parent = parts[p];
+                Vector3 torque = Vector3.zero;
+                float fade = Mathf.Clamp01(1f - t / (muscleFade * (legPart[i] ? LegFadeShare : 1f)));
+                float strength = fade * fade * MuscleStrength;
+                if (strength > 0.5f)
+                {
+                    Quaternion target = parent.rotation * muscleTarget[i];
+                    (target * Quaternion.Inverse(body.rotation)).ToAngleAxis(out float angle, out Vector3 axis);
+                    if (angle > 180f) angle -= 360f;
+                    if (Mathf.Abs(angle) > 0.01f && axis.sqrMagnitude > 0.5f) torque += axis.normalized * (angle * Mathf.Deg2Rad * strength);
+                    torque -= (body.angularVelocity - parent.angularVelocity) * (1.6f * Mathf.Sqrt(strength));
+                }
+                if (throesKind == DeathKind.Shock || throesKind == DeathKind.Burn)
+                {
+                    float span = throesKind == DeathKind.Shock ? ShockSeconds : BurnSeconds;
+                    float left = Mathf.Clamp01(1f - t / span);
+                    if (newThroe) throeAxis[i] = Random.onUnitSphere;
+                    // No jerk on a knee or an elbow: a jerk there slammed the shin into its limits and bent it sideways
+                    // (Bruno, 2026-10-27). The hips, the shoulders and the spine convulse, the shins and forearms follow.
+                    // A heavy (the death-only armour) jerks half as hard: its long limbs broke the knee limits.
+                    if (!hinge[i]) torque += throeAxis[i] * ((throesKind == DeathKind.Shock ? ShockTorque : BurnTorque) * left * (deathOnly ? 0.5f : 1f));
+                }
+                if (torque.sqrMagnitude > 0f) body.AddTorque(torque, ForceMode.Acceleration);
+            }
+        }
+
         // ── The bones ─────────────────────────────────────────────────
 
         private void GoLimp(bool hipsHeld)
         {
+            // A pose over the controller (a flinch, a fear pose) must not drive the limp bones.
+            if (animator != null && animator.TryGetComponent(out GlorifiedBody.Characters.PoseOverride pose)) pose.Halt();
             if (animator != null) animator.enabled = false;
             if (capsule != null) capsule.enabled = false;
             if (rootBody != null)

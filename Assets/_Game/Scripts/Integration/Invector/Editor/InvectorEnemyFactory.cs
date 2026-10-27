@@ -304,6 +304,7 @@ namespace GlorifiedBody.Integration.Invector.Build
                 civilianSo.ApplyModifiedPropertiesWithoutUndo();
                 root.AddComponent<CorpseCare>();
                 BuildRagdoll(root, animator);
+                root.AddComponent<HitReactions>(); // the flinch, the step, the hand on the wound (2026-10-27)
                 return root;
             }
 
@@ -328,23 +329,29 @@ namespace GlorifiedBody.Integration.Invector.Build
             BuildGun(root, scale, spec.weapon);
             if (spec.shield) BuildShield(root, scale);
             // The ragdoll (Bruno, 2026-10-24): the lift, the throw and a full mk_warspite knock him down. A heavy
-            // never falls (it only staggers), so it has none.
-            if (!spec.heavy) BuildRagdoll(root, animator);
+            // never falls alive (it only staggers), but every death plays out physically (Bruno, 2026-10-27): its
+            // ragdoll acts at its death only.
+            BuildRagdoll(root, animator, spec.heavy ? HeavyRagdollMass : RagdollMass, deathOnly: spec.heavy);
+            // The answer to a hit that does not kill (2026-10-27): a heavy only flinches.
+            HitReactions reactions = root.AddComponent<HitReactions>();
+            reactions.SetHeavy(spec.heavy);
+            EditorUtility.SetDirty(reactions);
             return root;
         }
 
         // ── The ragdoll ───────────────────────────────────────────────
 
         public const float RagdollMass = 60f; // kg, PROPOSED
+        public const float HeavyRagdollMass = 220f; // kg, the power armour, PROPOSED
 
         /// <summary>
         /// The ragdoll from HumanoidRagdoll (the parts of Unity's ragdoll wizard, built by our editor code). Then
         /// every bone body is kinematic with its collider off (EnemyRagdoll turns them on when he goes limp), on the
         /// BodyPart layer (it hits the room and other ragdolls, not her and not the capsules).
         /// </summary>
-        public static void BuildRagdoll(GameObject root, Animator animator)
+        public static void BuildRagdoll(GameObject root, Animator animator, float mass = RagdollMass, bool deathOnly = false)
         {
-            GlorifiedBody.Editor.Characters.HumanoidRagdoll.Result built = GlorifiedBody.Editor.Characters.HumanoidRagdoll.Build(animator, RagdollMass);
+            GlorifiedBody.Characters.HumanoidRagdoll.Result built = GlorifiedBody.Characters.HumanoidRagdoll.Build(animator, mass);
             if (built.Error != "")
             {
                 Debug.LogError($"[InvectorEnemyFactory] the ragdoll of {root.name}: {built.Error}");
@@ -375,8 +382,9 @@ namespace GlorifiedBody.Integration.Invector.Build
             }
             EnemyRagdoll ragdoll = root.GetComponent<EnemyRagdoll>() ?? root.AddComponent<EnemyRagdoll>();
             ragdoll.Bind(bones.ToArray());
+            ragdoll.SetDeathOnly(deathOnly);
             EditorUtility.SetDirty(ragdoll);
-            Debug.Log($"[InvectorEnemyFactory] ragdoll of {root.name}: {bones.Count} bones, {RagdollMass} kg.");
+            Debug.Log($"[InvectorEnemyFactory] ragdoll of {root.name}: {bones.Count} bones, {mass} kg{(deathOnly ? ", death only" : "")}.");
         }
 
         private static int Depth(Transform t)

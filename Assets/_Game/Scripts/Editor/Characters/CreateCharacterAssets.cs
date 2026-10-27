@@ -299,8 +299,67 @@ namespace GlorifiedBody.Editor.Characters
             t = airborne.AddTransition(locomotion); t.hasExitTime = false; t.duration = 0.1f; t.AddCondition(AnimatorConditionMode.IfNot, 0f, "Airborne");
             t = sm.AddAnyStateTransition(dead); t.hasExitTime = false; t.duration = 0.1f; t.canTransitionToSelf = false; t.AddCondition(AnimatorConditionMode.If, 0f, "Dead");
 
+            if (lucy) AddHitLayer(controller, invector);
+
             EditorUtility.SetDirty(controller);
             return controller;
+        }
+
+        public const string UpperBodyMaskPath = AnimFolder + "/UpperBody.mask";
+
+        /// <summary>
+        /// Lucy's flinch (Bruno, 2026-10-27: "hit on lucy"): the vendor's small hit from the side of the shot, on a
+        /// layer over the upper body only. The legs keep the walk and the tank keeps the control. "Hit" starts it,
+        /// "HitDirection" picks the side (the vendor's HitAngle: 0 the front, 90 the right, -90 the left, 180 the
+        /// back). The None state has no motion: the base layer shows through.
+        /// </summary>
+        private static void AddHitLayer(AnimatorController controller, Dictionary<string, AnimationClip> invector)
+        {
+            controller.AddParameter("Hit", AnimatorControllerParameterType.Trigger);
+            controller.AddParameter("HitDirection", AnimatorControllerParameterType.Int);
+            var sm = new AnimatorStateMachine { name = "Hit", hideFlags = HideFlags.HideInHierarchy };
+            AssetDatabase.AddObjectToAsset(sm, controller);
+            controller.AddLayer(new AnimatorControllerLayer
+            {
+                name = "Hit", defaultWeight = 1f, avatarMask = UpperBodyMask(), blendingMode = AnimatorLayerBlendingMode.Override, stateMachine = sm
+            });
+            AnimatorState none = sm.AddState("None");
+            sm.defaultState = none;
+            foreach ((string side, int direction) in new[] { ("Front", 0), ("Right", 90), ("Left", -90), ("Back", 180) })
+            {
+                if (!invector.TryGetValue($"Hit Small {side}", out AnimationClip clip))
+                {
+                    Debug.LogWarning($"[CreateCharacterAssets] no Invector clip Hit Small {side}: no flinch from that side");
+                    continue;
+                }
+                AnimatorState state = sm.AddState($"Hit_{side}");
+                state.motion = clip;
+                AnimatorStateTransition t = sm.AddAnyStateTransition(state);
+                t.hasExitTime = false; t.duration = 0.08f; t.canTransitionToSelf = true;
+                t.AddCondition(AnimatorConditionMode.If, 0f, "Hit");
+                t.AddCondition(AnimatorConditionMode.Equals, direction, "HitDirection");
+                t = state.AddTransition(none);
+                t.hasExitTime = true; t.exitTime = 0.85f; t.duration = 0.2f;
+            }
+        }
+
+        /// <summary>The spine, the head and the arms (no root, no legs): kept, so its GUID holds between builds.</summary>
+        private static AvatarMask UpperBodyMask()
+        {
+            var mask = AssetDatabase.LoadAssetAtPath<AvatarMask>(UpperBodyMaskPath);
+            bool created = mask == null;
+            if (created) mask = new AvatarMask();
+            for (AvatarMaskBodyPart part = 0; part < AvatarMaskBodyPart.LastBodyPart; part++)
+            {
+                bool upper = part == AvatarMaskBodyPart.Body || part == AvatarMaskBodyPart.Head
+                             || part == AvatarMaskBodyPart.LeftArm || part == AvatarMaskBodyPart.RightArm
+                             || part == AvatarMaskBodyPart.LeftFingers || part == AvatarMaskBodyPart.RightFingers
+                             || part == AvatarMaskBodyPart.LeftHandIK || part == AvatarMaskBodyPart.RightHandIK;
+                mask.SetHumanoidBodyPartActive(part, upper);
+            }
+            if (created) AssetDatabase.CreateAsset(mask, UpperBodyMaskPath);
+            else EditorUtility.SetDirty(mask);
+            return mask;
         }
 
         /// <summary>Root (the class id) > Model (the FBX instance at height / 1 m, the material, the animator).</summary>

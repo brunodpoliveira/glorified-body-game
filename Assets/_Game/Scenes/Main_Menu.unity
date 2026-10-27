@@ -340,11 +340,15 @@ MonoBehaviour:
   optionsMenu: {fileID: 0}
   creditsUI: {fileID: 0}
   howToPlayUI: {fileID: 0}
+  difficultyMenu: {fileID: 0}
   startLabel: START
   tutorialScene: Tutorial
   aiTestScene: AiTest
   coverTestScene: CoverTest
   civilianTestScene: CivilianTest
+  kitTestScene: KitTest
+  scriptTestScene: ScriptTest
+  travelTestScene: TravelTest_A
   subtitleLabel: WORK IN PROGRESS
 --- !u!4 &1100764176
 Transform:
@@ -396,6 +400,7 @@ MonoBehaviour:
   defaultMasterVolume: 1
   defaultSFXVolume: 1
   defaultMusicVolume: 1
+  defaultVoiceVolume: 1
   defaultMouseSensitivity: 3
   minMouseSensitivity: 0.5
   maxMouseSensitivity: 10

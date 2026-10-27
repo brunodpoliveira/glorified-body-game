@@ -1,10 +1,10 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace GlorifiedBody.Editor.Characters
+namespace GlorifiedBody.Characters
 {
     /// <summary>
-    /// A ragdoll on a Humanoid rig, from editor code. The same parts as Unity's ragdoll wizard (GameObject > 3D
+    /// A ragdoll on a Humanoid rig, from code (the enemy factory in the editor, Lucy at her death at run time). The same parts as Unity's ragdoll wizard (GameObject > 3D
     /// Object > Ragdoll), which cannot run outside its window: a box on the hips and the chest, capsules on the
     /// thighs, shins, upper arms and forearms, a sphere on the head, CharacterJoints to the parent part. Each joint
     /// turns about the axis across its bone, and its limits open toward the side a body bends (the knee back, the
@@ -90,6 +90,10 @@ namespace GlorifiedBody.Editor.Characters
             {
                 p.Body = p.Bone.gameObject.AddComponent<Rigidbody>();
                 p.Body.mass = totalMass * p.MassShare;
+                // More solver passes than the default 6: the joint limits hold under the death push and the jerks.
+                // A heavy body (the 220 kg power armour) needs twice that: its knee folded to 180 degrees in its fall.
+                p.Body.solverIterations = totalMass > 120f ? 32 : 16;
+                p.Body.solverVelocityIterations = 4;
             }
             Joint(torso, root.right, forward, -20f, 30f, 15f);
             Joint(skull, root.right, forward, -40f, 40f, 30f);
@@ -136,8 +140,11 @@ namespace GlorifiedBody.Editor.Characters
         {
             if (p == null || p.Parent == null) return;
             Vector3 along = p.End != p.Bone ? (p.End.position - p.Bone.position).normalized : p.Bone.position - p.Parent.Bone.position;
+            // A CharacterJoint counts its twist the other way round from Quaternion.AngleAxis (Unity's ragdoll wizard
+            // gives a knee -80..0 about the body's right). So the axis points where AngleAxis turns AWAY from the bend.
+            // Found 2026-10-27 (Bruno: "the lower leg bends inwards"): every knee bent 130 degrees the wrong way.
             Vector3 turned = Quaternion.AngleAxis(10f, axis) * along;
-            if (Vector3.Dot(turned - along, bend) < 0f) axis = -axis;
+            if (Vector3.Dot(turned - along, bend) > 0f) axis = -axis;
             Vector3 swingAxis = Vector3.Cross(axis, along);
             if (swingAxis.sqrMagnitude < 1e-6f) swingAxis = Vector3.Cross(axis, Vector3.up);
 
@@ -148,6 +155,10 @@ namespace GlorifiedBody.Editor.Characters
             joint.swingAxis = p.Bone.InverseTransformDirection(swingAxis.normalized);
             joint.enablePreprocessing = false;
             joint.enableProjection = true;
+            // The projection puts a bone back inside its limits when the solver lets it slip past them. The default
+            // angle (180) never acts: the 220 kg armour's knee settled 24 degrees bent the wrong way.
+            joint.projectionAngle = 10f;
+            joint.projectionDistance = 0.05f;
             joint.lowTwistLimit = new SoftJointLimit { limit = low };
             joint.highTwistLimit = new SoftJointLimit { limit = high };
             joint.swing1Limit = new SoftJointLimit { limit = swing };

@@ -77,7 +77,7 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator Death_ShowsDeathScreenWithinOneSecond_AndRestartPlays()
+        public IEnumerator Death_SheFallsAsARagdoll_ThenTheDeathScreen_AndRestartPlays()
         {
             yield return EnterRoom();
             Health health = FindPlayerHealth();
@@ -86,11 +86,17 @@ namespace GlorifiedBody.Tests.PlayMode
             float t0 = Time.realtimeSinceStartup;
             health.SetSecondWindEnabled(false); // the second wind has its own test; this one is the death flow
             health.TakeDamage(9999f);
-            yield return WaitUntil(() => GameManager.Instance.IsGameOver, 2f);
+            yield return WaitUntil(() => GameManager.Instance.IsGameOver, 4f); // her fall first (PlayerDeathFall, 1.6 s)
             float elapsed = Time.realtimeSinceStartup - t0;
             Assert.IsTrue(health.IsDead, "player dead");
             Assert.IsTrue(GameManager.Instance.IsGameOver, "game over");
-            Assert.Less(elapsed, 1f, "game over within 1 s of the lethal hit");
+            Assert.Less(elapsed, 2.5f, "game over within 2.5 s of the lethal hit (her fall: 1.6 s)");
+            Assert.GreaterOrEqual(elapsed, GlorifiedBody.Player.PlayerDeathFall.FallSeconds - 0.1f, "the death screen waits for her fall");
+            var fall = health.GetComponentInParent<GlorifiedBody.Player.PlayerDeathFall>() ?? health.GetComponent<GlorifiedBody.Player.PlayerDeathFall>();
+            Assert.IsNotNull(fall, "her death plays out physically (Bruno, 2026-10-27)");
+            Assert.IsTrue(fall.Fallen);
+            Assert.Greater(fall.Bones, 8, "a ragdoll on her bones");
+            Assert.Less(fall.Hips.position.y, 0.45f, "she lies on the floor when the death screen shows");
 
             yield return WaitUntil(() => DeathCanvasVisible(), 2f);
             Assert.IsTrue(DeathCanvasVisible(), "DeathMenuUICanvas visible");

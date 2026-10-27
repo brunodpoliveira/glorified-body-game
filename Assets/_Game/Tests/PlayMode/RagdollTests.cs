@@ -62,7 +62,7 @@ namespace GlorifiedBody.Tests.PlayMode
 
         private static void LogEvent(string name, string detail)
         {
-            if (name.StartsWith("ragdoll") || name.StartsWith("tk_") || name.StartsWith("gore_") || name == "soldier_down")
+            if (name.StartsWith("ragdoll") || name.StartsWith("tk_") || name.StartsWith("gore_") || name == "soldier_down" || name == "death_fall")
                 Debug.Log($"[RagdollTests] {Time.time:0.00} event {name} {detail}");
         }
 
@@ -109,7 +109,7 @@ namespace GlorifiedBody.Tests.PlayMode
         public IEnumerator Throw_IntoAnother_BothFallLimp_ThenBothStandUp()
         {
             SoldierBrain thrown = Find("Soldier_A");
-            SoldierBrain struck = soldiers.Where(s => s != thrown && s.GetComponent<EnemyRagdoll>() != null)
+            SoldierBrain struck = soldiers.Where(s => s != thrown && s.GetComponent<EnemyRagdoll>() != null && !s.GetComponent<EnemyRagdoll>().DeathOnly)
                 .OrderBy(s => Vector3.Distance(s.transform.position, thrown.transform.position)).First();
             EnemyRagdoll a = thrown.GetComponent<EnemyRagdoll>(), b = struck.GetComponent<EnemyRagdoll>();
             yield return WaitUntil(() => thrown.Engaged, 6f);
@@ -141,6 +141,9 @@ namespace GlorifiedBody.Tests.PlayMode
             powers.FireAt(powers.Selected, 0.5f, target, 0.01f);
             yield return new WaitForSeconds(0.3f);
             Assert.AreEqual(EnemyRagdoll.State.Animated, ragdoll.Current, "a part charge only staggers");
+            // The part charge's flinch (HitReactions, the vendor's big hit) ends first: the knockdown starts from a
+            // standing body.
+            yield return new WaitForSeconds(1.2f);
 
             Vector3 start = soldier.transform.position;
             Vector3 away = Vector3.ProjectOnPlane(start - lucy.transform.position, Vector3.up).normalized;
@@ -148,11 +151,16 @@ namespace GlorifiedBody.Tests.PlayMode
             powers.FireAt(powers.Selected, 1f, target, 0.01f);
             yield return null;
             Assert.AreEqual(EnemyRagdoll.State.Down, ragdoll.Current, "a full circle knocks him down");
+            // The push itself (the stagger step of the part charge, 2026-10-27, can put a cover block behind him, so
+            // the distance alone depends on the room).
+            float pushSpeed = Vector3.Dot(ragdoll.Parts[0].linearVelocity, away);
+            Debug.Log($"[RagdollTests] knockdown speed along her line {pushSpeed:0.00} m/s");
+            Assert.Greater(pushSpeed, 2f, "the blast throws him away from her");
             yield return new WaitForSeconds(2.3f);
             Assert.IsTrue(ragdoll.Current == EnemyRagdoll.State.Down, $"still down at 2.3 s (state {ragdoll.Current})");
             Vector3 pushed = Vector3.ProjectOnPlane(soldier.transform.position - start, Vector3.up);
             Debug.Log($"[RagdollTests] pushed {pushed.magnitude:0.00} m, along her line {Vector3.Dot(pushed, away):0.00} m");
-            Assert.Greater(Vector3.Dot(pushed, away), 0.3f, "pushed away from her");
+            Assert.Greater(Vector3.Dot(pushed, away), 0.15f, "pushed away from her");
             yield return WaitUntil(() => ragdoll.Current == EnemyRagdoll.State.StandingUp, 5f);
             float down = Time.time - t0;
             Debug.Log($"[RagdollTests] down {down:0.00} s, clip {ragdoll.StandUpClip}");
@@ -219,13 +227,219 @@ namespace GlorifiedBody.Tests.PlayMode
         public IEnumerator PowerArmour_FullBlast_DoesNotKnockItDown()
         {
             SoldierBrain armour = Find("Armour_C");
-            Assert.IsNull(armour.GetComponent<EnemyRagdoll>(), "a heavy has no ragdoll");
+            EnemyRagdoll armourRagdoll = armour.GetComponent<EnemyRagdoll>();
+            Assert.IsNotNull(armourRagdoll, "a heavy has a ragdoll for its death (Bruno, 2026-10-27)");
+            Assert.IsTrue(armourRagdoll.DeathOnly, "for its death only");
+            Assert.IsFalse(armourRagdoll.KnockDown(2.5f, Vector3.up), "no knockdown of a heavy");
             powers.Select(PowerKind.Blast);
             powers.FireAt(powers.Selected, 1f, armour.GetComponent<LockOnTargetable>(), 0.01f);
             yield return new WaitForSeconds(0.3f);
             Assert.IsFalse(RagdollBodies.IsDown(armour), "it stays on its feet");
             Assert.IsFalse(armour.GetComponent<InvectorEnemyBody>().Suspended, "it is not suspended");
         }
+
+        // ── Every death plays out physically (Bruno, 2026-10-27) ──────
+
+        [UnityTest]
+        public IEnumerator APartBlastKill_FallsLimp_TheWayTheHitPushed_NoDeathClip()
+        {
+            SoldierBrain soldier = Find("Soldier_A");
+            EnemyRagdoll ragdoll = soldier.GetComponent<EnemyRagdoll>();
+            Animator animator = soldier.GetComponent<Animator>();
+            yield return null;
+            Vector3 away = Flat(soldier.transform.position - lucy.transform.position).normalized;
+            Vector3 hips0 = ragdoll.Hips.position;
+            soldier.GetComponent<Health>().SetHealth(1f);
+            powers.Select(PowerKind.Blast);
+            powers.FireAt(powers.Selected, 0.5f, soldier.GetComponent<LockOnTargetable>());
+            yield return WaitUntil(() => soldier.GetComponent<Health>().IsDead, 1f);
+            yield return null;
+            Debug.Log($"[RagdollTests] part blast kill: result {powers.LastResult}, hp {soldier.GetComponent<Health>().CurrentHealth}");
+            Assert.IsTrue(soldier.GetComponent<Health>().IsDead, "the blast killed him");
+            Assert.IsTrue(ragdoll.DiedFalling, "the death goes limp from the living pose");
+            Assert.AreEqual(EnemyRagdoll.DeathKind.Plain, ragdoll.LastDeath);
+            Assert.IsTrue(ragdoll.IsRagdolled, "a ragdoll, not a death clip");
+            Assert.IsFalse(animator.enabled, "the animator is off");
+            Assert.IsTrue(ragdoll.InThroes, "the muscles hold him for a moment");
+            yield return new WaitForSeconds(0.6f);
+            Vector3 moved = Flat(ragdoll.Hips.position - hips0);
+            Debug.Log($"[RagdollTests] part blast death: hips moved {moved.magnitude:0.00} m, along the push {Vector3.Dot(moved, away):0.00} m, height {ragdoll.Hips.position.y - hips0.y:0.00} m, bone {ragdoll.LastDeathBone}");
+            Assert.Greater(Vector3.Dot(moved, away), 0.05f, "he falls away from her");
+            Assert.Less(ragdoll.Hips.position.y, hips0.y - 0.15f, "the knees buckle: the hips drop");
+            yield return WaitUntil(() => ragdoll.Current == EnemyRagdoll.State.Corpse, 9f);
+            Assert.AreEqual(EnemyRagdoll.State.Corpse, ragdoll.Current, "the body settles and freezes");
+            Assert.Less(ragdoll.Hips.position.y, hips0.y - 0.5f, "he lies on the floor");
+        }
+
+        [UnityTest]
+        public IEnumerator AFullBlastKill_ThrowsTheBodyFar()
+        {
+            SoldierBrain soldier = Find("Soldier_A");
+            EnemyRagdoll ragdoll = soldier.GetComponent<EnemyRagdoll>();
+            yield return null;
+            Vector3 away = Flat(soldier.transform.position - lucy.transform.position).normalized;
+            Vector3 hips0 = ragdoll.Hips.position;
+            soldier.GetComponent<Health>().SetHealth(1f);
+            powers.Select(PowerKind.Blast);
+            powers.FireAt(powers.Selected, 1f, soldier.GetComponent<LockOnTargetable>());
+            yield return null;
+            yield return new WaitForFixedUpdate();
+            Assert.IsTrue(ragdoll.DiedFalling);
+            Assert.AreEqual(EnemyRagdoll.DeathKind.Blast, ragdoll.LastDeath, "a full mk_warspite kill is a blast");
+            // The speed right after the death: a cover block behind him can stop the body (the flight was 0.9 to 1.6 m
+            // over five runs in the same room), the push itself does not depend on the room.
+            float speed = Vector3.Dot(ragdoll.Parts[0].linearVelocity, away);
+            yield return new WaitForSeconds(1.2f);
+            float along = Vector3.Dot(Flat(ragdoll.Hips.position - hips0), away);
+            Debug.Log($"[RagdollTests] full blast death: {speed:0.0} m/s at the start, {along:0.00} m along the push");
+            Assert.Greater(speed, 3f, "the blast throws the body away from her");
+            Assert.Greater(along, 0.5f, "the body flies away from her");
+        }
+
+        [UnityTest]
+        public IEnumerator AShockKill_Convulses_AFireKill_Writhes_ThenTheyLieStill()
+        {
+            SoldierBrain shocked = Find("Soldier_A");
+            SoldierBrain burnt = soldiers.First(s => s != shocked && !s.GetComponent<EnemyRagdoll>().DeathOnly && s.GetComponent<EnemyShield>() == null);
+            EnemyRagdoll a = shocked.GetComponent<EnemyRagdoll>(), b = burnt.GetComponent<EnemyRagdoll>();
+            yield return null;
+            KillWith(shocked, DamageType.ShortShock);
+            KillWith(burnt, DamageType.PsychicFire);
+            yield return new WaitForSeconds(0.5f);
+            Assert.AreEqual(EnemyRagdoll.DeathKind.Shock, a.LastDeath);
+            Assert.AreEqual(EnemyRagdoll.DeathKind.Burn, b.LastDeath);
+            Assert.IsTrue(a.InThroes && b.InThroes, "both in their throes");
+            float spin = a.Parts.Where(p => p != null).Max(p => p.angularVelocity.magnitude);
+            Debug.Log($"[RagdollTests] shock: the fastest part turns at {spin:0.0} rad/s");
+            Assert.Greater(spin, 3f, "the shock makes the limbs jerk");
+            yield return new WaitForSeconds(2f);
+            Assert.IsFalse(a.InThroes, "the convulsion ends after 1.6 s");
+            Assert.IsTrue(b.InThroes, "the writhe goes on (3.2 s)");
+            yield return WaitUntil(() => a.Current == EnemyRagdoll.State.Corpse && b.Current == EnemyRagdoll.State.Corpse, 10f);
+            Assert.AreEqual(EnemyRagdoll.State.Corpse, a.Current, "the shocked body lies still");
+            Assert.AreEqual(EnemyRagdoll.State.Corpse, b.Current, "the burnt body lies still");
+        }
+
+        [UnityTest]
+        public IEnumerator ThePowerArmour_DiesAsARagdoll()
+        {
+            SoldierBrain armour = Find("Armour_C");
+            EnemyRagdoll ragdoll = armour.GetComponent<EnemyRagdoll>();
+            yield return null;
+            float hips0 = ragdoll.Hips.position.y;
+            KillWith(armour, DamageType.PsychicBlast);
+            yield return null;
+            yield return null;
+            Assert.IsTrue(ragdoll.DiedFalling, "its death plays out physically");
+            yield return WaitUntil(() => ragdoll.Current == EnemyRagdoll.State.Corpse, 10f);
+            Assert.AreEqual(EnemyRagdoll.State.Corpse, ragdoll.Current);
+            Assert.Less(ragdoll.Hips.position.y, hips0 - 0.6f, "the 2.6 m armour lies on the floor");
+        }
+
+        [UnityTest]
+        public IEnumerator TheKnees_BendOnlyLikeKnees_InEveryDeath()
+        {
+            // Bruno, 2026-10-27: "the power armor and the shock death has this uncanny knee/leg rotation; the lower leg
+            // bends inwards in a very unnatural way". A knee is a hinge: the shin may turn about the knee's axis, and
+            // only a few degrees about the other two.
+            SoldierBrain shocked = Find("Soldier_A");
+            SoldierBrain burnt = soldiers.First(s => s != shocked && !s.GetComponent<EnemyRagdoll>().DeathOnly && s.GetComponent<EnemyShield>() == null);
+            SoldierBrain armour = Find("Armour_C");
+            SoldierBrain plain = Find("Guard_B");
+            var figures = new[] { shocked, burnt, armour, plain };
+            yield return null;
+            KillWith(shocked, DamageType.ShortShock);
+            KillWith(burnt, DamageType.PsychicFire);
+            KillWith(armour, DamageType.PsychicFire);
+            KillWith(plain, DamageType.EnemyProjectile);
+            yield return null;
+            yield return null;
+            var knees = figures.SelectMany(f => new[] { Knee.Of(f, true), Knee.Of(f, false) }).ToArray();
+            float t0 = Time.time;
+            while (Time.time - t0 < 4f)
+            {
+                foreach (Knee k in knees) k.Sample();
+                yield return null;
+            }
+            foreach (Knee k in knees)
+                Debug.Log($"[RagdollTests] knee {k.Name}: off the hinge {k.MaxOff:0.0} deg, out of the plane {k.MaxPlane:0.0} deg, bent back {k.MaxBack:0.0} deg, bent {k.MaxTwist:0.0} deg; off/plane/bend each 0.25 s:{k.Trace}");
+            foreach (Knee k in knees)
+            {
+                // Before the fix (the joint's twist sign): knees 66 to 137 degrees bent the wrong way, 16 to 135 off.
+                Assert.Less(k.MaxBack, 10f, $"{k.Name}: the knee bends the wrong way");
+                Assert.Less(k.MaxPlane, 40f, $"{k.Name}: the shin leaves the knee's plane");
+                Assert.Less(k.Plane, 25f, $"{k.Name}: the body lies with the shin out of the knee's plane");
+            }
+        }
+
+        /// <summary>One knee: the shin's turn against the thigh since the death, split into the hinge turn and the rest.</summary>
+        private sealed class Knee
+        {
+            public string Name;
+            public float MaxOff, MaxBack, MaxPlane, MaxTwist, Plane;
+            public string Trace = "";
+            private Transform foot;
+            private float nextTrace;
+            private Transform thigh, shin;
+            private Quaternion rest;
+            private Vector3 hinge, bend;
+
+            public static Knee Of(SoldierBrain f, bool left)
+            {
+                Animator a = f.GetComponent<Animator>();
+                Transform thigh = a.GetBoneTransform(left ? HumanBodyBones.LeftUpperLeg : HumanBodyBones.RightUpperLeg);
+                Transform shin = a.GetBoneTransform(left ? HumanBodyBones.LeftLowerLeg : HumanBodyBones.RightLowerLeg);
+                Transform foot = a.GetBoneTransform(left ? HumanBodyBones.LeftFoot : HumanBodyBones.RightFoot);
+                CharacterJoint joint = shin.GetComponent<CharacterJoint>();
+                Assert.IsNotNull(joint, $"{f.name}: a knee joint");
+                // The hinge in the thigh's frame, its sign so that a positive turn moves the foot back (a knee bend).
+                Vector3 axis = shin.TransformDirection(joint.axis).normalized;
+                Vector3 along = (foot.position - shin.position).normalized;
+                Vector3 back = -f.transform.forward;
+                if (Vector3.Dot(Quaternion.AngleAxis(10f, axis) * along - along, back) < 0f) axis = -axis;
+                return new Knee
+                {
+                    Name = $"{f.name}.{(left ? "L" : "R")}",
+                    thigh = thigh, shin = shin, foot = foot,
+                    rest = Quaternion.Inverse(thigh.rotation) * shin.rotation,
+                    hinge = thigh.InverseTransformDirection(axis),
+                };
+            }
+
+            public void Sample()
+            {
+                Quaternion now = Quaternion.Inverse(thigh.rotation) * shin.rotation;
+                Quaternion delta = now * Quaternion.Inverse(rest);
+                // Swing-twist split about the hinge.
+                Vector3 r = new Vector3(delta.x, delta.y, delta.z);
+                Vector3 p = Vector3.Project(r, hinge);
+                Quaternion twist = new Quaternion(p.x, p.y, p.z, delta.w);
+                float n = Mathf.Sqrt(twist.x * twist.x + twist.y * twist.y + twist.z * twist.z + twist.w * twist.w);
+                twist = n < 1e-6f ? Quaternion.identity : new Quaternion(twist.x / n, twist.y / n, twist.z / n, twist.w / n);
+                Quaternion swing = delta * Quaternion.Inverse(twist);
+                float off = Quaternion.Angle(Quaternion.identity, swing);
+                twist.ToAngleAxis(out float angle, out Vector3 ax);
+                if (angle > 180f) angle -= 360f;
+                float signed = Vector3.Dot(ax, hinge) >= 0f ? angle : -angle;
+                MaxOff = Mathf.Max(MaxOff, off);
+                MaxBack = Mathf.Max(MaxBack, -signed);
+                MaxTwist = Mathf.Max(MaxTwist, signed);
+                Vector3 v = (foot.position - shin.position).normalized;
+                float plane = Mathf.Asin(Mathf.Clamp(Mathf.Abs(Vector3.Dot(v, thigh.TransformDirection(hinge))), 0f, 1f)) * Mathf.Rad2Deg;
+                MaxPlane = Mathf.Max(MaxPlane, plane);
+                Plane = plane;
+                if (Time.time >= nextTrace) { nextTrace = Time.time + 0.25f; Trace += $" {off:0}/{plane:0}/{signed:0}"; }
+            }
+        }
+
+        private void KillWith(SoldierBrain figure, DamageType type)
+        {
+            Health h = figure.GetComponent<Health>();
+            h.TakeDamage(h.MaxHealth * 10f);
+            HitEventBus.Raise(new HitInfo { Attacker = lucy, Victim = figure.gameObject, HitTransform = figure.transform, HitPoint = figure.transform.position + Vector3.up * 1.2f, HitNormal = -figure.transform.forward, DamageAmount = 999f, DamageType = type, WasFatal = true });
+        }
+
+        private static Vector3 Flat(Vector3 v) => new Vector3(v.x, 0f, v.z);
 
         private SoldierBrain Find(string name)
         {

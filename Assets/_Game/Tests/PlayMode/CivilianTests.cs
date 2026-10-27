@@ -423,9 +423,17 @@ namespace GlorifiedBody.Tests.PlayMode
             a.Panic("test");
             yield return WaitUntil(() => a.CurrentPose == CivilianBrain.Pose.Lean, 16f);
             Assert.AreEqual(CivilianBrain.Pose.Lean, a.CurrentPose, "on its wall");
-            Vector3 intoWall = -a.Lean.WallNormal;
-            Kill(a);
-            Assert.IsTrue(a.GetComponent<EnemyRagdoll>().KnockDown(2.5f, intoWall * 6f + Vector3.up * 1.5f), "a full blast throws it at the wall");
+            // Since 2026-10-27 the death itself falls (EnemyRagdoll, the physical death): a full blast from in front of
+            // the wall kills it and throws it at the wall.
+            Vector3 wallNormal = a.Lean.WallNormal;
+            Teleport(OnMesh(a.transform.position + new Vector3(wallNormal.x, 0f, wallNormal.z).normalized * 2f));
+            yield return null;
+            Health h = a.GetComponent<Health>();
+            h.TakeDamage(h.MaxHealth * 10f);
+            HitEventBus.Raise(new HitInfo { Attacker = lucy, Victim = h.gameObject, HitTransform = a.transform, HitPoint = a.transform.position + Vector3.up * 1.2f, HitNormal = wallNormal, DamageAmount = h.MaxHealth * 10f, DamageType = DamageType.PsychicBlast, Charge = 1f, WasFatal = true });
+            yield return null;
+            yield return null;
+            Assert.IsTrue(a.GetComponent<EnemyRagdoll>().DiedFalling, "a full blast throws it at the wall");
             yield return new WaitForSeconds(2.5f);
             Vector3 hips = Bone(a, HumanBodyBones.Hips).position;
             Debug.Log($"[CivilianTests] lean knockdown: hips {hips}, root {a.transform.position}, lean weight {a.Lean.Weight:0.00}");

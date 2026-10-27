@@ -297,6 +297,17 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   (`DifficultyMenuUI`) for the main menu and the pause. Enemy damage on her goes through `DifficultyManager.EnemyDamage`;
   `PsychicStats` reads the HP, MK and SHORT scales and ONE-HIT WONDER. Batch runs ignore the saved choice (150 %).
   On screen the drug NALCON is the MK CAPSULE (code ids stay `Nalcon`/`nalcon`).
+- 2026-10-27, REACTIONS AND PHYSICAL DEATHS (`devlog-notes/2026-10-27_reactions_and_physical_deaths.md`). Delirium
+  (active ragdoll) is a BLOCKER: its tuning is GTA IV data, locked to a GTA IV file (`/home/pc/delirium-spike/REPORT.md`).
+  Every death falls as a ragdoll from the living pose (`EnemyRagdoll`: the push of the killing hit, muscles that fade,
+  shock convulsions, fire writhing; the armour has a death-only ragdoll; Lucy: `PlayerDeathFall`, the death screen waits
+  1.6 s). `HumanoidRagdoll` runs in the game now; its joint sign was wrong since 10-24 (knees bent backward): fixed,
+  test `TheKnees_BendOnlyLikeKnees_InEveryDeath`. Bruno's rule: "use invector clips for everyone, for all animations
+  that are applicable; we only generate the ones that invector does not have". `HitReactions`: the vendor small and
+  big hits from the attacker's side (`IEnemyBody.Flinch(from, big)`), a step, a limp (`IEnemyBody.SetAnimatorSpeed`:
+  vAIMotor writes `animator.speed` every frame), a shock spasm and a fire panic in code (Invector has no clip), a jolt
+  under a fear pose. Lucy flinches on an upper-body "Hit" layer. The RFab hit clips are out of the game. Bot
+  `play AiTest Main_Menu reactions 400` (record mode for clips).
 
 ## Rules
 

@@ -308,7 +308,7 @@ namespace GlorifiedBody.Enemy
             if (Current == Phase.Care) GetComponent<CorpseCare>()?.Stop("shock");
             gun.Stagger(seconds); // the aim breaks; OnStaggered holds the body for the seconds
             Hold(seconds);
-            body?.Flinch();
+            body?.Flinch(transform.position + transform.forward, false);
             // PLACEHOLDER lines: the writer owns the barks.
             string[] lines = gruesome ? new[] { "OH GOD...", "WHAT DID SHE DO TO HIM?", "JESUS!" } : new[] { "NO!", "MAN DOWN!" };
             Bark.Say(gameObject, lines[Random.Range(0, lines.Length)]);
