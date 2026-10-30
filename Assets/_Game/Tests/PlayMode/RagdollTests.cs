@@ -337,6 +337,8 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
+        // FOR LATER (Bruno, 2026-10-30: "later, annotate it"): the 220 kg power armour sometimes bends a knee 25 to 58
+        // degrees backward in its fire death, so this test fails in about half the runs (devlog-notes/2026-10-30_drugs_feeding_ward.md).
         public IEnumerator TheKnees_BendOnlyLikeKnees_InEveryDeath()
         {
             // Bruno, 2026-10-27: "the power armor and the shock death has this uncanny knee/leg rotation; the lower leg

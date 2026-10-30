@@ -54,7 +54,44 @@ Numbers and names are PROPOSED.
 | The game remembers | In the room a FlagGate shows a red mark on the wall when `marta_killed` is up. The writer decides the real consequences later. |
 | WARD TEST room | `WardTestSetup.BuildWardTest`, the WARD TEST button: the hall of the KIT TEST room, the patient's bed, Marta (a nurse with the scan and the fate), a lab worker and a guard, the mark, the door west to TRAVEL B. |
 
-## 5. The tutorial
+## 5. His answers, and the second part (same day)
+
+```text
+1: they are fine, i'll take a look once i do a manual pass
+2: we'll do a crouch + sound + blood effects for now. we can refine it later
+3: they should react to it; yes; have placeholder lines, the writer will refine them later
+4; later, anootate it
+```
+
+| Part | Behaviour (numbers PROPOSED) |
+|---|---|
+| Blood | During a feed, blood sprays from the chest of the body every 0.6 s, with a wet sound (`Feeding.Bleed`). The gore driver plays the spray without the hit bus, so no other system takes it as a hit. The Gore option applies (Off: no spray). |
+| Witnesses | A figure that sees a feed (the sight rule of a death) takes it as a gruesome death: +2 fear, then a shock or a retreat, and a line (`EnemyMorale.SeeFeed`). The lines are PLACEHOLDERS for the writer: the fighters "SHE'S FEEDING ON HIM!", the civilians "Oh God. She's eating him.". A civilian runs. |
+| Tutorial | A new step "feed" after the capsule. A dead lab worker lies in the door strip, south of the broken barricade, where the west camera sees it. The step starts with half her HP. Without the vendor prefabs (a clean clone) the step ends by itself. The tutorial has 23 steps now. |
+| The armour knee | FOR LATER (his ruling): a comment at `RagdollTests.TheKnees_BendOnlyLikeKnees_InEveryDeath`, and the Proof section. |
+
+Proof of the second part:
+
+| Check | Run | Result |
+|---|---|---|
+| EditMode | `runs/20261030-021024-test-editmode-638721` | 56/56 |
+| PlayMode, every suite | `runs/20261030-021052-test-playmode-639086` | 273/273 (the armour knee passed this time) |
+| Bots: structural, look, tutorial, ai, cover, civilians, reactions, lab, ward | the same chain | 9/9 PASS, triage CLEAN |
+| Ward bot, record mode (the blood) | `runs/20261030-024204-record-647725` | 5/5 steps |
+| After two tutorial drive fixes: TutorialTests, the tutorial bot, its record | `runs/20261030-031355-record-653205` and the runs before it | 9/9, PASS, 25/25 steps |
+
+Two faults of the tutorial drive, found in the record runs and fixed:
+
+- The walk north at x -1.2 brushed the bar bases (x -1.05). In a slow record run Lucy slid into the lane between the bars
+  and never reached the capsule. The waypoints are at x -1.6 now.
+- The first feed point (1.7, 11.7) put the feed under the gym camera. The point is (2.9, 11.4) now.
+
+The record limit for the tutorial is 900 s now (23 steps; the 500 s run ended at step 17).
+
+Clips: `~/MEGA/glorified-body-renders/game/ward/` (the feed with blood: `clips/ward_04_feed.mp4`, `shots/ward_04_feed_sheet.png`)
+and `~/MEGA/glorified-body-renders/game/tutorial/2026-10-30/` (`tut_14_capsule`, `tut_15_feed`, `tut_22_short`).
+
+## 6. The tutorial
 
 - The capsule step lowers MK to 30 first, so the MK capsule has work. Its text says that MK fills.
 - The short step gives a SHORT capsule. Its text names it.

@@ -322,7 +322,9 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   armed civilian 30, heavy 30, soldier/guard 20), once per body, a hit stops it, `BodyState.feedTaken` in the saves. Rank
   10: `PatientBrain` (kind `patient`: stays in bed, one line), a scan on a person (`EnemySpawn.scanImage`, at the chest),
   `FateFlag` (`<fate>_killed/_spared/_scanned`, `RoomExit.OnLeaving`). WARD TEST room (`WardTestSetup`), `WardTests` (9),
-  bot `play WardTest Main_Menu ward 400`.
+  bot `play WardTest Main_Menu ward 400`. Later that night (his answers): the feed sprays blood (`Feeding.Bleed`, the gore
+  driver's `PlayForCheck`), witnesses react (`EnemyMorale.SeeFeed`, placeholder lines), a tutorial "feed" step (23 steps,
+  record the tutorial with a 900 s limit). FOR LATER: the armour knee test fails in about half the runs.
 
 ## Rules
 

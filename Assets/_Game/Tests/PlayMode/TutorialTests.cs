@@ -29,7 +29,7 @@ namespace GlorifiedBody.Tests.PlayMode
     public class TutorialTests
     {
         private const string MainMenu = "Main_Menu";
-        private static readonly string[] ExpectedSteps = { "walk", "run", "dodge", "switch", "blast", "fire", "lift_throw", "slam", "prop", "catch", "grenade", "shield", "cover", "capsule", "log", "scan_image", "key", "door", "inventory", "scan_video", "short", "complete" };
+        private static readonly string[] ExpectedSteps = { "walk", "run", "dodge", "switch", "blast", "fire", "lift_throw", "slam", "prop", "catch", "grenade", "shield", "cover", "capsule", "feed", "log", "scan_image", "key", "door", "inventory", "scan_video", "short", "complete" };
 
         private TutorialDirector director;
 
@@ -101,7 +101,7 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.IsNotNull(log, "the log pickup");
             StringAssert.StartsWith("taken:", log.Confirm(interactor), "she takes the log in the capsule step");
             yield return null;
-            director.Advance();
+            while (director.Current != null && director.Current.Id != "log") director.Advance(); // the feed step comes between (2026-10-30)
             Assert.AreEqual("log", director.Current.Id);
             yield return null;
             InventoryUI ui = UnityEngine.Object.FindFirstObjectByType<InventoryUI>();

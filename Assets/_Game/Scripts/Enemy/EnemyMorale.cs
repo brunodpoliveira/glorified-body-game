@@ -20,6 +20,8 @@ namespace GlorifiedBody.Enemy
     /// Gruesome: the short's shocks, the fire, the telekinesis (the slam, a throw, a returned bullet, grenade or
     /// rocket), an explosion, a full-charge mk_warspite (it cuts a limb). A part-charge mk_warspite kill is not.
     /// All numbers and the gruesome list are PROPOSED.
+    /// A feed (Bruno, 2026-10-30: "they should react to it"): a witness of her feed on a body (the same sight rule)
+    /// takes it as a gruesome death: +2 fear, a shock or a retreat, and a line. The lines are PLACEHOLDERS for the writer.
     /// </summary>
     [RequireComponent(typeof(Health))]
     public sealed class EnemyMorale : MonoBehaviour
@@ -46,6 +48,11 @@ namespace GlorifiedBody.Enemy
         public int Fear { get; private set; }
         public int Shocks { get; private set; }
         public int Witnessed { get; private set; }
+        public int FeedsSeen { get; private set; }
+
+        // PLACEHOLDER lines (the writer refines them): the fighters, then the civilians.
+        public static readonly string[] FighterFeedLines = { "SHE'S FEEDING ON HIM!", "WHAT IS SHE DOING TO HIM?", "GET HER OFF HIM!" };
+        public static readonly string[] CivilianFeedLines = { "Oh God. She's eating him.", "No, no, no. What is she?", "She's... she's feeding." };
         public bool DiedGruesome { get; private set; }
         /// <summary>The fear at which this rank retreats. Never for soldiers and heavies.</summary>
         public int FearLimit => rank == Rank.UnarmedCivilian ? 0 : rank == Rank.ArmedCivilian || rank == Rank.Guard ? 3 : int.MaxValue;
@@ -83,6 +90,7 @@ namespace GlorifiedBody.Enemy
             health.OnDeath.AddListener(OnDeath);
             HitEventBus.OnHit += OnHit;
             OnColleagueDied += OnDeathSeen;
+            GlorifiedBody.Player.Feeding.OnFeedStarted += OnFeedSeen;
         }
 
         private void OnDisable()
@@ -90,6 +98,7 @@ namespace GlorifiedBody.Enemy
             health.OnDeath?.RemoveListener(OnDeath);
             HitEventBus.OnHit -= OnHit;
             OnColleagueDied -= OnDeathSeen;
+            GlorifiedBody.Player.Feeding.OnFeedStarted -= OnFeedSeen;
         }
 
         private void OnHit(HitInfo hit)
@@ -127,6 +136,33 @@ namespace GlorifiedBody.Enemy
             bool sees = distance <= witnessRange && !Physics.Linecast(eye, chest, LayerMask.GetMask("Default"), QueryTriggerInteraction.Ignore);
             if (!near && !sees) return;
             See(corpse, gruesome);
+        }
+
+        private void OnFeedSeen(GlorifiedBody.Player.Feeding who, GlorifiedBody.Interaction.FeedableBody body)
+        {
+            if (health.IsDead || body == null || body.gameObject == gameObject) return;
+            Vector3 eye = transform.position + Vector3.up * 1.6f;
+            Vector3 at = body.Point + Vector3.up * 0.3f;
+            float distance = Vector3.Distance(eye, at);
+            bool near = distance <= hearRange;
+            bool sees = distance <= witnessRange && !Physics.Linecast(eye, at, LayerMask.GetMask("Default"), QueryTriggerInteraction.Ignore);
+            if (near || sees) SeeFeed(body.name);
+        }
+
+        /// <summary>It saw her feed (the range and the line are checked before): a gruesome sight, then a line.</summary>
+        public void SeeFeed(string bodyName)
+        {
+            if (health.IsDead) return;
+            FeedsSeen++;
+            Fear += 2;
+            RunTelemetry.Event("enemy_saw_feed", $"{name}:{bodyName} fear={Fear}");
+            if (brain == null) return;
+            brain.Alert("feed", callOthers: false);
+            if (Fear >= FearLimit) brain.Retreat("feed");
+            else brain.Shock(gruesomeShockSeconds, true);
+            bool civilian = rank == Rank.UnarmedCivilian || rank == Rank.ArmedCivilian;
+            string[] lines = civilian ? CivilianFeedLines : FighterFeedLines;
+            Bark.Say(gameObject, lines[UnityEngine.Random.Range(0, lines.Length)]); // after the shock's own line: this one shows
         }
 
         /// <summary>It saw the death (the range and the line are checked before): the fear, then a shock or a retreat.</summary>

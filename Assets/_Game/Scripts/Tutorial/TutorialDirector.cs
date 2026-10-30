@@ -33,10 +33,15 @@ namespace GlorifiedBody.Tutorial
         public const string SceneName = "Tutorial";
         public const float CompleteDelay = 2.5f;
         public const float CapsuleStepMk = 30f; // the MK at the start of the capsule step, PROPOSED
+        public const float FeedStepHp = 0.5f;   // her HP at the start of the feed step, a share of the maximum, PROPOSED
+        public const string FeedBodyName = "Feed_Body";
 
         [SerializeField] private Vector3 barsPoint = new Vector3(-1.8f, 0f, 11.2f);
         [SerializeField] private Vector3 monitorsPoint = new Vector3(-2.4f, 0f, 16f);
         [SerializeField] private Vector3 capsulePoint = new Vector3(-2.6f, 0f, 13.5f);
+        // The door strip, south of the broken barricade: the west camera (Cam_Gym_W) sees the feed from 6 m. At 1.7, 11.7
+        // it happened under the gym camera (the first record, 2026-10-30).
+        [SerializeField] private Vector3 feedPoint = new Vector3(2.9f, 0f, 11.4f);
         [SerializeField] private Vector3 logPoint = new Vector3(-2.9f, 0f, 14.6f);
         [SerializeField] private string logItemId = "test_log";
         [SerializeField] private Vector3 keyPoint = new Vector3(-2.9f, 0f, 15.4f);
@@ -60,6 +65,9 @@ namespace GlorifiedBody.Tutorial
         public Vector3 BarsPoint => barsPoint;
         public Vector3 MonitorsPoint => monitorsPoint;
         public Vector3 CapsulePoint => capsulePoint;
+        public Vector3 FeedPoint => feedPoint;
+        /// <summary>The body of the feed step (a dead lab worker), or null before the step.</summary>
+        public FeedableBody FeedBody { get; private set; }
         public Vector3 LogPoint => logPoint;
         public string LogItemId => logItemId;
         public Vector3 KeyPoint => keyPoint;
@@ -85,6 +93,8 @@ namespace GlorifiedBody.Tutorial
         private ShortController shortController;
         private DrugInventory drugs;
         private ItemPickup capsule;
+        private int feedsAtEnter;
+        private bool feedMissing;
         private LockOnTargetable shooterTarget;
         private Interactor interactor;
         private PsychicScanner scanner;
@@ -306,6 +316,13 @@ namespace GlorifiedBody.Tutorial
                 "Face the capsule. {Interact} asks, {Interact} again takes it. {UseDrug} opens your drugs: {Interact} asks, {Interact} again uses it, and MK fills.",
                 () => drugUsed,
                 onEnter: () => { if (stats != null) stats.DebugSet(CapsuleStepMk, stats.Short); }));
+            // The feed (Bruno, 2026-10-30: her only HP; "yes" to a tutorial step, placeholder lines): a dead lab worker
+            // lies in the gym, and the step starts with half her HP.
+            steps.Add(new TutorialStep("feed",
+                "You are hurt. Nothing in this room heals you. The dead do. Feed.",
+                "Face the body. {Interact} asks, {Interact} again feeds: HP comes back. Only a body gives HP.",
+                () => feedMissing || (Feeding != null && Feeding.Feeds > feedsAtEnter && !Feeding.IsFeeding),
+                onEnter: StartFeedStep));
             steps.Add(new TutorialStep("log",
                 "A record was left by the wall. Take it. Read it.",
                 "Face the record. {Interact} asks to take it, {Interact} again takes it, {Back} leaves it. {Interact} closes the page. Taken already? {Inventory}, select it, {Interact} reads it.",
@@ -390,6 +407,34 @@ namespace GlorifiedBody.Tutorial
             if (stats != null && !shortBegan && !stats.IsShortFull && (shortController == null || !shortController.IsActive))
                 stats.DebugSet(stats.Nalcon, PsychicStats.MaxShort);
             if (drugs != null && !shortEnded && drugs.Count(DrugType.Red) == 0) drugs.Add(DrugType.Red, 1);
+        }
+
+        private Feeding Feeding => tank != null ? tank.GetComponent<Feeding>() : null; // Interactor adds it in older rooms
+
+        private void StartFeedStep()
+        {
+            feedsAtEnter = Feeding != null ? Feeding.Feeds : 0;
+            Health hers = stats != null ? stats.Health : null;
+            if (hers != null) hers.SetHealth(hers.MaxHealth * FeedStepHp);
+            if (FeedBody == null) StartCoroutine(LayFeedBody());
+        }
+
+        /// <summary>A lab worker (the room kit's prefab) dies at the feed point; without the prefabs the step ends by itself.</summary>
+        private System.Collections.IEnumerator LayFeedBody()
+        {
+            GameObject prefab = Resources.Load<GameObject>(EnemySpawn.Folder + "labworker");
+            if (prefab == null)
+            {
+                feedMissing = true;
+                Debug.LogWarning("[TutorialDirector] no Resources/Enemies/labworker: the feed step has no body (InvectorEnemyFactory.BuildEnemyPrefabs).");
+                yield break;
+            }
+            GameObject body = Instantiate(prefab, feedPoint, Quaternion.Euler(0f, 90f, 0f));
+            body.name = FeedBodyName;
+            yield return null; // its own Awake and Start first
+            body.GetComponent<Health>()?.SetHealth(0f);
+            FeedBody = body.GetComponent<FeedableBody>();
+            RunTelemetry.Event("tutorial_feed_body", FeedBody != null ? "laid" : "no FeedableBody");
         }
 
         /// <summary>

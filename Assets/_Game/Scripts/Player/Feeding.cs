@@ -14,10 +14,20 @@ namespace GlorifiedBody.Player
     /// A hit on her stops the feed: she keeps what she took and the body keeps the rest. The feed stops at her full
     /// HP too. No one tends a body she feeds on (CorpseCare). Numbers PROPOSED, after the exp of a kill (civilians
     /// most). Interactor adds this to her when a room's Lucy lacks it.
+    /// The look (Bruno, 2026-10-30: "a crouch + sound + blood effects for now"): blood sprays from the body's chest and a
+    /// wet sound every BloodSeconds (the gore driver's spray, without the hit bus: no other system takes it as a hit).
+    /// The ones who see a feed react (OnFeedStarted, EnemyMorale.SeeFeed).
     /// </summary>
     public sealed class Feeding : MonoBehaviour
     {
         public const float FeedSeconds = 2.5f;
+        public const float BloodSeconds = 0.6f; // a spray and a wet sound this often, PROPOSED
+
+        /// <summary>A feed starts: where the body lies. The witnesses react (EnemyMorale).</summary>
+        public static event System.Action<Feeding, FeedableBody> OnFeedStarted;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetOnLoad() => OnFeedStarted = null;
 
         /// <summary>The HP a body of the rank gives (Bruno: "civilians give more hp back as usual"). PROPOSED.</summary>
         public static int ValueOf(EnemyMorale.Rank rank)
@@ -40,6 +50,7 @@ namespace GlorifiedBody.Player
         private float rate;
         private float started;
         private float gained;
+        private float nextBlood;
 
         public bool IsFeeding => target != null;
         public FeedableBody Target => target;
@@ -47,6 +58,8 @@ namespace GlorifiedBody.Player
         /// <summary>The HP of the last feed, and why it ended ("done", "full", "hit", "dead", "gone").</summary>
         public float LastGain { get; private set; }
         public string LastEnd { get; private set; } = "";
+        /// <summary>The blood sprays of the feeds so far (the gore driver played them).</summary>
+        public int BloodSprays { get; private set; }
 
         private void Awake()
         {
@@ -81,8 +94,10 @@ namespace GlorifiedBody.Player
                 if (tank != null) tank.Teleport(transform.position, Quaternion.LookRotation(to).eulerAngles.y);
                 else transform.rotation = Quaternion.LookRotation(to);
             }
-            GlorifiedBody.Audio.Sfx.Play(GlorifiedBody.Audio.Sfx.FleshHit, body.Point, 0.7f);
+            nextBlood = 0f;
+            Bleed();
             RunTelemetry.Event("feed_start", $"{body.name}:{body.Left:0}");
+            OnFeedStarted?.Invoke(this, body);
             return true;
         }
 
@@ -93,6 +108,7 @@ namespace GlorifiedBody.Player
             if (dt <= 0f) return;
             if (target == null) { End("gone"); return; }
             if (health.IsDead) { End("dead"); return; }
+            if (Time.time >= nextBlood) Bleed();
             float give = Mathf.Min(rate * dt, target.Left, health.MaxHealth - health.CurrentHealth);
             if (give > 0f)
             {
@@ -103,6 +119,30 @@ namespace GlorifiedBody.Player
             if (target.Left <= 0.01f) End("done");
             else if (health.CurrentHealth >= health.MaxHealth - 0.01f) End("full");
             else if (Time.time - started > FeedSeconds + 0.5f) End("done");
+        }
+
+        /// <summary>A spray of blood from the body's chest and a wet sound. The Gore option decides the spray (Off: none).</summary>
+        private void Bleed()
+        {
+            nextBlood = Time.time + BloodSeconds;
+            if (target == null) return;
+            Animator animator = target.GetComponentInChildren<Animator>();
+            Transform chest = animator != null && animator.isHuman ? animator.GetBoneTransform(HumanBodyBones.Chest) : null;
+            Vector3 at = chest != null ? chest.position : target.Point;
+            GlorifiedBody.Audio.Sfx.Play(GlorifiedBody.Audio.Sfx.FleshHit, at, 0.6f);
+            var driver = GlorifiedBody.Gore.ThatIndividual.ThatIndividualGoreDriver.Instance;
+            if (driver == null) return;
+            var weight = driver.PlayForCheck(new HitInfo
+            {
+                Attacker = gameObject,
+                Victim = target.gameObject,
+                HitTransform = chest != null ? chest : target.transform,
+                HitPoint = at,
+                HitNormal = Vector3.up,
+                DamageAmount = 12f,
+                DamageType = DamageType.EnemyMelee,
+            });
+            if (weight != GlorifiedBody.Gore.ThatIndividual.GoreHitWeight.None) BloodSprays++;
         }
 
         /// <summary>A hit with damage on her stops the feed.</summary>
