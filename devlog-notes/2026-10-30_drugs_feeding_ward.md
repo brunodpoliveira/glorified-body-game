@@ -160,6 +160,19 @@ with no load and no room crossing puts them back. With a checkpoint, the restart
 | WardTests with the fix | `runs/20261030-150633-test-playmode-728052` | 11/11 |
 | PlayMode, every suite | `runs/20261030-150826-test-playmode-728895` | 274/274 |
 
+Then he asked: "ensure that in-game civilians are hit by the shock short". The short skipped the figures on the north
+wall of the training room. Those figures are statues (no Health, no collider, `MenuLoopSetup`), and he keeps them as
+they are. Real civilians take the shocks: `CivilianTests.TheShort_HurtsACivilian`, and a new test for the patient,
+`WardTests.TheShort_HurtsThePatient_InHerBed`. WardTests, CivilianTests and ArmedCivilianTests:
+`runs/20261030-163551-test-playmode-742318`, 40/40.
+
+NEXT, his rules for the map (to build when he returns):
+
+```text
+the map will start hidden, and being revealed room-by-room unless the player picks up a floor plan item; key places
+(i.e locked door, items, logs) are to marked on the map as well.
+```
+
 ## Open for Bruno
 
 1. The numbers: the HP of each rank, the feed time of 2.5 s, half the SHORT bar for the SHORT capsule.

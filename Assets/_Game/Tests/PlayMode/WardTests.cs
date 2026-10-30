@@ -117,6 +117,26 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.Less(Vector3.Distance(bed, patient.transform.position), 0.1f, "she never left the bed");
         }
 
+        /// <summary>Bruno, 2026-10-30: "ensure that in-game civilians are hit by the shock short". The patient has her own brain.</summary>
+        [UnityTest]
+        public IEnumerator TheShort_HurtsThePatient_InHerBed()
+        {
+            foreach (string name in new[] { Marta, Lab, Guard }) Remove(name);
+            GameObject patient = GameObject.Find(Patient);
+            Vector3 bed = patient.transform.position;
+            Teleport(new Vector3(bed.x, 0f, bed.z - 1.6f), 0f);
+            yield return null;
+            ShortController shortController = lucy.GetComponent<ShortController>();
+            shortController.Begin();
+            float t0 = Time.realtimeSinceStartup; // the shocks start after the pain (2.5 s)
+            while (shortController.Victim == null && Time.realtimeSinceStartup - t0 < ShortController.StartFreeze + 2f) yield return null;
+            Health victim = shortController.Victim;
+            Assert.IsNotNull(victim, "the short found a victim");
+            Assert.AreSame(patient, victim.gameObject, "the victim is the patient");
+            Assert.Less(victim.CurrentHealth, victim.MaxHealth, "the shocks hurt her");
+            shortController.End(byDrug: false);
+        }
+
         [UnityTest]
         public IEnumerator TheScan_ReadsMarta_AndRaisesTheFlag()
         {

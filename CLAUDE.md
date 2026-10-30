@@ -328,6 +328,9 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   His answers after his manual test: rank 11 (fire, firemen) is NOT in the demo, rank 14 on hold, the short starts at
   the attack press and lasts 16 s (as built), the tutorial goes into the story path, the writer makes the death
   screens. A restart of a room puts back the story flags she came in with (`SaveSystem`, the ward's mark stayed up).
+  NEXT (his rules, build when he returns): THE MAP starts hidden, each room shows when she enters it, a floor plan item
+  shows the whole floor; locked doors, items and logs are marked. Then screens and audio logs, the outfit change, the
+  floor shield, a seam sweep, all in isolation before the demo level.
 
 ## Rules
 
