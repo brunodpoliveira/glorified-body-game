@@ -30,6 +30,7 @@ namespace GlorifiedBody.UI
         [SerializeField] private string kitTestScene = "KitTest";       // every system in one room (2026-10-26)
         [SerializeField] private string scriptTestScene = "ScriptTest"; // the ultimatum, a gate, a cutscene (2026-10-26)
         [SerializeField] private string travelTestScene = "TravelTest_A"; // two rooms and a door (2026-10-26)
+        [SerializeField] private string labTestScene = "LabTest";       // the armed lab workers, a carried key (2026-10-27)
         [SerializeField] private string subtitleLabel = "WORK IN PROGRESS";
 
         private Canvas canvas;
@@ -176,6 +177,7 @@ namespace GlorifiedBody.UI
         private void OnKitTestClicked() => GameManager.Instance?.LoadLevel(kitTestScene);
         private void OnScriptTestClicked() => GameManager.Instance?.LoadLevel(scriptTestScene);
         private void OnTravelTestClicked() => GameManager.Instance?.LoadLevel(travelTestScene);
+        private void OnLabTestClicked() => GameManager.Instance?.LoadLevel(labTestScene);
 
         private void OnStartClicked()
         {
@@ -382,6 +384,7 @@ namespace GlorifiedBody.UI
             nav.Add(CreateButton(tests.transform, "KIT TEST", 300, OnKitTestClicked, 44));
             nav.Add(CreateButton(tests.transform, "SCRIPT TEST", 300, OnScriptTestClicked, 44));
             nav.Add(CreateButton(tests.transform, "TRAVEL TEST", 300, OnTravelTestClicked, 44));
+            nav.Add(CreateButton(tests.transform, "LAB TEST", 300, OnLabTestClicked, 44));
 
             // ── Wire keyboard navigation (up/down) ──
             for (int i = 0; i < nav.Count; i++)

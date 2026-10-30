@@ -46,6 +46,11 @@ namespace GlorifiedBody.Integration.Invector.Build
             public EnemyMorale.Rank rank = EnemyMorale.Rank.Soldier;
             /// <summary>An unarmed civilian (CivilianBrain): no gun, it runs, cowers and begs.</summary>
             public bool civilian;
+            /// <summary>A shaky shooter: the lock lands up to this far off her chest (DummyShooter.AimSpread), metres.</summary>
+            public float aimSpread;
+            /// <summary>The pistol in both hands, and the gun's tremble in degrees (EnemyGun.SetHold).</summary>
+            public bool twoHanded;
+            public float shakeDegrees;
         }
 
         public static Spec SpecFor(string classId)
@@ -70,6 +75,7 @@ namespace GlorifiedBody.Integration.Invector.Build
         public static readonly string[] Kinds =
         {
             "soldier_pistol", "soldier_rifle", "soldier_gas", "guard_pistol", "guard_shield", "power_armour", "labworker", "nurse",
+            "labworker_pistol", "labworker_knife",
         };
 
         /// <summary>The spec of a kind: the class's spec with the kind's weapon and shield.</summary>
@@ -84,6 +90,15 @@ namespace GlorifiedBody.Integration.Invector.Build
                 case "power_armour": { Spec s = SpecFor("power_armour"); s.weapon = DummyShooter.Weapon.ArmourLaunchers; return s; }
                 case "labworker": return SpecFor("labworker");
                 case "nurse": return SpecFor("nurse");
+                // The armed civilians (2026-10-27, the design sweep's rank 6): lab workers that fight, and retreat at a
+                // fear of 3 (design §11.5). The pistol: both hands, a shaking gun, a spread lock. The knife: melee only,
+                // it runs at her. PROPOSED numbers.
+                case "labworker_pistol":
+                    return new Spec { classId = "labworker", health = 35f, range = 9f, weapon = DummyShooter.Weapon.Pistol, canMelee = false,
+                        rank = EnemyMorale.Rank.ArmedCivilian, aimSpread = 0.35f, twoHanded = true, shakeDegrees = 3f };
+                case "labworker_knife":
+                    return new Spec { classId = "labworker", health = 35f, range = 1.8f, weapon = DummyShooter.Weapon.Knife, canMelee = true,
+                        rank = EnemyMorale.Rank.ArmedCivilian };
                 default: return SpecFor("soldier");
             }
         }
@@ -316,6 +331,7 @@ namespace GlorifiedBody.Integration.Invector.Build
             SetBool(gunSo, "requireLineOfSight", true);
             gunSo.FindProperty("weapon").enumValueIndex = (int)spec.weapon;
             SetBool(gunSo, "canMelee", spec.canMelee);
+            SetFloat(gunSo, "aimSpread", spec.aimSpread);
             gunSo.ApplyModifiedPropertiesWithoutUndo();
 
             root.AddComponent<SoldierBrain>();
@@ -326,7 +342,14 @@ namespace GlorifiedBody.Integration.Invector.Build
             moraleSo.FindProperty("rank").enumValueIndex = (int)spec.rank;
             moraleSo.ApplyModifiedPropertiesWithoutUndo();
             if (spec.rank != EnemyMorale.Rank.Heavy) root.AddComponent<CorpseCare>();
-            BuildGun(root, scale, spec.weapon);
+            if (spec.rank == EnemyMorale.Rank.ArmedCivilian) root.AddComponent<Tremble>(); // its nerves (SoldierBrain)
+            if (spec.weapon == DummyShooter.Weapon.Knife) BuildKnife(root);
+            else BuildGun(root, scale, spec.weapon, spec.twoHanded);
+            if (root.TryGetComponent(out EnemyGun hold) && (spec.twoHanded || spec.shakeDegrees > 0f))
+            {
+                hold.SetHold(spec.twoHanded, spec.shakeDegrees);
+                EditorUtility.SetDirty(hold);
+            }
             if (spec.shield) BuildShield(root, scale);
             // The ragdoll (Bruno, 2026-10-24): the lift, the throw and a full mk_warspite knock him down. A heavy
             // never falls alive (it only staggers), but every death plays out physically (Bruno, 2026-10-27): its
@@ -415,7 +438,7 @@ namespace GlorifiedBody.Integration.Invector.Build
         /// The vendor AI handgun without its scripts and colliders: the mesh, the flash and smoke particles, the
         /// light, the audio source. EnemyGun places it at the right hand every frame.
         /// </summary>
-        private static void BuildGun(GameObject root, float rootScale, DummyShooter.Weapon weapon)
+        private static void BuildGun(GameObject root, float rootScale, DummyShooter.Weapon weapon, bool twoHanded = false)
         {
             // The launchers (frag, gas, the power armour's frag and rockets) use the vendor shotgun as a placeholder.
             bool launcher = weapon == DummyShooter.Weapon.GrenadeLauncher || weapon == DummyShooter.Weapon.GasLauncher || weapon == DummyShooter.Weapon.ArmourLaunchers;
@@ -424,8 +447,8 @@ namespace GlorifiedBody.Integration.Invector.Build
             int animatorId = weapon == DummyShooter.Weapon.Rifle ? 2 : launcher ? 3 : 1;
             GameObject gun = StrippedVendorModel(path, "Gun", root, rootScale);
             if (gun == null) return;
-            // The left-hand grip stays on the long guns (EnemyGun holds the gun with both hands).
-            foreach (string unused in weapon == DummyShooter.Weapon.Pistol ? new[] { "AimReference", "leftHandIK" } : new[] { "AimReference" })
+            // The left-hand grip stays on the long guns and the two-hand pistol (EnemyGun holds them with both hands).
+            foreach (string unused in weapon == DummyShooter.Weapon.Pistol && !twoHanded ? new[] { "AimReference", "leftHandIK" } : new[] { "AimReference" })
             {
                 Transform t = FindDeep(gun.transform, unused);
                 if (t != null) Object.DestroyImmediate(t.gameObject);
@@ -460,6 +483,61 @@ namespace GlorifiedBody.Integration.Invector.Build
             EnemyGun enemyGun = root.AddComponent<EnemyGun>();
             enemyGun.Bind(gun.transform, muzzle, flashes.ToArray(), smoke, light, source, animatorId, animatorId);
             EditorUtility.SetDirty(enemyGun);
+        }
+
+        public const string KnifeMaterialFolder = "Assets/_Game/Rendering/Materials";
+
+        /// <summary>
+        /// The knife of the knife scientist: a PLACEHOLDER of two boxes (a dark grip 0.11 m, a steel blade 0.17 m),
+        /// our own data (no vendor knife exists), its tip the "muzzle" EnemyGun points along the strike. The vendor
+        /// animator keeps its unarmed set (upper body 0): the strike is the vendor attack plus the overhead stab.
+        /// </summary>
+        private static void BuildKnife(GameObject root)
+        {
+            float scale = Mathf.Max(0.01f, root.transform.lossyScale.y);
+            var knife = new GameObject("Gun"); // the same name as the gun models
+            knife.transform.SetParent(root.transform, false);
+            knife.transform.localScale = Vector3.one / scale; // the root carries the model scale: the knife in metres
+            Material grip = KnifeMaterial("GB_Knife_Grip", new Color(0.08f, 0.08f, 0.09f), 0.3f, 0f);
+            Material steel = KnifeMaterial("GB_Knife_Blade", new Color(0.72f, 0.74f, 0.78f), 0.75f, 1f);
+            KnifePart(knife.transform, "Grip", new Vector3(0f, 0f, 0.025f), new Vector3(0.025f, 0.03f, 0.11f), grip);
+            KnifePart(knife.transform, "Blade", new Vector3(0f, 0.004f, 0.165f), new Vector3(0.004f, 0.026f, 0.17f), steel);
+            var tip = new GameObject("muzzle").transform;
+            tip.SetParent(knife.transform, false);
+            tip.localPosition = new Vector3(0f, 0f, 0.25f);
+            SetLayer(knife, LayerMask.NameToLayer("Enemy"));
+            EnemyGun enemyGun = root.AddComponent<EnemyGun>();
+            enemyGun.Bind(knife.transform, tip, new ParticleSystem[0], null, null, null, 0, 0);
+            EditorUtility.SetDirty(enemyGun);
+        }
+
+        private static void KnifePart(Transform parent, string name, Vector3 position, Vector3 size, Material material)
+        {
+            GameObject part = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            part.name = name;
+            Object.DestroyImmediate(part.GetComponent<Collider>());
+            part.transform.SetParent(parent, false);
+            part.transform.localPosition = position;
+            part.transform.localScale = size;
+            part.GetComponent<Renderer>().sharedMaterial = material;
+        }
+
+        private static Material KnifeMaterial(string name, Color colour, float smoothness, float metallic)
+        {
+            string path = $"{KnifeMaterialFolder}/{name}.mat";
+            Shader shader = Shader.Find("Universal Render Pipeline/Lit");
+            var material = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (material == null)
+            {
+                material = new Material(shader);
+                AssetDatabase.CreateAsset(material, path);
+            }
+            material.shader = shader;
+            material.SetColor("_BaseColor", colour);
+            material.SetFloat("_Smoothness", smoothness);
+            material.SetFloat("_Metallic", metallic);
+            EditorUtility.SetDirty(material);
+            return material;
         }
 
         /// <summary>A vendor weapon prefab, unpacked under the root, without its scripts and colliders.</summary>

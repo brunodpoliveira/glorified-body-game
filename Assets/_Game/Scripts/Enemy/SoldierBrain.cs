@@ -31,6 +31,9 @@ namespace GlorifiedBody.Enemy
     /// Morale (EnemyMorale, design §11.4 and §11.5): a colleague's death shocks it (Shock: it stops, loses its
     /// aim, flinches, barks) and adds fear; a guard at its limit retreats (Retreat: it sprints away from her, then
     /// cowers in a crouch and never attacks again). CorpseCare: it tends a dead colleague (Phase.Care).
+    /// A knife (DummyShooter.Weapon.Knife, the knife scientist, 2026-10-27) makes it a rusher: no firing spot and no
+    /// cover, it runs at her, finds her again every RushRepathSeconds, and strikes when she is in melee range.
+    /// An armed civilian (the lab worker with a pistol) trembles while alerted, and more when it cowers.
     /// </summary>
     [RequireComponent(typeof(DummyShooter), typeof(Health))]
     public sealed class SoldierBrain : MonoBehaviour, IFearful, ICarer
@@ -60,6 +63,7 @@ namespace GlorifiedBody.Enemy
         private bool aimStarted;
         private bool driftLogged;
         private Transform player;
+        private Tremble tremble;
 
         public Phase Current { get; private set; } = Phase.Idle;
         public bool Engaged => Time.frameCount - lastEngageFrame <= 2;
@@ -67,6 +71,8 @@ namespace GlorifiedBody.Enemy
         /// <summary>The barricade he stands behind, or null.</summary>
         public Breakable Cover { get; private set; }
 
+        private const float RushRepathSeconds = 0.3f; // the knife finds her again this often
+        private const float ArmedCivilianNerves = 0.35f; // the tremble of an alerted armed civilian, PROPOSED
         private const float CoverStandOff = 0.9f;    // m behind the barricade's middle
         private const float CoverMinRange = 2.5f;    // m from her: closer is no cover
         private const float CoverExtraRange = 4f;    // m beyond the preferred range
@@ -82,6 +88,8 @@ namespace GlorifiedBody.Enemy
         public int Moves { get; private set; }
         public int ShootPhases { get; private set; }
         public IEnemyBody Body => body;
+        /// <summary>A knife: it runs at her and strikes, it never stops at a firing spot.</summary>
+        public bool Rusher => gun != null && gun.WeaponKind == DummyShooter.Weapon.Knife;
         public DummyShooter Gun => gun;
         public bool Alerted { get; private set; }
         public int ShockCount { get; private set; }
@@ -93,10 +101,12 @@ namespace GlorifiedBody.Enemy
         /// <summary>A soldier tends a body only while he does not see her (CorpseCare).</summary>
         public bool CareIgnoresHer => false;
         // The care barks (barks.csv, the writer, 2026-10-25): the guard's and the soldier's own.
-        public string CareStartLine => IsGuard ? "Hey. Hey buddy. Look at me. Look at me." : "Casualty. I'm on it.";
-        public string DragLine => IsGuard ? "Come on. I'm getting you out of here. I'm getting you out." : "Pulling out. Cover me. Cover me.";
-        public string CprLine => IsGuard ? "One. Two. Three. Four. Five. Come on. Come on." : "Come on. Come on, breathe. Don't you do this.";
+        // The armed lab worker's lines are PLACEHOLDERS until the writer gives them.
+        public string CareStartLine => IsArmedCivilian ? "Oh no. No no no. Can you hear me?" : IsGuard ? "Hey. Hey buddy. Look at me. Look at me." : "Casualty. I'm on it.";
+        public string DragLine => IsArmedCivilian ? "I've got you. I've got you. Please." : IsGuard ? "Come on. I'm getting you out of here. I'm getting you out." : "Pulling out. Cover me. Cover me.";
+        public string CprLine => IsArmedCivilian ? "Breathe. Please breathe. Please." : IsGuard ? "One. Two. Three. Four. Five. Come on. Come on." : "Come on. Come on, breathe. Don't you do this.";
         private bool IsGuard => GetComponent<EnemyMorale>() is EnemyMorale m && m.RankOf == EnemyMorale.Rank.Guard;
+        private bool IsArmedCivilian => GetComponent<EnemyMorale>() is EnemyMorale m && m.RankOf == EnemyMorale.Rank.ArmedCivilian;
         public string AlertReason { get; private set; } = "";
         /// <summary>Where she is: her real position once alerted, else the last seen position.</summary>
         public Vector3 TargetPosition => Alerted && player != null ? player.position : body.TargetPosition;
@@ -109,6 +119,7 @@ namespace GlorifiedBody.Enemy
             gun.HoldFire = true;
             gun.RequireLineOfSight = true;
             gun.OnStaggered += Hold;
+            tremble = GetComponent<Tremble>();
         }
 
         private void OnEnable()
@@ -233,6 +244,8 @@ namespace GlorifiedBody.Enemy
             }
 
             if (!Alerted && body.CanSeeTarget) Alert("sight", callOthers: true);
+            // An armed civilian is no fighter: its hands shake while it hunts her, and it shakes hard when it cowers.
+            if (tremble != null && IsArmedCivilian) tremble.Amount = Current == Phase.Cower ? 1f : Alerted ? ArmedCivilianNerves : 0f;
 
             if (Current == Phase.Retreat)
             {
@@ -310,7 +323,9 @@ namespace GlorifiedBody.Enemy
             Hold(seconds);
             body?.Flinch(transform.position + transform.forward, false);
             // PLACEHOLDER lines: the writer owns the barks.
-            string[] lines = gruesome ? new[] { "OH GOD...", "WHAT DID SHE DO TO HIM?", "JESUS!" } : new[] { "NO!", "MAN DOWN!" };
+            string[] lines = IsArmedCivilian
+                ? (gruesome ? new[] { "OH GOD. OH GOD.", "SHE TORE HIM APART!" } : new[] { "NO! NOT HIM!", "SOMEBODY HELP!" })
+                : gruesome ? new[] { "OH GOD...", "WHAT DID SHE DO TO HIM?", "JESUS!" } : new[] { "NO!", "MAN DOWN!" };
             Bark.Say(gameObject, lines[Random.Range(0, lines.Length)]);
             RunTelemetry.Event("soldier_shocked", $"{name}:{seconds:0.0}s{(gruesome ? ":gruesome" : "")}");
         }
@@ -335,7 +350,7 @@ namespace GlorifiedBody.Enemy
             body.Crouch(false);
             body.MoveTo(Spot, MoveSpeed.Sprint);
             timer = 8f;
-            Bark.Say(gameObject, "FALL BACK! FALL BACK!"); // PLACEHOLDER line
+            Bark.Say(gameObject, IsArmedCivilian ? "I CAN'T. I CAN'T DO THIS!" : "FALL BACK! FALL BACK!"); // PLACEHOLDER lines
             RunTelemetry.Event("soldier_retreat", $"{name}:{reason} to {Spot.x:0.0},{Spot.z:0.0}");
         }
 
@@ -392,7 +407,8 @@ namespace GlorifiedBody.Enemy
                     gun.HoldFire = body.IsMoving && !gun.HoldsSlot;
                     timer -= dt;
                     bool fired = gun.ShotsFired > shotsAtShootStart && !gun.HoldsSlot;
-                    if (fired || (timer <= 0f && !gun.HoldsSlot)) StartMove();
+                    bool gotAway = Rusher && !gun.HoldsSlot && Distance() > gun.MeleeRange; // a knife does not wait for her
+                    if (fired || gotAway || (timer <= 0f && !gun.HoldsSlot)) StartMove();
                     break;
             }
         }
@@ -423,7 +439,7 @@ namespace GlorifiedBody.Enemy
             Spot = spot;
             bool sprint = (spot - transform.position).magnitude > sprintOver;
             body.MoveTo(spot, sprint ? MoveSpeed.Sprint : MoveSpeed.Run);
-            timer = Random.Range(moveSeconds.x, moveSeconds.y);
+            timer = Rusher ? RushRepathSeconds : Random.Range(moveSeconds.x, moveSeconds.y);
             moveStarted = Time.time;
             Current = Phase.Move;
             Moves++;
@@ -437,6 +453,11 @@ namespace GlorifiedBody.Enemy
         private Vector3 PickSpot()
         {
             Vector3 target = TargetPosition;
+            if (Rusher)
+            {
+                // A knife goes for her: the NavMesh point next to her.
+                return NavMesh.SamplePosition(target, out NavMeshHit at, 1.5f, NavMesh.AllAreas) ? at.position : target;
+            }
             Vector3 chest = target + Vector3.up * GlorifiedBody.Characters.Body.ChestHeight;
             if (TryCoverSpot(target, chest, out Vector3 covered)) return covered;
             Vector3 away = transform.position - target;

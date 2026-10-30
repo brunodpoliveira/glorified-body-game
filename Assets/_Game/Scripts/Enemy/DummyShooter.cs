@@ -27,7 +27,7 @@ namespace GlorifiedBody.Enemy
     public sealed class DummyShooter : MonoBehaviour, IStaggerable
     {
         public enum State { Idle, Aiming, Telegraph, Firing, Cooldown, Staggered, Dead }
-        public enum Weapon { Pistol, Rifle, GrenadeLauncher, GasLauncher, ArmourLaunchers }
+        public enum Weapon { Pistol, Rifle, GrenadeLauncher, GasLauncher, ArmourLaunchers, Knife } // Knife: melee only (2026-10-27)
         public enum Attack { None, Shot, Burst, Grenade, Melee, Gas, Rocket }
 
         [SerializeField] private string enemyId = "dummy_shooter";
@@ -64,6 +64,8 @@ namespace GlorifiedBody.Enemy
         [SerializeField, Min(0.5f)] private float meleeReach = 2.2f;   // the strike lands within this
         [SerializeField, Range(10f, 180f)] private float meleeArc = 70f; // degrees each side of his facing
         [SerializeField, Min(0f)] private float meleeDamage = 20f;
+        [Tooltip("A shaky shooter (the armed lab worker): the locked point lands up to this far off her chest, in metres.")]
+        [SerializeField, Min(0f)] private float aimSpread;
 
         private Health health;
         private Transform player;
@@ -90,6 +92,9 @@ namespace GlorifiedBody.Enemy
         public Weapon WeaponKind { get => weapon; set => weapon = value; }
         public bool CanMelee { get => canMelee; set => canMelee = value; }
         public float MeleeRange => meleeRange;
+        public float AimSpread { get => aimSpread; set => aimSpread = Mathf.Max(0f, value); }
+        /// <summary>How far the last lock landed off her chest (the spread), in metres.</summary>
+        public float LastMissDistance { get; private set; }
         public float GrenadeRadius => grenadeRadius;
         public float GrenadeMinDistance => grenadeMinDistance;
         /// <summary>The ranged attack of a weapon.</summary>
@@ -101,6 +106,7 @@ namespace GlorifiedBody.Enemy
                 case Weapon.GrenadeLauncher: return Attack.Grenade;
                 case Weapon.GasLauncher: return Attack.Gas;
                 case Weapon.ArmourLaunchers: return Attack.Grenade; // and Rocket, one after the other
+                case Weapon.Knife: return Attack.None; // a knife only strikes
                 default: return Attack.Shot;
             }
         }
@@ -121,6 +127,7 @@ namespace GlorifiedBody.Enemy
                 Weapon.GrenadeLauncher => "grenades",
                 Weapon.GasLauncher => "gas",
                 Weapon.ArmourLaunchers => "launchers",
+                Weapon.Knife => "knife",
                 _ => "pistol"
             };
             return classId + "_" + w;
@@ -233,6 +240,7 @@ namespace GlorifiedBody.Enemy
                     {
                         Current = State.Telegraph;
                         timer = telegraphLength;
+                        LockWithSpread();
                         RunTelemetry.Event("enemy_telegraph", $"{enemyId}:{CurrentAttack}");
                     }
                     break;
@@ -262,6 +270,7 @@ namespace GlorifiedBody.Enemy
             if (canMelee && distance <= meleeRange) return Attack.Melee;
             if (distance > range) return Attack.None;
             Attack ranged = RangedAttackOf(weapon);
+            if (ranged == Attack.None) return Attack.None;
             if (weapon == Weapon.ArmourLaunchers && nextIsRocket) ranged = Attack.Rocket;
             if ((IsLobbed(ranged) || ranged == Attack.Rocket) && distance < grenadeMinDistance) return Attack.None;
             return ranged;
@@ -269,6 +278,23 @@ namespace GlorifiedBody.Enemy
 
         /// <summary>The gun aims at her chest, a grenade at the floor under her.</summary>
         private Vector3 AimFor(Attack attack, Vector3 chest) => IsLobbed(attack) ? new Vector3(chest.x, player.position.y, chest.z) : chest;
+
+        /// <summary>
+        /// The lock of a shaky shooter: the point moves off her chest, square to the line of fire, up to aimSpread.
+        /// A shot that misses still flies to the locked point (the telegraph shows where). Gun shots only.
+        /// </summary>
+        private void LockWithSpread()
+        {
+            LastMissDistance = 0f;
+            if (aimSpread <= 0f || (CurrentAttack != Attack.Shot && CurrentAttack != Attack.Burst)) return;
+            Vector3 line = aimPoint - Muzzle;
+            if (line.sqrMagnitude < 0.0001f) return;
+            Vector3 side = Vector3.Cross(Vector3.up, line).normalized;
+            Vector2 offset = Random.insideUnitCircle * aimSpread;
+            aimPoint += side * offset.x + Vector3.up * offset.y;
+            LastMissDistance = offset.magnitude;
+            RunTelemetry.Event("enemy_aim_spread", $"{enemyId}:{LastMissDistance:0.00}");
+        }
 
         /// <summary>The time from the laser to the attack: the difficulty's, one third laser, two thirds circle.</summary>
         private void SplitTiming(out float aim, out float telegraph)

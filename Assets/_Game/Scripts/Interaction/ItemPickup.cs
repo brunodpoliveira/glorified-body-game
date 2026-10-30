@@ -12,7 +12,12 @@ namespace GlorifiedBody.Interaction
     {
         public ItemDefinition item;
 
-        public override bool Available => base.Available && item != null;
+        public override bool Available => base.Available && item != null && !Taken;
+
+        /// <summary>She took it, or a load removed it: the saves count it as taken, even while it is still in the room.</summary>
+        public bool Taken { get; private set; }
+
+        public void MarkTaken() => Taken = true;
 
         public string Name => item != null ? "the " + ItemDefinition.Spoken(item.displayName) : "it";
 
@@ -26,6 +31,7 @@ namespace GlorifiedBody.Interaction
         {
             ItemInventory inventory = who != null ? who.Inventory : null;
             if (inventory == null || !inventory.TryAdd(item)) return "full:" + item.itemId;
+            Taken = true;
             gameObject.SetActive(false);
             Destroy(gameObject);
             return "taken:" + item.itemId;

@@ -205,8 +205,9 @@ namespace GlorifiedBody.Saving
             foreach (string path in baselineFigures)
                 if (!aliveFigures.Contains(path) && !room.dead.Contains(path)) room.dead.Add(path); // destroyed since
             var presentItems = new HashSet<string>();
-            foreach (ItemPickup pickup in UnityEngine.Object.FindObjectsByType<ItemPickup>(FindObjectsSortMode.None))
-                if (pickup.gameObject.scene == scene) presentItems.Add(ScenePaths.Of(pickup.transform));
+            // A hidden item counts too (a carrier's drop waits inactive until the carrier dies, ItemCarrier).
+            foreach (ItemPickup pickup in UnityEngine.Object.FindObjectsByType<ItemPickup>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                if (pickup.gameObject.scene == scene && !pickup.Taken) presentItems.Add(ScenePaths.Of(pickup.transform));
             foreach (string path in baselineItems)
                 if (!presentItems.Contains(path)) room.taken.Add(path);
             foreach (LockedDoor door in UnityEngine.Object.FindObjectsByType<LockedDoor>(FindObjectsSortMode.None))
@@ -272,6 +273,7 @@ namespace GlorifiedBody.Saving
                 if (bodies.Contains(path)) continue;
                 GameObject figure = ScenePaths.Find(scene, path);
                 if (figure == null) continue;
+                if (figure.TryGetComponent(out ItemCarrier carrier)) carrier.DropNow(); // the item stays in the room
                 figure.SetActive(false); // a dead one with no saved body (an older file, a destroyed figure) stays gone
                 goneByLoad.Add(path);
             }
@@ -279,6 +281,7 @@ namespace GlorifiedBody.Saving
             {
                 GameObject item = ScenePaths.Find(scene, path);
                 if (item == null) continue;
+                if (item.TryGetComponent(out ItemPickup taken)) taken.MarkTaken();
                 item.SetActive(false);
                 UnityEngine.Object.Destroy(item);
             }

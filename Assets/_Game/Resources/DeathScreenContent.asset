@@ -114,3 +114,17 @@ MonoBehaviour:
       it with mk_orzabal and send it back.'
     voiceLine: {fileID: 0}
     voiceText: 
+  - killerId: labworker_pistol
+    picture: {fileID: 0}
+    pictureNote: 'PLACEHOLDER: the lab worker''s pistol, both hands shaking'
+    hint: 'PLACEHOLDER HINT: the lab worker''s aim shakes and can miss. Do not stand
+      still in the circle.'
+    voiceLine: {fileID: 0}
+    voiceText: 
+  - killerId: labworker_knife
+    picture: {fileID: 0}
+    pictureNote: 'PLACEHOLDER: the knife over her, the lab coat behind it'
+    hint: 'PLACEHOLDER HINT: the knife runs at you. Dodge when it raises the knife,
+      then strike.'
+    voiceLine: {fileID: 0}
+    voiceText: 

@@ -13,8 +13,12 @@ namespace GlorifiedBody.Enemy
     /// On the aim: a click and the aim pose. On the shot: the flash particles, the smoke, a short light, a fire
     /// sound, the shot animation. The weapon (DummyShooter.WeaponKind) picks the sound set and the vendor
     /// animator's weapon set (upperBodyId, shotId). A melee strike plays the vendor attack and a swing or hit sound.
+    /// A knife (2026-10-27) uses the same hand: its tip is the muzzle, it has no flash, and its strike comes down
+    /// from over the shoulder. The armed lab worker holds its pistol in both hands (twoHanded) and the gun shakes
+    /// (shakeDegrees): no fighter, a scientist with a gun.
     /// </summary>
     [RequireComponent(typeof(DummyShooter))]
+    [DefaultExecutionOrder(30)] // after Tremble (20): a shaking hand carries its gun (the armed lab worker)
     public sealed class EnemyGun : MonoBehaviour
     {
         [SerializeField] private Transform gun;
@@ -28,6 +32,9 @@ namespace GlorifiedBody.Enemy
         [SerializeField, Range(0f, 45f)] private float restDownDegrees = 25f;
         [SerializeField] private int upperBodyId = 1; // the vendor weapon's own ids: handgun 1, rifle 2, shotgun 3
         [SerializeField] private int shotId = 1;
+        [SerializeField] private bool twoHanded;                       // a pistol in both hands
+        [SerializeField, Range(0f, 15f)] private float shakeDegrees;    // the gun's tremble, PROPOSED
+        [SerializeField, Min(0.1f)] private float shakeFrequency = 7f;  // noise steps per second
 
         private static readonly int UpperBodyId = Animator.StringToHash("UpperBody_ID");
         private static readonly int IsAimingId = Animator.StringToHash("IsAiming");
@@ -65,6 +72,17 @@ namespace GlorifiedBody.Enemy
         public int MeleeSwings { get; private set; }
         public Transform Muzzle => muzzle;
         public Transform Model => gun;
+        public bool TwoHanded => twoHanded;
+        public float ShakeDegrees => shakeDegrees;
+        /// <summary>The gun's tremble in the last frame, in degrees (0 when still). For the tests.</summary>
+        public float LastShake { get; private set; }
+
+        /// <summary>The armed lab worker's hold: both hands on the pistol, and the gun shakes by up to the degrees.</summary>
+        public void SetHold(bool bothHands, float shake)
+        {
+            twoHanded = bothHands;
+            shakeDegrees = shake;
+        }
 
         public void Bind(Transform gunRoot, Transform muzzlePoint, ParticleSystem[] flashSystems, ParticleSystem smokeSystem, Light light, AudioSource audioSource, int upperBody = 1, int shot = 1)
         {
@@ -111,7 +129,7 @@ namespace GlorifiedBody.Enemy
                             main.loop = false;
                         }
             // A long gun is held with both hands: the left hand goes to the vendor's grip point on the gun.
-            if (animator != null && animator.isHuman && upperBodyId != 1 && gun != null)
+            if (animator != null && animator.isHuman && (upperBodyId != 1 || twoHanded) && gun != null)
             {
                 leftGrip = FindDeep(gun, "leftHandIK");
                 leftUpper = animator.GetBoneTransform(HumanBodyBones.LeftUpperArm);
@@ -121,7 +139,7 @@ namespace GlorifiedBody.Enemy
                 rightUpper = animator.GetBoneTransform(HumanBodyBones.RightUpperArm);
                 rightLower = animator.GetBoneTransform(HumanBodyBones.RightLowerArm);
                 rightKnuckle = animator.GetBoneTransform(HumanBodyBones.RightMiddleProximal);
-                shouldered = rightUpper != null && rightLower != null && hand != null && muzzle != null && FindStock(out stockLocal);
+                shouldered = upperBodyId != 1 && rightUpper != null && rightLower != null && hand != null && muzzle != null && FindStock(out stockLocal);
             }
             ragdoll = GetComponent<IRagdollBody>();
             brain = GetComponent<SoldierBrain>();
@@ -257,9 +275,24 @@ namespace GlorifiedBody.Enemy
                 aim = Quaternion.AngleAxis(restDownDegrees, Vector3.Cross(Vector3.up, flatForward)) * flatForward;
             }
             if (aim.sqrMagnitude < 0.0001f) aim = transform.forward;
+            aim = Shake(aim);
             Point(aim);
             gun.position = hand.position + aim.normalized * gripForward;
             if (leftGrip != null && !HandsFree) Reach(leftUpper, leftLower, leftHand, null, leftGrip.position, -transform.up - transform.right * 0.3f, Vector3.zero);
+        }
+
+        /// <summary>The tremble of a shaky hold: noise turns of the aim, up to shakeDegrees on each axis.</summary>
+        private Vector3 Shake(Vector3 aim)
+        {
+            LastShake = 0f;
+            if (shakeDegrees <= 0f || (health != null && health.IsDead) || HandsFree) return aim;
+            float t = Time.time * shakeFrequency;
+            float yaw = (Mathf.PerlinNoise(t, 3.7f) - 0.5f) * 2f * shakeDegrees;
+            float pitch = (Mathf.PerlinNoise(11.3f, t) - 0.5f) * 2f * shakeDegrees;
+            LastShake = Mathf.Max(Mathf.Abs(yaw), Mathf.Abs(pitch));
+            Vector3 side = Vector3.Cross(Vector3.up, aim);
+            if (side.sqrMagnitude < 0.0001f) side = transform.right;
+            return Quaternion.AngleAxis(yaw, Vector3.up) * Quaternion.AngleAxis(pitch, side.normalized) * aim;
         }
 
         /// <summary>

@@ -308,6 +308,13 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   vAIMotor writes `animator.speed` every frame), a shock spasm and a fire panic in code (Invector has no clip), a jolt
   under a fear pose. Lucy flinches on an upper-body "Hit" layer. The RFab hit clips are out of the game. Bot
   `play AiTest Main_Menu reactions 400` (record mode for clips).
+- 2026-10-29, THE ARMED LAB WORKERS (`devlog-notes/2026-10-29_armed_civilians.md`, the sweep's rank 6; Bruno: the story
+  docs are out of date, so names and numbers are PROPOSED): kinds `labworker_knife` (`DummyShooter.Weapon.Knife`, melee
+  only, `SoldierBrain.Rusher` runs at her, a two-box placeholder knife) and `labworker_pistol` (both hands,
+  `EnemyGun.SetHold` shake, `DummyShooter.AimSpread` 0.35 m), rank `ArmedCivilian` (fear limit 3, `Tremble` nerves).
+  `EnemyGun` runs at order 30 (after `Tremble`). A carried item: `EnemySpawn.drop` (a hidden pickup of the room) gives
+  the figure an `ItemCarrier`; at the death it lies beside the body, clear of the limbs. The saves count hidden pickups
+  (`ItemPickup.Taken`). LAB TEST room (`LabTestSetup`, in git), `ArmedCivilianTests` (8), bot `play LabTest Main_Menu lab 300`.
 
 ## Rules
 

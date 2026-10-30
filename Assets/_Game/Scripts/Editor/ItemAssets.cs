@@ -32,6 +32,7 @@ namespace GlorifiedBody.Editor
             Drug(DrugType.DFelon, "D-FELON", DFelonColour);
             TestLog();
             TestKey();
+            LabCard();
             AssetDatabase.SaveAssets();
         }
 
@@ -58,6 +59,12 @@ namespace GlorifiedBody.Editor
         public static ItemDefinition TestKey()
         {
             return Item("test_key", "TEST KEY", ItemKind.Key, KeyColour, "A placeholder key card. It opens the locked door of the gym.", "", DrugType.Nalcon);
+        }
+
+        /// <summary>The key card an armed lab worker carries in the LAB TEST room (ItemCarrier). PLACEHOLDER words.</summary>
+        public static ItemDefinition LabCard()
+        {
+            return Item("lab_card", "LAB KEY CARD", ItemKind.Key, KeyColour, "A placeholder key card from a lab worker's coat. It opens the store room of the lab.", "", DrugType.Nalcon);
         }
 
         private static ItemDefinition Item(string id, string name, ItemKind kind, Color colour, string description, string logText, DrugType drug)

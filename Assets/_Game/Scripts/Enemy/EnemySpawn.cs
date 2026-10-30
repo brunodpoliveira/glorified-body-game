@@ -14,10 +14,12 @@ namespace GlorifiedBody.Enemy
     {
         public const string Folder = "Enemies/";
 
-        [Tooltip("The prefab name in Resources/Enemies: soldier_pistol, soldier_rifle, soldier_gas, guard_pistol, guard_shield, power_armour, labworker, nurse.")]
+        [Tooltip("The prefab name in Resources/Enemies: soldier_pistol, soldier_rifle, soldier_gas, guard_pistol, guard_shield, power_armour, labworker, nurse, labworker_pistol, labworker_knife.")]
         public string kind = "soldier_pistol";
         [Tooltip("A civilian's pose variant (CivilianBrain.SetVariant), or -1 for the prefab's own.")]
         public int variant = -1;
+        [Tooltip("An item of the room the figure carries: hidden until it dies, then on the floor beside the body (ItemCarrier).")]
+        public GlorifiedBody.Interaction.ItemPickup drop;
 
         public static int Spawned { get; private set; }
         public static int Missing { get; private set; }
@@ -42,6 +44,7 @@ namespace GlorifiedBody.Enemy
             figure.name = figureName;
             figure.transform.SetSiblingIndex(transform.GetSiblingIndex());
             if (variant >= 0 && figure.TryGetComponent(out CivilianBrain civilian)) civilian.SetVariant(variant);
+            if (drop != null) figure.AddComponent<GlorifiedBody.Interaction.ItemCarrier>().Bind(drop);
             Spawned++;
             Destroy(gameObject);
             return figure;

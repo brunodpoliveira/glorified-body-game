@@ -1,6 +1,34 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!114 &-8961439278164189706
+--- !u!114 &-8869626650080302209
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c98aadafa8d79206c856aa5f0c235721, type: 3}
+  m_Name: Is Alerted
+  m_EditorClassIdentifier: Assembly-CSharp::GlorifiedBody.Integration.Invector.GbAlertedDecision
+  parentFSM: {fileID: 0}
+  editingName: 0
+  trueRect:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 10
+    height: 10
+  falseRect:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 10
+    height: 10
+  selectedTrue: 0
+  selectedFalse: 0
+--- !u!114 &-8644469506772308120
 MonoBehaviour:
   m_ObjectHideFlags: 1
   m_CorrespondingSourceObject: {fileID: 0}
@@ -16,7 +44,22 @@ MonoBehaviour:
   executionType: 1
   editingName: 0
   checkForObstacles: 1
---- !u!114 &-6411120891197496890
+--- !u!114 &-8538934968635503608
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d4294f65f714852ce88954d46c5b3879, type: 3}
+  m_Name: Move Or Shoot
+  m_EditorClassIdentifier: Assembly-CSharp::GlorifiedBody.Integration.Invector.GbEngageAction
+  parentFSM: {fileID: 0}
+  executionType: 5
+  editingName: 0
+--- !u!114 &-4773174651013711727
 MonoBehaviour:
   m_ObjectHideFlags: 1
   m_CorrespondingSourceObject: {fileID: 0}
@@ -55,16 +98,16 @@ MonoBehaviour:
   transitions:
   - decisions:
     - trueValue: 1
-      decision: {fileID: 716805548660843709}
+      decision: {fileID: -8869626650080302209}
       isValid: 0
       validated: 0
-    trueState: {fileID: 7199206750354138670}
+    trueState: {fileID: 6194016990234601517}
     falseState: {fileID: 0}
     muteTrue: 0
     muteFalse: 0
     transitionType: 0
     transitionDelay: 0
-    parentState: {fileID: -6411120891197496890}
+    parentState: {fileID: -4773174651013711727}
     trueRect:
       serializedVersion: 2
       x: 0
@@ -86,12 +129,38 @@ MonoBehaviour:
     scroolView: {x: 0, y: 0, z: 0}
     sameTargetCount: 0
   actions:
-  - {fileID: -8961439278164189706}
+  - {fileID: -8644469506772308120}
   useActions: 1
   useDecisions: 1
   parentGraph: {fileID: 11400000}
   defaultTransition: {fileID: 0}
---- !u!114 &-4418665224031320821
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a5fc604039227434d8b4e63ebc5e74a5, type: 3}
+  m_Name: FSM_GB_Soldier
+  m_EditorClassIdentifier: Assembly-CSharp::Invector.vCharacterController.AI.FSMBehaviour.vFSMBehaviour
+  selectedNode: {fileID: 0}
+  wantConnection: 0
+  connectionNode: {fileID: 0}
+  showProperties: 0
+  states:
+  - {fileID: 4549198339198679848}
+  - {fileID: 8571375581426225721}
+  - {fileID: -4773174651013711727}
+  - {fileID: 6194016990234601517}
+  panOffset: {x: 0, y: 0}
+  overNode: 0
+  actions: []
+  decisions: []
+  icon: {fileID: 0}
+--- !u!114 &4549198339198679848
 MonoBehaviour:
   m_ObjectHideFlags: 1
   m_CorrespondingSourceObject: {fileID: 0}
@@ -131,77 +200,8 @@ MonoBehaviour:
   useActions: 0
   useDecisions: 0
   parentGraph: {fileID: 11400000}
-  defaultTransition: {fileID: -6411120891197496890}
---- !u!114 &11400000
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a5fc604039227434d8b4e63ebc5e74a5, type: 3}
-  m_Name: FSM_GB_Soldier
-  m_EditorClassIdentifier: Assembly-CSharp::Invector.vCharacterController.AI.FSMBehaviour.vFSMBehaviour
-  selectedNode: {fileID: 0}
-  wantConnection: 0
-  connectionNode: {fileID: 0}
-  showProperties: 0
-  states:
-  - {fileID: -4418665224031320821}
-  - {fileID: 7727160912511549767}
-  - {fileID: -6411120891197496890}
-  - {fileID: 7199206750354138670}
-  panOffset: {x: 0, y: 0}
-  overNode: 0
-  actions: []
-  decisions: []
-  icon: {fileID: 0}
---- !u!114 &716805548660843709
-MonoBehaviour:
-  m_ObjectHideFlags: 1
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c98aadafa8d79206c856aa5f0c235721, type: 3}
-  m_Name: Is Alerted
-  m_EditorClassIdentifier: Assembly-CSharp::GlorifiedBody.Integration.Invector.GbAlertedDecision
-  parentFSM: {fileID: 0}
-  editingName: 0
-  trueRect:
-    serializedVersion: 2
-    x: 0
-    y: 0
-    width: 10
-    height: 10
-  falseRect:
-    serializedVersion: 2
-    x: 0
-    y: 0
-    width: 10
-    height: 10
-  selectedTrue: 0
-  selectedFalse: 0
---- !u!114 &4833364343024891358
-MonoBehaviour:
-  m_ObjectHideFlags: 1
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d4294f65f714852ce88954d46c5b3879, type: 3}
-  m_Name: Move Or Shoot
-  m_EditorClassIdentifier: Assembly-CSharp::GlorifiedBody.Integration.Invector.GbEngageAction
-  parentFSM: {fileID: 0}
-  executionType: 5
-  editingName: 0
---- !u!114 &7199206750354138670
+  defaultTransition: {fileID: -4773174651013711727}
+--- !u!114 &6194016990234601517
 MonoBehaviour:
   m_ObjectHideFlags: 1
   m_CorrespondingSourceObject: {fileID: 0}
@@ -240,16 +240,16 @@ MonoBehaviour:
   transitions:
   - decisions:
     - trueValue: 0
-      decision: {fileID: 7703024190562127058}
+      decision: {fileID: 6807070665497177863}
       isValid: 0
       validated: 0
-    trueState: {fileID: -6411120891197496890}
+    trueState: {fileID: -4773174651013711727}
     falseState: {fileID: 0}
     muteTrue: 0
     muteFalse: 0
     transitionType: 0
     transitionDelay: 0
-    parentState: {fileID: 7199206750354138670}
+    parentState: {fileID: 6194016990234601517}
     trueRect:
       serializedVersion: 2
       x: 0
@@ -271,12 +271,12 @@ MonoBehaviour:
     scroolView: {x: 0, y: 0, z: 0}
     sameTargetCount: 0
   actions:
-  - {fileID: 4833364343024891358}
+  - {fileID: -8538934968635503608}
   useActions: 1
   useDecisions: 1
   parentGraph: {fileID: 11400000}
   defaultTransition: {fileID: 0}
---- !u!114 &7703024190562127058
+--- !u!114 &6807070665497177863
 MonoBehaviour:
   m_ObjectHideFlags: 1
   m_CorrespondingSourceObject: {fileID: 0}
@@ -304,7 +304,7 @@ MonoBehaviour:
     height: 10
   selectedTrue: 0
   selectedFalse: 0
---- !u!114 &7727160912511549767
+--- !u!114 &8571375581426225721
 MonoBehaviour:
   m_ObjectHideFlags: 1
   m_CorrespondingSourceObject: {fileID: 0}
