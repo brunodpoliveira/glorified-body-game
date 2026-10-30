@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Devlog visuals catalog: lists the stills and the clips the writer can name in a script.
 
-Walks ~/glorified-body-renders/ (override: GB_RENDERS), skips frame sequences (files named 0001.png) and the
+Walks ~/MEGA/glorified-body-renders/ (override: GB_RENDERS), skips frame sequences (files named 0001.png) and the
 proxies, caps each folder at 40 stills, and writes:
-  ~/glorified-body-renders/devlog/VISUALS.md    for the writer (a copy goes to the writers' folder, see --copy)
-  ~/glorified-body-renders/devlog/visuals.json  for assemble.py
+  ~/MEGA/glorified-body-renders/devlog/VISUALS.md    for the writer (a copy goes to the writers' folder, see --copy)
+  ~/MEGA/glorified-body-renders/devlog/visuals.json  for assemble.py
 Run: python3 -I catalog.py [--copy /path/to/the-glorified-body/devlog]
 """
 import json
@@ -12,7 +12,7 @@ import os
 import subprocess
 import sys
 
-ROOT = os.environ.get("GB_RENDERS", os.path.expanduser("~/glorified-body-renders"))
+ROOT = os.environ.get("GB_RENDERS", os.path.expanduser("~/MEGA/glorified-body-renders"))
 OUT = os.path.join(ROOT, "devlog")
 STILL = {".png", ".jpg", ".jpeg", ".webp"}
 CLIP = {".mp4", ".mov", ".webm"}

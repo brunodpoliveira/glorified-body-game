@@ -17,7 +17,7 @@ def thumb(p):
     return [v - m for v in px]
 def dist(a,b): return sum((x-y)**2 for x,y in zip(a,b))/len(a)
 for n in sys.argv[1:]: refs[n] = thumb(n)
-roots = [os.path.expanduser(r) for r in ('~/glorified-body-renders', '~/MEGA/code/reality-fabricator/the-glorified-body', '~/Pictures', '~/Downloads')]
+roots = [os.path.expanduser(r) for r in ('~/MEGA/glorified-body-renders', '~/MEGA/code/reality-fabricator/the-glorified-body', '~/Pictures', '~/Downloads')]
 best={n:[] for n in refs}
 count=0
 for root in roots:

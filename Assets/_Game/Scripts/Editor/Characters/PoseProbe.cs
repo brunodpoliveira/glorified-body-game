@@ -66,7 +66,7 @@ namespace GlorifiedBody.Editor.Characters
             string json = Automation.AutomationArgs.Get("-gbPleaJson");
             string output = Automation.AutomationArgs.Get("-gbOut", Path.Combine(
                 System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile),
-                "glorified-body-renders/game/civilians/plea_probe/plea_sheet.png"));
+                "MEGA/glorified-body-renders/game/civilians/plea_probe/plea_sheet.png"));
             string figure = Automation.AutomationArgs.Get("-gbFigure", "labworker");
             int renderMax = int.Parse(Automation.AutomationArgs.Get("-gbRenderMax", "8"));
             float at = float.Parse(Automation.AutomationArgs.Get("-gbAt", "1.0"), System.Globalization.CultureInfo.InvariantCulture);

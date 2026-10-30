@@ -7,8 +7,8 @@ const { execSync } = require('child_process');
 
 const BE = process.env.RFAB_BACKEND || '/home/pc/MEGA/code/reality-fabricator/rfab-backend';
 const BASE = process.env.BASE || 'http://localhost:3000';
-// The local account: EMAIL, or the first line of ~/glorified-body-renders/devlog/account.txt (private, not in git).
-const ACCOUNT_FILE = path.join(process.env.HOME, 'glorified-body-renders/devlog/account.txt');
+// The local account: EMAIL, or the first line of ~/MEGA/glorified-body-renders/devlog/account.txt (private, not in git).
+const ACCOUNT_FILE = path.join(process.env.HOME, 'MEGA/glorified-body-renders/devlog/account.txt');
 const EMAIL = process.env.EMAIL || (fs.existsSync(ACCOUNT_FILE) ? fs.readFileSync(ACCOUNT_FILE, 'utf8').split('\n')[0].trim() : '');
 
 function mintToken() {

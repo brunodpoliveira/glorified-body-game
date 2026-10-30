@@ -116,6 +116,6 @@ it is about 230,000 ($4.60).
 
 ## 7. Working rules
 
-1. Renders and big files go in `~/glorified-body-renders/`, never inside `~/MEGA`.
+1. Renders and big files go in `~/MEGA/glorified-body-renders/`, never inside `~/MEGA`.
 2. One Blender render at a time, through `kit/run_blender.sh` (RAM cap). Unity through its wrapper.
 3. Show Bruno a picture or a clip with every result. Never "it should look fine".

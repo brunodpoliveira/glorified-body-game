@@ -59,7 +59,7 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   for the whole game: render scale 2/3 (720p of 1080p), linear upscale, hard shadows only, per-pixel spots.
   Textures: `tools/look_textures.sh` (RFab Nano Banana, 1024 px, mirror wrap) with
   `tools/look_textures_procedural.py` as the fallback (RFab gap 11: the default model draws scenes). F11 in the
-  training room loads the look test room. Shots for Bruno's pick: `~/glorified-body-renders/game/look_test/`.
+  training room loads the look test room. Shots for Bruno's pick: `~/MEGA/glorified-body-renders/game/look_test/`.
 - 2026-10-22, the second look test (`devlog-notes/2026-10-22_look_test2.md`), after Bruno's morning rulings
   (F10 is the editor's menu key, 2K textures and clarity, the relief painted in the texture and subtle greebles
   on concrete, a camera for every section): `LookTest2.unity` is the skylight corridor of T12 GALLERY_v3 plus
@@ -322,7 +322,7 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
    (RAM gate, one batch slot shared with Warspite, run folders in `runs/`). One batch Unity at a time. Close the
    editor before a batch run.
 2. `.megaignore` keeps Library, Temp, Logs, UserSettings, builds, `runs/` and the vendor folders out of MEGA. Keep
-   it. Renders and captures go in `~/glorified-body-renders/game/`.
+   it. Renders and captures go in `~/MEGA/glorified-body-renders/game/`.
 3. Keyboard and mouse only for now. Render pipeline: URP. Input: the legacy Input Manager with the KeyCode remapper.
 4. Packages (Bruno, 2026-10-20): Invector Shooter + FSM AI templates and Gore System URP (That Individual), imported
    from `~/.local/share/unity3d/Asset Store-5.x/` with `tools/unity.sh import`, plus Warspite2's gore and Invector

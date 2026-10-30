@@ -16,7 +16,7 @@ Next: step 4, the look test (one room greyboxed, then dressed two ways).
 
 ## The characters
 
-The models come from the RFab 3D Studio (T19, `~/glorified-body-renders/T19_characters/models/`), 2,500
+The models come from the RFab 3D Studio (T19, `~/MEGA/glorified-body-renders/T19_characters/models/`), 2,500
 triangles each, a mixamo rig, idle, walk and run. `tools/characters.sh` turns each one into an FBX plus a 1024 px
 base colour under `Assets/_Game/Characters/Models/` (Blender 5.2 in the background), and measures the travel of
 each clip into `<class>.clips.json` (`tools/characters_clips.py`). Then

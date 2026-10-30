@@ -16,7 +16,7 @@ for (let i = 2; i < process.argv.length; i++) {
 }
 if (!args.script || !args.out) { console.error('usage: node narrate.js --script <script.md> --out <dir> [--cache <dir>] [--voices <json>] [--dry]'); process.exit(2); }
 
-const VOICES = JSON.parse(fs.readFileSync(args.voices || path.join(process.env.HOME, 'glorified-body-renders/devlog/voices.json'), 'utf8'));
+const VOICES = JSON.parse(fs.readFileSync(args.voices || path.join(process.env.HOME, 'MEGA/glorified-body-renders/devlog/voices.json'), 'utf8'));
 const script = parse(fs.readFileSync(args.script, 'utf8'));
 const voiceName = script.meta.voice || 'me';
 const voice = VOICES[voiceName];

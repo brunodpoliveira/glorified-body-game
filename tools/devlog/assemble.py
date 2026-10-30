@@ -4,7 +4,7 @@
 Each section lasts as long as its narration plus a short pad. Its visuals share that time evenly. A still gets a
 slow push-in, a clip is cut (or held on its last frame), a card is drawn here. kind: long = 1920x1080,
 short = 1080x1920 with the title on top and the section text as a caption.
-Run: python3 -I assemble.py --timing <dir>/timing.json [--renders ~/glorified-body-renders] [--label v1]
+Run: python3 -I assemble.py --timing <dir>/timing.json [--renders ~/MEGA/glorified-body-renders] [--label v1]
 Out: <dir>/final.mp4, <dir>/contact_sheet.png, <dir>/REVIEW.md, <dir>/seg/ (the pieces)
 """
 import argparse
@@ -224,7 +224,7 @@ def review_md(timing, sections, starts, out_dir, label, total):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--timing", required=True)
-    ap.add_argument("--renders", default=os.path.expanduser("~/glorified-body-renders"))
+    ap.add_argument("--renders", default=os.path.expanduser("~/MEGA/glorified-body-renders"))
     ap.add_argument("--label", default="")
     a = ap.parse_args()
     timing = json.load(open(a.timing))

@@ -17,7 +17,7 @@
 #   record <Level> [StartScene] [bot] [timeoutSec]
 #                               The play run with video: the bot saves 1080p30 frames of its steps,
 #                               ffmpeg makes clips/<step>.mp4, copies go to
-#                               ~/glorified-body-renders/devlog/clips/{latest,<stamp>}/. (slot: batch)
+#                               ~/MEGA/glorified-body-renders/devlog/clips/{latest,<stamp>}/. (slot: batch)
 #   import <file.unitypackage>  Batch: import an Asset Store package (unity assets import). (slot: batch)
 #   triage <run-dir>            Re-run log triage on a run folder.
 #
@@ -232,7 +232,7 @@ case "$mode" in
       return $rc
     }
     encode_clips() {  # frames/<clip>/00001.png -> clips/<clip>.mp4 (1080p30), then the frames go
-      local out="$RUN/clips" dest="${GB_CLIPS_DIR:-$HOME/glorified-body-renders/devlog/clips}" stamp
+      local out="$RUN/clips" dest="${GB_CLIPS_DIR:-$HOME/MEGA/glorified-body-renders/devlog/clips}" stamp
       stamp=$(date +%Y%m%d-%H%M)
       mkdir -p "$out"
       for d in "$RUN"/frames/*/; do

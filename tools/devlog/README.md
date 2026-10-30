@@ -6,11 +6,11 @@ voice clone on RFab), the long video (16:9) and the short (9:16), plus a review 
 ## The loop
 
 1. The game agent ends each step with a note in `devlog-notes/` and, when the editor is closed, the bot video run
-   `tools/unity.sh record TrainingRoom`. The clips land in `~/glorified-body-renders/devlog/clips/latest/`.
+   `tools/unity.sh record TrainingRoom`. The clips land in `~/MEGA/glorified-body-renders/devlog/clips/latest/`.
 2. The writer writes `devlog/<ep>/long_vN.md` and `short_vN.md` in the writers' folder (reality-fabricator,
    `the-glorified-body/devlog/`). It names visuals from `VISUALS.md` in that folder (made by `catalog.py`).
 3. At night: `tools/devlog/night.sh <ep>` (add `--record` for fresh clips). About 10 minutes for a 6-minute video.
-4. In the morning Bruno watches `~/glorified-body-renders/devlog/<ep>/vN/long/final.mp4` and the short, and writes
+4. In the morning Bruno watches `~/MEGA/glorified-body-renders/devlog/<ep>/vN/long/final.mp4` and the short, and writes
    notes in `NOTES.md` next to each.
 5. The writer reads the notes and writes `vN+1`. The next night run renders only the changed sections.
 
@@ -21,7 +21,7 @@ voice clone on RFab), the long video (16:9) and the short (9:16), plus a review 
 episode: 0
 kind: long            long = 1920x1080. short = 1080x1920, the title on top, the section text as a caption.
 title: Why the series became a game
-voice: me             a name in ~/glorified-body-renders/devlog/voices.json (RFab voice ids, private)
+voice: me             a name in ~/MEGA/glorified-body-renders/devlog/voices.json (RFab voice ids, private)
 ---
 
 ## 1. Cold open
@@ -34,7 +34,7 @@ The words the voice reads. Several lines are fine. A section is one idea, 20 to 
 
 - A section lasts as long as its narration plus 0.6 s. Its visuals share that time evenly.
 - `still` gets a slow push-in. `clip` is cut to the range (or held on its last frame). `seq` is a folder of
-  numbered PNG frames. `card` is drawn here. Ids are paths under `~/glorified-body-renders/`.
+  numbered PNG frames. `card` is drawn here. Ids are paths under `~/MEGA/glorified-body-renders/`.
 - A missing file does not stop the build: a card names it, and the review table shows it.
 - Rules for every episode (T13): the sponsor line said and shown in the first 10 s, a calm title, no shock words.
 - Full transparency (Bruno, 2026-10-21, CANON): name every tool, model and provider that did work in what the

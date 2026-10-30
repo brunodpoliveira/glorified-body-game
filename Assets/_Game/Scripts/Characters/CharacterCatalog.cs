@@ -19,7 +19,7 @@ namespace GlorifiedBody.Characters
     }
 
     /// <summary>
-    /// The nine demo classes of T19 (`~/glorified-body-renders/T19_characters/models/`), as the game sees them.
+    /// The nine demo classes of T19 (`~/MEGA/glorified-body-renders/T19_characters/models/`), as the game sees them.
     /// Built by CreateCharacterAssets, loaded from Resources. Heights are Bruno's (2026-10-21).
     /// </summary>
     public sealed class CharacterCatalog : ScriptableObject

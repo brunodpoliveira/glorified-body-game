@@ -7,13 +7,13 @@
 # detail... on concrete more subtle: weathering, cracks, concrete tiles"): the prompts ask for seams, stains,
 # cracks and chips with a slight shadow, so the picture carries the relief a normal map would.
 # The gear emblem, the CRT face and the light panel come from tools/look_textures_procedural.py.
-# Output: ~/glorified-body-renders/game/look_test/textures/nb2k/<name>_1.png, the log and the cost line.
+# Output: ~/MEGA/glorified-body-renders/game/look_test/textures/nb2k/<name>_1.png, the log and the cost line.
 #   tools/look_textures.sh          make the pictures (skips the ones already made)
 #   tools/look_textures.sh import   copy them into Assets/_Game/Rendering/Textures/<name>.png (the fern keyed to alpha)
 # Needs the RFab API key in ~/.rfab-api-key (never printed).
 set -u
 RFAB="node /home/pc/MEGA/code/reality-fabricator/rfab-backend/scripts/ops/rfab.js"
-OUT="$HOME/glorified-body-renders/game/look_test/textures/nb2k"
+OUT="$HOME/MEGA/glorified-body-renders/game/look_test/textures/nb2k"
 TOP="$(cd "$(dirname "$0")/.." && pwd)"
 ASSETS="$TOP/Assets/_Game/Rendering/Textures"
 MODEL="seegen:nano-banana-pro"

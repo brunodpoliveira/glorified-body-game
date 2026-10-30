@@ -55,7 +55,7 @@ Measured in the tests:
 - The gunman: the gun shakes 3.3 degrees, the body trembles 1.7 degrees, the wrists are 0.09 m apart, the worst miss is 0.20 m.
 - The card lies 0.50 m from the hips, 0.21 m from the nearest limb, on the floor.
 
-Clips for Bruno (1920 x 1080): `~/glorified-body-renders/game/lab/clips/`, shots in `~/glorified-body-renders/game/lab/shots/`
+Clips for Bruno (1920 x 1080): `~/MEGA/glorified-body-renders/game/lab/clips/`, shots in `~/MEGA/glorified-body-renders/game/lab/shots/`
 
 | Clip | It shows |
 |---|---|

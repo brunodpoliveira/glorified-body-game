@@ -8,13 +8,13 @@
 #   --record    first run the bot with video (tools/unity.sh record). Waits up to 8 h for the editor to close.
 #   --skip-short  the long video only
 # Scripts: $GB_SCRIPTS/<ep>/long_vN.md, short_vN.md (default: the-glorified-body/devlog in reality-fabricator)
-# Out:     ~/glorified-body-renders/devlog/<ep>/vN/{long,short}/final.mp4, contact_sheet.png, REVIEW.md, NOTES.md
-#          and ~/glorified-body-renders/devlog/<ep>/vN/night.log
+# Out:     ~/MEGA/glorified-body-renders/devlog/<ep>/vN/{long,short}/final.mp4, contact_sheet.png, REVIEW.md, NOTES.md
+#          and ~/MEGA/glorified-body-renders/devlog/<ep>/vN/night.log
 set -uo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TOP="$(cd "$HERE/../.." && pwd)"
 SCRIPTS="${GB_SCRIPTS:-/home/pc/MEGA/code/reality-fabricator/the-glorified-body/devlog}"
-RENDERS="${GB_RENDERS:-$HOME/glorified-body-renders}"
+RENDERS="${GB_RENDERS:-$HOME/MEGA/glorified-body-renders}"
 
 ep="${1:?episode folder required, for example ep00}"; shift
 version=""; record=0; skip_short=0
