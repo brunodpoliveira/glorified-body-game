@@ -325,6 +325,9 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   bot `play WardTest Main_Menu ward 400`. Later that night (his answers): the feed sprays blood (`Feeding.Bleed`, the gore
   driver's `PlayForCheck`), witnesses react (`EnemyMorale.SeeFeed`, placeholder lines), a tutorial "feed" step (23 steps,
   record the tutorial with a 900 s limit). FOR LATER: the armour knee test fails in about half the runs.
+  His answers after his manual test: rank 11 (fire, firemen) is NOT in the demo, rank 14 on hold, the short starts at
+  the attack press and lasts 16 s (as built), the tutorial goes into the story path, the writer makes the death
+  screens. A restart of a room puts back the story flags she came in with (`SaveSystem`, the ward's mark stayed up).
 
 ## Rules
 

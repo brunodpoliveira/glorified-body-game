@@ -40,6 +40,10 @@ namespace GlorifiedBody.Saving
         private static readonly HashSet<string> baselineItems = new HashSet<string>();
         // What a load took away: it counts as dead / taken at the next save.
         private static readonly HashSet<string> goneByLoad = new HashSet<string>();
+        // The story flags as she came into the room: a restart of the room puts them back (Bruno, 2026-10-30: the
+        // ward's red mark stayed up after a restart).
+        private static readonly List<string> entryFlags = new List<string>();
+        private static string currentRoom;
 
         public static string Folder
         {
@@ -357,9 +361,19 @@ namespace GlorifiedBody.Saving
                 pending = null;
                 StoryFlags.Set(null);
                 WorldState.Clear();
+                currentRoom = null;
+                entryFlags.Clear();
                 return;
             }
             Baseline(scene);
+            bool restart = scene.name == currentRoom && pending == null && !WorldState.Travelling;
+            currentRoom = scene.name;
+            if (restart) StoryFlags.Set(entryFlags); // the room comes back as she found it, the story too
+            else
+            {
+                entryFlags.Clear();
+                entryFlags.AddRange(StoryFlags.All);
+            }
             if (pending != null && pending.scene == scene.name)
             {
                 SaveData data = pending;
@@ -428,6 +442,8 @@ namespace GlorifiedBody.Saving
             baselineFigures.Clear();
             baselineItems.Clear();
             goneByLoad.Clear();
+            entryFlags.Clear();
+            currentRoom = null;
             SceneManager.sceneLoaded -= OnSceneLoaded;
             SceneManager.sceneLoaded += OnSceneLoaded;
         }

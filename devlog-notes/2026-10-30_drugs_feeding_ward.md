@@ -133,6 +133,33 @@ Shots and clips for Bruno: `~/MEGA/glorified-body-renders/game/ward/`
 | `shots/ward_02_marta_mark.png`, `clips/ward_03_marta.mp4` | Marta dies, and the mark shows on the wall |
 | `shots/ward_03_feed.png`, `clips/ward_04_feed.mp4` | Lucy crouches at a dead lab worker: HP 30 to 70 |
 
+## 7. His manual test and his answers (same day)
+
+```text
+Rank 11:no
+rank 14: on hold still
+rank 18:the short starts the moment the player presses the attack button
+short is 16 seocnds
+it will be, the writer agent will write the final ascript and adjust if necessary
+ the death screen + graphics will be made by the writer agent as well
+red sauqre stays set on restarting the ward test scenario
+```
+
+- Rank 11 (the fire, the alarm, the sprinklers, the firemen) is not in the demo.
+- The short starts at the attack press, and it lasts 16 s. The game does this now: no change.
+- The tutorial goes into the story path. The writer writes the final script. The writer also makes the death screens and their pictures.
+
+The fault: a restart of the room (Restart in the pause menu, or Retry on the death screen, with no save in this
+game) reloads the room as she found it, but the story flags stayed. So `marta_killed` stayed up and the red mark
+showed on a living Marta. Now `SaveSystem` keeps the flags as she came into the room. A reload of the same room
+with no load and no room crossing puts them back. With a checkpoint, the restart loads it, and its flags apply.
+
+| Check | Run | Result |
+|---|---|---|
+| The new test `WardTests.ARestart_WithNoCheckpoint_TakesHerFateBack_AndTheMarkHides`, without the fix | `runs/20261030-150447-test-playmode-727346` | FAILS (10/11) |
+| WardTests with the fix | `runs/20261030-150633-test-playmode-728052` | 11/11 |
+| PlayMode, every suite | `runs/20261030-150826-test-playmode-728895` | 274/274 |
+
 ## Open for Bruno
 
 1. The numbers: the HP of each rank, the feed time of 2.5 s, half the SHORT bar for the SHORT capsule.

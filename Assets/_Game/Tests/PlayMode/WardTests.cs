@@ -151,6 +151,22 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.IsTrue(GameObject.Find("Gate_MartaKilled").GetComponent<FlagGate>().Showing, "and the mark");
         }
 
+        /// <summary>Bruno, 2026-10-30: "red square stays set on restarting the ward test scenario".</summary>
+        [UnityTest]
+        public IEnumerator ARestart_WithNoCheckpoint_TakesHerFateBack_AndTheMarkHides()
+        {
+            Kill(Marta);
+            yield return null;
+            Assert.IsTrue(StoryFlags.Has("marta_killed"));
+            Assert.IsFalse(SaveSystem.HasSessionCheckpoint, "no save and no checkpoint in this game");
+            // The pause's Restart and the death screen's Retry.
+            if (!GameManager.Instance.RestartFromLatestCheckpoint()) GameManager.Instance.RestartLevel();
+            yield return InRoom();
+            yield return null;
+            Assert.IsFalse(StoryFlags.Has("marta_killed"), "the room comes back as she found it, the story too");
+            Assert.IsFalse(GameObject.Find("Gate_MartaKilled").GetComponent<FlagGate>().Showing, "no mark: Marta lives again");
+        }
+
         [UnityTest]
         public IEnumerator LeavingWithMartaAlive_RaisesSpared()
         {
