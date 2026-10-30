@@ -299,7 +299,16 @@ namespace GlorifiedBody.Editor.Characters
             t = airborne.AddTransition(locomotion); t.hasExitTime = false; t.duration = 0.1f; t.AddCondition(AnimatorConditionMode.IfNot, 0f, "Airborne");
             t = sm.AddAnyStateTransition(dead); t.hasExitTime = false; t.duration = 0.1f; t.canTransitionToSelf = false; t.AddCondition(AnimatorConditionMode.If, 0f, "Dead");
 
-            if (lucy) AddHitLayer(controller, invector);
+            if (lucy)
+            {
+                // The feed (Bruno, 2026-10-30: HP only from feeding on a body): she crouches at the body (the vendor clip).
+                controller.AddParameter("Feeding", AnimatorControllerParameterType.Bool);
+                AnimatorState feed = sm.AddState("Feed");
+                feed.motion = Pick(invector, idle, "the feed", "Crouch_Idle");
+                t = sm.AddAnyStateTransition(feed); t.hasExitTime = false; t.duration = 0.25f; t.canTransitionToSelf = false; t.AddCondition(AnimatorConditionMode.If, 0f, "Feeding");
+                t = feed.AddTransition(locomotion); t.hasExitTime = false; t.duration = 0.3f; t.AddCondition(AnimatorConditionMode.IfNot, 0f, "Feeding");
+                AddHitLayer(controller, invector);
+            }
 
             EditorUtility.SetDirty(controller);
             return controller;

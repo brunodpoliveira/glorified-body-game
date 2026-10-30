@@ -32,6 +32,7 @@ namespace GlorifiedBody.Tutorial
     {
         public const string SceneName = "Tutorial";
         public const float CompleteDelay = 2.5f;
+        public const float CapsuleStepMk = 30f; // the MK at the start of the capsule step, PROPOSED
 
         [SerializeField] private Vector3 barsPoint = new Vector3(-1.8f, 0f, 11.2f);
         [SerializeField] private Vector3 monitorsPoint = new Vector3(-2.4f, 0f, 16f);
@@ -299,10 +300,12 @@ namespace GlorifiedBody.Tutorial
                 "Lock the dummy behind it ({SwitchTarget}). mk_warspite, {PowerBlast}: the barricade takes the blast until it breaks. A thrown body breaks it too.",
                 () => Cover == null || Cover.IsBroken,
                 onEnter: () => { if (Cover != null) Cover.gameObject.SetActive(true); }));
+            // Each drug does one thing (Bruno, 2026-10-30): the MK capsule fills MK, so the step lowers MK first.
             steps.Add(new TutorialStep("capsule",
-                "A capsule lies by the bars. Take it. Use it.",
-                "Face the capsule. {Interact} asks, {Interact} again takes it. {UseDrug} opens your drugs: {Interact} asks, {Interact} again uses it, the bars refill.",
-                () => drugUsed));
+                "Your MK runs low. A capsule lies by the bars. Take it. Use it.",
+                "Face the capsule. {Interact} asks, {Interact} again takes it. {UseDrug} opens your drugs: {Interact} asks, {Interact} again uses it, and MK fills.",
+                () => drugUsed,
+                onEnter: () => { if (stats != null) stats.DebugSet(CapsuleStepMk, stats.Short); }));
             steps.Add(new TutorialStep("log",
                 "A record was left by the wall. Take it. Read it.",
                 "Face the record. {Interact} asks to take it, {Interact} again takes it, {Back} leaves it. {Interact} closes the page. Taken already? {Inventory}, select it, {Interact} reads it.",
@@ -328,13 +331,13 @@ namespace GlorifiedBody.Tutorial
                 "Face the monitors. {Scan} scans them: a short clip. It closes at its end, or with {Scan}.",
                 () => monitorsScanned));
             steps.Add(new TutorialStep("short",
-                "The overflow. Your bar is full: the next faculty shorts. A capsule ends it.",
-                "{Charge} starts the short. {UseDrug} opens your drugs: {Interact} twice ends it.",
+                "The overflow. Your bar is full: the next faculty shorts. The SHORT capsule ends it.",
+                "{Charge} starts the short. {UseDrug} opens your drugs on the SHORT capsule: {Interact} twice ends it.",
                 () => shortBegan && shortEnded,
                 onEnter: () =>
                 {
                     if (stats != null) stats.DebugSet(stats.Nalcon, PsychicStats.MaxShort);
-                    if (drugs != null) drugs.Add(DrugType.Nalcon, 1);
+                    if (drugs != null) drugs.Add(DrugType.Red, 1);
                 }));
             steps.Add(new TutorialStep("complete",
                 "Demonstration complete. Thank you, ladies and gentlemen.",
@@ -370,7 +373,9 @@ namespace GlorifiedBody.Tutorial
                 Advance();
                 return;
             }
-            if (stats != null && stats.Nalcon < PsychicStats.MaxNalcon) stats.DebugSet(PsychicStats.MaxNalcon, stats.Short);
+            // The MK never runs out here, but in the capsule step: the MK capsule needs room to fill.
+            bool capsuleStep = Current.Id == "capsule" && !drugUsed;
+            if (!capsuleStep && stats != null && stats.Nalcon < PsychicStats.MaxNalcon) stats.DebugSet(PsychicStats.MaxNalcon, stats.Short);
             if (Current.Id == "short") RearmShort();
             if (Current.Id == "capsule") RearmCapsule();
             if (Current.IsDone != null && Current.IsDone()) Advance();
@@ -384,7 +389,7 @@ namespace GlorifiedBody.Tutorial
         {
             if (stats != null && !shortBegan && !stats.IsShortFull && (shortController == null || !shortController.IsActive))
                 stats.DebugSet(stats.Nalcon, PsychicStats.MaxShort);
-            if (drugs != null && !shortEnded && drugs.Count(DrugType.Nalcon) == 0) drugs.Add(DrugType.Nalcon, 1);
+            if (drugs != null && !shortEnded && drugs.Count(DrugType.Red) == 0) drugs.Add(DrugType.Red, 1);
         }
 
         /// <summary>

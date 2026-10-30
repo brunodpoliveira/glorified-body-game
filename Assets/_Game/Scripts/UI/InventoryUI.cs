@@ -101,8 +101,16 @@ namespace GlorifiedBody.UI
             Open();
             if (!IsOpen) return false;
             drugMode = true;
+            // The choice opens on the drug she needs most (the SHORT capsule in a short), else on the first drug.
+            DrugType? need = powers != null ? powers.MostNeededDrug() : null;
+            int first = -1, wanted = -1;
             for (int i = 0; i < entries.Count; i++)
-                if (entries[i].Drug.HasValue) { Select(i); break; }
+            {
+                if (!entries[i].Drug.HasValue) continue;
+                if (first < 0) first = i;
+                if (need.HasValue && entries[i].Drug.Value == need.Value) { wanted = i; break; }
+            }
+            if (wanted >= 0 || first >= 0) Select(wanted >= 0 ? wanted : first);
             return true;
         }
 
@@ -193,7 +201,7 @@ namespace GlorifiedBody.UI
                     if (def == null)
                     {
                         e.Name = type.ToString().ToUpperInvariant();
-                        e.Words = "A drug. It ends a short and refills HP and MK.";
+                        e.Words = "A drug.";
                         e.Colour = new Color(0.4f, 0.8f, 0.4f);
                     }
                     e.Label = $"{e.Name}\nx{count}";
@@ -272,7 +280,12 @@ namespace GlorifiedBody.UI
                 bool used = powers != null && powers.UseDrug(e.Drug.Value);
                 Rebuild();
                 Select(Selected);
-                return used ? "used:" + e.Drug.Value : "none";
+                if (used || powers == null) return used ? "used:" + e.Drug.Value : "none";
+                // A drug with nothing to do stays in the inventory: say why (Bruno, 2026-10-30: each drug does one thing).
+                string why = powers.LastResult;
+                wordsText.text = why == "mk_full" ? "MK is full." : why == "short_empty" ? "The SHORT bar is empty."
+                    : why == "second_wind_ready" ? "The second wind is ready." : "It does nothing now.";
+                return "refused:" + why;
             }
             if (e.Item != null && e.Item.kind == ItemKind.Log)
             {

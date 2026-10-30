@@ -53,6 +53,7 @@ namespace GlorifiedBody.Saving
                 path = ScenePaths.Of(h.transform),
                 position = h.transform.position,
                 rotation = h.transform.rotation,
+                feedTaken = h.TryGetComponent(out GlorifiedBody.Interaction.FeedableBody fed) ? fed.Taken : 0f,
             };
             if (h.TryGetComponent(out EnemyShield shield) && shield.Dropped && shield.Model != null)
             {
@@ -165,6 +166,7 @@ namespace GlorifiedBody.Saving
             Health health = figure.GetComponent<Health>();
             if (health == null) return false;
             if (figure.TryGetComponent(out EnemyMorale morale)) morale.MarkOldDeath();
+            if (figure.TryGetComponent(out GlorifiedBody.Interaction.FeedableBody fed)) fed.Restore(state.feedTaken);
             CorpseCare.MarkTended(figure.transform);
             BodyBloodPool.MarkPooled(figure);
 

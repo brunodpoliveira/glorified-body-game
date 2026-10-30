@@ -81,8 +81,8 @@ namespace GlorifiedBody.Editor
                 -20, Type.SteadyMind, Section.Easier, Short, None, false, P(DifficultyModuleDefinition.ParamShortGainScale, 0.5f)));
             made.Add(CreateModule("deep_well", "DEEP WELL", "◉", "MK recharges twice as fast.",
                 -15, Type.DeepWell, Section.Easier, Mk, None, false, P(DifficultyModuleDefinition.ParamMkRegenScale, 2f)));
-            made.Add(CreateModule("mending", "MENDING", "✙", "HP recharges twice as fast (the outfits that recharge HP).",
-                -10, Type.Mending, Section.Easier, Hp, None, false, P(DifficultyModuleDefinition.ParamHpRegenScale, 2f)));
+            made.Add(CreateModule("mending", "MENDING", "✙", "Feeding on a body gives twice the HP.",
+                -10, Type.Mending, Section.Easier, Hp, None, false, P(DifficultyModuleDefinition.ParamFeedScale, 2f)));
 
             foreach (string guid in AssetDatabase.FindAssets("t:DifficultyModuleDefinition", new[] { AssetFolder }))
             {

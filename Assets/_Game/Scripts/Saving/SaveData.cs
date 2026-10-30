@@ -80,6 +80,8 @@ namespace GlorifiedBody.Saving
         public bool shield;
         public Vector3 shieldPosition;
         public Quaternion shieldRotation = Quaternion.identity;
+        /// <summary>The HP she took from the body by feeding (FeedableBody).</summary>
+        public float feedTaken;
     }
 
     [Serializable]

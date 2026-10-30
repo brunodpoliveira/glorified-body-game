@@ -349,6 +349,8 @@ MonoBehaviour:
   kitTestScene: KitTest
   scriptTestScene: ScriptTest
   travelTestScene: TravelTest_A
+  labTestScene: LabTest
+  wardTestScene: WardTest
   subtitleLabel: WORK IN PROGRESS
 --- !u!4 &1100764176
 Transform:

@@ -13,9 +13,10 @@ MonoBehaviour:
   m_Name: item_dfelon
   m_EditorClassIdentifier: Assembly-CSharp::GlorifiedBody.Interaction.ItemDefinition
   itemId: dfelon
-  displayName: D-FELON
+  displayName: SECOND WIND PILL
   kind: 3
   drugType: 2
   colour: {r: 0.35, g: 0.6, b: 1, a: 1}
-  description: A drug. It ends a short and refills HP and MK. One slot.
+  description: 'A drug. It gives the second wind back: the next lethal hit leaves
+    her at 1 HP. No drug gives HP. One slot.'
   logText: 

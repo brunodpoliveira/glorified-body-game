@@ -15,7 +15,6 @@ MonoBehaviour:
   outfitId: guard
   displayName: SECURITY GUARD
   maxHp: 150
-  hpRegenPerSecond: 0
   nalconRegenPerSecond: 0
   shortDecayPerSecond: 0
   drugSlotsPerType: 4

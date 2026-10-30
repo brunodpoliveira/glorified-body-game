@@ -98,6 +98,7 @@ namespace GlorifiedBody.Interaction
             Scans++;
             SetLock(true);
             GameManager.Instance?.BeginReading();
+            if (!string.IsNullOrEmpty(target.raiseFlag)) GlorifiedBody.Saving.StoryFlags.Raise(target.raiseFlag);
             Result((target.IsVideo ? "video:" : "image:") + target.scanId);
             OnScanStarted?.Invoke(target);
         }

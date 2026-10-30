@@ -47,5 +47,8 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/_Game/Scenes/LabTest.unity
     guid: 6cec300531fa515ada41dace03698c7b
+  - enabled: 1
+    path: Assets/_Game/Scenes/WardTest.unity
+    guid: c24e1a7568d033673a9bc0a590e2a90e
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0

@@ -13,9 +13,10 @@ MonoBehaviour:
   m_Name: item_red
   m_EditorClassIdentifier: Assembly-CSharp::GlorifiedBody.Interaction.ItemDefinition
   itemId: red
-  displayName: RED
+  displayName: SHORT CAPSULE
   kind: 3
   drugType: 1
   colour: {r: 0.95, g: 0.25, b: 0.22, a: 1}
-  description: A drug. It ends a short and refills HP and MK. One slot.
+  description: A drug. It takes half the SHORT bar away, and it ends a short. No
+    drug gives HP. One slot.
   logText: 

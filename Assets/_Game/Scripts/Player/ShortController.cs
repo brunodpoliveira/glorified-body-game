@@ -14,7 +14,7 @@ namespace GlorifiedBody.Player
     /// <summary>
     /// THE SHORT (design §2.8). When the SHORT bar is full, the next power starts a short: a migraine, and
     /// electric shocks fly everywhere out of her control. They do huge damage around her, and they take about
-    /// half of her HP before she stabilises. A drug ends the short at once and refills her. Numbers are PROPOSED.
+    /// half of her HP before she stabilises. The SHORT capsule ends the short at once. Numbers are PROPOSED.
     /// Bruno, 2026-10-20: it lasts 16 s. She can walk, slowly: no run, no dodge, no powers (TankController.SlowWalk).
     /// The HP drain spreads over the 16 s, and each shock does the same damage to the others as before.
     /// One enemy at a time (Bruno, 2026-10-22, design §11.4: "i want the enemies to see their colleagues dying in
@@ -126,7 +126,7 @@ namespace GlorifiedBody.Player
             pose.Play(clips.lucyPain, loop: false, unscaledTime: true, from: PoseClips.PainFrom, length: StartFreeze);
         }
 
-        /// <summary>Ends the short. A drug ends it early and refills her (the caller refills).</summary>
+        /// <summary>Ends the short. The SHORT capsule ends it early (the caller lowers the bar).</summary>
         public void End(bool byDrug)
         {
             if (!IsActive) return;

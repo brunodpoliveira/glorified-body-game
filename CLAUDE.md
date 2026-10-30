@@ -44,8 +44,7 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   full charge, a part charge is a flash that breaks the aim. The HUD warns on low HP, low nalcon and high SHORT
   (icon, "!", word, three beeps once). The second wind: the first lethal hit leaves her at 1 HP, invulnerable
   2.5 s, once. Nude outfit nalcon recharge 2 per second.
-  OPEN for Bruno: drugs with one stat each (tbc), difficulty as percentages (easy 100, normal 150, hard 200,
-  custom), the HP recharge rate. Later (Bruno, 2026-10-21): the Invector FSM AI with "move or shoot, never
+  OPEN for Bruno: difficulty as percentages (easy 100, normal 150, hard 200, custom). Drugs and HP: see 2026-10-30. Later (Bruno, 2026-10-21): the Invector FSM AI with "move or shoot, never
   both", props from free assets or Invector's placeholder weapons, the psychic scan (a clue from an object), the
   logs (grab and read).
 - 2026-10-22, step 4 built, the look test (`devlog-notes/2026-10-22_look_test.md`): `LookTest.unity` is the
@@ -315,6 +314,15 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   `EnemyGun` runs at order 30 (after `Tremble`). A carried item: `EnemySpawn.drop` (a hidden pickup of the room) gives
   the figure an `ItemCarrier`: a copy hangs on the belt while it lives, and at the death it lies beside the body, clear of the limbs. The saves count hidden pickups
   (`ItemPickup.Taken`). LAB TEST room (`LabTestSetup`, in git), `ArmedCivilianTests` (8), bot `play LabTest Main_Menu lab 300`.
+- 2026-10-30, DRUGS, FEEDING, THE WARD (`devlog-notes/2026-10-30_drugs_feeding_ward.md`, Bruno: "the only form to regain hp
+  is by feeding on fallen enemies"): each drug does one thing (`PsychicPowers.UseDrug`: MK CAPSULE `Nalcon` fills MK,
+  SHORT CAPSULE `Red` takes half the SHORT bar and ends a short, SECOND WIND PILL `DFelon` rearms the second wind; no drug
+  gives HP; a drug with nothing to do stays). NO HP REGEN in any outfit, a level gives no HP, MENDING doubles the feed.
+  `FeedableBody` (every figure) + `Feeding` (Lucy, vendor `Crouch_Idle`): Interact on a body, HP by rank (civilian 40,
+  armed civilian 30, heavy 30, soldier/guard 20), once per body, a hit stops it, `BodyState.feedTaken` in the saves. Rank
+  10: `PatientBrain` (kind `patient`: stays in bed, one line), a scan on a person (`EnemySpawn.scanImage`, at the chest),
+  `FateFlag` (`<fate>_killed/_spared/_scanned`, `RoomExit.OnLeaving`). WARD TEST room (`WardTestSetup`), `WardTests` (9),
+  bot `play WardTest Main_Menu ward 400`.
 
 ## Rules
 

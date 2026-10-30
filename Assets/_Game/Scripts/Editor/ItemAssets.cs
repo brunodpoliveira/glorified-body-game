@@ -28,8 +28,9 @@ namespace GlorifiedBody.Editor
         {
             Directory.CreateDirectory(ItemsFolder);
             Drug(DrugType.Nalcon, "MK CAPSULE", NalconColour); // NALCON before 2026-10-26 (Bruno: no "nalcon" on screen)
-            Drug(DrugType.Red, "RED", RedColour);
-            Drug(DrugType.DFelon, "D-FELON", DFelonColour);
+            // Each drug does one thing (Bruno, 2026-10-30). PLACEHOLDER names until Bruno picks them (design §10.5).
+            Drug(DrugType.Red, "SHORT CAPSULE", RedColour);
+            Drug(DrugType.DFelon, "SECOND WIND PILL", DFelonColour);
             TestLog();
             TestKey();
             LabCard();
@@ -44,8 +45,10 @@ namespace GlorifiedBody.Editor
 
         private static ItemDefinition Drug(DrugType type, string name, Color colour)
         {
-            return Item(type.ToString().ToLowerInvariant(), name, ItemKind.Drug, colour,
-                "A drug. It ends a short and refills HP and MK. One slot.", "", type);
+            string effect = type == DrugType.Nalcon ? "It fills MK."
+                : type == DrugType.Red ? "It takes half the SHORT bar away, and it ends a short."
+                : "It gives the second wind back: the next lethal hit leaves her at 1 HP.";
+            return Item(type.ToString().ToLowerInvariant(), name, ItemKind.Drug, colour, $"A drug. {effect} No drug gives HP. One slot.", "", type);
         }
 
         public static ItemDefinition TestLog()

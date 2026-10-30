@@ -529,9 +529,10 @@ namespace GlorifiedBody.Automation
             yield return null;
 
             // The short: a full bar, the attack press starts it at once (Bruno, 2026-10-20), the shocks, the slow
-            // walk, then the drug ends it.
+            // walk, then the SHORT capsule ends it (Bruno, 2026-10-30: each drug does one thing, no drug gives HP).
             Clip("short");
             stats.DebugSet(100f, 100f);
+            drugs.DebugSet(DrugType.Red, 1);
             pad.Tap(InputManager.GameAction.Charge);
             yield return null;
             yield return null;
@@ -544,8 +545,8 @@ namespace GlorifiedBody.Automation
             if (hud != null && hud.Canvas != null) yield return OverlayShot.Capture(hud.Canvas, "hud_short.png", 0.1f);
             float hpDuring = playerHealth.CurrentHealth;
             yield return DrugPress.TakeFirst(pad); // the drug key opens the choice: it asks, then it takes
-            Record("short_and_drug", shortBegan && hpDuring < hpBefore - 2f && !shortController.IsActive && !tank.SlowWalk && playerHealth.CurrentHealth >= playerHealth.MaxHealth - 0.5f,
-                $"began={shortBegan} hp {hpBefore:0} -> {hpDuring:0} -> {playerHealth.CurrentHealth:0} ended={!shortController.IsActive} slow={tank.SlowWalk} drugs={drugs.Count(DrugType.Nalcon)}");
+            Record("short_and_drug", shortBegan && hpDuring < hpBefore - 2f && !shortController.IsActive && !tank.SlowWalk && drugs.Count(DrugType.Red) == 0 && playerHealth.CurrentHealth <= hpDuring + 0.5f,
+                $"began={shortBegan} hp {hpBefore:0} -> {hpDuring:0} -> {playerHealth.CurrentHealth:0} ended={!shortController.IsActive} slow={tank.SlowWalk} short capsules={drugs.Count(DrugType.Red)}");
             if (hud != null && hud.Canvas != null) yield return OverlayShot.Capture(hud.Canvas, "hud.png", 0.2f);
             yield return Linger(1f);
             EndClip();

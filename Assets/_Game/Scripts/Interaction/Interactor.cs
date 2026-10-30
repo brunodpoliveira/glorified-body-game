@@ -44,6 +44,8 @@ namespace GlorifiedBody.Interaction
             tank = GetComponent<TankController>();
             inventory = GetComponent<ItemInventory>();
             scanner = GetComponent<PsychicScanner>();
+            // The feed (2026-10-30) came after the rooms were built: her Lucy gets it here when the room lacks it.
+            if (GetComponent<GlorifiedBody.Player.Feeding>() == null) gameObject.AddComponent<GlorifiedBody.Player.Feeding>();
         }
 
         private void OnDisable()

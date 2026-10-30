@@ -99,7 +99,7 @@ namespace GlorifiedBody.Systems
 
         public float ShortGainScale => Product(DifficultyModuleDefinition.ParamShortGainScale);
 
-        public float HpRegenScale => Product(DifficultyModuleDefinition.ParamHpRegenScale);
+        public float FeedScale => Product(DifficultyModuleDefinition.ParamFeedScale);
 
         /// <summary>An enemy attack's damage on her at the active difficulty (no manager: unchanged).</summary>
         public static float EnemyDamage(float amount) => Instance != null ? amount * Instance.EnemyDamageScale : amount;

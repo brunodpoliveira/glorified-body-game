@@ -46,6 +46,8 @@ namespace GlorifiedBody.Integration.Invector.Build
             public EnemyMorale.Rank rank = EnemyMorale.Rank.Soldier;
             /// <summary>An unarmed civilian (CivilianBrain): no gun, it runs, cowers and begs.</summary>
             public bool civilian;
+            /// <summary>A civilian that stays where the room puts it (PatientBrain): the patient in her bed.</summary>
+            public bool stayPut;
             /// <summary>A shaky shooter: the lock lands up to this far off her chest (DummyShooter.AimSpread), metres.</summary>
             public float aimSpread;
             /// <summary>The pistol in both hands, and the gun's tremble in degrees (EnemyGun.SetHold).</summary>
@@ -75,7 +77,7 @@ namespace GlorifiedBody.Integration.Invector.Build
         public static readonly string[] Kinds =
         {
             "soldier_pistol", "soldier_rifle", "soldier_gas", "guard_pistol", "guard_shield", "power_armour", "labworker", "nurse",
-            "labworker_pistol", "labworker_knife",
+            "labworker_pistol", "labworker_knife", "patient",
         };
 
         /// <summary>The spec of a kind: the class's spec with the kind's weapon and shield.</summary>
@@ -96,6 +98,9 @@ namespace GlorifiedBody.Integration.Invector.Build
                 case "labworker_pistol":
                     return new Spec { classId = "labworker", health = 35f, range = 9f, weapon = DummyShooter.Weapon.Pistol, canMelee = false,
                         rank = EnemyMorale.Rank.ArmedCivilian, aimSpread = 0.35f, twoHanded = true, shakeDegrees = 3f };
+                // The patient in her bed (rank 10, 2026-10-30): a civilian that never leaves its place.
+                case "patient":
+                    return new Spec { classId = "patient", health = 30f, canMelee = false, civilian = true, stayPut = true, rank = EnemyMorale.Rank.UnarmedCivilian };
                 case "labworker_knife":
                     return new Spec { classId = "labworker", health = 35f, range = 1.8f, weapon = DummyShooter.Weapon.Knife, canMelee = true,
                         rank = EnemyMorale.Rank.ArmedCivilian };
@@ -300,9 +305,25 @@ namespace GlorifiedBody.Integration.Invector.Build
             SetBool(targetSo, "civilian", spec.civilian);
             targetSo.ApplyModifiedPropertiesWithoutUndo();
             // The subtitles name the speaker by the cast name: NURSE, LAB WORKER, SECURITY GUARD (Bruno, 2026-10-25).
+            // Every body feeds her once dead (Bruno, 2026-10-30: HP only from feeding).
+            root.AddComponent<GlorifiedBody.Interaction.FeedableBody>();
             var speaker = root.GetComponent<GlorifiedBody.Subtitles.Speaker>() ?? root.AddComponent<GlorifiedBody.Subtitles.Speaker>();
             speaker.DisplayName = entry != null && !string.IsNullOrEmpty(entry.displayName) ? entry.displayName : spec.classId.ToUpperInvariant();
 
+            if (spec.civilian && spec.stayPut)
+            {
+                // It stays in its place: no flight, no care. It fears, trembles and dies like any civilian.
+                root.AddComponent<Tremble>();
+                root.AddComponent<PatientBrain>();
+                root.AddComponent<InvectorEnemyBody>();
+                EnemyMorale patientMorale = root.AddComponent<EnemyMorale>();
+                var patientSo = new SerializedObject(patientMorale);
+                patientSo.FindProperty("rank").enumValueIndex = (int)spec.rank;
+                patientSo.ApplyModifiedPropertiesWithoutUndo();
+                BuildRagdoll(root, animator);
+                root.AddComponent<HitReactions>();
+                return root;
+            }
             if (spec.civilian)
             {
                 // No gun, no fight: it backs away, runs after a kill, cowers, begs and trembles. Its death still

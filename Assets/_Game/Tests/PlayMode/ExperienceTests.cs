@@ -88,6 +88,7 @@ namespace GlorifiedBody.Tests.PlayMode
             stats.AddExp(ExperienceRules.Threshold(2), "test");
             Assert.AreEqual(2, stats.Level);
             Assert.AreEqual(max0 + ExperienceRules.HpPerLevel, health.MaxHealth, 0.01f, "a level adds maximum HP");
+            Assert.AreEqual(max0, health.CurrentHealth, 0.01f, "but no HP: only feeding gives HP (Bruno, 2026-10-30)");
             yield return null;
             Assert.AreEqual("LV 2", hud.LevelShown);
             Assert.IsTrue(hud.LevelUpShown, "\"LEVEL 2\" on the screen");

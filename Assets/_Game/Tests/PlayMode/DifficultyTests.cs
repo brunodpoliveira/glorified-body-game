@@ -148,7 +148,7 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator ShortGain_FollowsShortFuseAndSteadyMind_AndMendingDoublesTheHpRecharge()
+        public IEnumerator ShortGain_FollowsShortFuseAndSteadyMind_AndMendingDoublesTheFeed()
         {
             yield return InRoom();
             stats.RegenPaused = true;
@@ -161,15 +161,15 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.AreEqual(37.5f, fuse, 0.01f, "SHORT FUSE: 1.5x");
             Assert.AreEqual(12.5f, steady, 0.01f, "STEADY MIND (it turns SHORT FUSE off): half");
 
+            // No HP comes back by itself (Bruno, 2026-10-30): MENDING doubles the feed instead.
             stats.RegenPaused = false;
-            Assert.Greater(stats.Outfit.hpRegenPerSecond, 0f, "the nude outfit recharges HP");
+            Assert.AreEqual(1f, GlorifiedBody.Player.Feeding.DifficultyScale, 0.001f, "the feed at 150 %");
             Toggle("mending");
             health.SetHealth(health.MaxHealth * 0.5f);
             float hp0 = health.CurrentHealth;
-            float t0 = Time.time;
             yield return new WaitForSeconds(1f);
-            float rate = (health.CurrentHealth - hp0) / (Time.time - t0);
-            Assert.AreEqual(stats.Outfit.hpRegenPerSecond * 2f, rate, 0.3f, "MENDING: twice the HP recharge");
+            Assert.AreEqual(hp0, health.CurrentHealth, 0.001f, "no HP recharge, even with MENDING");
+            Assert.AreEqual(2f, GlorifiedBody.Player.Feeding.DifficultyScale, 0.001f, "MENDING: twice the HP of a feed");
         }
 
         [UnityTest]

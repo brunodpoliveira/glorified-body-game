@@ -22,12 +22,15 @@ namespace GlorifiedBody.Characters
         public static readonly int DeadHash = Animator.StringToHash("Dead");
         public static readonly int HitHash = Animator.StringToHash("Hit");
         public static readonly int HitDirectionHash = Animator.StringToHash("HitDirection");
+        public static readonly int FeedingHash = Animator.StringToHash("Feeding");
         public const float HitGap = 0.35f; // s between two flinches (a rifle burst gives one)
 
         private TankController tank;
         private LockOnController lockOn;
         private Health health;
         private Animator animator;
+        private GlorifiedBody.Player.Feeding feeding;
+        private bool hasFeeding;
 
         public Animator Animator => animator;
         public float Speed { get; private set; }
@@ -44,6 +47,7 @@ namespace GlorifiedBody.Characters
             tank = GetComponent<TankController>();
             lockOn = GetComponent<LockOnController>();
             health = GetComponent<Health>() ?? GetComponentInChildren<Health>();
+            feeding = GetComponent<GlorifiedBody.Player.Feeding>();
         }
 
         private void OnEnable()
@@ -100,6 +104,8 @@ namespace GlorifiedBody.Characters
             {
                 animator = GetComponentInChildren<Animator>();
                 if (animator == null) return;
+                hasFeeding = false;
+                foreach (AnimatorControllerParameter p in animator.parameters) hasFeeding |= p.nameHash == FeedingHash;
             }
 
             float wanted = 0f;
@@ -113,6 +119,8 @@ namespace GlorifiedBody.Characters
             animator.SetBool(BackHash, tank.MoveInput < -0.01f);
             animator.SetBool(ChargingHash, lockOn != null && lockOn.IsCharging);
             animator.SetBool(DeadHash, health != null && health.IsDead);
+            if (feeding == null) feeding = GetComponent<GlorifiedBody.Player.Feeding>(); // Interactor adds it in older rooms
+            if (hasFeeding) animator.SetBool(FeedingHash, feeding != null && feeding.IsFeeding);
         }
     }
 }

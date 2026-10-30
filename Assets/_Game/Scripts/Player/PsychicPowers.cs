@@ -346,28 +346,77 @@ namespace GlorifiedBody.Player
             });
         }
 
-        /// <summary>Uses the drug of the selected power (or any other): ends a short, refills HP and nalcon.</summary>
+        /// <summary>
+        /// The drug key without the drug choice (a room with no InventoryUI, the bots): the drug she needs most that
+        /// she carries. The SHORT capsule while a short runs or the bar is half full or more, else the MK capsule when MK
+        /// is not full, else the second wind pill when the second wind is used. PROPOSED.
+        /// </summary>
         public bool UseDrug()
         {
-            PowerDefinition power = Selected;
-            return UseDrug(power != null ? power.drug : DrugType.Nalcon);
+            DrugType? need = MostNeededDrug();
+            return need.HasValue ? UseDrug(need.Value) : Result("drug_none", 0f);
         }
 
-        /// <summary>Uses a drug of the type (or any other when that one is empty): the inventory screen calls it.</summary>
+        /// <summary>The drug she carries that has the most work now (the rule of UseDrug), or null. The drug choice opens on it.</summary>
+        public DrugType? MostNeededDrug()
+        {
+            bool shortNeed = (shortController != null && shortController.IsActive) || stats.Short >= PsychicStats.MaxShort * 0.5f;
+            foreach (DrugType type in shortNeed
+                ? new[] { DrugType.Red, DrugType.Nalcon, DrugType.DFelon }
+                : new[] { DrugType.Nalcon, DrugType.Red, DrugType.DFelon })
+            {
+                if (drugs.Has(type) && NeedOf(type) == null) return type;
+            }
+            return null;
+        }
+
+        /// <summary>The SHORT capsule takes this share of the SHORT bar away (Bruno, 2026-10-30: "decrease short"). PROPOSED.</summary>
+        public const float ShortCapsuleShare = 0.5f;
+
+        /// <summary>
+        /// Uses one drug of the type (the inventory screen calls it). Each drug does one thing (Bruno, 2026-10-30):
+        /// the MK capsule fills MK, the SHORT capsule takes half the SHORT bar away and ends a short that runs, the
+        /// second wind pill gives the second wind back. No drug gives HP: only feeding does (Feeding). A drug that
+        /// has nothing to do is refused and kept ("mk_full", "short_empty", "second_wind_ready").
+        /// </summary>
         public bool UseDrug(DrugType wanted)
         {
             // In the beat between her death and the death screen a drug must not bring her back (found 2026-10-26).
             if (stats.Health.IsDead) return Result("dead", 0f);
-            if (!drugs.TryUse(wanted, out DrugType used))
-            {
-                return Result("drug_none", 0f);
-            }
+            string refusal = NeedOf(wanted);
+            if (refusal != null) return Result(refusal, 0f);
+            if (!drugs.TryUse(wanted, out DrugType used)) return Result("drug_none", 0f);
 
-            shortController?.End(byDrug: true);
-            stats.RefillAll();
+            switch (used)
+            {
+                case DrugType.Nalcon:
+                    stats.FillMk();
+                    break;
+                case DrugType.Red:
+                    shortController?.End(byDrug: true);
+                    stats.AddShort(-PsychicStats.MaxShort * ShortCapsuleShare);
+                    break;
+                case DrugType.DFelon:
+                    stats.Health.RearmSecondWind();
+                    break;
+            }
             LastResult = "drug:" + used;
             OnChanged?.Invoke();
             return true;
+        }
+
+        /// <summary>Why the drug would do nothing now, or null when it has work to do.</summary>
+        public string NeedOf(DrugType type)
+        {
+            switch (type)
+            {
+                case DrugType.Nalcon: return stats.Nalcon >= PsychicStats.MaxNalcon - 0.001f ? "mk_full" : null;
+                case DrugType.Red: return stats.Short <= 0.001f && (shortController == null || !shortController.IsActive) ? "short_empty" : null;
+                case DrugType.DFelon:
+                    Health h = stats.Health;
+                    return !h.IsSecondWindEnabled ? "no_second_wind" : h.IsSecondWindAvailable ? "second_wind_ready" : null;
+                default: return null;
+            }
         }
 
         /// <summary>The damage scale of the last power fired (2 under the MK boost). Tests read it.</summary>

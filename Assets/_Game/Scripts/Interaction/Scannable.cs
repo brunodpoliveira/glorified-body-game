@@ -21,6 +21,8 @@ namespace GlorifiedBody.Interaction
         [Min(0.5f)] public float range = DefaultRange;
         [Tooltip("The point the scan aims at (the centre of the door, the middle of the screen). Empty = this transform.")]
         public Transform focus;
+        [Tooltip("A story flag the scan raises (a person's fate: \"marta_scanned\"). Empty: none.")]
+        public string raiseFlag = "";
 
         private static readonly List<Scannable> all = new List<Scannable>();
         public static IReadOnlyList<Scannable> All => all;

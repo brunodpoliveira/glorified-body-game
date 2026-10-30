@@ -673,10 +673,10 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator SecondWind_LeavesHerAt1Hp_Invulnerable_Once_AndADrugDoesNotRearmIt()
+        public IEnumerator SecondWind_LeavesHerAt1Hp_Invulnerable_Once_AndOnlyThePillRearmsIt()
         {
-            // Bruno, 2026-10-20: the first lethal hit leaves her at 1 HP and invulnerable for 2.5 s. Once. A drug
-            // refills her but does not give the second wind back (the pill does, later).
+            // Bruno, 2026-10-20: the first lethal hit leaves her at 1 HP and invulnerable for 2.5 s. Once. Bruno,
+            // 2026-10-30: no drug gives HP; the second wind pill gives the second wind back.
             Assert.IsTrue(health.IsSecondWindEnabled, "the second wind is on for Lucy");
             Assert.IsTrue(health.IsSecondWindAvailable, "and unused");
             PlayerHud hud = UnityEngine.Object.FindFirstObjectByType<PlayerHud>();
@@ -695,14 +695,81 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.IsFalse(health.IsInvulnerable, "the window closed");
             Assert.IsFalse(health.IsSecondWindAvailable, "the second wind is used up");
 
+            stats.DebugSet(40f, 0f);
             drugs.DebugSet(DrugType.Nalcon, 1);
             yield return DrugPress.TakeFirst(pad); // the drug key opens the choice: it asks, then it takes
-            Assert.AreEqual(health.MaxHealth, health.CurrentHealth, 0.01f, "the drug refills her");
-            Assert.IsFalse(health.IsSecondWindAvailable, "but the second wind stays used");
+            Assert.AreEqual(PsychicStats.MaxNalcon, stats.Nalcon, 0.01f, "the MK capsule fills MK");
+            Assert.AreEqual(1f, health.CurrentHealth, 0.01f, "and gives no HP");
+            Assert.IsFalse(health.IsSecondWindAvailable, "and no second wind");
 
+            drugs.DebugSet(DrugType.DFelon, 1);
+            yield return DrugPress.TakeFirst(pad);
+            Assert.AreEqual("drug:DFelon", powers.LastResult);
+            Assert.IsTrue(health.IsSecondWindAvailable, "the second wind pill gives it back");
+            Assert.AreEqual(1f, health.CurrentHealth, 0.01f, "and no HP");
+            health.TakeDamage(health.MaxHealth * 2f);
+            yield return null;
+            Assert.IsFalse(health.IsDead, "the second wind holds again");
+            yield return new WaitForSecondsRealtime(2.6f);
             health.TakeDamage(health.MaxHealth * 2f);
             yield return null;
             Assert.IsTrue(health.IsDead, "the next lethal hit kills her");
+        }
+
+        [UnityTest]
+        public IEnumerator EachDrug_DoesOneThing_AndADrugWithNothingToDo_IsKept()
+        {
+            // Bruno, 2026-10-30: "they can either fill up mk (one pill does it) or decrease short (another pill does that)".
+            health.SetHealth(50f);
+            stats.DebugSet(20f, 60f);
+            drugs.DebugSet(DrugType.Nalcon, 1);
+            Assert.IsTrue(powers.UseDrug(DrugType.Nalcon));
+            Assert.AreEqual(PsychicStats.MaxNalcon, stats.Nalcon, 0.01f, "the MK capsule: MK full");
+            Assert.AreEqual(60f, stats.Short, 0.01f, "the SHORT bar as it was");
+            Assert.AreEqual(50f, health.CurrentHealth, 0.01f, "no HP");
+
+            drugs.DebugSet(DrugType.Red, 1);
+            Assert.IsTrue(powers.UseDrug(DrugType.Red));
+            Assert.AreEqual(60f - PsychicStats.MaxShort * PsychicPowers.ShortCapsuleShare, stats.Short, 0.01f, "the SHORT capsule: half the bar away");
+            Assert.AreEqual(PsychicStats.MaxNalcon, stats.Nalcon, 0.01f, "MK as it was");
+            Assert.AreEqual(50f, health.CurrentHealth, 0.01f, "no HP");
+
+            // Nothing to do: refused, and the drug stays.
+            drugs.DebugSet(DrugType.Nalcon, 1);
+            Assert.IsFalse(powers.UseDrug(DrugType.Nalcon));
+            Assert.AreEqual("mk_full", powers.LastResult);
+            Assert.AreEqual(1, drugs.Count(DrugType.Nalcon), "kept");
+            stats.DebugSet(100f, 0f);
+            drugs.DebugSet(DrugType.Red, 1);
+            Assert.IsFalse(powers.UseDrug(DrugType.Red));
+            Assert.AreEqual("short_empty", powers.LastResult);
+            Assert.AreEqual(1, drugs.Count(DrugType.Red), "kept");
+            drugs.DebugSet(DrugType.DFelon, 1);
+            Assert.IsFalse(powers.UseDrug(DrugType.DFelon));
+            Assert.AreEqual("second_wind_ready", powers.LastResult);
+            Assert.AreEqual(1, drugs.Count(DrugType.DFelon), "kept");
+
+            // No stand-in: a wanted drug she does not carry is not replaced by another.
+            drugs.DebugSet(DrugType.Nalcon, 0);
+            stats.DebugSet(20f, 0f);
+            Assert.IsFalse(powers.UseDrug(DrugType.Nalcon));
+            Assert.AreEqual("drug_none", powers.LastResult);
+            Assert.AreEqual(1, drugs.Count(DrugType.Red), "the SHORT capsule stays");
+            yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator NoHp_ComesBack_ByItself_InAnyOutfit()
+        {
+            // Bruno, 2026-10-30: "hp regen is to be disabled in all forms (includes the passive regen we have on lucy bare)".
+            stats.RegenPaused = false;
+            health.SetHealth(40f);
+            yield return new WaitForSeconds(2f);
+            Assert.AreEqual(40f, health.CurrentHealth, 0.001f, "the nude outfit: no HP back");
+            stats.SetOutfit(Resources.Load<OutfitProfile>("Outfits/outfit_guard"));
+            health.SetHealth(40f);
+            yield return new WaitForSeconds(1f);
+            Assert.AreEqual(40f, health.CurrentHealth, 0.001f, "the guard outfit: no HP back");
         }
 
         [UnityTest]
@@ -735,12 +802,12 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator FullShort_StartsOnTheAttackPress_SlowWalk_AndADrugEndsIt()
+        public IEnumerator FullShort_StartsOnTheAttackPress_SlowWalk_AndTheShortCapsuleEndsIt()
         {
             // Bruno, 2026-10-20: with a full bar the short starts the moment she presses attack or defend. During
             // it she walks slowly: no run, no dodge.
             powers.Select(PowerKind.Blast);
-            drugs.DebugSet(DrugType.Nalcon, 1);
+            drugs.DebugSet(DrugType.Red, 1);
             stats.DebugSet(100f, 100f);
             Assert.IsTrue(stats.IsShortFull);
             float hpMax = health.MaxHealth;
@@ -779,12 +846,12 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.Less(health.CurrentHealth, hpMax - 2f, "the shocks hurt her");
             Assert.GreaterOrEqual(health.CurrentHealth, 1f, "the short never kills her");
 
+            float hpInShort = health.CurrentHealth;
             yield return DrugPress.TakeFirst(pad); // the drug key opens the choice: it asks, then it takes
-            Assert.IsFalse(shortController.IsActive, "the drug ends the short");
-            Assert.AreEqual(hpMax, health.CurrentHealth, 0.01f, "HP refilled");
-            Assert.AreEqual(PsychicStats.MaxNalcon, stats.Nalcon, 0.01f, "nalcon refilled");
+            Assert.IsFalse(shortController.IsActive, "the SHORT capsule ends the short");
+            Assert.AreEqual(hpInShort, health.CurrentHealth, 0.01f, "no HP back (Bruno, 2026-10-30: only feeding)");
             Assert.AreEqual(0f, stats.Short, 0.01f, "SHORT reset");
-            Assert.AreEqual(0, drugs.Count(DrugType.Nalcon), "one drug used");
+            Assert.AreEqual(0, drugs.Count(DrugType.Red), "one drug used");
             Assert.IsFalse(tank.MovementLocked, "control is back");
             Assert.IsFalse(tank.SlowWalk, "the normal walk is back");
         }
@@ -833,7 +900,7 @@ namespace GlorifiedBody.Tests.PlayMode
         [UnityTest]
         public IEnumerator FullShort_Holds_UntilAShortOrADrug()
         {
-            // Bruno, 2026-10-20: a full SHORT bar does not drain. Only a short or a drug empties it.
+            // Bruno, 2026-10-20: a full SHORT bar does not drain. Only a short or the SHORT capsule lowers it.
             Assert.Greater(stats.Outfit.shortDecayPerSecond, 0f, "the nude outfit drains a part-full bar");
             stats.RegenPaused = false; // the drain runs with the regen (the setup pauses both)
             stats.DebugSet(100f, 90f);
@@ -850,7 +917,7 @@ namespace GlorifiedBody.Tests.PlayMode
 
             drugs.DebugSet(DrugType.Red, 1);
             yield return DrugPress.TakeFirst(pad); // the drug key opens the choice: it asks, then it takes
-            Assert.AreEqual(0f, stats.Short, 0.01f, "a drug empties the full bar, short or not");
+            Assert.AreEqual(PsychicStats.MaxShort * PsychicPowers.ShortCapsuleShare, stats.Short, 0.2f, "the SHORT capsule takes half the full bar away (the part-full bar drains a little in the frames of the press) (Bruno, 2026-10-30: \"decrease short\")");
             Assert.IsFalse(shortController.IsActive, "no short ran");
 
             stats.DebugSet(100f, PsychicStats.MaxShort);

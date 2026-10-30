@@ -290,6 +290,8 @@ namespace GlorifiedBody.Tests.PlayMode
             yield return Press(InputManager.GameAction.Interact);
             yield return Press(InputManager.GameAction.Interact); // close the page
             tank.GetComponent<DrugInventory>().DebugSet(GlorifiedBody.Player.DrugType.Red, 2);
+            PsychicStats barStats = tank.GetComponent<PsychicStats>();
+            barStats.DebugSet(barStats.Nalcon, 60f); // the SHORT capsule needs a bar to lower (Bruno, 2026-10-30: each drug does one thing)
 
             yield return Press(InputManager.GameAction.Inventory);
             Assert.IsTrue(screen.IsOpen, "the inventory opens");
@@ -315,6 +317,7 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.AreEqual(2, tank.GetComponent<DrugInventory>().Count(GlorifiedBody.Player.DrugType.Red), "nothing used yet");
             yield return Press(InputManager.GameAction.Interact); // yes
             Assert.AreEqual(1, tank.GetComponent<DrugInventory>().Count(GlorifiedBody.Player.DrugType.Red), "a drug used from the inventory");
+            Assert.AreEqual(60f - PsychicStats.MaxShort * PsychicPowers.ShortCapsuleShare, barStats.Short, 0.01f, "the SHORT capsule lowers the bar");
 
             yield return Press(InputManager.GameAction.Inventory);
             Assert.IsFalse(screen.IsOpen, "the Inventory key closes it");

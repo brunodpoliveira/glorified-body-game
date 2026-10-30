@@ -18,6 +18,8 @@ namespace GlorifiedBody.Saving
         public string requiredFlag = "";
 
         public static int Used { get; private set; }
+        /// <summary>She leaves the room by an exit (FateFlag: who she spared).</summary>
+        public static event System.Action OnLeaving;
         public bool IsOpen => string.IsNullOrEmpty(requiredFlag) || StoryFlags.Has(requiredFlag);
 
         private void Reset() => GetComponent<BoxCollider>().isTrigger = true;
@@ -34,10 +36,15 @@ namespace GlorifiedBody.Saving
             if (!IsOpen || WorldState.Travelling) return false;
             if (GameManager.Instance != null && !GameManager.Instance.IsPlaying) return false;
             Used++;
+            OnLeaving?.Invoke();
             return WorldState.Travel(targetScene, targetEntry);
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void ResetOnLoad() => Used = 0;
+        private static void ResetOnLoad()
+        {
+            Used = 0;
+            OnLeaving = null;
+        }
     }
 }

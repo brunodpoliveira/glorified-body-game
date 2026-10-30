@@ -79,11 +79,12 @@ namespace GlorifiedBody.Tests.PlayMode
             var stats = lucy.GetComponent<GlorifiedBody.Player.PsychicStats>();
             var drugs = lucy.GetComponent<GlorifiedBody.Player.DrugInventory>();
             Assert.IsTrue(stats.IsShortFull, "the step fills the bar");
-            Assert.IsTrue(powers.UseDrug(GlorifiedBody.Player.DrugType.Nalcon), "the drug before the short");
+            // The SHORT capsule (Bruno, 2026-10-30: each drug does one thing) lowers the bar before the short.
+            Assert.IsTrue(powers.UseDrug(GlorifiedBody.Player.DrugType.Red), "the SHORT capsule before the short");
             yield return new WaitForSeconds(0.5f);
-            Debug.Log($"[TutorialTests] after the drug: short {stats.Short:0}, nalcon drugs {drugs.Count(GlorifiedBody.Player.DrugType.Nalcon)}");
+            Debug.Log($"[TutorialTests] after the drug: short {stats.Short:0}, SHORT capsules {drugs.Count(GlorifiedBody.Player.DrugType.Red)}");
             Assert.IsTrue(stats.IsShortFull, "the bar is full again: the short can start");
-            Assert.Greater(drugs.Count(GlorifiedBody.Player.DrugType.Nalcon), 0, "a drug to end it");
+            Assert.Greater(drugs.Count(GlorifiedBody.Player.DrugType.Red), 0, "a SHORT capsule to end it");
         }
 
         /// <summary>
@@ -154,8 +155,9 @@ namespace GlorifiedBody.Tests.PlayMode
             var powers = lucy.GetComponent<GlorifiedBody.Player.PsychicPowers>();
             foreach (ItemPickup capsule in UnityEngine.Object.FindObjectsByType<ItemPickup>(FindObjectsSortMode.None).Where(p => p.item != null && p.item.kind == ItemKind.Drug).ToArray())
                 capsule.Confirm(lucy.GetComponent<Interactor>());
+            // Every drug gone before the step (used or refused: a drug with nothing to do stays, so the test empties them).
             foreach (GlorifiedBody.Player.DrugType type in (GlorifiedBody.Player.DrugType[])Enum.GetValues(typeof(GlorifiedBody.Player.DrugType)))
-                while (drugs.Count(type) > 0 && powers.UseDrug(type)) { }
+                drugs.DebugSet(type, 0);
             while (director.Current != null && director.Current.Id != "capsule") director.Advance();
             yield return new WaitForSeconds(0.3f);
             int held = ((GlorifiedBody.Player.DrugType[])Enum.GetValues(typeof(GlorifiedBody.Player.DrugType))).Sum(t => drugs.Count(t));

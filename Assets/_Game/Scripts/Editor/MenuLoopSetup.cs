@@ -191,6 +191,7 @@ namespace GlorifiedBody.Editor
             EnsureComponent<ItemInventory>(player);
             EnsureComponent<PsychicScanner>(player);
             EnsureComponent<Interactor>(player);
+            EnsureComponent<GlorifiedBody.Player.Feeding>(player);
             EnsureCharacterModel(player, catalog, "lucy_bare");
             EnsureComponent<LucyAnimator>(player);
             Health health = EnsureComponent<Health>(player);
@@ -302,6 +303,7 @@ namespace GlorifiedBody.Editor
             if (File.Exists(ScriptTestSetup.ScenePath)) EnsureBuildScene(scenes, ScriptTestSetup.ScenePath);
             if (File.Exists(KitTestSetup.ScenePath)) EnsureBuildScene(scenes, KitTestSetup.ScenePath);
             if (File.Exists(LabTestSetup.ScenePath)) EnsureBuildScene(scenes, LabTestSetup.ScenePath);
+            if (File.Exists(WardTestSetup.ScenePath)) EnsureBuildScene(scenes, WardTestSetup.ScenePath);
             if (File.Exists(TutorialSetup.ScenePath)) EnsureBuildScene(scenes, TutorialSetup.ScenePath);
             if (File.Exists(AiTestSetup.ScenePath)) EnsureBuildScene(scenes, AiTestSetup.ScenePath);
             if (File.Exists(Destruction.CoverTestSetup.ScenePath)) EnsureBuildScene(scenes, Destruction.CoverTestSetup.ScenePath);

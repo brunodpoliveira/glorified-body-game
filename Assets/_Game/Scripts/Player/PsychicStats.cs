@@ -133,18 +133,14 @@ namespace GlorifiedBody.Player
                 Nalcon = Mathf.Min(MaxNalcon, Nalcon + outfit.nalconRegenPerSecond * Scale(d => d.MkRegenScale) * dt);
                 changed = true;
             }
-            // A full SHORT bar holds (Bruno, 2026-10-20). Only the short (ResetShort at its end) or a drug
-            // (RefillAll) empties it. A part-full bar drains at the outfit rate.
+            // A full SHORT bar holds (Bruno, 2026-10-20). Only the short (ResetShort at its end) or the SHORT capsule
+            // lowers it. A part-full bar drains at the outfit rate.
             if (outfit.shortDecayPerSecond > 0f && Short > 0f && !IsShortFull)
             {
                 Short = Mathf.Max(0f, Short - outfit.shortDecayPerSecond * dt);
                 changed = true;
             }
-            if (outfit.hpRegenPerSecond > 0f && !health.IsDead && health.CurrentHealth < health.MaxHealth)
-            {
-                health.Heal(outfit.hpRegenPerSecond * Scale(d => d.HpRegenScale) * dt);
-                changed = true;
-            }
+            // No HP comes back by itself, in any outfit (Bruno, 2026-10-30): only feeding on a body gives HP (Feeding).
             if (changed) OnChanged?.Invoke();
         }
 
@@ -158,6 +154,14 @@ namespace GlorifiedBody.Player
             return true;
         }
 
+        /// <summary>The MK capsule: MK full.</summary>
+        public void FillMk()
+        {
+            Nalcon = MaxNalcon;
+            OnChanged?.Invoke();
+        }
+
+        /// <summary>Debug key and bots only (F7): every bar as new. No drug does this since 2026-10-30.</summary>
         public void RefillAll()
         {
             Nalcon = MaxNalcon;
@@ -217,9 +221,8 @@ namespace GlorifiedBody.Player
             while (Level < target)
             {
                 Level++;
-                float before = health.MaxHealth;
+                // A level raises the maximum HP only: the HP she has stays (Bruno, 2026-10-30: only feeding gives HP).
                 health.SetMaxHealth(MaxHpTarget, fillToMax: false);
-                health.Heal(health.MaxHealth - before);
                 RunTelemetry.Event("level_up", $"{Level}:hp={health.MaxHealth:0}:damage=x{LevelDamageScale:0.00}");
                 OnLevelUp?.Invoke(Level);
             }

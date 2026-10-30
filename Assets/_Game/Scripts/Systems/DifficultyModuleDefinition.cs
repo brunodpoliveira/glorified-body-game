@@ -28,7 +28,7 @@ namespace GlorifiedBody.Systems
             ThickSkin,     // easier: enemy attacks do half damage
             SteadyMind,    // easier: the SHORT bar fills half as fast
             DeepWell,      // easier: MK recharges twice as fast
-            Mending        // easier: HP recharges twice as fast
+            Mending        // easier: feeding on a body gives twice the HP (no HP recharge since 2026-10-30)
         }
 
         public enum Section { Base, Harder, Easier }
@@ -46,7 +46,7 @@ namespace GlorifiedBody.Systems
         public const string ParamPlayerMaxHpScale = "playerMaxHpScale";
         public const string ParamMkRegenScale = "mkRegenScale";
         public const string ParamShortGainScale = "shortGainScale";
-        public const string ParamHpRegenScale = "hpRegenScale";
+        public const string ParamFeedScale = "feedScale";
 
         [Header("Identity")]
         [Tooltip("Unique identifier used for persistence and lookups.")]

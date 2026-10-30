@@ -491,7 +491,7 @@ namespace GlorifiedBody.UI
 
             if (drugs != null)
             {
-                drugText.text = $"MK CAPSULE {drugs.Count(DrugType.Nalcon)}   RED {drugs.Count(DrugType.Red)}   D-FELON {drugs.Count(DrugType.DFelon)}";
+                drugText.text = $"MK CAPSULE {drugs.Count(DrugType.Nalcon)}   SHORT CAPSULE {drugs.Count(DrugType.Red)}   SECOND WIND {drugs.Count(DrugType.DFelon)}";
             }
 
             bool shortActive = shortController != null && shortController.IsActive;
