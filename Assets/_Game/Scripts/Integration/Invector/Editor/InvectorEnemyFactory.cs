@@ -487,9 +487,14 @@ namespace GlorifiedBody.Integration.Invector.Build
 
         public const string KnifeMaterialFolder = "Assets/_Game/Rendering/Materials";
 
+        public const string ShortSwordPath = "Assets/Invector-3rdPersonController/Melee Combat/3DModels/vMeleeWeapons/vSword/SwordV_short.fbx";
+        public const float KnifeLength = 0.32f;  // metres, grip to tip, PROPOSED
+        public const float KnifeGripBack = 0.06f; // metres of the knife behind the hand point
+
         /// <summary>
-        /// The knife of the knife scientist: a PLACEHOLDER of two boxes (a dark grip 0.11 m, a steel blade 0.17 m),
-        /// our own data (no vendor knife exists), its tip the "muzzle" EnemyGun points along the strike. The vendor
+        /// The knife of the knife lab worker. Invector has no knife (Bruno, 2026-10-29: use a vendor melee weapon as
+        /// one): its short sword, made KnifeLength long, the blade forward (+z), the grip at the hand point, the tip the
+        /// "muzzle" EnemyGun points along the strike. Without the vendor model: a PLACEHOLDER of two boxes. The vendor
         /// animator keeps its unarmed set (upper body 0): the strike is the vendor attack plus the overhead stab.
         /// </summary>
         private static void BuildKnife(GameObject root)
@@ -498,17 +503,74 @@ namespace GlorifiedBody.Integration.Invector.Build
             var knife = new GameObject("Gun"); // the same name as the gun models
             knife.transform.SetParent(root.transform, false);
             knife.transform.localScale = Vector3.one / scale; // the root carries the model scale: the knife in metres
-            Material grip = KnifeMaterial("GB_Knife_Grip", new Color(0.08f, 0.08f, 0.09f), 0.3f, 0f);
-            Material steel = KnifeMaterial("GB_Knife_Blade", new Color(0.72f, 0.74f, 0.78f), 0.75f, 1f);
-            KnifePart(knife.transform, "Grip", new Vector3(0f, 0f, 0.025f), new Vector3(0.025f, 0.03f, 0.11f), grip);
-            KnifePart(knife.transform, "Blade", new Vector3(0f, 0.004f, 0.165f), new Vector3(0.004f, 0.026f, 0.17f), steel);
-            var tip = new GameObject("muzzle").transform;
-            tip.SetParent(knife.transform, false);
-            tip.localPosition = new Vector3(0f, 0f, 0.25f);
+            Transform tip;
+            if (!VendorKnife(knife.transform, out tip)) tip = BoxKnife(knife.transform);
             SetLayer(knife, LayerMask.NameToLayer("Enemy"));
             EnemyGun enemyGun = root.AddComponent<EnemyGun>();
             enemyGun.Bind(knife.transform, tip, new ParticleSystem[0], null, null, null, 0, 0);
             EditorUtility.SetDirty(enemyGun);
+        }
+
+        /// <summary>
+        /// The vendor short sword under the knife root: measured upright at the origin, its long side turned to +z
+        /// with the end farther from its pivot (the blade) forward, scaled to KnifeLength, the rear end KnifeGripBack
+        /// behind the hand point. False when the model is missing.
+        /// </summary>
+        private static bool VendorKnife(Transform knife, out Transform tip)
+        {
+            tip = null;
+            var source = AssetDatabase.LoadAssetAtPath<GameObject>(ShortSwordPath);
+            if (source == null) { Debug.LogWarning($"[InvectorEnemyFactory] no short sword at {ShortSwordPath}: the knife is two boxes."); return false; }
+            var model = (GameObject)PrefabUtility.InstantiatePrefab(source);
+            PrefabUtility.UnpackPrefabInstance(model, PrefabUnpackMode.Completely, InteractionMode.AutomatedAction);
+            model.name = "Blade";
+            foreach (Collider c in model.GetComponentsInChildren<Collider>(true)) Object.DestroyImmediate(c);
+            for (int pass = 0; pass < 4; pass++)
+                foreach (MonoBehaviour script in model.GetComponentsInChildren<MonoBehaviour>(true))
+                    if (script != null) Object.DestroyImmediate(script);
+            model.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
+            model.transform.localScale = Vector3.one;
+            Bounds bounds = new Bounds();
+            bool any = false;
+            foreach (Renderer r in model.GetComponentsInChildren<Renderer>(true))
+            {
+                if (!any) { bounds = r.bounds; any = true; }
+                else bounds.Encapsulate(r.bounds);
+            }
+            if (!any) { Object.DestroyImmediate(model); return false; }
+            Vector3 size = bounds.size;
+            int axis = size.x >= size.y && size.x >= size.z ? 0 : size.y >= size.z ? 1 : 2;
+            Vector3 along = Vector3.zero;
+            along[axis] = 1f;
+            // The blade is the end farther from the model's pivot (a weapon's pivot sits at its grip).
+            if (Mathf.Abs(bounds.max[axis]) < Mathf.Abs(bounds.min[axis])) along = -along;
+            float length = size[axis];
+            float fit = length > 0.01f ? KnifeLength / length : 1f;
+            Quaternion turn = Quaternion.FromToRotation(along, Vector3.forward);
+            float rear = Mathf.Min(Vector3.Dot(bounds.min, along), Vector3.Dot(bounds.max, along)); // the grip end, along the blade
+            Vector3 centre = bounds.center - along * Vector3.Dot(bounds.center, along); // the middle across the blade
+            model.transform.SetParent(knife, false);
+            model.transform.localRotation = turn;
+            model.transform.localScale = Vector3.one * fit;
+            model.transform.localPosition = -(turn * (centre + along * rear)) * fit - Vector3.forward * KnifeGripBack;
+            tip = new GameObject("muzzle").transform;
+            tip.SetParent(knife, false);
+            tip.localPosition = Vector3.forward * (KnifeLength - KnifeGripBack);
+            Debug.Log($"[InvectorEnemyFactory] knife from the short sword: bounds {size}, long axis {axis}, scale x{fit:0.00}.");
+            return true;
+        }
+
+        /// <summary>The PLACEHOLDER knife of two boxes (a dark grip 0.11 m, a steel blade 0.17 m). Returns its tip.</summary>
+        private static Transform BoxKnife(Transform knife)
+        {
+            Material grip = KnifeMaterial("GB_Knife_Grip", new Color(0.08f, 0.08f, 0.09f), 0.3f, 0f);
+            Material steel = KnifeMaterial("GB_Knife_Blade", new Color(0.72f, 0.74f, 0.78f), 0.75f, 1f);
+            KnifePart(knife, "Grip", new Vector3(0f, 0f, 0.025f), new Vector3(0.025f, 0.03f, 0.11f), grip);
+            KnifePart(knife, "Blade", new Vector3(0f, 0.004f, 0.165f), new Vector3(0.004f, 0.026f, 0.17f), steel);
+            var tip = new GameObject("muzzle").transform;
+            tip.SetParent(knife, false);
+            tip.localPosition = new Vector3(0f, 0f, 0.25f);
+            return tip;
         }
 
         private static void KnifePart(Transform parent, string name, Vector3 position, Vector3 size, Material material)

@@ -105,6 +105,15 @@ namespace GlorifiedBody.Automation
             gunmanObj.GetComponent<SoldierBrain>().enabled = false;
             yield return BotClock.Wait(0.5f);
 
+            // 0. The carrier shows the card on his belt (Bruno, 2026-10-29: a carrier should show what it carries).
+            ItemCarrier belt = carrierObj.GetComponent<ItemCarrier>();
+            if (belt != null && belt.Carried != null)
+            {
+                Vector3 hip = belt.Carried.transform.position;
+                ShotFixed("belt_card", hip + carrierObj.transform.right * 1.1f + carrierObj.transform.forward * 0.9f + Vector3.up * 0.35f, hip);
+            }
+            Record("belt", belt != null && belt.ShowsItem, belt != null && belt.Carried != null ? "the card at his hip" : "no card on the belt");
+
             // 1. The knife: it runs at her across the hall and strikes (the wind-up, the stab, the vendor attack).
             SoldierBrain knife = knifeObj.GetComponent<SoldierBrain>();
             DummyShooter blade = knifeObj.GetComponent<DummyShooter>();

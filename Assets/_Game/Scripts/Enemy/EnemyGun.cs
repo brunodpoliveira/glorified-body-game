@@ -27,6 +27,8 @@ namespace GlorifiedBody.Enemy
         [SerializeField] private ParticleSystem smoke;
         [SerializeField] private Light flashLight;
         [SerializeField] private AudioSource source;
+        // FOR LATER (Bruno, 2026-10-29): a pistol sits a few cm in front of the fingers (the two-hand pistol shows it
+        // most). Fix the grip point with the long-gun hold (roadmap item 26).
         [SerializeField, Min(0f)] private float gripForward = 0.06f; // metres from the palm along the aim
         [SerializeField, Min(0f)] private float lightSeconds = 0.06f;
         [SerializeField, Range(0f, 45f)] private float restDownDegrees = 25f;

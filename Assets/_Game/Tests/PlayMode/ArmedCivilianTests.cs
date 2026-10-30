@@ -69,7 +69,11 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.IsTrue(knife.CanMelee);
             Assert.AreEqual("labworker_knife", knife.EnemyId);
             Assert.IsTrue(GameObject.Find(Knife).GetComponent<SoldierBrain>().Rusher, "a knife runs at her");
-            Assert.IsNotNull(GameObject.Find(Knife).GetComponent<EnemyGun>().Model, "the knife model in the hand");
+            EnemyGun knifeHold = GameObject.Find(Knife).GetComponent<EnemyGun>();
+            Assert.IsNotNull(knifeHold.Model, "the knife model in the hand");
+            Assert.IsNotNull(knifeHold.Model.Find("Blade"), "the vendor short sword as the knife (Bruno, 2026-10-29)");
+            float reach = Vector3.Distance(knifeHold.Model.position, knifeHold.Muzzle.position);
+            Assert.AreEqual(0.26f, reach, 0.02f, "a knife, not a sword: 0.26 m from the hand point to the tip");
 
             DummyShooter pistol = GameObject.Find(Gunman).GetComponent<DummyShooter>();
             Assert.AreEqual(DummyShooter.Weapon.Pistol, pistol.WeaponKind);
@@ -83,7 +87,11 @@ namespace GlorifiedBody.Tests.PlayMode
             ItemCarrier carrier = GameObject.Find(Carrier).GetComponent<ItemCarrier>();
             Assert.IsNotNull(carrier, "the carrier carries");
             Assert.IsNotNull(carrier.Drop, "its item");
-            Assert.IsFalse(carrier.Drop.gameObject.activeSelf, "the card is hidden while he lives");
+            Assert.IsFalse(carrier.Drop.gameObject.activeSelf, "the card in the room is hidden while he lives");
+            Assert.IsTrue(carrier.ShowsItem, "he shows the card on his belt (Bruno, 2026-10-29)");
+            Transform carrierHips = GameObject.Find(Carrier).GetComponent<Animator>().GetBoneTransform(HumanBodyBones.Hips);
+            Assert.Less(Vector3.Distance(carrier.Carried.transform.position, carrierHips.position), 0.35f, "at the hip");
+            Assert.AreEqual(carrier.Drop.GetComponent<Renderer>().sharedMaterial, carrier.Carried.GetComponent<Renderer>().sharedMaterial, "unlit, like the pickup");
             Assert.IsNull(GameObject.Find(Knife).GetComponent<ItemCarrier>(), "only the carrier carries");
         }
 
@@ -199,6 +207,7 @@ namespace GlorifiedBody.Tests.PlayMode
             yield return new WaitForSeconds(ItemCarrier.FallSeconds + 0.5f);
             ItemPickup card = carrier.GetComponent<ItemCarrier>().Drop;
             Assert.IsTrue(card.gameObject.activeInHierarchy, "the card shows after his fall");
+            Assert.IsFalse(carrier.GetComponent<ItemCarrier>().ShowsItem, "and leaves his belt");
             float apart = Flat(card.transform.position, hips.position);
             Debug.Log($"[ArmedCivilianTests] the card lies {apart:0.00} m from his hips, {card.transform.position.y:0.00} m up");
             Assert.LessOrEqual(apart, 1.0f, "beside the body");

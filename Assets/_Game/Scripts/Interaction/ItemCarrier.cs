@@ -13,6 +13,9 @@ namespace GlorifiedBody.Interaction
     /// The room keeps the pickup at its own path, so the saves treat it as any other item: taken stays taken. A load
     /// kills the carrier again quietly (RoomGore), so the item comes back beside the body when she did not take it.
     /// EnemySpawn adds this to the figure when its marker names a drop. Numbers PROPOSED.
+    /// The item shows on the carrier while it lives (Bruno, 2026-10-29: a carrier "should" show what it carries): a
+    /// smaller copy of the pickup, unlit like every pickup, hangs on the belt at the right hip. It goes when the item
+    /// drops.
     /// </summary>
     [RequireComponent(typeof(Health))]
     public sealed class ItemCarrier : MonoBehaviour
@@ -21,20 +24,55 @@ namespace GlorifiedBody.Interaction
         public const float BesideBody = 0.5f;     // metres from the hips, her side first
         public const float FarBesideBody = 0.85f; // the second ring when no limb leaves room at the first
         public const float ClearRadius = 0.2f;    // no limb this close to the item
+        public const float BeltScale = 0.7f;      // the copy on the belt, a share of the pickup's size
+        public const string CarriedName = "CarriedItem";
 
         [SerializeField] private ItemPickup drop;
 
         private Health health;
         private float height = 0.1f; // the pickup's height over the floor, as the room built it
         private bool dropped;
+        private GameObject carried;
 
         public ItemPickup Drop => drop;
         public bool Dropped => dropped;
+        /// <summary>The copy of the item on the belt, or null.</summary>
+        public GameObject Carried => carried;
+        public bool ShowsItem => carried != null && carried.activeSelf;
 
         public void Bind(ItemPickup pickup)
         {
             drop = pickup;
             if (drop != null) height = Mathf.Max(0.02f, drop.transform.position.y);
+            if (drop != null && carried == null && health != null && !health.IsDead) HangOnBelt();
+        }
+
+        private void Start()
+        {
+            if (drop != null && carried == null && !health.IsDead) HangOnBelt();
+        }
+
+        /// <summary>The smaller copy of the pickup on the belt: at the right hip, a little forward, flat against the body.</summary>
+        private void HangOnBelt()
+        {
+            Animator animator = GetComponentInChildren<Animator>();
+            Transform hips = animator != null && animator.isHuman ? animator.GetBoneTransform(HumanBodyBones.Hips) : null;
+            MeshFilter mesh = drop.GetComponent<MeshFilter>();
+            Renderer look = drop.GetComponent<Renderer>();
+            if (hips == null || mesh == null || look == null) return;
+            carried = new GameObject(CarriedName);
+            carried.layer = gameObject.layer;
+            carried.AddComponent<MeshFilter>().sharedMesh = mesh.sharedMesh;
+            MeshRenderer shown = carried.AddComponent<MeshRenderer>();
+            shown.sharedMaterial = look.sharedMaterial;
+            shown.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            Vector3 outward = (transform.right * 0.8f + transform.forward * 0.6f).normalized;
+            carried.transform.SetParent(hips, false);
+            carried.transform.position = hips.position + transform.right * 0.16f + transform.forward * 0.08f + Vector3.up * 0.08f; // at the belt line
+            // The card's thin side faces out from the hip, its long edge level.
+            carried.transform.rotation = Quaternion.LookRotation(Vector3.up, outward); // the pickup is a flat box: x long, y thin, z wide
+            Vector3 world = drop.transform.lossyScale * BeltScale, parent = hips.lossyScale;
+            carried.transform.localScale = new Vector3(world.x / parent.x, world.y / parent.y, world.z / parent.z);
         }
 
         private void Awake()
@@ -53,7 +91,11 @@ namespace GlorifiedBody.Interaction
 
         private void OnDeath()
         {
-            if (dropped || drop == null) return;
+            if (dropped || drop == null)
+            {
+                if (carried != null) carried.SetActive(false);
+                return;
+            }
             StartCoroutine(DropAfterFall());
         }
 
@@ -66,6 +108,7 @@ namespace GlorifiedBody.Interaction
         /// <summary>The item shows on the floor beside the body now (a dead one with no body: where it stood).</summary>
         public void DropNow()
         {
+            if (carried != null) carried.SetActive(false); // off the belt
             if (dropped || drop == null) return; // taken already, or removed by a load
             if (drop.Taken) return;
             dropped = true;
