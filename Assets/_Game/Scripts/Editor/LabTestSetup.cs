@@ -99,8 +99,7 @@ namespace GlorifiedBody.Editor
             RoomKit.Spawn(figures, Gunman, "labworker_pistol", new Vector3(3f, 0f, 5.5f), 190f);
 
             SaveAssets.SavePoint("Save_Lab", new Vector3(-9f, 0f, -3f), 90f);
-            GameObject music = MenuLoopSetup.EnsureRoot("[Music]");
-            MenuLoopSetup.EnsureComponent<RoomMusic>(music).Key = MusicKey;
+            RoomKit.Music(MusicKey);
 
             // The cameras of the kit room (the same hall): the west half from the east wall, the east half from the west
             // wall, one at the door for the store room.

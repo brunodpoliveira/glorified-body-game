@@ -126,6 +126,23 @@ namespace GlorifiedBody.Editor
         }
 
         /// <summary>The unlit material of a pickup: one flat colour, no light, no shadow on it.</summary>
+        /// <summary>An unlit material of a plain colour, saved by its id (GB_Unlit_&lt;id&gt;): props and placeholders.</summary>
+        public static Material UnlitMaterial(string id, Color colour)
+        {
+            string path = $"{MaterialsFolder}/GB_Unlit_{id}.mat";
+            Shader shader = Shader.Find(UnlitShaderName);
+            var material = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (material == null)
+            {
+                material = new Material(shader);
+                AssetDatabase.CreateAsset(material, path);
+            }
+            material.shader = shader;
+            material.SetColor("_BaseColor", colour);
+            EditorUtility.SetDirty(material);
+            return material;
+        }
+
         public static Material UnlitMaterial(ItemDefinition item)
         {
             string path = $"{MaterialsFolder}/GB_Pickup_{item.itemId}.mat";

@@ -53,5 +53,8 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/_Game/Scenes/ScreenTest.unity
     guid: 933ce46c4b18eb3649895c0c25b5da6b
+  - enabled: 1
+    path: Assets/_Game/Scenes/OutfitTest.unity
+    guid: 8fba0e771f4fb65cd8e81f6e109ff91e
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0

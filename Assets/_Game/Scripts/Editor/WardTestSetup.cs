@@ -91,8 +91,7 @@ namespace GlorifiedBody.Editor
             SaveAssets.SavePoint("Save_Ward", new Vector3(-9f, 0f, -3f), 90f);
             RoomKit.Exit("Exit_WardWest", new Vector3(-hw - 1.7f, 1.2f, 0f), new Vector3(0.6f, 2.4f, 2f), TravelTestSetup.SceneB, TravelTestSetup.EntryFromA);
             RoomKit.Entry(EntryWest, new Vector3(-hw + 1.4f, 0f, 0f), 90f);
-            GameObject music = MenuLoopSetup.EnsureRoot("[Music]");
-            MenuLoopSetup.EnsureComponent<RoomMusic>(music).Key = MusicKey;
+            RoomKit.Music(MusicKey);
 
             // The cameras of the kit room (the same hall).
             GameObject camerasRoot = LookTestSetup.ResetCameras();

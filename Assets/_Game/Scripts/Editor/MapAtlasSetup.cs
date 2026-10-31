@@ -25,6 +25,7 @@ namespace GlorifiedBody.Editor
         public const string TrainingFloor = "training";
         public const string TestFloor1 = "test_1";
         public const string TestFloor2 = "test_2";
+        public const string TestFloor3 = "test_3";
 
         private struct Place
         {
@@ -38,11 +39,12 @@ namespace GlorifiedBody.Editor
             (TrainingFloor, "TRAINING"),
             (TestFloor1, "TEST FLOOR 1"),
             (TestFloor2, "TEST FLOOR 2"),
+            (TestFloor3, "TEST FLOOR 3"),
         };
 
         /// <summary>
         /// Where each room lies on its floor (floor metres = world x, z + offset). TRAVEL A's east corridor and TRAVEL B's
-        /// west corridor are the same piece of floor. KIT TEST lies east of TRAVEL B, the LAB east of the WARD.
+        /// west corridor are the same piece of floor. KIT TEST lies east of TRAVEL B, the LAB east of the WARD, the SCREENS east of the LOCKERS.
         /// </summary>
         private static readonly Place[] Layout =
         {
@@ -53,6 +55,8 @@ namespace GlorifiedBody.Editor
             new Place("KitTest", TestFloor1, "KIT TEST", 31f, 0f),
             new Place("WardTest", TestFloor2, "WARD", 0f, 0f),
             new Place("LabTest", TestFloor2, "LAB", 22.5f, 0f),
+            new Place("OutfitTest", TestFloor3, "LOCKERS", 0f, 0f),
+            new Place("ScreenTest", TestFloor3, "SCREENS", 16f, -13.8f), // the gym (z 10.3 to 17.3) east of the lockers' hall
         };
 
         [MenuItem("GlorifiedBody/Build Map Atlas")]

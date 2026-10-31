@@ -19,6 +19,8 @@ MonoBehaviour:
     title: TEST FLOOR 1
   - id: test_2
     title: TEST FLOOR 2
+  - id: test_3
+    title: TEST FLOOR 3
   rooms:
   - scene: TrainingRoom
     floor: training
@@ -226,3 +228,55 @@ MonoBehaviour:
       path: Save_Lab
       position: {x: -9, y: -3}
       label: SAVE
+  - scene: OutfitTest
+    floor: test_3
+    title: LOCKERS
+    offset: {x: 0, y: 0}
+    areas:
+    - serializedVersion: 2
+      x: -10
+      y: -7
+      width: 20
+      height: 14
+    exits: []
+    marks:
+    - kind: 1
+      path: '[Pills]/Pill_0'
+      position: {x: -4, y: 1}
+      label: SHORT CAPSULE
+    - kind: 1
+      path: '[Pills]/Pill_1'
+      position: {x: -2.8, y: 1}
+      label: SHORT CAPSULE
+    - kind: 1
+      path: '[Pills]/Pill_2'
+      position: {x: -1.5999999, y: 1}
+      label: SHORT CAPSULE
+    - kind: 1
+      path: '[Pills]/Pill_3'
+      position: {x: -0.39999986, y: 1}
+      label: SHORT CAPSULE
+    - kind: 1
+      path: '[Pills]/Pill_4'
+      position: {x: 0.8000002, y: 1}
+      label: SHORT CAPSULE
+    - kind: 1
+      path: '[Pills]/Pill_5'
+      position: {x: 2.0000002, y: 1}
+      label: SHORT CAPSULE
+    - kind: 3
+      path: Save_Lockers
+      position: {x: -8.5, y: 4}
+      label: SAVE
+  - scene: ScreenTest
+    floor: test_3
+    title: SCREENS
+    offset: {x: 16, y: -13.8}
+    areas:
+    - serializedVersion: 2
+      x: -4
+      y: 10.299999
+      width: 8
+      height: 7
+    exits: []
+    marks: []

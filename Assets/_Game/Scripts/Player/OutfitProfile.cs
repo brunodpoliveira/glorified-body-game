@@ -18,5 +18,7 @@ namespace GlorifiedBody.Player
         [Min(0)] public int drugSlotsPerType = 2;
         /// <summary>The item slots of the inventory (keys, logs, objects). Bruno, 2026-10-22: the guard outfit has more. PROPOSED numbers.</summary>
         [Min(1)] public int itemSlots = 4;
+        /// <summary>Her model in this outfit: a class of the character catalog (2026-10-31, the outfit change).</summary>
+        public string modelClass = "lucy_bare";
     }
 }

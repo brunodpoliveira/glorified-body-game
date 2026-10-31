@@ -238,16 +238,4 @@ namespace GlorifiedBody.Audio
             Changes++;
         }
     }
-
-    /// <summary>The music key of a room: rooms of one sector share a key, and so a track (Resources/Audio/Music/&lt;key&gt;/).</summary>
-    public sealed class RoomMusic : MonoBehaviour
-    {
-        [SerializeField] private string key = "";
-
-        public string Key
-        {
-            get => key;
-            set => key = value ?? "";
-        }
-    }
 }

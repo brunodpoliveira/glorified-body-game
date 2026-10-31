@@ -86,6 +86,17 @@ namespace GlorifiedBody.Editor
             return MenuLoopSetup.EnsureComponent<RoomEntry>(obj);
         }
 
+        /// <summary>The room's music key on "[Music]". A missing script left there by an older build goes first.</summary>
+        public static Audio.RoomMusic Music(string key)
+        {
+            GameObject music = MenuLoopSetup.EnsureRoot("[Music]");
+            GameObjectUtility.RemoveMonoBehavioursWithMissingScript(music);
+            Audio.RoomMusic room = MenuLoopSetup.EnsureComponent<Audio.RoomMusic>(music);
+            room.Key = key;
+            EditorUtility.SetDirty(room);
+            return room;
+        }
+
         /// <summary>A sequence of steps with its done flag (empty: "seq_" + its name).</summary>
         public static ScriptedSequence Sequence(string name, string doneFlag, params ScriptStep[] steps)
         {

@@ -61,6 +61,16 @@ namespace GlorifiedBody.Player
             return true;
         }
 
+        /// <summary>One drug of the type leaves the inventory unused (the pockets go: it falls to the floor).</summary>
+        public bool Drop(DrugType type)
+        {
+            if (!Has(type)) return false;
+            counts[(int)type]--;
+            RunTelemetry.Event("drug_dropped", $"{type}:{counts[(int)type]}");
+            OnChanged?.Invoke();
+            return true;
+        }
+
         /// <summary>Tests and bots.</summary>
         public void DebugSet(DrugType type, int count)
         {

@@ -108,11 +108,23 @@ namespace GlorifiedBody.Player
             health.SetSecondWindEnabled(!oneHit && secondWindByDefault);
         }
 
-        public void SetOutfit(OutfitProfile profile)
+        /// <summary>
+        /// Puts on the outfit: its HP, slots and recharge, and its model (LucyModel). keepDamage (a change in play): she
+        /// keeps the damage she took, so the uniform adds its armour and taking it off takes the armour away (never
+        /// below 1 HP). Without it (a new game, a load) the HP fills, and the load sets the saved HP after.
+        /// </summary>
+        public void SetOutfit(OutfitProfile profile, bool keepDamage = false)
         {
             if (profile == null) return;
+            float hp = health.CurrentHealth, oldMax = health.MaxHealth;
             outfit = profile;
-            ApplyOutfit();
+            if (keepDamage)
+            {
+                health.SetMaxHealth(MaxHpTarget, fillToMax: false);
+                health.SetHealth(Mathf.Clamp(hp + (health.MaxHealth - oldMax), 1f, health.MaxHealth));
+            }
+            else ApplyOutfit();
+            GlorifiedBody.Characters.LucyModel.Wear(gameObject, profile.modelClass);
             RunTelemetry.Event("outfit", profile.outfitId);
             OnChanged?.Invoke();
         }

@@ -76,6 +76,7 @@ namespace GlorifiedBody.Tests.PlayMode
         [UnityTest]
         public IEnumerator TheCrtWall_PlaysWhenSheWalksIn_WithItsSoundAndLines_Once()
         {
+            Assert.AreEqual("screen_test", MusicDirector.Instance.RoomKey, "the room's music key (RoomMusic loads)");
             InWorldScreen wall = Screen(Wall);
             Assert.AreEqual(24, wall.faces.Length, "the wall of CRTs is one screen with 24 faces");
             Assert.IsNotNull(wall.clip, "the clip (tools/screen_placeholder.sh)");

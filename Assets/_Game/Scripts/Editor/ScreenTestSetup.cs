@@ -110,8 +110,7 @@ namespace GlorifiedBody.Editor
             ScriptedSequence tape = RoomKit.Sequence("Seq_RehearsalTape", TapeFlag, ScriptStep.Screen(wallObj));
             RoomKit.Trigger("Trigger_Gym", new Vector3(0f, 1f, 14.4f), new Vector3(7.6f, 2f, 5.4f), tape);
 
-            GameObject music = MenuLoopSetup.EnsureRoot("[Music]");
-            MenuLoopSetup.EnsureComponent<RoomMusic>(music).Key = MusicKey;
+            RoomKit.Music(MusicKey);
 
             // The tutorial's cameras (the same gym, the door shut).
             GameObject camerasRoot = LookTestSetup.ResetCameras();

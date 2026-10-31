@@ -19,3 +19,4 @@ MonoBehaviour:
   shortDecayPerSecond: 0
   drugSlotsPerType: 4
   itemSlots: 8
+  modelClass: lucy_guard

@@ -88,6 +88,8 @@ namespace GlorifiedBody.UI
         private Text secondWindText;
         // The exp level (design §11.2): "LV n" and a thin exp bar over the bars, "LEVEL n" for a moment at a level up.
         private Text levelText;
+        private Text outfitText; // the outfit she wears (2026-10-31, the outfit change)
+        public string OutfitShown => outfitText != null ? outfitText.text : "";
         private Image expFill;
         private Text levelUpText;
         private float levelUpUntil = -1f;
@@ -193,6 +195,9 @@ namespace GlorifiedBody.UI
             levelText = Label(bars.transform, "Level", 18, TextAnchor.MiddleLeft, new Vector2(0f, 1f), new Vector2(0f, 32f), new Vector2(90f, 24f));
             levelText.fontStyle = FontStyle.Bold;
             levelText.color = new Color(0.8f, 0.95f, 0.75f);
+            outfitText = Label(bars.transform, "Outfit", 16, TextAnchor.MiddleLeft, new Vector2(0f, 1f), new Vector2(0f, 56f), new Vector2(300f, 22f));
+            outfitText.fontStyle = FontStyle.Bold;
+            outfitText.color = new Color(0.75f, 0.8f, 0.9f);
             var expBg = Element("ExpBg", bars.transform);
             var expBgRect = expBg.GetComponent<RectTransform>();
             expBgRect.anchorMin = expBgRect.anchorMax = new Vector2(0f, 1f);
@@ -452,6 +457,8 @@ namespace GlorifiedBody.UI
             if (stats == null || levelText == null) return;
             int level = stats.Level;
             levelText.text = $"LV {level}";
+            string outfit = stats.Outfit != null ? stats.Outfit.displayName : "";
+            if (outfitText != null && outfitText.text != outfit) outfitText.text = outfit;
             int from = ExperienceRules.Threshold(level);
             int to = ExperienceRules.Threshold(level + 1);
             expFill.fillAmount = level >= ExperienceRules.MaxLevel || to <= from ? 1f : Mathf.Clamp01((stats.Exp - from) / (float)(to - from));

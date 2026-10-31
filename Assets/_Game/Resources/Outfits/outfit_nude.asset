@@ -19,3 +19,4 @@ MonoBehaviour:
   shortDecayPerSecond: 1
   drugSlotsPerType: 2
   itemSlots: 4
+  modelClass: lucy_bare
