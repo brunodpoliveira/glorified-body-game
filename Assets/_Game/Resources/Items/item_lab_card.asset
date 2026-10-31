@@ -20,3 +20,4 @@ MonoBehaviour:
   description: A placeholder key card from a lab worker's coat. It opens the store
     room of the lab.
   logText: 
+  mapFloor: 

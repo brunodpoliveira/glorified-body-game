@@ -23,7 +23,8 @@ namespace GlorifiedBody.Systems
             GameOver,
             LevelComplete,
             Cutscene, // a cutscene plays: time stops, no game key passes (2026-10-26)
-            Reading // a log or a scan fills the screen: time stops, only its close keys pass (Bruno, 2026-10-26)
+            Reading, // a log or a scan fills the screen: time stops, only its close keys pass (Bruno, 2026-10-26)
+            Map // the map screen: time stops, only its keys pass (Bruno, 2026-10-31)
         }
 
         public static GameManager Instance { get; private set; }
@@ -53,7 +54,35 @@ namespace GlorifiedBody.Systems
             if (currentState == GameState.Cutscene) return action == InputManager.GameAction.Interact; // the skip key
             if (currentState == GameState.Inventory) return IsInventoryAction(action);
             if (currentState == GameState.Reading) return IsReadingAction(action);
+            if (currentState == GameState.Map) return IsMapAction(action);
             return true;
+        }
+
+        /// <summary>The keys of the map screen: close it, change the floor.</summary>
+        public static bool IsMapAction(InputManager.GameAction action) =>
+            action == InputManager.GameAction.Map || action == InputManager.GameAction.Back
+            || action == InputManager.GameAction.TurnLeft || action == InputManager.GameAction.TurnRight;
+
+        public bool IsMap => currentState == GameState.Map;
+
+        /// <summary>The map screen opens: the world stops as in the pause. False when the game is not playing.</summary>
+        public bool OpenMap()
+        {
+            if (currentState != GameState.Playing) return false;
+            storedTimeScale = Time.timeScale;
+            storedFixedDeltaTime = Time.fixedDeltaTime;
+            Time.timeScale = 0f;
+            Time.fixedDeltaTime = 0f;
+            SetState(GameState.Map);
+            return true;
+        }
+
+        public void CloseMap()
+        {
+            if (currentState != GameState.Map) return;
+            Time.timeScale = storedTimeScale;
+            Time.fixedDeltaTime = storedFixedDeltaTime;
+            SetState(GameState.Playing);
         }
 
         /// <summary>The keys that close a log or a scan.</summary>
@@ -146,6 +175,11 @@ namespace GlorifiedBody.Systems
             if (currentState == GameState.Inventory)
             {
                 if (Input.GetKeyDown(KeyCode.Escape)) CloseInventory();
+                return;
+            }
+            if (currentState == GameState.Map)
+            {
+                if (Input.GetKeyDown(KeyCode.Escape)) CloseMap();
                 return;
             }
             if (currentState == GameState.Playing || currentState == GameState.Paused)

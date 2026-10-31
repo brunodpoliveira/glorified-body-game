@@ -14,7 +14,9 @@ namespace GlorifiedBody.Interaction
         /// <summary>A pill or a capsule: it goes to the drug count and takes a slot.</summary>
         Drug = 3,
         /// <summary>Another mission-critical item (the injector): no slot.</summary>
-        Critical = 4
+        Critical = 4,
+        /// <summary>A floor plan: the whole floor shows on the map (Bruno, 2026-10-31). No slot.</summary>
+        Map = 5
     }
 
     /// <summary>
@@ -44,9 +46,11 @@ namespace GlorifiedBody.Interaction
         public Color colour = Color.white;
         [TextArea(2, 4)] public string description = "";
         [TextArea(6, 20)] public string logText = "";
+        [Tooltip("A floor plan (kind Map): the id of the floor it shows (MapAtlas).")]
+        public string mapFloor = "";
 
-        /// <summary>Keys, logs and the critical items take no slot (Bruno, 2026-10-22).</summary>
-        public bool IsCritical => kind == ItemKind.Log || kind == ItemKind.Key || kind == ItemKind.Critical;
+        /// <summary>Keys, logs, floor plans and the critical items take no slot (Bruno, 2026-10-22).</summary>
+        public bool IsCritical => kind == ItemKind.Log || kind == ItemKind.Key || kind == ItemKind.Critical || kind == ItemKind.Map;
 
         public const string ResourceFolder = "Items";
         private static System.Collections.Generic.Dictionary<string, ItemDefinition> byId;

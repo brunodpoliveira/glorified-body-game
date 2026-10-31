@@ -114,7 +114,8 @@ namespace GlorifiedBody.Systems
         {
             GameManager gm = GameManager.Instance;
             return gm != null && (gm.CurrentState == GameManager.GameState.Paused || gm.CurrentState == GameManager.GameState.Inventory
-                                  || gm.CurrentState == GameManager.GameState.Cutscene || gm.CurrentState == GameManager.GameState.Reading);
+                                  || gm.CurrentState == GameManager.GameState.Cutscene || gm.CurrentState == GameManager.GameState.Reading
+                                  || gm.CurrentState == GameManager.GameState.Map);
         }
 
         private static bool IsEnded() => !IsPlaying() && !IsHeld();

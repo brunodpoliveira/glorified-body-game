@@ -301,6 +301,13 @@ namespace GlorifiedBody.Automation
                     c.Pad.Tap(InputManager.GameAction.Inventory); // closed
                     yield return BotClock.Wait(0.3f);
                     break;
+                case "map":
+                    c.Pad.Tap(InputManager.GameAction.Map); // the room stops
+                    yield return BotClock.Wait(0.5f);
+                    c.Moment?.Invoke("map");
+                    c.Pad.Tap(InputManager.GameAction.Map); // closed
+                    yield return BotClock.Wait(0.3f);
+                    break;
                 case "scan_video":
                     yield return ScanAt(c, c.Director.MonitorsPoint, c.Director.MonitorsScanId, -1f);
                     break;

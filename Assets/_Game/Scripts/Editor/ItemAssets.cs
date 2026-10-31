@@ -23,6 +23,7 @@ namespace GlorifiedBody.Editor
         public static readonly Color DFelonColour = new Color(0.35f, 0.6f, 1f);
         public static readonly Color LogColour = new Color(0.96f, 0.95f, 0.88f);
         public static readonly Color KeyColour = new Color(1f, 0.82f, 0.2f);
+        public static readonly Color PlanColour = new Color(0.6f, 0.82f, 1f);
 
         public static void CreateAll()
         {
@@ -34,6 +35,7 @@ namespace GlorifiedBody.Editor
             TestLog();
             TestKey();
             LabCard();
+            FloorPlan(MapAtlasSetup.TestFloor1, "FLOOR PLAN: TEST FLOOR 1");
             AssetDatabase.SaveAssets();
         }
 
@@ -68,6 +70,15 @@ namespace GlorifiedBody.Editor
         public static ItemDefinition LabCard()
         {
             return Item("lab_card", "LAB KEY CARD", ItemKind.Key, KeyColour, "A placeholder key card from a lab worker's coat. It opens the store room of the lab.", "", DrugType.Nalcon);
+        }
+
+        /// <summary>A floor plan: the whole floor shows on the map (Bruno, 2026-10-31). A key item. PLACEHOLDER words.</summary>
+        public static ItemDefinition FloorPlan(string floor, string name)
+        {
+            ItemDefinition item = Item("plan_" + floor, name, ItemKind.Map, PlanColour, "A printed floor plan. The whole floor shows on the map.", "", DrugType.Nalcon);
+            item.mapFloor = floor;
+            EditorUtility.SetDirty(item);
+            return item;
         }
 
         private static ItemDefinition Item(string id, string name, ItemKind kind, Color colour, string description, string logText, DrugType drug)

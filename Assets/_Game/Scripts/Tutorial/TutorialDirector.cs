@@ -9,6 +9,7 @@ using GlorifiedBody.DebugTools;
 using GlorifiedBody.Destruction;
 using GlorifiedBody.Enemy;
 using GlorifiedBody.Interaction;
+using GlorifiedBody.Map;
 using GlorifiedBody.Player;
 using GlorifiedBody.Systems;
 using GlorifiedBody.UI;
@@ -103,7 +104,7 @@ namespace GlorifiedBody.Tutorial
         private bool slammed, propThrown, grenadeLeft, shieldFlanked;
         private EnemyShield shield;
         public EnemyShield Shield => shield;
-        private bool ranInStep, dodgedSide, launched, caught, drugUsed, shortBegan, shortEnded, logRead, doorScanned, monitorsScanned, inventoryOpened, inventoryClosed;
+        private bool ranInStep, dodgedSide, launched, caught, drugUsed, shortBegan, shortEnded, logRead, doorScanned, monitorsScanned, inventoryOpened, inventoryClosed, mapOpened, mapClosed;
         private ItemInventory items;
         private readonly List<(LockOnTargetable target, Vector3 position, Quaternion rotation)> dummies = new List<(LockOnTargetable, Vector3, Quaternion)>();
         // The weapon steps show only their own dummy (Bruno, 2026-10-24: "once the grenade steps start we should have
@@ -184,6 +185,8 @@ namespace GlorifiedBody.Tutorial
             InventoryUI.OnOpened += OnInventoryOpened;
             InventoryUI.OnClosed += OnInventoryClosed;
             InventoryUI.OnLogRead += OnInventoryLogRead;
+            MapScreen.OnOpened += OnMapOpened;
+            MapScreen.OnClosed += OnMapClosed;
             capsule = FindObjectsByType<ItemPickup>(FindObjectsSortMode.None).Where(p => p.item != null && p.item.kind == ItemKind.Drug)
                 .OrderBy(p => Vector3.Distance(p.transform.position, capsulePoint)).FirstOrDefault();
 
@@ -210,6 +213,8 @@ namespace GlorifiedBody.Tutorial
             InventoryUI.OnOpened -= OnInventoryOpened;
             InventoryUI.OnClosed -= OnInventoryClosed;
             InventoryUI.OnLogRead -= OnInventoryLogRead;
+            MapScreen.OnOpened -= OnMapOpened;
+            MapScreen.OnClosed -= OnMapClosed;
             EnemyGrenade.OnBurst -= OnGrenadeBurst;
         }
 
@@ -233,6 +238,13 @@ namespace GlorifiedBody.Tutorial
         }
 
         private void OnInventoryOpened() => inventoryOpened = true;
+
+        private void OnMapOpened() => mapOpened = true;
+
+        private void OnMapClosed()
+        {
+            if (mapOpened) mapClosed = true;
+        }
 
         private void OnInventoryLogRead(ItemDefinition item)
         {
@@ -343,6 +355,11 @@ namespace GlorifiedBody.Tutorial
                 "Show us what you carry.",
                 "{Inventory} opens the inventory: the room stops. {TurnLeft} {TurnRight} select, {Interact} reads or uses. {Inventory} closes it.",
                 () => inventoryClosed));
+            // The map (Bruno, 2026-10-31: hidden at the start, a room shows when she enters it). PLACEHOLDER lines.
+            steps.Add(new TutorialStep("map",
+                "Where are you? Look at your map.",
+                "{Map} opens the map: the room stops. It shows the rooms you know, and the doors, items and logs in them. {Map} closes it.",
+                () => mapClosed));
             steps.Add(new TutorialStep("scan_video",
                 "Now the monitors. They remember more.",
                 "Face the monitors. {Scan} scans them: a short clip. It closes at its end, or with {Scan}.",
@@ -482,7 +499,7 @@ namespace GlorifiedBody.Tutorial
             StepIndex = index;
             StepStartTime = Time.time;
             slammed = propThrown = false;
-            ranInStep = dodgedSide = launched = caught = drugUsed = shortBegan = shortEnded = doorScanned = monitorsScanned = inventoryOpened = inventoryClosed = false;
+            ranInStep = dodgedSide = launched = caught = drugUsed = shortBegan = shortEnded = doorScanned = monitorsScanned = inventoryOpened = inventoryClosed = mapOpened = mapClosed = false;
             targetChanges = 0;
             firedKind = null;
             firedCharge = 0f;

@@ -328,9 +328,20 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   His answers after his manual test: rank 11 (fire, firemen) is NOT in the demo, rank 14 on hold, the short starts at
   the attack press and lasts 16 s (as built), the tutorial goes into the story path, the writer makes the death
   screens. A restart of a room puts back the story flags she came in with (`SaveSystem`, the ward's mark stayed up).
-  NEXT (his rules, build when he returns): THE MAP starts hidden, each room shows when she enters it, a floor plan item
-  shows the whole floor; locked doors, items and logs are marked. Then screens and audio logs, the outfit change, the
-  floor shield, a seam sweep, all in isolation before the demo level.
+- 2026-10-31, THE MAP (`devlog-notes/2026-10-31_map.md`, Bruno: "the map will start hidden, and being revealed
+  room-by-room unless the player picks up a floor plan item; key places ... are to marked"): M opens it
+  (`GameAction.Map`, `GameState.Map` stops the room), A and D change the floor. `Scripts/Map/`: `MapAtlas`
+  (`Resources/Map/map_atlas.asset`), `MapKnowledge` (a room shows when she is or was in it, `WorldState`, or when she
+  carries a floor plan, `ItemKind.Map` + `ItemDefinition.mapFloor`; no save data of its own), `MapScreen` ("[Map]",
+  one object for the game). Key places: locked doors red/green, items, logs, saves. `MapAtlasSetup.BuildAtlas` reads
+  each room scene (objects named "...Floor", exits, doors, pickups, save machines) from its layout table: RUN IT after
+  a room changes, and a demo room needs a line there. Opening a scene unloads the atlas: read the rooms first.
+  Test floors: TRAINING, TEST FLOOR 1 (TRAVEL A with a test log, TRAVEL B with the floor plan, KIT), TEST FLOOR 2
+  (WARD, LAB). Tutorial: 24 steps (map). `MapTests` (7), bot `play TravelTest_A Main_Menu map 300`.
+  NEXT: AUDIO LOGS (his rules, 2026-10-31): she collects one and listens while she walks, combat pauses it (she
+  resumes it), replay from the inventory, the music drops to near silence while it plays. Then screens, the outfit
+  change, the floor shield, a seam sweep, all in isolation before the demo level. FOR LATER (Bruno): replace the temp
+  audio, music, SFX and graphics with the real ones; refine the character models and the texture placement.
 
 ## Rules
 

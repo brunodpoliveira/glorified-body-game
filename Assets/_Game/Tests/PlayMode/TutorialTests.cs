@@ -29,7 +29,7 @@ namespace GlorifiedBody.Tests.PlayMode
     public class TutorialTests
     {
         private const string MainMenu = "Main_Menu";
-        private static readonly string[] ExpectedSteps = { "walk", "run", "dodge", "switch", "blast", "fire", "lift_throw", "slam", "prop", "catch", "grenade", "shield", "cover", "capsule", "feed", "log", "scan_image", "key", "door", "inventory", "scan_video", "short", "complete" };
+        private static readonly string[] ExpectedSteps = { "walk", "run", "dodge", "switch", "blast", "fire", "lift_throw", "slam", "prop", "catch", "grenade", "shield", "cover", "capsule", "feed", "log", "scan_image", "key", "door", "inventory", "map", "scan_video", "short", "complete" };
 
         private TutorialDirector director;
 

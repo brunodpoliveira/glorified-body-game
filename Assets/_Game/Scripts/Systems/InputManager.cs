@@ -34,7 +34,8 @@ namespace GlorifiedBody.Systems
             Interact,
             Defend, // RMB: the defensive use of the selected power (Bruno, 2026-10-20)
             Scan,     // the psychic scan, separate from Interact (Bruno, 2026-10-22)
-            Inventory // the inventory overlay, pauses the game (Bruno, 2026-10-22)
+            Inventory, // the inventory overlay, pauses the game (Bruno, 2026-10-22)
+            Map // the map screen, pauses the game (Bruno, 2026-10-31)
         }
 
         [Serializable]
@@ -61,6 +62,7 @@ namespace GlorifiedBody.Systems
                 GameAction.Interact => "Interact (take, read)",
                 GameAction.Scan => "Psychic Scan",
                 GameAction.Inventory => "Inventory",
+                GameAction.Map => "Map",
                 GameAction.Defend => "Defend (hold: shield, later)",
                 _ => action.ToString()
             };
@@ -89,6 +91,7 @@ namespace GlorifiedBody.Systems
             new KeyBinding { action = GameAction.Defend, defaultKey = KeyCode.Mouse1 },
             new KeyBinding { action = GameAction.Scan, defaultKey = KeyCode.F },
             new KeyBinding { action = GameAction.Inventory, defaultKey = KeyCode.I },
+            new KeyBinding { action = GameAction.Map, defaultKey = KeyCode.M },
         };
 
         [Header("Default Bindings")]

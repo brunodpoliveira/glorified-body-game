@@ -295,7 +295,9 @@ namespace GlorifiedBody.UI
                 OnLogRead?.Invoke(e.Item);
                 return "read:" + e.Item.itemId;
             }
-            wordsText.text = e.Item != null && e.Item.kind == ItemKind.Key ? "Use it at the door it opens: face the door and press " + Key(InputManager.GameAction.Interact) + "." : e.Words;
+            wordsText.text = e.Item != null && e.Item.kind == ItemKind.Key ? "Use it at the door it opens: face the door and press " + Key(InputManager.GameAction.Interact) + "."
+                : e.Item != null && e.Item.kind == ItemKind.Map ? "The whole floor shows on the map. Press " + Key(InputManager.GameAction.Map) + " to see it."
+                : e.Words;
             return "look";
         }
 

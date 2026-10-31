@@ -39,6 +39,8 @@ namespace GlorifiedBody.Editor
             healthSo.FindProperty("destroyOnDeath").boolValue = false; // the body stays for the return
             healthSo.ApplyModifiedPropertiesWithoutUndo();
             MenuLoopSetup.EnsurePickup("Drug_Nalcon", DrugType.Nalcon, new Vector3(-3f, 0.4f, -3f));
+            // A log for the map's marks (2026-10-31).
+            ItemAssets.Pickup(null, "Log_Travel", ItemAssets.TestLog(), PrimitiveType.Cube, new Vector3(3f, 0.05f, 3f), new Vector3(0.3f, 0.04f, 0.4f), Quaternion.Euler(0f, 15f, 0f));
             Exit("Exit_ToB", new Vector3(6.7f, 1.2f, 0f), SceneB, EntryFromA);
             Entry(EntryFromB, new Vector3(4.6f, 0f, 0f), 270f);
             Finish(a, new Vector3(-5f, 6f, -7f), new Vector3(1f, 0f, 1f));
@@ -51,11 +53,13 @@ namespace GlorifiedBody.Editor
             Exit("Exit_ToA", new Vector3(-5.7f, 1.2f, 0f), SceneA, EntryFromB);
             Entry(EntryFromA, new Vector3(-3.6f, 0f, 0f), 90f);
             SaveAssets.SavePoint("Save_TravelB", new Vector3(3f, 0f, 2.5f), 180f);
+            // The floor plan of TEST FLOOR 1 (Bruno, 2026-10-31): the KIT TEST room shows on the map before she goes there.
+            ItemAssets.Pickup(null, "Plan_TestFloor1", ItemAssets.FloorPlan(MapAtlasSetup.TestFloor1, "FLOOR PLAN: TEST FLOOR 1"), PrimitiveType.Cube, new Vector3(1f, 0.05f, -2.5f), new Vector3(0.4f, 0.03f, 0.3f), Quaternion.Euler(0f, -10f, 0f));
             Finish(b, new Vector3(4f, 6f, -6f), new Vector3(-1f, 0f, 1f));
 
             MenuLoopSetup.CleanBuildSettings();
             AssetDatabase.SaveAssets();
-            Debug.Log("[TravelTestSetup] built TravelTest_A and TravelTest_B.");
+            Debug.Log("[TravelTestSetup] built TravelTest_A and TravelTest_B. Run MapAtlasSetup.BuildAtlas for the map.");
         }
 
         /// <summary>A floor and four walls (0.5 m thick), a 2 m doorway in the east or the west wall at z 0.</summary>

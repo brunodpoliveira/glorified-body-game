@@ -1,0 +1,224 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 792dc27201d5e2ff6846f7f7eab7facb, type: 3}
+  m_Name: map_atlas
+  m_EditorClassIdentifier: Assembly-CSharp::GlorifiedBody.Map.MapAtlas
+  floors:
+  - id: training
+    title: TRAINING
+  - id: test_1
+    title: TEST FLOOR 1
+  - id: test_2
+    title: TEST FLOOR 2
+  rooms:
+  - scene: TrainingRoom
+    floor: training
+    title: TRAINING ROOM
+    offset: {x: 0, y: 0}
+    areas:
+    - serializedVersion: 2
+      x: -5
+      y: -5
+      width: 10
+      height: 10
+    exits: []
+    marks:
+    - kind: 1
+      path: Drug_Nalcon
+      position: {x: -3, y: 0}
+      label: MK CAPSULE
+    - kind: 1
+      path: Drug_Red
+      position: {x: -3.5, y: 1.2}
+      label: SHORT CAPSULE
+    - kind: 1
+      path: Drug_DFelon
+      position: {x: -2.5, y: -1.2}
+      label: SECOND WIND PILL
+    - kind: 3
+      path: SavePoint_Training
+      position: {x: 4.55, y: -2}
+      label: SAVE
+  - scene: Tutorial
+    floor: training
+    title: THERAPY GYM
+    offset: {x: 30, y: 0}
+    areas:
+    - serializedVersion: 2
+      x: -4
+      y: 10.299999
+      width: 8
+      height: 7
+    - serializedVersion: 2
+      x: -0.9
+      y: 8.4
+      width: 1.8
+      height: 1.6000004
+    exits: []
+    marks:
+    - kind: 1
+      path: Capsule
+      position: {x: -2.6, y: 13.5}
+      label: MK CAPSULE
+    - kind: 1
+      path: Closet_Pill
+      position: {x: 0, y: 8.9}
+      label: SHORT CAPSULE
+    - kind: 0
+      path: Door_Gym
+      position: {x: 0, y: 10.35}
+      label: the test key
+    - kind: 2
+      path: Log_Clipboard
+      position: {x: -3.72, y: 14.6}
+      label: TEST LOG
+    - kind: 1
+      path: Test_Key
+      position: {x: -3.72, y: 15.4}
+      label: TEST KEY
+  - scene: TravelTest_A
+    floor: test_1
+    title: TRAVEL A
+    offset: {x: 0, y: 0}
+    areas:
+    - serializedVersion: 2
+      x: -6
+      y: -5
+      width: 12
+      height: 10
+    - serializedVersion: 2
+      x: 6.25
+      y: -1
+      width: 2
+      height: 2
+    exits:
+    - path: Exit_ToB
+      position: {x: 6.7, y: 0}
+      targetScene: TravelTest_B
+    marks:
+    - kind: 1
+      path: Drug_Nalcon
+      position: {x: -3, y: -3}
+      label: MK CAPSULE
+    - kind: 2
+      path: Log_Travel
+      position: {x: 3, y: 3}
+      label: TEST LOG
+  - scene: TravelTest_B
+    floor: test_1
+    title: TRAVEL B
+    offset: {x: 13.5, y: 0}
+    areas:
+    - serializedVersion: 2
+      x: -5
+      y: -4
+      width: 10
+      height: 8
+    - serializedVersion: 2
+      x: -7.25
+      y: -1
+      width: 2
+      height: 2
+    exits:
+    - path: Exit_ToA
+      position: {x: -5.7, y: 0}
+      targetScene: TravelTest_A
+    marks:
+    - kind: 3
+      path: Save_TravelB
+      position: {x: 3, y: 2.5}
+      label: SAVE
+    - kind: 1
+      path: Plan_TestFloor1
+      position: {x: 1, y: -2.5}
+      label: 'FLOOR PLAN: TEST FLOOR 1'
+  - scene: KitTest
+    floor: test_1
+    title: KIT TEST
+    offset: {x: 31, y: 0}
+    areas:
+    - serializedVersion: 2
+      x: -10
+      y: -7
+      width: 20
+      height: 14
+    - serializedVersion: 2
+      x: -12.25
+      y: -1
+      width: 2
+      height: 2
+    exits:
+    - path: Exit_KitWest
+      position: {x: -11.7, y: 0}
+      targetScene: TravelTest_B
+    marks:
+    - kind: 1
+      path: Drug_Nalcon
+      position: {x: -8.5, y: -5.8}
+      label: MK CAPSULE
+    - kind: 3
+      path: Save_Kit
+      position: {x: -9, y: -3}
+      label: SAVE
+  - scene: WardTest
+    floor: test_2
+    title: WARD
+    offset: {x: 0, y: 0}
+    areas:
+    - serializedVersion: 2
+      x: -10
+      y: -7
+      width: 20
+      height: 14
+    - serializedVersion: 2
+      x: -12.25
+      y: -1
+      width: 2
+      height: 2
+    exits:
+    - path: Exit_WardWest
+      position: {x: -11.7, y: 0}
+      targetScene: TravelTest_B
+    marks:
+    - kind: 3
+      path: Save_Ward
+      position: {x: -9, y: -3}
+      label: SAVE
+  - scene: LabTest
+    floor: test_2
+    title: LAB
+    offset: {x: 22.5, y: 0}
+    areas:
+    - serializedVersion: 2
+      x: -10
+      y: -7
+      width: 20
+      height: 14
+    - serializedVersion: 2
+      x: -12.25
+      y: -1
+      width: 2
+      height: 2
+    exits: []
+    marks:
+    - kind: 0
+      path: Door_Store
+      position: {x: -10.25, y: 0}
+      label: the lab key card
+    - kind: 1
+      path: Store_Pill
+      position: {x: -11.6, y: 0}
+      label: SHORT CAPSULE
+    - kind: 3
+      path: Save_Lab
+      position: {x: -9, y: -3}
+      label: SAVE

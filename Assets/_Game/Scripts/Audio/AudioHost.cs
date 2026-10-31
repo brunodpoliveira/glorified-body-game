@@ -86,7 +86,7 @@ namespace GlorifiedBody.Audio
             // A cutscene stops the world's sounds too; its own lines and music play through (CutscenePlayer).
             AudioListener.pause = state == GameManager.GameState.Paused || state == GameManager.GameState.Inventory
                                   || state == GameManager.GameState.GameOver || state == GameManager.GameState.Cutscene
-                                  || state == GameManager.GameState.Reading;
+                                  || state == GameManager.GameState.Reading || state == GameManager.GameState.Map;
             if (state == GameManager.GameState.GameOver) Sfx.Ui(Sfx.DeathSting, 0.9f);
         }
     }

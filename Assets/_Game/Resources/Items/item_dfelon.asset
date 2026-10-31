@@ -20,3 +20,4 @@ MonoBehaviour:
   description: 'A drug. It gives the second wind back: the next lethal hit leaves
     her at 1 HP. No drug gives HP. One slot.'
   logText: 
+  mapFloor: 

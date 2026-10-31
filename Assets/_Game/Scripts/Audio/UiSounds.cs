@@ -27,8 +27,8 @@ namespace GlorifiedBody.Audio
 
         private void OnStateChanged(GameManager.GameState state)
         {
-            bool stopped = state == GameManager.GameState.Paused || state == GameManager.GameState.Inventory;
-            bool wasStopped = lastState == GameManager.GameState.Paused || lastState == GameManager.GameState.Inventory;
+            bool stopped = state == GameManager.GameState.Paused || state == GameManager.GameState.Inventory || state == GameManager.GameState.Map;
+            bool wasStopped = lastState == GameManager.GameState.Paused || lastState == GameManager.GameState.Inventory || lastState == GameManager.GameState.Map;
             if (stopped && !wasStopped) Sfx.Ui(Sfx.UiOpen, 0.6f);
             else if (!stopped && wasStopped && state == GameManager.GameState.Playing) Sfx.Ui(Sfx.UiClose, 0.6f);
             lastState = state;
