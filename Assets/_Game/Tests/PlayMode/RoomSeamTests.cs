@@ -119,18 +119,28 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator TheShort_EndsAtTheDoor_AndDoesNotStartAgain()
+        public IEnumerator TheShort_GoesOn_InTheNextRoom_AndDoesNotStartAgain()
         {
+            // Bruno, 2026-10-31: "carry the short into the next room". Before: the bar arrived full with no short, and her
+            // next attack started a second one (the seam sweep).
             PsychicStats stats = lucy.GetComponent<PsychicStats>();
             ShortController shortController = lucy.GetComponent<ShortController>();
             stats.DebugSet(stats.Nalcon, PsychicStats.MaxShort);
             shortController.Begin();
             Assert.IsTrue(shortController.IsActive);
             yield return new WaitForSeconds(3f); // past the frozen start
+            float left = shortController.Remaining;
             yield return ThroughTheDoor();
-            stats = lucy.GetComponent<PsychicStats>();
-            Assert.Less(stats.Short, PsychicStats.MaxShort * 0.5f, "the bar does not arrive full: no second short at her next attack");
-            Assert.IsFalse(stats.IsShortFull);
+            shortController = lucy.GetComponent<ShortController>();
+            Assert.IsTrue(shortController.IsActive, "the short goes on in the next room");
+            Assert.LessOrEqual(shortController.Remaining, left, "with the seconds it had left");
+            Assert.Greater(shortController.Remaining, left - 2f);
+            Assert.IsFalse(shortController.InPain, "no second freeze");
+            Assert.AreEqual(0, shortController.StartPains, "no new pain in the new room");
+            Assert.IsTrue(lucy.GetComponent<TankController>().SlowWalk, "the slow walk goes on");
+            yield return WaitUntil(() => !shortController.IsActive, left + 3f);
+            Assert.IsFalse(shortController.IsActive, "it ends by itself");
+            Assert.Less(lucy.GetComponent<PsychicStats>().Short, PsychicStats.MaxShort * 0.5f, "and empties the bar, as a short does");
         }
 
         [UnityTest]

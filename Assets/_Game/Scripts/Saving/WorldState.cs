@@ -43,10 +43,8 @@ namespace GlorifiedBody.Saving
             GameObject lucy = GameObject.FindWithTag("Player");
             Health health = lucy != null ? lucy.GetComponentInChildren<Health>() : null;
             if (health != null && health.IsDead) return false; // a dead body does not leave the room
-            // The short burns out at the door: it does not cross with her, and her bar does not arrive full (seam sweep,
-            // 2026-10-31: the full bar started a second short at her next attack). PROPOSED.
-            GlorifiedBody.Player.ShortController burning = lucy != null ? lucy.GetComponent<GlorifiedBody.Player.ShortController>() : null;
-            if (burning != null && burning.IsActive) burning.End(byDrug: false);
+            // A short that runs crosses with her and goes on (Bruno, 2026-10-31: "carry the short into the next room"):
+            // SaveSystem.CapturePlayer keeps its seconds left, ShortController.GoOn goes on with them.
             Scene here = SceneManager.GetActiveScene();
             rooms[here.name] = SaveSystem.CaptureRoom(here);
             carried = lucy != null ? SaveSystem.CapturePlayer(lucy) : null;

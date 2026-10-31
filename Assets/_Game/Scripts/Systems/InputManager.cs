@@ -36,7 +36,8 @@ namespace GlorifiedBody.Systems
             Scan,     // the psychic scan, separate from Interact (Bruno, 2026-10-22)
             Inventory, // the inventory overlay, pauses the game (Bruno, 2026-10-22)
             Map, // the map screen, pauses the game (Bruno, 2026-10-31)
-            Tape // plays or pauses the audio log without the inventory (Bruno, 2026-10-31)
+            Tape, // plays or pauses the audio log without the inventory (Bruno, 2026-10-31)
+            Drop // the inventory: puts the selected thing on the floor (Bruno, 2026-10-31: "a chance to drop items")
         }
 
         [Serializable]
@@ -65,6 +66,7 @@ namespace GlorifiedBody.Systems
                 GameAction.Inventory => "Inventory",
                 GameAction.Map => "Map",
                 GameAction.Tape => "Play / Pause Tape",
+                GameAction.Drop => "Drop Item (inventory)",
                 GameAction.Defend => "Defend (tap: catch, hold: floor shield)",
                 _ => action.ToString()
             };
@@ -95,6 +97,7 @@ namespace GlorifiedBody.Systems
             new KeyBinding { action = GameAction.Inventory, defaultKey = KeyCode.I },
             new KeyBinding { action = GameAction.Map, defaultKey = KeyCode.M },
             new KeyBinding { action = GameAction.Tape, defaultKey = KeyCode.T },
+            new KeyBinding { action = GameAction.Drop, defaultKey = KeyCode.X },
         };
 
         [Header("Default Bindings")]

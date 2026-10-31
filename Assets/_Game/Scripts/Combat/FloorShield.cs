@@ -60,7 +60,7 @@ namespace GlorifiedBody.Combat
             FloorShield shield = slab.AddComponent<FloorShield>();
             shield.Holder = lucy;
             shield.born = Time.time;
-            shield.Scar = MakeScar(slab.transform.position, forward, floor.normal);
+            shield.Scar = ScarAt(slab.transform.position + floor.normal * 0.004f, Quaternion.LookRotation(forward, floor.normal));
             Current = shield;
             Sfx.Play(Sfx.Slam, slab.transform.position, 0.8f);
             RunTelemetry.Event("floor_shield", $"{spot.x:0.0},{spot.z:0.0}");
@@ -117,14 +117,13 @@ namespace GlorifiedBody.Combat
             if (Current == this) Current = null;
         }
 
-        /// <summary>The hole it leaves: a dark plate on the floor, the slab's size. It stays for the room.</summary>
-        private static GameObject MakeScar(Vector3 at, Vector3 forward, Vector3 normal)
+        /// <summary>The hole it leaves: a dark plate on the floor, the slab's size. The room keeps it (FloorScar, the saves).</summary>
+        public static GameObject ScarAt(Vector3 at, Quaternion rotation)
         {
             var scar = GameObject.CreatePrimitive(PrimitiveType.Cube);
             scar.name = "FloorShield_Scar";
             Destroy(scar.GetComponent<Collider>());
-            scar.transform.position = at + normal * 0.004f;
-            scar.transform.rotation = Quaternion.LookRotation(forward, normal);
+            scar.transform.SetPositionAndRotation(at, rotation);
             scar.transform.localScale = new Vector3(Width, 0.006f, Tall);
             Shader unlit = Shader.Find("Universal Render Pipeline/Unlit");
             if (unlit != null)
@@ -134,6 +133,7 @@ namespace GlorifiedBody.Combat
                 scar.GetComponent<Renderer>().sharedMaterial = material;
             }
             scar.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            scar.AddComponent<FloorScar>();
             return scar;
         }
 

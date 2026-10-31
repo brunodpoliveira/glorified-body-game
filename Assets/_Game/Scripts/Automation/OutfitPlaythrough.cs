@@ -128,7 +128,7 @@ namespace GlorifiedBody.Automation
             t0 = BotClock.Now;
             while (stats.Outfit.outfitId != OutfitChange.NudeId && BotClock.Now - t0 < 10f) yield return null;
             yield return BotClock.Wait(0.8f);
-            int fell = FindObjectsByType<ItemPickup>(FindObjectsSortMode.None).Count(p => p.name.StartsWith("Fell_"));
+            int fell = FindObjectsByType<FloorItem>(FindObjectsSortMode.None).Length;
             yield return Shot("grab_torn_off", new Vector3(4.4f, 1.8f, -4.6f), new Vector3(6.6f, 0.4f, -2f));
             Record("the_grab_tears_it_off", stats.Outfit.outfitId == OutfitChange.NudeId && LucyModel.Current(lucy) == "lucy_bare" && fell == 2,
                 $"outfit={stats.Outfit.outfitId} fell={fell} hp={health.CurrentHealth:0}/{health.MaxHealth:0}");

@@ -1,5 +1,6 @@
 using UnityEngine;
 using GlorifiedBody.Player;
+using GlorifiedBody.Systems;
 using GlorifiedBody.UI;
 
 namespace GlorifiedBody.Interaction
@@ -50,14 +51,40 @@ namespace GlorifiedBody.Interaction
         }
 
         public override string Hint => Wearing(null) ? "take off the uniform" : "put on " + thing;
-        public override InteractKind KindFor(Interactor who) => InteractKind.Ask;
-        public override string TextFor(Interactor who) => Wearing(who)
-            ? "Take off the uniform and leave it here?"
-            : $"Put on {thing}?";
+        public override InteractKind KindFor(Interactor who) => Over(who) > 0 ? InteractKind.Message : InteractKind.Ask;
+        public override string TextFor(Interactor who)
+        {
+            int over = Over(who);
+            if (over > 0)
+            {
+                // Bruno, 2026-10-31: "give the player a warning and a chance to drop items".
+                ItemInventory items = who.Inventory;
+                string key = InputManager.Instance != null ? InputManager.GetKeyDisplayName(InputManager.Instance.GetKey(InputManager.GameAction.Drop)) : "X";
+                return $"Without the uniform she carries {BareSlots} things. She has {items.UsedSlots}.\nDrop {over} first: inventory, {key} drop.";
+            }
+            return Wearing(who) ? "Take off the uniform and leave it here?" : $"Put on {thing}?";
+        }
+
+        private static int BareSlots
+        {
+            get
+            {
+                OutfitProfile bare = OutfitChange.Load(OutfitChange.NudeId);
+                return bare != null ? bare.itemSlots : 4;
+            }
+        }
+
+        /// <summary>The grabbables over the bare limit when she takes the uniform off here (0: they fit, or she puts it on).</summary>
+        private int Over(Interactor who)
+        {
+            if (who == null || !Wearing(who) || who.Inventory == null) return 0;
+            return Mathf.Max(0, who.Inventory.UsedSlots - BareSlots);
+        }
 
         public override string Confirm(Interactor who)
         {
             if (who == null) return "none";
+            if (Over(who) > 0) return "too_many:" + Over(who);
             GameObject lucy = who.gameObject;
             OutfitProfile to = OutfitChange.Load(Wearing(who) ? OutfitChange.NudeId : outfitId);
             if (to == null) return "no_outfit:" + outfitId;

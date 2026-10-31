@@ -109,6 +109,25 @@ namespace GlorifiedBody.Player
             StartCoroutine(Run());
         }
 
+        /// <summary>
+        /// A short that ran when she went through a door (or saved) goes on here with its seconds left (2026-10-31,
+        /// Bruno: "carry the short into the next room"). No new freeze, no pain, no surge: the shocks go on.
+        /// </summary>
+        public void GoOn(float secondsLeft)
+        {
+            if (IsActive || health.IsDead || secondsLeft <= 0f) return;
+            IsActive = true;
+            Remaining = Mathf.Min(duration, secondsLeft);
+            Victim = null;
+            pendingSelf = 0f;
+            painUntil = 0f;
+            stats.RegenPaused = true;
+            if (tank != null) tank.SetSlowWalk(true);
+            RunTelemetry.Event("short_goes_on", $"{Remaining:0.0}s");
+            OnShortBegan?.Invoke();
+            StartCoroutine(Run());
+        }
+
         /// <summary>The migraine hits: the game freezes for a moment, and Lucy's pain clip plays through it.</summary>
         private void StartPain()
         {

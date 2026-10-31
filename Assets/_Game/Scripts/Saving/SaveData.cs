@@ -42,6 +42,8 @@ namespace GlorifiedBody.Saving
         public List<string> critical = new List<string>();
         public List<string> carried = new List<string>();
         public List<int> drugs = new List<int>();
+        /// <summary>A short that runs: its seconds left (2026-10-31, Bruno: "carry the short into the next room"). 0: none.</summary>
+        public float shortLeft;
     }
 
     /// <summary>
@@ -61,6 +63,27 @@ namespace GlorifiedBody.Saving
         public List<StainState> stains = new List<StainState>();
         /// <summary>The cut limbs on the floor.</summary>
         public List<LimbState> limbs = new List<LimbState>();
+        /// <summary>Items on the floor that came in play: dropped, or fallen at an outfit change (2026-10-31).</summary>
+        public List<FloorItemState> floorItems = new List<FloorItemState>();
+        /// <summary>The holes the floor shield tore (2026-10-31).</summary>
+        public List<ScarState> scars = new List<ScarState>();
+    }
+
+    /// <summary>An item on the floor that the room did not have: its id and its place.</summary>
+    [Serializable]
+    public sealed class FloorItemState
+    {
+        public string itemId = "";
+        public Vector3 position;
+        public float yaw;
+    }
+
+    /// <summary>A scar of the floor shield: its place and turn.</summary>
+    [Serializable]
+    public sealed class ScarState
+    {
+        public Vector3 position;
+        public Quaternion rotation = Quaternion.identity;
     }
 
     /// <summary>A dead body: the root, the humanoid bones (local), and the gore on it.</summary>

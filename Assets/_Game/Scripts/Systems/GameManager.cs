@@ -45,7 +45,8 @@ namespace GlorifiedBody.Systems
         public static bool IsInventoryAction(InputManager.GameAction action) =>
             action == InputManager.GameAction.Inventory || action == InputManager.GameAction.Interact
             || action == InputManager.GameAction.Back || action == InputManager.GameAction.Forward
-            || action == InputManager.GameAction.TurnLeft || action == InputManager.GameAction.TurnRight;
+            || action == InputManager.GameAction.TurnLeft || action == InputManager.GameAction.TurnRight
+            || action == InputManager.GameAction.Drop;
 
         /// <summary>False while a menu or the game over owns the keys; inside the inventory only its keys pass.</summary>
         public bool AllowsAction(InputManager.GameAction action)

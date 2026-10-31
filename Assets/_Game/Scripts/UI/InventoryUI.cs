@@ -135,9 +135,16 @@ namespace GlorifiedBody.UI
                 || GameInput.GetActionDown(InputManager.GameAction.UseDrug, KeyCode.Q);
             bool back = GameInput.GetActionDown(InputManager.GameAction.Back, KeyCode.S);
             bool use = GameInput.GetActionDown(InputManager.GameAction.Interact, KeyCode.E);
+            bool drop = GameInput.GetActionDown(InputManager.GameAction.Drop, KeyCode.X);
             if (ReaderOpen)
             {
                 if (back || use || toggle) readerPanel.SetActive(false);
+                return;
+            }
+            if (AskingDrop)
+            {
+                if (use) Drop();
+                else if (back || toggle || drop) { askingDrop = false; Select(Selected); }
                 return;
             }
             if (AskingDrug)
@@ -154,6 +161,45 @@ namespace GlorifiedBody.UI
             if (GameInput.GetActionDown(InputManager.GameAction.TurnLeft, KeyCode.A)) Select(Selected - 1);
             if (GameInput.GetActionDown(InputManager.GameAction.TurnRight, KeyCode.D)) Select(Selected + 1);
             if (use) Act();
+            else if (drop) Drop();
+        }
+
+        private bool askingDrop;
+        /// <summary>The question "Drop the RED?" is on.</summary>
+        public bool AskingDrop => askingDrop;
+
+        /// <summary>
+        /// The drop key on the selected entry (Bruno, 2026-10-31: "give the player a warning and a chance to drop
+        /// items"): the first press asks, the second (Interact) puts one on the floor at her feet. The room keeps it
+        /// (FloorItem). Key items stay: she needs them.
+        /// </summary>
+        public string Drop()
+        {
+            if (entries.Count == 0) return "none";
+            Entry e = entries[Selected];
+            ItemDefinition item = e.Drug.HasValue ? Resources.Load<ItemDefinition>("Items/item_" + e.Drug.Value.ToString().ToLowerInvariant()) : e.Item;
+            if (item == null || (!e.Drug.HasValue && item.IsCritical))
+            {
+                wordsText.text = "She needs it. It takes no slot.";
+                return "keep:" + (item != null ? item.itemId : "none");
+            }
+            if (!askingDrop)
+            {
+                askingDrop = true;
+                wordsText.text = $"Drop the {ItemDefinition.Spoken(e.Name)}? It stays on the floor here.";
+                keysText.text = $"{Key(InputManager.GameAction.Interact)}  yes      {Key(InputManager.GameAction.Back)}  no";
+                return "ask_drop:" + item.itemId;
+            }
+            askingDrop = false;
+            GameObject lucy = inventory.gameObject;
+            bool gone = e.Drug.HasValue ? drugs != null && drugs.Drop(e.Drug.Value) : inventory.Remove(item);
+            if (!gone) return "none";
+            FloorItem.Drop(lucy, item, 0);
+            GlorifiedBody.DebugTools.RunTelemetry.Event("item_dropped", item.itemId);
+            Rebuild();
+            Select(Mathf.Min(Selected, Mathf.Max(0, entries.Count - 1)));
+            wordsText.text = "On the floor.";
+            return "dropped:" + item.itemId;
         }
 
         public void Open()
@@ -248,6 +294,7 @@ namespace GlorifiedBody.UI
             }
             Selected = (index % entries.Count + entries.Count) % entries.Count;
             pendingDrug = -1;
+            askingDrop = false;
             for (int i = 0; i < entries.Count && i < cells.Count; i++)
             {
                 Outline outline = cells[i].GetComponent<Outline>();
@@ -259,7 +306,8 @@ namespace GlorifiedBody.UI
             wordsText.text = e.Words;
             string action = e.Drug.HasValue ? "use" : e.Item != null && e.Item.kind == ItemKind.Log ? "read"
                 : e.Item != null && e.Item.kind == ItemKind.AudioLog ? (TapePlaying(e.Item) ? "pause" : "play") : "look";
-            keysText.text = $"{Key(InputManager.GameAction.TurnLeft)} {Key(InputManager.GameAction.TurnRight)}  select      {Key(InputManager.GameAction.Interact)}  {action}      {Key(InputManager.GameAction.Inventory)} / {Key(InputManager.GameAction.Back)}  close";
+            string dropKey = e.Drug.HasValue || (e.Item != null && !e.Item.IsCritical) ? $"      {Key(InputManager.GameAction.Drop)}  drop" : "";
+            keysText.text = $"{Key(InputManager.GameAction.TurnLeft)} {Key(InputManager.GameAction.TurnRight)}  select      {Key(InputManager.GameAction.Interact)}  {action}{dropKey}      {Key(InputManager.GameAction.Inventory)} / {Key(InputManager.GameAction.Back)}  close";
         }
 
         /// <summary>Interact on the selected entry: read a log, use a drug, or say where a key goes.</summary>

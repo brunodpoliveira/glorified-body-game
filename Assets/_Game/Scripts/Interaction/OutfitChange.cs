@@ -61,15 +61,10 @@ namespace GlorifiedBody.Interaction
             return fell;
         }
 
-        /// <summary>A pickup on the floor in an arc in front of her, 0.7 m out, 25 degrees apart.</summary>
         private static ItemPickup Fall(GameObject lucy, ItemDefinition item, int index)
         {
-            float side = (index % 2 == 0 ? 1f : -1f) * ((index + 1) / 2) * 25f;
-            Vector3 dir = Quaternion.Euler(0f, side, 0f) * Vector3.ProjectOnPlane(lucy.transform.forward, Vector3.up).normalized;
-            Vector3 at = lucy.transform.position + dir * 0.7f + Vector3.up * 0.06f;
-            ItemPickup pickup = ItemPickup.Spawn(item, "Fell_" + item.itemId + "_" + index, at, new Vector3(0.14f, 0.1f, 0.14f), Quaternion.Euler(0f, side * 3f, 0f));
             RunTelemetry.Event("item_fell", item.itemId);
-            return pickup;
+            return FloorItem.Drop(lucy, item, index);
         }
     }
 }

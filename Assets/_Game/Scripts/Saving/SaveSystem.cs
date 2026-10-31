@@ -185,6 +185,8 @@ namespace GlorifiedBody.Saving
                 p.exp = stats.Exp;
                 p.outfit = stats.Outfit != null ? stats.Outfit.outfitId : "";
             }
+            ShortController running = lucy.GetComponentInChildren<ShortController>();
+            if (running != null && running.IsActive) p.shortLeft = Mathf.Max(0.1f, running.Remaining);
             ItemInventory items = lucy.GetComponentInChildren<ItemInventory>();
             if (items != null)
             {
@@ -221,6 +223,15 @@ namespace GlorifiedBody.Saving
                 if (!presentItems.Contains(path)) room.taken.Add(path);
             foreach (LockedDoor door in UnityEngine.Object.FindObjectsByType<LockedDoor>(FindObjectsSortMode.None))
                 if (door.gameObject.scene == scene && door.IsOpen) room.opened.Add(ScenePaths.Of(door.transform));
+            // What came in play stays too (Bruno, 2026-10-31: "fix both"): the items on the floor, the shield's scars.
+            foreach (FloorItem item in UnityEngine.Object.FindObjectsByType<FloorItem>(FindObjectsSortMode.None))
+            {
+                ItemPickup pickup = item.GetComponent<ItemPickup>();
+                if (item.gameObject.scene != scene || pickup == null || pickup.Taken) continue;
+                room.floorItems.Add(new FloorItemState { itemId = item.itemId, position = item.transform.position, yaw = item.transform.eulerAngles.y });
+            }
+            foreach (GlorifiedBody.Combat.FloorScar scar in UnityEngine.Object.FindObjectsByType<GlorifiedBody.Combat.FloorScar>(FindObjectsSortMode.None))
+                if (scar.gameObject.scene == scene) room.scars.Add(new ScarState { position = scar.transform.position, rotation = scar.transform.rotation });
             return room;
         }
 
@@ -276,6 +287,12 @@ namespace GlorifiedBody.Saving
         public static int ApplyRoom(Scene scene, RoomState room)
         {
             if (room == null) return 0;
+            foreach (FloorItemState f in room.floorItems)
+            {
+                ItemDefinition def = ItemDefinition.Find(f.itemId);
+                if (def != null) FloorItem.Place(def, f.position, f.yaw);
+            }
+            foreach (ScarState scar in room.scars) GlorifiedBody.Combat.FloorShield.ScarAt(scar.position, scar.rotation);
             HashSet<string> bodies = RoomGore.Restore(scene, room);
             foreach (string path in room.dead)
             {
@@ -332,6 +349,8 @@ namespace GlorifiedBody.Saving
                 }
             }
             if (drugs != null) for (int i = 0; i < 3 && i < p.drugs.Count; i++) drugs.DebugSet((DrugType)i, p.drugs[i]);
+            ShortController shortController = lucy.GetComponentInChildren<ShortController>();
+            if (shortController != null && p.shortLeft > 0f) shortController.GoOn(p.shortLeft);
         }
 
         private static void PlaceAt(GameObject lucy, string spot)
