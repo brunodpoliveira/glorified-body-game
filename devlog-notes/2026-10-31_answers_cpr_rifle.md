@@ -46,6 +46,27 @@ grip point, so the fist sat ahead of the grip and the forearm went up. Now each 
 its grip, so the palm holds it. The right elbow hangs closer to the body. The bot "holds" measures it: both hands on
 their targets (gaps 0 to 3 cm), and the right elbow 0.25 m under the shoulder.
 
+## The trigger hand (his report after the first fix)
+
+```text
+However I still see the trigger hand out of position on the photos. Invector has animations built in? I don't recall
+seeing such issues with the firing animations on warspite
+```
+
+```text
+You can do the 6 8 hour fix if the first hand fix fails, I'm patient
+```
+
+- Confirmed in close shots: the right hand on the rifle and the shotgun had its fingers up and its palm out.
+- Why Warspite did not show it: its enemies use the vendor shooter stack. The gun is a child of the hand, the vendor
+  animations pose the arms, and IK moves only the left hand. Here the enemies use the plain AI, and `EnemyGun` places
+  the gun and reaches both arms. The RFab (T19) rigs have no finger bones, so the reach set the wrist and left the turn
+  of the hand wrong.
+- The fix (the first, short one): each hand gets its frame from the bind pose of the mesh (the line of the fingers, the
+  side of the palm, `EnemyGun.FindHandFrame`). After the reach, the grip hand turns to wrap the grip, and the support
+  hand cups the handguard from below. The bigger change to the vendor shooter stack is not needed now.
+- Shots: `trigger_hand_before.png`, `trigger_hand_after.png`, `rifle_hold_after.png`.
+
 ## Proof
 
 | Check | Result |
