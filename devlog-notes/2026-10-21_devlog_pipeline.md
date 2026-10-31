@@ -96,3 +96,15 @@ markers), `Assets/_Game/Scripts/Editor/Automation/PlaythroughRunner.cs` (`-gbRec
   with the session that builds the civilians.
 - Ep04 v1: long 7:09 (22 sections), short 1:03 (7 sections), 19,728 tokens of narration. One gore shot, the
   limb cut, 3.4 s, wide and low detail, long video only. A "This is a work of fiction" card at the end.
+
+## Episodes 4 (re-planned), 5 and 6 (2026-10-31, 00:30 to 01:40)
+
+- The renders of episode 4 were lost in the move to `~/MEGA/glorified-body-renders`. Its scripts and the 12 AI
+  clips (in `runs/20261025-013936-record-603053/clips/`) survived.
+- `DevlogClip` (Room, Close, End) is the shared clip helper. The civilians bot records 8 clips (`7b3b1da`).
+  The AI room recorded again: 12 clips, CLEAN.
+- RAM gate: the record runs waited at 4,500 MB with 4,197 MB free. `GB_MIN_AVAIL_MB=3800` ran both.
+- Known fault: a Close clip whose side comes from `Lean.WallNormal` (cower, slide) films the wall, while the bot's
+  still from the same spot is right. The videos use the stills. The drag clip is good for its first 17 s.
+- Renders: ep04 v2 7:03 and 0:59, ep05 v1 6:54 and 1:01, ep06 v1 6:56 and 1:05. Morning summary:
+  `~/MEGA/glorified-body-renders/devlog/MORNING_2026-10-31.md`.
