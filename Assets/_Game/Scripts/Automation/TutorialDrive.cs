@@ -138,6 +138,23 @@ namespace GlorifiedBody.Automation
                     yield return null;
                     yield return CatchOneBullet(c, 20f);
                     break;
+                case "floor_shield":
+                {
+                    // Lock the gun, hold the defend key to the full circle, wait for a bullet on the slab.
+                    c.Pad.Tap(InputManager.GameAction.PowerTelekinesis);
+                    yield return null;
+                    GameObject gun = GameObject.Find("Target_Gun");
+                    LockOnController lockOn = c.Lucy.GetComponent<LockOnController>();
+                    if (gun != null && lockOn != null) lockOn.SetTarget(gun.GetComponent<LockOnTargetable>());
+                    c.Pad.SetHeld(InputManager.GameAction.Defend, true);
+                    float t0 = BotClock.Now;
+                    while (FloorShield.Current == null && BotClock.Now - t0 < 6f) yield return null;
+                    c.Pad.SetHeld(InputManager.GameAction.Defend, false);
+                    c.Moment?.Invoke("floor_shield");
+                    t0 = BotClock.Now;
+                    while (c.Director.Current != null && c.Director.Current.Id == "floor_shield" && BotClock.Now - t0 < 20f) yield return null;
+                    break;
+                }
                 case "grenade":
                 {
                     // Stand 4.6 m from the gun (it lobs no grenade closer than 3.5 m), wait for the grenade, run 3.4 m.

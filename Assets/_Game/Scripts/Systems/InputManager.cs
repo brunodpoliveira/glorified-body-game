@@ -65,7 +65,7 @@ namespace GlorifiedBody.Systems
                 GameAction.Inventory => "Inventory",
                 GameAction.Map => "Map",
                 GameAction.Tape => "Play / Pause Tape",
-                GameAction.Defend => "Defend (hold: shield, later)",
+                GameAction.Defend => "Defend (tap: catch, hold: floor shield)",
                 _ => action.ToString()
             };
         }

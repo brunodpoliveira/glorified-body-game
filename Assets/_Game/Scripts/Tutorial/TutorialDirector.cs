@@ -109,7 +109,7 @@ namespace GlorifiedBody.Tutorial
         private bool slammed, propThrown, grenadeLeft, shieldFlanked;
         private EnemyShield shield;
         public EnemyShield Shield => shield;
-        private bool ranInStep, dodgedSide, launched, caught, drugUsed, shortBegan, shortEnded, logRead, doorScanned, monitorsScanned, inventoryOpened, inventoryClosed, mapOpened, mapClosed;
+        private bool ranInStep, dodgedSide, launched, caught, shieldTook, drugUsed, shortBegan, shortEnded, logRead, doorScanned, monitorsScanned, inventoryOpened, inventoryClosed, mapOpened, mapClosed;
         private ItemInventory items;
         private readonly List<(LockOnTargetable target, Vector3 position, Quaternion rotation)> dummies = new List<(LockOnTargetable, Vector3, Quaternion)>();
         // The weapon steps show only their own dummy (Bruno, 2026-10-24: "once the grenade steps start we should have
@@ -308,6 +308,17 @@ namespace GlorifiedBody.Tutorial
                 () => caught,
                 onEnter: () => SetGunActive(true),
                 onExit: () => SetGunActive(false)));
+            // The floor shield (2026-10-31, design §2.3): the defend key held to a full circle tears up a slab of floor.
+            steps.Add(new TutorialStep("floor_shield",
+                "Faculty three guards you too. Tear the floor up between you and the gun.",
+                "With mk_orzabal selected, lock the gun ({SwitchTarget}) and hold {Defend} to the full circle. A slab rises in front of you and takes the bullets.",
+                () => shieldTook |= GlorifiedBody.Combat.FloorShield.Current != null && GlorifiedBody.Combat.FloorShield.Current.Absorbed > 0,
+                onEnter: () => SetGunActive(true),
+                onExit: () =>
+                {
+                    SetGunActive(false);
+                    if (GlorifiedBody.Combat.FloorShield.Current != null) GlorifiedBody.Combat.FloorShield.Current.Shatter(); // the next steps start clear
+                }));
             // The attacks (Bruno, 2026-10-24): the icon names the attack; a red ring is a grenade.
             steps.Add(new TutorialStep("grenade",
                 "The dummy by the door has a new toy. When the ring is under you, do not stay.",
@@ -537,7 +548,7 @@ namespace GlorifiedBody.Tutorial
             StepIndex = index;
             StepStartTime = Time.time;
             slammed = propThrown = false;
-            ranInStep = dodgedSide = launched = caught = drugUsed = shortBegan = shortEnded = doorScanned = monitorsScanned = inventoryOpened = inventoryClosed = mapOpened = mapClosed = false;
+            ranInStep = dodgedSide = launched = caught = shieldTook = drugUsed = shortBegan = shortEnded = doorScanned = monitorsScanned = inventoryOpened = inventoryClosed = mapOpened = mapClosed = false;
             targetChanges = 0;
             firedKind = null;
             firedCharge = 0f;

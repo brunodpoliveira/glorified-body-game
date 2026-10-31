@@ -509,12 +509,12 @@ namespace GlorifiedBody.UI
                 shortText.text = blink ? $"SHORT   {shortController.Remaining:0.0}" : "";
             }
 
-            bool charging = powers != null && powers.Charge > 0f;
+            bool charging = powers != null && powers.ShownCharge > 0f;
             if (ringRect.gameObject.activeSelf != charging) ringRect.gameObject.SetActive(charging);
             if (charging)
             {
-                chargeRing.fillAmount = powers.Charge;
-                chargeRing.color = Color.Lerp(Color.white, new Color(1f, 0.25f, 0.2f), powers.Charge);
+                chargeRing.fillAmount = powers.ShownCharge;
+                chargeRing.color = Color.Lerp(Color.white, new Color(1f, 0.25f, 0.2f), powers.ShownCharge);
                 Vector3 world = lockOn != null && lockOn.CurrentTarget != null ? lockOn.CurrentTarget.GetDisplayPoint() : player.position + Vector3.up * 1.2f;
                 Camera cam = Camera.main;
                 if (cam != null)

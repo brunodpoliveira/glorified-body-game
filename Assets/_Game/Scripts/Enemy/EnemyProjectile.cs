@@ -110,7 +110,8 @@ namespace GlorifiedBody.Enemy
             {
                 bool self = attacker != null && (hit.transform == attacker.transform || hit.transform.IsChildOf(attacker.transform));
                 bool player = hit.transform.CompareTag("Player") || (hit.transform.root != null && hit.transform.root.CompareTag("Player"));
-                if (!self && !player)
+                bool ownShield = returned && hit.transform.GetComponentInParent<FloorShield>() != null; // her bullet leaves through it
+                if (!self && !player && !ownShield)
                 {
                     Impact(hit);
                     return;
@@ -213,6 +214,15 @@ namespace GlorifiedBody.Enemy
             Transform root = hit.transform.root;
             RunTelemetry.Event("projectile_impact", $"{killerId}>{hit.transform.name}@{hit.point.x:0.0},{hit.point.y:0.0},{hit.point.z:0.0}");
             bool isPlayer = hit.transform.CompareTag("Player") || (root != null && root.CompareTag("Player"));
+            // Her floor shield takes the bullet and wears down (2026-10-31). It does not drop like a floater.
+            FloorShield shield = !returned ? hit.transform.GetComponentInParent<FloorShield>() : null;
+            if (shield != null)
+            {
+                shield.Absorb(damage, hit.point, transform.forward);
+                ShotEffects.Impact(hit.point, hit.normal, SurfaceKind.Concrete, withSound: true);
+                Destroy(gameObject);
+                return;
+            }
             // An enemy bullet that hits a floater drops it, unhurt (Bruno, 2026-10-22).
             TelekinesisLift floater = !returned && !isPlayer ? hit.transform.GetComponentInParent<TelekinesisLift>() : null;
             if (floater != null && floater.CanLaunch) floater.Release(attacker);

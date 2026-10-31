@@ -32,11 +32,18 @@ namespace GlorifiedBody.Player
         private TelekinesisLift activeLift;
         private bool holdAfterLaunch; // the press that launched must not start a charge
         private float catchPressUntil = -1f; // an RMB press counts for CatchBuffer seconds (the bullet may still be on its way)
+        private TankController tank;
+        private float defendHeldFor;
+        private bool shieldLocked; // the shield's circle holds her feet
 
         public IReadOnlyList<PowerDefinition> Powers => powers;
         public int SelectedIndex { get; private set; }
         public PowerDefinition Selected => powers != null && powers.Length > 0 ? powers[Mathf.Clamp(SelectedIndex, 0, powers.Length - 1)] : null;
         public float Charge { get; private set; }
+        /// <summary>The circle of the floor shield (the defend key held with mk_orzabal), 0..1.</summary>
+        public float ShieldCharge { get; private set; }
+        /// <summary>The circle the HUD shows: the attack's or the shield's.</summary>
+        public float ShownCharge => Mathf.Max(Charge, ShieldCharge);
 
         /// <summary>The MK boost (Bruno, 2026-10-22): at half a nalcon bar or more, attacks do 2x damage and charge 2x as fast.</summary>
         public const float BoostThreshold = 0.5f;
@@ -72,6 +79,7 @@ namespace GlorifiedBody.Player
             drugs = GetComponent<DrugInventory>();
             lockOn = GetComponent<LockOnController>();
             shortController = GetComponent<ShortController>();
+            tank = GetComponent<TankController>();
             if (powers == null || powers.Length == 0)
             {
                 powers = Resources.LoadAll<PowerDefinition>("Powers");
@@ -139,6 +147,8 @@ namespace GlorifiedBody.Player
                 catchPressUntil = -1f;
             }
 
+            UpdateShield(dt);
+
             // The bar filled during a held charge (a hit): the short starts now, not at the release (Bruno,
             // 2026-10-25: "shock should trigger the moment player presses attack"). The charge is lost.
             if (wasCharging && TryStartShort(Charge))
@@ -163,6 +173,77 @@ namespace GlorifiedBody.Player
                 OnChanged?.Invoke();
             }
             wasCharging = charging;
+        }
+
+        public const float ShieldHoldDelay = 0.2f; // s: a shorter press is only the catch, PROPOSED
+
+        /// <summary>
+        /// The floor shield (2026-10-31, design §2.3; Bruno, 2026-10-20: "RMB hold = the floor shield, the defensive
+        /// full charge"). With mk_orzabal selected and nothing in the air, the defend key held past ShieldHoldDelay fills
+        /// the circle (she stands still and faces her target, as for an attack). At a full circle a slab tears out of the
+        /// floor in front of her and hangs there (FloorShield), for the power's full cost. One at a time. A release
+        /// before the full circle costs nothing.
+        /// </summary>
+        private void UpdateShield(float dt)
+        {
+            bool held = GameInput.GetAction(InputManager.GameAction.Defend, KeyCode.Mouse1);
+            bool can = held && Selected.kind == PowerKind.Telekinesis && activeLift == null && FloorShield.Current == null
+                       && !IsCharging && !(shortController != null && shortController.IsActive) && !stats.Health.IsDead;
+            if (!can)
+            {
+                EndShieldCharge();
+                return;
+            }
+            defendHeldFor += dt;
+            if (defendHeldFor < ShieldHoldDelay) return;
+            if (!shieldLocked && tank != null)
+            {
+                tank.LockMovement(true);
+                shieldLocked = true;
+            }
+            if (tank != null && lockOn.CurrentTarget != null) tank.FaceTowards(lockOn.CurrentTarget.GetLockPoint(), 540f);
+            float before = ShieldCharge;
+            ShieldCharge = Mathf.Min(1f, ShieldCharge + dt * (IsBoosted ? BoostMultiplier : 1f) / Selected.fullChargeTime);
+            if (!Mathf.Approximately(before, ShieldCharge)) OnChanged?.Invoke();
+            if (ShieldCharge >= 0.999f)
+            {
+                TryRaiseShield();
+                EndShieldCharge();
+            }
+        }
+
+        private void EndShieldCharge()
+        {
+            defendHeldFor = 0f;
+            if (ShieldCharge > 0f)
+            {
+                ShieldCharge = 0f;
+                OnChanged?.Invoke();
+            }
+            if (shieldLocked)
+            {
+                shieldLocked = false;
+                if (tank != null && !lockOn.IsCharging) tank.LockMovement(false);
+            }
+        }
+
+        /// <summary>The full circle of the shield: the slab tears out and rises. Tests call it directly.</summary>
+        public bool TryRaiseShield()
+        {
+            PowerDefinition power = Selected;
+            if (power == null || power.kind != PowerKind.Telekinesis || FloorShield.Current != null || activeLift != null) return false;
+            if (stats.Nalcon < power.nalconCost - 0.001f) return Result("no_nalcon", 1f);
+            float scale = DamageScale;
+            FloorShield shield = FloorShield.Tear(gameObject);
+            if (shield == null) return Result("no_floor", 1f);
+            stats.TrySpendNalcon(power.nalconCost);
+            // A held prop: it turns with her, the attack key throws it (the power's full damage), a full circle slams it.
+            activeLift = TelekinesisLift.Apply(shield.gameObject, gameObject, FloorShield.HangHeight, FloorShield.RiseSeconds, 0f, power.baseDamage * scale);
+            shield.HeldBy(activeLift);
+            LastResult = "shield";
+            LastResultTime = Time.time;
+            OnChanged?.Invoke();
+            return true;
         }
 
         /// <summary>The release of the circle: short, fizzle, no target, no nalcon, or the attack.</summary>
