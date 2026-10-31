@@ -144,6 +144,7 @@ namespace GlorifiedBody.Enemy
                 rightLower = animator.GetBoneTransform(HumanBodyBones.RightLowerArm);
                 rightKnuckle = animator.GetBoneTransform(HumanBodyBones.RightMiddleProximal);
                 shouldered = upperBodyId != 1 && rightUpper != null && rightLower != null && hand != null && muzzle != null && FindStock(out stockLocal);
+                handFrames = FindHandFrame(hand, rightLower, true, out rightHandFrame) & FindHandFrame(leftHand, leftLower, false, out leftHandFrame);
             }
             ragdoll = GetComponent<IRagdollBody>();
             brain = GetComponent<SoldierBrain>();
@@ -369,16 +370,68 @@ namespace GlorifiedBody.Enemy
             // Bruno, 2026-10-25: "the right arm is too high up", the left arm loose. The wrists go behind and under their
             // grips, so the palms close on them (the wrist on the grip put the fist ahead of it and lifted the forearm), and
             // the right elbow hangs closer to the body. PROPOSED (2026-10-31, from the bot's shots and RightGap/LeftGap).
-            Vector3 rightTarget = gun.position - aim * WristBehind - gunUp * WristUnder;
-            Reach(rightUpper, rightLower, hand, rightKnuckle, rightTarget, -Vector3.up + right * 0.25f - flatForward * 0.1f, aim * 0.8f - gunUp * 0.5f);
+            // The hands (Bruno, 2026-10-31: "the trigger hand out of position"; the T19 rigs have no finger bones, so the
+            // reach set the wrist and left the hand turned wrong: the fingers up, the palm out). With the hand frames of
+            // the bind pose: the grip hand lies beside the grip, the fingers forward under the receiver, the palm on the
+            // grip; the support hand cups the handguard from below, the palm up, the fingers across. The wrist goes back
+            // from the palm's middle.
+            Vector3 rightFingers = (aim - gunUp * 0.35f).normalized, rightPalm = -gunRight;
+            Vector3 rightTarget = handFrames
+                ? gun.position + gunRight * PalmSide - rightFingers * PalmLength
+                : gun.position - aim * WristBehind - gunUp * WristUnder;
+            Reach(rightUpper, rightLower, hand, handFrames ? null : rightKnuckle, rightTarget, -Vector3.up + right * 0.25f - flatForward * 0.1f, aim * 0.8f - gunUp * 0.5f);
+            if (handFrames) Turn(hand, rightHandFrame, rightFingers, rightPalm);
             RightGap = Vector3.Distance(hand.position, rightTarget);
             RightElbowLift = rightLower.position.y - rightUpper.position.y;
             if (leftGrip != null)
             {
-                Vector3 leftTarget = leftGrip.position - aim * WristBehind - gunUp * WristUnder;
-                Reach(leftUpper, leftLower, leftHand, leftKnuckle, leftTarget, -Vector3.up - right * 0.15f, aim * 0.7f + gunRight * 0.5f + gunUp * 0.2f);
+                Vector3 leftFingers = (gunRight * 0.8f + aim * 0.45f).normalized, leftPalm = gunUp;
+                Vector3 leftTarget = handFrames
+                    ? leftGrip.position - gunUp * PalmSide - leftFingers * PalmLength
+                    : leftGrip.position - aim * WristBehind - gunUp * WristUnder;
+                Reach(leftUpper, leftLower, leftHand, handFrames ? null : leftKnuckle, leftTarget, -Vector3.up - right * 0.15f, aim * 0.7f + gunRight * 0.5f + gunUp * 0.2f);
+                if (handFrames) Turn(leftHand, leftHandFrame, leftFingers, leftPalm);
                 LeftGap = Vector3.Distance(leftHand.position, leftTarget);
             }
+        }
+
+        private const float PalmLength = 0.06f; // metres from the wrist to the palm's middle, along the fingers, PROPOSED
+        private const float PalmSide = 0.035f;  // metres from the bone's line to the palm's skin, PROPOSED
+        private bool handFrames;
+        private Quaternion rightHandFrame = Quaternion.identity, leftHandFrame = Quaternion.identity;
+
+        /// <summary>Turns the hand so its fingers point along fingers and its palm faces palm (the frame from FindHandFrame).</summary>
+        private static void Turn(Transform hand, Quaternion frame, Vector3 fingers, Vector3 palm)
+        {
+            if (hand == null || fingers.sqrMagnitude < 0.0001f || palm.sqrMagnitude < 0.0001f) return;
+            hand.rotation = Quaternion.LookRotation(fingers, palm) * Quaternion.Inverse(frame);
+        }
+
+        /// <summary>
+        /// The hand's own frame from the skinned mesh's bind pose: forward the fingers (the forearm's line through the
+        /// wrist), up the palm's side (a T or an A pose: the right palm faces down and in, the left too). A rig with no
+        /// finger bones has no other way to know how its hand is turned. False with no skin or bones.
+        /// </summary>
+        private bool FindHandFrame(Transform handBone, Transform forearm, bool rightSide, out Quaternion frame)
+        {
+            frame = Quaternion.identity;
+            if (handBone == null || forearm == null) return false;
+            foreach (SkinnedMeshRenderer skin in GetComponentsInChildren<SkinnedMeshRenderer>(true))
+            {
+                if (skin.sharedMesh == null) continue;
+                int h = System.Array.IndexOf(skin.bones, handBone), f = System.Array.IndexOf(skin.bones, forearm);
+                Matrix4x4[] bind = skin.sharedMesh.bindposes;
+                if (h < 0 || f < 0 || bind.Length <= Mathf.Max(h, f)) continue;
+                Matrix4x4 handMesh = bind[h].inverse, foreMesh = bind[f].inverse;
+                Vector3 fingers = ((Vector3)handMesh.GetColumn(3) - (Vector3)foreMesh.GetColumn(3)).normalized;
+                Vector3 front = skin.transform.InverseTransformDirection(transform.forward);
+                Vector3 palm = rightSide ? Vector3.Cross(fingers, front) : Vector3.Cross(front, fingers);
+                Quaternion handRotation = Quaternion.LookRotation(handMesh.GetColumn(2), handMesh.GetColumn(1));
+                Quaternion toLocal = Quaternion.Inverse(handRotation);
+                frame = Quaternion.LookRotation(toLocal * fingers, toLocal * palm);
+                return true;
+            }
+            return false;
         }
 
         private const float WristBehind = 0.06f, WristUnder = 0.04f; // metres: the wrist from the grip, so the palm holds it
