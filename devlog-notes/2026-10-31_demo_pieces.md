@@ -62,7 +62,10 @@ Shots for Bruno: `~/MEGA/glorified-body-renders/game/demo_pieces/shots/`
 | `pieces_03_bulletin_typing.png`, `pieces_04_bulletin.png` | the card, typing and whole (15 deaths: the middle wording) |
 | `pieces_05_sign.png` | the W6 poster over the lockers |
 
-## Open for Bruno
+## His answers
 
-1. The bands of the bulletin: 10 and 20?
-2. A hider is found at 2 m. Is that right, or should she find it only when she faces it?
+```text
+1,2: keep that
+```
+
+The bulletin bands stay at 10 and 20. She finds a hider at 2 m, with no facing rule.
