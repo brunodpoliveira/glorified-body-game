@@ -27,8 +27,8 @@ namespace GlorifiedBody.Enemy
         [SerializeField] private ParticleSystem smoke;
         [SerializeField] private Light flashLight;
         [SerializeField] private AudioSource source;
-        // FOR LATER (Bruno, 2026-10-29): a pistol sits a few cm in front of the fingers (the two-hand pistol shows it
-        // most). Fix the grip point with the long-gun hold (roadmap item 26).
+        // Bruno, 2026-10-29: "a pistol sits a few cm in front of the fingers". Since 2026-10-31 a pistol's grip sits in
+        // the palm (Palm, PistolGripForward); gripForward is for the long guns off the shoulder.
         [SerializeField, Min(0f)] private float gripForward = 0.06f; // metres from the palm along the aim
         [SerializeField, Min(0f)] private float lightSeconds = 0.06f;
         [SerializeField, Range(0f, 45f)] private float restDownDegrees = 25f;
@@ -48,6 +48,7 @@ namespace GlorifiedBody.Enemy
         private DummyShooter shooter;
         private Animator animator;
         private Transform hand;
+        private Transform middleKnuckle; // the palm lies between the wrist and this joint
         private Health health;
         private float lightOffAt = -1f;
         private float swingStart = -10f;
@@ -106,6 +107,7 @@ namespace GlorifiedBody.Enemy
             health = GetComponent<Health>();
             animator = GetComponent<Animator>();
             if (animator != null && animator.isHuman) hand = animator.GetBoneTransform(HumanBodyBones.RightHand);
+            if (animator != null && animator.isHuman) middleKnuckle = animator.GetBoneTransform(HumanBodyBones.RightMiddleProximal);
             if (animator != null)
             {
                 foreach (AnimatorControllerParameter p in animator.parameters)
@@ -281,9 +283,17 @@ namespace GlorifiedBody.Enemy
             if (aim.sqrMagnitude < 0.0001f) aim = transform.forward;
             aim = Shake(aim);
             Point(aim);
-            gun.position = hand.position + aim.normalized * gripForward;
+            LastAim = aim.normalized;
+            gun.position = upperBodyId == 1 ? Palm : hand.position + aim.normalized * gripForward;
             if (leftGrip != null && !HandsFree) Reach(leftUpper, leftLower, leftHand, null, leftGrip.position, -transform.up - transform.right * 0.3f, Vector3.zero);
         }
+
+        /// <summary>The middle of the palm: the pistol's grip (the gun's root) sits there, in the closed fist.</summary>
+        public Vector3 Palm => middleKnuckle != null ? Vector3.Lerp(hand.position, middleKnuckle.position, PalmShare) : hand.position + LastAim * PistolGripForward;
+        /// <summary>A rig with no finger bones (the T19 models): the grip this far from the wrist along the aim, PROPOSED (0.06 put it a fist-width ahead).</summary>
+        public const float PistolGripForward = 0.0f;
+        private Vector3 LastAim = Vector3.forward;
+        private const float PalmShare = 0.6f; // of the way from the wrist to the middle finger's first joint, PROPOSED
 
         /// <summary>The tremble of a shaky hold: noise turns of the aim, up to shakeDegrees on each axis.</summary>
         private Vector3 Shake(Vector3 aim)
