@@ -43,6 +43,11 @@ namespace GlorifiedBody.Saving
         // The story flags as she came into the room: a restart of the room puts them back (Bruno, 2026-10-30: the
         // ward's red mark stayed up after a restart).
         private static readonly List<string> entryFlags = new List<string>();
+        // She came into this room through a door: her state then, the room as she found it, the door. A RETRY with no
+        // checkpoint gives these back (seam sweep, 2026-10-31: she came back blank, her items lost for good).
+        private static PlayerState entryPlayer;
+        private static RoomState entryRoom;
+        private static string entryDoor;
         private static string currentRoom;
 
         public static string Folder
@@ -363,6 +368,7 @@ namespace GlorifiedBody.Saving
                 WorldState.Clear();
                 currentRoom = null;
                 entryFlags.Clear();
+                entryPlayer = null;
                 return;
             }
             Baseline(scene);
@@ -373,6 +379,13 @@ namespace GlorifiedBody.Saving
             {
                 entryFlags.Clear();
                 entryFlags.AddRange(StoryFlags.All);
+                entryPlayer = null;
+            }
+            if (restart && entryPlayer != null)
+            {
+                EnsureRunner();
+                runner.StartCoroutine(ArriveNextFrame(scene, entryPlayer, entryRoom, entryDoor, again: true));
+                return;
             }
             if (pending != null && pending.scene == scene.name)
             {
@@ -389,13 +402,24 @@ namespace GlorifiedBody.Saving
         }
 
         /// <summary>A room crossing ends: the room as she left it (when she was here before), her state, her place at the entry.</summary>
-        private static IEnumerator ArriveNextFrame(Scene scene, PlayerState player, RoomState room, string entry)
+        private static IEnumerator ArriveNextFrame(Scene scene, PlayerState player, RoomState room, string entry, bool again = false)
         {
             yield return null; // every Awake and Start of the room has run
+            if (!again)
+            {
+                entryPlayer = player;
+                entryRoom = room;
+                entryDoor = entry;
+            }
             int bodies = ApplyRoom(scene, room);
             GameObject lucy = GameObject.FindWithTag("Player");
             ApplyPlayer(lucy, player);
             if (lucy != null) PlaceAt(lucy, entry);
+            if (again)
+            {
+                RunTelemetry.Event("retry_at_door", $"{scene.name}:{entry}");
+                yield break;
+            }
             Arrivals++;
             RunTelemetry.Event("arrived", $"{scene.name}:{entry} {(room != null ? $"again ({room.dead.Count} dead, {bodies} bodies, {room.taken.Count} taken)" : "first visit")}");
             WorldState.Arrived();
@@ -431,6 +455,8 @@ namespace GlorifiedBody.Saving
             folder = null;
             pending = null;
             runner = null;
+            entryPlayer = null;
+            entryRoom = null;
             HasSessionCheckpoint = false;
             PlaySeconds = 0f;
             Loads = 0;

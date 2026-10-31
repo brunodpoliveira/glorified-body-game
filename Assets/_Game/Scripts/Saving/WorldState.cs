@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using GlorifiedBody.Core;
 using GlorifiedBody.DebugTools;
 using GlorifiedBody.Systems;
 using GlorifiedBody.UI;
@@ -40,6 +41,12 @@ namespace GlorifiedBody.Saving
                 return false;
             }
             GameObject lucy = GameObject.FindWithTag("Player");
+            Health health = lucy != null ? lucy.GetComponentInChildren<Health>() : null;
+            if (health != null && health.IsDead) return false; // a dead body does not leave the room
+            // The short burns out at the door: it does not cross with her, and her bar does not arrive full (seam sweep,
+            // 2026-10-31: the full bar started a second short at her next attack). PROPOSED.
+            GlorifiedBody.Player.ShortController burning = lucy != null ? lucy.GetComponent<GlorifiedBody.Player.ShortController>() : null;
+            if (burning != null && burning.IsActive) burning.End(byDrug: false);
             Scene here = SceneManager.GetActiveScene();
             rooms[here.name] = SaveSystem.CaptureRoom(here);
             carried = lucy != null ? SaveSystem.CapturePlayer(lucy) : null;
@@ -50,6 +57,12 @@ namespace GlorifiedBody.Saving
             RunTelemetry.Event("travel", $"{here.name} -> {scene}:{entry}");
             ScreenFade.Out(FadeOutSeconds, () =>
             {
+                // A lethal hit in the fade: she dies here, the trip is off (seam sweep, 2026-10-31).
+                if (health != null && health.IsDead)
+                {
+                    Cancel();
+                    return;
+                }
                 if (GameManager.Instance != null) GameManager.Instance.LoadLevel(scene);
                 else SceneManager.LoadScene(scene);
             });
@@ -69,6 +82,16 @@ namespace GlorifiedBody.Saving
             carried = null;
             arrivalScene = null;
             return true;
+        }
+
+        /// <summary>The trip is off before the load (her death in the door's fade): she stays, the screen comes back.</summary>
+        private static void Cancel()
+        {
+            Travelling = false;
+            carried = null;
+            arrivalScene = null;
+            RunTelemetry.Event("travel_cancelled", "dead");
+            ScreenFade.In(FadeInSeconds);
         }
 
         /// <summary>The crossing is done (her place set): the screen comes back.</summary>

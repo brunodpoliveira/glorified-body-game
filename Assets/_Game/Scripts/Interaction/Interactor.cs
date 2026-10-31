@@ -39,11 +39,14 @@ namespace GlorifiedBody.Interaction
         private int stateFrame;
         private float messageUntil;
 
+        private GlorifiedBody.Core.Health health;
+
         private void Awake()
         {
             tank = GetComponent<TankController>();
             inventory = GetComponent<ItemInventory>();
             scanner = GetComponent<PsychicScanner>();
+            health = GetComponentInChildren<GlorifiedBody.Core.Health>();
             // The feed (2026-10-30) came after the rooms were built: her Lucy gets it here when the room lacks it.
             if (GetComponent<GlorifiedBody.Player.Feeding>() == null) gameObject.AddComponent<GlorifiedBody.Player.Feeding>();
         }
@@ -57,6 +60,7 @@ namespace GlorifiedBody.Interaction
         {
             GameManager gm = GameManager.Instance;
             if (gm != null && !gm.IsPlaying && !(gm.IsReading && Current == State.Reading)) return;
+            if (health != null && health.IsDead) return; // the death fall (seam sweep, 2026-10-31)
             bool interact = GameInput.GetActionDown(InputManager.GameAction.Interact, KeyCode.E);
             bool back = GameInput.GetActionDown(InputManager.GameAction.Back, KeyCode.S);
             bool sameFrame = Time.frameCount == stateFrame;

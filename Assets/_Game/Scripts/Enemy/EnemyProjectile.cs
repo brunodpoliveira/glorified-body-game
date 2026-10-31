@@ -100,22 +100,24 @@ namespace GlorifiedBody.Enemy
 
             // Lucy first, by geometry: a ray does not register her CharacterController in every frame rate.
             // A returned bullet is hers: it leaves her and never hits her.
-            if (!returned && CrossesPlayer(origin, next, out Vector3 playerPoint))
-            {
-                ImpactPlayer(playerPoint);
-                return;
-            }
-
+            Vector3 playerPoint = next;
+            bool crosses = !returned && CrossesPlayer(origin, next, out playerPoint);
             if (Physics.Raycast(origin, transform.forward, out RaycastHit hit, step + 0.1f, ~0, QueryTriggerInteraction.Ignore))
             {
                 bool self = attacker != null && (hit.transform == attacker.transform || hit.transform.IsChildOf(attacker.transform));
                 bool player = hit.transform.CompareTag("Player") || (hit.transform.root != null && hit.transform.root.CompareTag("Player"));
                 bool ownShield = returned && hit.transform.GetComponentInParent<FloorShield>() != null; // her bullet leaves through it
-                if (!self && !player && !ownShield)
+                // The nearer one first: a long step (a fast round, a slow frame) must not jump her floor shield.
+                if (!self && !player && !ownShield && (!crosses || hit.distance <= Vector3.Distance(origin, playerPoint)))
                 {
                     Impact(hit);
                     return;
                 }
+            }
+            if (crosses)
+            {
+                ImpactPlayer(playerPoint);
+                return;
             }
 
             transform.position = next;

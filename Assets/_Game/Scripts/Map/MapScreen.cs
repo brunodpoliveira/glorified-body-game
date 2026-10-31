@@ -132,6 +132,8 @@ namespace GlorifiedBody.Map
             GameManager gm = GameManager.Instance;
             GameObject lucy = GameObject.FindGameObjectWithTag("Player");
             if (gm == null || !gm.IsPlaying || lucy == null) return false;
+            GlorifiedBody.Core.Health health = lucy.GetComponentInChildren<GlorifiedBody.Core.Health>();
+            if (health != null && health.IsDead) return false; // the death fall (seam sweep, 2026-10-31)
             Interactor interactor = lucy.GetComponent<Interactor>();
             PsychicScanner scanner = lucy.GetComponent<PsychicScanner>();
             if ((interactor != null && interactor.Current != Interactor.State.Free) || (scanner != null && scanner.IsViewing)) return false;

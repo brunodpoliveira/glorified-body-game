@@ -223,7 +223,7 @@ namespace GlorifiedBody.Player
             if (shieldLocked)
             {
                 shieldLocked = false;
-                if (tank != null && !lockOn.IsCharging) tank.LockMovement(false);
+                if (tank != null) tank.LockMovement(false); // the lock counts: the charge keeps its own
             }
         }
 

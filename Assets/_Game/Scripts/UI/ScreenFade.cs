@@ -41,10 +41,17 @@ namespace GlorifiedBody.UI
             return instance;
         }
 
+        private Action pending; // the callback of the running fade
+
         private void Run(float target, float seconds, Action then)
         {
+            // A new fade replaces the running one, but its callback still runs (2026-10-31: a cutscene's fade dropped a
+            // door's room load, and the trip never ended).
+            Action dropped = running != null ? pending : null;
             if (running != null) StopCoroutine(running);
+            pending = then;
             running = StartCoroutine(Fade(target, seconds, then));
+            dropped?.Invoke();
         }
 
         private IEnumerator Fade(float target, float seconds, Action then)
@@ -59,6 +66,7 @@ namespace GlorifiedBody.UI
             }
             image.color = new Color(0f, 0f, 0f, target);
             running = null;
+            pending = null;
             then?.Invoke();
         }
     }

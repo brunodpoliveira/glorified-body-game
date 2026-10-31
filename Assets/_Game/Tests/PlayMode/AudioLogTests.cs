@@ -177,6 +177,24 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator TheInventory_InAFight_SaysTheTapeWaits()
+        {
+            // The seam sweep (2026-10-31): the inventory said "It plays" in a fight, and the fight paused it again.
+            ItemDefinition tape = GiveTape();
+            Tapes.Play(tape);
+            yield return new WaitForSeconds(0.5f);
+            MusicDirector.Threat();
+            yield return WaitUntil(() => !Tapes.IsPlaying, 2f);
+            InventoryUI inventory = UnityEngine.Object.FindFirstObjectByType<InventoryUI>();
+            yield return Press(InputManager.GameAction.Inventory);
+            inventory.SelectIndex(IndexOf(inventory, tape));
+            StringAssert.StartsWith("tape_wait:", inventory.Act(), "in a fight the tape waits");
+            yield return Press(InputManager.GameAction.Inventory);
+            yield return new WaitForSeconds(0.3f);
+            Assert.IsFalse(Tapes.IsPlaying);
+        }
+
+        [UnityTest]
         public IEnumerator TheInventory_PausesIt_AndAnEndedTapePlaysFromTheStart()
         {
             ItemDefinition tape = GiveTape();

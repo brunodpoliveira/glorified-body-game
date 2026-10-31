@@ -292,6 +292,11 @@ namespace GlorifiedBody.UI
             {
                 // Play or pause the tape (Bruno, 2026-10-31: a fight pauses it, she plays it again here).
                 GlorifiedBody.Audio.TapePlayer tapes = GlorifiedBody.Audio.TapePlayer.Instance;
+                if (tapes != null && !tapes.IsPlaying && GlorifiedBody.Audio.TapePlayer.InFight)
+                {
+                    wordsText.text = "A fight. The tape waits until it ends.";
+                    return "tape_wait:" + e.Item.itemId;
+                }
                 bool plays = tapes != null && tapes.Toggle(e.Item);
                 Select(Selected);
                 wordsText.text = plays ? "It plays. Close the inventory to hear it." : "Paused.";

@@ -80,6 +80,7 @@ namespace GlorifiedBody.Audio
         {
             if (mode != LoadSceneMode.Single) return;
             shownLine = -1; // a new scene clears the subtitles: the line shows again
+            ownerCheckAt = Time.unscaledTime + OwnerCheckDelay; // after the load or the arrival gives her items back
             if (scene.name == MenuScene) Stop(); // a new game, or a load from the menu
         }
 
@@ -138,6 +139,7 @@ namespace GlorifiedBody.Audio
         public void Stop()
         {
             if (tape == null) return;
+            label.gameObject.SetActive(false);
             source.Stop();
             source.clip = null;
             SubtitleService.Hide(SubtitleOwner);
@@ -161,9 +163,26 @@ namespace GlorifiedBody.Audio
         // The clock on the label, after this frame's time. A play, a pause and the end change the label at once.
         private void LateUpdate() => UpdateLabel();
 
+        private const float OwnerCheckDelay = 0.5f;
+        private float ownerCheckAt = -1f;
+
+        /// <summary>
+        /// A load or a RETRY to a time before she took the tape: she does not carry it, so the player forgets it (seam
+        /// sweep, 2026-10-31: the label stayed, and T played a tape she did not have).
+        /// </summary>
+        private void ForgetIfNotHers(GameManager gm)
+        {
+            if (tape == null || ownerCheckAt < 0f || Time.unscaledTime < ownerCheckAt || gm == null || !gm.IsPlaying || Saving.WorldState.Travelling) return;
+            ownerCheckAt = -1f;
+            GameObject lucy = GameObject.FindGameObjectWithTag("Player");
+            ItemInventory items = lucy != null ? lucy.GetComponent<ItemInventory>() : null;
+            if (items != null && !items.Has(tape.itemId)) Stop();
+        }
+
         private void Update()
         {
             GameManager gm = GameManager.Instance;
+            ForgetIfNotHers(gm);
             // The tape key (Bruno, 2026-10-31: a key that plays it again without the inventory). In a fight it waits.
             if (tape != null && gm != null && gm.IsPlaying && GameInput.GetActionDown(InputManager.GameAction.Tape, KeyCode.T))
             {
@@ -198,7 +217,8 @@ namespace GlorifiedBody.Audio
             ShowLine();
         }
 
-        private static bool InFight => MusicDirector.Instance != null && MusicDirector.Instance.State == MusicState.Combat;
+        /// <summary>The music is in Combat: a tape does not play (the inventory says it waits).</summary>
+        public static bool InFight => MusicDirector.Instance != null && MusicDirector.Instance.State == MusicState.Combat;
 
         /// <summary>The line of this time as a subtitle, once per line.</summary>
         private void ShowLine()

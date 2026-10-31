@@ -177,6 +177,40 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator TheShieldCircle_ThenAnAttack_LeavesHerFeetFree()
+        {
+            // The seam sweep (2026-10-31): the shield's lock stayed on when the attack key cut its circle.
+            powers.Select(PowerKind.Telekinesis);
+            pad.SetHeld(InputManager.GameAction.Defend, true);
+            yield return new WaitForSeconds(0.5f);
+            Assert.IsTrue(tank.MovementLocked, "the shield's circle holds her feet");
+            pad.SetHeld(InputManager.GameAction.Charge, true);
+            yield return new WaitForSeconds(0.2f);
+            pad.SetHeld(InputManager.GameAction.Charge, false);
+            pad.SetHeld(InputManager.GameAction.Defend, false);
+            yield return new WaitForSeconds(0.3f);
+            Assert.IsFalse(tank.MovementLocked, "her feet are free after both keys are up");
+        }
+
+        [UnityTest]
+        public IEnumerator AFastBullet_StopsOnTheSlab_Too()
+        {
+            // The seam sweep (2026-10-31): a bullet checked for her body before the walls, so a long step jumped the slab.
+            powers.Select(PowerKind.Telekinesis);
+            FaceDummy();
+            yield return null;
+            Assert.IsTrue(powers.TryRaiseShield());
+            yield return new WaitForSeconds(0.6f);
+            float hp = health.CurrentHealth;
+            Vector3 her = player.transform.position + Vector3.up * Body.ChestHeight;
+            Vector3 muzzle = dummyA.transform.position + Vector3.up * Body.MuzzleHeight;
+            EnemyProjectile.Launch(muzzle, (her - muzzle).normalized, 150f, 15f, dummyA.gameObject, "test_fast");
+            yield return new WaitForSeconds(0.5f);
+            Assert.AreEqual(hp, health.CurrentHealth, 0.01f, "the fast bullet did not reach her");
+            Assert.AreEqual(1, FloorShield.Current.Absorbed, "it stopped on the slab");
+        }
+
+        [UnityTest]
         public IEnumerator HoldingDefend_WithAnotherPower_DoesNothing()
         {
             powers.Select(PowerKind.Blast);

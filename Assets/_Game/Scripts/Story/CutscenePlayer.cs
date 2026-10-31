@@ -45,6 +45,7 @@ namespace GlorifiedBody.Story
         public static bool Play(CutsceneAsset asset)
         {
             if (asset == null || IsPlaying) return false;
+            if (Saving.WorldState.Travelling) return false; // she is in a doorway: the trip ends first (seam sweep, 2026-10-31)
             if (GameManager.Instance != null && !GameManager.Instance.BeginCutscene()) return false;
             Ensure().StartCoroutine(instance.Run(asset));
             return true;
