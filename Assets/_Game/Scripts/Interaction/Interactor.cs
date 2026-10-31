@@ -162,6 +162,7 @@ namespace GlorifiedBody.Interaction
         {
             if (item == null || item.kind != ItemKind.Log) return;
             Reading = item;
+            ItemDefinition.MarkRead(item);
             SetState(State.Reading);
             GameManager.Instance?.BeginReading();
             Result("read:" + item.itemId);

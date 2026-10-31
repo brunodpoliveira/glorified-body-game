@@ -183,6 +183,7 @@ namespace GlorifiedBody.Saving
                 p.shortBar = stats.Short;
                 p.kills = stats.Kills;
                 p.exp = stats.Exp;
+                p.people = stats.People;
                 p.outfit = stats.Outfit != null ? stats.Outfit.outfitId : "";
             }
             ShortController running = lucy.GetComponentInChildren<ShortController>();
@@ -337,7 +338,7 @@ namespace GlorifiedBody.Saving
                 health.SetMaxHealth(p.maxHealth, fillToMax: false);
                 health.SetHealth(p.health);
             }
-            if (stats != null) stats.Restore(p.nalcon, p.shortBar, p.kills, p.exp);
+            if (stats != null) stats.Restore(p.nalcon, p.shortBar, p.kills, p.exp, p.people);
             if (items != null)
             {
                 items.Clear();

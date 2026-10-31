@@ -44,6 +44,8 @@ namespace GlorifiedBody.Saving
         public List<int> drugs = new List<int>();
         /// <summary>A short that runs: its seconds left (2026-10-31, Bruno: "carry the short into the next room"). 0: none.</summary>
         public float shortLeft;
+        /// <summary>Every person she killed (the bulletin, 2026-10-31). -1: an older file.</summary>
+        public int people = -1;
     }
 
     /// <summary>

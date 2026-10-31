@@ -20,6 +20,7 @@ MonoBehaviour:
   description: A drug. It takes half the SHORT bar away, and it ends a short. No
     drug gives HP. One slot.
   logText: 
+  readFlag: 
   mapFloor: 
   audioClip: {fileID: 0}
   tapeLines: []

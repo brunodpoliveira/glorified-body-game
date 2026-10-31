@@ -114,6 +114,8 @@ namespace GlorifiedBody.Editor
             RoomKit.Trigger("Trigger_Grab", GrabCentre + new Vector3(0f, 1f, 0f), new Vector3(2.4f, 2f, 2.4f), grab);
 
             SaveAssets.SavePoint("Save_Lockers", new Vector3(-8.5f, 0f, 4f), 90f);
+            // The poster of W6 (the demo plan §2.3, PROPOSED words), over the lockers.
+            RoomKit.Sign(room, "Sign_HardDays", "THANK YOU FOR THE HARD DAYS.", new Vector3(-1f, 2.35f, hd - 0.02f), Vector3.back, new Vector2(2.4f, 0.4f), 56);
             MenuLoopSetup.EnsureLucy(catalog, new Vector3(-6f, 0f, -3f), 30f);
             RoomKit.Music(MusicKey);
 

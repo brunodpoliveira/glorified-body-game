@@ -32,6 +32,8 @@ namespace GlorifiedBody.Player
         public float Short { get; private set; }
         public bool IsShortFull => Short >= MaxShort - 0.001f;
         public int Kills { get; private set; }
+        /// <summary>Every person she killed, armed or not (her own kills, each body once): the bulletin's count (2026-10-31).</summary>
+        public int People { get; private set; }
         /// <summary>The exp of her kills (ExperienceRules) and the level it gives.</summary>
         public int Exp { get; private set; }
         public int Level { get; private set; } = 1;
@@ -217,6 +219,7 @@ namespace GlorifiedBody.Player
             Health victim = hit.Victim.GetComponentInParent<Health>();
             if (victim == null || victim == health || victim.DeathFrame != Time.frameCount) return;
             if (!credited.Add(victim.GetInstanceID())) return;
+            People++;
             int value = ExperienceRules.ValueOf(victim.gameObject);
             if (value > 0) AddExp(value, victim.name);
         }
@@ -242,9 +245,10 @@ namespace GlorifiedBody.Player
         }
 
         /// <summary>A loaded save: the bars, the kill count and the exp as they were. The saved maximum HP already holds the level's.</summary>
-        public void Restore(float nalcon, float shortValue, int kills, int exp = 0)
+        public void Restore(float nalcon, float shortValue, int kills, int exp = 0, int people = -1)
         {
             Kills = Mathf.Max(0, kills);
+            People = people >= 0 ? people : Kills; // an older file has no count: its kills stand in
             Exp = Mathf.Max(0, exp);
             Level = ExperienceRules.LevelFor(Exp);
             RefreshMaxHp(); // the difficulty of now, not of the save

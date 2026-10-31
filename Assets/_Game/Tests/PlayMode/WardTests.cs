@@ -2,6 +2,7 @@
 using System;
 using System.Collections;
 using System.IO;
+using System.Linq;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -233,6 +234,112 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.AreEqual("feed:" + Guard, guard.Confirm(hands));
             yield return WaitUntil(() => !feeding.IsFeeding, Feeding.FeedSeconds + 2f);
             Assert.AreEqual(30f + lab.Total + guard.Total, hers.CurrentHealth, 0.5f, "the guard's HP");
+        }
+
+        [UnityTest]
+        public IEnumerator AHider_StaysHidden_Whispers_ThenBegsWhereItIs_AndNeverRuns()
+        {
+            // The demo plan (2026-10-31): "A nurse who hides in a shower stall"; the best HP, near the people who watch.
+            const string hiderName = "Hider_Stall";
+            CivilianBrain hider = GameObject.Find(hiderName).GetComponent<CivilianBrain>();
+            Assert.IsTrue(hider.Hides, "the marker made a hider");
+            Vector3 spot = hider.transform.position;
+            Remove(Marta);
+            Kill(Guard); // a death three metres from it, and the shots and screams of a fight
+            yield return new WaitForSeconds(2f);
+            Assert.IsFalse(hider.Alerted, "a hider makes no sound to the others and stays hidden");
+            Assert.IsFalse(hider.Found);
+            Assert.Less(EnemyNav.Flat(hider.transform.position, spot), 0.5f, "it stays at its place");
+
+            Teleport(spot + new Vector3(-3.5f, 0f, -1f), 45f); // near, not on it
+            yield return new WaitForSeconds(0.5f);
+            Assert.Greater(hider.Whispers, 0, "near her it whispers");
+            Assert.IsTrue(GlorifiedBody.Subtitles.SubtitleService.Lines.Any(l => l.Text.StartsWith("It is sown in weakness")), "the whisper shows as a subtitle");
+            Assert.IsFalse(hider.Found);
+
+            Teleport(spot + new Vector3(-1.4f, 0f, -0.6f), 45f);
+            yield return new WaitForSeconds(0.5f);
+            Assert.IsTrue(hider.Found, "close, she finds it");
+            Assert.AreEqual(CivilianBrain.Phase.Beg, hider.Current, "it begs where it is");
+            Assert.IsTrue(GlorifiedBody.Subtitles.SubtitleService.Lines.Any(l => l.Text.StartsWith("I'm not here")), "its own words");
+            Teleport(spot + new Vector3(-6f, 0f, -4f), 45f);
+            yield return new WaitForSeconds(3f);
+            Assert.Less(EnemyNav.Flat(hider.transform.position, spot), 0.8f, "cornered: it never runs");
+            Assert.AreEqual(EnemyMorale.Rank.UnarmedCivilian, hider.GetComponent<EnemyMorale>().RankOf, "a civilian: the best feed");
+        }
+
+        [UnityTest]
+        public IEnumerator TheBulletin_CountsEveryoneSheKilled_AndTypesItsWording()
+        {
+            // T11 (the writers' room, 2026-10-31): the last card, one wording of three by the people she killed.
+            PsychicStats stats = lucy.GetComponent<PsychicStats>();
+            int before = stats.People;
+            Remove(Marta);
+            Kill(Lab);   // a civilian: before, only armed kills counted
+            Kill(Guard);
+            yield return null;
+            Assert.AreEqual(before + 2, stats.People, "every person she killed counts, a civilian too");
+
+            string[] low = GlorifiedBody.Story.Bulletin.WordingFor(5, out string band);
+            Assert.AreEqual("low", band);
+            Assert.IsFalse(string.Join(" ", low).Contains("DEATHS"), "the low wording names no deaths");
+            string[] middle = GlorifiedBody.Story.Bulletin.WordingFor(15, out band);
+            Assert.AreEqual("middle", band);
+            StringAssert.Contains("15 DEATHS", string.Join(" ", middle));
+            string[] high = GlorifiedBody.Story.Bulletin.WordingFor(30, out band);
+            Assert.AreEqual("high", band);
+            StringAssert.Contains("NO WEAPON RECOVERED", string.Join(" ", high));
+
+            bool closed = false;
+            Assert.IsTrue(GlorifiedBody.Story.Bulletin.Show(15, () => closed = true));
+            yield return new WaitForSecondsRealtime(0.4f);
+            Assert.IsTrue(GameManager.Instance.IsCutscene, "the world stops for the card");
+            string partial = GlorifiedBody.Story.Bulletin.Shown;
+            Assert.Greater(partial.Length, 0, "it types");
+            Assert.Less(partial.Length, string.Join("\n", middle).Length, "one character at a time, like a teleprinter");
+            yield return Press(InputManager.GameAction.Interact); // skips the typing
+            StringAssert.Contains("15 DEATHS", GlorifiedBody.Story.Bulletin.Shown, "the whole card");
+            Assert.IsTrue(GlorifiedBody.Story.Bulletin.IsShowing);
+            yield return Press(InputManager.GameAction.Interact); // closes it
+            Assert.IsTrue(closed, "the card is closed");
+            Assert.IsFalse(GlorifiedBody.Story.Bulletin.IsShowing);
+            Assert.IsTrue(GameManager.Instance.IsPlaying, "the world goes on");
+        }
+
+        [UnityTest]
+        public IEnumerator TheStoryLocksTheFeed_UntilSheReadsHerCareChart()
+        {
+            // Round 18, CANON: "the feed starts locked. Reading log L9 sets one flag that unlocks it for the rest of the
+            // game. Before the flag, a body gives no prompt and no HP."
+            StoryFlags.Raise(Feeding.LockFlag); // the story's start (a sequence in W1)
+            Remove(Marta);
+            Kill(Lab);
+            yield return new WaitForSeconds(1.5f);
+            hers.SetHealth(30f);
+            FeedableBody lab = GameObject.Find(Lab).GetComponent<FeedableBody>();
+            Teleport(Beside(lab), 0f);
+            yield return null;
+            Assert.IsTrue(Feeding.Locked);
+            Assert.IsFalse(lab.Available, "no prompt on the body");
+            Assert.AreNotSame(lab, hands.FindFocus());
+            Assert.IsFalse(feeding.Begin(lab), "no feed");
+
+            var chart = ScriptableObject.CreateInstance<ItemDefinition>();
+            chart.itemId = "test_care_chart";
+            chart.displayName = "CARE CHART";
+            chart.kind = ItemKind.Log;
+            chart.logText = "PLACEHOLDER: her care chart (L9).";
+            chart.readFlag = Feeding.UnlockFlag;
+            hands.OpenReader(chart);
+            yield return null;
+            Assert.IsTrue(StoryFlags.Has(Feeding.UnlockFlag), "reading the chart raises the flag");
+            yield return Press(InputManager.GameAction.Interact); // closes the page
+            Assert.IsFalse(Feeding.Locked, "the feed is open for the rest of the game");
+            Assert.IsTrue(lab.Available, "the body asks now");
+            Assert.AreEqual("feed:" + Lab, lab.Confirm(hands));
+            yield return WaitUntil(() => !feeding.IsFeeding, Feeding.FeedSeconds + 2f);
+            Assert.Greater(hers.CurrentHealth, 30f, "she fed");
+            UnityEngine.Object.Destroy(chart);
         }
 
         [UnityTest]

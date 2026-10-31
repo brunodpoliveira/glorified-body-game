@@ -28,6 +28,8 @@ namespace GlorifiedBody.Editor
         public const string EntryWest = "Entry_WardWest";
         public const string MusicKey = "ward_test";
         public const string Patient = "Patient_W1", Marta = "Marta", Lab = "Lab_W3", Guard = "Guard_W4";
+        public const string Hider = "Hider_Stall";
+        public static readonly Vector3 HiderSpot = new Vector3(9.1f, 0f, 6.1f); // the north-east corner, its face to the corner
         public const string Fate = "marta";
         public const string Gate = "Gate_MartaKilled";
         public const float Width = 20f, Depth = 14f, Height = 3f;
@@ -75,6 +77,12 @@ namespace GlorifiedBody.Editor
             EditorUtility.SetDirty(marta);
             RoomKit.Spawn(figures, Lab, "labworker", new Vector3(7f, 0f, -4f), 250f, variant: 2);
             RoomKit.Spawn(figures, Guard, "guard_pistol", new Vector3(8.5f, 0f, 3f), 240f);
+            // A hider (2026-10-31; the demo plan: the nurse in the W4 shower stall). The writer's lines (barks.csv).
+            EnemySpawn hider = RoomKit.Spawn(figures, Hider, "nurse", HiderSpot, 45f, variant: 0);
+            hider.hides = true;
+            hider.hideLine = "It is sown in weakness. It is raised in power. It is sown in weakness.";
+            hider.foundLine = "I'm not here. Please. I'm not here.";
+            EditorUtility.SetDirty(hider);
 
             // The game remembers: a mark on the north wall that shows only when Marta is dead. PLACEHOLDER.
             GameObject gateRoot = MenuLoopSetup.EnsureRoot(Gate);

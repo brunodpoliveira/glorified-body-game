@@ -19,6 +19,7 @@ MonoBehaviour:
   colour: {r: 0.95, g: 0.55, b: 0.2, a: 1}
   description: A placeholder tape. It plays while she walks. A fight pauses it.
   logText: 
+  readFlag: 
   mapFloor: 
   audioClip: {fileID: 8300000, guid: cd6ca56ef1d01f821bafc74bc1eb7da1, type: 3}
   tapeLines:

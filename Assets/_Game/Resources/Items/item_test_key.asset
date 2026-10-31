@@ -19,6 +19,7 @@ MonoBehaviour:
   colour: {r: 1, g: 0.82, b: 0.2, a: 1}
   description: A placeholder key card. It opens the locked door of the gym.
   logText: 
+  readFlag: 
   mapFloor: 
   audioClip: {fileID: 0}
   tapeLines: []

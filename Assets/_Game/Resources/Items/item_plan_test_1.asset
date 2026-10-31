@@ -19,6 +19,7 @@ MonoBehaviour:
   colour: {r: 0.6, g: 0.82, b: 1, a: 1}
   description: A printed floor plan. The whole floor shows on the map.
   logText: 
+  readFlag: 
   mapFloor: test_1
   audioClip: {fileID: 0}
   tapeLines: []

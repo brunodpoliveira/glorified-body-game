@@ -18,7 +18,7 @@ namespace GlorifiedBody.Player
     /// wet sound every BloodSeconds (the gore driver's spray, without the hit bus: no other system takes it as a hit).
     /// The ones who see a feed react (OnFeedStarted, EnemyMorale.SeeFeed).
     /// </summary>
-    public sealed class Feeding : MonoBehaviour
+    public sealed partial class Feeding : MonoBehaviour
     {
         public const float FeedSeconds = 2.5f;
         public const float BloodSeconds = 0.6f; // a spray and a wet sound this often, PROPOSED
@@ -78,7 +78,7 @@ namespace GlorifiedBody.Player
         /// <summary>Starts a feed on the body. False when she is dead, unhurt, busy, or the body gives nothing.</summary>
         public bool Begin(FeedableBody body)
         {
-            if (body == null || IsFeeding || health == null || health.IsDead) return false;
+            if (body == null || IsFeeding || health == null || health.IsDead || Locked) return false;
             if (!body.IsDead || body.Left <= 0.5f || health.CurrentHealth >= health.MaxHealth - 0.5f) return false;
             target = body;
             rate = body.Total / FeedSeconds;

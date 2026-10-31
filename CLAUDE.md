@@ -375,7 +375,13 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   the vendor `Pick_Down` held at 0.42 s (a kneel) plus the arms as humanoid muscles (`CorpseCare.CprArms`, from a
   `PoseProbe` sheet; `ClipProbe` measures a clip), the drag hands on the shoulders by the two-bone reach. THE RIFLE ARMS:
   the wrists 6 cm behind and 4 cm under the grips, the right elbow down (bot "holds" measures it).
-  NEXT: his review; then the demo rooms (the player build, rank 16, at their start).
+- 2026-10-31, evening, four pieces the demo beats need (`devlog-notes/2026-10-31_demo_pieces.md`): the FEED LOCK
+  (`Feeding.Locked`: `feed_locked` up and `feed_unlocked` not; a log raises a flag on reading, `ItemDefinition.readFlag`),
+  HIDERS (`EnemySpawn.hides`, `CivilianBrain.SetHider`: silent, whispers at 4.5 m, begs at 2 m, never runs), THE
+  BULLETIN (`Story/Bulletin.cs`, `StepKind.Bulletin`, by `PsychicStats.People`, every person she killed, saved), WALL
+  SIGNS (`RoomKit.Sign`). The brain fight is for later, built separately (Bruno). The push needs Bruno's hand (the
+  session may not run `git push`).
+  NEXT: the player build (rank 16), then floor 2 of the demo in greybox (W1 to W12).
 
 ## Rules
 

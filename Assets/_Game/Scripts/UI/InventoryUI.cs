@@ -355,6 +355,7 @@ namespace GlorifiedBody.UI
                 readerTitle.text = e.Item.displayName;
                 readerBody.text = e.Item.logText;
                 readerPanel.SetActive(true);
+                ItemDefinition.MarkRead(e.Item);
                 OnLogRead?.Invoke(e.Item);
                 return "read:" + e.Item.itemId;
             }

@@ -86,6 +86,53 @@ namespace GlorifiedBody.Editor
             return MenuLoopSetup.EnsureComponent<RoomEntry>(obj);
         }
 
+        /// <summary>
+        /// A sign on a wall (2026-10-31; the demo plan §2.3: "in-world text, cheap, and it does a lot"): a thin dark plate
+        /// with the words on it, a world-space canvas with a legacy Text (no extra package), so the camera reads it from
+        /// its fixed place. The plate stands at the point, its face to the facing (the room side). Size in metres.
+        /// </summary>
+        public static GameObject Sign(GameObject parent, string name, string words, Vector3 point, Vector3 facing, Vector2 size, int fontSize = 64)
+        {
+            Transform old = parent != null ? parent.transform.Find(name) : null;
+            if (old != null) Object.DestroyImmediate(old.gameObject);
+            var sign = new GameObject(name);
+            if (parent != null) sign.transform.SetParent(parent.transform, false);
+            sign.transform.SetPositionAndRotation(point, Quaternion.LookRotation(-facing.normalized, Vector3.up));
+            GameObject plate = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            plate.name = "Plate";
+            Object.DestroyImmediate(plate.GetComponent<Collider>());
+            plate.transform.SetParent(sign.transform, false);
+            plate.transform.localPosition = new Vector3(0f, 0f, 0.01f);
+            plate.transform.localScale = new Vector3(size.x, size.y, 0.02f);
+            plate.GetComponent<Renderer>().sharedMaterial = ItemAssets.UnlitMaterial("sign_plate", new Color(0.06f, 0.06f, 0.07f));
+            var canvasObj = new GameObject("Words", typeof(RectTransform));
+            canvasObj.transform.SetParent(sign.transform, false);
+            Canvas canvas = canvasObj.AddComponent<Canvas>();
+            canvas.renderMode = RenderMode.WorldSpace;
+            RectTransform rect = canvasObj.GetComponent<RectTransform>();
+            const float pixelsPerMetre = 400f;
+            rect.sizeDelta = size * pixelsPerMetre * 0.9f;
+            rect.localScale = Vector3.one / pixelsPerMetre;
+            rect.localPosition = new Vector3(0f, 0f, -0.002f);
+            rect.localRotation = Quaternion.identity;
+            var textObj = new GameObject("Text", typeof(RectTransform));
+            textObj.transform.SetParent(canvasObj.transform, false);
+            RectTransform textRect = textObj.GetComponent<RectTransform>();
+            textRect.anchorMin = Vector2.zero;
+            textRect.anchorMax = Vector2.one;
+            textRect.offsetMin = textRect.offsetMax = Vector2.zero;
+            var text = textObj.AddComponent<UnityEngine.UI.Text>();
+            text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            text.fontSize = fontSize;
+            text.fontStyle = FontStyle.Bold;
+            text.alignment = TextAnchor.MiddleCenter;
+            text.color = new Color(0.88f, 0.86f, 0.8f);
+            text.text = words;
+            text.horizontalOverflow = HorizontalWrapMode.Wrap;
+            text.verticalOverflow = VerticalWrapMode.Truncate;
+            return sign;
+        }
+
         /// <summary>The room's music key on "[Music]". A missing script left there by an older build goes first.</summary>
         public static Audio.RoomMusic Music(string key)
         {

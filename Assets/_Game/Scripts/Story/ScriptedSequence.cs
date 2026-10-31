@@ -31,6 +31,7 @@ namespace GlorifiedBody.Story
         FreeHer,     // her feet move again
         Screen,      // the screen under target plays (InWorldScreen); id "wait": until it ends
         Outfit,      // her outfit (id "nude", "guard"); the grabbables over the new limit fall at her feet
+        Bulletin,    // the police bulletin card by her body count (T11); waits until she closes it
     }
 
     /// <summary>One step of a sequence: what it does and its data (the room builder fills them in code).</summary>
@@ -62,6 +63,7 @@ namespace GlorifiedBody.Story
         public static ScriptStep Play(CutsceneAsset asset) => new ScriptStep { kind = StepKind.Cutscene, cutscene = asset };
         public static ScriptStep LockHer() => new ScriptStep { kind = StepKind.LockHer };
         public static ScriptStep FreeHer() => new ScriptStep { kind = StepKind.FreeHer };
+        public static ScriptStep ShowBulletin() => new ScriptStep { kind = StepKind.Bulletin };
         public static ScriptStep Outfit(string outfitId) => new ScriptStep { kind = StepKind.Outfit, id = outfitId };
         public static ScriptStep Screen(GameObject screen, bool wait = false) => new ScriptStep { kind = StepKind.Screen, target = screen, id = wait ? "wait" : "" };
     }
@@ -160,6 +162,14 @@ namespace GlorifiedBody.Story
                     break;
                 case StepKind.LockHer: SetLock(true); break;
                 case StepKind.FreeHer: SetLock(false); break;
+                case StepKind.Bulletin:
+                {
+                    PsychicStats her = Lucy() != null ? Lucy().GetComponent<PsychicStats>() : null;
+                    bool closed = false;
+                    if (Bulletin.Show(her != null ? her.People : 0, () => closed = true))
+                        while (!closed) yield return null;
+                    break;
+                }
                 case StepKind.Outfit:
                 {
                     // The Crown grab of U1 tears the uniform off (Bruno, round 20): every player enters the brain fight bare.

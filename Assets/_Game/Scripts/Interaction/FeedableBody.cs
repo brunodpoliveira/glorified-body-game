@@ -34,7 +34,7 @@ namespace GlorifiedBody.Interaction
             range = 1.6f;
         }
 
-        public override bool Available => base.Available && IsDead && Left > 0.5f;
+        public override bool Available => base.Available && IsDead && Left > 0.5f && !Feeding.Locked;
 
         public override string Hint => "feed on the body";
 

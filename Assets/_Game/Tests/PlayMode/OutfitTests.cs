@@ -74,6 +74,8 @@ namespace GlorifiedBody.Tests.PlayMode
         public IEnumerator TheLocker_PutsOnTheUniform_TheModelTheStatsAndTheHud()
         {
             Assert.AreEqual("outfit_test", GlorifiedBody.Audio.MusicDirector.Instance.RoomKey, "the room's music key (RoomMusic loads)");
+            UnityEngine.UI.Text sign = GameObject.Find("Sign_HardDays").GetComponentInChildren<UnityEngine.UI.Text>();
+            Assert.AreEqual("THANK YOU FOR THE HARD DAYS.", sign.text, "the wall sign of W6 (RoomKit.Sign)");
             Assert.AreEqual(OutfitChange.NudeId, stats.Outfit.outfitId, "she starts bare");
             Assert.AreEqual("lucy_bare", LucyModel.Current(lucy));
             Assert.AreEqual(4, lucy.GetComponent<ItemInventory>().Capacity);

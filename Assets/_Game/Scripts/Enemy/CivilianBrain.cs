@@ -46,6 +46,14 @@ namespace GlorifiedBody.Enemy
         public const string LineKillSeen = "Oh God. Oh God, she's killing people!";
 
         [SerializeField] private bool nurse;
+        [Tooltip("A hider (the demo plan: the nurse in the W4 shower stall, the technician behind the W8 chair, the clerk in " +
+                 "the G6 stall): it waits crouched at its place, makes no sound to the others, whispers when she comes " +
+                 "near, and begs where it is when she finds it. It never runs. EnemySpawn sets it.")]
+        [SerializeField] private bool hides;
+        [SerializeField] private string hideLine = "";  // the whisper while she is near (the writer's line)
+        [SerializeField] private string foundLine = ""; // the first words when she finds it
+        [SerializeField, Min(0.5f)] private float whisperRange = 4.5f;
+        [SerializeField, Min(0.5f)] private float foundRange = 2f;
         [SerializeField, Min(1f)] private float alertRadius = 25f;
         [SerializeField, Min(1f)] private float hearPowerRadius = 12f;
         [SerializeField, Min(1f)] private float waryDistance = 6f;   // m: the wary one backs away until she is this far
@@ -103,6 +111,59 @@ namespace GlorifiedBody.Enemy
         private Vector3 Her => player != null ? player.position : body.TargetPosition;
 
         public void SetNurse(bool value) => nurse = value;
+
+        /// <summary>Makes it a hider with the writer's lines (EnemySpawn).</summary>
+        public void SetHider(string whisper, string found)
+        {
+            hides = true;
+            hideLine = whisper ?? "";
+            foundLine = found ?? "";
+        }
+
+        public bool Hides => hides;
+        /// <summary>She found the hider: it begs where it is.</summary>
+        public bool Found { get; private set; }
+        public int Whispers { get; private set; }
+
+        /// <summary>
+        /// The hider waits: crouched, the face to its corner, silent to the others (no sight alert, no scream). Near her
+        /// it whispers its line; close, it is found and begs where it is. A sound or a death near it does not move it.
+        /// </summary>
+        private void HideTick()
+        {
+            body.Stop();
+            if (CurrentPose != Pose.Crouch) SetPose(Pose.Crouch);
+            body.Crouch(true);
+            tremble.Amount = 0.8f;
+            if (player == null)
+            {
+                GameObject p = GameObject.FindWithTag("Player");
+                player = p != null ? p.transform : null;
+                if (player == null) return;
+            }
+            float gap = EnemyNav.Flat(transform.position, Her);
+            if (gap <= foundRange)
+            {
+                Found = true;
+                Alerted = true;
+                Panicked = true; // a cornered one never runs: Flee is off for a hider
+                body.Track(player);
+                Beg("found");
+                if (!string.IsNullOrEmpty(foundLine))
+                {
+                    Bark.Say(gameObject, foundLine); // its own words first, then the plea
+                    nextBark = Time.time + begBarkSeconds * 2f;
+                }
+                RunTelemetry.Event("hider_found", name);
+                return;
+            }
+            if (gap <= whisperRange && !string.IsNullOrEmpty(hideLine) && Time.time >= nextBark)
+            {
+                Bark.Say(gameObject, hideLine);
+                Whispers++;
+                nextBark = Time.time + 7f;
+            }
+        }
         /// <summary>Tests and bots: the cower variant (0 crouch, 1 wall lean, 2 self-hug, 3 shaking stance).</summary>
         public void SetVariant(int value) => variant = ((value % 4) + 4) % 4;
 
@@ -159,6 +220,7 @@ namespace GlorifiedBody.Enemy
         public void Alert(string reason, bool callOthers)
         {
             if (Alerted || Current == Phase.Dead || body == null) return;
+            if (hides && !Found) return; // it stays hidden: only she finds it
             if (player == null)
             {
                 GameObject p = GameObject.FindWithTag("Player");
@@ -281,6 +343,7 @@ namespace GlorifiedBody.Enemy
 
         private void Flee()
         {
+            if (hides) { Cower(); return; } // cornered: it stays where it hid
             tremble.Amount = 0f;
             SetPose(Pose.Controller);
             if (!EnemyNav.TryEscape(transform.position, Her, avoidRadius, cornerGain, out Vector3 spot))
@@ -357,6 +420,7 @@ namespace GlorifiedBody.Enemy
 
             if (Stunned) { body.Stop(); return; }
 
+            if (hides && !Found) { HideTick(); return; }
             if (!Alerted && Current != Phase.Care && body.CanSeeTarget) Alert("sight", callOthers: true);
             if (!Alerted || Current == Phase.Care) return;
             float gap = EnemyNav.Flat(transform.position, Her);

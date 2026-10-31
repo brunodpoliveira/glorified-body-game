@@ -57,6 +57,14 @@ namespace GlorifiedBody.Interaction
         public Color colour = Color.white;
         [TextArea(2, 4)] public string description = "";
         [TextArea(6, 20)] public string logText = "";
+        [Tooltip("A log: the story flag its reading raises (round 18: L9, her care chart, unlocks the feed). Empty: none.")]
+        public string readFlag = "";
+
+        /// <summary>She reads the log (the pickup's reader or the inventory's): its flag goes up.</summary>
+        public static void MarkRead(ItemDefinition item)
+        {
+            if (item != null && !string.IsNullOrEmpty(item.readFlag)) GlorifiedBody.Saving.StoryFlags.Raise(item.readFlag);
+        }
         [Tooltip("A floor plan (kind Map): the id of the floor it shows (MapAtlas).")]
         public string mapFloor = "";
         [Tooltip("An audio log (kind AudioLog): the recording.")]
