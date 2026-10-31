@@ -89,17 +89,19 @@ namespace GlorifiedBody.Automation
             yield return BotClock.Wait(1f);
             Directory.CreateDirectory(Path.Combine(BotArgs.RunDir, "shots"));
             GameManager gm = GameManager.Instance;
-            gm.LoadLevel("AiTest");
+            // AI TEST: a soldier tends a soldier. WARD TEST: Marta the nurse tends the guard (the "uncanny" nurse of 10-27).
+            bool ward = BotArgs.Level == "WardTest";
+            string room = ward ? "WardTest" : "AiTest";
+            gm.LoadLevel(room);
             float t0 = BotClock.Now;
-            while ((SceneManager.GetActiveScene().name != "AiTest" || !gm.IsPlaying) && BotClock.Now - t0 < 30f) yield return null;
+            while ((SceneManager.GetActiveScene().name != room || !gm.IsPlaying) && BotClock.Now - t0 < 30f) yield return null;
             yield return BotClock.Wait(1f);
             GameObject lucy = GameObject.FindGameObjectWithTag("Player");
             lucy.GetComponentInChildren<Health>().SetInvulnerable(true);
-            Enemy.SoldierBrain victim = GameObject.Find("Soldier_A")?.GetComponent<Enemy.SoldierBrain>();
-            Enemy.SoldierBrain medic = GameObject.Find("Gasser_D")?.GetComponent<Enemy.SoldierBrain>();
-            if (victim == null || medic == null) { Record("figures_in_room", false, "no Soldier_A or Gasser_D (AiTestSetup.BuildAiTest)"); Finish(); yield break; }
-            t0 = BotClock.Now;
-            while (!medic.Alerted && BotClock.Now - t0 < 8f) yield return null;
+            GameObject victim = GameObject.Find(ward ? "Guard_W4" : "Soldier_A");
+            GameObject medic = GameObject.Find(ward ? "Marta" : "Gasser_D");
+            if (victim == null || medic == null) { Record("figures_in_room", false, "no victim or carer in " + room); Finish(); yield break; }
+            yield return BotClock.Wait(2f);
 
             // A soldier dies; she hides (out of every sight line); a colleague drags him and starts the CPR.
             Health victimHealth = victim.GetComponent<Health>();
@@ -117,20 +119,23 @@ namespace GlorifiedBody.Automation
             while (care == null && BotClock.Now - t0 < 6f)
             {
                 foreach (Enemy.CorpseCare c in FindObjectsByType<Enemy.CorpseCare>(FindObjectsSortMode.None)) if (c.Patient == victim.transform) care = c;
-                if (care == null && medic.CanCare) { care = medic.GetComponent<Enemy.CorpseCare>(); care.Begin(victim.transform); }
+                if (care == null) { Enemy.CorpseCare mine = medic.GetComponent<Enemy.CorpseCare>(); if (mine != null && mine.Begin(victim.transform)) care = mine; }
                 yield return null;
             }
             Transform carer = care != null ? care.transform : medic.transform;
-            yield return BotClock.Wait(1.0f);
+            t0 = BotClock.Now;
+            while (care != null && care.Current != Enemy.CorpseCare.Step.Drag && care.Current != Enemy.CorpseCare.Step.Cpr && BotClock.Now - t0 < 10f) yield return null;
+            yield return BotClock.Wait(0.8f);
             yield return Shot("drag", carer.position + carer.right * 2.2f + carer.forward * 0.8f + Vector3.up * 1.5f, carer.position + Vector3.up * 0.9f);
             t0 = BotClock.Now;
             while (care != null && care.Current != Enemy.CorpseCare.Step.Cpr && BotClock.Now - t0 < 20f) yield return null;
             yield return BotClock.Wait(1.5f);
             yield return Shot("cpr_side", carer.position + carer.right * 2.0f + Vector3.up * 1.2f, carer.position + Vector3.up * 0.6f);
+            yield return Shot("cpr_front", carer.position + carer.forward * 1.9f - carer.right * 0.9f + Vector3.up * 1.0f, carer.position + carer.forward * 0.4f + Vector3.up * 0.5f);
             Enemy.EnemyGun gun = carer.GetComponent<Enemy.EnemyGun>();
             Animator body = carer.GetComponent<Animator>();
             float fromHand = gun != null && body != null ? Vector3.Distance(gun.Model.position, body.GetBoneTransform(HumanBodyBones.RightHand).position) : -1f;
-            Record("cpr_with_the_gun_on_his_back", care != null && care.Current == Enemy.CorpseCare.Step.Cpr && fromHand > 0.25f, $"carer={carer.name} step={(care != null ? care.Current.ToString() : "none")} gun_from_hand={fromHand:0.00}");
+            Record("cpr_kneel_the_gun_off_the_hands", care != null && care.Current == Enemy.CorpseCare.Step.Cpr && (gun == null || fromHand > 0.25f), $"carer={carer.name} step={(care != null ? care.Current.ToString() : "none")} gun_from_hand={fromHand:0.00}");
             Finish();
         }
 
@@ -169,7 +174,7 @@ namespace GlorifiedBody.Automation
             Canvas.ForceUpdateCanvases();
             try
             {
-                ShotRenderer.Render(cam, Path.Combine(BotArgs.RunDir, "shots", $"cpr_{shotIndex:00}_{moment}.png"), useTargetTexture: true);
+                ShotRenderer.Render(cam, Path.Combine(BotArgs.RunDir, "shots", $"cpr_{(BotArgs.Level == "WardTest" ? "ward_" : "")}{shotIndex:00}_{moment}.png"), useTargetTexture: true);
             }
             finally
             {

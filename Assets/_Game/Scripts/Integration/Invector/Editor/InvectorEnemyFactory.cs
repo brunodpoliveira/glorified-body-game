@@ -108,6 +108,16 @@ namespace GlorifiedBody.Integration.Invector.Build
             }
         }
 
+        /// <summary>The CPR's kneel: the vendor's Pick_Down (Basic_Actions), held at its low point (CorpseCare).</summary>
+        private static AnimationClip KneelClip()
+        {
+            const string path = "Assets/Invector-3rdPersonController/Basic Locomotion/3D Models/Animations/Basic_Actions.fbx";
+            foreach (Object asset in AssetDatabase.LoadAllAssetsAtPath(path))
+                if (asset is AnimationClip clip && clip.name == "Pick_Down") return clip;
+            Debug.LogWarning("[InvectorEnemyFactory] no Pick_Down in " + path + ": the CPR kneels as a crouch.");
+            return null;
+        }
+
         /// <summary>
         /// Builds every kind as a prefab in Resources/Enemies, in a scratch scene: the FSM and the shot effects first,
         /// then each figure as BuildSoldier makes it, saved and removed. A room's EnemySpawn markers load them at run time.
@@ -338,7 +348,7 @@ namespace GlorifiedBody.Integration.Invector.Build
                 var civilianSo = new SerializedObject(civilianMorale);
                 civilianSo.FindProperty("rank").enumValueIndex = (int)spec.rank;
                 civilianSo.ApplyModifiedPropertiesWithoutUndo();
-                root.AddComponent<CorpseCare>();
+                root.AddComponent<CorpseCare>().SetKneelClip(KneelClip());
                 BuildRagdoll(root, animator);
                 root.AddComponent<HitReactions>(); // the flinch, the step, the hand on the wound (2026-10-27)
                 return root;
@@ -362,7 +372,7 @@ namespace GlorifiedBody.Integration.Invector.Build
             var moraleSo = new SerializedObject(morale);
             moraleSo.FindProperty("rank").enumValueIndex = (int)spec.rank;
             moraleSo.ApplyModifiedPropertiesWithoutUndo();
-            if (spec.rank != EnemyMorale.Rank.Heavy) root.AddComponent<CorpseCare>();
+            if (spec.rank != EnemyMorale.Rank.Heavy) root.AddComponent<CorpseCare>().SetKneelClip(KneelClip());
             if (spec.rank == EnemyMorale.Rank.ArmedCivilian) root.AddComponent<Tremble>(); // its nerves (SoldierBrain)
             if (spec.weapon == DummyShooter.Weapon.Knife) BuildKnife(root);
             else BuildGun(root, scale, spec.weapon, spec.twoHanded);

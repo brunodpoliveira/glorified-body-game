@@ -31,6 +31,47 @@ namespace GlorifiedBody.Enemy
         [SerializeField, Min(1f)] private float cprSeconds = 12f;
         [SerializeField, Min(0.5f)] private float compressionsPerMinute = 110f;
         [SerializeField, Range(0f, 40f)] private float compressionDegrees = 14f;
+        [Tooltip("The kneel of the CPR: a vendor clip (Pick_Down), held at KneelFrom. The factory sets it (the prefab is not in git).")]
+        [SerializeField] private AnimationClip kneelClip;
+
+        /// <summary>The kneel of the vendor's Pick_Down: one knee on the floor, the hips 0.44 m up (ClipProbe, 2026-10-31).</summary>
+        public const float KneelFrom = 0.42f, KneelLength = 0.03f;
+
+        /// <summary>
+        /// The CPR's arms (2026-10-31, Bruno: the CPR pose "sometimes comes extremely uncanny"; "do them now"): both arms
+        /// straight down to the chest, the head down, as humanoid muscles, so one set fits every rig (the old code turned
+        /// the bones along +y, which only some rigs have). Over the vendor kneel. PROPOSED (picked from the PoseProbe sheet
+        /// over Pick_Down, set B: ~/MEGA/glorified-body-renders/game/animation/shots/cpr_probe_sheet.png).
+        /// </summary>
+        public static readonly (string muscle, float value)[] CprArms =
+        {
+            ("Shoulder Down-Up", -0.3f),
+            ("Shoulder Front-Back", 0.5f),
+            ("Arm Down-Up", -0.45f),
+            ("Arm Front-Back", -0.8f),
+            ("Arm Twist In-Out", 0f),
+            ("Forearm Stretch", 1f),
+            ("Forearm Twist In-Out", 0f),
+            ("Hand Down-Up", 0.6f),
+            ("Hand In-Out", 0f),
+            ("Head Nod Down-Up", -0.5f),
+            ("Neck Nod Down-Up", -0.3f),
+        };
+        // The spine and chest bend (negative leans forward: the PoseProbe sheet of 2026-10-31, set B), and the bob of a
+        // compression (more forward at the push).
+        private const float CprBend = -0.5f, CprPump = -0.15f;
+
+        public AnimationClip KneelClip => kneelClip;
+        public void SetKneelClip(AnimationClip clip) => kneelClip = clip;
+
+        private HumanPoseHandler poseHandler;
+        private HumanPose humanPose;
+        private int[] cprIndices;
+        private float[] cprValues;
+        private int spineBend = -1, chestBend = -1;
+        private Transform hips;
+        private Transform leftHand, rightHand;
+        private GlorifiedBody.Characters.PoseOverride kneel;
 
         private ICarer brain;
         private Health health;
@@ -68,9 +109,19 @@ namespace GlorifiedBody.Enemy
                 rightArm = animator.GetBoneTransform(HumanBodyBones.RightUpperArm);
                 leftFore = animator.GetBoneTransform(HumanBodyBones.LeftLowerArm);
                 rightFore = animator.GetBoneTransform(HumanBodyBones.RightLowerArm);
+                leftHand = animator.GetBoneTransform(HumanBodyBones.LeftHand);
+                rightHand = animator.GetBoneTransform(HumanBodyBones.RightHand);
+                hips = animator.GetBoneTransform(HumanBodyBones.Hips);
+                if (animator.avatar != null) poseHandler = new HumanPoseHandler(animator.avatar, animator.transform);
+                var set = new System.Collections.Generic.List<(string, float)>(CprArms) { ("Spine Front-Back", 0f), ("Chest Front-Back", 0f) };
+                GlorifiedBody.Characters.PleaHands.Resolve(set.ToArray(), out cprIndices, out cprValues);
+                spineBend = System.Array.IndexOf(cprIndices, System.Array.IndexOf(HumanTrait.MuscleName, "Spine Front-Back"));
+                chestBend = System.Array.IndexOf(cprIndices, System.Array.IndexOf(HumanTrait.MuscleName, "Chest Front-Back"));
             }
             lastSeen = Time.time;
         }
+
+        private void OnDestroy() => poseHandler?.Dispose();
 
         private void OnEnable()
         {
@@ -119,6 +170,7 @@ namespace GlorifiedBody.Enemy
             Current = Step.None;
             if (patient != null) tended.Remove(patient);
             patient = null;
+            if (kneel != null && kneel.Current == kneelClip) kneel.Stop();
             brain.Body.Crouch(false);
             brain.EndCare();
         }
@@ -166,12 +218,21 @@ namespace GlorifiedBody.Enemy
 
         private void LateUpdate()
         {
+            if (Current == Step.Drag) { DragHands(); return; }
             if (Current != Step.Cpr) return;
             // The compressions: the upper body pumps down over the chest, the arms straight down.
             float phase = Time.time * compressionsPerMinute / 60f;
             float pump = Mathf.Max(0f, Mathf.Sin(phase * Mathf.PI * 2f));
             int count = Mathf.FloorToInt(phase);
             if (count != lastCount) { Compressions++; lastCount = count; }
+            if (poseHandler != null && kneel != null && kneel.Playing)
+            {
+                // The kneel holds; the arms and the bob are muscles (every rig the same).
+                if (spineBend >= 0) cprValues[spineBend] = CprBend + CprPump * pump;
+                if (chestBend >= 0) cprValues[chestBend] = CprBend * 0.8f + CprPump * 0.5f * pump;
+                GlorifiedBody.Characters.PleaHands.Apply(poseHandler, ref humanPose, cprIndices, cprValues, 1f, hips);
+                return;
+            }
             if (spine != null) spine.localRotation *= Quaternion.Euler(20f + compressionDegrees * pump, 0f, 0f);
             if (chest != null) chest.localRotation *= Quaternion.Euler(10f, 0f, 0f);
             // The arms: straight from the shoulders to the chest of the body (the bone's own axis is +y on this rig).
@@ -314,6 +375,25 @@ namespace GlorifiedBody.Enemy
         }
 
         private const float LimpGripHeight = 0.5f; // metres over his feet: the hands of a crouched carer
+
+        /// <summary>
+        /// The drag (Bruno, 2026-10-27: "the body and the dragger's arm" need refinement): both hands on the body's
+        /// shoulders, by the two-bone reach of the gun hold, the elbows down and out. Over the vendor crouch walk.
+        /// </summary>
+        private void DragHands()
+        {
+            if (patient == null || leftArm == null || rightArm == null) return;
+            Animator body = patient.GetComponent<Animator>();
+            Transform left = body != null && body.isHuman ? body.GetBoneTransform(HumanBodyBones.LeftUpperArm) : null;
+            Transform right = body != null && body.isHuman ? body.GetBoneTransform(HumanBodyBones.RightUpperArm) : null;
+            if (left == null || right == null) return;
+            Vector3 side = transform.right;
+            // His left hand takes the shoulder on his left: the body lies with its head to him.
+            Transform toLeft = Vector3.Dot(left.position - right.position, side) < 0f ? left : right;
+            Transform toRight = toLeft == left ? right : left;
+            EnemyGun.Reach(leftArm, leftFore, leftHand, null, toLeft.position, -Vector3.up - side * 0.6f, Vector3.zero);
+            EnemyGun.Reach(rightArm, rightFore, rightHand, null, toRight.position, -Vector3.up + side * 0.6f, Vector3.zero);
+        }
         private const float ReachGap = 1.5f;       // metres from the kneeling spot: near enough to take the body
 
         /// <summary>A limp body falls from his hands; it settles and freezes again (EnemyRagdoll).</summary>
@@ -331,6 +411,13 @@ namespace GlorifiedBody.Enemy
             brain.Body.Stop();
             brain.Body.Crouch(true);
             brain.Body.Face(PatientChest() - transform.position);
+            // The kneel: the vendor's Pick_Down held at its low point (one knee down), the arms over it in LateUpdate.
+            Animator animator = GetComponent<Animator>();
+            if (kneelClip != null && animator != null)
+            {
+                kneel = animator.GetComponent<GlorifiedBody.Characters.PoseOverride>() ?? animator.gameObject.AddComponent<GlorifiedBody.Characters.PoseOverride>();
+                kneel.Play(kneelClip, loop: true, fade: 0f, from: KneelFrom, length: KneelLength);
+            }
             RunTelemetry.Event("care_cpr", $"{name}>{patient.name} dragged {Dragged:0.0} m");
             if (brain.CprLine != null) Bark.Say(gameObject, brain.CprLine);
         }

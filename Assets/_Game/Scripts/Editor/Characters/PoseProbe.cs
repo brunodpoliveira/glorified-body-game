@@ -11,7 +11,8 @@ namespace GlorifiedBody.Editor.Characters
     /// Renders the plea (PleaHands) on a figure over a pose clip, from the front and the side, one column per muscle
     /// set, into one sheet. A tool to pick the numbers from pictures. Sets come from a JSON file
     /// (-gbPleaJson, {"sets":[{"name":"a","muscles":["Arm Down-Up"],"values":[0.2]}]}), else the PleaHands values.
-    /// Run: tools/unity.sh exec GlorifiedBody.Editor.Characters.PoseProbe.Plea [-gbPleaJson f] [-gbOut f.png]
+    /// Run: tools/unity.sh exec GlorifiedBody.Editor.Characters.PoseProbe.Plea [-gbPleaJson f] [-gbOut f.png] [-gbFigure class]
+    /// [-gbAt seconds] [-gbClipPath asset -gbClipName clip]
     /// </summary>
     public static class PoseProbe
     {
@@ -91,6 +92,11 @@ namespace GlorifiedBody.Editor.Characters
             Animator animator = body.GetComponentInChildren<Animator>();
             PoseClips clips = AssetDatabase.LoadAssetAtPath<PoseClips>("Assets/_Game/Resources/Characters/pose_clips.asset");
             AnimationClip clip = clips != null ? clips.sit : null;
+            // Another clip (2026-10-31, the CPR over the vendor kneel): -gbClipPath <asset> -gbClipName <name>.
+            string clipPath = Automation.AutomationArgs.Get("-gbClipPath"), clipName = Automation.AutomationArgs.Get("-gbClipName");
+            if (!string.IsNullOrEmpty(clipPath) && !string.IsNullOrEmpty(clipName))
+                foreach (Object asset in AssetDatabase.LoadAllAssetsAtPath(clipPath))
+                    if (asset is AnimationClip c && c.name == clipName) clip = c;
             var handler = new HumanPoseHandler(animator.avatar, animator.transform);
             var pose = new HumanPose();
 
