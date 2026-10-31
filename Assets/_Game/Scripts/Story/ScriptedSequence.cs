@@ -29,6 +29,7 @@ namespace GlorifiedBody.Story
         Cutscene,    // plays the cutscene, waits for its end
         LockHer,     // her feet stop (a talk)
         FreeHer,     // her feet move again
+        Screen,      // the screen under target plays (InWorldScreen); id "wait": until it ends
     }
 
     /// <summary>One step of a sequence: what it does and its data (the room builder fills them in code).</summary>
@@ -60,12 +61,13 @@ namespace GlorifiedBody.Story
         public static ScriptStep Play(CutsceneAsset asset) => new ScriptStep { kind = StepKind.Cutscene, cutscene = asset };
         public static ScriptStep LockHer() => new ScriptStep { kind = StepKind.LockHer };
         public static ScriptStep FreeHer() => new ScriptStep { kind = StepKind.FreeHer };
+        public static ScriptStep Screen(GameObject screen, bool wait = false) => new ScriptStep { kind = StepKind.Screen, target = screen, id = wait ? "wait" : "" };
     }
 
     /// <summary>
     /// A scripted beat of the story (the design sweep's rank 2: "the scientist's ultimatum, code silver, the QRF
     /// wave, the sealed gate, Marta's choice"). A list of steps run in order: lines, the PA, story flags, objects
-    /// shown or hidden, a group alerted, a wait for a group's death, her SHORT bar, the music, a cutscene. It runs
+    /// shown or hidden, a group alerted, a wait for a group's death, her SHORT bar, the music, a cutscene, a screen. It runs
     /// once: its done flag goes up at the end and the save keeps it, so a load or a return does not run it again.
     /// A ScriptTrigger starts it when she walks in, or another step or system calls Run.
     /// </summary>
@@ -156,6 +158,13 @@ namespace GlorifiedBody.Story
                     break;
                 case StepKind.LockHer: SetLock(true); break;
                 case StepKind.FreeHer: SetLock(false); break;
+                case StepKind.Screen:
+                {
+                    var screen = step.target != null ? step.target.GetComponentInChildren<Interaction.InWorldScreen>() : null;
+                    if (screen != null && screen.Play() && step.id == "wait")
+                        while (screen != null && screen.IsPlaying) yield return null;
+                    break;
+                }
             }
         }
 

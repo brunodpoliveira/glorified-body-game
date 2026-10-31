@@ -15,7 +15,7 @@ namespace GlorifiedBody.Audio
     /// inventory "yes"). A taken audio log plays at once on the Voice channel, in her ear (2D), and the world goes on.
     /// Its lines show as subtitles at their times. While it plays the music drops to MusicLevel (MusicDirector). When the
     /// music goes to Combat the tape pauses, and it stays paused: she plays it again from the inventory (Interact on
-    /// it plays or pauses it; at its end it plays from the start). The pause, the inventory and the map stop it with
+    /// it plays or pauses it; at its end it plays from the start), or with the tape key (T; not during a fight). The pause, the inventory and the map stop it with
     /// the world sounds. It lives on the sound system's object, so it plays on through a door. A small label at the
     /// top right shows the tape and its time. Placeholder look.
     /// </summary>
@@ -163,15 +163,21 @@ namespace GlorifiedBody.Audio
 
         private void Update()
         {
-            if (!IsPlaying) return;
             GameManager gm = GameManager.Instance;
+            // The tape key (Bruno, 2026-10-31: a key that plays it again without the inventory). In a fight it waits.
+            if (tape != null && gm != null && gm.IsPlaying && GameInput.GetActionDown(InputManager.GameAction.Tape, KeyCode.T))
+            {
+                if (IsPlaying) Pause(PausedByPlayer);
+                else if (!InFight) Play(tape);
+            }
+            if (!IsPlaying) return;
             if (gm != null && (gm.IsGameOver || gm.IsInMenu))
             {
                 Pause(PausedByPlayer);
                 return;
             }
             // A fight pauses it, and it stays paused: she plays it again (Bruno: "once the player un-pauses it").
-            if (MusicDirector.Instance != null && MusicDirector.Instance.State == MusicState.Combat)
+            if (InFight)
             {
                 CombatPauses++;
                 Pause(PausedByCombat);
@@ -191,6 +197,8 @@ namespace GlorifiedBody.Audio
             }
             ShowLine();
         }
+
+        private static bool InFight => MusicDirector.Instance != null && MusicDirector.Instance.State == MusicState.Combat;
 
         /// <summary>The line of this time as a subtitle, once per line.</summary>
         private void ShowLine()
@@ -216,9 +224,19 @@ namespace GlorifiedBody.Audio
             if (label.gameObject.activeSelf != show) label.gameObject.SetActive(show);
             if (!show) return;
             string time = $"{Clock(Position)} / {Clock(Length)}";
+            string key = TapeKeyName;
             label.text = IsPlaying ? $"TAPE  {tape.displayName}  {time}"
-                : StoppedBy == PausedByCombat ? $"TAPE PAUSED: a fight  {time}\nPlay it again from the inventory"
-                : $"TAPE PAUSED  {time}";
+                : StoppedBy == PausedByCombat ? $"TAPE PAUSED: a fight  {time}\n{key}: play it again"
+                : $"TAPE PAUSED  {time}\n{key}: play";
+        }
+
+        private static string TapeKeyName
+        {
+            get
+            {
+                KeyCode key = InputManager.Instance != null ? InputManager.Instance.GetKey(InputManager.GameAction.Tape) : KeyCode.T;
+                return InputManager.GetKeyDisplayName(key == KeyCode.None ? KeyCode.T : key).ToUpperInvariant();
+            }
         }
 
         private static string Clock(float seconds) => $"{(int)(seconds / 60f)}:{(int)(seconds % 60f):00}";

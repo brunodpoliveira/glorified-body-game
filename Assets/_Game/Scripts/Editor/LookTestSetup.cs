@@ -946,7 +946,8 @@ namespace GlorifiedBody.Editor
                     float x = gMin.x + 0.32f + col * 0.57f;
                     Vector3 c = new Vector3(x, y + 0.24f, gMax.z - 0.32f);
                     Block(room, $"Crt_{row}_{col}", PrimitiveType.Cube, c, new Vector3(0.5f, 0.42f, 0.46f), p.DarkSteel);
-                    Face(room, $"CrtFace_{row}_{col}", c + new Vector3(0f, 0.01f, -0.235f), Quaternion.Euler(0f, 180f, 0f), 0.4f, 0.32f, p.Crt, 0f, stretch: true);
+                    // No turn: a face shows to -z, like the north wall (the 180 of 2026-10-22 turned them into the boxes).
+                    Face(room, $"CrtFace_{row}_{col}", c + new Vector3(0f, 0.01f, -0.235f), Quaternion.identity, 0.4f, 0.32f, p.Crt, 0f, stretch: true);
                 }
             }
             Block(room, "Shelf_Post_W", PrimitiveType.Cube, new Vector3(gMin.x + 0.03f, 1.1f, gMax.z - 0.3f), new Vector3(0.05f, 2.2f, 0.6f), p.DarkSteel);

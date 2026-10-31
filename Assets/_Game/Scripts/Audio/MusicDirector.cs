@@ -167,6 +167,7 @@ namespace GlorifiedBody.Audio
             float voice = Time.unscaledTime < voiceDuckUntil ? VoiceDuckLevel : 1f;
             // A tape plays: the music drops to almost nothing (Bruno, 2026-10-31).
             if (TapePlayer.Instance != null && TapePlayer.Instance.IsPlaying) voice = Mathf.Min(voice, TapePlayer.MusicLevel);
+            if (GlorifiedBody.Interaction.InWorldScreen.AnyDucking) voice = Mathf.Min(voice, TapePlayer.MusicLevel); // a screen speaks near her
             GameManager gm = GameManager.Instance;
             if (gm == null) return voice;
             bool stopped = gm.CurrentState == GameManager.GameState.Paused || gm.CurrentState == GameManager.GameState.Inventory

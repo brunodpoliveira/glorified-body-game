@@ -114,6 +114,12 @@ namespace GlorifiedBody.Interaction
                 Result((target is LockedDoor ? "locked:" : "message:") + target.name);
                 return;
             }
+            if (target.KindFor(this) == InteractKind.Act)
+            {
+                Result(target.Confirm(this));
+                SetState(State.Free);
+                return;
+            }
             Pending = target;
             SetState(State.Confirming);
             Result("ask:" + target.name);

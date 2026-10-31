@@ -116,13 +116,14 @@ namespace GlorifiedBody.Tests.PlayMode
         public IEnumerator AFight_PausesTheTape_UntilSheResumesIt_FromTheInventory()
         {
             ItemDefinition tape = GiveTape();
+            int pausesBefore = Tapes.CombatPauses;
             Tapes.Play(tape);
             yield return new WaitForSeconds(1.5f);
             MusicDirector.Threat(); // a hit: the music goes to Combat
             yield return WaitUntil(() => !Tapes.IsPlaying, 2f);
             Assert.IsFalse(Tapes.IsPlaying, "a fight pauses the tape");
             Assert.AreEqual(TapePlayer.PausedByCombat, Tapes.StoppedBy);
-            Assert.AreEqual(1, Tapes.CombatPauses);
+            Assert.AreEqual(pausesBefore + 1, Tapes.CombatPauses);
             float pausedAt = Tapes.Position;
             Assert.Greater(pausedAt, 1f);
             Assert.IsFalse(SubtitleService.Lines.Any(l => l.Owner == TapePlayer.SubtitleOwner), "its subtitle goes");
@@ -146,6 +147,33 @@ namespace GlorifiedBody.Tests.PlayMode
             yield return new WaitForSeconds(0.5f);
             Assert.IsTrue(Tapes.IsPlaying, "it plays again");
             Assert.GreaterOrEqual(Tapes.Position, pausedAt, "from where the fight stopped it");
+        }
+
+        [UnityTest]
+        public IEnumerator TheTapeKey_PausesAndPlaysIt_ButNotInAFight()
+        {
+            ItemDefinition tape = GiveTape();
+            int pausesBefore = Tapes.CombatPauses; // the player lives for the whole run
+            Tapes.Play(tape);
+            yield return new WaitForSeconds(1f);
+            yield return Press(InputManager.GameAction.Tape);
+            Assert.IsFalse(Tapes.IsPlaying, "the tape key pauses it");
+            Assert.AreEqual(TapePlayer.PausedByPlayer, Tapes.StoppedBy);
+            StringAssert.Contains("T: play", Tapes.LabelShown, "the label names the key");
+            float pausedAt = Tapes.Position;
+            yield return Press(InputManager.GameAction.Tape);
+            Assert.IsTrue(Tapes.IsPlaying, "and plays it again, with no inventory");
+            Assert.AreEqual(pausedAt, Tapes.Position, 0.1f, "from where it stopped");
+
+            MusicDirector.Threat(); // a fight pauses it
+            yield return WaitUntil(() => !Tapes.IsPlaying, 2f);
+            StringAssert.Contains("T: play it again", Tapes.LabelShown);
+            yield return Press(InputManager.GameAction.Tape);
+            Assert.IsFalse(Tapes.IsPlaying, "in the fight the key waits");
+            yield return WaitUntil(() => MusicDirector.Instance.State != MusicState.Combat, MusicDirector.CombatHoldSeconds + 3f);
+            yield return Press(InputManager.GameAction.Tape);
+            Assert.IsTrue(Tapes.IsPlaying, "after the fight the key plays it");
+            Assert.AreEqual(pausesBefore + 1, Tapes.CombatPauses);
         }
 
         [UnityTest]

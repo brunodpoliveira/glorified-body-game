@@ -9,7 +9,9 @@ namespace GlorifiedBody.Interaction
         /// <summary>Ask first ("Take the test log?", "Use the test key?"), act on a yes.</summary>
         Ask,
         /// <summary>Only a message ("It is locked."), no question.</summary>
-        Message
+        Message,
+        /// <summary>Act at once, no question (a switch: a screen on or off).</summary>
+        Act
     }
 
     /// <summary>

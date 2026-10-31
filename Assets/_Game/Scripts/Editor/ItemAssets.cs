@@ -99,7 +99,7 @@ namespace GlorifiedBody.Editor
                 new TapeLine { at = 4.5f, speaker = "TAPE", text = "It stands in for the audio logs of the demo." },
                 new TapeLine { at = 9.5f, speaker = "TAPE", text = "The writer gives the words. The voices come later." },
                 new TapeLine { at = 14.5f, speaker = "TAPE", text = "Walk while it plays. A fight pauses it." },
-                new TapeLine { at = 19.0f, speaker = "TAPE", text = "Play it again from the inventory." },
+                new TapeLine { at = 19.0f, speaker = "TAPE", text = "The tape key or the inventory plays it again." },
             };
             EditorUtility.SetDirty(item);
             return item;

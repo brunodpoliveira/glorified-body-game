@@ -36,4 +36,4 @@ MonoBehaviour:
     text: Walk while it plays. A fight pauses it.
   - at: 19
     speaker: TAPE
-    text: Play it again from the inventory.
+    text: The tape key or the inventory plays it again.
