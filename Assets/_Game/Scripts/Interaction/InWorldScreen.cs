@@ -122,8 +122,7 @@ namespace GlorifiedBody.Interaction
             {
                 video = gameObject.AddComponent<VideoPlayer>();
                 video.playOnAwake = false;
-                video.source = VideoSource.VideoClip;
-                video.clip = clip;
+                GlorifiedBody.Core.VideoClips.Assign(video, clip);
                 video.isLooping = loop;
                 video.renderMode = VideoRenderMode.RenderTexture;
                 video.timeUpdateMode = VideoTimeUpdateMode.GameTime;

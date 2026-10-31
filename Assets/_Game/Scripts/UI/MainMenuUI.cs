@@ -366,6 +366,12 @@ namespace GlorifiedBody.UI
             nav.Add(optionsBtn);
             nav.Add(creditsBtn);
             nav.Add(quitBtn);
+            // The web build: a page cannot quit (Application.Quit does nothing in a browser).
+            if (Application.platform == RuntimePlatform.WebGLPlayer)
+            {
+                quitBtn.gameObject.SetActive(false);
+                nav.Remove(quitBtn);
+            }
 
             // ── The test rooms (right): one column of their own, so the main column fits the screen (2026-10-26:
             // with the three new rooms the column ran past the bottom) ──

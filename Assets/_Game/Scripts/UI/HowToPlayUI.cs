@@ -150,10 +150,14 @@ namespace GlorifiedBody.UI
             CreateControl(p, "W/A/S/D twice", "A double tap: the same dodge, no Space");
             CreateControl(p, "LMB again (TK)", "Enemy in the air: turn to aim, throw it into another one");
             CreateControl(p, "RMB (TK), bullet near", "Defend: catch the bullet, send it back at the shooter");
-            CreateControl(p, "F4", "Debug: kill Lucy (shows the death screen)");
-            CreateControl(p, "F5 / F6 / F7", "Debug: fill SHORT / start the short / refill (debug only) + drugs");
-            CreateControl(p, "F8 / F9", "Debug: MK -25 / +25");
-            CreateControl(p, "F11 / F3", "Debug: the next look test room / cycle its dressings");
+            // The debug keys only where they work (GameBuild.Dev): a release does not list them (2026-10-31).
+            if (GlorifiedBody.Systems.GameBuild.Dev)
+            {
+                CreateControl(p, "F4", "Debug: kill Lucy (shows the death screen)");
+                CreateControl(p, "F5 / F6 / F7", "Debug: fill SHORT / start the short / refill (debug only) + drugs");
+                CreateControl(p, "F8 / F9", "Debug: MK -25 / +25");
+                CreateControl(p, "F11 / F3", "Debug: the next look test room / cycle its dressings");
+            }
             CreateSpacer(p, 14);
 
             backBtn = CreateButton(p, "Back", OnBackClicked);

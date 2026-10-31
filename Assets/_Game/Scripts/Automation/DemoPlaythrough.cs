@@ -85,7 +85,7 @@ namespace GlorifiedBody.Automation
         private IEnumerator Run()
         {
             yield return new WaitForSecondsRealtime(1f);
-            string shotsDir = Path.Combine(BotArgs.RunDir, "shots");
+            string shotsDir = Path.Combine(BotArgs.RunDirOrData, "shots");
             foreach (string id in Rooms)
             {
                 string scene = "Demo_" + id;
@@ -110,6 +110,7 @@ namespace GlorifiedBody.Automation
                     string file = Path.Combine(shotsDir, $"demo_{fixedCamera.cameraName.ToLowerInvariant()}.png");
                     bool saved = ShotRenderer.Render(Camera.main, file, ShotWidth, ShotHeight, useTargetTexture: true);
                     Record($"shot_{fixedCamera.cameraName.ToLowerInvariant()}", saved, $"saved={saved}");
+                    if (BotArgs.ShotWait > 0f) yield return new WaitForSecondsRealtime(BotArgs.ShotWait); // a browser driver takes the screen now
                 }
                 director.Override(null);
             }
@@ -132,13 +133,15 @@ namespace GlorifiedBody.Automation
                   .Append(", \"detail\": \"").Append(Esc(s.detail)).Append("\"}").Append(i < steps.Count - 1 ? ",\n" : "\n");
             }
             sb.Append("  ]\n}\n");
-            string dir = BotArgs.RunDir;
+            string dir = BotArgs.RunDirOrData;
             if (!string.IsNullOrEmpty(dir))
             {
                 Directory.CreateDirectory(dir);
                 File.WriteAllText(Path.Combine(dir, "playthrough.json"), sb.ToString());
             }
             Debug.Log($"[DemoBot] finished pass={pass} steps={steps.Count} ok={steps.Count(s => s.ok)}");
+            // A player run (the Linux player, the Windows player under Wine) ends here; the editor runner and the web page stop it themselves.
+            if (!Application.isEditor && Application.platform != RuntimePlatform.WebGLPlayer) Application.Quit(pass ? 0 : 1);
             RunTelemetry.Event("demo_bot_done", pass ? "pass" : "fail");
         }
 

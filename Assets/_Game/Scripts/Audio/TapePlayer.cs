@@ -44,7 +44,7 @@ namespace GlorifiedBody.Audio
         /// <summary>Why the tape stopped: PausedByCombat, PausedByPlayer, Ended, or empty while it plays or with no tape.</summary>
         public string StoppedBy { get; private set; } = "";
         public int CombatPauses { get; private set; }
-        public float Length => tape != null && tape.audioClip != null ? tape.audioClip.length : LinesLength;
+        public float Length => tape != null && tape.audioClip != null ? GameAudio.Length(tape.audioClip, LinesLength) : LinesLength;
         /// <summary>The time in the tape, in seconds.</summary>
         public float Position => tape == null ? 0f : playing ? clock : resumeAt;
         public string LabelShown => label != null && label.gameObject.activeSelf ? label.text : "";
@@ -103,7 +103,7 @@ namespace GlorifiedBody.Audio
             clock = resumeAt;
             if (source.clip != null)
             {
-                source.time = Mathf.Clamp(resumeAt, 0f, source.clip.length - 0.01f);
+                source.time = Mathf.Clamp(resumeAt, 0f, GameAudio.Length(source.clip, resumeAt + 0.02f) - 0.01f);
                 source.Play();
             }
             UpdateLabel();

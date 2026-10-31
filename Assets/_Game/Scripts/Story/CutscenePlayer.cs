@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Video;
 using GlorifiedBody.Audio;
+using GlorifiedBody.Core;
 using GlorifiedBody.DebugTools;
 using GlorifiedBody.Saving;
 using GlorifiedBody.Subtitles;
@@ -127,7 +128,7 @@ namespace GlorifiedBody.Story
                     line = Voice.PlayOnly(shot.lineId, VoiceMode.Radio);
                     if (line != null) line.ignoreListenerPause = true;
                 }
-                float length = Mathf.Max(shot.seconds, line != null && line.clip != null ? line.clip.length + 0.3f : 0f);
+                float length = Mathf.Max(shot.seconds, line != null && line.clip != null ? GameAudio.Length(line.clip, 0f) + 0.3f : 0f);
                 if (shot.video != null)
                 {
                     if (videoTexture == null) videoTexture = new RenderTexture(1280, 720, 0) { name = "cutscene_video" };
@@ -135,11 +136,11 @@ namespace GlorifiedBody.Story
                     picture.texture = videoTexture;
                     picture.uvRect = new Rect(0f, 0f, 1f, 1f);
                     video.targetTexture = videoTexture;
-                    video.clip = shot.video;
+                    VideoClips.Assign(video, shot.video);
                     video.Prepare();
                     while (!video.isPrepared && !skipped) yield return null;
                     video.Play();
-                    length = Mathf.Max(length, (float)shot.video.length);
+                    length = Mathf.Max(length, (float)video.length); // the player's length: on the web the clip plays by URL
                 }
                 else
                 {

@@ -395,6 +395,15 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   `ScriptedSequence.runOnStart`, `StepKind.EndDemo`.
   TBD (Bruno): a second way past the W11 stair card, a bit out of the way, that lets her go on without the ward
   sister's death. He reports on the cameras after his playthrough.
+- 2026-10-31, night, THE WEB AND WINDOWS BUILDS (`devlog-notes/2026-10-31_web_windows_builds.md`, Bruno: itch.io first):
+  `tools/unity.sh build release web|windows|linux`. Both bots pass in all three players (web: `node tools/web_bot.mjs
+  <build> demo|tutorial <dir>`, headless Chrome; Windows: Wine; the bots quit a player at the end). Web: clips play by
+  URL (`Core/VideoClips.Assign`, copied to StreamingAssets for the build only), the template keeps the saves
+  (`autoSyncPersistentDataPath`), Standalone's defines (`PlayerBuild.SyncWebDefines`), no pointer lock, no QUIT,
+  `WebTexturePostprocessor` (DXT for the web only), every timer from a clip length through `GameAudio.Length`. A
+  release hides the debug line and the debug keys of How to Play. 90 MB on itch.io. A BUILD RUNS IN ITS OWN systemd
+  SCOPE (9 GB): the web IL2CPP step once took 4.7 GB and the OOM stopped the whole Devin app. Every build switches the
+  editor back to Linux. OPEN for Bruno: the manual web check (§5 of the note), code signing for Windows.
 
 ## Rules
 

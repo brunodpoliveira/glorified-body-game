@@ -42,7 +42,7 @@ namespace GlorifiedBody.Audio
             if (string.IsNullOrEmpty(text) && string.IsNullOrEmpty(id)) return null;
             if (string.IsNullOrEmpty(id)) id = IdFor(speaker, text);
             AudioClip clip = Clip(id);
-            float seconds = clip != null ? Mathf.Max(minSeconds, clip.length + 0.25f) : minSeconds;
+            float seconds = clip != null ? Mathf.Max(minSeconds, GameAudio.Length(clip, SubtitleService.ReadSeconds(text)) + 0.25f) : minSeconds;
             if (speaker != null) SubtitleService.Say(speaker, text, seconds);
             else SubtitleService.Say("voice:" + id, mode == VoiceMode.PA ? PaSpeaker : SubtitleService.UnknownSpeaker, text, seconds);
             return Play(speaker, id, clip, mode, seconds);
@@ -53,7 +53,7 @@ namespace GlorifiedBody.Audio
         {
             if (string.IsNullOrEmpty(id)) id = Slug(speakerName, 4) + "." + Slug(text, 6);
             AudioClip clip = Clip(id);
-            float seconds = clip != null ? Mathf.Max(minSeconds, clip.length + 0.25f) : minSeconds;
+            float seconds = clip != null ? Mathf.Max(minSeconds, GameAudio.Length(clip, SubtitleService.ReadSeconds(text)) + 0.25f) : minSeconds;
             SubtitleService.Say("voice:" + (speakerName ?? "") , string.IsNullOrEmpty(speakerName) ? SubtitleService.UnknownSpeaker : speakerName, text, seconds);
             return Play(null, id, clip, mode == VoiceMode.World ? VoiceMode.Radio : mode, seconds);
         }
@@ -62,7 +62,7 @@ namespace GlorifiedBody.Audio
         public static AudioSource PlayOnly(string id, VoiceMode mode = VoiceMode.Radio, GameObject speaker = null)
         {
             AudioClip clip = Clip(id);
-            return Play(speaker, id, clip, mode, clip != null ? clip.length : 0f);
+            return Play(speaker, id, clip, mode, GameAudio.Length(clip, 0f));
         }
 
         /// <summary>The building's speakers: a chime, then the line in every room ("PA: ..." under it).</summary>
@@ -83,7 +83,7 @@ namespace GlorifiedBody.Audio
         private static void SayPa(string id, string text)
         {
             AudioClip clip = Clip(id);
-            float seconds = clip != null ? clip.length + 0.25f : 2f;
+            float seconds = clip != null ? GameAudio.Length(clip, SubtitleService.ReadSeconds(text)) + 0.25f : 2f;
             SubtitleService.Say("voice:pa", PaSpeaker, text, seconds);
             Play(null, id, clip, VoiceMode.PA, seconds);
         }

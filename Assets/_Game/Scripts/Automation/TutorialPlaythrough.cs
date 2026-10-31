@@ -98,8 +98,8 @@ namespace GlorifiedBody.Automation
             pad = new VirtualPad();
             GameInput.SetBotSource(pad);
             TutorialDrive.Context context = TutorialDrive.Context.From(pad, director);
-            context.Moment = moment => ShotWithOverlays(Path.Combine(BotArgs.RunDir, "shots", $"tutorial_moment_{moment}.png"));
-            string shotsDir = Path.Combine(BotArgs.RunDir, "shots");
+            context.Moment = moment => ShotWithOverlays(Path.Combine(BotArgs.RunDirOrData, "shots", $"tutorial_moment_{moment}.png"));
+            string shotsDir = Path.Combine(BotArgs.RunDirOrData, "shots");
             if (FrameRecorder.Enabled) FrameRecorder.OverlayProvider = GameOverlays;
 
             int guard = 0;
@@ -213,13 +213,15 @@ namespace GlorifiedBody.Automation
                   .Append(", \"detail\": \"").Append(Esc(s.detail)).Append("\"}").Append(i < steps.Count - 1 ? ",\n" : "\n");
             }
             sb.Append("  ]\n}\n");
-            string dir = BotArgs.RunDir;
+            string dir = BotArgs.RunDirOrData;
             if (!string.IsNullOrEmpty(dir))
             {
                 Directory.CreateDirectory(dir);
                 File.WriteAllText(Path.Combine(dir, "playthrough.json"), sb.ToString());
             }
             Debug.Log($"[TutorialBot] finished pass={pass} steps={steps.Count} ok={steps.Count(s => s.ok)}");
+            // A player run (the Linux player, the Windows player under Wine) ends here; the editor runner and the web page stop it themselves.
+            if (!Application.isEditor && Application.platform != RuntimePlatform.WebGLPlayer) Application.Quit(pass ? 0 : 1);
             RunTelemetry.Event("tutorial_bot_done", pass ? "pass" : "fail");
         }
 

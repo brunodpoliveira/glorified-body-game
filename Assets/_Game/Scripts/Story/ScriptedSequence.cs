@@ -205,8 +205,8 @@ namespace GlorifiedBody.Story
         public static float LineSeconds(string id, string text)
         {
             AudioClip clip = Voice.Clip(id);
-            if (clip != null) return clip.length + 0.25f;
-            return Mathf.Max(1.6f, Subtitles.SubtitleService.ReadSeconds(text ?? ""));
+            float read = Mathf.Max(1.6f, Subtitles.SubtitleService.ReadSeconds(text ?? ""));
+            return clip != null ? GameAudio.Length(clip, read) + 0.25f : read;
         }
 
         private static bool AnyAlive(GameObject group)

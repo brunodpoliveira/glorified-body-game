@@ -60,6 +60,24 @@ namespace GlorifiedBody.Tests.PlayMode
             }
         }
 
+        [UnityTest]
+        public IEnumerator TheDebugStatusLine_ShowsOnlyInDev()
+        {
+            foreach (bool dev in new[] { false, true })
+            {
+                GameBuild.Force = dev;
+                yield return Menu();
+                GameManager.Instance.LoadGameplay();
+                float t0 = Time.realtimeSinceStartup;
+                while ((SceneManager.GetActiveScene().name != "TrainingRoom" || !GameManager.Instance.IsPlaying) && Time.realtimeSinceStartup - t0 < 10f) yield return null;
+                yield return null;
+                yield return null;
+                GameObject line = Find("DebugStatusCanvas");
+                Assert.IsNotNull(line, "the status line exists in the training room");
+                Assert.AreEqual(dev, line.activeInHierarchy, dev ? "a dev build shows it" : "a release hides it (the web build showed it, 2026-10-31)");
+            }
+        }
+
         private static IEnumerator Menu()
         {
             SceneManager.LoadScene("Main_Menu");

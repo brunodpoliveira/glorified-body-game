@@ -391,7 +391,13 @@ namespace GlorifiedBody.Systems
         private void SetCursor(bool visible)
         {
             Cursor.visible = visible;
+#if UNITY_WEBGL && !UNITY_EDITOR
+            // The web build (2026-10-31): no pointer lock. The browser takes Escape to release a lock, so the pause key
+            // would not reach the game. No game code reads the mouse movement.
+            Cursor.lockState = CursorLockMode.None;
+#else
             Cursor.lockState = visible ? CursorLockMode.None : CursorLockMode.Locked;
+#endif
         }
     }
 }

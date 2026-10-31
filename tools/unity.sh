@@ -165,10 +165,17 @@ case "$mode" in
     with_lock batch run_batch -- -executeMethod "$method" -gbRunDir "$RUN" "$@"; rc=$?
     triage; t=$?; [ $rc -eq 0 ] && rc=$t; exit $rc ;;
   build)
-    # The player build (2026-10-31): release or dev, linux or windows. The shader compile of a first build takes over
+    # The player build (2026-10-31): release or dev, linux, windows or web. The shader compile of a first build takes over
     # half an hour, so this mode waits up to GB_BUILD_TIMEOUT (2 h) instead of the 30 min of a batch run.
+    # Its own systemd scope with a memory limit (2026-10-31): the web build's IL2CPP step used 4.7 GB, the kernel killed
+    # it, and systemd's OOMPolicy=stop then stopped the whole unit it ran in: the Devin app and this session with it.
+    # In its own scope, an overrun stops the build only.
+    if [ -z "${GB_IN_SCOPE:-}" ] && command -v systemd-run >/dev/null 2>&1; then
+      exec systemd-run --user --scope --quiet --unit="gb-build-$$" -p MemoryMax="${GB_BUILD_MEM:-9G}" -p MemorySwapMax=2G \
+        env GB_IN_SCOPE=1 "$0" build "$@"
+    fi
     kind="${1:-release}"; target="${2:-linux}"
-    case "$kind" in release) method=GlorifiedBody.Editor.PlayerBuild.Release ;; dev) method=GlorifiedBody.Editor.PlayerBuild.Dev ;; *) echo "build release|dev [linux|windows]"; exit 2 ;; esac
+    case "$kind" in release) method=GlorifiedBody.Editor.PlayerBuild.Release ;; dev) method=GlorifiedBody.Editor.PlayerBuild.Dev ;; *) echo "build release|dev [linux|windows|web]"; exit 2 ;; esac
     new_run build "$kind" "$target"
     BATCH_TIMEOUT="${GB_BUILD_TIMEOUT:-7200}"
     with_lock batch run_batch -- -executeMethod "$method" -gbRunDir "$RUN" -gbTarget "$target"; rc=$?

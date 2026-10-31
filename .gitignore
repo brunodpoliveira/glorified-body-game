@@ -138,3 +138,7 @@ InitTestScene*.unity*
 # a room in git holds EnemySpawn markers. Build them with InvectorEnemyFactory.BuildEnemyPrefabs.
 /Assets/_Game/Resources/Enemies/
 /Assets/_Game/Resources/Enemies.meta
+
+# The web build copies the clips here for the build only (PlayerBuild.CopyWebVideos).
+/Assets/StreamingAssets/Video/
+/Assets/StreamingAssets/Video.meta

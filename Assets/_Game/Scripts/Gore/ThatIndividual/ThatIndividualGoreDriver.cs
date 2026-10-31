@@ -291,10 +291,20 @@ namespace GlorifiedBody.Gore.ThatIndividual
 
         // ── Hit handling ─────────────────────────────────────────────
 
+        /// <summary>The thread's allocated bytes, for the budget check. 0 on the web: its player does not have the count (it logs "Not implemented icall" on each call).</summary>
+        private static long AllocatedBytes()
+        {
+#if UNITY_WEBGL && !UNITY_EDITOR
+            return 0L;
+#else
+            return System.GC.GetAllocatedBytesForCurrentThread();
+#endif
+        }
+
         private void HandleHit(HitInfo hit)
         {
             // Cost and allocation of the gore work itself, for the budget check (no allocation to measure).
-            long allocBefore = System.GC.GetAllocatedBytesForCurrentThread();
+            long allocBefore = AllocatedBytes();
             long ticksBefore = System.Diagnostics.Stopwatch.GetTimestamp();
             GoreHitWeight weight = PlayHit(hit);
             LastWeight = weight;
@@ -304,7 +314,7 @@ namespace GlorifiedBody.Gore.ThatIndividual
             }
 
             double ms = (System.Diagnostics.Stopwatch.GetTimestamp() - ticksBefore) * 1000.0 / System.Diagnostics.Stopwatch.Frequency;
-            long alloc = System.GC.GetAllocatedBytesForCurrentThread() - allocBefore;
+            long alloc = AllocatedBytes() - allocBefore;
             HitsPlayed++;
             MaxHitMs = Mathf.Max(MaxHitMs, (float)ms);
             MaxHitAllocBytes = System.Math.Max(MaxHitAllocBytes, alloc);

@@ -7,7 +7,7 @@ namespace GlorifiedBody.DebugTools
 {
     /// <summary>
     /// One line of state in the top-left corner of the greybox: the camera, the lock target, the move state.
-    /// It makes the bot shots readable. F1 hides and shows it. Gone when the real HUD arrives.
+    /// It makes the bot shots readable. F1 hides and shows it. Only in dev (GameBuild.Dev): a release never shows it.
     /// </summary>
     public sealed class DebugStatusLine : MonoBehaviour
     {
@@ -41,6 +41,8 @@ namespace GlorifiedBody.DebugTools
             text.fontSize = 22;
             text.color = new Color(0.9f, 0.9f, 0.85f);
             text.alignment = TextAnchor.UpperLeft;
+            // A release build hides it (2026-10-31: the web build showed it to the player). Dev builds, the editor and -gbDev keep it.
+            canvasObj.SetActive(GlorifiedBody.Systems.GameBuild.Dev);
         }
 
         private void Update()

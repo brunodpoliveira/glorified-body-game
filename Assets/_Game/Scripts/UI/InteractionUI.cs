@@ -87,7 +87,11 @@ namespace GlorifiedBody.UI
             }
             hintText.text = hint;
             hintText.gameObject.SetActive(hint.Length > 0);
-            if (video != null && video.isPlaying && video.frame > VideoFramesSeen) VideoFramesSeen = video.frame;
+            if (video != null && video.isPlaying && video.frame > VideoFramesSeen)
+            {
+                if (VideoFramesSeen <= 0) Debug.Log($"[Scan] the clip plays: frame {video.frame} ({(video.source == VideoSource.Url ? video.url : video.clip?.name)})");
+                VideoFramesSeen = video.frame;
+            }
         }
 
         private void Refresh()
@@ -128,7 +132,7 @@ namespace GlorifiedBody.UI
                     videoTexture.Create();
                 }
                 scanImage.texture = videoTexture;
-                video.clip = target.clip;
+                GlorifiedBody.Core.VideoClips.Assign(video, target.clip);
                 video.targetTexture = videoTexture;
                 video.Play();
             }

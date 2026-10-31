@@ -16,6 +16,20 @@ namespace GlorifiedBody.Audio
     /// </summary>
     public static class GameAudio
     {
+        /// <summary>
+        /// The clip's length in seconds, or whenUnknown while the clip still loads. The web player decodes a clip in the
+        /// background: the first time a clip plays there, its length reads 0 ("Trying to get length of sound which is not
+        /// loaded yet"). Every timer from a clip's length goes through here (2026-10-31, the web build).
+        /// </summary>
+        public static float Length(AudioClip clip, float whenUnknown)
+        {
+            if (clip == null) return whenUnknown;
+#if UNITY_WEBGL && !UNITY_EDITOR
+            if (clip.loadState != AudioDataLoadState.Loaded) return whenUnknown;
+#endif
+            return clip.length > 0f ? clip.length : whenUnknown;
+        }
+
         public const float MinDistance = 1.5f;
         public const float MaxDistance = 40f;
 
@@ -85,7 +99,7 @@ namespace GlorifiedBody.Audio
             source.clip = clip;
             source.pitch = pitch;
             source.Play();
-            Object.Destroy(obj, clip.length / Mathf.Max(0.1f, Mathf.Abs(pitch)) + 0.1f);
+            Object.Destroy(obj, Length(clip, 5f) / Mathf.Max(0.1f, Mathf.Abs(pitch)) + 0.1f); // unknown yet: 5 s, a late removal is harmless
             Played++;
             LastClip = clip;
             LastChannel = channel;
