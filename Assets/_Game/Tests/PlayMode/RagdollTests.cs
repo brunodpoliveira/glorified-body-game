@@ -364,11 +364,13 @@ namespace GlorifiedBody.Tests.PlayMode
                 yield return null;
             }
             foreach (Knee k in knees)
-                Debug.Log($"[RagdollTests] knee {k.Name}: off the hinge {k.MaxOff:0.0} deg, out of the plane {k.MaxPlane:0.0} deg, bent back {k.MaxBack:0.0} deg, bent {k.MaxTwist:0.0} deg; off/plane/bend each 0.25 s:{k.Trace}");
+                Debug.Log($"[RagdollTests] knee {k.Name}: off the hinge {k.MaxOff:0.0} deg, out of the plane {k.MaxPlane:0.0} deg, bent back {k.MaxBack:0.0} deg, bent {k.MaxTwist:0.0} deg, knee angle at death {k.FlexAtDeath:0.0} min {k.MinFlex:0.0} straight {k.FlexBind:0.0}, past straight {k.PastStraight:0.0} deg; off/plane/bend each 0.25 s:{k.Trace}");
             foreach (Knee k in knees)
             {
                 // Before the fix (the joint's twist sign): knees 66 to 137 degrees bent the wrong way, 16 to 135 off.
-                Assert.Less(k.MaxBack, 10f, $"{k.Name}: the knee bends the wrong way");
+                // Past its straight leg (the mesh's bind pose), not back from the death pose: a knee bent 37 degrees at the
+                // death that lands straight turned 32 degrees "back" and was right (2026-10-31, measured in 3 of 3 runs).
+                Assert.Less(k.PastStraight, 10f, $"{k.Name}: the knee bends the wrong way, past the straight leg");
                 Assert.Less(k.MaxPlane, 40f, $"{k.Name}: the shin leaves the knee's plane");
                 Assert.Less(k.Plane, 25f, $"{k.Name}: the body lies with the shin out of the knee's plane");
             }
@@ -379,6 +381,12 @@ namespace GlorifiedBody.Tests.PlayMode
         {
             public string Name;
             public float MaxOff, MaxBack, MaxPlane, MaxTwist, Plane;
+            /// <summary>The knee's own angle, thigh to shin about the hinge: 0 a straight leg, below 0 bent the wrong way.</summary>
+            public float MinFlex = float.MaxValue, FlexAtDeath = float.NaN;
+            /// <summary>The same angle in the mesh's bind pose (a straight leg): the zero the knee must not pass.</summary>
+            public float FlexBind = float.NaN;
+            /// <summary>How far the knee went past its straight leg, in degrees (0: never).</summary>
+            public float PastStraight => float.IsNaN(FlexBind) ? 0f : Mathf.Max(0f, FlexBind - MinFlex);
             public string Trace = "";
             private Transform foot;
             private float nextTrace;
@@ -392,20 +400,39 @@ namespace GlorifiedBody.Tests.PlayMode
                 Transform thigh = a.GetBoneTransform(left ? HumanBodyBones.LeftUpperLeg : HumanBodyBones.RightUpperLeg);
                 Transform shin = a.GetBoneTransform(left ? HumanBodyBones.LeftLowerLeg : HumanBodyBones.RightLowerLeg);
                 Transform foot = a.GetBoneTransform(left ? HumanBodyBones.LeftFoot : HumanBodyBones.RightFoot);
-                CharacterJoint joint = shin.GetComponent<CharacterJoint>();
+                Joint joint = shin.GetComponent<Joint>(); // a ConfigurableJoint since 2026-10-31 (a locked hinge)
                 Assert.IsNotNull(joint, $"{f.name}: a knee joint");
                 // The hinge in the thigh's frame, its sign so that a positive turn moves the foot back (a knee bend).
                 Vector3 axis = shin.TransformDirection(joint.axis).normalized;
                 Vector3 along = (foot.position - shin.position).normalized;
                 Vector3 back = -f.transform.forward;
                 if (Vector3.Dot(Quaternion.AngleAxis(10f, axis) * along - along, back) < 0f) axis = -axis;
+                float flexBind = BindFlex(f, thigh, shin, foot, thigh.InverseTransformDirection(axis));
                 return new Knee
                 {
+                    FlexBind = flexBind,
                     Name = $"{f.name}.{(left ? "L" : "R")}",
                     thigh = thigh, shin = shin, foot = foot,
                     rest = Quaternion.Inverse(thigh.rotation) * shin.rotation,
                     hinge = thigh.InverseTransformDirection(axis),
                 };
+            }
+
+            /// <summary>The knee angle in the skinned mesh's bind pose (its bones' bind matrices), NaN without one.</summary>
+            private static float BindFlex(SoldierBrain f, Transform thigh, Transform shin, Transform foot, Vector3 hingeInThigh)
+            {
+                foreach (SkinnedMeshRenderer skin in f.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+                {
+                    if (skin.sharedMesh == null) continue;
+                    int it = System.Array.IndexOf(skin.bones, thigh), ish = System.Array.IndexOf(skin.bones, shin), ifo = System.Array.IndexOf(skin.bones, foot);
+                    Matrix4x4[] bind = skin.sharedMesh.bindposes;
+                    if (it < 0 || ish < 0 || ifo < 0 || bind.Length <= Mathf.Max(it, Mathf.Max(ish, ifo))) continue;
+                    Matrix4x4 t = bind[it].inverse, sh = bind[ish].inverse, fo = bind[ifo].inverse;
+                    Vector3 pt = t.GetColumn(3), psh = sh.GetColumn(3), pfo = fo.GetColumn(3);
+                    Vector3 hinge = t.MultiplyVector(hingeInThigh).normalized;
+                    return Vector3.SignedAngle((psh - pt).normalized, (pfo - psh).normalized, hinge);
+                }
+                return float.NaN;
             }
 
             public void Sample()
@@ -429,6 +456,10 @@ namespace GlorifiedBody.Tests.PlayMode
                 Vector3 v = (foot.position - shin.position).normalized;
                 float plane = Mathf.Asin(Mathf.Clamp(Mathf.Abs(Vector3.Dot(v, thigh.TransformDirection(hinge))), 0f, 1f)) * Mathf.Rad2Deg;
                 MaxPlane = Mathf.Max(MaxPlane, plane);
+                Vector3 thighDir = (shin.position - thigh.position).normalized;
+                float flex = Vector3.SignedAngle(thighDir, v, thigh.TransformDirection(hinge));
+                if (float.IsNaN(FlexAtDeath)) FlexAtDeath = flex;
+                MinFlex = Mathf.Min(MinFlex, flex);
                 Plane = plane;
                 if (Time.time >= nextTrace) { nextTrace = Time.time + 0.25f; Trace += $" {off:0}/{plane:0}/{signed:0}"; }
             }

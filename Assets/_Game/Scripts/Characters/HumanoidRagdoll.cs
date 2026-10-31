@@ -114,6 +114,7 @@ namespace GlorifiedBody.Characters
         private static void Clean(Transform hips)
         {
             foreach (CharacterJoint j in hips.GetComponentsInChildren<CharacterJoint>(true)) Object.DestroyImmediate(j);
+            foreach (ConfigurableJoint j in hips.GetComponentsInChildren<ConfigurableJoint>(true)) Object.DestroyImmediate(j);
             foreach (Rigidbody r in hips.GetComponentsInChildren<Rigidbody>(true))
                 if (r.GetComponentInParent<Animator>() != null && !r.GetComponent<Animator>()) Object.DestroyImmediate(r);
             foreach (Collider c in hips.GetComponentsInChildren<Collider>(true))
@@ -148,6 +149,11 @@ namespace GlorifiedBody.Characters
             Vector3 swingAxis = Vector3.Cross(axis, along);
             if (swingAxis.sqrMagnitude < 1e-6f) swingAxis = Vector3.Cross(axis, Vector3.up);
 
+            if (swing <= HingeSwing)
+            {
+                Hinge(p, axis, swingAxis, low, high);
+                return;
+            }
             var joint = p.Bone.gameObject.AddComponent<CharacterJoint>();
             joint.connectedBody = p.Parent.Body;
             joint.anchor = Vector3.zero;
@@ -163,6 +169,33 @@ namespace GlorifiedBody.Characters
             joint.highTwistLimit = new SoftJointLimit { limit = high };
             joint.swing1Limit = new SoftJointLimit { limit = swing };
             joint.swing2Limit = new SoftJointLimit { limit = swing };
+        }
+
+        /// <summary>A joint with this swing or less is a hinge (a knee, an elbow).</summary>
+        public const float HingeSwing = 10f;
+
+        /// <summary>
+        /// A knee or an elbow (2026-10-31): a joint with its two swing axes locked, so the shin turns about the knee's
+        /// axis only. The CharacterJoint's 5 degrees of swing did not hold: in 2 of 4 runs a shin turned 41 to 62 degrees
+        /// out of the knee's plane (the 220 kg armour's fire death, a shock death; Bruno, 2026-10-27: "the lower leg bends
+        /// inwards in a very unnatural way"). The bend range [low, high] is the same as before, on the joint's X.
+        /// </summary>
+        private static void Hinge(Part p, Vector3 axis, Vector3 swingAxis, float low, float high)
+        {
+            var joint = p.Bone.gameObject.AddComponent<ConfigurableJoint>();
+            joint.connectedBody = p.Parent.Body;
+            joint.anchor = Vector3.zero;
+            joint.axis = p.Bone.InverseTransformDirection(axis.normalized);
+            joint.secondaryAxis = p.Bone.InverseTransformDirection(swingAxis.normalized);
+            joint.xMotion = joint.yMotion = joint.zMotion = ConfigurableJointMotion.Locked;
+            joint.angularXMotion = ConfigurableJointMotion.Limited;
+            joint.angularYMotion = joint.angularZMotion = ConfigurableJointMotion.Locked;
+            joint.lowAngularXLimit = new SoftJointLimit { limit = low };
+            joint.highAngularXLimit = new SoftJointLimit { limit = high };
+            joint.enablePreprocessing = false;
+            joint.projectionMode = JointProjectionMode.PositionAndRotation;
+            joint.projectionAngle = 5f;
+            joint.projectionDistance = 0.05f;
         }
 
         private static void Capsule(Part p, float radiusMetres)

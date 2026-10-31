@@ -408,7 +408,7 @@ namespace GlorifiedBody.Integration.Invector.Build
             foreach (Rigidbody body in hips.GetComponentsInChildren<Rigidbody>(true))
             {
                 // Only the builder's bodies: the hips and the bones with a joint (not a gun or a shield part).
-                if (body == rootBody || (body.transform != hips && body.GetComponent<CharacterJoint>() == null)) continue;
+                if (body == rootBody || (body.transform != hips && body.GetComponent<CharacterJoint>() == null && body.GetComponent<ConfigurableJoint>() == null)) continue;
                 bones.Add(body);
             }
             // Parents before children: EnemyRagdoll puts the bones back in this order.

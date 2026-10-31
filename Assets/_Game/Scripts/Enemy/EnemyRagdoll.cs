@@ -196,7 +196,8 @@ namespace GlorifiedBody.Enemy
                 if (parts[i] == null) continue;
                 legPart[i] = legs.Contains(parts[i].transform);
                 // HumanoidRagdoll gives a hinge (a knee, an elbow) a swing of a few degrees only.
-                hinge[i] = parts[i].TryGetComponent(out CharacterJoint joint) && joint.swing1Limit.limit <= 10f;
+                hinge[i] = (parts[i].TryGetComponent(out CharacterJoint joint) && joint.swing1Limit.limit <= 10f)
+                           || (parts[i].TryGetComponent(out ConfigurableJoint locked) && locked.angularYMotion == ConfigurableJointMotion.Locked);
                 for (Transform t = parts[i].transform.parent; t != null && parentIndex[i] < 0; t = t.parent)
                 {
                     for (int j = 0; j < i; j++) if (parts[j] != null && parts[j].transform == t) { parentIndex[i] = j; break; }
