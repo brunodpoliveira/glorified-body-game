@@ -20,3 +20,5 @@ MonoBehaviour:
   description: A drug. It fills MK. No drug gives HP. One slot.
   logText: 
   mapFloor: 
+  audioClip: {fileID: 0}
+  tapeLines: []

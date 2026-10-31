@@ -27,6 +27,32 @@ namespace GlorifiedBody.Interaction
 
         public override string TextFor(Interactor who) => $"Take {Name}?";
 
+        /// <summary>
+        /// A pickup made in play (a scripted beat, the tutorial): a box with a trigger, the item's colour unlit, the
+        /// pickup range of the room builders (ItemAssets.Pickup makes the same in the editor).
+        /// </summary>
+        public static ItemPickup Spawn(ItemDefinition item, string name, Vector3 position, Vector3 scale, Quaternion rotation)
+        {
+            GameObject obj = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            obj.name = name;
+            obj.transform.SetPositionAndRotation(position, rotation);
+            obj.transform.localScale = scale;
+            obj.GetComponent<Collider>().isTrigger = true;
+            Renderer renderer = obj.GetComponent<Renderer>();
+            Shader unlit = Shader.Find("Universal Render Pipeline/Unlit");
+            if (unlit != null)
+            {
+                var material = new Material(unlit);
+                material.SetColor("_BaseColor", item != null ? item.colour : Color.white);
+                renderer.sharedMaterial = material;
+            }
+            renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            ItemPickup pickup = obj.AddComponent<ItemPickup>();
+            pickup.item = item;
+            pickup.range = 1.6f;
+            return pickup;
+        }
+
         public override string Confirm(Interactor who)
         {
             ItemInventory inventory = who != null ? who.Inventory : null;

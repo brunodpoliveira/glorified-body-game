@@ -24,6 +24,8 @@ namespace GlorifiedBody.Editor
         public static readonly Color LogColour = new Color(0.96f, 0.95f, 0.88f);
         public static readonly Color KeyColour = new Color(1f, 0.82f, 0.2f);
         public static readonly Color PlanColour = new Color(0.6f, 0.82f, 1f);
+        public static readonly Color TapeColour = new Color(0.95f, 0.55f, 0.2f);
+        public const string TestTapeClipPath = "Assets/_Game/Audio/Logs/tape_test.wav";
 
         public static void CreateAll()
         {
@@ -36,6 +38,7 @@ namespace GlorifiedBody.Editor
             TestKey();
             LabCard();
             FloorPlan(MapAtlasSetup.TestFloor1, "FLOOR PLAN: TEST FLOOR 1");
+            TestTape();
             AssetDatabase.SaveAssets();
         }
 
@@ -77,6 +80,27 @@ namespace GlorifiedBody.Editor
         {
             ItemDefinition item = Item("plan_" + floor, name, ItemKind.Map, PlanColour, "A printed floor plan. The whole floor shows on the map.", "", DrugType.Nalcon);
             item.mapFloor = floor;
+            EditorUtility.SetDirty(item);
+            return item;
+        }
+
+        /// <summary>
+        /// The placeholder audio log (Bruno, 2026-10-31): the clip from tools/tape_placeholder.py, its line times here. The
+        /// writer gives the real words and the voices later.
+        /// </summary>
+        public static ItemDefinition TestTape()
+        {
+            ItemDefinition item = Item("test_tape", "TEST TAPE", ItemKind.AudioLog, TapeColour, "A placeholder tape. It plays while she walks. A fight pauses it.", "", DrugType.Nalcon);
+            item.audioClip = AssetDatabase.LoadAssetAtPath<AudioClip>(TestTapeClipPath);
+            if (item.audioClip == null) Debug.LogWarning("[ItemAssets] no tape clip at " + TestTapeClipPath + ": run tools/tape_placeholder.py");
+            item.tapeLines = new System.Collections.Generic.List<TapeLine>
+            {
+                new TapeLine { at = 0.6f, speaker = "TAPE", text = "This is a placeholder tape." },
+                new TapeLine { at = 4.5f, speaker = "TAPE", text = "It stands in for the audio logs of the demo." },
+                new TapeLine { at = 9.5f, speaker = "TAPE", text = "The writer gives the words. The voices come later." },
+                new TapeLine { at = 14.5f, speaker = "TAPE", text = "Walk while it plays. A fight pauses it." },
+                new TapeLine { at = 19.0f, speaker = "TAPE", text = "Play it again from the inventory." },
+            };
             EditorUtility.SetDirty(item);
             return item;
         }

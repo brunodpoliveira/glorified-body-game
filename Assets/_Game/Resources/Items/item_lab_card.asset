@@ -21,3 +21,5 @@ MonoBehaviour:
     room of the lab.
   logText: 
   mapFloor: 
+  audioClip: {fileID: 0}
+  tapeLines: []

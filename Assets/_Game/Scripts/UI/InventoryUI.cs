@@ -222,7 +222,7 @@ namespace GlorifiedBody.UI
         private static Entry FromItem(ItemDefinition item, int count)
         {
             if (item == null) return new Entry { Label = "?", Name = "?", Words = "", Colour = Color.grey, Count = count };
-            string tag = item.IsCritical ? "KEY ITEM" : "CARRIED";
+            string tag = item.kind == ItemKind.AudioLog ? "AUDIO LOG" : item.IsCritical ? "KEY ITEM" : "CARRIED";
             return new Entry
             {
                 Label = item.displayName,
@@ -257,7 +257,8 @@ namespace GlorifiedBody.UI
             Entry e = entries[Selected];
             titleText.text = "Item...  " + e.Name;
             wordsText.text = e.Words;
-            string action = e.Drug.HasValue ? "use" : e.Item != null && e.Item.kind == ItemKind.Log ? "read" : "look";
+            string action = e.Drug.HasValue ? "use" : e.Item != null && e.Item.kind == ItemKind.Log ? "read"
+                : e.Item != null && e.Item.kind == ItemKind.AudioLog ? (TapePlaying(e.Item) ? "pause" : "play") : "look";
             keysText.text = $"{Key(InputManager.GameAction.TurnLeft)} {Key(InputManager.GameAction.TurnRight)}  select      {Key(InputManager.GameAction.Interact)}  {action}      {Key(InputManager.GameAction.Inventory)} / {Key(InputManager.GameAction.Back)}  close";
         }
 
@@ -287,6 +288,15 @@ namespace GlorifiedBody.UI
                     : why == "second_wind_ready" ? "The second wind is ready." : "It does nothing now.";
                 return "refused:" + why;
             }
+            if (e.Item != null && e.Item.kind == ItemKind.AudioLog)
+            {
+                // Play or pause the tape (Bruno, 2026-10-31: a fight pauses it, she plays it again here).
+                GlorifiedBody.Audio.TapePlayer tapes = GlorifiedBody.Audio.TapePlayer.Instance;
+                bool plays = tapes != null && tapes.Toggle(e.Item);
+                Select(Selected);
+                wordsText.text = plays ? "It plays. Close the inventory to hear it." : "Paused.";
+                return (plays ? "tape_play:" : "tape_pause:") + e.Item.itemId;
+            }
             if (e.Item != null && e.Item.kind == ItemKind.Log)
             {
                 readerTitle.text = e.Item.displayName;
@@ -300,6 +310,9 @@ namespace GlorifiedBody.UI
                 : e.Words;
             return "look";
         }
+
+        private static bool TapePlaying(ItemDefinition item) =>
+            GlorifiedBody.Audio.TapePlayer.Instance != null && GlorifiedBody.Audio.TapePlayer.Instance.IsPlaying && GlorifiedBody.Audio.TapePlayer.Instance.Tape == item;
 
         private static string Key(InputManager.GameAction action)
         {

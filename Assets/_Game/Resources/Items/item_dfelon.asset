@@ -21,3 +21,5 @@ MonoBehaviour:
     her at 1 HP. No drug gives HP. One slot.'
   logText: 
   mapFloor: 
+  audioClip: {fileID: 0}
+  tapeLines: []

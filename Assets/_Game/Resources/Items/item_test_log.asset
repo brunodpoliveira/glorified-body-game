@@ -32,3 +32,5 @@ MonoBehaviour:
     It proves the Interact key: she faces
     it, the game asks, she takes it, it opens here, and it stays in her inventory.'
   mapFloor: 
+  audioClip: {fileID: 0}
+  tapeLines: []

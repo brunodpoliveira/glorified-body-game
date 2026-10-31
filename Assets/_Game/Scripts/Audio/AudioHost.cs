@@ -18,6 +18,7 @@ namespace GlorifiedBody.Audio
         public MusicDirector Music { get; private set; }
         public ListenerRig Ears { get; private set; }
         public UiSounds Ui { get; private set; }
+        public TapePlayer Tapes { get; private set; }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void Boot()
@@ -36,6 +37,7 @@ namespace GlorifiedBody.Audio
             ears.transform.SetParent(transform, false);
             Ears = ears.AddComponent<ListenerRig>();
             Ui = gameObject.AddComponent<UiSounds>();
+            Tapes = gameObject.AddComponent<TapePlayer>();
             SceneManager.sceneLoaded += OnSceneLoaded;
             GameManager.OnStateChanged += OnStateChanged;
             HitEventBus.OnHit += CombatSounds.OnHit;

@@ -96,6 +96,11 @@ namespace GlorifiedBody.Tutorial
         private ItemPickup capsule;
         private int feedsAtEnter;
         private bool feedMissing;
+        // The tape (Bruno, 2026-10-31): it lies on the log's stand (empty by then), she stands at the log point.
+        public const string TapeItemId = "test_tape";
+        public static readonly Vector3 TapeSpot = new Vector3(-3.72f, 0.97f, 14.6f);
+        private ItemDefinition tapeItem;
+        private bool tapeMissing;
         private LockOnTargetable shooterTarget;
         private Interactor interactor;
         private PsychicScanner scanner;
@@ -360,6 +365,12 @@ namespace GlorifiedBody.Tutorial
                 "Where are you? Look at your map.",
                 "{Map} opens the map: the room stops. It shows the rooms you know, and the doors, items and logs in them. {Map} closes it.",
                 () => mapClosed));
+            // The audio log (Bruno, 2026-10-31): it plays while she walks, a fight pauses it. PLACEHOLDER lines.
+            steps.Add(new TutorialStep("tape",
+                "A tape lies where the record was. Take it. Listen while you walk.",
+                "Face the tape. {Interact} asks, {Interact} again takes it: it plays while you walk. A fight pauses it: {Inventory}, select it, {Interact} plays it again.",
+                () => tapeMissing || TapeHeard(),
+                onEnter: LayTape));
             steps.Add(new TutorialStep("scan_video",
                 "Now the monitors. They remember more.",
                 "Face the monitors. {Scan} scans them: a short clip. It closes at its end, or with {Scan}.",
@@ -377,6 +388,33 @@ namespace GlorifiedBody.Tutorial
                 "Demonstration complete. Thank you, ladies and gentlemen.",
                 "",
                 () => Time.time - StepStartTime >= CompleteDelay));
+        }
+
+        /// <summary>The tape of the step: on the log's stand, made in play (the gym scene needs no rebuild).</summary>
+        private void LayTape()
+        {
+            tapeItem = Resources.Load<ItemDefinition>("Items/item_" + TapeItemId);
+            if (tapeItem == null)
+            {
+                tapeMissing = true; // the step ends by itself
+                return;
+            }
+            if (FindPickup(TapeItemId) == null)
+                ItemPickup.Spawn(tapeItem, "Tape_Tutorial", TapeSpot, new Vector3(0.24f, 0.08f, 0.16f), Quaternion.Euler(0f, 10f, 0f));
+        }
+
+        private static ItemPickup FindPickup(string itemId)
+        {
+            foreach (Interactable target in Interactable.All)
+                if (target is ItemPickup pickup && pickup.item != null && pickup.item.itemId == itemId) return pickup;
+            return null;
+        }
+
+        /// <summary>She took the tape and it played for a second (or a fight paused it already).</summary>
+        private bool TapeHeard()
+        {
+            GlorifiedBody.Audio.TapePlayer tapes = GlorifiedBody.Audio.TapePlayer.Instance;
+            return tapes != null && tapeItem != null && tapes.Tape == tapeItem && (tapes.Position >= 1f || !tapes.IsPlaying);
         }
 
         private void SetGunActive(bool active)

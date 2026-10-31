@@ -20,3 +20,5 @@ MonoBehaviour:
   description: A printed floor plan. The whole floor shows on the map.
   logText: 
   mapFloor: test_1
+  audioClip: {fileID: 0}
+  tapeLines: []

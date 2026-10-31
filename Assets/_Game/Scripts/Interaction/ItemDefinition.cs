@@ -16,7 +16,18 @@ namespace GlorifiedBody.Interaction
         /// <summary>Another mission-critical item (the injector): no slot.</summary>
         Critical = 4,
         /// <summary>A floor plan: the whole floor shows on the map (Bruno, 2026-10-31). No slot.</summary>
-        Map = 5
+        Map = 5,
+        /// <summary>An audio log: it plays while she walks (Bruno, 2026-10-31). No slot.</summary>
+        AudioLog = 6
+    }
+
+    /// <summary>One line of an audio log: when it starts in the clip, who speaks, the words (the subtitle).</summary>
+    [System.Serializable]
+    public struct TapeLine
+    {
+        public float at;
+        public string speaker;
+        [TextArea(1, 3)] public string text;
     }
 
     /// <summary>
@@ -48,9 +59,13 @@ namespace GlorifiedBody.Interaction
         [TextArea(6, 20)] public string logText = "";
         [Tooltip("A floor plan (kind Map): the id of the floor it shows (MapAtlas).")]
         public string mapFloor = "";
+        [Tooltip("An audio log (kind AudioLog): the recording.")]
+        public AudioClip audioClip;
+        [Tooltip("An audio log: its lines, in order of time.")]
+        public System.Collections.Generic.List<TapeLine> tapeLines = new System.Collections.Generic.List<TapeLine>();
 
-        /// <summary>Keys, logs, floor plans and the critical items take no slot (Bruno, 2026-10-22).</summary>
-        public bool IsCritical => kind == ItemKind.Log || kind == ItemKind.Key || kind == ItemKind.Critical || kind == ItemKind.Map;
+        /// <summary>Keys, logs, floor plans, audio logs and the critical items take no slot (Bruno, 2026-10-22).</summary>
+        public bool IsCritical => kind == ItemKind.Log || kind == ItemKind.Key || kind == ItemKind.Critical || kind == ItemKind.Map || kind == ItemKind.AudioLog;
 
         public const string ResourceFolder = "Items";
         private static System.Collections.Generic.Dictionary<string, ItemDefinition> byId;

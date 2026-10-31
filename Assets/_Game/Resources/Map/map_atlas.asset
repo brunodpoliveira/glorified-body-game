@@ -113,6 +113,10 @@ MonoBehaviour:
       path: Log_Travel
       position: {x: 3, y: 3}
       label: TEST LOG
+    - kind: 2
+      path: Tape_Travel
+      position: {x: 1.5, y: -3.5}
+      label: TEST TAPE
   - scene: TravelTest_B
     floor: test_1
     title: TRAVEL B

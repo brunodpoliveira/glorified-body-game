@@ -57,6 +57,8 @@ namespace GlorifiedBody.Audio
         public bool Crossfading => fade < 1f;
         public int Changes { get; private set; }
         public AudioClip RoomToneClip => roomTone != null ? roomTone.clip : null;
+        /// <summary>The music's level now, 0..1, before the slider: the pause, a voice line, a tape (tests).</summary>
+        public float DuckFactor { get; private set; } = 1f;
 
         private void Awake()
         {
@@ -151,7 +153,8 @@ namespace GlorifiedBody.Audio
                 CurrentIsPlaceholder = clip != null && placeholder;
             }
             fade = Mathf.MoveTowards(fade, 1f, Time.unscaledDeltaTime / FadeSeconds);
-            float level = GameAudio.Volume(SoundChannel.Music) * Duck();
+            DuckFactor = Duck();
+            float level = GameAudio.Volume(SoundChannel.Music) * DuckFactor;
             AudioSource other = current == a ? b : a;
             current.volume = level * fade * (CurrentIsPlaceholder ? 0.7f : 1f);
             other.volume = level * (1f - fade) * 0.7f;
@@ -162,6 +165,8 @@ namespace GlorifiedBody.Audio
         private float Duck()
         {
             float voice = Time.unscaledTime < voiceDuckUntil ? VoiceDuckLevel : 1f;
+            // A tape plays: the music drops to almost nothing (Bruno, 2026-10-31).
+            if (TapePlayer.Instance != null && TapePlayer.Instance.IsPlaying) voice = Mathf.Min(voice, TapePlayer.MusicLevel);
             GameManager gm = GameManager.Instance;
             if (gm == null) return voice;
             bool stopped = gm.CurrentState == GameManager.GameState.Paused || gm.CurrentState == GameManager.GameState.Inventory

@@ -133,6 +133,11 @@ namespace GlorifiedBody.Interaction
             string result = target.Confirm(this);
             Result(result);
             if (item != null && item.kind == ItemKind.Log && result.StartsWith("taken:")) OpenReader(item);
+            else if (item != null && item.kind == ItemKind.AudioLog && result.StartsWith("taken:"))
+            {
+                GlorifiedBody.Audio.TapePlayer.Instance?.Play(item); // it plays while she walks (Bruno, 2026-10-31)
+                SetState(State.Free);
+            }
             else if (result.StartsWith("full:"))
             {
                 Text = "No room. The inventory is full.";

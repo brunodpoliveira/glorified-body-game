@@ -338,10 +338,17 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   a room changes, and a demo room needs a line there. Opening a scene unloads the atlas: read the rooms first.
   Test floors: TRAINING, TEST FLOOR 1 (TRAVEL A with a test log, TRAVEL B with the floor plan, KIT), TEST FLOOR 2
   (WARD, LAB). Tutorial: 24 steps (map). `MapTests` (7), bot `play TravelTest_A Main_Menu map 300`.
-  NEXT: AUDIO LOGS (his rules, 2026-10-31): she collects one and listens while she walks, combat pauses it (she
-  resumes it), replay from the inventory, the music drops to near silence while it plays. Then screens, the outfit
-  change, the floor shield, a seam sweep, all in isolation before the demo level. FOR LATER (Bruno): replace the temp
-  audio, music, SFX and graphics with the real ones; refine the character models and the texture placement.
+- 2026-10-31, THE AUDIO LOGS (`devlog-notes/2026-10-31_audio_logs.md`, Bruno: "collected and listened to while walking
+  around; it automatically pauses when combat begins; music goes down to almost nothing"; it plays again "once the
+  player un-pauses it"; replay from the inventory): `ItemKind.AudioLog` (`audioClip`, `tapeLines` with times and
+  speakers), `Audio/TapePlayer.cs` on "[GameAudio]" (plays on through a door, its own clock on game time, the label at
+  the top right, the lines as subtitles), the music at `TapePlayer.MusicLevel` 8 % (`MusicDirector.DuckFactor`),
+  MusicState.Combat pauses it and only the inventory's Interact plays it again. `ItemPickup.Spawn` makes a pickup in
+  play. Placeholder clip: `tools/tape_placeholder.py`; `ItemAssets.TestTape`; TRAVEL A has `Tape_Travel`. Tutorial: 25
+  steps (tape). `AudioLogTests` (4), bot `play TravelTest_A Main_Menu tape 300`.
+  NEXT (all in isolation before the demo level): in-world screens (a CRT clip with sound), the outfit change, the
+  floor shield, a seam sweep (the gas pixel test is flaky). FOR LATER (Bruno): replace the temp audio, music, SFX and
+  graphics with the real ones; refine the character models and the texture placement.
 
 ## Rules
 

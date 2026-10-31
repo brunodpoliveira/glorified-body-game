@@ -20,3 +20,5 @@ MonoBehaviour:
   description: A placeholder key card. It opens the locked door of the gym.
   logText: 
   mapFloor: 
+  audioClip: {fileID: 0}
+  tapeLines: []

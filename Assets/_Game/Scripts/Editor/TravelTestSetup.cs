@@ -41,6 +41,8 @@ namespace GlorifiedBody.Editor
             MenuLoopSetup.EnsurePickup("Drug_Nalcon", DrugType.Nalcon, new Vector3(-3f, 0.4f, -3f));
             // A log for the map's marks (2026-10-31).
             ItemAssets.Pickup(null, "Log_Travel", ItemAssets.TestLog(), PrimitiveType.Cube, new Vector3(3f, 0.05f, 3f), new Vector3(0.3f, 0.04f, 0.4f), Quaternion.Euler(0f, 15f, 0f));
+            // An audio log (Bruno, 2026-10-31): it plays while she walks.
+            ItemAssets.Pickup(null, "Tape_Travel", ItemAssets.TestTape(), PrimitiveType.Cube, new Vector3(1.5f, 0.06f, -3.5f), new Vector3(0.24f, 0.08f, 0.16f), Quaternion.Euler(0f, -20f, 0f));
             Exit("Exit_ToB", new Vector3(6.7f, 1.2f, 0f), SceneB, EntryFromA);
             Entry(EntryFromB, new Vector3(4.6f, 0f, 0f), 270f);
             Finish(a, new Vector3(-5f, 6f, -7f), new Vector3(1f, 0f, 1f));

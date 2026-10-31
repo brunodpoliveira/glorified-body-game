@@ -308,6 +308,20 @@ namespace GlorifiedBody.Automation
                     c.Pad.Tap(InputManager.GameAction.Map); // closed
                     yield return BotClock.Wait(0.3f);
                     break;
+                case "tape":
+                {
+                    yield return WalkTo(c, c.Director.LogPoint, run: false, radius: 0.3f);
+                    ItemPickup tape = FindPickup(TutorialDirector.TapeItemId);
+                    if (tape == null) break;
+                    yield return TurnTo(c, tape.Point, 4f);
+                    c.Pad.Tap(InputManager.GameAction.Interact); // "Take it?"
+                    yield return BotClock.Wait(0.3f);
+                    c.Pad.Tap(InputManager.GameAction.Interact); // take: it plays
+                    yield return BotClock.Wait(0.8f);
+                    c.Moment?.Invoke("tape");
+                    yield return BotClock.Wait(1.0f);
+                    break;
+                }
                 case "scan_video":
                     yield return ScanAt(c, c.Director.MonitorsPoint, c.Director.MonitorsScanId, -1f);
                     break;

@@ -110,7 +110,7 @@ namespace GlorifiedBody.Editor
                 foreach (ItemPickup pickup in top.GetComponentsInChildren<ItemPickup>())
                 {
                     if (!pickup.gameObject.activeInHierarchy || pickup.item == null) continue; // a carried item waits hidden
-                    MapMarkKind kind = pickup.item.kind == ItemKind.Log ? MapMarkKind.Log : MapMarkKind.Item;
+                    MapMarkKind kind = pickup.item.kind == ItemKind.Log || pickup.item.kind == ItemKind.AudioLog ? MapMarkKind.Log : MapMarkKind.Item;
                     room.marks.Add(new MapMark { kind = kind, path = ScenePaths.Of(pickup.transform), position = Flat(pickup.transform.position), label = pickup.item.displayName });
                 }
                 foreach (SavePoint save in top.GetComponentsInChildren<SavePoint>())
