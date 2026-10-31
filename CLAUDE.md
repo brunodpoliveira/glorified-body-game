@@ -367,7 +367,15 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
     tape after a load, the death fall); knees and elbows are locked hinges (`HumanoidRagdoll.Hinge`; enemy prefabs
     built again); the gun hangs on the back in the care (`EnemyGun.Sling`); the pistol grip sits in the fist. The
     harness flags a missing exec method. Bots "cpr", "holds".
-  OPEN for Bruno: in those notes. NEXT: his review; then the demo rooms (the player build, rank 16, at their start).
+  OPEN for Bruno: in those notes.
+- 2026-10-31, afternoon, his answers (`devlog-notes/2026-10-31_answers_cpr_rifle.md`): a short goes on in the next room
+  (`ShortController.GoOn`, `PlayerState.shortLeft`); a cutscene in a doorway stays off; the locker warns and keeps the
+  uniform when she carries too much, the key X (`GameAction.Drop`) drops a thing from the inventory; the room saves the
+  floor items (`FloorItem`) and the shield scars (`FloorScar`). THE CPR AND DRAG: RFab has no such motion (gap 13), so
+  the vendor `Pick_Down` held at 0.42 s (a kneel) plus the arms as humanoid muscles (`CorpseCare.CprArms`, from a
+  `PoseProbe` sheet; `ClipProbe` measures a clip), the drag hands on the shoulders by the two-bone reach. THE RIFLE ARMS:
+  the wrists 6 cm behind and 4 cm under the grips, the right elbow down (bot "holds" measures it).
+  NEXT: his review; then the demo rooms (the player build, rank 16, at their start).
 
 ## Rules
 
