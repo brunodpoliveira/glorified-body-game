@@ -450,7 +450,7 @@ namespace GlorifiedBody.Tutorial
             if (IsComplete || Current == null) return;
             if (tank != null && tank.IsRunning) ranInStep = true;
             if (GameManager.Instance != null && !GameManager.Instance.IsPlaying) return;
-            if (Input.GetKeyDown(skipKey))
+            if (GameBuild.Dev && Input.GetKeyDown(skipKey))
             {
                 RunTelemetry.Event("tutorial_skip", Current.Id);
                 Advance();

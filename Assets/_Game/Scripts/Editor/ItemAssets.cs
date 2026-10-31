@@ -105,7 +105,7 @@ namespace GlorifiedBody.Editor
             return item;
         }
 
-        private static ItemDefinition Item(string id, string name, ItemKind kind, Color colour, string description, string logText, DrugType drug)
+        public static ItemDefinition Item(string id, string name, ItemKind kind, Color colour, string description, string logText, DrugType drug)
         {
             string path = $"{ItemsFolder}/item_{id}.asset";
             var item = AssetDatabase.LoadAssetAtPath<ItemDefinition>(path);

@@ -53,7 +53,7 @@ namespace GlorifiedBody.Enemy
         [SerializeField] private string hideLine = "";  // the whisper while she is near (the writer's line)
         [SerializeField] private string foundLine = ""; // the first words when she finds it
         [SerializeField, Min(0.5f)] private float whisperRange = 4.5f;
-        [SerializeField, Min(0.5f)] private float foundRange = 2f;
+        [SerializeField, Min(0f)] private float foundRange = 2f; // 0: never found (she prays on)
         [SerializeField, Min(1f)] private float alertRadius = 25f;
         [SerializeField, Min(1f)] private float hearPowerRadius = 12f;
         [SerializeField, Min(1f)] private float waryDistance = 6f;   // m: the wary one backs away until she is this far
@@ -113,9 +113,10 @@ namespace GlorifiedBody.Enemy
         public void SetNurse(bool value) => nurse = value;
 
         /// <summary>Makes it a hider with the writer's lines (EnemySpawn).</summary>
-        public void SetHider(string whisper, string found)
+        public void SetHider(string whisper, string found, float foundAt = 2f)
         {
             hides = true;
+            foundRange = foundAt;
             hideLine = whisper ?? "";
             foundLine = found ?? "";
         }
@@ -142,7 +143,7 @@ namespace GlorifiedBody.Enemy
                 if (player == null) return;
             }
             float gap = EnemyNav.Flat(transform.position, Her);
-            if (gap <= foundRange)
+            if (foundRange > 0f && gap <= foundRange)
             {
                 Found = true;
                 Alerted = true;

@@ -19,6 +19,7 @@
 #                               ffmpeg makes clips/<step>.mp4, copies go to
 #                               ~/MEGA/glorified-body-renders/devlog/clips/{latest,<stamp>}/. (slot: batch)
 #   import <file.unitypackage>  Batch: import an Asset Store package (unity assets import). (slot: batch)
+#   build <release|dev> [linux|windows]  Batch: the player build to builds/<kind>_<target>/ (2 h limit). (slot: batch)
 #   triage <run-dir>            Re-run log triage on a run folder.
 #
 # Project = the git toplevel of cwd (the Unity project sits at the repo root). Override with GB_PROJECT.
@@ -162,6 +163,15 @@ case "$mode" in
     method="${1:?Class.Method required}"; shift
     new_run exec "$method" "$@"
     with_lock batch run_batch -- -executeMethod "$method" -gbRunDir "$RUN" "$@"; rc=$?
+    triage; t=$?; [ $rc -eq 0 ] && rc=$t; exit $rc ;;
+  build)
+    # The player build (2026-10-31): release or dev, linux or windows. The shader compile of a first build takes over
+    # half an hour, so this mode waits up to GB_BUILD_TIMEOUT (2 h) instead of the 30 min of a batch run.
+    kind="${1:-release}"; target="${2:-linux}"
+    case "$kind" in release) method=GlorifiedBody.Editor.PlayerBuild.Release ;; dev) method=GlorifiedBody.Editor.PlayerBuild.Dev ;; *) echo "build release|dev [linux|windows]"; exit 2 ;; esac
+    new_run build "$kind" "$target"
+    BATCH_TIMEOUT="${GB_BUILD_TIMEOUT:-7200}"
+    with_lock batch run_batch -- -executeMethod "$method" -gbRunDir "$RUN" -gbTarget "$target"; rc=$?
     triage; t=$?; [ $rc -eq 0 ] && rc=$t; exit $rc ;;
   cmdb)
     name="${1:?command name required}"; shift

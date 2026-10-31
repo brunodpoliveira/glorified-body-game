@@ -40,6 +40,8 @@ namespace GlorifiedBody.Editor
             (TestFloor1, "TEST FLOOR 1"),
             (TestFloor2, "TEST FLOOR 2"),
             (TestFloor3, "TEST FLOOR 3"),
+            (Demo.DemoItems.Floor2, "THE WARD"),
+            (Demo.DemoItems.Floor1, "THE PUBLIC FLOOR"),
         };
 
         /// <summary>
@@ -57,6 +59,29 @@ namespace GlorifiedBody.Editor
             new Place("LabTest", TestFloor2, "LAB", 22.5f, 0f),
             new Place("OutfitTest", TestFloor3, "LOCKERS", 0f, 0f),
             new Place("ScreenTest", TestFloor3, "SCREENS", 16f, -13.8f), // the gym (z 10.3 to 17.3) east of the lockers' hall
+            // The demo (2026-10-31): each room in plan coordinates.
+            new Place("Demo_W1", Demo.DemoItems.Floor2, "RECOVERY", 0f, 0f),
+            new Place("Demo_W2", Demo.DemoItems.Floor2, "NORTH CORRIDOR", 0f, 0f),
+            new Place("Demo_W3", Demo.DemoItems.Floor2, "PATIENTS", 0f, 0f),
+            new Place("Demo_W4", Demo.DemoItems.Floor2, "SHOWERS", 0f, 0f),
+            new Place("Demo_W5", Demo.DemoItems.Floor2, "SOUTH CORRIDOR", 0f, 0f),
+            new Place("Demo_W6", Demo.DemoItems.Floor2, "LOCKERS", 0f, 0f),
+            new Place("Demo_W7", Demo.DemoItems.Floor2, "THERAPY GYM", 0f, 0f),
+            new Place("Demo_W8", Demo.DemoItems.Floor2, "INDUCTION", 0f, 0f),
+            new Place("Demo_W9", Demo.DemoItems.Floor2, "NURSES' STATION", 0f, 0f),
+            new Place("Demo_W10", Demo.DemoItems.Floor2, "RESEARCH", 0f, 0f),
+            new Place("Demo_W11", Demo.DemoItems.Floor2, "MAPPING LAB", 0f, 0f),
+            new Place("Demo_W12", Demo.DemoItems.Floor2, "STAIRWELL", 0f, 0f),
+            new Place("Demo_G1", Demo.DemoItems.Floor1, "LANDING", 0f, 0f),
+            new Place("Demo_G2", Demo.DemoItems.Floor1, "CONCOURSE", 0f, 0f),
+            new Place("Demo_G3", Demo.DemoItems.Floor1, "DONOR WALL", 0f, 0f),
+            new Place("Demo_G4", Demo.DemoItems.Floor1, "CHAPEL", 0f, 0f),
+            new Place("Demo_G5", Demo.DemoItems.Floor1, "RECEPTION", 0f, 0f),
+            new Place("Demo_G6", Demo.DemoItems.Floor1, "BATHROOMS", 0f, 0f),
+            new Place("Demo_G7", Demo.DemoItems.Floor1, "FAMILY ROOMS", 0f, 0f),
+            new Place("Demo_G8", Demo.DemoItems.Floor1, "OFFICES", 0f, 0f),
+            new Place("Demo_G9", Demo.DemoItems.Floor1, "SECURITY", 0f, 0f),
+            new Place("Demo_U1", Demo.DemoItems.Floor1, "SECTOR C", 0f, 0f),
         };
 
         [MenuItem("GlorifiedBody/Build Map Atlas")]
@@ -66,7 +91,7 @@ namespace GlorifiedBody.Editor
             var rooms = new List<MapRoom>();
             foreach (Place place in Layout)
             {
-                string path = MenuLoopSetup.ScenesFolder + "/" + place.Scene + ".unity";
+                string path = MenuLoopSetup.ScenesFolder + "/" + (place.Scene.StartsWith("Demo_") ? "Demo/" : "") + place.Scene + ".unity";
                 if (!File.Exists(path))
                 {
                     Debug.LogWarning($"[MapAtlasSetup] no scene {path}: the room is not on the map.");

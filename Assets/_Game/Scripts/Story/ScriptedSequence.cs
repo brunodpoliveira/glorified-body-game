@@ -32,6 +32,7 @@ namespace GlorifiedBody.Story
         Screen,      // the screen under target plays (InWorldScreen); id "wait": until it ends
         Outfit,      // her outfit (id "nude", "guard"); the grabbables over the new limit fall at her feet
         Bulletin,    // the police bulletin card by her body count (T11); waits until she closes it
+        EndDemo,     // the demo ends: back to the main menu (the title)
     }
 
     /// <summary>One step of a sequence: what it does and its data (the room builder fills them in code).</summary>
@@ -63,6 +64,7 @@ namespace GlorifiedBody.Story
         public static ScriptStep Play(CutsceneAsset asset) => new ScriptStep { kind = StepKind.Cutscene, cutscene = asset };
         public static ScriptStep LockHer() => new ScriptStep { kind = StepKind.LockHer };
         public static ScriptStep FreeHer() => new ScriptStep { kind = StepKind.FreeHer };
+        public static ScriptStep EndDemo() => new ScriptStep { kind = StepKind.EndDemo };
         public static ScriptStep ShowBulletin() => new ScriptStep { kind = StepKind.Bulletin };
         public static ScriptStep Outfit(string outfitId) => new ScriptStep { kind = StepKind.Outfit, id = outfitId };
         public static ScriptStep Screen(GameObject screen, bool wait = false) => new ScriptStep { kind = StepKind.Screen, target = screen, id = wait ? "wait" : "" };
@@ -82,6 +84,14 @@ namespace GlorifiedBody.Story
         public List<ScriptStep> steps = new List<ScriptStep>();
         [Tooltip("The flag raised at the end (empty: \"seq_\" + the object's name). A raised flag means it ran.")]
         public string doneFlag = "";
+
+        [Tooltip("It runs by itself when the room starts (the first beat of a room). Its done flag still stops a second run.")]
+        public bool runOnStart;
+
+        private void Start()
+        {
+            if (runOnStart) Run();
+        }
 
         public string DoneFlag => string.IsNullOrEmpty(doneFlag) ? "seq_" + name : doneFlag;
         public bool Running { get; private set; }
@@ -162,6 +172,10 @@ namespace GlorifiedBody.Story
                     break;
                 case StepKind.LockHer: SetLock(true); break;
                 case StepKind.FreeHer: SetLock(false); break;
+                case StepKind.EndDemo:
+                    RunTelemetry.Event("demo_end", name);
+                    GlorifiedBody.Systems.GameManager.Instance?.LoadMainMenu();
+                    break;
                 case StepKind.Bulletin:
                 {
                     PsychicStats her = Lucy() != null ? Lucy().GetComponent<PsychicStats>() : null;

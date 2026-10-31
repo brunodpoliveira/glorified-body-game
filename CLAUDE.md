@@ -381,7 +381,17 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   BULLETIN (`Story/Bulletin.cs`, `StepKind.Bulletin`, by `PsychicStats.People`, every person she killed, saved), WALL
   SIGNS (`RoomKit.Sign`). The brain fight is for later, built separately (Bruno). The push needs Bruno's hand (the
   session may not run `git push`).
-  NEXT: the player build (rank 16), then floor 2 of the demo in greybox (W1 to W12).
+- 2026-10-31, night, THE PLAYER BUILD AND THE DEMO GREYBOX (`devlog-notes/2026-10-31_player_build_demo_greybox.md`):
+  `tools/unity.sh build release|dev [linux|windows]` (`Editor/PlayerBuild.cs`, 2 h limit, output in `builds/`, out of
+  git and MEGA); a release has the menu, training, tutorial and the Demo_* rooms; `GameBuild.Dev` (editor, development
+  build or `-gbDev`) gates the debug keys and the TEST ROOMS column. The triage marks a run that did not end DIRTY.
+  THE DEMO: 22 rooms in plan metres (`Scenes/Demo/Demo_<id>.unity`, `Editor/Demo/`: `DemoRoom` the kit, `DemoWard`
+  W1 to W12, `DemoPublic` G1 to G9 and U1, `DemoContent` the logs and the writers' cutscene lines as subtitles), the
+  map floors "THE WARD" and "THE PUBLIC FLOOR", a DEMO (GREYBOX) button. Each camera cell searches its pose by the
+  coverage rule (`CameraCoverage.Sees`) and splits when it misses over 3 %. A room change: run its BuildAll, then
+  `MapAtlasSetup.BuildAtlas`. Proof: `DemoTests` (4), bot `play Demo_W1 Main_Menu demo 900` (one shot a camera).
+  `FlagSwitch` (a switch that raises a flag), `ScriptedSequence.runOnStart`, `StepKind.EndDemo`.
+  OPEN for Bruno: in the note (G5 has 12 cameras, START, the stair card).
 
 ## Rules
 

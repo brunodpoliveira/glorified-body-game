@@ -13,7 +13,7 @@ namespace GlorifiedBody.DebugTools
 
         private void Update()
         {
-            if (!Input.GetKeyDown(key)) return;
+            if (!GlorifiedBody.Systems.GameBuild.Dev || !Input.GetKeyDown(key)) return;
             GameManager gm = GameManager.Instance;
             if (gm != null && !gm.IsPlaying) return;
 

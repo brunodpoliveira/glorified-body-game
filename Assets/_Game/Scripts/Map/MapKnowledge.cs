@@ -26,7 +26,7 @@ namespace GlorifiedBody.Map
         {
             if (items == null || string.IsNullOrEmpty(floor)) return false;
             foreach (ItemDefinition item in items.Critical)
-                if (item != null && item.kind == ItemKind.Map && item.mapFloor == floor) return true;
+                if (item != null && item.kind == ItemKind.Map && System.Array.IndexOf(item.mapFloor.Split(','), floor) >= 0) return true;
             return false;
         }
 

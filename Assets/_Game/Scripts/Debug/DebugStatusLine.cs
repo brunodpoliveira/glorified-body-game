@@ -45,7 +45,7 @@ namespace GlorifiedBody.DebugTools
 
         private void Update()
         {
-            if (Input.GetKeyDown(toggleKey) && canvas != null) canvas.gameObject.SetActive(!canvas.gameObject.activeSelf);
+            if (GlorifiedBody.Systems.GameBuild.Dev && Input.GetKeyDown(toggleKey) && canvas != null) canvas.gameObject.SetActive(!canvas.gameObject.activeSelf);
             if (text == null) return;
             if (tank == null)
             {

@@ -88,10 +88,25 @@ namespace GlorifiedBody.Automation
             return best != null ? best.fixedCamera : director != null ? director.DefaultCamera : null;
         }
 
-        public static bool InFrame(FixedCamera cam, Vector3 point, float margin)
+        /// <summary>
+        /// One floor point from one camera pose, the rule of Check: under the near distance it passes; else the head and
+        /// the hip are in frame and nothing solid lies on the line to the head. A room builder scores its camera poses with it.
+        /// </summary>
+        public static bool Sees(Vector3 camPos, Quaternion rotation, float fieldOfView, Vector3 p, float nearCamera, int solid)
         {
-            Matrix4x4 view = Matrix4x4.Scale(new Vector3(1f, 1f, -1f)) * Matrix4x4.TRS(cam.transform.position, cam.transform.rotation, Vector3.one).inverse;
-            Matrix4x4 projection = Matrix4x4.Perspective(cam.fieldOfView, Aspect, 0.1f, 100f);
+            if (Vector2.Distance(new Vector2(p.x, p.z), new Vector2(camPos.x, camPos.z)) < nearCamera) return true;
+            Vector3 head = p + Vector3.up * 1.6f, hip = p + Vector3.up * 0.9f;
+            return InFrame(camPos, rotation, fieldOfView, head, 0.05f) && InFrame(camPos, rotation, fieldOfView, hip, 0f)
+                && !Physics.Linecast(camPos, head, solid, QueryTriggerInteraction.Ignore);
+        }
+
+        public static bool InFrame(FixedCamera cam, Vector3 point, float margin) =>
+            InFrame(cam.transform.position, cam.transform.rotation, cam.fieldOfView, point, margin);
+
+        public static bool InFrame(Vector3 camPos, Quaternion rotation, float fieldOfView, Vector3 point, float margin)
+        {
+            Matrix4x4 view = Matrix4x4.Scale(new Vector3(1f, 1f, -1f)) * Matrix4x4.TRS(camPos, rotation, Vector3.one).inverse;
+            Matrix4x4 projection = Matrix4x4.Perspective(fieldOfView, Aspect, 0.1f, 100f);
             Vector4 clip = projection * view * new Vector4(point.x, point.y, point.z, 1f);
             if (clip.w <= 0.01f) return false;
             float x = clip.x / clip.w, y = clip.y / clip.w;

@@ -30,6 +30,7 @@ namespace GlorifiedBody.DebugTools
         {
             GameManager gm = GameManager.Instance;
             if (gm != null && !gm.IsPlaying) return;
+            if (!GameBuild.Dev) return; // a release build has no debug keys (rank 16)
             if (Input.GetKeyDown(fillShortKey)) FillShort();
             if (Input.GetKeyDown(startShortKey)) StartShort();
             if (Input.GetKeyDown(refillKey)) Refill();

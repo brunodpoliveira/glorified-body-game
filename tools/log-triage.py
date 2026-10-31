@@ -160,6 +160,12 @@ def main():
     }
     for p in sorted(run.glob("*.log")):
         parse_log(p, noise, out)
+    # An exec or build run that Unity did not end itself: a time limit killed it (2026-10-31: a player build stopped
+    # at 1,800 s in the shader compile, and the triage said CLEAN).
+    editor_log = run / "editor.log"
+    if ("-exec-" in run.name or "-build-" in run.name) and editor_log.exists():
+        if "Exiting batchmode successfully" not in editor_log.read_text(errors="replace"):
+            out["errors"].append({"msg": "the run did not end normally (no 'Exiting batchmode successfully': a time limit or a crash)", "at": "", "src": "editor.log"})
     for p in sorted(run.glob("*.jsonl")):
         parse_jsonl(p, noise, out)
     for p in sorted(run.glob("*.xml")):

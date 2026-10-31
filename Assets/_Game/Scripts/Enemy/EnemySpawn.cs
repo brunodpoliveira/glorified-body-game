@@ -32,6 +32,8 @@ namespace GlorifiedBody.Enemy
         public bool hides;
         public string hideLine = "";
         public string foundLine = "";
+        [Tooltip("A hider is found this near (metres). 0: never (the nurse who prays on).")]
+        public float foundAt = 2f;
 
         public static int Spawned { get; private set; }
         public static int Missing { get; private set; }
@@ -58,7 +60,7 @@ namespace GlorifiedBody.Enemy
             if (variant >= 0 && figure.TryGetComponent(out CivilianBrain civilian)) civilian.SetVariant(variant);
             if (drop != null) figure.AddComponent<GlorifiedBody.Interaction.ItemCarrier>().Bind(drop);
             if (!string.IsNullOrEmpty(line) && figure.TryGetComponent(out PatientBrain patient)) patient.Line = line;
-            if (hides && figure.TryGetComponent(out CivilianBrain hider)) hider.SetHider(hideLine, foundLine);
+            if (hides && figure.TryGetComponent(out CivilianBrain hider)) hider.SetHider(hideLine, foundLine, foundAt);
             if (!string.IsNullOrEmpty(fate)) figure.AddComponent<GlorifiedBody.Story.FateFlag>().fate = fate;
             if (scanImage != null || scanClip != null) AddScan(figure);
             Spawned++;

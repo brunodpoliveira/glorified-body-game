@@ -21,6 +21,10 @@ MonoBehaviour:
     title: TEST FLOOR 2
   - id: test_3
     title: TEST FLOOR 3
+  - id: demo_2
+    title: THE WARD
+  - id: demo_1
+    title: THE PUBLIC FLOOR
   rooms:
   - scene: TrainingRoom
     floor: training
@@ -280,3 +284,449 @@ MonoBehaviour:
       height: 7
     exits: []
     marks: []
+  - scene: Demo_W1
+    floor: demo_2
+    title: RECOVERY
+    offset: {x: 0, y: 0}
+    areas:
+    - serializedVersion: 2
+      x: 1
+      y: 14
+      width: 6
+      height: 5
+    exits:
+    - path: '[Exits]/Exit_To_W2'
+      position: {x: 4, y: 12.1}
+      targetScene: Demo_W2
+    marks:
+    - kind: 1
+      path: '[Props]/L1_Printout'
+      position: {x: 2.6, y: 14.5}
+      label: STEVENS' PRINTOUT
+    - kind: 1
+      path: Capsule_W1
+      position: {x: 1.6, y: 18.2}
+      label: MK CAPSULE
+  - scene: Demo_W2
+    floor: demo_2
+    title: NORTH CORRIDOR
+    offset: {x: 0, y: 0}
+    areas:
+    - serializedVersion: 2
+      x: 0
+      y: 11
+      width: 24
+      height: 3
+    exits:
+    - path: '[Exits]/Exit_To_W1'
+      position: {x: 4, y: 15.9}
+      targetScene: Demo_W1
+    - path: '[Exits]/Exit_To_W3'
+      position: {x: 13, y: 15.9}
+      targetScene: Demo_W3
+    - path: '[Exits]/Exit_To_W4'
+      position: {x: 22, y: 15.9}
+      targetScene: Demo_W4
+    - path: '[Exits]/Exit_To_W5'
+      position: {x: 1.5, y: 9.1}
+      targetScene: Demo_W5
+    marks:
+    - kind: 2
+      path: '[Props]/L9_Care_Chart'
+      position: {x: 9.5, y: 11.8}
+      label: HER CARE CHART
+  - scene: Demo_W3
+    floor: demo_2
+    title: PATIENTS
+    offset: {x: 0, y: 0}
+    areas:
+    - serializedVersion: 2
+      x: 9
+      y: 14
+      width: 8
+      height: 5
+    exits:
+    - path: '[Exits]/Exit_To_W2'
+      position: {x: 13, y: 12.1}
+      targetScene: Demo_W2
+    marks:
+    - kind: 2
+      path: '[Props]/L2_Chart'
+      position: {x: 16.1, y: 17.8}
+      label: THE PATIENT'S CHART
+  - scene: Demo_W4
+    floor: demo_2
+    title: SHOWERS
+    offset: {x: 0, y: 0}
+    areas:
+    - serializedVersion: 2
+      x: 19
+      y: 14
+      width: 6
+      height: 6
+    exits:
+    - path: '[Exits]/Exit_To_W2'
+      position: {x: 22, y: 12.1}
+      targetScene: Demo_W2
+    marks: []
+  - scene: Demo_W5
+    floor: demo_2
+    title: SOUTH CORRIDOR
+    offset: {x: 0, y: 0}
+    areas:
+    - serializedVersion: 2
+      x: 0
+      y: -9
+      width: 3
+      height: 20
+    exits:
+    - path: '[Exits]/Exit_To_W2'
+      position: {x: 1.5, y: 12.9}
+      targetScene: Demo_W2
+    - path: '[Exits]/Exit_To_W6'
+      position: {x: -1.9, y: 5}
+      targetScene: Demo_W6
+    - path: '[Exits]/Exit_To_W7'
+      position: {x: 4.9, y: 1.5}
+      targetScene: Demo_W7
+    marks: []
+  - scene: Demo_W6
+    floor: demo_2
+    title: LOCKERS
+    offset: {x: 0, y: 0}
+    areas:
+    - serializedVersion: 2
+      x: -7
+      y: 2
+      width: 7
+      height: 6
+    exits:
+    - path: '[Exits]/Exit_To_W5'
+      position: {x: 1.9, y: 5}
+      targetScene: Demo_W5
+    marks:
+    - kind: 2
+      path: '[Props]/L3_Card'
+      position: {x: -2.2, y: 7.4}
+      label: A LAMINATED CARD
+    - kind: 3
+      path: '[Props]/Save_W6'
+      position: {x: -6.4, y: 3}
+      label: SAVE
+  - scene: Demo_W7
+    floor: demo_2
+    title: THERAPY GYM
+    offset: {x: 0, y: 0}
+    areas:
+    - serializedVersion: 2
+      x: 3
+      y: -2
+      width: 8
+      height: 7
+    exits:
+    - path: '[Exits]/Exit_To_W5'
+      position: {x: 1.1, y: 1.5}
+      targetScene: Demo_W5
+    - path: '[Exits]/Exit_To_W8'
+      position: {x: 12.9, y: 1.5}
+      targetScene: Demo_W8
+    marks: []
+  - scene: Demo_W8
+    floor: demo_2
+    title: INDUCTION
+    offset: {x: 0, y: 0}
+    areas:
+    - serializedVersion: 2
+      x: 11
+      y: -2
+      width: 6
+      height: 7
+    exits:
+    - path: '[Exits]/Exit_To_W7'
+      position: {x: 9.1, y: 1.5}
+      targetScene: Demo_W7
+    - path: '[Exits]/Exit_To_W9'
+      position: {x: 14, y: -3.9}
+      targetScene: Demo_W9
+    marks: []
+  - scene: Demo_W9
+    floor: demo_2
+    title: NURSES' STATION
+    offset: {x: 0, y: 0}
+    areas:
+    - serializedVersion: 2
+      x: 3
+      y: -10
+      width: 14
+      height: 8
+    exits:
+    - path: '[Exits]/Exit_To_W8'
+      position: {x: 14, y: -0.100000024}
+      targetScene: Demo_W8
+    - path: '[Exits]/Exit_To_W10'
+      position: {x: 18.9, y: -7}
+      targetScene: Demo_W10
+    - path: '[Exits]/Exit_To_W11'
+      position: {x: 8, y: -11.9}
+      targetScene: Demo_W11
+    - path: '[Exits]/Exit_To_W12'
+      position: {x: 15, y: -11.9}
+      targetScene: Demo_W12
+    marks: []
+  - scene: Demo_W10
+    floor: demo_2
+    title: RESEARCH
+    offset: {x: 0, y: 0}
+    areas:
+    - serializedVersion: 2
+      x: 17
+      y: -10
+      width: 6
+      height: 6
+    exits:
+    - path: '[Exits]/Exit_To_W9'
+      position: {x: 15.1, y: -7}
+      targetScene: Demo_W9
+    marks:
+    - kind: 2
+      path: '[Props]/L7_Session_Note'
+      position: {x: 19, y: -5.2}
+      label: A SESSION NOTE
+  - scene: Demo_W11
+    floor: demo_2
+    title: MAPPING LAB
+    offset: {x: 0, y: 0}
+    areas:
+    - serializedVersion: 2
+      x: 3
+      y: -18
+      width: 10
+      height: 8
+    exits:
+    - path: '[Exits]/Exit_To_W9'
+      position: {x: 8, y: -8.1}
+      targetScene: Demo_W9
+    marks:
+    - kind: 2
+      path: '[Props]/L4_Whiteboard'
+      position: {x: 3.2, y: -13.5}
+      label: THE WHITEBOARD
+  - scene: Demo_W12
+    floor: demo_2
+    title: STAIRWELL
+    offset: {x: 0, y: 0}
+    areas:
+    - serializedVersion: 2
+      x: 13
+      y: -14
+      width: 4
+      height: 4
+    exits:
+    - path: '[Exits]/Exit_To_W9'
+      position: {x: 15, y: -8.1}
+      targetScene: Demo_W9
+    - path: '[Exits]/Exit_To_G1'
+      position: {x: 15, y: -15.9}
+      targetScene: Demo_G1
+    marks:
+    - kind: 0
+      path: '[Props]/Door_G1'
+      position: {x: 30, y: -28.15}
+      label: the ward sister's card
+  - scene: Demo_G1
+    floor: demo_1
+    title: LANDING
+    offset: {x: 0, y: 0}
+    areas:
+    - serializedVersion: 2
+      x: 0
+      y: 0
+      width: 5
+      height: 5
+    exits:
+    - path: '[Exits]/Exit_To_W12'
+      position: {x: 2.5, y: 6.9}
+      targetScene: Demo_W12
+    - path: '[Exits]/Exit_To_G2'
+      position: {x: 6.9, y: 2.5}
+      targetScene: Demo_G2
+    marks:
+    - kind: 3
+      path: '[Props]/Save_G1'
+      position: {x: 0.6, y: 1}
+      label: SAVE
+  - scene: Demo_G2
+    floor: demo_1
+    title: CONCOURSE
+    offset: {x: 0, y: 0}
+    areas:
+    - serializedVersion: 2
+      x: 5
+      y: 0
+      width: 30
+      height: 6
+    exits:
+    - path: '[Exits]/Exit_To_G1'
+      position: {x: 3.1, y: 2.5}
+      targetScene: Demo_G1
+    - path: '[Exits]/Exit_To_G3'
+      position: {x: 12, y: 7.9}
+      targetScene: Demo_G3
+    - path: '[Exits]/Exit_To_G4'
+      position: {x: 28, y: 7.9}
+      targetScene: Demo_G4
+    - path: '[Exits]/Exit_To_G5'
+      position: {x: 20, y: -1.9}
+      targetScene: Demo_G5
+    marks: []
+  - scene: Demo_G3
+    floor: demo_1
+    title: DONOR WALL
+    offset: {x: 0, y: 0}
+    areas:
+    - serializedVersion: 2
+      x: 8
+      y: 6
+      width: 8
+      height: 6
+    exits:
+    - path: '[Exits]/Exit_To_G2'
+      position: {x: 12, y: 4.1}
+      targetScene: Demo_G2
+    marks: []
+  - scene: Demo_G4
+    floor: demo_1
+    title: CHAPEL
+    offset: {x: 0, y: 0}
+    areas:
+    - serializedVersion: 2
+      x: 24
+      y: 6
+      width: 8
+      height: 8
+    exits:
+    - path: '[Exits]/Exit_To_G2'
+      position: {x: 28, y: 4.1}
+      targetScene: Demo_G2
+    marks:
+    - kind: 2
+      path: '[Props]/L8_Prayer_Card'
+      position: {x: 26.2, y: 9.6}
+      label: A PRAYER CARD
+  - scene: Demo_G5
+    floor: demo_1
+    title: RECEPTION
+    offset: {x: 0, y: 0}
+    areas:
+    - serializedVersion: 2
+      x: 12
+      y: -16
+      width: 16
+      height: 16
+    exits:
+    - path: '[Exits]/Exit_To_G2'
+      position: {x: 20, y: 1.9}
+      targetScene: Demo_G2
+    - path: '[Exits]/Exit_To_G6'
+      position: {x: 10.1, y: -4}
+      targetScene: Demo_G6
+    - path: '[Exits]/Exit_To_G7'
+      position: {x: 10.1, y: -12}
+      targetScene: Demo_G7
+    - path: '[Exits]/Exit_To_G8'
+      position: {x: 29.9, y: -4}
+      targetScene: Demo_G8
+    - path: '[Exits]/Exit_To_G9'
+      position: {x: 29.9, y: -12}
+      targetScene: Demo_G9
+    - path: '[Exits]/Exit_To_U1'
+      position: {x: 20, y: -17.9}
+      targetScene: Demo_U1
+    marks: []
+  - scene: Demo_G6
+    floor: demo_1
+    title: BATHROOMS
+    offset: {x: 0, y: 0}
+    areas:
+    - serializedVersion: 2
+      x: 5
+      y: -7
+      width: 7
+      height: 6
+    exits:
+    - path: '[Exits]/Exit_To_G5'
+      position: {x: 13.9, y: -4}
+      targetScene: Demo_G5
+    marks: []
+  - scene: Demo_G7
+    floor: demo_1
+    title: FAMILY ROOMS
+    offset: {x: 0, y: 0}
+    areas:
+    - serializedVersion: 2
+      x: 4
+      y: -16
+      width: 8
+      height: 7
+    exits:
+    - path: '[Exits]/Exit_To_G5'
+      position: {x: 13.9, y: -12}
+      targetScene: Demo_G5
+    marks: []
+  - scene: Demo_G8
+    floor: demo_1
+    title: OFFICES
+    offset: {x: 0, y: 0}
+    areas:
+    - serializedVersion: 2
+      x: 28
+      y: -8
+      width: 8
+      height: 8
+    exits:
+    - path: '[Exits]/Exit_To_G5'
+      position: {x: 26.1, y: -4}
+      targetScene: Demo_G5
+    marks: []
+  - scene: Demo_G9
+    floor: demo_1
+    title: SECURITY
+    offset: {x: 0, y: 0}
+    areas:
+    - serializedVersion: 2
+      x: 28
+      y: -16
+      width: 6
+      height: 7
+    exits:
+    - path: '[Exits]/Exit_To_G5'
+      position: {x: 26.1, y: -12}
+      targetScene: Demo_G5
+    marks:
+    - kind: 2
+      path: '[Props]/L5_Logbook'
+      position: {x: 29.6, y: -14.8}
+      label: THE SECURITY LOGBOOK
+    - kind: 3
+      path: '[Props]/Save_G9'
+      position: {x: 33.4, y: -10}
+      label: SAVE
+  - scene: Demo_U1
+    floor: demo_1
+    title: SECTOR C
+    offset: {x: 0, y: 0}
+    areas:
+    - serializedVersion: 2
+      x: 14
+      y: -28
+      width: 12
+      height: 12
+    exits:
+    - path: '[Exits]/Exit_To_G5'
+      position: {x: 20, y: -14.1}
+      targetScene: Demo_G5
+    marks:
+    - kind: 3
+      path: '[Props]/Save_U1'
+      position: {x: 15, y: -18}
+      label: SAVE
