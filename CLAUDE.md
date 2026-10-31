@@ -346,9 +346,28 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   MusicState.Combat pauses it and only the inventory's Interact plays it again. `ItemPickup.Spawn` makes a pickup in
   play. Placeholder clip: `tools/tape_placeholder.py`; `ItemAssets.TestTape`; TRAVEL A has `Tape_Travel`. Tutorial: 25
   steps (tape). `AudioLogTests` (4), bot `play TravelTest_A Main_Menu tape 300`.
-  NEXT (all in isolation before the demo level): in-world screens (a CRT clip with sound), the outfit change, the
-  floor shield, a seam sweep (the gas pixel test is flaky). FOR LATER (Bruno): replace the temp audio, music, SFX and
-  graphics with the real ones; refine the character models and the texture placement.
+  FOR LATER (Bruno): replace the temp audio, music, SFX and graphics with the real ones; refine the character models
+  and the texture placement.
+- 2026-10-31, day, his answers: save machines stay on the map, the tape music stays at 8 %, a tape key yes; "all of it,
+  then check the animation errors" (PC free all day). Built and committed, not pushed:
+  - The tape key T (`GameAction.Tape`), not in a fight. IN-WORLD SCREENS (`devlog-notes/2026-10-31_screens_tape_key.md`):
+    `Interaction/InWorldScreen.cs` (one video for many faces, 3D sound on Voice, stops with the world, subtitles within
+    12 m, ducks the music, pauses a tape; no clip = a greybox card), `InteractKind.Act` (no question),
+    `StepKind.Screen`. SCREEN TEST room (`ScreenTestSetup`), placeholder clip `tools/screen_placeholder.sh` (ffmpeg +
+    flite). The gym CRT faces faced into their boxes since 10-22: fixed in `BuildTherapyGym`.
+  - THE OUTFIT CHANGE (`devlog-notes/2026-10-31_outfit_change.md`): `OutfitLocker`, `OutfitChange` (keeps the damage, the
+    grabbables over the limit fall at her feet), `LucyModel.Wear` (`OutfitProfile.modelClass`, also on a load or a door),
+    the HUD outfit name, `StepKind.Outfit` (the Crown grab). OUTFIT TEST room. `RoomMusic` has its own file (it loaded
+    as a missing script); `RoomKit.Music`. Map: TEST FLOOR 3.
+  - THE FLOOR SHIELD (`devlog-notes/2026-10-31_floor_shield.md`): mk_orzabal + the defend key held = a full circle tears
+    a slab out of the floor (`Combat/FloorShield.cs`, 80 HP, 30 MK), a held prop (throw, slam), bullets stop on it, a
+    scar stays. Tutorial: 26 steps (floor_shield). Bot "shield" (AI TEST).
+  - SEAM SWEEP 3 and THE ANIMATION CHECK (`devlog-notes/2026-10-31_seams_and_animation.md`): nine seams fixed with tests
+    that failed first (`RoomSeamTests`: RETRY at the door, a cutscene or a death in a door fade, the short at a door, a
+    tape after a load, the death fall); knees and elbows are locked hinges (`HumanoidRagdoll.Hinge`; enemy prefabs
+    built again); the gun hangs on the back in the care (`EnemyGun.Sling`); the pistol grip sits in the fist. The
+    harness flags a missing exec method. Bots "cpr", "holds".
+  OPEN for Bruno: in those notes. NEXT: his review; then the demo rooms (the player build, rank 16, at their start).
 
 ## Rules
 
