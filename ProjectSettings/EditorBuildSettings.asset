@@ -12,69 +12,6 @@ EditorBuildSettings:
     path: Assets/_Game/Scenes/TrainingRoom.unity
     guid: 7ea10558d54fcbf168e1f261856fe570
   - enabled: 1
-    path: Assets/_Game/Scenes/Tutorial.unity
-    guid: 03b1e66e174a0a6839b7878b1b3be2e9
-  - enabled: 1
-    path: Assets/_Game/Scenes/LookTest2.unity
-    guid: f16ac6bfa3cc9ac95b2e04c2c3b5ebe3
-  - enabled: 1
-    path: Assets/_Game/Scenes/LookTest.unity
-    guid: 4dcf584bbe1429f5dab2bfc9490e5591
-  - enabled: 1
-    path: Assets/_Game/Scenes/Demo/Demo_W8.unity
-    guid: a02d38306866074ee827422f8edca845
-  - enabled: 1
-    path: Assets/_Game/Scenes/Demo/Demo_W9.unity
-    guid: 4211164a5a478f939b9e2d84062ec7ba
-  - enabled: 1
-    path: Assets/_Game/Scenes/Demo/Demo_W10.unity
-    guid: 221967617c498c4d79086fc8bb6d182a
-  - enabled: 1
-    path: Assets/_Game/Scenes/Demo/Demo_W1.unity
-    guid: 56b527060b02787fbb33b43edd4d50ae
-  - enabled: 1
-    path: Assets/_Game/Scenes/Demo/Demo_G1.unity
-    guid: 814efc5eb5100afd8ad6bce656e159cf
-  - enabled: 1
-    path: Assets/_Game/Scenes/Demo/Demo_G4.unity
-    guid: 4c35e101e50d88d6d9582a4ea4e09f53
-  - enabled: 1
-    path: Assets/_Game/Scenes/Demo/Demo_G5.unity
-    guid: 771c92cadd4a788f8a242b3718f69e03
-  - enabled: 1
-    path: Assets/_Game/Scenes/Demo/Demo_G6.unity
-    guid: b0af699eab86b20fa867ad465ee2dfd5
-  - enabled: 1
-    path: Assets/_Game/Scenes/Demo/Demo_G7.unity
-    guid: 9b7f54a4c1808b8a7af3f0a6efa13b4f
-  - enabled: 1
-    path: Assets/_Game/Scenes/Demo/Demo_G8.unity
-    guid: dd6d50da2b98153ada46bba83e4488d0
-  - enabled: 1
-    path: Assets/_Game/Scenes/CivilianTest.unity
-    guid: 39e5237926e458bf5b4f6758a4ca93fb
-  - enabled: 1
-    path: Assets/_Game/Scenes/CoverTest.unity
-    guid: 3fa152185068e6e1a823baac2be1aea7
-  - enabled: 1
-    path: Assets/_Game/Scenes/AiTest.unity
-    guid: 7ffbe3fa105c30dd8a0cb827f4c21639
-  - enabled: 1
-    path: Assets/_Game/Scenes/LookTestExterior.unity
-    guid: 9a5b3d7fbaa62b233bf4d064c638a43d
-  - enabled: 1
-    path: Assets/_Game/Scenes/TravelTest_A.unity
-    guid: 70e6e9f06bd919961b2eacb2e10da3b1
-  - enabled: 1
-    path: Assets/_Game/Scenes/TravelTest_B.unity
-    guid: 7f76706c193f11f40a73f3bf8f20a056
-  - enabled: 1
-    path: Assets/_Game/Scenes/Demo/Demo_W5.unity
-    guid: cd3554e839b1a55c791f0deb8111b0bc
-  - enabled: 1
-    path: Assets/_Game/Scenes/Demo/Demo_W4.unity
-    guid: be2047203d0aa1546a717ad4473e8723
-  - enabled: 1
     path: Assets/_Game/Scenes/Demo/Demo_W3.unity
     guid: a3ecaddf229949d1b866268dac129002
   - enabled: 1
@@ -93,11 +30,11 @@ EditorBuildSettings:
     path: Assets/_Game/Scenes/Demo/Demo_G3.unity
     guid: 58374bc7f68037c2097eced3e97c5e3b
   - enabled: 1
+    path: Assets/_Game/Scenes/Demo/Demo_G4.unity
+    guid: 4c35e101e50d88d6d9582a4ea4e09f53
+  - enabled: 1
     path: Assets/_Game/Scenes/Demo/Demo_W11.unity
     guid: a0035e01c63d77b8f86e3c44f787e45c
-  - enabled: 1
-    path: Assets/_Game/Scenes/ScreenTest.unity
-    guid: 933ce46c4b18eb3649895c0c25b5da6b
   - enabled: 1
     path: Assets/_Game/Scenes/WardTest.unity
     guid: c24e1a7568d033673a9bc0a590e2a90e
@@ -117,8 +54,71 @@ EditorBuildSettings:
     path: Assets/_Game/Scenes/Demo/Demo_W6.unity
     guid: 31a9448431c0a077c95cdb3be95f9f54
   - enabled: 1
+    path: Assets/_Game/Scenes/Demo/Demo_W5.unity
+    guid: cd3554e839b1a55c791f0deb8111b0bc
+  - enabled: 1
+    path: Assets/_Game/Scenes/Demo/Demo_W4.unity
+    guid: be2047203d0aa1546a717ad4473e8723
+  - enabled: 1
+    path: Assets/_Game/Scenes/TravelTest_B.unity
+    guid: 7f76706c193f11f40a73f3bf8f20a056
+  - enabled: 1
+    path: Assets/_Game/Scenes/TravelTest_A.unity
+    guid: 70e6e9f06bd919961b2eacb2e10da3b1
+  - enabled: 1
+    path: Assets/_Game/Scenes/LookTestExterior.unity
+    guid: 9a5b3d7fbaa62b233bf4d064c638a43d
+  - enabled: 1
+    path: Assets/_Game/Scenes/LookTest2.unity
+    guid: f16ac6bfa3cc9ac95b2e04c2c3b5ebe3
+  - enabled: 1
+    path: Assets/_Game/Scenes/LookTest.unity
+    guid: 4dcf584bbe1429f5dab2bfc9490e5591
+  - enabled: 1
+    path: Assets/_Game/Scenes/Demo/Demo_W8.unity
+    guid: a02d38306866074ee827422f8edca845
+  - enabled: 1
+    path: Assets/_Game/Scenes/Demo/Demo_W9.unity
+    guid: 4211164a5a478f939b9e2d84062ec7ba
+  - enabled: 1
+    path: Assets/_Game/Scenes/Demo/Demo_W10.unity
+    guid: 221967617c498c4d79086fc8bb6d182a
+  - enabled: 1
+    path: Assets/_Game/Scenes/Demo/Demo_W1.unity
+    guid: 56b527060b02787fbb33b43edd4d50ae
+  - enabled: 1
     path: Assets/_Game/Scenes/OutfitTest.unity
     guid: 8fba0e771f4fb65cd8e81f6e109ff91e
+  - enabled: 1
+    path: Assets/_Game/Scenes/ScreenTest.unity
+    guid: 933ce46c4b18eb3649895c0c25b5da6b
+  - enabled: 1
+    path: Assets/_Game/Scenes/Demo/Demo_G1.unity
+    guid: 814efc5eb5100afd8ad6bce656e159cf
+  - enabled: 1
+    path: Assets/_Game/Scenes/Demo/Demo_G6.unity
+    guid: b0af699eab86b20fa867ad465ee2dfd5
+  - enabled: 1
+    path: Assets/_Game/Scenes/Demo/Demo_G7.unity
+    guid: 9b7f54a4c1808b8a7af3f0a6efa13b4f
+  - enabled: 1
+    path: Assets/_Game/Scenes/Demo/Demo_G8.unity
+    guid: dd6d50da2b98153ada46bba83e4488d0
+  - enabled: 1
+    path: Assets/_Game/Scenes/CivilianTest.unity
+    guid: 39e5237926e458bf5b4f6758a4ca93fb
+  - enabled: 1
+    path: Assets/_Game/Scenes/CoverTest.unity
+    guid: 3fa152185068e6e1a823baac2be1aea7
+  - enabled: 1
+    path: Assets/_Game/Scenes/AiTest.unity
+    guid: 7ffbe3fa105c30dd8a0cb827f4c21639
+  - enabled: 1
+    path: Assets/_Game/Scenes/Tutorial.unity
+    guid: 03b1e66e174a0a6839b7878b1b3be2e9
+  - enabled: 1
+    path: Assets/_Game/Scenes/Demo/Demo_G5.unity
+    guid: 771c92cadd4a788f8a242b3718f69e03
   - enabled: 1
     path: Assets/_Game/Scenes/Demo/Demo_U1.unity
     guid: 806d317fd8f24bce79f89b6674d89996

@@ -66,7 +66,7 @@ namespace GlorifiedBody.Tests.PlayMode
                 FixedCameraDirector director = UnityEngine.Object.FindFirstObjectByType<FixedCameraDirector>();
                 CameraCoverage.Report report = CameraCoverage.Check(director, CameraCoverage.GameRoomNear, false);
                 Debug.Log($"[DemoTests] {scene}: {report.Uncovered.Count} of {report.Total} floor points out of frame");
-                if (report.Share > 0.04f) failures.Add($"{scene}: {report}");
+                if (report.Uncovered.Count > 0) failures.Add($"{scene}: {report}"); // no blind spot (Bruno, 2026-10-31)
                 entries[scene] = new HashSet<string>(UnityEngine.Object.FindObjectsByType<RoomEntry>(FindObjectsSortMode.None).Select(e => e.name));
                 foreach (RoomExit exit in UnityEngine.Object.FindObjectsByType<RoomExit>(FindObjectsSortMode.None))
                     exits.Add((scene, exit.targetScene, exit.targetEntry));

@@ -9,8 +9,8 @@ namespace GlorifiedBody.UI
     /// <summary>
     /// Main menu screen. Shown when the MainMenu scene loads.
     /// Creates its own Canvas and UI elements at runtime.
-    /// The first, default-selected button starts the game (GameManager.LoadGameplay, the training room in
-    /// build order step 1). The DIFFICULTY button opens the difficulty screen (DifficultyMenuUI, the same as in
+    /// The first, default-selected button starts the game: the demo from W1 (Bruno, 2026-10-31: "start goes to the
+    /// demo"). TRAINING ROOM, under TUTORIAL, loads the training room for the players (GameManager.LoadGameplay). The DIFFICULTY button opens the difficulty screen (DifficultyMenuUI, the same as in
     /// the pause menu; Bruno, 2026-10-26). Notifies GameManager that the main menu is ready.
     /// </summary>
     public class MainMenuUI : MonoBehaviour
@@ -34,7 +34,7 @@ namespace GlorifiedBody.UI
         [SerializeField] private string wardTestScene = "WardTest";     // a patient, a scan on a person, feeding (2026-10-30)
         [SerializeField] private string screenTestScene = "ScreenTest"; // the in-world screens (2026-10-31)
         [SerializeField] private string outfitTestScene = "OutfitTest"; // the outfit change (2026-10-31)
-        [SerializeField] private string demoScene = "Demo_W1";          // the demo, in greybox (2026-10-31)
+        [SerializeField] private string demoScene = "Demo_W1";          // START: the demo, in greybox (2026-10-31)
         [SerializeField] private string subtitleLabel = "WORK IN PROGRESS";
 
         private Canvas canvas;
@@ -185,11 +185,11 @@ namespace GlorifiedBody.UI
         private void OnWardTestClicked() => GameManager.Instance?.LoadLevel(wardTestScene);
         private void OnScreenTestClicked() => GameManager.Instance?.LoadLevel(screenTestScene);
         private void OnOutfitTestClicked() => GameManager.Instance?.LoadLevel(outfitTestScene);
-        private void OnDemoClicked() => GameManager.Instance?.LoadLevel(demoScene);
+        private void OnTrainingClicked() => GameManager.Instance?.LoadGameplay();
 
         private void OnStartClicked()
         {
-            GameManager.Instance?.LoadGameplay();
+            GameManager.Instance?.LoadLevel(demoScene);
         }
 
         private void OnModifiersClicked()
@@ -344,8 +344,6 @@ namespace GlorifiedBody.UI
             startBtn = CreateButton(column.transform, startLabel, 760, OnStartClicked, 84, 34,
                 new Color(0.62f, 0.1f, 0.12f, 0.95f), new Color(0.85f, 0.2f, 0.22f, 1f), new Color(0.96f, 0.93f, 0.9f));
             nav.Add(startBtn);
-            // The demo in greybox (2026-10-31): from W1 to the end card. START stays the training room for now.
-            nav.Add(CreateButton(column.transform, "DEMO (GREYBOX)", 420, OnDemoClicked, 48));
             // The saves (Bruno, 2026-10-25): CONTINUE takes the newest file, LOAD GAME lists the slots.
             continueBtn = CreateButton(column.transform, "CONTINUE", 420, OnContinueClicked, 48);
             continueBtn.interactable = GlorifiedBody.Saving.SaveSystem.Newest() >= 0;
@@ -355,6 +353,8 @@ namespace GlorifiedBody.UI
             CreateSpacer(column.transform, 10f);
             tutorialBtn = CreateButton(column.transform, "TUTORIAL", 420, OnTutorialClicked, 48);
             nav.Add(tutorialBtn);
+            // The training room is for the players too (Bruno, 2026-10-31).
+            nav.Add(CreateButton(column.transform, "TRAINING ROOM", 420, OnTrainingClicked, 48));
             howToBtn = CreateButton(column.transform, "HOW TO PLAY", 420, OnHowToPlayClicked, 48);
             modifiersBtn = CreateButton(column.transform, "DIFFICULTY", 420, OnModifiersClicked, 48);
             modifiersLabel = modifiersBtn.GetComponentInChildren<Text>();

@@ -11,7 +11,7 @@ namespace GlorifiedBody.Editor
 {
     /// <summary>
     /// The player build (2026-10-31, the design sweep's rank 16: "a build script, a dev flag for the debug keys and the
-    /// test-room buttons"). A release build has the menu, the training room, the tutorial and the demo rooms (Demo_*),
+    /// test-room buttons"). A release build has the menu, the training room, the tutorial and the demo rooms (Demo_*; START loads W1),
     /// no test or look room, and no debug keys (GameBuild.Dev). A dev build has every scene of the build settings and is
     /// a development build. Linux or Windows. The output goes to builds/&lt;kind&gt;_&lt;target&gt;/ (git- and MEGA-ignored).
     /// Batch: tools/unity.sh exec GlorifiedBody.Editor.PlayerBuild.Release -gbTarget linux|windows

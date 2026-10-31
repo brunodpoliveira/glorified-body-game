@@ -213,8 +213,8 @@ namespace GlorifiedBody.Editor.Demo
         /// <summary>
         /// A camera for each cell of the room (cells of 9 m or less) and a zone on the cell. Each cell tries camera poses (its
         /// corners and edge middles, and 2 m past an inner edge; two aims; three lenses) and keeps the pose that sees the most
-        /// of its floor by the coverage rule (CameraCoverage.Sees). A cell that still misses more than 3 % splits in two
-        /// along its long side, twice at most. The camera coverage test checks every floor point (DemoTests).
+        /// of its floor by the coverage rule (CameraCoverage.Sees). A cell that misses any point splits in two along its
+        /// long side, four times at most (Bruno, 2026-10-31: "I prefer no hiding/blind spots"). The camera coverage test checks every floor point (DemoTests).
         /// </summary>
         private void CamerasOnCells()
         {
@@ -233,7 +233,7 @@ namespace GlorifiedBody.Editor.Demo
             {
                 (Rect cell, int splits) = cells.Dequeue();
                 (Vector3 cam, Vector3 look, float fov, float missed) = BestPose(cell);
-                if (missed > 0.03f && splits < 2 && Mathf.Max(cell.width, cell.height) > 3f)
+                if (missed > 0f && splits < 4 && Mathf.Max(cell.width, cell.height) > 1.5f)
                 {
                     bool alongX = cell.width >= cell.height;
                     Rect a = alongX ? new Rect(cell.x, cell.y, cell.width * 0.5f, cell.height) : new Rect(cell.x, cell.y, cell.width, cell.height * 0.5f);

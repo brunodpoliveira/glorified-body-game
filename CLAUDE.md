@@ -387,11 +387,14 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   build or `-gbDev`) gates the debug keys and the TEST ROOMS column. The triage marks a run that did not end DIRTY.
   THE DEMO: 22 rooms in plan metres (`Scenes/Demo/Demo_<id>.unity`, `Editor/Demo/`: `DemoRoom` the kit, `DemoWard`
   W1 to W12, `DemoPublic` G1 to G9 and U1, `DemoContent` the logs and the writers' cutscene lines as subtitles), the
-  map floors "THE WARD" and "THE PUBLIC FLOOR", a DEMO (GREYBOX) button. Each camera cell searches its pose by the
-  coverage rule (`CameraCoverage.Sees`) and splits when it misses over 3 %. A room change: run its BuildAll, then
-  `MapAtlasSetup.BuildAtlas`. Proof: `DemoTests` (4), bot `play Demo_W1 Main_Menu demo 900` (one shot a camera).
-  `FlagSwitch` (a switch that raises a flag), `ScriptedSequence.runOnStart`, `StepKind.EndDemo`.
-  OPEN for Bruno: in the note (G5 has 12 cameras, START, the stair card).
+  map floors "THE WARD" and "THE PUBLIC FLOOR". START loads the demo (W1); TRAINING ROOM (under TUTORIAL) is for the
+  players too, in the release. NO BLIND SPOTS (Bruno): each camera cell searches its pose by the coverage rule
+  (`CameraCoverage.Sees`) and splits while it misses any point; `DemoTests` fails on one point out of frame (G5 has
+  16 cameras, U1 13). A room change: run its BuildAll, then `MapAtlasSetup.BuildAtlas`. Proof: `DemoTests` (4), bot
+  `play Demo_W1 Main_Menu demo 900` (one shot a camera). `FlagSwitch` (a switch that raises a flag),
+  `ScriptedSequence.runOnStart`, `StepKind.EndDemo`.
+  TBD (Bruno): a second way past the W11 stair card, a bit out of the way, that lets her go on without the ward
+  sister's death. He reports on the cameras after his playthrough.
 
 ## Rules
 

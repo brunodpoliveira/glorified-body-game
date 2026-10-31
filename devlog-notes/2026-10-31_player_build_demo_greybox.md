@@ -122,3 +122,24 @@ seemed to float. The walls are at 0.22 now.
 - Smoke test: the player started in batch mode on the null graphics device and ran 40 s with no error and no
   exception in its log. This PC has no virtual display, so a test with pictures needs Bruno: start
   `builds/release_linux/TheGlorifiedBody.x86_64`, check the menu has no TEST ROOMS column, press DEMO (GREYBOX).
+
+## 6. His answers
+
+```text
+1: once I do a playthrough I'll let you know, but I prefer no hiding/blind spots
+2: start goes to the demo
+3: that is one possible solution, but TBD an alternative and a bit out of way solution that'll allow Lucy to progress without her death
+Training room is for the players too
+```
+
+- NO BLIND SPOTS: a camera cell that misses any floor point splits in two, four times at most. `DemoTests` now
+  fails on one point out of frame (it allowed 4 %). All 22 rooms: 0 points out. The cost is in the camera count:
+  G5 has 16 cameras, U1 has 13, G6 has 5. Small cells give near-overhead views (`u1_11`, `u1_12`). Bruno judges
+  them in his playthrough.
+- START loads the demo (W1). TRAINING ROOM is a button under TUTORIAL, in the release too. The DEMO (GREYBOX)
+  button is gone. Test: `PlayerBuildFlagTests.Start_LoadsTheDemo_TrainingRoom_LoadsTheTrainingRoom`.
+- The stair card: TBD. Killing the ward sister stays one way. A second way, a bit out of the way, must let Lucy go
+  on without her death. Not built yet.
+- Proof: `DemoTests` and `PlayerBuildFlagTests` 7 of 7 (run `20261031-151629-test-playmode-1005431`),
+  `PlayerBuildTests` 2 of 2, the demo bot 87 of 87 (run `20261031-151750-play-1005895`, 65 shots, the shot folder
+  has the new set).
