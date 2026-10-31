@@ -170,6 +170,16 @@ namespace GlorifiedBody.Tests.PlayMode
             yield return new WaitForSeconds(2f);
             Assert.GreaterOrEqual(care.Compressions - pumps, 3, "the chest compressions go on (110 a minute)");
             Assert.IsFalse(medic.Gun.HoldsSlot, "no aim during the care");
+            // Bruno, 2026-10-24: the gun floated in the air during the CPR. It hangs on his back now.
+            EnemyGun gun = medic.GetComponent<EnemyGun>();
+            Animator body = medic.GetComponent<Animator>();
+            Transform chest = body.GetBoneTransform(HumanBodyBones.UpperChest) ?? body.GetBoneTransform(HumanBodyBones.Chest);
+            Transform rightHand = body.GetBoneTransform(HumanBodyBones.RightHand);
+            Vector3 gunCentre = gun.Model.GetComponentInChildren<Renderer>().bounds.center;
+            Vector3 torsoForward = Vector3.ProjectOnPlane(chest.position - body.GetBoneTransform(HumanBodyBones.Hips).position, Vector3.up).sqrMagnitude > 0.01f ? medic.transform.forward : medic.transform.forward;
+            Debug.Log($"[EnemyMoraleTests] the gun in the CPR: {Vector3.Distance(gunCentre, rightHand.position):0.00} m from his hand, {Vector3.Dot(gunCentre - chest.position, torsoForward):0.00} m before his chest");
+            Assert.Greater(Vector3.Distance(gun.Model.position, rightHand.position), 0.25f, "the gun is not in his hand during the CPR");
+            Assert.Less(Vector3.Dot(gunCentre - chest.position, torsoForward), 0f, "it hangs on his back");
 
             // She comes back into view: he drops the body and fights.
             lucy.GetComponent<TankController>().Teleport(home, 0f);

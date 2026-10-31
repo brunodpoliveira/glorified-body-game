@@ -245,6 +245,8 @@ namespace GlorifiedBody.Enemy
             if (gun == null) return;
             if (flashLight != null && flashLight.enabled && Time.time >= lightOffAt) flashLight.enabled = false;
             if (hand == null) return;
+            // The care (CPR, the drag): the gun hangs on him, out of his hands (Bruno, 2026-10-24: it floated in the CPR).
+            if (brain != null && brain.Current == SoldierBrain.Phase.Care && !(health != null && health.IsDead) && Sling()) return;
 
             Vector3 aim;
             Vector3 flatForward = transform.forward;
@@ -301,6 +303,34 @@ namespace GlorifiedBody.Enemy
         /// The vendor model's barrel is not its own forward: the muzzle's forward is the barrel (Invector shoots
         /// along it). Turn the gun so the muzzle looks along the aim.
         /// </summary>
+        /// <summary>
+        /// The gun out of the hands: a long gun across his back, the muzzle up over the left shoulder; a pistol at the
+        /// right hip, the muzzle down. In the frame of his torso, so it leans with him. False without the bones.
+        /// </summary>
+        private bool Sling()
+        {
+            if (animator == null || !animator.isHuman) return false;
+            Transform chest = animator.GetBoneTransform(HumanBodyBones.UpperChest) ?? animator.GetBoneTransform(HumanBodyBones.Chest);
+            Transform hips = animator.GetBoneTransform(HumanBodyBones.Hips);
+            if (chest == null || hips == null) return false;
+            Vector3 up = (chest.position - hips.position).normalized;
+            Vector3 forward = Vector3.ProjectOnPlane(transform.forward, up).normalized;
+            if (forward.sqrMagnitude < 0.01f) forward = transform.forward;
+            Vector3 right = Vector3.Cross(up, forward);
+            if (upperBodyId == 1)
+            {
+                Point(-up + forward * 0.15f);
+                gun.position = hips.position + right * 0.2f - forward * 0.02f;
+            }
+            else
+            {
+                Vector3 along = (up * 0.8f - right * 0.6f).normalized;
+                Point(along);
+                gun.position = chest.position - forward * 0.2f - along * 0.25f;
+            }
+            return true;
+        }
+
         private void Point(Vector3 aim)
         {
             Quaternion muzzleLocal = muzzle != null ? Quaternion.Inverse(gun.rotation) * muzzle.rotation : Quaternion.identity;

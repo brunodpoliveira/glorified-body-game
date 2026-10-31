@@ -19,6 +19,8 @@ RE_CS_ERROR = re.compile(r"error CS\d{4}")
 RE_CS_WARN = re.compile(r"warning CS\d{4}")
 RE_EXCEPTION = re.compile(r"^([A-Za-z_][\w.]*Exception)(: .*)?$")
 RE_ASSERT = re.compile(r"Assertion failed")
+# A batch call to a method that does not exist: Unity logs it and quits with 0 (2026-10-31: a wrong class name looked CLEAN).
+RE_EXEC_MISSING = re.compile(r"executeMethod (class|method) .* could not be found")
 RE_MISSING_SCRIPT = re.compile(r"referenced script.*is missing|Missing Prefab|missing script", re.I)
 RE_STACK = re.compile(r"^\s*(at |[\w.<>`]+[:.][\w<>`]+ ?\(.*\)( \(at .*\))?$|\(Filename:)|^Parameter name:|^Your script should")
 RE_LOGERROR_FRAME = re.compile(r"UnityEngine\.Debug:LogError|UnityEngine\.Debug:LogException|UnityEngine\.Logger:LogError")
@@ -73,6 +75,8 @@ def parse_log(path, noise, out):
             out["counts"]["compile_warnings"] += 1
         elif RE_EXCEPTION.match(line.strip()):
             out["exceptions"].append({"msg": line.strip()[:300], "at": first_project_frame(stack), "src": src})
+        elif RE_EXEC_MISSING.search(line):
+            out["errors"].append({"msg": line.strip()[:300], "at": "", "src": src})
         elif RE_ASSERT.search(line):
             out["asserts"].append({"msg": line.strip()[:300], "at": first_project_frame(stack), "src": src})
         elif RE_MISSING_SCRIPT.search(line):
