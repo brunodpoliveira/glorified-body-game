@@ -366,10 +366,27 @@ namespace GlorifiedBody.Enemy
             gun.position += pocket - gun.TransformPoint(stockLocal);
             Vector3 gunRight = Vector3.Cross(Vector3.up, aim).normalized;
             Vector3 gunUp = Vector3.Cross(aim, gunRight);
-            Reach(rightUpper, rightLower, hand, rightKnuckle, gun.position - aim * gripForward, -Vector3.up + right * 0.5f - flatForward * 0.2f, aim * 0.8f - gunUp * 0.5f);
+            // Bruno, 2026-10-25: "the right arm is too high up", the left arm loose. The wrists go behind and under their
+            // grips, so the palms close on them (the wrist on the grip put the fist ahead of it and lifted the forearm), and
+            // the right elbow hangs closer to the body. PROPOSED (2026-10-31, from the bot's shots and RightGap/LeftGap).
+            Vector3 rightTarget = gun.position - aim * WristBehind - gunUp * WristUnder;
+            Reach(rightUpper, rightLower, hand, rightKnuckle, rightTarget, -Vector3.up + right * 0.25f - flatForward * 0.1f, aim * 0.8f - gunUp * 0.5f);
+            RightGap = Vector3.Distance(hand.position, rightTarget);
+            RightElbowLift = rightLower.position.y - rightUpper.position.y;
             if (leftGrip != null)
-                Reach(leftUpper, leftLower, leftHand, leftKnuckle, leftGrip.position, -Vector3.up - right * 0.4f, aim * 0.7f + gunRight * 0.5f + gunUp * 0.2f);
+            {
+                Vector3 leftTarget = leftGrip.position - aim * WristBehind - gunUp * WristUnder;
+                Reach(leftUpper, leftLower, leftHand, leftKnuckle, leftTarget, -Vector3.up - right * 0.15f, aim * 0.7f + gunRight * 0.5f + gunUp * 0.2f);
+                LeftGap = Vector3.Distance(leftHand.position, leftTarget);
+            }
         }
+
+        private const float WristBehind = 0.06f, WristUnder = 0.04f; // metres: the wrist from the grip, so the palm holds it
+        /// <summary>How far each wrist stays from its target after the reach (0: on it; more: the arm is too short). The bot logs it.</summary>
+        public float RightGap { get; private set; }
+        public float LeftGap { get; private set; }
+        /// <summary>The right elbow over the shoulder joint, in metres (above 0: the arm is up). The bot logs it.</summary>
+        public float RightElbowLift { get; private set; }
 
         private void OnAimStarted()
         {

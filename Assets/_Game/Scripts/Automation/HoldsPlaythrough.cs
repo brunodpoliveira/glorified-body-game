@@ -113,6 +113,15 @@ namespace GlorifiedBody.Automation
                     done.Add(gun);
                     Vector3 side = gun.transform.right;
                     yield return Shot($"{gun.name}_hands", hand.position + side * 0.7f + gun.transform.forward * 0.15f + Vector3.up * 0.1f, hand.position);
+                    Vector3 chest = gun.transform.position + Vector3.up * 1.3f;
+                    if (gun.name != "Guard_B") Record($"{gun.name}_long_gun_hold", gun.RightGap < 0.03f && gun.LeftGap < 0.05f && gun.RightElbowLift < 0f, $"right gap {gun.RightGap:0.000} left gap {gun.LeftGap:0.000} elbow {gun.RightElbowLift:0.00} m");
+                    // The others hide for the two body shots (two soldiers overlapped).
+                    var hidden = new List<Renderer>();
+                    foreach (Enemy.EnemyGun other in FindObjectsByType<Enemy.EnemyGun>(FindObjectsSortMode.None))
+                        if (other != gun) foreach (Renderer r in other.GetComponentsInChildren<Renderer>()) if (r.enabled) { r.enabled = false; hidden.Add(r); }
+                    yield return Shot($"{gun.name}_side", chest + side * 2.1f + Vector3.up * 0.1f, chest);
+                    yield return Shot($"{gun.name}_front", chest + gun.transform.forward * 2.2f + side * 0.9f + Vector3.up * 0.2f, chest);
+                    foreach (Renderer r in hidden) if (r != null) r.enabled = true;
                     seen++;
                     if (gun.Model != null && gun.name.Contains("Guard"))
                         Record($"{gun.name}_pistol_grip_in_the_palm", Vector3.Distance(gun.Model.position, gun.Palm) < 0.03f, $"grip to palm {Vector3.Distance(gun.Model.position, gun.Palm):0.000} m");
