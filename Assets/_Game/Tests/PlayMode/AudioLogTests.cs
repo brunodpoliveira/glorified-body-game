@@ -226,12 +226,14 @@ namespace GlorifiedBody.Tests.PlayMode
             ItemDefinition tape = GiveTape();
             Tapes.Play(tape);
             yield return new WaitForSeconds(1f);
-            yield return Press(InputManager.GameAction.Map); // the map stops the world
-            Assert.IsTrue(GameManager.Instance.IsMap);
+            GameManager.Instance.OpenInventory(); // the inventory stops the world (the map does not, since 2026-11-02)
+            yield return null;
+            Assert.IsTrue(GameManager.Instance.IsInventory);
             float at = Tapes.Position;
             yield return new WaitForSecondsRealtime(0.6f);
             Assert.AreEqual(at, Tapes.Position, 0.01f, "the tape stops with the world");
-            yield return Press(InputManager.GameAction.Map);
+            GameManager.Instance.CloseInventory();
+            yield return null;
             int arrivals = SaveSystem.Arrivals;
             Assert.IsTrue(GameObject.Find("Exit_ToB").GetComponent<RoomExit>().Use());
             yield return WaitUntil(() => SaveSystem.Arrivals > arrivals, 10f);

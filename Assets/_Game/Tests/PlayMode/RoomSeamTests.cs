@@ -173,7 +173,7 @@ namespace GlorifiedBody.Tests.PlayMode
             yield return Press(InputManager.GameAction.Interact);
             Assert.AreEqual(Interactor.State.Free, lucy.GetComponent<Interactor>().Current, "a dead body takes nothing");
             yield return Press(InputManager.GameAction.Map);
-            Assert.IsFalse(Gm.IsMap, "no map in the fall");
+            Assert.IsFalse(GlorifiedBody.Map.MapScreen.Instance.IsShowing, "no map in the fall");
         }
 
         // ── Helpers ───────────────────────────────────────────────────

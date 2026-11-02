@@ -125,8 +125,9 @@ namespace GlorifiedBody.Tests.PlayMode
             InWorldScreen wall = Screen(Wall);
             Assert.IsTrue(wall.Play());
             yield return new WaitForSeconds(1.2f);
-            yield return Press(InputManager.GameAction.Map);
-            Assert.IsTrue(GameManager.Instance.IsMap, "the map stops the world");
+            GameManager.Instance.OpenInventory();
+            yield return null;
+            Assert.IsTrue(GameManager.Instance.IsInventory, "the inventory stops the world");
             yield return new WaitForSecondsRealtime(0.3f);
             long frame = wall.Frame;
             float at = wall.Time;
@@ -134,7 +135,8 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.AreEqual(frame, wall.Frame, "the clip holds while the world stops");
             Assert.AreEqual(at, wall.Time, 0.05f);
             Assert.IsTrue(wall.IsPlaying, "it is still on");
-            yield return Press(InputManager.GameAction.Map);
+            GameManager.Instance.CloseInventory();
+            yield return null;
             yield return new WaitForSeconds(0.8f);
             Assert.Greater(wall.Frame, frame, "and goes on after");
         }

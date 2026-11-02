@@ -319,7 +319,7 @@ namespace GlorifiedBody.Automation
                     yield return BotClock.Wait(0.3f);
                     break;
                 case "map":
-                    c.Pad.Tap(InputManager.GameAction.Map); // the room stops
+                    c.Pad.Tap(InputManager.GameAction.Map); // the corner map, the room goes on
                     yield return BotClock.Wait(0.5f);
                     c.Moment?.Invoke("map");
                     c.Pad.Tap(InputManager.GameAction.Map); // closed

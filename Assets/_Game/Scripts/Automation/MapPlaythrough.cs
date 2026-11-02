@@ -134,10 +134,22 @@ namespace GlorifiedBody.Automation
             yield return Cross("Exit_WardWest", "TravelTest_B");
             yield return OpenMap();
             int floors = map.Floors.Count;
-            pad.Tap(InputManager.GameAction.TurnRight);
+            pad.Tap(InputManager.GameAction.MapNextFloor); // the arrow keys: A and D turn her (2026-11-02)
             yield return BotClock.Wait(0.3f);
             yield return OverlayShot(map, "floor_2");
             Record("two_floors", floors == 2 && map.ShownFloor == "test_2" && map.ShownRooms.Contains("WardTest"), $"floors={floors} shown={map.ShownFloor}");
+            pad.Tap(InputManager.GameAction.MapPreviousFloor);
+            yield return BotClock.Wait(0.3f);
+
+            // 6. The corner map in real time (2026-11-02): she walks with it on, and her dot follows her.
+            Vector2? before = map.HerPlace;
+            pad.SetHeld(InputManager.GameAction.Forward, true);
+            yield return BotClock.Wait(1.2f);
+            pad.SetHeld(InputManager.GameAction.Forward, false);
+            yield return BotClock.Wait(0.2f);
+            yield return OverlayShot(map, "walking");
+            Record("real_time", GameManager.Instance.IsPlaying && Time.timeScale > 0.5f && before.HasValue && map.HerPlace.HasValue
+                && Vector2.Distance(before.Value, map.HerPlace.Value) > 0.5f, $"moved={(before.HasValue && map.HerPlace.HasValue ? Vector2.Distance(before.Value, map.HerPlace.Value) : -1f):0.00} m");
             yield return CloseMap();
             Finish();
         }

@@ -416,6 +416,12 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   signing. THE CARD BY A WORD: the Interact key on a living, unarmed civilian who carries an item asks for it
   (`Interaction/CarrierTalk.cs`, added by `EnemySpawn`), the second way past the W11 stair card. FOR THE SECOND PASS
   (not built): backtracking and more rooms and puzzles, his list in `DEMO_PLAN.md` §12.
+- 2026-11-02, THE CORNER MAP (`devlog-notes/2026-11-02_corner_map.md`, Bruno: "opening the map does not pause the game,
+  and shows the player's location"; his pick: a corner map, she moves): M shows `MapScreen` in the top left corner and
+  the game goes on (no `GameState.Map` any more); her dot moves every frame; the key places draw again on a change
+  (`MapScreen.Draws`); it stays on through a door and hides under the pause, the inventory, a page, a cutscene and the
+  death; the arrow keys change the floor (`GameAction.MapPreviousFloor`, `MapNextFloor`). Tests that need a stopped
+  world use the inventory.
 
 ## Rules
 

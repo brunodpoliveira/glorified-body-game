@@ -171,7 +171,7 @@ namespace GlorifiedBody.Audio
             GameManager gm = GameManager.Instance;
             if (gm == null) return voice;
             bool stopped = gm.CurrentState == GameManager.GameState.Paused || gm.CurrentState == GameManager.GameState.Inventory
-                           || gm.CurrentState == GameManager.GameState.Reading || gm.CurrentState == GameManager.GameState.Map;
+                           || gm.CurrentState == GameManager.GameState.Reading;
             return Mathf.Min(voice, stopped ? DuckLevel : 1f);
         }
 

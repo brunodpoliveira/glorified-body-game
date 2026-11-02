@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using GlorifiedBody.Audio;
 using GlorifiedBody.DebugTools;
 using GlorifiedBody.Interaction;
 using GlorifiedBody.Systems;
@@ -10,12 +11,16 @@ using GlorifiedBody.Systems;
 namespace GlorifiedBody.Map
 {
     /// <summary>
-    /// The map screen (Bruno, 2026-10-31). The Map key (M) opens it over the stopped room, on her floor: the rooms she
-    /// knows (MapKnowledge) as their floor pieces, her room lighter, the doors out, the key places (locked doors red,
-    /// open doors green, items, logs, save machines), and her place with the way she faces. A and D change the floor
-    /// (only floors with a known room). The Map key or Back closes it. North is up. One object for the whole game
-    /// ("[Map]", made at the start like the sound system), so no room needs a rebuild. Placeholder look: plain
-    /// panels, the legacy font.
+    /// The map (Bruno, 2026-10-31; a corner map since 2026-11-02: "it also should work in real-time i.e opening the map
+    /// does not pause the game, and shows the player's location"). The Map key (M) shows it in the top left corner of
+    /// the screen, and the game goes on: she walks, turns and fights with it on. It shows her floor: the rooms she knows
+    /// (MapKnowledge) as their floor pieces, her room lighter, the doors out, the key places (locked doors red, open
+    /// doors green, items, logs, save machines), and her place with the way she faces, moved every frame. The key
+    /// places draw again when they change (a door opens, she takes an item). It stays on through a door and goes to her
+    /// new floor. The arrow keys change the floor (MapPreviousFloor, MapNextFloor: A and D turn her). The Map key hides
+    /// it. Under the pause, the inventory, a page, a cutscene and the death it hides, and it comes back after. North is
+    /// up. One object for the whole game ("[Map]", made at the start like the sound system), so no room needs a
+    /// rebuild. Placeholder look: plain panels, the legacy font.
     /// </summary>
     public sealed class MapScreen : MonoBehaviour
     {
@@ -23,8 +28,8 @@ namespace GlorifiedBody.Map
         public static event Action OnOpened;
         public static event Action OnClosed;
 
-        public static readonly Color RoomColour = new Color(0.22f, 0.3f, 0.36f, 1f);
-        public static readonly Color HereColour = new Color(0.38f, 0.52f, 0.6f, 1f);
+        public static readonly Color RoomColour = new Color(0.22f, 0.3f, 0.36f, 0.95f);
+        public static readonly Color HereColour = new Color(0.38f, 0.52f, 0.6f, 0.95f);
         public static readonly Color LockedColour = new Color(0.95f, 0.22f, 0.2f);
         public static readonly Color OpenColour = new Color(0.3f, 0.9f, 0.4f);
         public static readonly Color ItemColour = new Color(1f, 0.82f, 0.2f);
@@ -32,9 +37,15 @@ namespace GlorifiedBody.Map
         public static readonly Color SaveColour = new Color(0.35f, 0.65f, 1f);
         public static readonly Color HerColour = new Color(1f, 0.35f, 0.75f);
 
-        private const float PlanWidth = 1560f;
-        private const float PlanHeight = 720f;
-        private const float MaxPixelsPerMetre = 40f;
+        // The corner (1920 x 1080 reference): the top left, under the debug line of a dev build.
+        public const float CornerWidth = 600f;
+        public const float CornerHeight = 390f;
+        private static readonly Vector2 CornerPlace = new Vector2(24f, -48f);
+        private const float PlanWidth = 568f;
+        private const float PlanHeight = 280f;
+        private const float MaxPixelsPerMetre = 24f;
+        private const float RefreshSeconds = 0.25f; // how often the key places are checked for a change
+        private const float TitleMinPixels = 70f;  // a room narrower than this on screen shows no title
 
         /// <summary>A key place as the screen shows it (tests).</summary>
         public struct ShownMark
@@ -49,18 +60,30 @@ namespace GlorifiedBody.Map
         private Canvas canvas;
         private GameObject root;
         private RectTransform plan;
+        private RectTransform herDot, herNose;
         private Text titleText;
         private Text keysText;
         private Text noteText;
         private readonly List<GameObject> drawn = new List<GameObject>();
-        private int openFrame = -1;
+        private int toggleFrame = -1;
+        private bool wanted;
+        private bool newRoom;
+        private float nextRefresh;
+        private int signature;
+        private float scale = 1f;
+        private Vector2 centre;
         private int floorIndex;
         private readonly List<string> floors = new List<string>();
         private readonly List<string> shownRooms = new List<string>();
         private readonly List<ShownMark> shownMarks = new List<ShownMark>();
 
         public Canvas Canvas => canvas;
-        public bool IsOpen => root != null && root.activeSelf;
+        /// <summary>The player turned the map on (it can be hidden for a moment under the pause or a page).</summary>
+        public bool IsOpen => wanted;
+        /// <summary>On screen now.</summary>
+        public bool IsShowing => root != null && root.activeSelf;
+        /// <summary>The corner of the screen the map takes (reference pixels, from the top left).</summary>
+        public Rect Corner => new Rect(CornerPlace.x, -CornerPlace.y, CornerWidth, CornerHeight);
         /// <summary>The floor on screen (its id), empty when no room is known.</summary>
         public string ShownFloor => floorIndex >= 0 && floorIndex < floors.Count ? floors[floorIndex] : "";
         /// <summary>The floors she can page through (each with a known room).</summary>
@@ -73,6 +96,8 @@ namespace GlorifiedBody.Map
         public Vector2? HerPixel { get; private set; }
         public float HerHeading { get; private set; }
         public string NoteShown => noteText != null ? noteText.text : "";
+        /// <summary>How many times the rooms and the key places were drawn (tests: a change draws again).</summary>
+        public int Draws { get; private set; }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void Boot()
@@ -98,84 +123,103 @@ namespace GlorifiedBody.Map
 
         private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {
-            if (mode == LoadSceneMode.Single) Hide();
+            if (mode != LoadSceneMode.Single) return;
+            // Through a door it stays on and goes to her new floor; to the menu it goes off.
+            if (scene.name == "Main_Menu") Close();
+            else newRoom = true;
         }
 
         private void Update()
         {
             GameManager gm = GameManager.Instance;
             if (gm == null) return;
-            if (!IsOpen)
+            GameObject lucy = gm.IsPlaying ? GameObject.FindGameObjectWithTag("Player") : null;
+            if (gm.IsPlaying && Time.frameCount != toggleFrame && GameInput.GetActionDown(InputManager.GameAction.Map, KeyCode.M))
             {
-                if (gm.IsPlaying && Time.frameCount != openFrame && GameInput.GetActionDown(InputManager.GameAction.Map, KeyCode.M)) Open();
-                return;
+                if (wanted) Close();
+                else Open();
             }
-            if (!gm.IsMap)
+            if (wanted && lucy != null && Dead(lucy)) Close(); // the death fall (seam sweep, 2026-10-31)
+            bool show = wanted && lucy != null;
+            if (root.activeSelf != show) root.SetActive(show);
+            if (!show) return;
+
+            if (newRoom)
             {
-                // Escape closed it through the GameManager.
-                Hide();
-                return;
+                newRoom = false;
+                OnHerFloor(lucy);
+                Draw(lucy);
             }
-            if (Time.frameCount == openFrame) return;
-            if (GameInput.GetActionDown(InputManager.GameAction.Map, KeyCode.M) || GameInput.GetActionDown(InputManager.GameAction.Back, KeyCode.S))
+            if (GameInput.GetActionDown(InputManager.GameAction.MapPreviousFloor, KeyCode.LeftArrow)) Page(-1);
+            if (GameInput.GetActionDown(InputManager.GameAction.MapNextFloor, KeyCode.RightArrow)) Page(1);
+            if (Time.unscaledTime >= nextRefresh)
             {
-                Close();
-                return;
+                nextRefresh = Time.unscaledTime + RefreshSeconds;
+                CollectFloors(lucy);
+                if (Signature(lucy) != signature) Draw(lucy);
             }
-            if (GameInput.GetActionDown(InputManager.GameAction.TurnLeft, KeyCode.A)) Page(-1);
-            if (GameInput.GetActionDown(InputManager.GameAction.TurnRight, KeyCode.D)) Page(1);
+            PlaceHer(lucy);
         }
 
-        /// <summary>Opens the map on her floor. False when the game is not playing or she is busy (a question, a scan).</summary>
+        private static bool Dead(GameObject lucy)
+        {
+            GlorifiedBody.Core.Health health = lucy.GetComponentInChildren<GlorifiedBody.Core.Health>();
+            return health != null && health.IsDead;
+        }
+
+        /// <summary>Shows the map on her floor. False when the game is not playing or she is dead.</summary>
         public bool Open()
         {
             GameManager gm = GameManager.Instance;
             GameObject lucy = GameObject.FindGameObjectWithTag("Player");
-            if (gm == null || !gm.IsPlaying || lucy == null) return false;
-            GlorifiedBody.Core.Health health = lucy.GetComponentInChildren<GlorifiedBody.Core.Health>();
-            if (health != null && health.IsDead) return false; // the death fall (seam sweep, 2026-10-31)
-            Interactor interactor = lucy.GetComponent<Interactor>();
-            PsychicScanner scanner = lucy.GetComponent<PsychicScanner>();
-            if ((interactor != null && interactor.Current != Interactor.State.Free) || (scanner != null && scanner.IsViewing)) return false;
-            if (!gm.OpenMap()) return false;
-            openFrame = Time.frameCount;
+            if (gm == null || !gm.IsPlaying || lucy == null || Dead(lucy)) return false;
+            if (wanted) return true;
+            wanted = true;
+            toggleFrame = Time.frameCount;
             root.SetActive(true);
-            CollectFloors(lucy);
-            MapAtlas atlas = MapAtlas.Instance;
-            MapRoom here = atlas != null ? atlas.Room(SceneManager.GetActiveScene().name) : null;
-            floorIndex = here != null ? floors.IndexOf(here.floor) : 0;
-            if (floorIndex < 0) floorIndex = 0;
+            OnHerFloor(lucy);
             Draw(lucy);
+            PlaceHer(lucy);
+            Sfx.Ui(Sfx.UiOpen, 0.4f);
             RunTelemetry.Event("map_open", $"{ShownFloor}: {shownRooms.Count} rooms, {shownMarks.Count} marks");
             OnOpened?.Invoke();
             return true;
         }
 
+        /// <summary>Hides the map.</summary>
         public void Close()
         {
-            GameManager.Instance?.CloseMap();
-            Hide();
+            if (!wanted) return;
+            wanted = false;
+            toggleFrame = Time.frameCount;
+            root.SetActive(false);
+            Sfx.Ui(Sfx.UiClose, 0.4f);
+            OnClosed?.Invoke();
         }
 
         /// <summary>The next or the previous floor she knows a room of.</summary>
         public void Page(int step)
         {
-            if (!IsOpen || floors.Count < 2) return;
+            if (!wanted || floors.Count < 2) return;
             floorIndex = ((floorIndex + step) % floors.Count + floors.Count) % floors.Count;
-            Draw(GameObject.FindGameObjectWithTag("Player"));
+            GameObject lucy = GameObject.FindGameObjectWithTag("Player");
+            Draw(lucy);
+            PlaceHer(lucy);
             RunTelemetry.Event("map_floor", ShownFloor);
         }
 
-        private void Hide()
+        private void OnHerFloor(GameObject lucy)
         {
-            if (!IsOpen) return;
-            openFrame = Time.frameCount;
-            root.SetActive(false);
-            OnClosed?.Invoke();
+            CollectFloors(lucy);
+            MapAtlas atlas = MapAtlas.Instance;
+            MapRoom here = atlas != null ? atlas.Room(SceneManager.GetActiveScene().name) : null;
+            floorIndex = here != null ? floors.IndexOf(here.floor) : 0;
+            if (floorIndex < 0) floorIndex = 0;
         }
 
         private void CollectFloors(GameObject lucy)
         {
+            string shown = ShownFloor;
             floors.Clear();
             MapAtlas atlas = MapAtlas.Instance;
             if (atlas == null) return;
@@ -189,6 +233,31 @@ namespace GlorifiedBody.Map
                     break;
                 }
             }
+            if (!string.IsNullOrEmpty(shown) && floors.Contains(shown)) floorIndex = floors.IndexOf(shown); // a new floor never moves the page
+        }
+
+        /// <summary>A number for what the map shows now: the room, the floor, the known rooms, each key place there and open.</summary>
+        private int Signature(GameObject lucy)
+        {
+            unchecked
+            {
+                int hash = 17;
+                hash = hash * 31 + SceneManager.GetActiveScene().name.GetHashCode();
+                hash = hash * 31 + ShownFloor.GetHashCode();
+                hash = hash * 31 + floors.Count;
+                MapAtlas atlas = MapAtlas.Instance;
+                if (atlas == null) return hash;
+                ItemInventory items = lucy != null ? lucy.GetComponent<ItemInventory>() : null;
+                hash = hash * 31 + (MapKnowledge.HasPlan(items, ShownFloor) ? 1 : 0);
+                foreach (MapRoom room in atlas.RoomsOn(ShownFloor))
+                {
+                    if (!MapKnowledge.Knows(room, items)) continue;
+                    hash = hash * 31 + room.scene.GetHashCode();
+                    foreach (MapMark mark in room.marks)
+                        hash = hash * 31 + (MapKnowledge.IsThere(room, mark) ? 1 : 0) * 2 + (MapKnowledge.IsOpen(room, mark) ? 1 : 0);
+                }
+                return hash;
+            }
         }
 
         // ── Draw ──────────────────────────────────────────────────────
@@ -199,11 +268,11 @@ namespace GlorifiedBody.Map
             drawn.Clear();
             shownRooms.Clear();
             shownMarks.Clear();
-            HerPlace = null;
-            HerPixel = null;
+            Draws++;
+            signature = Signature(lucy);
             MapAtlas atlas = MapAtlas.Instance;
             string here = SceneManager.GetActiveScene().name;
-            string keys = $"{Key(InputManager.GameAction.Map)} / {Key(InputManager.GameAction.Back)}  close";
+            string keys = $"{Key(InputManager.GameAction.Map)} hide";
             if (atlas == null || floors.Count == 0)
             {
                 titleText.text = "MAP";
@@ -217,7 +286,7 @@ namespace GlorifiedBody.Map
             bool hasPlan = MapKnowledge.HasPlan(items, floorId);
             titleText.text = "MAP  -  " + (floor != null ? floor.title : floorId);
             noteText.text = hasPlan ? "FLOOR PLAN: the whole floor shows." : atlas.Room(here) == null ? "There is no map of this room." : "";
-            keysText.text = (floors.Count > 1 ? $"{Key(InputManager.GameAction.TurnLeft)} {Key(InputManager.GameAction.TurnRight)}  floor {floorIndex + 1} / {floors.Count}      " : "") + keys;
+            keysText.text = (floors.Count > 1 ? $"{Key(InputManager.GameAction.MapPreviousFloor)} {Key(InputManager.GameAction.MapNextFloor)}  floor {floorIndex + 1} / {floors.Count}    " : "") + keys;
 
             // The scale fits the whole floor, known or not: a new room never moves the others.
             bool any = false;
@@ -231,9 +300,8 @@ namespace GlorifiedBody.Map
                 all.xMax = Mathf.Max(all.xMax, b.xMax);
                 all.yMax = Mathf.Max(all.yMax, b.yMax);
             }
-            float scale = Mathf.Min(MaxPixelsPerMetre, PlanWidth / Mathf.Max(1f, all.width), PlanHeight / Mathf.Max(1f, all.height));
-            Vector2 centre = all.center;
-            Vector2 Pixel(Vector2 metres) => (metres - centre) * scale;
+            scale = Mathf.Min(MaxPixelsPerMetre, PlanWidth / Mathf.Max(1f, all.width), PlanHeight / Mathf.Max(1f, all.height));
+            centre = all.center;
 
             foreach (MapRoom room in atlas.RoomsOn(floorId))
             {
@@ -246,13 +314,16 @@ namespace GlorifiedBody.Map
                     GameObject cell = Box("Room_" + room.scene, Pixel(onPlan.center), onPlan.size * scale, isHere ? HereColour : RoomColour);
                     cell.AddComponent<Outline>().effectColor = new Color(0.85f, 0.9f, 0.92f, 0.8f);
                 }
-                Text title = Label(plan.transform, "Title_" + room.scene, 18, FontStyle.Bold, new Color(0.92f, 0.95f, 0.96f), TextAnchor.MiddleCenter, new Vector2(300f, 30f));
-                title.text = room.title;
-                title.rectTransform.anchoredPosition = Pixel(room.Bounds.center) + new Vector2(0f, room.Bounds.height * scale * 0.5f - 20f);
-                drawn.Add(title.gameObject);
+                if (room.Bounds.width * scale >= TitleMinPixels)
+                {
+                    Text title = Label(plan.transform, "Title_" + room.scene, 12, FontStyle.Bold, new Color(0.92f, 0.95f, 0.96f), TextAnchor.MiddleCenter, new Vector2(room.Bounds.width * scale, 18f));
+                    title.text = room.title;
+                    title.rectTransform.anchoredPosition = Pixel(room.Bounds.center) + new Vector2(0f, room.Bounds.height * scale * 0.5f - 10f);
+                    drawn.Add(title.gameObject);
+                }
                 foreach (MapExit exit in room.exits)
                 {
-                    GameObject door = Box("Exit_" + exit.path, Pixel(room.OnPlan(exit.position)), new Vector2(10f, 10f), new Color(0.95f, 0.95f, 0.95f, 0.9f));
+                    GameObject door = Box("Exit_" + exit.path, Pixel(room.OnPlan(exit.position)), new Vector2(6f, 6f), new Color(0.95f, 0.95f, 0.95f, 0.9f));
                     door.transform.localRotation = Quaternion.Euler(0f, 0f, 45f);
                 }
                 foreach (MapMark mark in room.marks)
@@ -260,26 +331,34 @@ namespace GlorifiedBody.Map
                     if (!MapKnowledge.IsThere(room, mark)) continue;
                     bool open = MapKnowledge.IsOpen(room, mark);
                     Vector2 at = Pixel(room.OnPlan(mark.position));
-                    Box("Mark_" + mark.path, at, new Vector2(18f, 18f), ColourOf(mark.kind, open)).AddComponent<Outline>().effectColor = new Color(0f, 0f, 0f, 0.9f);
+                    Box("Mark_" + mark.path, at, new Vector2(10f, 10f), ColourOf(mark.kind, open)).AddComponent<Outline>().effectColor = new Color(0f, 0f, 0f, 0.9f);
                     shownMarks.Add(new ShownMark { Room = room.scene, Kind = mark.kind, Path = mark.path, Open = open, Pixel = at });
                 }
             }
+            herNose.SetAsLastSibling();
+            herDot.SetAsLastSibling();
+        }
 
-            // Her place: a dot and a nose the way she faces, on her room's floor only.
-            MapRoom hers = atlas.Room(here);
-            if (lucy != null && hers != null && hers.floor == floorId)
-            {
-                Vector3 p = lucy.transform.position;
-                HerPlace = hers.OnPlan(new Vector2(p.x, p.z));
-                HerPixel = Pixel(HerPlace.Value);
-                HerHeading = lucy.transform.eulerAngles.y;
-                GameObject nose = Box("Her_Nose", HerPixel.Value, new Vector2(6f, 30f), HerColour);
-                RectTransform rect = nose.GetComponent<RectTransform>();
-                rect.pivot = new Vector2(0.5f, 0f);
-                rect.anchoredPosition = HerPixel.Value;
-                rect.localRotation = Quaternion.Euler(0f, 0f, -HerHeading);
-                Box("Her", HerPixel.Value, new Vector2(20f, 20f), HerColour).AddComponent<Outline>().effectColor = new Color(0f, 0f, 0f, 0.9f);
-            }
+        private Vector2 Pixel(Vector2 metres) => (metres - centre) * scale;
+
+        /// <summary>Her place: a dot and a nose the way she faces, on her room's floor only. Every frame.</summary>
+        private void PlaceHer(GameObject lucy)
+        {
+            HerPlace = null;
+            HerPixel = null;
+            MapAtlas atlas = MapAtlas.Instance;
+            MapRoom hers = atlas != null ? atlas.Room(SceneManager.GetActiveScene().name) : null;
+            bool on = lucy != null && hers != null && hers.floor == ShownFloor && floors.Count > 0;
+            herDot.gameObject.SetActive(on);
+            herNose.gameObject.SetActive(on);
+            if (!on) return;
+            Vector3 p = lucy.transform.position;
+            HerPlace = hers.OnPlan(new Vector2(p.x, p.z));
+            HerPixel = Pixel(HerPlace.Value);
+            HerHeading = lucy.transform.eulerAngles.y;
+            herDot.anchoredPosition = HerPixel.Value;
+            herNose.anchoredPosition = HerPixel.Value;
+            herNose.localRotation = Quaternion.Euler(0f, 0f, -HerHeading);
         }
 
         public static Color ColourOf(MapMarkKind kind, bool open)
@@ -314,36 +393,48 @@ namespace GlorifiedBody.Map
             canvasObj.transform.SetParent(transform, false);
             canvas = canvasObj.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvas.sortingOrder = 80;
+            canvas.sortingOrder = 40; // over the HUD, under the menus
             var scaler = canvasObj.AddComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(1920f, 1080f);
 
-            root = Panel(canvasObj.transform, "Root", new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(1920f, 1080f), new Color(0.02f, 0.03f, 0.04f, 1f)); // opaque: the room behind does not show through
-            GameObject sheet = Panel(root.transform, "Sheet", new Vector2(0.5f, 0.5f), new Vector2(0f, 10f), new Vector2(PlanWidth + 120f, PlanHeight + 100f), new Color(0.07f, 0.09f, 0.11f, 1f));
-            sheet.AddComponent<Outline>().effectColor = new Color(0.85f, 0.88f, 0.9f, 0.9f);
+            // The corner: a dark sheet you can see the room through at its edges.
+            root = Panel(canvasObj.transform, "Root", new Vector2(0f, 1f), Vector2.zero, new Vector2(CornerWidth, CornerHeight), new Color(0.02f, 0.03f, 0.04f, 0.82f));
+            RectTransform rootRect = root.GetComponent<RectTransform>();
+            rootRect.pivot = new Vector2(0f, 1f);
+            rootRect.anchoredPosition = CornerPlace;
+            root.AddComponent<Outline>().effectColor = new Color(0.85f, 0.88f, 0.9f, 0.7f);
             var planObj = new GameObject("Plan", typeof(RectTransform));
-            planObj.transform.SetParent(sheet.transform, false);
+            planObj.transform.SetParent(root.transform, false);
             plan = planObj.GetComponent<RectTransform>();
             plan.anchorMin = plan.anchorMax = new Vector2(0.5f, 0.5f);
             plan.sizeDelta = new Vector2(PlanWidth, PlanHeight);
+            plan.anchoredPosition = new Vector2(0f, -4f);
 
-            titleText = Label(root.transform, "Title", 34, FontStyle.Bold, new Color(0.7f, 0.95f, 0.95f), TextAnchor.MiddleLeft, new Vector2(1600f, 50f));
-            titleText.rectTransform.anchoredPosition = new Vector2(0f, 485f);
-            noteText = Label(root.transform, "Note", 22, FontStyle.Normal, new Color(0.95f, 0.92f, 0.8f), TextAnchor.MiddleRight, new Vector2(1600f, 40f));
-            noteText.rectTransform.anchoredPosition = new Vector2(0f, 485f);
-            keysText = Label(root.transform, "Keys", 20, FontStyle.Bold, new Color(0.85f, 0.85f, 0.85f), TextAnchor.MiddleRight, new Vector2(1600f, 40f));
-            keysText.rectTransform.anchoredPosition = new Vector2(0f, -490f);
+            titleText = Label(root.transform, "Title", 18, FontStyle.Bold, new Color(0.7f, 0.95f, 0.95f), TextAnchor.MiddleLeft, new Vector2(CornerWidth - 24f, 26f));
+            titleText.rectTransform.anchoredPosition = new Vector2(0f, CornerHeight * 0.5f - 18f);
+            keysText = Label(root.transform, "Keys", 13, FontStyle.Bold, new Color(0.85f, 0.85f, 0.85f), TextAnchor.MiddleRight, new Vector2(CornerWidth - 24f, 26f));
+            keysText.rectTransform.anchoredPosition = new Vector2(0f, CornerHeight * 0.5f - 18f);
+            noteText = Label(root.transform, "Note", 12, FontStyle.Normal, new Color(0.95f, 0.92f, 0.8f), TextAnchor.MiddleLeft, new Vector2(CornerWidth - 24f, 18f));
+            noteText.rectTransform.anchoredPosition = new Vector2(0f, CornerHeight * 0.5f - 38f);
 
-            // The legend at the bottom left.
-            var legend = new (string, Color)[] { ("YOU", HerColour), ("LOCKED", LockedColour), ("OPEN", OpenColour), ("ITEM", ItemColour), ("LOG", LogColour), ("SAVE", SaveColour), ("DOOR OUT", new Color(0.95f, 0.95f, 0.95f)) };
+            // Her place: kept from draw to draw, moved every frame.
+            herNose = Panel(plan.transform, "Her_Nose", new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(4f, 16f), HerColour).GetComponent<RectTransform>();
+            herNose.pivot = new Vector2(0.5f, 0f);
+            herDot = Panel(plan.transform, "Her", new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(12f, 12f), HerColour).GetComponent<RectTransform>();
+            herDot.gameObject.AddComponent<Outline>().effectColor = new Color(0f, 0f, 0f, 0.9f);
+
+            // The legend along the bottom.
+            var legend = new (string, Color)[] { ("YOU", HerColour), ("LOCKED", LockedColour), ("OPEN", OpenColour), ("ITEM", ItemColour), ("LOG", LogColour), ("SAVE", SaveColour), ("DOOR", new Color(0.95f, 0.95f, 0.95f)) };
+            float step = (CornerWidth - 24f) / legend.Length;
             for (int i = 0; i < legend.Length; i++)
             {
-                float x = -800f + i * 140f;
-                Panel(root.transform, "Legend_" + legend[i].Item1, new Vector2(0.5f, 0.5f), new Vector2(x, -490f), new Vector2(18f, 18f), legend[i].Item2);
-                Text word = Label(root.transform, "LegendWord_" + legend[i].Item1, 18, FontStyle.Bold, new Color(0.85f, 0.85f, 0.85f), TextAnchor.MiddleLeft, new Vector2(110f, 30f));
+                float x = -CornerWidth * 0.5f + 12f + i * step + 6f;
+                float y = -CornerHeight * 0.5f + 16f;
+                Panel(root.transform, "Legend_" + legend[i].Item1, new Vector2(0.5f, 0.5f), new Vector2(x, y), new Vector2(10f, 10f), legend[i].Item2);
+                Text word = Label(root.transform, "LegendWord_" + legend[i].Item1, 12, FontStyle.Bold, new Color(0.85f, 0.85f, 0.85f), TextAnchor.MiddleLeft, new Vector2(step - 14f, 20f));
                 word.text = legend[i].Item1;
-                word.rectTransform.anchoredPosition = new Vector2(x + 72f, -490f);
+                word.rectTransform.anchoredPosition = new Vector2(x + 10f + (step - 14f) * 0.5f, y);
             }
             root.SetActive(false);
         }

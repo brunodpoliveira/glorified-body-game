@@ -35,9 +35,11 @@ namespace GlorifiedBody.Systems
             Defend, // RMB: the defensive use of the selected power (Bruno, 2026-10-20)
             Scan,     // the psychic scan, separate from Interact (Bruno, 2026-10-22)
             Inventory, // the inventory overlay, pauses the game (Bruno, 2026-10-22)
-            Map, // the map screen, pauses the game (Bruno, 2026-10-31)
+            Map, // shows or hides the corner map; the game goes on (Bruno, 2026-11-02)
             Tape, // plays or pauses the audio log without the inventory (Bruno, 2026-10-31)
-            Drop // the inventory: puts the selected thing on the floor (Bruno, 2026-10-31: "a chance to drop items")
+            Drop, // the inventory: puts the selected thing on the floor (Bruno, 2026-10-31: "a chance to drop items")
+            MapPreviousFloor, // the corner map: the floor before (Bruno, 2026-11-02: A and D turn her while it shows)
+            MapNextFloor
         }
 
         [Serializable]
@@ -64,7 +66,9 @@ namespace GlorifiedBody.Systems
                 GameAction.Interact => "Interact (take, read)",
                 GameAction.Scan => "Psychic Scan",
                 GameAction.Inventory => "Inventory",
-                GameAction.Map => "Map",
+                GameAction.Map => "Map (show / hide)",
+                GameAction.MapPreviousFloor => "Map: Previous Floor",
+                GameAction.MapNextFloor => "Map: Next Floor",
                 GameAction.Tape => "Play / Pause Tape",
                 GameAction.Drop => "Drop Item (inventory)",
                 GameAction.Defend => "Defend (tap: catch, hold: floor shield)",
@@ -98,6 +102,8 @@ namespace GlorifiedBody.Systems
             new KeyBinding { action = GameAction.Map, defaultKey = KeyCode.M },
             new KeyBinding { action = GameAction.Tape, defaultKey = KeyCode.T },
             new KeyBinding { action = GameAction.Drop, defaultKey = KeyCode.X },
+            new KeyBinding { action = GameAction.MapPreviousFloor, defaultKey = KeyCode.LeftArrow },
+            new KeyBinding { action = GameAction.MapNextFloor, defaultKey = KeyCode.RightArrow },
         };
 
         [Header("Default Bindings")]

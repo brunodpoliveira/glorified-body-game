@@ -19,7 +19,8 @@ namespace GlorifiedBody.Tests.PlayMode
     /// <summary>
     /// The map (Bruno, 2026-10-31: "the map will start hidden, and being revealed room-by-room unless the player picks up
     /// a floor plan item; key places (i.e locked door, items, logs) are to marked on the map as well"), in the travel
-    /// rooms (TEST FLOOR 1: TRAVEL A, TRAVEL B, KIT TEST), the ward and the lab (TEST FLOOR 2). Needs the atlas:
+    /// rooms (TEST FLOOR 1: TRAVEL A, TRAVEL B, KIT TEST), the ward and the lab (TEST FLOOR 2). Since 2026-11-02 a corner
+    /// map in real time (Bruno: "opening the map does not pause the game, and shows the player's location"). Needs the atlas:
     /// MapAtlasSetup.BuildAtlas. Batch: tools/unity.sh test playmode MapTests.
     /// </summary>
     public class MapTests
@@ -77,9 +78,10 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.IsNotNull(MapAtlas.Instance, "the atlas (MapAtlasSetup.BuildAtlas)");
             yield return Load(A);
             yield return Press(InputManager.GameAction.Map);
-            Assert.IsTrue(Screen.IsOpen, "the Map key opens the map");
-            Assert.IsTrue(GameManager.Instance.IsMap);
-            Assert.AreEqual(0f, Time.timeScale, "the room stops");
+            Assert.IsTrue(Screen.IsOpen, "the Map key shows the map");
+            Assert.IsTrue(Screen.IsShowing);
+            Assert.IsTrue(GameManager.Instance.IsPlaying, "the game goes on (Bruno, 2026-11-02)");
+            Assert.AreEqual(1f, Time.timeScale, "the room does not stop");
             Assert.AreEqual(Floor1, Screen.ShownFloor, "her floor");
             CollectionAssert.AreEquivalent(new[] { A }, Screen.ShownRooms.ToArray(), "only the room she is in");
             Assert.IsTrue(HasMark(MapMarkKind.Log, "Log_Travel"), "the log");
@@ -106,7 +108,44 @@ namespace GlorifiedBody.Tests.PlayMode
             Vector3 her = lucy.transform.position;
             Assert.Less(Vector2.Distance(new Vector2(her.x + 13.5f, her.z), Screen.HerPlace.Value), 0.01f, "her place in TRAVEL B (13.5 m east)");
             yield return Press(InputManager.GameAction.Back);
-            Assert.IsFalse(Screen.IsOpen, "Back closes it too");
+            Assert.IsTrue(Screen.IsOpen, "Back walks her back: the map stays");
+        }
+
+        [UnityTest]
+        public IEnumerator TheCornerMap_SheWalks_HerPlaceMoves_AndTheMapStaysThroughADoor()
+        {
+            yield return Load(A);
+            yield return Press(InputManager.GameAction.Map);
+            Assert.IsTrue(GameManager.Instance.AllowsAction(InputManager.GameAction.Forward), "her keys pass");
+            Vector2 before = Screen.HerPlace.Value;
+            Vector2 pixelBefore = Screen.HerPixel.Value;
+            Vector3 start = lucy.transform.position;
+            pad.SetHeld(InputManager.GameAction.Forward, true);
+            yield return new WaitForSeconds(1f);
+            pad.SetHeld(InputManager.GameAction.Forward, false);
+            yield return null;
+            Assert.Greater(Vector3.Distance(lucy.transform.position, start), 0.5f, "she walks with the map on");
+            Vector3 her = lucy.transform.position;
+            Assert.Less(Vector2.Distance(new Vector2(her.x, her.z), Screen.HerPlace.Value), 0.05f, "her place follows her, every frame");
+            Assert.Greater(Vector2.Distance(Screen.HerPlace.Value, before), 0.5f);
+            Assert.AreNotEqual(pixelBefore, Screen.HerPixel.Value, "her dot moves on screen");
+
+            // Hidden under the inventory (the world stops there), back after.
+            GameManager.Instance.OpenInventory();
+            yield return null;
+            Assert.IsFalse(Screen.IsShowing, "hidden under the inventory");
+            Assert.IsTrue(Screen.IsOpen, "still on");
+            GameManager.Instance.CloseInventory();
+            yield return null;
+            Assert.IsTrue(Screen.IsShowing, "back after");
+
+            // Through a door it stays on and shows the new room.
+            yield return Cross("Exit_ToB", B);
+            yield return null;
+            Assert.IsTrue(Screen.IsShowing, "on through the door");
+            CollectionAssert.AreEquivalent(new[] { A, B }, Screen.ShownRooms.ToArray(), "the new room shows at once");
+            her = lucy.transform.position;
+            Assert.Less(Vector2.Distance(new Vector2(her.x + 13.5f, her.z), Screen.HerPlace.Value), 0.05f, "her place in TRAVEL B");
         }
 
         [UnityTest]
@@ -158,16 +197,19 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.AreEqual(Floor2, Screen.ShownFloor);
             ShownMarkOf(MapMarkKind.LockedDoor, LabDoor, out MapScreen.ShownMark door);
             Assert.IsFalse(door.Open, "locked");
-            yield return Press(InputManager.GameAction.Map);
+            int draws = Screen.Draws;
+            yield return new WaitForSeconds(0.6f);
+            Assert.AreEqual(draws, Screen.Draws, "no change, no new draw");
             GameObject.Find(LabDoor).GetComponent<LockedDoor>().Open(instant: true);
-            yield return Press(InputManager.GameAction.Map);
+            yield return new WaitForSeconds(0.6f);
+            Assert.IsTrue(Screen.IsOpen, "the map stayed on");
             ShownMarkOf(MapMarkKind.LockedDoor, LabDoor, out door);
-            Assert.IsTrue(door.Open, "open");
+            Assert.IsTrue(door.Open, "open: green on the map at once, no need to show it again");
             Assert.AreEqual(MapScreen.OpenColour, MapScreen.ColourOf(MapMarkKind.LockedDoor, true));
         }
 
         [UnityTest]
-        public IEnumerator TwoFloors_AandDChangeTheFloor()
+        public IEnumerator TwoFloors_TheArrowKeysChangeTheFloor()
         {
             yield return Load(Ward);
             yield return Cross("Exit_WardWest", B);
@@ -176,11 +218,14 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.AreEqual(2, Screen.Floors.Count, "the ward's floor is known too");
             Assert.IsTrue(Screen.HerPlace.HasValue);
             yield return Press(InputManager.GameAction.TurnRight);
-            Assert.AreEqual(Floor2, Screen.ShownFloor, "D: the next floor");
+            Assert.AreEqual(Floor1, Screen.ShownFloor, "D turns her: the floor stays");
+            yield return Press(InputManager.GameAction.MapNextFloor);
+            Assert.AreEqual(Floor2, Screen.ShownFloor, "the right arrow: the next floor");
             CollectionAssert.AreEquivalent(new[] { Ward }, Screen.ShownRooms.ToArray(), "the ward, not the lab she never saw");
             Assert.IsFalse(Screen.HerPlace.HasValue, "she is not on that floor");
-            yield return Press(InputManager.GameAction.TurnLeft);
-            Assert.AreEqual(Floor1, Screen.ShownFloor, "A: back");
+            yield return Press(InputManager.GameAction.MapPreviousFloor);
+            Assert.AreEqual(Floor1, Screen.ShownFloor, "the left arrow: back");
+            Assert.IsTrue(Screen.HerPlace.HasValue, "her place again");
         }
 
         [UnityTest]

@@ -374,7 +374,7 @@ namespace GlorifiedBody.Tutorial
             // The map (Bruno, 2026-10-31: hidden at the start, a room shows when she enters it). PLACEHOLDER lines.
             steps.Add(new TutorialStep("map",
                 "Where are you? Look at your map.",
-                "{Map} opens the map: the room stops. It shows the rooms you know, and the doors, items and logs in them. {Map} closes it.",
+                "{Map} shows the map in the corner, and you can still move. It shows the rooms you know, and the doors, items and logs in them. {Map} hides it.",
                 () => mapClosed));
             // The audio log (Bruno, 2026-10-31): it plays while she walks, a fight pauses it. PLACEHOLDER lines.
             steps.Add(new TutorialStep("tape",
