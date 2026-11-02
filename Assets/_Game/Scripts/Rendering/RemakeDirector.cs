@@ -14,7 +14,7 @@ namespace GlorifiedBody.Rendering
     {
         Bake = 0,        // 1. lightmaps at 40 texels a metre, four bounces, the panel as an area light, directional
         Shadows = 1,     // 2. the key lights' shadow maps: the lamp at 4096, the panel at 2048 a face (off: A's 1024 / 512)
-        Probes = 2,      // 3. the bake lights the characters (probes), contact shadows (SSAO, the foot blobs)
+        Probes = 2,      // 3. contact shadows (SSAO at contact distance, the foot blobs); the figures keep their probes either way
         Surfaces = 3,    // 4. Lit materials with normal and smoothness maps, decals (off: A's Simple Lit, no decals)
         Volumetric = 4,  // 5. the light in the air and the dust
         Grade = 5,       // 6. tone map, colour grade, film grain, bloom, vignette
@@ -75,10 +75,22 @@ namespace GlorifiedBody.Rendering
         public string[] characterClasses = { "lucy_bare", "guard" };
         public Material[] characterMaterials = new Material[0];   // B: Lucy C3 4096, the guard 4096 (when no full mesh)
         public Material[] characterMaterialsA = new Material[0];  // A: Lucy C3 1024, the game's guard (1024)
-        public RemakeBodySwap[] bodySwaps = new RemakeBodySwap[0]; // B: the full-mesh bodies
+        public RemakeBodySwap[] bodySwaps = new RemakeBodySwap[0]; // B: the full-mesh bodies (cutscene tier only)
 
-        /// <summary>Profile A: every switch off, the game's characters and maps (the current look of the game).</summary>
-        public bool ProfileA { get; private set; }
+        [Header("B-game: the 2,500 game meshes at one texture size (Bruno, 2026-11-01)")]
+        public Material[] lucyTiers = new Material[0];  // Lucy C3 at 1024, 2048, 4096
+        public Material[] guardTiers = new Material[0]; // the guard (light kit) at 1024, 2048, 4096
+        public static readonly int[] TierSizes = { 1024, 2048, 4096 };
+
+        public enum Profile { A, BFull, BGame }
+
+        /// <summary>A: every switch off, the game's characters and maps (the look of the game before T26).
+        /// BFull: the T26 profile B (switches, the full-mesh guard). BGame: Bruno's pick of 2026-11-01 (design §28a): B
+        /// with no dither and with anti-aliasing, switch 3 (the most expensive one under the air) off, the air a room
+        /// choice, the 2,500 game meshes with the maps of one tier.</summary>
+        public Profile Current { get; private set; } = Profile.BFull;
+        public bool ProfileA => Current == Profile.A;
+        public int GameTier { get; private set; } = 2048;
 
         public static RemakeDirector Instance { get; private set; }
         public event Action OnChanged;
@@ -139,7 +151,7 @@ namespace GlorifiedBody.Rendering
         /// <summary>Profile B: 0 = all on, 1..10 = that switch off alone, 11 = all off (A's settings, B's characters).</summary>
         public void Cycle(int step)
         {
-            ProfileA = false;
+            Current = Profile.BFull;
             cycle = step;
             for (int i = 0; i < SwitchCount; i++) on[i] = step == 0 || (step <= SwitchCount ? i != step - 1 : false);
             Label = step == 0 ? "all on" : step <= SwitchCount ? $"switch {step} off ({(RemakeSwitch)(step - 1)})" : "all off";
@@ -150,15 +162,27 @@ namespace GlorifiedBody.Rendering
         public void SetProfileA(bool a)
         {
             if (!a) { Cycle(0); return; }
-            ProfileA = true;
+            Current = Profile.A;
             for (int i = 0; i < SwitchCount; i++) on[i] = false;
             Label = "PROFILE A (the current look)";
             ApplyAll();
         }
 
+        /// <summary>B-game: switch 3 off, switch 5 (the air) as the room wants, every other switch on, the given tier.</summary>
+        public void SetProfileGame(bool air, int tier)
+        {
+            Current = Profile.BGame;
+            GameTier = tier;
+            for (int i = 0; i < SwitchCount; i++) on[i] = true;
+            on[(int)RemakeSwitch.Probes] = false;
+            on[(int)RemakeSwitch.Volumetric] = air;
+            Label = $"B-game, air {(air ? "on" : "off")}, {tier} maps";
+            ApplyAll();
+        }
+
         public void SetAll(bool value)
         {
-            ProfileA = false;
+            Current = Profile.BFull;
             for (int i = 0; i < SwitchCount; i++) on[i] = value;
             Label = value ? "all on" : "all off";
             ApplyAll();
@@ -253,8 +277,8 @@ namespace GlorifiedBody.Rendering
 
         private void WearCharacterTextures()
         {
-            foreach (RemakeBodySwap swap in bodySwaps) if (swap != null) swap.Use(!ProfileA);
-            Material[] wanted = ProfileA ? characterMaterialsA : characterMaterials;
+            foreach (RemakeBodySwap swap in bodySwaps) if (swap != null) swap.Use(Current == Profile.BFull);
+            Material[] wanted = Current == Profile.A ? characterMaterialsA : Current == Profile.BFull ? characterMaterials : TierMaterials();
             characterRenderers.Clear();
             for (int i = 0; i < characterRoots.Length; i++)
             {
@@ -268,13 +292,20 @@ namespace GlorifiedBody.Rendering
                     if (material == null || IsBodyB(r)) continue;
                     Material current = r.sharedMaterial;
                     bool ours = current != null && (current.name.IndexOf(characterClasses[i], StringComparison.OrdinalIgnoreCase) >= 0
-                        || Array.IndexOf(characterMaterials, current) >= 0 || Array.IndexOf(characterMaterialsA, current) >= 0);
+                        || Array.IndexOf(characterMaterials, current) >= 0 || Array.IndexOf(characterMaterialsA, current) >= 0
+                        || Array.IndexOf(lucyTiers, current) >= 0 || Array.IndexOf(guardTiers, current) >= 0);
                     if (current != material && ours) r.sharedMaterial = material;
                 }
             }
-            // A lights its figures with the baked probes, as the game does; in B switch 3 off takes them away.
-            bool probes = ProfileA || IsOn(RemakeSwitch.Probes);
-            foreach (Renderer r in characterRenderers) r.lightProbeUsage = probes ? LightProbeUsage.BlendProbes : LightProbeUsage.Off;
+            // The figures take the baked probes in every profile, as the game does (switch 3 is the contact shadows only).
+            foreach (Renderer r in characterRenderers) r.lightProbeUsage = LightProbeUsage.BlendProbes;
+        }
+
+        private Material[] TierMaterials()
+        {
+            int i = Array.IndexOf(TierSizes, GameTier);
+            if (i < 0) i = 1;
+            return new[] { i < lucyTiers.Length ? lucyTiers[i] : null, i < guardTiers.Length ? guardTiers[i] : null };
         }
 
         private bool IsBodyB(Renderer r)
@@ -291,7 +322,7 @@ namespace GlorifiedBody.Rendering
         private void OnGUI()
         {
             if (!string.IsNullOrEmpty(GlorifiedBody.Automation.BotArgs.Bot)) return;
-            GUI.Label(new Rect(12f, 8f, 1200f, 24f), $"REMAKE LOOK ({(ProfileA ? "profile A" : "profile B")})  {Label}  switches {Describe()}  (F3 cycles)");
+            GUI.Label(new Rect(12f, 8f, 1200f, 24f), $"REMAKE LOOK ({Current})  {Label}  switches {Describe()}  (F3 cycles)");
         }
     }
 }

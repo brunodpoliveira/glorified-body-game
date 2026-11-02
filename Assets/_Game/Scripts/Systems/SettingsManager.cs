@@ -349,7 +349,7 @@ namespace GlorifiedBody.Systems
 
         private void ApplyAudioSettings()
         {
-            AudioListener.volume = masterVolume;
+            AudioListener.volume = Application.isBatchMode ? 0f : masterVolume; // batch runs (bots, tests) play silent
             OnAudioChanged?.Invoke();
         }
 

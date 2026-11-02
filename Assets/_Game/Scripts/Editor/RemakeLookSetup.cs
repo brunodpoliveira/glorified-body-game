@@ -27,6 +27,11 @@ namespace GlorifiedBody.Editor
     {
         public const string SceneName = "RemakeLook";
         public const string ScenePath = MenuLoopSetup.ScenesFolder + "/" + SceneName + ".unity";
+        // Bruno, 2026-11-01 (design §28a): "since it is a hospital most rooms will be brightly lit". The dark room stays as
+        // the abandoned-area variant; this one has the same room and materials under bright, even ceiling panels.
+        public const string BrightSceneName = "RemakeLookBright";
+        public const string BrightScenePath = MenuLoopSetup.ScenesFolder + "/" + BrightSceneName + ".unity";
+        private static bool bright;
         public const string Root = "Assets/_Game/Remake";
         public const string TexturesFolder = Root + "/Textures";
         public const string PropsFolder = Root + "/Props";
@@ -50,9 +55,15 @@ namespace GlorifiedBody.Editor
         // The long lens (switch 10): from the south-west corner, beside the locker, onto the bed, the lamp and the curtain.
         public static readonly Vector3 LongCamPos = new Vector3(2.55f, 1.55f, 2.75f), LongCamAt = new Vector3(6.3f, 1.05f, 6.4f);
 
-        [MenuItem("GlorifiedBody/T26 Remake Look/Build (profile B)")]
-        public static void Build()
+        [MenuItem("GlorifiedBody/T26 Remake Look/Build (the dark room)")]
+        public static void Build() => Build(false);
+
+        [MenuItem("GlorifiedBody/T26 Remake Look/Build (the bright room)")]
+        public static void BuildBright() => Build(true);
+
+        private static void Build(bool brightRoom)
         {
+            bright = brightRoom;
             foreach (string f in new[] { Root, TexturesFolder, PropsFolder, CharactersFolder, MaterialsFolder, SettingsFolder, BakeFolder }) Directory.CreateDirectory(f);
             AssetDatabase.Refresh();
             ImportTextures();
@@ -286,11 +297,16 @@ namespace GlorifiedBody.Editor
             Debug.Log("[RemakeLookSetup] grade written.");
         }
 
-        [MenuItem("GlorifiedBody/T26 Remake Look/Bake (low, then high)")]
-        public static void Bake()
+        [MenuItem("GlorifiedBody/T26 Remake Look/Bake the dark room (low, then high)")]
+        public static void Bake() => Bake(ScenePath);
+
+        [MenuItem("GlorifiedBody/T26 Remake Look/Bake the bright room (low, then high)")]
+        public static void BakeBright() => Bake(BrightScenePath);
+
+        private static void Bake(string path)
         {
-            if (!File.Exists(ScenePath)) { Debug.LogError("[RemakeLookSetup] build first."); return; }
-            Scene scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+            if (!File.Exists(path)) { Debug.LogError("[RemakeLookSetup] build first."); return; }
+            Scene scene = EditorSceneManager.OpenScene(path, OpenSceneMode.Single);
             var low = AssetDatabase.LoadAssetAtPath<LightingSettings>(BakeLowPath);
             var high = AssetDatabase.LoadAssetAtPath<LightingSettings>(BakeHighPath);
             GameObject area = GameObject.Find("[RemakeB]/Lights/Remake_PanelArea");
@@ -391,7 +407,7 @@ namespace GlorifiedBody.Editor
             var adjust = Add<ColorAdjustments>(profile);
             adjust.postExposure.Override(0.2f);
             adjust.contrast.Override(5f);
-            adjust.saturation.Override(-10f);
+            adjust.saturation.Override(0f); // -10 took the last of the gold out of Lucy's veins
             var split = Add<SplitToning>(profile);
             split.shadows.Override(new Color(0.49f, 0.52f, 0.53f));
             split.highlights.Override(new Color(0.55f, 0.52f, 0.47f));
@@ -708,10 +724,10 @@ namespace GlorifiedBody.Editor
             return m;
         }
 
-        private static Material CharacterMaterial(string classId, string texture)
+        private static Material CharacterMaterial(string classId, string texture, string tag = "4k")
         {
             var original = AssetDatabase.LoadAssetAtPath<Material>($"Assets/_Game/Characters/Materials/{classId}.mat");
-            string path = $"{MaterialsFolder}/RB_{classId}_4k.mat";
+            string path = $"{MaterialsFolder}/RB_{classId}_{tag}.mat";
             var m = AssetDatabase.LoadAssetAtPath<Material>(path);
             if (m == null)
             {
@@ -788,11 +804,12 @@ namespace GlorifiedBody.Editor
         private static void BuildScene(UniversalRenderPipelineAsset high, UniversalRenderPipelineAsset low, UniversalRenderPipelineAsset mid, UniversalRendererData remake, UniversalRendererData dither, VolumeProfile grade)
         {
             // A fresh copy of LookTest2 every build (LookTest2 is only read). Both profiles live in this scene.
-            AssetDatabase.DeleteAsset(ScenePath);
-            string lightingFolder = MenuLoopSetup.ScenesFolder + "/" + SceneName;
+            string scenePath = bright ? BrightScenePath : ScenePath;
+            AssetDatabase.DeleteAsset(scenePath);
+            string lightingFolder = MenuLoopSetup.ScenesFolder + "/" + (bright ? BrightSceneName : SceneName);
             if (AssetDatabase.IsValidFolder(lightingFolder)) AssetDatabase.DeleteAsset(lightingFolder);
-            if (!AssetDatabase.CopyAsset(LookTestSetup.Scene2Path, ScenePath)) { Debug.LogError("[RemakeLookSetup] cannot copy LookTest2."); return; }
-            Scene scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+            if (!AssetDatabase.CopyAsset(LookTestSetup.Scene2Path, scenePath)) { Debug.LogError("[RemakeLookSetup] cannot copy LookTest2."); return; }
+            Scene scene = EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);
             Lightmapping.lightingDataAsset = null;
             Lightmapping.SetLightingSettingsForScene(scene, AssetDatabase.LoadAssetAtPath<LightingSettings>(BakeHighPath));
             surfaceRenderers.Clear();
@@ -844,51 +861,17 @@ namespace GlorifiedBody.Editor
 
             BuildFurniture(w1, set);
 
-            // ── The light (switch 2 sets its shadow map): the one small ceiling light, a hard spot straight down. Live and
-            // hard, the bounce baked (Mixed).
-            Part(w1, "W1_Downlight_Ring", PrimitiveType.Cylinder, DownlightPos + new Vector3(0f, -0.015f, 0f), new Vector3(0.34f, 0.015f, 0.34f), set.Chrome, casts: false);
-            GameObject disc = Part(w1, "W1_Downlight_Disc", PrimitiveType.Cylinder, DownlightPos + new Vector3(0f, -0.032f, 0f), new Vector3(0.24f, 0.004f, 0.24f), set.Lamp, casts: false);
-            GameObject spotObj = MenuLoopSetup.EnsureChild(lights, "W1_Downlight");
-            spotObj.transform.SetPositionAndRotation(DownlightPos + new Vector3(0f, -0.06f, 0f), Quaternion.Euler(90f, 0f, 0f));
-            Light spot = MenuLoopSetup.EnsureComponent<Light>(spotObj);
-            spot.type = LightType.Spot;
-            // A neutral white (a ward light, the board): the warm white of the first frames turned the guard's grey-blue to brown-grey.
-            spot.color = new Color(0.97f, 0.98f, 1f);
-            spot.intensity = 14f;
-            spot.range = 7f;
-            // Wide (120 degrees): at 92 the cone stopped short of the cabinet, the fern and the drip stand on the north
-            // wall, and W1's props went black in every frame. The falloff with distance still leaves the walls black.
-            spot.spotAngle = 120f;
-            spot.innerSpotAngle = 60f;
-            spot.shadows = LightShadows.Hard;
-            spot.shadowStrength = 1f;
-            spot.shadowBias = 0.01f;
-            spot.shadowNormalBias = 0.2f;
-            spot.shadowNearPlane = 0.1f;
-            spot.lightmapBakeType = LightmapBakeType.Mixed;
-            ShadowTier(spot, UniversalAdditionalLightData.AdditionalLightsShadowResolutionTierHigh);
-            // A thin cone: at 1.0 the cone washed the black room out and hid the guard (first frames of the restart).
-            MenuLoopSetup.EnsureComponent<VolumetricLight>(spotObj).strength = 0.08f;
+            Renderer emitter;
+            List<Light> roomLights = bright ? BrightLights(w1, lights, set, out emitter) : DarkLight(w1, lights, set, out emitter);
+            Light spot = roomLights[0];
 
             // The lights outside the room drop to the low shadow tier: from inside the room they still count in the
             // atlas (their range reaches through the walls) and would halve the key light.
             foreach (Light l in Object.FindObjectsByType<Light>(FindObjectsInactive.Include, FindObjectsSortMode.None))
             {
-                if (l == spot || room.Contains(l.transform.position)) continue;
+                if (roomLights.Contains(l) || room.Contains(l.transform.position)) continue;
                 ShadowTier(l, UniversalAdditionalLightData.AdditionalLightsShadowResolutionTierLow);
             }
-
-            // Switch 1: the fixture's glow as a small disc area light, baked only (the high bake; off in the low one).
-            GameObject areaObj = MenuLoopSetup.EnsureChild(lights, "Remake_PanelArea");
-            areaObj.transform.SetPositionAndRotation(DownlightPos + new Vector3(0f, -0.04f, 0f), Quaternion.Euler(90f, 0f, 0f));
-            Light areaLight = MenuLoopSetup.EnsureComponent<Light>(areaObj);
-            areaLight.type = LightType.Disc;
-            areaLight.areaSize = new Vector2(0.12f, 0.12f);
-            areaLight.color = spot.color;
-            areaLight.intensity = 3f;
-            areaLight.range = 8f;
-            areaLight.lightmapBakeType = LightmapBakeType.Baked;
-            areaLight.shadows = LightShadows.Soft;
 
             // ── Decals (switch 4): what a clean ward shows after this night. The scorch where each strap burned through, on
             // the mattress and on the floor under the charred ends; a faint mop haze on the polished floor; trolley scuffs by
@@ -919,12 +902,12 @@ namespace GlorifiedBody.Editor
             group.probePositions = positions.ToArray();
 
             // ── The light in the air (switch 5): the volumetric pass reads the marked spot; the dust in its cone.
-            Dust(air, "Dust_Cone", DownlightPos + new Vector3(0f, -1.5f, 0f), new Vector3(2.4f, 2.8f, 2.4f), 320);
+            Dust(air, "Dust_Cone", bright ? new Vector3(4.8f, 1.6f, 5.5f) : DownlightPos + new Vector3(0f, -1.5f, 0f), bright ? new Vector3(4.4f, 2.8f, 5.4f) : new Vector3(2.4f, 2.8f, 2.4f), 320);
 
             // ── The live layers (switch 7): the light stutters now and then; the fan turns behind the round vent grille.
-            LightFlicker flicker = MenuLoopSetup.EnsureComponent<LightFlicker>(spotObj);
+            LightFlicker flicker = MenuLoopSetup.EnsureComponent<LightFlicker>(spot.gameObject);
             flicker.target = spot;
-            flicker.emitter = disc.GetComponent<Renderer>();
+            flicker.emitter = emitter;
             Spinner fan = VentFan(live, w1, set);
 
             // ── Reflections (switch 8): one baked, box-projected probe for the room (the polished floor, the chrome).
@@ -985,6 +968,8 @@ namespace GlorifiedBody.Editor
             director.characterMaterialsA = new[] { LucyC3Material("1k", Root + "/Resources"), AssetDatabase.LoadAssetAtPath<Material>("Assets/_Game/Characters/Materials/guard.mat") };
             director.characterMaterials = new[] { LucyC3Material("4k", MaterialsFolder), CharacterMaterial("guard", "guard_basecolor_4k") };
             director.bodySwaps = guardSwap != null ? new[] { guardSwap } : new RemakeBodySwap[0];
+            director.lucyTiers = new[] { LucyC3Material("1k", Root + "/Resources"), LucyC3Material("2k", MaterialsFolder), LucyC3Material("4k", MaterialsFolder) };
+            director.guardTiers = new[] { CharacterMaterial("guard", "guard_basecolor_1k", "1k"), CharacterMaterial("guard", "guard_basecolor_2k", "2k"), CharacterMaterial("guard", "guard_basecolor_4k", "4k") };
             EditorUtility.SetDirty(director);
 
             // No static batching in this scene: a batch burns each renderer's lightmap scale and offset into its mesh,
@@ -1011,9 +996,112 @@ namespace GlorifiedBody.Editor
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
             var scenes = EditorBuildSettings.scenes.ToList();
-            MenuLoopSetup.EnsureBuildScene(scenes, ScenePath);
+            MenuLoopSetup.EnsureBuildScene(scenes, scenePath);
             EditorBuildSettings.scenes = scenes.ToArray();
-            Debug.Log($"[RemakeLookSetup] {ScenePath}: {recoloured} room surfaces in black, {surfaceRenderers.Count} A/B surfaces in all, {positions.Count} extra probes, guard B = {(guardFull != null ? "full mesh" : "2,500 mesh with the 4096 map")}.");
+            Debug.Log($"[RemakeLookSetup] {scenePath} ({(bright ? "bright" : "dark")}): {recoloured} room surfaces in black, {surfaceRenderers.Count} A/B surfaces in all, {positions.Count} extra probes, guard B = {(guardFull != null ? "full mesh" : "2,500 mesh with the 4096 map")}.");
+        }
+
+        // The emergency light of the dark room: a twin-head battery unit over the door (west wall), both heads aimed down
+        // across the room, where the figures stand.
+        public static readonly Vector3 EmergencyPos = new Vector3(RoomMin.x + 0.12f, 2.55f, 5.0f);
+
+        /// <summary>
+        /// The dark room, the abandoned-area variant (Bruno, 2026-11-01, design §28a item 5): the ward's ceiling light is
+        /// dead (the fixture stays, unlit), a twin-head emergency light over the door lights the room, the light in the air
+        /// on. Two hard spots through the air; their glow baked as a small rectangle (switch 1).
+        /// </summary>
+        private static List<Light> DarkLight(GameObject w1, GameObject lights, BlackSet set, out Renderer emitter)
+        {
+            Part(w1, "W1_Downlight_Ring", PrimitiveType.Cylinder, DownlightPos + new Vector3(0f, -0.015f, 0f), new Vector3(0.34f, 0.015f, 0.34f), set.Chrome, casts: false);
+            Part(w1, "W1_Downlight_Dead", PrimitiveType.Cylinder, DownlightPos + new Vector3(0f, -0.032f, 0f), new Vector3(0.24f, 0.004f, 0.24f), set.Glass, casts: false);
+            // The unit: a black box on the wall, a chrome bar, two round heads.
+            Vector3 e = EmergencyPos;
+            Part(w1, "Emergency_Box", PrimitiveType.Cube, e + new Vector3(0.05f, 0.1f, 0f), new Vector3(0.1f, 0.14f, 0.36f), set.BlackSteel, casts: false);
+            Part(w1, "Emergency_Bar", PrimitiveType.Cube, e + new Vector3(0.1f, 0f, 0f), new Vector3(0.03f, 0.03f, 0.5f), set.Chrome, casts: false);
+            var result = new List<Light>();
+            emitter = null;
+            Vector3[] aims = { new Vector3(5.6f, 0f, 4.0f), new Vector3(5.4f, 0f, 6.6f) };
+            for (int i = 0; i < aims.Length; i++)
+            {
+                Vector3 head = e + new Vector3(0.16f, -0.02f, i == 0 ? -0.2f : 0.2f);
+                Quaternion look = Quaternion.LookRotation(aims[i] - head);
+                Part(w1, $"Emergency_Head_{i}", PrimitiveType.Cylinder, head, new Vector3(0.11f, 0.05f, 0.11f), set.Chrome, look * Quaternion.Euler(90f, 0f, 0f), casts: false);
+                GameObject lens = Part(w1, $"Emergency_Lens_{i}", PrimitiveType.Cylinder, head + look * Vector3.forward * 0.052f, new Vector3(0.09f, 0.004f, 0.09f), set.Lamp, look * Quaternion.Euler(90f, 0f, 0f), casts: false);
+                if (emitter == null) emitter = lens.GetComponent<Renderer>();
+                Light spot = CeilingSpot(lights, $"Emergency_Light_{i}", head + look * Vector3.forward * 0.12f, 16f, 64f, 34f, 0.14f);
+                spot.transform.rotation = look;
+                spot.range = 9f;
+                result.Add(spot);
+            }
+            // Switch 1: the unit's glow, baked only (the high bake; off in the low one).
+            GameObject areaObj = MenuLoopSetup.EnsureChild(lights, "Remake_PanelArea");
+            areaObj.transform.SetPositionAndRotation(e + new Vector3(0.2f, -0.02f, 0f), Quaternion.LookRotation(new Vector3(1f, -0.6f, 0f)));
+            Light areaLight = MenuLoopSetup.EnsureComponent<Light>(areaObj);
+            areaLight.type = LightType.Rectangle;
+            areaLight.areaSize = new Vector2(0.4f, 0.15f);
+            areaLight.color = result[0].color;
+            areaLight.intensity = 3f;
+            areaLight.range = 9f;
+            areaLight.lightmapBakeType = LightmapBakeType.Baked;
+            areaLight.shadows = LightShadows.Soft;
+            return result;
+        }
+
+        /// <summary>
+        /// The bright room (Bruno: "most rooms will be brightly lit"): four recessed ceiling panels in a 2 x 2 grid, each a
+        /// hard spot straight down (live, the shadows stay hard) and a soft rectangle baked into the lightmaps (switch 1:
+        /// the even hospital fill). The same black materials: the light makes the room bright, not the walls.
+        /// </summary>
+        private static List<Light> BrightLights(GameObject w1, GameObject lights, BlackSet set, out Renderer emitter)
+        {
+            var result = new List<Light>();
+            emitter = null;
+            GameObject areaRoot = MenuLoopSetup.EnsureChild(lights, "Remake_PanelArea"); // off in the low bake (Bake)
+            areaRoot.transform.position = Vector3.zero;
+            int k = 0;
+            foreach (float x in new[] { 3.55f, 6.05f })
+            foreach (float z in new[] { 4.0f, 7.0f })
+            {
+                Vector3 p = new Vector3(x, RoomMax.y, z);
+                Part(w1, $"W1_PanelFrame_{k}", PrimitiveType.Cube, p + new Vector3(0f, -0.008f, 0f), new Vector3(1.26f, 0.016f, 0.66f), set.Chrome, casts: false);
+                GameObject panel = Part(w1, $"W1_Panel_{k}", PrimitiveType.Cube, p + new Vector3(0f, -0.018f, 0f), new Vector3(1.2f, 0.01f, 0.6f), set.Lamp, casts: false);
+                if (emitter == null) emitter = panel.GetComponent<Renderer>();
+                result.Add(CeilingSpot(lights, $"W1_PanelLight_{k}", p, 7f, 140f, 90f, 0.03f));
+                GameObject areaObj = MenuLoopSetup.EnsureChild(areaRoot, $"Area_{k}");
+                areaObj.transform.SetPositionAndRotation(p + new Vector3(0f, -0.03f, 0f), Quaternion.Euler(90f, 0f, 0f));
+                Light area = MenuLoopSetup.EnsureComponent<Light>(areaObj);
+                area.type = LightType.Rectangle;
+                area.areaSize = new Vector2(1.2f, 0.6f);
+                area.color = new Color(0.96f, 0.98f, 1f);
+                area.intensity = 2f;
+                area.range = 10f;
+                area.lightmapBakeType = LightmapBakeType.Baked;
+                area.shadows = LightShadows.Soft;
+                k++;
+            }
+            return result;
+        }
+
+        private static Light CeilingSpot(GameObject lights, string name, Vector3 at, float intensity, float angle, float inner, float air)
+        {
+            GameObject obj = MenuLoopSetup.EnsureChild(lights, name);
+            obj.transform.SetPositionAndRotation(at + new Vector3(0f, -0.06f, 0f), Quaternion.Euler(90f, 0f, 0f));
+            Light spot = MenuLoopSetup.EnsureComponent<Light>(obj);
+            spot.type = LightType.Spot;
+            spot.color = new Color(0.97f, 0.98f, 1f);
+            spot.intensity = intensity;
+            spot.range = 7f;
+            spot.spotAngle = angle;
+            spot.innerSpotAngle = inner;
+            spot.shadows = LightShadows.Hard;
+            spot.shadowStrength = 1f;
+            spot.shadowBias = 0.01f;
+            spot.shadowNormalBias = 0.2f;
+            spot.shadowNearPlane = 0.1f;
+            spot.lightmapBakeType = LightmapBakeType.Mixed;
+            ShadowTier(spot, UniversalAdditionalLightData.AdditionalLightsShadowResolutionTierHigh);
+            MenuLoopSetup.EnsureComponent<VolumetricLight>(obj).strength = air;
+            return spot;
         }
 
         /// <summary>
@@ -1121,7 +1209,11 @@ namespace GlorifiedBody.Editor
                 var so = new SerializedObject(r);
                 SerializedProperty s = so.FindProperty("m_ScaleInLightmap");
                 if (s != null) { s.floatValue = 0.5f; so.ApplyModifiedPropertiesWithoutUndo(); }
-                GameObjectUtility.SetStaticEditorFlags(r.gameObject, StaticEditorFlags.ContributeGI | StaticEditorFlags.ReflectionProbeStatic);
+                // The fern stays out of the bake and the reflection probe: under the bright panels its green leaves put a
+                // green stain on the glossy tiles of the west wall (the bright room, 2026-11-01). The probes light it.
+                bool fern = model == "planter_fern";
+                GameObjectUtility.SetStaticEditorFlags(r.gameObject, fern ? 0 : StaticEditorFlags.ContributeGI | StaticEditorFlags.ReflectionProbeStatic);
+                if (fern && r is MeshRenderer fr) { fr.receiveGI = ReceiveGI.LightProbes; fr.lightProbeUsage = LightProbeUsage.BlendProbes; }
                 if (r.GetComponent<MeshCollider>() == null && name != "tray_set") r.gameObject.AddComponent<MeshCollider>();
                 Register(r, p);
             }

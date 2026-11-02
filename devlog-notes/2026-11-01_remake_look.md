@@ -4,6 +4,121 @@ Bruno (2026-11-01, evening): compare A (the current look of the game) with B (re
 RESULT of the pre-rendered Resident Evil remake of 2002: not its method, not limited to 720p). A real 3D room,
 rendered live. No plates, no AI-painted backgrounds.
 
+## Round 23: Bruno's picks and the final set (late evening)
+
+His answers (CANON, design §28a):
+1. "I prefer B."
+2. No dither, anti-aliasing on. "Turn off the most expensive ones and keep the cheapest ones for performance."
+3. The full mesh is for cutscenes only. In play, the 2,500 game meshes.
+4. "Since it is a hospital most rooms will be brightly lit." The dark black-walled room is for "some more abandoned
+   areas". The black-on-black materials stay.
+5. The light in the air is only for rooms "that call for that direct light, especially on act 1": a flashlight, a
+   flood light, an abandoned room under emergency lights. Most rooms have bright LED panels, "not ones with strong
+   directional lights".
+6. The light in the air must be adjustable later (see "For a later build" below). Not built now.
+
+He also found a fault: Lucy's gold veins did not show in B (0.0 percent gold pixels).
+
+### What changed
+
+1. **B-game** (`RemakeDirector.SetProfileGame(air, tier)`): B with switch 3 OFF (SSAO and the foot blobs, the most
+   expensive switch after the air), switch 5 (the air) a room setting, every other switch on: the high bake, the
+   4096 shadow map, the Lit surfaces and decals, the grade, the live layers, the reflection probe, no dither with
+   MSAA 4x and SMAA, the long lens. The 2,500 game meshes, the full-mesh guard off. The figures keep their baked
+   probes in every profile now (switch 3 is the contact shadows only).
+2. **Two rooms, the same W1 and the same materials:**
+   - The bright hospital room, `RemakeLookBright.unity` (`RemakeLookSetup.BuildBright`, `BakeBright`): four
+     recessed LED panels in a 2 x 2 grid. Each is a hard spot straight down (live) and a soft rectangle baked into the
+     lightmaps (the even fill). Air OFF.
+   - The dark abandoned room, `RemakeLook.unity`: the ward's ceiling light is dead (the fixture stays, unlit). A twin-
+     head emergency light over the door lights the room, both heads aimed across it. Air ON.
+3. **The gold veins** (`tools/remake_lucy_gold.py`): the T20 subtle maps kept the painted colour inside the veins, a
+   pale beige (170, 148, 112) almost the same as the skin (164, 148, 135), at full metal. A metal shows what it
+   reflects, and a black room gave it nothing. Now the vein colour is the T20 gold (1.00, 0.76, 0.22) shaded by the
+   painted brightness, and the metal is 0.6, so 40 percent of the gold is diffuse and reads under any light. The sunken
+   groove stays. The grade's saturation is 0 (it was -10). Gold pixels on Lucy: 6.7 to 14.3 percent in B-game (was
+   0.0), 8.1 to 14.9 percent in A (A takes the same fix at 1024).
+4. **The texture pick:** 2048 (below).
+5. A fault found on the way: in the bright room the reflection probe put the fern's green on the glossy tiles as a
+   green stain. The fern is out of the probe now.
+
+### The texture pick: 2048
+
+The bot renders the same frame at 1024, 2048 and 4096 with the figures frozen, the dust paused and the grain off, so
+only the maps differ. A second 4096 frame gives the noise floor. PSNR against 4096, inside each figure's mask, over
+three cameras and both rooms (`game/tiers_bright.txt`, `game/tiers_dark.txt`):
+
+| Figure | 1024 | 2048 | 4096 again (noise floor) |
+|---|---|---|---|
+| Lucy | 36.6 to 40.6 dB (mean diff 1.1 to 1.8 levels) | 41.5 to 44.2 dB (0.6 to 0.85 levels) | 45.9 to 53.7 dB |
+| Guard | 46.1 to 51.3 dB (0.3 to 0.6 levels) | 47.2 to 53.1 dB (0.2 to 0.9 levels) | 48.8 to 56.2 dB |
+
+At 2x (`game/tiers_<room>_<who>_<camera>.png`): **Lucy at 1024 loses the veins**: they go soft and wide on the shins,
+the feet and the forearms. At 2048 nothing differs from 4096. The guard at 1024 is the same as 4096 within the noise
+(plain cloth, large shapes).
+- **The pick: 2048 for Lucy.** The guard (and figures of plain cloth like him) can stay at 1024 with no visible loss.
+  The final sheets use 2048 for both.
+- VRAM (BC7 and BC5, 1 byte a pixel, with mipmaps): a 4096 map 22.4 MB, a 2048 map 5.6 MB, a 1024 map 1.4 MB. Lucy has
+  three maps (colour, metal-smoothness, normal): 67 MB at 4096, 17 MB at 2048, 4 MB at 1024. The guard has one map: 22,
+  5.6 or 1.4 MB. With ten classes in a room, 4096 would need about 300 to 700 MB of the 2 GB card. 2048 needs a quarter.
+- The frame time does not change with the tier (bright room, B-game: 13.7 ms at 1024, 13.8 at 2048, 13.5 at 4096).
+
+### Frame times of B-game (GTX 1050, 1080p, the bed camera, the lowest of three rounds)
+
+Bot `remake_time`: the measures first thing after the load, no shots, one texture tier loaded. Two runs each, ms:
+
+| Room | A | B-game | B-game with the other air setting | B-game at 1440p |
+|---|---|---|---|---|
+| Bright hospital room (air off) | 9.0 / 9.6 | 12.5 / 13.1 | 24.6 / 25.3 (air on) | 18.1 / 18.5 |
+| Dark abandoned room (air on) | 7.8 / 7.6 | 20.5 / 20.1 | 10.8 / 10.9 (air off) | 31.4 / 31.4 |
+
+- The air is the big cost: about 9.5 ms with the two emergency heads, about 12 ms with the four panels.
+- B-game in the bright room costs about 1.4 times A (about 13 ms against 9). That is 75 frames a second on the GTX
+  1050. The dark room with the air: about 50 frames a second.
+- **VRAM is the limit, not the GPU time.** The other apps held 250 to 612 MiB of the 2 GB card before the runs. When
+  the bot first took its shots and loaded the three tiers, and then measured, the dark room's B-game ran into VRAM
+  thrash (frames of seconds). Those numbers are not the cost of the settings and are not in this note. The same room,
+  measured first, is stable at about 20 ms. For the game: keep the character maps at 2048 and watch the VRAM of a
+  room with the air on.
+
+### Contrast in B-game (Weber, the T22 method)
+
+The final shots (`game/contrast_bright.txt`, `game/contrast_dark.txt`), Lucy / guard:
+
+| Camera | Bright A | Bright B-game | Dark A | Dark B-game (air on) | Dark B-game, air off |
+|---|---|---|---|---|---|
+| Cam_Recovery | +3.70 / +2.33 | +1.71 / +1.24 | +6.57 / +9.21 | +1.11 / +0.58 | +3.64 / +5.24 |
+| Cam_Recovery_Bed | +3.43 / +1.70 | +2.16 / +0.82 | +9.89 / +4.68 | +1.62 / +0.42 | +5.34 / +2.93 |
+| Cam_Recovery_Long | +4.42 / +0.96 | +2.84 / +0.47 | +15.47 / +5.25 | +1.23 / +0.52 | +0.85 / +1.80 |
+
+Both figures are brighter than what is behind them in every frame. The guard is lowest where the air of the
+emergency light sits behind him (+0.42). His colour: blue over red by +9 to +12 in every frame, the white bands 0.4
+to 4.3 percent of his pixels. Lucy's gold: 13.2 to 14.3 percent of her pixels in the bright room, 6.5 to 9.6 percent
+in the dark room. The walls: the median of the upper third of the frame is 0.04 to 0.05 in the bright room (a lit
+black wall) and 0.004 in the dark room where no beam crosses it.
+
+### For a later build: the light in the air, adjustable (design §28a item 6, not built now)
+
+The requirement: the direction, the point of origin and the number of air sources in a room can each be set, for
+"maximum flexibility when applying this effect on the room". Examples: a flashlight, a flood light, emergency lights.
+
+**The current switch-5 setup does not block it.** Each air source is a `VolumetricLight` component on a real URP spot
+or point light, so its origin and direction are the light's own transform and cone, with a strength of its own. The
+dark room already has two. The limits to lift in that build: at most four air sources in one frame (the shader's
+array), one density for the whole frame, and no air-only source (an air source also lights the surfaces and needs its
+shadow map).
+
+### The final files
+
+`~/MEGA/glorified-body-renders/T26_remake_look/game/`:
+- `AB_bright_<camera>.png`, `AB_dark_<camera>.png`: A beside B-game, three cameras each.
+- `air_bright_<camera>.png`, `air_dark_<camera>.png`: B-game with the room's air setting beside the other one.
+- `tiers_<room>_<lucy|guard>_<camera>.png` and `tiers_<room>.txt`: the texture pick.
+- `contrast_bright.txt`, `contrast_dark.txt`.
+- `clips/`: the walk in A and in B-game, in both rooms, and side by side.
+
+Runs: RUNS_GAME.
+
 ## The first pass is superseded
 
 The first pass of the afternoon used the wrong style and the wrong guard texture:
@@ -166,7 +281,7 @@ setup B (a light that lights the background more than the figure).
 
 Runs: `runs/20261101-205917-exec-76886` (build), `20261101-210155-exec-77547` (bake: low 33 s, high 472 s), `20261101-211042-record-81606` (the bot, 71 of 71 steps, CLEAN).
 
-## For Bruno (the pick)
+## For Bruno (the pick), answered: see "Round 23" at the top
 
 1. **A or B?** A is the game today: hard light, black walls, the room read by its white grout, sharp and clean.
    B adds the cone of light in the air, the soft tone of a pre-rendered frame, smooth contact shadows, and the full-

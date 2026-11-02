@@ -42,7 +42,14 @@ namespace GlorifiedBody.Automation
         private float startTime;
         private bool finished;
 
-        public static bool IsRequested => string.Equals(BotArgs.Bot, "remake", StringComparison.OrdinalIgnoreCase);
+        public static bool IsRequested => string.Equals(BotArgs.Bot, "remake", StringComparison.OrdinalIgnoreCase) || IsGame;
+        /// <summary>Bot "remake_game" (Bruno's pick, 2026-11-01): A beside B-game, the three texture tiers, the air on and off.</summary>
+        public static bool IsGame => string.Equals(BotArgs.Bot, "remake_game", StringComparison.OrdinalIgnoreCase) || TimeOnly;
+        /// <summary>Bot "remake_time": the frame times of A and B-game only, first thing after the load, no shots, no other
+        /// tier loaded (on the 2 GB card the shots and the three tiers pushed the later measures into VRAM thrash).</summary>
+        public static bool TimeOnly => string.Equals(BotArgs.Bot, "remake_time", StringComparison.OrdinalIgnoreCase);
+        /// <summary>The texture tier of B-game's walk and frame time (the pick from the tier close-ups).</summary>
+        public const int GameTier = 2048;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void AutoStart()
@@ -56,7 +63,7 @@ namespace GlorifiedBody.Automation
         private void Start()
         {
             startTime = Time.unscaledTime;
-            StartCoroutine(Run());
+            StartCoroutine(IsGame ? RunGame() : Run());
             StartCoroutine(Watchdog());
         }
 
@@ -222,6 +229,166 @@ namespace GlorifiedBody.Automation
             }
             Record("air_pass", VolumetricLightFeature.Runs > 0 && VolumetricLightFeature.LastFound > 0, $"runs={VolumetricLightFeature.Runs} lights={VolumetricLightFeature.LastFound} marked={VolumetricLight.All.Count}");
 
+            GameInput.ClearBotSource(pad);
+            Finish();
+        }
+
+        /// <summary>
+        /// Bot "remake_game": per camera, A, then B-game at 1024, 2048 and 4096 (the texture pick, the same frame), B-game
+        /// with the air on, and the masks of A and B-game. Then the frame times (A, B-game per tier, B-game with the air,
+        /// 1440p) and the walk in A and in B-game. Shots: remake_A_&lt;cam&gt;, remake_Bg&lt;tier&gt;_&lt;cam&gt;,
+        /// remake_BgAlt_&lt;cam&gt; (the other air setting), mask_&lt;A|Bg&gt;_&lt;who&gt;_&lt;cam&gt;.
+        /// </summary>
+        private IEnumerator RunGame()
+        {
+            yield return new WaitForSecondsRealtime(1f);
+            string level = string.IsNullOrEmpty(BotArgs.Level) ? "RemakeLook" : BotArgs.Level;
+            GameManager gm = GameManager.Instance;
+            if (gm != null) gm.LoadLevel(level); else SceneManager.LoadScene(level);
+            float t0 = Time.realtimeSinceStartup;
+            while (SceneManager.GetActiveScene().name != level && Time.realtimeSinceStartup - t0 < 30f) yield return null;
+            yield return new WaitForSecondsRealtime(0.5f);
+            yield return new WaitForSeconds(0.3f);
+            RemakeDirector remake = RemakeDirector.Instance;
+            FixedCameraDirector director = FixedCameraDirector.Instance;
+            GameObject player = GameObject.FindGameObjectWithTag("Player");
+            TankController tank = player != null ? player.GetComponent<TankController>() : null;
+            GameObject guard = GameObject.Find("Figure_Guard");
+            foreach (string hide in new[] { "Figure_LabWorker", "Figure_Patient" })
+            {
+                GameObject h = GameObject.Find(hide);
+                if (h != null) h.SetActive(false);
+            }
+            Record("loaded", director != null && tank != null && guard != null && remake != null && remake.lucyTiers.Length == 3 && remake.guardTiers.Length == 3,
+                $"scene={SceneManager.GetActiveScene().name} lightmaps={LightmapSettings.lightmaps.Length} tiers={(remake != null ? remake.lucyTiers.Length : 0)}");
+            if (director == null || tank == null || guard == null || remake == null) { Finish(); yield break; }
+            // The light in the air is a room setting (Bruno, design §28a item 5): off in the bright hospital room, on in
+            // the dark abandoned room under its emergency light.
+            bool roomAir = level != "RemakeLookBright";
+            Record("room_air", true, $"air {(roomAir ? "on" : "off")} in {level}");
+            pad = new VirtualPad();
+            GameInput.SetBotSource(pad);
+            string shots = Path.Combine(BotArgs.RunDir, "shots");
+            var cameras = CameraNames.Select(n => FindObjectsByType<FixedCamera>(FindObjectsSortMode.None).FirstOrDefault(c => c.cameraName == n)).Where(c => c != null).ToList();
+            Record("cameras", cameras.Count == 3, string.Join(",", cameras.Select(c => c.cameraName)));
+            LightFlicker flicker = FindFirstObjectByType<LightFlicker>();
+            bool first = true;
+            foreach (FixedCamera fc in TimeOnly ? new List<FixedCamera>() : cameras)
+            {
+                Staging(fc.cameraName, out Vector3 lucyAt, out Vector3 guardAt);
+                Vector3 camPos = fc.transform.position;
+                tank.Teleport(lucyAt, Yaw(lucyAt, Vector3.Lerp(camPos, guardAt, 0.35f)));
+                guard.transform.SetPositionAndRotation(guardAt, Quaternion.Euler(0f, Yaw(guardAt, Vector3.Lerp(camPos, lucyAt, 0.5f)), 0f));
+                director.Override(fc);
+                yield return new WaitForSeconds(first ? 2.5f : 0.8f);
+                first = false;
+                string cam = fc.cameraName.ToLowerInvariant();
+                remake.SetProfileA(true);
+                yield return null;
+                yield return Shot(flicker, Path.Combine(shots, $"remake_A_{cam}.png"), ShotWidth, ShotHeight, $"A_{cam}");
+                yield return Masks(shots, "A", cam, player, guard);
+                remake.SetProfileGame(roomAir, GameTier);
+                yield return null;
+                yield return Shot(flicker, Path.Combine(shots, $"remake_Bg{GameTier}_{cam}.png"), ShotWidth, ShotHeight, $"Bg{GameTier}_{cam} {remake.Describe()}");
+                // The texture pick: the same frame at 1024, 2048 and 4096, the figures frozen, the dust paused and the grain
+                // off, so only the maps differ; a second 4096 frame gives the noise floor of the comparison.
+                var frozen = new List<(Animator a, float speed)>();
+                foreach (Animator an in player.GetComponentsInChildren<Animator>().Concat(guard.GetComponentsInChildren<Animator>()))
+                {
+                    frozen.Add((an, an.speed));
+                    an.speed = 0f;
+                }
+                var paused = FindObjectsByType<ParticleSystem>(FindObjectsSortMode.None).Where(ps => ps.isPlaying).ToList();
+                foreach (ParticleSystem ps in paused) ps.Pause();
+                FilmGrain grain = null;
+                if (remake.gradeVolume != null && remake.gradeVolume.sharedProfile != null) remake.gradeVolume.sharedProfile.TryGet(out grain);
+                bool grainWas = grain != null && grain.active;
+                if (grain != null) grain.active = false;
+                foreach (int tier in RemakeDirector.TierSizes)
+                {
+                    remake.SetProfileGame(roomAir, tier);
+                    yield return null;
+                    yield return Shot(flicker, Path.Combine(shots, $"remake_Tier{tier}_{cam}.png"), ShotWidth, ShotHeight, $"Tier{tier}_{cam}");
+                }
+                yield return Shot(flicker, Path.Combine(shots, $"remake_Tier4096b_{cam}.png"), ShotWidth, ShotHeight, $"Tier4096b_{cam}");
+                if (grain != null) grain.active = grainWas;
+                foreach (ParticleSystem ps in paused) if (ps != null) ps.Play();
+                foreach ((Animator an, float speed) in frozen) if (an != null) an.speed = speed;
+                remake.SetProfileGame(roomAir, GameTier);
+                yield return Masks(shots, "Bg", cam, player, guard);
+                remake.SetProfileGame(!roomAir, GameTier);
+                yield return Shot(flicker, Path.Combine(shots, $"remake_BgAlt_{cam}.png"), ShotWidth, ShotHeight, $"BgAlt_{cam} air {(!roomAir ? "on" : "off")} {remake.Describe()}");
+            }
+
+            FixedCamera bed = cameras.FirstOrDefault(c => c.cameraName == "Cam_Recovery_Bed") ?? cameras[0];
+            Staging(bed.cameraName, out Vector3 bl, out Vector3 bg);
+            tank.Teleport(bl, Yaw(bl, Vector3.Lerp(bed.transform.position, bg, 0.35f)));
+            guard.transform.SetPositionAndRotation(bg, Quaternion.Euler(0f, Yaw(bg, Vector3.Lerp(bed.transform.position, bl, 0.5f)), 0f));
+            director.Override(bed);
+            yield return new WaitForSeconds(0.8f);
+            Camera main = Camera.main;
+            // -1 = A; 1024, 2048, 4096 = B-game with the room's air at that tier; 1 = B-game with the other air (the game tier)
+            var settings = TimeOnly ? new List<int> { -1, GameTier, 1 } : new List<int> { -1, 1024, 2048, 4096, 1 };
+            var times = new Dictionary<int, List<float>>();
+            var times1440 = new Dictionary<int, List<float>> { { -1, new List<float>() }, { GameTier, new List<float>() } };
+            FrameMs(main, 1920, 1080, 20);
+            for (int round = 0; round < 3; round++)
+            {
+                foreach (int setting in settings)
+                {
+                    if (setting == -1) remake.SetProfileA(true);
+                    else remake.SetProfileGame(setting == 1 ? !roomAir : roomAir, setting == 1 ? GameTier : setting);
+                    yield return null;
+                    yield return null;
+                    FrameMs(main, 1920, 1080, 5);
+                    if (!times.ContainsKey(setting)) times[setting] = new List<float>();
+                    times[setting].Add(FrameMs(main, 1920, 1080, 30));
+                }
+            }
+            // 1440p last, in its own pass (its targets thrash the 2 GB card for the 1080p measures that follow them)
+            for (int round = 0; round < 2; round++)
+            {
+                foreach (int setting in times1440.Keys.ToList())
+                {
+                    if (setting == -1) remake.SetProfileA(true); else remake.SetProfileGame(roomAir, setting);
+                    yield return null;
+                    yield return null;
+                    times1440[setting].Add(FrameMs(main, 2560, 1440, 20));
+                }
+            }
+            foreach (int setting in settings)
+            {
+                List<float> t = times[setting].OrderBy(x => x).ToList();
+                string tag = setting == -1 ? "A" : setting == 1 ? $"Bg_air_{(!roomAir ? "on" : "off")}_{GameTier}" : $"Bg_{setting}_air_{(roomAir ? "on" : "off")}";
+                string extra = times1440.ContainsKey(setting) ? $"  1440p min {times1440[setting].Min():0.00} ms" : "";
+                Record($"frametime_{tag}", t[0] > 0f, $"1080p min {t[0]:0.00} ms median {t[1]:0.00} ms (rounds {string.Join("/", times[setting].Select(x => x.ToString("0.0")))}){extra}");
+            }
+            // The 1440p still AFTER the frame times: on the 2 GB card its targets pushed later measures into VRAM thrash
+            // (5 to 6 s frames in run 20261101-225016).
+            if (TimeOnly) { GameInput.ClearBotSource(pad); Finish(); yield break; }
+            remake.SetProfileGame(roomAir, GameTier);
+            yield return Shot(flicker, Path.Combine(shots, "remake_Bg_1440p_cam_recovery_bed.png"), 2560, 1440, "Bg_1440p");
+
+            foreach (string profile in new[] { "A", "Bg" })
+            {
+                if (profile == "A") remake.SetProfileA(true); else remake.SetProfileGame(roomAir, GameTier);
+                director.Override(null);
+                Vector3 start = new Vector3(3.0f, 0f, 3.7f);
+                tank.Teleport(start, 25f);
+                Vector3 gAt = new Vector3(5.9f, 0f, 4.3f);
+                guard.transform.SetPositionAndRotation(gAt, Quaternion.Euler(0f, Yaw(gAt, new Vector3(4.5f, 0f, 6f)), 0f));
+                yield return new WaitForSeconds(0.6f);
+                if (FrameRecorder.Enabled) FrameRecorder.Ensure().Begin($"remake_{profile}_walk");
+                string firstCam = director.CurrentName;
+                yield return new WaitForSeconds(0.8f);
+                pad.SetHeld(InputManager.GameAction.Forward, true);
+                yield return new WaitForSeconds(2.8f);
+                pad.ReleaseAll();
+                yield return new WaitForSeconds(1.4f);
+                if (FrameRecorder.Instance != null) FrameRecorder.Instance.End();
+                float walked = Vector3.Distance(start, player.transform.position);
+                Record($"walk_{profile}", walked > 2f && firstCam != director.CurrentName, $"walked={walked:0.00} m cameras {firstCam} -> {director.CurrentName}");
+            }
             GameInput.ClearBotSource(pad);
             Finish();
         }

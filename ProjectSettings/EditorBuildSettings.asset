@@ -125,5 +125,8 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/_Game/Scenes/RemakeLook.unity
     guid: ff9e14b6b9b476779bd3df8a93646809
+  - enabled: 1
+    path: Assets/_Game/Scenes/RemakeLookBright.unity
+    guid: 12c97b3eed1b72d10ae2152832d42966
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0
