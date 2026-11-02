@@ -40,24 +40,32 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator Start_LoadsTheDemo_TrainingRoom_LoadsTheTrainingRoom()
+        public IEnumerator Start_LoadsTheDemo_AndAReleaseHasNoTrainingRoom()
         {
             GameBuild.Force = false;
-            foreach ((string label, string scene) in new[] { ("START", "Demo_W1"), ("TRAINING ROOM", "TrainingRoom") })
-            {
-                yield return Menu();
-                UnityEngine.UI.Button button = null;
-                foreach (UnityEngine.UI.Button b in UnityEngine.Object.FindObjectsByType<UnityEngine.UI.Button>(FindObjectsSortMode.None))
-                {
-                    UnityEngine.UI.Text text = b.GetComponentInChildren<UnityEngine.UI.Text>();
-                    if (text != null && text.text == label && b.gameObject.activeInHierarchy) button = b;
-                }
-                Assert.IsNotNull(button, label + " in a release menu");
-                button.onClick.Invoke();
-                float t0 = Time.realtimeSinceStartup;
-                while ((SceneManager.GetActiveScene().name != scene || !GameManager.Instance.IsPlaying) && Time.realtimeSinceStartup - t0 < 10f) yield return null;
-                Assert.AreEqual(scene, SceneManager.GetActiveScene().name, label);
-            }
+            yield return Menu();
+            // Bruno, 2026-11-02: "remove the training room, or set it to dev only".
+            Assert.IsNull(Button("TRAINING ROOM"), "no training room in a release menu");
+            UnityEngine.UI.Button start = Button("START");
+            Assert.IsNotNull(start, "START in a release menu");
+            start.onClick.Invoke();
+            float t0 = Time.realtimeSinceStartup;
+            while ((SceneManager.GetActiveScene().name != "Demo_W1" || !GameManager.Instance.IsPlaying) && Time.realtimeSinceStartup - t0 < 10f) yield return null;
+            Assert.AreEqual("Demo_W1", SceneManager.GetActiveScene().name, "START");
+        }
+
+        [UnityTest]
+        public IEnumerator ADevBuild_TrainingRoom_LoadsTheTrainingRoom_FromTheTestColumn()
+        {
+            GameBuild.Force = true;
+            yield return Menu();
+            UnityEngine.UI.Button button = Button("TRAINING ROOM");
+            Assert.IsNotNull(button, "TRAINING ROOM in a dev menu");
+            Assert.AreEqual("TestColumn", button.transform.parent.name, "with the test rooms");
+            button.onClick.Invoke();
+            float t0 = Time.realtimeSinceStartup;
+            while ((SceneManager.GetActiveScene().name != "TrainingRoom" || !GameManager.Instance.IsPlaying) && Time.realtimeSinceStartup - t0 < 10f) yield return null;
+            Assert.AreEqual("TrainingRoom", SceneManager.GetActiveScene().name);
         }
 
         [UnityTest]
@@ -85,6 +93,17 @@ namespace GlorifiedBody.Tests.PlayMode
             while ((SceneManager.GetActiveScene().name != "Main_Menu" || GameManager.Instance == null || !GameManager.Instance.IsInMenu) && Time.realtimeSinceStartup - t0 < 10f) yield return null;
             yield return null;
             yield return null;
+        }
+
+        /// <summary>The active button with this label, or null.</summary>
+        private static UnityEngine.UI.Button Button(string label)
+        {
+            foreach (UnityEngine.UI.Button b in UnityEngine.Object.FindObjectsByType<UnityEngine.UI.Button>(FindObjectsSortMode.None))
+            {
+                UnityEngine.UI.Text text = b.GetComponentInChildren<UnityEngine.UI.Text>();
+                if (text != null && text.text == label && b.gameObject.activeInHierarchy) return b;
+            }
+            return null;
         }
 
         private static GameObject Find(string name)

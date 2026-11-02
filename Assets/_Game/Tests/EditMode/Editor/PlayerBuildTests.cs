@@ -5,7 +5,7 @@ using GlorifiedBody.Editor;
 
 namespace GlorifiedBody.Tests.EditMode
 {
-    /// <summary>The player build (2026-10-31, rank 16): a release has the menu, the training room, the tutorial and the demo (START), no test room.</summary>
+    /// <summary>The player build (2026-10-31, rank 16): a release has the menu, the tutorial and the demo (START), no test room and no training room (2026-11-02).</summary>
     public class PlayerBuildTests
     {
         [Test]
@@ -15,9 +15,9 @@ namespace GlorifiedBody.Tests.EditMode
             Assert.AreEqual("Main_Menu", scenes[0], "the menu loads first");
             CollectionAssert.Contains(scenes, "Demo_W1", "START");
             CollectionAssert.Contains(scenes, "Tutorial", "the tutorial mode");
-            CollectionAssert.Contains(scenes, "TrainingRoom", "the training room is for the players too");
+            CollectionAssert.DoesNotContain(scenes, "TrainingRoom", "the training room is dev only (Bruno, 2026-11-02)");
             Assert.IsFalse(scenes.Any(s => s.EndsWith("Test") || s.StartsWith("LookTest") || s.StartsWith("TravelTest")), "no test or look room: " + string.Join(", ", scenes));
-            Assert.IsTrue(scenes.Skip(3).All(s => s.StartsWith("Demo_")), "the rest are the demo rooms");
+            Assert.IsTrue(scenes.Skip(2).All(s => s.StartsWith("Demo_")), "the rest are the demo rooms");
         }
 
         [Test]
@@ -27,6 +27,7 @@ namespace GlorifiedBody.Tests.EditMode
             Assert.AreEqual("Main_Menu", scenes[0]);
             CollectionAssert.Contains(scenes, "KitTest");
             CollectionAssert.Contains(scenes, "ScreenTest");
+            CollectionAssert.Contains(scenes, "TrainingRoom");
             Assert.Greater(scenes.Count, PlayerBuild.ReleaseScenes().Count);
         }
     }

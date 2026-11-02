@@ -387,8 +387,8 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   build or `-gbDev`) gates the debug keys and the TEST ROOMS column. The triage marks a run that did not end DIRTY.
   THE DEMO: 22 rooms in plan metres (`Scenes/Demo/Demo_<id>.unity`, `Editor/Demo/`: `DemoRoom` the kit, `DemoWard`
   W1 to W12, `DemoPublic` G1 to G9 and U1, `DemoContent` the logs and the writers' cutscene lines as subtitles), the
-  map floors "THE WARD" and "THE PUBLIC FLOOR". START loads the demo (W1); TRAINING ROOM (under TUTORIAL) is for the
-  players too, in the release. NO BLIND SPOTS (Bruno): each camera cell searches its pose by the coverage rule
+  map floors "THE WARD" and "THE PUBLIC FLOOR". START loads the demo (W1); TRAINING ROOM is dev only since 2026-11-02 (the
+  top of the TEST ROOMS column, not in a release). NO BLIND SPOTS (Bruno): each camera cell searches its pose by the coverage rule
   (`CameraCoverage.Sees`) and splits while it misses any point; `DemoTests` fails on one point out of frame (G5 has
   16 cameras, U1 13). A room change: run its BuildAll, then `MapAtlasSetup.BuildAtlas`. Proof: `DemoTests` (4), bot
   `play Demo_W1 Main_Menu demo 900` (one shot a camera). `FlagSwitch` (a switch that raises a flag),
@@ -422,6 +422,9 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   (`MapScreen.Draws`); it stays on through a door and hides under the pause, the inventory, a page, a cutscene and the
   death; the arrow keys change the floor (`GameAction.MapPreviousFloor`, `MapNextFloor`). Tests that need a stopped
   world use the inventory.
+- 2026-11-02, THE TRAINING ROOM IS DEV ONLY (`devlog-notes/2026-11-02_training_room_dev_only.md`, Bruno: "remove the
+  training room, or set it to dev only"): its button is the first of the TEST ROOMS column, and
+  `PlayerBuild.ReleaseScenes` leaves the scene out. The tests and the bots still use the room.
 
 ## Rules
 

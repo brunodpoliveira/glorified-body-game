@@ -11,7 +11,7 @@ namespace GlorifiedBody.Editor
 {
     /// <summary>
     /// The player build (2026-10-31, the design sweep's rank 16: "a build script, a dev flag for the debug keys and the
-    /// test-room buttons"). A release build has the menu, the training room, the tutorial and the demo rooms (Demo_*; START loads W1),
+    /// test-room buttons"). A release build has the menu, the tutorial and the demo rooms (Demo_*; START loads W1),
     /// no test or look room, and no debug keys (GameBuild.Dev). A dev build has every scene of the build settings and is
     /// a development build. Linux, Windows (Mono: IL2CPP for Windows does not build on Linux) or web (itch.io). The output
     /// goes to builds/&lt;kind&gt;_&lt;target&gt;/ (git- and MEGA-ignored).
@@ -27,7 +27,8 @@ namespace GlorifiedBody.Editor
         /// <summary>The scenes of a release, in order: the menu first. The demo rooms are the scenes named Demo_*.</summary>
         public static List<string> ReleaseScenes()
         {
-            var scenes = new List<string> { MenuLoopSetup.MainMenuScenePath, MenuLoopSetup.TrainingRoomScenePath, TutorialSetup.ScenePath };
+            // No training room: it is dev only (Bruno, 2026-11-02).
+            var scenes = new List<string> { MenuLoopSetup.MainMenuScenePath, TutorialSetup.ScenePath };
             foreach (EditorBuildSettingsScene s in EditorBuildSettings.scenes)
                 if (Path.GetFileNameWithoutExtension(s.path).StartsWith("Demo_") && !scenes.Contains(s.path)) scenes.Add(s.path);
             return scenes.Where(File.Exists).ToList();

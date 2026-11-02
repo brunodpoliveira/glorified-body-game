@@ -10,7 +10,7 @@ namespace GlorifiedBody.UI
     /// Main menu screen. Shown when the MainMenu scene loads.
     /// Creates its own Canvas and UI elements at runtime.
     /// The first, default-selected button starts the game: the demo from W1 (Bruno, 2026-10-31: "start goes to the
-    /// demo"). TRAINING ROOM, under TUTORIAL, loads the training room for the players (GameManager.LoadGameplay). The DIFFICULTY button opens the difficulty screen (DifficultyMenuUI, the same as in
+    /// demo"). TRAINING ROOM, at the top of the TEST ROOMS column (dev only, Bruno, 2026-11-02), loads the training room (GameManager.LoadGameplay). The DIFFICULTY button opens the difficulty screen (DifficultyMenuUI, the same as in
     /// the pause menu; Bruno, 2026-10-26). Notifies GameManager that the main menu is ready.
     /// </summary>
     public class MainMenuUI : MonoBehaviour
@@ -353,8 +353,6 @@ namespace GlorifiedBody.UI
             CreateSpacer(column.transform, 10f);
             tutorialBtn = CreateButton(column.transform, "TUTORIAL", 420, OnTutorialClicked, 48);
             nav.Add(tutorialBtn);
-            // The training room is for the players too (Bruno, 2026-10-31).
-            nav.Add(CreateButton(column.transform, "TRAINING ROOM", 420, OnTrainingClicked, 48));
             howToBtn = CreateButton(column.transform, "HOW TO PLAY", 420, OnHowToPlayClicked, 48);
             modifiersBtn = CreateButton(column.transform, "DIFFICULTY", 420, OnModifiersClicked, 48);
             modifiersLabel = modifiersBtn.GetComponentInChildren<Text>();
@@ -392,6 +390,8 @@ namespace GlorifiedBody.UI
             tests.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
             Text testsHeader = CreateLabel(tests.transform, "TEST ROOMS", 22, TextAnchor.MiddleCenter, 36, FontStyle.Bold, new Color(0.6f, 0.6f, 0.7f));
             testsHeader.rectTransform.sizeDelta = new Vector2(300f, testsHeader.rectTransform.sizeDelta.y); // the column does not size its children
+            // The training room is dev only (Bruno, 2026-11-02: "remove the training room, or set it to dev only").
+            nav.Add(CreateButton(tests.transform, "TRAINING ROOM", 300, OnTrainingClicked, 44));
             aiTestBtn = CreateButton(tests.transform, "AI TEST", 300, OnAiTestClicked, 44);
             coverTestBtn = CreateButton(tests.transform, "COVER TEST", 300, OnCoverTestClicked, 44);
             civilianTestBtn = CreateButton(tests.transform, "CIVILIAN TEST", 300, OnCivilianTestClicked, 44);
