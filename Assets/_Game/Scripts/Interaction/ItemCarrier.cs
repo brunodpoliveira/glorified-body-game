@@ -75,6 +75,18 @@ namespace GlorifiedBody.Interaction
             carried.transform.localScale = new Vector3(world.x / parent.x, world.y / parent.y, world.z / parent.z);
         }
 
+        /// <summary>The copy leaves the belt (she asked for the item: CarrierTalk).</summary>
+        public void HideCarried()
+        {
+            if (carried != null) carried.SetActive(false);
+        }
+
+        // A load removes an item she took from a living carrier (CarrierTalk): the copy on the belt goes too.
+        private void Update()
+        {
+            if (carried != null && carried.activeSelf && (drop == null || drop.Taken)) carried.SetActive(false);
+        }
+
         private void Awake()
         {
             health = GetComponent<Health>();

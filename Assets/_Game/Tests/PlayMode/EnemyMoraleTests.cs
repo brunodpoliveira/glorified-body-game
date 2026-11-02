@@ -180,6 +180,13 @@ namespace GlorifiedBody.Tests.PlayMode
             Debug.Log($"[EnemyMoraleTests] the gun in the CPR: {Vector3.Distance(gunCentre, rightHand.position):0.00} m from his hand, {Vector3.Dot(gunCentre - chest.position, torsoForward):0.00} m before his chest");
             Assert.Greater(Vector3.Distance(gun.Model.position, rightHand.position), 0.25f, "the gun is not in his hand during the CPR");
             Assert.Less(Vector3.Dot(gunCentre - chest.position, torsoForward), 0f, "it hangs on his back");
+            // Bruno, 2026-11-02: the CPR kneels on both knees (the vendor kneel has one knee up, 0.41 m).
+            yield return null; // the bones keep the last LateUpdate's pose until the animator runs again
+            float floor = medic.transform.position.y;
+            float leftKnee = body.GetBoneTransform(HumanBodyBones.LeftLowerLeg).position.y - floor;
+            float rightKnee = body.GetBoneTransform(HumanBodyBones.RightLowerLeg).position.y - floor;
+            Debug.Log($"[EnemyMoraleTests] the knees in the CPR: L {leftKnee:0.00} m, R {rightKnee:0.00} m over the floor");
+            Assert.Less(Mathf.Max(leftKnee, rightKnee), 0.2f, "both knees on the floor");
 
             // She comes back into view: he drops the body and fights.
             lucy.GetComponent<TankController>().Teleport(home, 0f);

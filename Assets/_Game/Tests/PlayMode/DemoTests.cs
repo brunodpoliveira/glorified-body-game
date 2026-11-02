@@ -140,6 +140,41 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.AreEqual("Main_Menu", SceneManager.GetActiveScene().name, "the title: back to the menu");
         }
 
+        [UnityTest]
+        public IEnumerator W11_TheWardSister_GivesTheCard_WhenSheAsks()
+        {
+            // Bruno, 2026-11-02: "the second way to grab cards from civvies is to simply interact/talk with them".
+            GameManager.Instance.LoadLevel("Demo_W11");
+            yield return Room("Demo_W11");
+            GameObject sister = GameObject.Find("Ward_Sister");
+            Assert.IsNotNull(sister);
+            var talk = sister.GetComponent<GlorifiedBody.Interaction.CarrierTalk>();
+            var carrier = sister.GetComponent<GlorifiedBody.Interaction.ItemCarrier>();
+            Assert.IsNotNull(talk, "the unarmed carrier talks");
+            Assert.IsTrue(talk.Available);
+            Assert.IsTrue(carrier.ShowsItem, "the card on her belt");
+            StringAssert.Contains("ask for the ward sister's card", talk.Hint);
+
+            GameObject lucy = GameObject.FindGameObjectWithTag("Player");
+            Vector3 at = sister.transform.position + sister.transform.forward * 1.1f;
+            lucy.GetComponent<TankController>().Teleport(new Vector3(at.x, sister.transform.position.y, at.z), sister.transform.eulerAngles.y + 180f);
+            yield return null;
+            var hands = lucy.GetComponent<GlorifiedBody.Interaction.Interactor>();
+            Assert.AreSame(talk, hands.FindFocus(), "the Interact key reaches her");
+            Assert.AreEqual("given:stair_card", talk.Confirm(hands));
+            Assert.IsTrue(lucy.GetComponent<GlorifiedBody.Interaction.ItemInventory>().Has("stair_card"), "the card is hers");
+            Assert.IsFalse(sister.GetComponent<Health>().IsDead, "the sister lives");
+            yield return null;
+            Assert.IsFalse(carrier.ShowsItem, "the card leaves her belt");
+            Assert.IsFalse(talk.Available, "once");
+            Assert.IsTrue(GlorifiedBody.Subtitles.SubtitleService.Lines.Any(l => l.Text.Contains(GlorifiedBody.Interaction.CarrierTalk.LineGive)), "she says her line");
+
+            // A death now drops nothing: the card is gone from the room.
+            sister.GetComponent<Health>().TakeDamage(9999f);
+            yield return new WaitForSeconds(GlorifiedBody.Interaction.ItemCarrier.FallSeconds + 0.3f);
+            Assert.IsFalse(carrier.Dropped, "no second card beside the body");
+        }
+
         [DefaultExecutionOrder(-1000)]
         private sealed class PadDriver : MonoBehaviour
         {

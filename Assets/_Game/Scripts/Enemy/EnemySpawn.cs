@@ -59,6 +59,8 @@ namespace GlorifiedBody.Enemy
             figure.transform.SetSiblingIndex(transform.GetSiblingIndex());
             if (variant >= 0 && figure.TryGetComponent(out CivilianBrain civilian)) civilian.SetVariant(variant);
             if (drop != null) figure.AddComponent<GlorifiedBody.Interaction.ItemCarrier>().Bind(drop);
+            // Bruno, 2026-11-02: she can also ask an unarmed civilian for the item.
+            if (drop != null && figure.GetComponent<CivilianBrain>() != null) figure.AddComponent<GlorifiedBody.Interaction.CarrierTalk>();
             if (!string.IsNullOrEmpty(line) && figure.TryGetComponent(out PatientBrain patient)) patient.Line = line;
             if (hides && figure.TryGetComponent(out CivilianBrain hider)) hider.SetHider(hideLine, foundLine, foundAt);
             if (!string.IsNullOrEmpty(fate)) figure.AddComponent<GlorifiedBody.Story.FateFlag>().fate = fate;

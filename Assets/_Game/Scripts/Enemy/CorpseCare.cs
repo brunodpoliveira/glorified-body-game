@@ -34,7 +34,7 @@ namespace GlorifiedBody.Enemy
         [Tooltip("The kneel of the CPR: a vendor clip (Pick_Down), held at KneelFrom. The factory sets it (the prefab is not in git).")]
         [SerializeField] private AnimationClip kneelClip;
 
-        /// <summary>The kneel of the vendor's Pick_Down: one knee on the floor, the hips 0.44 m up (ClipProbe, 2026-10-31).</summary>
+        /// <summary>The kneel of the vendor's Pick_Down: one knee on the floor, the hips 0.44 m up (ClipProbe, 2026-10-31). CprLegs puts the other knee down.</summary>
         public const float KneelFrom = 0.42f, KneelLength = 0.03f;
 
         /// <summary>
@@ -56,6 +56,19 @@ namespace GlorifiedBody.Enemy
             ("Hand In-Out", 0f),
             ("Head Nod Down-Up", -0.5f),
             ("Neck Nod Down-Up", -0.3f),
+        };
+
+        /// <summary>
+        /// The CPR's legs (2026-11-02, Bruno: "both knees"): the vendor kneel has one knee up. Both thighs straight down,
+        /// the shins flat on the floor behind. PoseProbe over Pick_Down at 0.43 s: the knees 0.07 to 0.09 m over the
+        /// floor, the ankles about 0.09 m (~/MEGA/glorified-body-renders/game/animation/shots/cpr_knees_probe_sheet2.png).
+        /// </summary>
+        public static readonly (string muscle, float value)[] CprLegs =
+        {
+            ("Upper Leg Front-Back", 0f),
+            ("Upper Leg In-Out", 0f),
+            ("Upper Leg Twist In-Out", 0f),
+            ("Lower Leg Stretch", -0.25f),
         };
         // The spine and chest bend (negative leans forward: the PoseProbe sheet of 2026-10-31, set B), and the bob of a
         // compression (more forward at the push).
@@ -114,6 +127,7 @@ namespace GlorifiedBody.Enemy
                 hips = animator.GetBoneTransform(HumanBodyBones.Hips);
                 if (animator.avatar != null) poseHandler = new HumanPoseHandler(animator.avatar, animator.transform);
                 var set = new System.Collections.Generic.List<(string, float)>(CprArms) { ("Spine Front-Back", 0f), ("Chest Front-Back", 0f) };
+                set.AddRange(CprLegs);
                 GlorifiedBody.Characters.PleaHands.Resolve(set.ToArray(), out cprIndices, out cprValues);
                 spineBend = System.Array.IndexOf(cprIndices, System.Array.IndexOf(HumanTrait.MuscleName, "Spine Front-Back"));
                 chestBend = System.Array.IndexOf(cprIndices, System.Array.IndexOf(HumanTrait.MuscleName, "Chest Front-Back"));
@@ -411,7 +425,7 @@ namespace GlorifiedBody.Enemy
             brain.Body.Stop();
             brain.Body.Crouch(true);
             brain.Body.Face(PatientChest() - transform.position);
-            // The kneel: the vendor's Pick_Down held at its low point (one knee down), the arms over it in LateUpdate.
+            // The kneel: the vendor's Pick_Down held at its low point (one knee down), the arms and the legs over it in LateUpdate (CprLegs: both knees down).
             Animator animator = GetComponent<Animator>();
             if (kneelClip != null && animator != null)
             {

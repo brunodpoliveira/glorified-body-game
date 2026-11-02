@@ -93,6 +93,7 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.Less(Vector3.Distance(carrier.Carried.transform.position, carrierHips.position), 0.35f, "at the hip");
             Assert.AreEqual(carrier.Drop.GetComponent<Renderer>().sharedMaterial, carrier.Carried.GetComponent<Renderer>().sharedMaterial, "unlit, like the pickup");
             Assert.IsNull(GameObject.Find(Knife).GetComponent<ItemCarrier>(), "only the carrier carries");
+            Assert.IsNull(GameObject.Find(Carrier).GetComponent<CarrierTalk>(), "an armed carrier does not give the card on a word (PROPOSED)");
         }
 
         [UnityTest]

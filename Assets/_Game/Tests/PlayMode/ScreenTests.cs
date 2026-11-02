@@ -175,6 +175,12 @@ namespace GlorifiedBody.Tests.PlayMode
             yield return null;
             Assert.IsFalse(TapePlayer.Instance.IsPlaying, "two voices at once: the screen pauses the tape");
             Assert.AreEqual(InWorldScreen.PausedTape, TapePlayer.Instance.StoppedBy);
+            // Bruno, 2026-11-02: "the player should be able to press a button to unpause; it shouldn't autoplay".
+            InWorldScreen wall = Screen(Wall);
+            wall.Seek(wall.Length - 0.5f);
+            yield return WaitUntil(() => !wall.IsPlaying, 6f);
+            yield return new WaitForSeconds(0.5f);
+            Assert.IsFalse(TapePlayer.Instance.IsPlaying, "the screen ends and the tape stays paused");
             yield return Press(InputManager.GameAction.Tape);
             Assert.IsTrue(TapePlayer.Instance.IsPlaying, "she plays it again with the tape key");
         }

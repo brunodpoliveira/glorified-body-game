@@ -19,7 +19,9 @@ namespace GlorifiedBody.Interaction
 
         public void MarkTaken() => Taken = true;
 
-        public string Name => item != null ? "the " + ItemDefinition.Spoken(item.displayName) : "it";
+        public string Name => item == null ? "it"
+            : ItemDefinition.Spoken(item.displayName).StartsWith("the ") ? ItemDefinition.Spoken(item.displayName) // "THE WARD SISTER'S CARD"
+            : "the " + ItemDefinition.Spoken(item.displayName);
 
         public override string Hint => "take " + Name;
 

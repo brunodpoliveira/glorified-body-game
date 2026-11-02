@@ -410,6 +410,12 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   the act 1 black look, profile A (the current look) and profile B (ten switches, `RemakeDirector`, F3) in one scene,
   the full-mesh 3D Studio guard in B (`RemakeBodySwap`), bot `play RemakeLook Main_Menu remake 1500`. Static batching
   is off in that scene (a batch broke the bake swap). OPEN for Bruno: the pick (the note's last section).
+- 2026-11-02, his answers (`devlog-notes/2026-11-02_answers_knees_card_talk.md`): the CPR kneels on BOTH knees
+  (`CorpseCare.CprLegs`, leg muscles over the vendor kneel; the care test measures the knees); the floor shield works
+  on every floor; the map stays plain boxes; a tape paused by a screen waits for the tape key (no autoplay); no code
+  signing. THE CARD BY A WORD: the Interact key on a living, unarmed civilian who carries an item asks for it
+  (`Interaction/CarrierTalk.cs`, added by `EnemySpawn`), the second way past the W11 stair card. FOR THE SECOND PASS
+  (not built): backtracking and more rooms and puzzles, his list in `DEMO_PLAN.md` §12.
 
 ## Rules
 

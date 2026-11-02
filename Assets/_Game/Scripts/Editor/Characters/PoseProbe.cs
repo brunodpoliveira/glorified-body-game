@@ -126,6 +126,10 @@ namespace GlorifiedBody.Editor.Characters
                 Vector3 elbow = toChest * (animator.GetBoneTransform(HumanBodyBones.RightLowerArm).position - shoulder.position);
                 Vector3 palm = toChest * (animator.GetBoneTransform(HumanBodyBones.RightHand).rotation * Vector3.forward);
                 Debug.Log($"[PoseProbe] SET {sets[s].name} hand {hand.x:0.00} {hand.y:0.00} {hand.z:0.00} elbow {elbow.x:0.00} {elbow.y:0.00} {elbow.z:0.00} handfwd {palm.x:0.00} {palm.y:0.00} {palm.z:0.00}");
+                // The legs (2026-11-02, the CPR on both knees): the heights over the floor, and the toes against the knees.
+                float Y(HumanBodyBones b) => animator.GetBoneTransform(b) != null ? animator.GetBoneTransform(b).position.y : float.NaN;
+                Debug.Log($"[PoseProbe] SET {sets[s].name} legs hips {Y(HumanBodyBones.Hips):0.00} knees L {Y(HumanBodyBones.LeftLowerLeg):0.00} R {Y(HumanBodyBones.RightLowerLeg):0.00} "
+                    + $"feet L {Y(HumanBodyBones.LeftFoot):0.00} R {Y(HumanBodyBones.RightFoot):0.00} toes L {Y(HumanBodyBones.LeftToes):0.00} R {Y(HumanBodyBones.RightToes):0.00}");
                 if (s >= renderMax) continue;
                 // Edit mode does not skin the mesh again after a bone change: skin it here and draw it for each shot.
                 var drawn = new System.Collections.Generic.List<(Mesh mesh, Material[] materials)>();
