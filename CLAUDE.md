@@ -404,6 +404,12 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   release hides the debug line and the debug keys of How to Play. 90 MB on itch.io. A BUILD RUNS IN ITS OWN systemd
   SCOPE (9 GB): the web IL2CPP step once took 4.7 GB and the OOM stopped the whole Devin app. Every build switches the
   editor back to Linux. OPEN for Bruno: the manual web check (§5 of the note), code signing for Windows.
+- 2026-11-01, evening, THE REMAKE LOOK TEST, T26 (`devlog-notes/2026-11-01_remake_look.md`, restarted: the first pass had
+  the white room and the navy guard). The guard and Lucy's disguise wear the T24 light kit in the game
+  (`guard_basecolor.png`, `lucy_guard_basecolor.png`). `RemakeLook.unity` (`RemakeLookSetup.Build`, then `.Bake`): W1 in
+  the act 1 black look, profile A (the current look) and profile B (ten switches, `RemakeDirector`, F3) in one scene,
+  the full-mesh 3D Studio guard in B (`RemakeBodySwap`), bot `play RemakeLook Main_Menu remake 1500`. Static batching
+  is off in that scene (a batch broke the bake swap). OPEN for Bruno: the pick (the note's last section).
 
 ## Rules
 

@@ -122,5 +122,8 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/_Game/Scenes/Demo/Demo_U1.unity
     guid: 806d317fd8f24bce79f89b6674d89996
+  - enabled: 1
+    path: Assets/_Game/Scenes/RemakeLook.unity
+    guid: ff9e14b6b9b476779bd3df8a93646809
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0

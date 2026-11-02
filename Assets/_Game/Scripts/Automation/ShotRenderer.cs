@@ -15,7 +15,10 @@ namespace GlorifiedBody.Automation
         public static bool Render(Camera cam, string path, int width = 1280, int height = 720, bool useTargetTexture = false)
         {
             if (cam == null) return false;
-            var rt = RenderTexture.GetTemporary(width, height, 24, RenderTextureFormat.ARGB32);
+            // The pipeline's MSAA on the shot too (the Clear look, profile B of T26): a target texture renders with its own sample count.
+            var urp = UnityEngine.Rendering.Universal.UniversalRenderPipeline.asset;
+            int samples = useTargetTexture && cam.allowMSAA && urp != null ? Mathf.Max(1, urp.msaaSampleCount) : 1;
+            var rt = RenderTexture.GetTemporary(width, height, 24, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Default, samples);
             RenderTexture prevActive = RenderTexture.active;
             RenderTexture prevTarget = cam.targetTexture;
             try
