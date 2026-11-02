@@ -59,6 +59,9 @@ The recipe that works:
    `restore_hair` where the re-texture painted hair as skin.
 6. Measure the painted rows (eyes, nose, mouth, chin) before you move any vertex. Put the features THERE.
 7. Accept about 5 mm of asymmetry in a low-poly face. No post fix removed it without a new fault.
+8. **Gloss by material, for every character** (Bruno, 2026-11-02, T27). A baked metal-rough map makes cloth too
+   shiny (the T27 guard: smoothness mean 0.56). Cap fabric (uniforms, vests, trousers, caps, gowns, scrubs, hoods)
+   at about 0.25. Hard parts may stay glossy: masks, visors, lenses, helmets, armour, boots, holsters.
 
 What failed, never again:
 
