@@ -33,7 +33,9 @@ If the console shows a red line, copy it too.
 | 19 | In G2, use a lever at the G5 doorway. | A fire door, as in step 15. | No door. |
 | 20 | Press M. | The corner map shows your room. It follows you down the stair. | No map, or the wrong floor. |
 
-## C. Not for a manual test today
+## C. The look (no dither)
 
-- The dither: its asset step waits for a closed editor (`2026-11-03_no_dither.md`). The walls still show the dot
-  pattern until then. That is expected.
+| # | Do | Expected | If faulty |
+|---|---|---|---|
+| 21 | Open Options > Display > Look. | Two choices: "Sharp (no anti-aliasing)" and "Clear (anti-aliasing)". | "Authentic (1999)" shows. |
+| 22 | Pick Sharp. Look at a dark wall or a planter in a look test room (F11 in the training room). | A smooth gradient, no dot pattern. | A grid of dots on the walls. |
