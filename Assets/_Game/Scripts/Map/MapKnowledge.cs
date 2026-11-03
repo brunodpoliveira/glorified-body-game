@@ -14,12 +14,18 @@ namespace GlorifiedBody.Map
     /// </summary>
     public static class MapKnowledge
     {
+        /// <summary>Her room's key: her room in a world scene (2026-11-02), else the scene.</summary>
+        public static string Here => GlorifiedBody.Rooms.RoomTracker.Current != null ? GlorifiedBody.Rooms.RoomTracker.CurrentId : SceneManager.GetActiveScene().name;
+
         /// <summary>She knows the room: she is in it, she was in it, or she has the plan of its floor.</summary>
         public static bool Knows(MapRoom room, ItemInventory items)
         {
             if (room == null) return false;
-            return room.scene == SceneManager.GetActiveScene().name || WorldState.Visited(room.scene) || HasPlan(items, room.floor);
+            return room.scene == Here || WorldState.Visited(room.scene) || GlorifiedBody.Rooms.RoomTracker.WasIn(room.scene) || HasPlan(items, room.floor);
         }
+
+        /// <summary>The room's objects are loaded now: her scene, or a room of her world scene.</summary>
+        private static bool Live(MapRoom room, Scene here) => room.scene == here.name || (!string.IsNullOrEmpty(room.world) && room.world == here.name);
 
         /// <summary>She carries the floor plan of the floor.</summary>
         public static bool HasPlan(ItemInventory items, string floor)
@@ -38,7 +44,7 @@ namespace GlorifiedBody.Map
         {
             if (mark.kind != MapMarkKind.Item && mark.kind != MapMarkKind.Log) return true;
             Scene here = SceneManager.GetActiveScene();
-            if (room.scene == here.name)
+            if (Live(room, here))
             {
                 GameObject obj = ScenePaths.Find(here, mark.path);
                 if (obj == null || !obj.activeInHierarchy) return false;
@@ -52,7 +58,7 @@ namespace GlorifiedBody.Map
         {
             if (mark.kind != MapMarkKind.LockedDoor) return false;
             Scene here = SceneManager.GetActiveScene();
-            if (room.scene == here.name)
+            if (Live(room, here))
             {
                 GameObject obj = ScenePaths.Find(here, mark.path);
                 return obj != null && obj.TryGetComponent(out LockedDoor door) && door.IsOpen;

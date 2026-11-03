@@ -70,11 +70,13 @@ namespace GlorifiedBody.Audio
             GameAudio.Configure(roomTone, SoundChannel.Sfx, RoomToneLevel, false);
             roomTone.loop = true;
             HitEventBus.OnHit += OnHit;
+            GlorifiedBody.Rooms.RoomTracker.OnChanged += OnRoomChanged;
         }
 
         private void OnDestroy()
         {
             HitEventBus.OnHit -= OnHit;
+            GlorifiedBody.Rooms.RoomTracker.OnChanged -= OnRoomChanged;
             if (Instance == this) Instance = null;
         }
 
@@ -118,10 +120,21 @@ namespace GlorifiedBody.Audio
             if (hers || onHer) lastThreat = Time.time;
         }
 
+        /// <summary>A room change in the world scene: a new key starts its music; the same key changes nothing (a chase goes on).</summary>
+        private void OnRoomChanged(GlorifiedBody.Rooms.Room from, GlorifiedBody.Rooms.Room to)
+        {
+            RoomMusic music = to != null ? to.GetComponentInChildren<RoomMusic>() : null;
+            string key = music != null && !string.IsNullOrEmpty(music.Key) ? music.Key : RoomKey;
+            if (key == RoomKey && from != null) return;
+            EnterRoom(SceneManager.GetActiveScene());
+        }
+
         /// <summary>A new room: its key, its room tone. The music goes on if the new room has the same track.</summary>
         public void EnterRoom(Scene scene)
         {
-            RoomMusic room = FindFirstObjectByType<RoomMusic>();
+            // In the world scene (2026-11-02) every room has its RoomMusic: the one of her room counts.
+            GlorifiedBody.Rooms.Room here = GlorifiedBody.Rooms.RoomTracker.Current;
+            RoomMusic room = here != null ? here.GetComponentInChildren<RoomMusic>() : FindFirstObjectByType<RoomMusic>();
             RoomKey = room != null && !string.IsNullOrEmpty(room.Key) ? room.Key : scene.name;
             hunting = false;
             lastThreat = -100f;

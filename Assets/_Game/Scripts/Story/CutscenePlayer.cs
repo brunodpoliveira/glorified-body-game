@@ -17,8 +17,10 @@ namespace GlorifiedBody.Story
     /// Plays a CutsceneAsset over the room (the design sweep's rank 4). The game goes to its Cutscene state: the world
     /// stops, no game key passes, the world sounds pause, the music holds the cutscene's track or the silence. Each shot
     /// fills the screen (a still with its pan and zoom, or a video), its line plays on the Voice channel, and its
-    /// subtitle shows "SPEAKER: words". The skip key (Interact, Escape or Enter) ends it at once. At the end the screen
-    /// fades through black back to the room, the done flag goes up, and the game plays again.
+    /// subtitle shows "SPEAKER: words". The skip key (Interact, Escape or Enter) opens a menu with the movie paused
+    /// (Bruno, 2026-11-02: "it opens a menu where the player keeps the movie paused; they can resume or skip"): RESUME
+    /// plays on, SKIP ends it. At the end the screen fades through black back to the room, the done flag goes up, and the
+    /// game plays again; a sequence goes on with its next steps (a skip too: the story still changes).
     /// </summary>
     public sealed class CutscenePlayer : MonoBehaviour
     {
@@ -33,12 +35,17 @@ namespace GlorifiedBody.Story
         private AudioSource videoSound;
         private RenderTexture videoTexture;
         private bool skipped;
+        private GameObject menu;
+        private Text resumeLabel, skipLabel;
+        private int choice; // 0 resume, 1 skip
 
         public static bool IsPlaying { get; private set; }
         public static string Current { get; private set; } = "";
         public static int ShotIndex { get; private set; } = -1;
         public static int Played { get; private set; }
         public static int Skipped { get; private set; }
+        /// <summary>The skip menu is open: the movie holds.</summary>
+        public static bool MenuOpen { get; private set; }
         public static Texture Showing => instance != null && instance.picture != null && instance.canvas.enabled ? instance.picture.texture : null;
         public static Rect ShowingRect => instance != null && instance.picture != null ? instance.picture.uvRect : default;
 
@@ -52,10 +59,29 @@ namespace GlorifiedBody.Story
             return true;
         }
 
-        /// <summary>Ends the playing cutscene now (the skip key, and tests).</summary>
+        /// <summary>Ends the playing cutscene now (SKIP in the menu, and tests).</summary>
         public static void Skip()
         {
             if (instance != null && IsPlaying) instance.skipped = true;
+            MenuOpen = false;
+        }
+
+        /// <summary>Opens the skip menu: the movie, the line and the pan hold (the skip key, and tests).</summary>
+        public static void OpenMenu()
+        {
+            if (instance == null || !IsPlaying || MenuOpen) return;
+            MenuOpen = true;
+            instance.choice = 0;
+            instance.ShowMenu();
+            RunTelemetry.Event("cutscene_menu", Current);
+        }
+
+        /// <summary>RESUME: the movie plays on from where it held.</summary>
+        public static void Resume()
+        {
+            if (!MenuOpen) return;
+            MenuOpen = false;
+            if (instance != null) instance.ShowMenu();
         }
 
         private static CutscenePlayer Ensure()
@@ -93,6 +119,77 @@ namespace GlorifiedBody.Story
             videoSound.ignoreListenerPause = true;
             video.audioOutputMode = VideoAudioOutputMode.AudioSource;
             video.SetTargetAudioSource(0, videoSound);
+            BuildMenu();
+        }
+
+        private void BuildMenu()
+        {
+            // The held frame dims behind a solid panel: the words of a still do not show through the menu.
+            menu = new GameObject("SkipMenu", typeof(RectTransform));
+            menu.transform.SetParent(transform, false);
+            Stretch(menu.GetComponent<RectTransform>());
+            menu.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0.6f);
+            var panel = new GameObject("Panel", typeof(RectTransform));
+            panel.transform.SetParent(menu.transform, false);
+            RectTransform rect = panel.GetComponent<RectTransform>();
+            rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.sizeDelta = new Vector2(420f, 230f);
+            panel.AddComponent<Image>().color = new Color(0.03f, 0.03f, 0.04f, 1f);
+            Font font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            Label(panel.transform, font, "PAUSED", 30, new Vector2(0f, 70f), new Color(0.7f, 0.7f, 0.75f));
+            resumeLabel = Label(panel.transform, font, "RESUME", 38, new Vector2(0f, 5f), Color.white);
+            skipLabel = Label(panel.transform, font, "SKIP", 38, new Vector2(0f, -55f), Color.white);
+            foreach ((Text label, int index) in new[] { (resumeLabel, 0), (skipLabel, 1) })
+            {
+                Button button = label.gameObject.AddComponent<Button>();
+                button.transition = Selectable.Transition.None;
+                int which = index;
+                button.onClick.AddListener(() => { choice = which; Confirm(); });
+            }
+            menu.SetActive(false);
+        }
+
+        private static Text Label(Transform parent, Font font, string words, int size, Vector2 at, Color colour)
+        {
+            var obj = new GameObject(words, typeof(RectTransform));
+            obj.transform.SetParent(parent, false);
+            RectTransform rect = obj.GetComponent<RectTransform>();
+            rect.anchoredPosition = at;
+            rect.sizeDelta = new Vector2(380f, 50f);
+            Text text = obj.AddComponent<Text>();
+            text.font = font;
+            text.fontSize = size;
+            text.fontStyle = FontStyle.Bold;
+            text.alignment = TextAnchor.MiddleCenter;
+            text.color = colour;
+            text.text = words;
+            return text;
+        }
+
+        private void ShowMenu()
+        {
+            menu.SetActive(MenuOpen);
+            resumeLabel.text = choice == 0 ? "> RESUME <" : "RESUME";
+            skipLabel.text = choice == 1 ? "> SKIP <" : "SKIP";
+            resumeLabel.color = choice == 0 ? new Color(1f, 0.85f, 0.3f) : Color.white;
+            skipLabel.color = choice == 1 ? new Color(1f, 0.85f, 0.3f) : Color.white;
+        }
+
+        private void Confirm()
+        {
+            if (!MenuOpen) return;
+            if (choice == 1) Skip();
+            else Resume();
+            ShowMenu();
+        }
+
+        /// <summary>The menu's keys: up and down (or forward and back) choose, Interact or Enter confirms, Escape resumes.</summary>
+        private void MenuKeys()
+        {
+            if (GameInput.GetActionDown(InputManager.GameAction.Forward, KeyCode.W) || Input.GetKeyDown(KeyCode.UpArrow)) { choice = 0; ShowMenu(); }
+            else if (GameInput.GetActionDown(InputManager.GameAction.Back, KeyCode.S) || Input.GetKeyDown(KeyCode.DownArrow)) { choice = 1; ShowMenu(); }
+            else if (Input.GetKeyDown(KeyCode.Escape)) Resume();
+            else if (GameInput.GetActionDown(InputManager.GameAction.Interact, KeyCode.E) || Input.GetKeyDown(KeyCode.Return)) Confirm();
         }
 
         private static void Stretch(RectTransform rect)
@@ -149,9 +246,26 @@ namespace GlorifiedBody.Story
                 float t = 0f;
                 while (t < length && !skipped)
                 {
+                    if (MenuOpen)
+                    {
+                        // The movie holds: the clip, the line, the pan. The menu decides.
+                        if (video.isPlaying) video.Pause();
+                        if (line != null && line.isPlaying) line.Pause();
+                        int openedAt = Time.frameCount;
+                        while (MenuOpen && !skipped)
+                        {
+                            if (Time.frameCount > openedAt) MenuKeys();
+                            yield return null;
+                        }
+                        if (skipped) break;
+                        if (shot.video != null) video.Play();
+                        if (line != null) line.UnPause();
+                        yield return null; // the confirm key does not open the menu again
+                        continue;
+                    }
                     t += Time.unscaledDeltaTime;
                     if (shot.video == null) picture.uvRect = Pan(shot, Mathf.Clamp01(t / length));
-                    if (Time.unscaledTime - startedAt > SkipGuardSeconds && SkipPressed()) skipped = true;
+                    if (Time.unscaledTime - startedAt > SkipGuardSeconds && SkipPressed()) OpenMenu();
                     yield return null;
                 }
                 if (video.isPlaying) video.Stop();
@@ -160,6 +274,8 @@ namespace GlorifiedBody.Story
             }
 
             ShotIndex = -1; // the shots are over (the loop left it past the last one)
+            MenuOpen = false;
+            ShowMenu();
             if (skipped) Skipped++;
             RunTelemetry.Event(skipped ? "cutscene_skipped" : "cutscene_done", $"{asset.cutsceneId} at shot {ShotIndex}");
             fadeDone = false;
@@ -201,6 +317,7 @@ namespace GlorifiedBody.Story
             ShotIndex = -1;
             Played = 0;
             Skipped = 0;
+            MenuOpen = false;
         }
     }
 }

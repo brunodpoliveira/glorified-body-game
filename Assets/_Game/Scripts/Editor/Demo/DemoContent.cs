@@ -45,6 +45,71 @@ namespace GlorifiedBody.Editor.Demo
             return lines;
         }
 
+        public const string FmvFolder = "Assets/_Game/Cutscenes";
+        public const string FmvCardPath = FmvFolder + "/fmv_placeholder.png";
+
+        /// <summary>
+        /// A story cutscene of the demo as FMV (Bruno, 2026-11-02: "the two initial cutscenes (the stevens release and the
+        /// scientist thing) will be fmv cutscenes"): Resources/Cutscenes/cutscene_&lt;id&gt;.asset. The clip
+        /// Assets/_Game/Cutscenes/&lt;id&gt;.webm (VP8: the Linux editor has no H.264) is the whole cutscene when it exists.
+        /// Until then a dark card holds the place, one shot for each line of the writers' script, the line as its subtitle.
+        /// </summary>
+        public static CutsceneAsset Fmv(string file, string cutsceneId, string idPrefix)
+        {
+            Directory.CreateDirectory(ScriptTestSetup.CutscenesFolder);
+            string path = ScriptTestSetup.CutscenesFolder + "/cutscene_" + cutsceneId + ".asset";
+            var asset = AssetDatabase.LoadAssetAtPath<CutsceneAsset>(path);
+            if (asset == null)
+            {
+                asset = ScriptableObject.CreateInstance<CutsceneAsset>();
+                AssetDatabase.CreateAsset(asset, path);
+            }
+            asset.cutsceneId = cutsceneId;
+            asset.music = null;
+            var clip = AssetDatabase.LoadAssetAtPath<UnityEngine.Video.VideoClip>(FmvFolder + "/" + cutsceneId + ".webm");
+            var shots = new List<CutsceneAsset.Shot>();
+            if (clip != null) shots.Add(new CutsceneAsset.Shot { video = clip, seconds = 1f });
+            else
+            {
+                Texture2D card = Card();
+                int n = 0;
+                foreach ((string speaker, string text) in Lines(file))
+                    shots.Add(new CutsceneAsset.Shot
+                    {
+                        still = card, seconds = Mathf.Clamp(1.2f + text.Length * 0.055f, 2f, 6f),
+                        panFrom = new Vector3(0f, 0f, 1f), panTo = new Vector3(0f, 0f, 1f),
+                        speaker = speaker, lineId = $"{idPrefix}_{n++:00}", text = text,
+                    });
+            }
+            asset.shots = shots.ToArray();
+            EditorUtility.SetDirty(asset);
+            AssetDatabase.SaveAssets();
+            return asset;
+        }
+
+        /// <summary>The dark card of an FMV slot with no clip yet: a grey frame on black (no words: the subtitles carry them).</summary>
+        private static Texture2D Card()
+        {
+            var card = AssetDatabase.LoadAssetAtPath<Texture2D>(FmvCardPath);
+            if (card != null) return card;
+            Directory.CreateDirectory(FmvFolder);
+            const int w = 640, h = 360;
+            var tex = new Texture2D(w, h, TextureFormat.RGB24, false);
+            var px = new Color32[w * h];
+            for (int y = 0; y < h; y++)
+                for (int x = 0; x < w; x++)
+                {
+                    bool frame = (x > 24 && x < w - 24 && (y == 24 || y == h - 25)) || (y > 24 && y < h - 24 && (x == 24 || x == w - 25));
+                    byte v = frame ? (byte)70 : (byte)12;
+                    px[y * w + x] = new Color32(v, v, (byte)(v + 3), 255);
+                }
+            tex.SetPixels32(px);
+            File.WriteAllBytes(FmvCardPath, tex.EncodeToPNG());
+            Object.DestroyImmediate(tex);
+            AssetDatabase.ImportAsset(FmvCardPath);
+            return AssetDatabase.LoadAssetAtPath<Texture2D>(FmvCardPath);
+        }
+
         /// <summary>The lines as steps: each one a subtitle with its speaker (a radio line: no voice yet), at reading pace.</summary>
         public static List<ScriptStep> Steps(string file, string idPrefix, int max = 99)
         {

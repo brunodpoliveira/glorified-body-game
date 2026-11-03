@@ -247,6 +247,8 @@ namespace GlorifiedBody.Player
             {
                 Health other = col.GetComponentInParent<Health>();
                 if (other == best || !CanShock(other, origin)) continue;
+                if (!GlorifiedBody.Rooms.Room.Same(origin, other.transform.position)
+                    && Physics.Linecast(origin + Vector3.up, other.transform.position + Vector3.up, LayerMask.GetMask("Default"), QueryTriggerInteraction.Ignore)) continue; // no shock through a wall (2026-11-02)
                 float distance = (other.transform.position - origin).sqrMagnitude;
                 if (distance >= bestDistance) continue;
                 best = other;

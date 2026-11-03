@@ -1,0 +1,76 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4b009882ac86ab7df88ae9f6a98ca8d5, type: 3}
+  m_Name: cutscene_02_the_scientist
+  m_EditorClassIdentifier: Assembly-CSharp::GlorifiedBody.Story.CutsceneAsset
+  cutsceneId: 02_the_scientist
+  shots:
+  - still: {fileID: 2800000, guid: ac9c33c1e928167c79fe8e580e38f6ef, type: 3}
+    video: {fileID: 0}
+    seconds: 4.39
+    panFrom: {x: 0, y: 0, z: 1}
+    panTo: {x: 0, y: 0, z: 1}
+    speaker: SCIENTIST
+    lineId: cs02_00
+    text: Computer. Subject has escaped containment. Request advice.
+  - still: {fileID: 2800000, guid: ac9c33c1e928167c79fe8e580e38f6ef, type: 3}
+    video: {fileID: 0}
+    seconds: 6
+    panFrom: {x: 0, y: 0, z: 1}
+    panTo: {x: 0, y: 0, z: 1}
+    speaker: COMPUTER
+    lineId: cs02_01
+    text: With a firm tone of voice, demand the subject lie down on the ground, hands
+      behind their back.
+  - still: {fileID: 2800000, guid: ac9c33c1e928167c79fe8e580e38f6ef, type: 3}
+    video: {fileID: 0}
+    seconds: 3.785
+    panFrom: {x: 0, y: 0, z: 1}
+    panTo: {x: 0, y: 0, z: 1}
+    speaker: SCIENTIST
+    lineId: cs02_02
+    text: Lie down on the ground. Hands behind your back.
+  - still: {fileID: 2800000, guid: ac9c33c1e928167c79fe8e580e38f6ef, type: 3}
+    video: {fileID: 0}
+    seconds: 2.4650002
+    panFrom: {x: 0, y: 0, z: 1}
+    panTo: {x: 0, y: 0, z: 1}
+    speaker: SCIENTIST
+    lineId: cs02_03
+    text: Subject did not comply.
+  - still: {fileID: 2800000, guid: ac9c33c1e928167c79fe8e580e38f6ef, type: 3}
+    video: {fileID: 0}
+    seconds: 6
+    panFrom: {x: 0, y: 0, z: 1}
+    panTo: {x: 0, y: 0, z: 1}
+    speaker: COMPUTER
+    lineId: cs02_04
+    text: 'Approach the subject and repeat the ultimatum in an even firmer tone of
+      voice. Add at the end: "or else".'
+  - still: {fileID: 2800000, guid: ac9c33c1e928167c79fe8e580e38f6ef, type: 3}
+    video: {fileID: 0}
+    seconds: 3.8400002
+    panFrom: {x: 0, y: 0, z: 1}
+    panTo: {x: 0, y: 0, z: 1}
+    speaker: SCIENTIST
+    lineId: cs02_05
+    text: Lie down. On the ground. Hands behind your back.
+  - still: {fileID: 2800000, guid: ac9c33c1e928167c79fe8e580e38f6ef, type: 3}
+    video: {fileID: 0}
+    seconds: 2
+    panFrom: {x: 0, y: 0, z: 1}
+    panTo: {x: 0, y: 0, z: 1}
+    speaker: SCIENTIST
+    lineId: cs02_06
+    text: Or else.
+  music: {fileID: 0}
+  doneFlag: 

@@ -11,7 +11,7 @@ namespace GlorifiedBody.Saving
     [Serializable]
     public sealed class SaveData
     {
-        public const int CurrentVersion = 1;
+        public const int CurrentVersion = 2; // 2 (2026-11-02): the demo is one world scene, the rooms she was in
 
         public int version = CurrentVersion;
         public string scene = "";
@@ -26,6 +26,8 @@ namespace GlorifiedBody.Saving
         public List<RoomState> rooms = new List<RoomState>();
         public LedgerState ledger = new LedgerState();
         public List<string> flags = new List<string>();
+        /// <summary>The rooms of the world scene she was in (the map shows them). An older file has none.</summary>
+        public List<string> visited = new List<string>();
     }
 
     [Serializable]

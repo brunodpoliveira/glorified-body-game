@@ -1,0 +1,83 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4b009882ac86ab7df88ae9f6a98ca8d5, type: 3}
+  m_Name: cutscene_01_the_wake
+  m_EditorClassIdentifier: Assembly-CSharp::GlorifiedBody.Story.CutsceneAsset
+  cutsceneId: 01_the_wake
+  shots:
+  - still: {fileID: 2800000, guid: ac9c33c1e928167c79fe8e580e38f6ef, type: 3}
+    video: {fileID: 0}
+    seconds: 2
+    panFrom: {x: 0, y: 0, z: 1}
+    panTo: {x: 0, y: 0, z: 1}
+    speaker: STEVENS
+    lineId: cs01_00
+    text: Lucy.
+  - still: {fileID: 2800000, guid: ac9c33c1e928167c79fe8e580e38f6ef, type: 3}
+    video: {fileID: 0}
+    seconds: 2.19
+    panFrom: {x: 0, y: 0, z: 1}
+    panTo: {x: 0, y: 0, z: 1}
+    speaker: STEVENS
+    lineId: cs01_01
+    text: Your name is Lucy.
+  - still: {fileID: 2800000, guid: ac9c33c1e928167c79fe8e580e38f6ef, type: 3}
+    video: {fileID: 0}
+    seconds: 4.775
+    panFrom: {x: 0, y: 0, z: 1}
+    panTo: {x: 0, y: 0, z: 1}
+    speaker: STEVENS
+    lineId: cs01_02
+    text: You're confused. You're dizzy. That's normal, and I can't fix it.
+  - still: {fileID: 2800000, guid: ac9c33c1e928167c79fe8e580e38f6ef, type: 3}
+    video: {fileID: 0}
+    seconds: 2.74
+    panFrom: {x: 0, y: 0, z: 1}
+    panTo: {x: 0, y: 0, z: 1}
+    speaker: STEVENS
+    lineId: cs01_03
+    text: Neither of us has much time.
+  - still: {fileID: 2800000, guid: ac9c33c1e928167c79fe8e580e38f6ef, type: 3}
+    video: {fileID: 0}
+    seconds: 2.4650002
+    panFrom: {x: 0, y: 0, z: 1}
+    panTo: {x: 0, y: 0, z: 1}
+    speaker: STEVENS
+    lineId: cs01_04
+    text: The screen by the door.
+  - still: {fileID: 2800000, guid: ac9c33c1e928167c79fe8e580e38f6ef, type: 3}
+    video: {fileID: 0}
+    seconds: 6
+    panFrom: {x: 0, y: 0, z: 1}
+    panTo: {x: 0, y: 0, z: 1}
+    speaker: STEVENS
+    lineId: cs01_05
+    text: The part in red. Nobody's finished it. There are no cameras in there. I'll
+      make sure it's empty.
+  - still: {fileID: 2800000, guid: ac9c33c1e928167c79fe8e580e38f6ef, type: 3}
+    video: {fileID: 0}
+    seconds: 2.025
+    panFrom: {x: 0, y: 0, z: 1}
+    panTo: {x: 0, y: 0, z: 1}
+    speaker: STEVENS
+    lineId: cs01_06
+    text: Take the sheet.
+  - still: {fileID: 2800000, guid: ac9c33c1e928167c79fe8e580e38f6ef, type: 3}
+    video: {fileID: 0}
+    seconds: 4.335
+    panFrom: {x: 0, y: 0, z: 1}
+    panTo: {x: 0, y: 0, z: 1}
+    speaker: STEVENS
+    lineId: cs01_07
+    text: I can't walk you there. You'll have to find your own way.
+  music: {fileID: 0}
+  doneFlag: 

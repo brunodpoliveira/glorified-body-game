@@ -276,7 +276,7 @@ namespace GlorifiedBody.Enemy
                 Health h = other.GetComponent<Health>();
                 if (h == null || !h.IsDead || tended.Contains(other.transform)) continue;
                 float d = Flat(transform.position, other.transform.position);
-                if (d >= bestDistance) continue;
+                if (d >= bestDistance || !GlorifiedBody.Rooms.Room.Same(transform.position, other.transform.position)) continue; // a body in its own room (2026-11-02)
                 // The nearest free colleague takes it: another live one nearer to the body goes instead.
                 if (NearerCarer(other.transform, d)) continue;
                 best = other.transform;

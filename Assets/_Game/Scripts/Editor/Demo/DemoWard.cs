@@ -35,7 +35,7 @@ namespace GlorifiedBody.Editor.Demo
                 Room("W9", "NURSES' STATION", 3, -10, 17, -2, W9, new Door('N', 14, "W8"), new Door('W', -6, "", flag: CodeSilver), new Door('E', -7, "W10"), new Door('S', 8, "W11"), new Door('S', 15, "W12")),
                 Room("W10", "RESEARCH OFFICE", 17, -10, 23, -4, W10, new Door('W', -7, "W9")),
                 Room("W11", "MAPPING LAB", 3, -18, 13, -10, W11, new Door('N', 8, "W9")),
-                Room("W12", "STAIRWELL", 13, -14, 17, -10, W12, new Door('N', 15, "W9"), new Door('S', 15, "G1")),
+                Room("W12", "STAIRWELL", 13, -14, 17, -10, W12, new Door('N', 15, "W9"), new Door('S', 15, "S1")),
             };
             return rooms;
         }
@@ -47,13 +47,8 @@ namespace GlorifiedBody.Editor.Demo
             return spec;
         }
 
-        [MenuItem("GlorifiedBody/Demo/Build Floor 2 (the ward)")]
-        public static void BuildAll()
-        {
-            foreach (RoomSpec spec in Rooms()) DemoRoom.Build(spec);
-            MenuLoopSetup.CleanBuildSettings();
-            AssetDatabase.SaveAssets();
-        }
+        /// <summary>The ward is a part of the world scene: this builds the whole world (DemoWorld.BuildAll).</summary>
+        public static void BuildAll() => DemoWorld.BuildAll();
 
         // ── The rooms ─────────────────────────────────────────────────
 
@@ -76,21 +71,28 @@ namespace GlorifiedBody.Editor.Demo
                 ScriptStep.LockHer(),
                 ScriptStep.Wait(1f),
             };
-            wake.AddRange(DemoScripts.Steps("cutscenes/01_the_wake.md", "cs01"));
+            wake.Add(ScriptStep.Play(DemoScripts.Fmv("cutscenes/01_the_wake.md", "01_the_wake", "cs01"))); // FMV (Bruno, 2026-11-02)
             wake.Add(ScriptStep.FreeHer());
             r.Beat("W1_Wake", "demo_w1_wake", Vector3.zero, Vector3.zero, wake.ToArray());
 
             // The scientist comes in at the door once she nears it with the printout (beat 3, cutscene 02). Bruno,
             // 2026-11-02: "the first scientist should be in a secondary room ... it should do the dialogue then he
-            // attacks her". He waits in the corridor behind the door, stops in the doorway (the cutscene), talks, steps
-            // in on the second ultimatum, and attacks after "Or else." A hit from her ends the talk early.
+            // attacks her". He waits in the corridor W2 behind the door, stops in the doorway (the cutscene), and attacks
+            // after it. A hit from her ends the talk early.
             GameObject scientist = MenuLoopSetup.EnsureChild(r.Figures, "Group_Scientist");
             r.Figure("Scientist_Knife", "labworker_knife", new Vector3(4f, 0f, 12.3f), 0f, parent: scientist);
             scientist.SetActive(false);
-            var meet = new List<ScriptStep> { ScriptStep.Show(scientist), ScriptStep.Approach(scientist, new Vector3(4f, 0f, 13.85f)), ScriptStep.Wait(0.6f) };
-            meet.AddRange(DemoScripts.Steps("cutscenes/02_the_scientist.md", "cs02"));
-            int stepIn = meet.FindIndex(s => s.text.StartsWith("Lie down. On the ground."));
-            if (stepIn > 0) meet.Insert(stepIn, ScriptStep.Approach(scientist, new Vector3(4f, 0f, 14.7f)));
+            // The talk is an FMV (Bruno, 2026-11-02): she sees him come into the doorway, the cutscene plays, he steps in after
+            // it and attacks.
+            var meet = new List<ScriptStep>
+            {
+                ScriptStep.Show(scientist),
+                ScriptStep.Approach(scientist, new Vector3(4f, 0f, 13.85f)),
+                ScriptStep.Wait(1.8f),
+                ScriptStep.Play(DemoScripts.Fmv("cutscenes/02_the_scientist.md", "02_the_scientist", "cs02")),
+                ScriptStep.Approach(scientist, new Vector3(4f, 0f, 14.7f)),
+                ScriptStep.Wait(0.5f),
+            };
             meet.Add(ScriptStep.Alert(scientist));
             r.Beat("W1_Scientist", "demo_w1_scientist", new Vector3(4f, 1f, 15.6f), new Vector3(5.6f, 2f, 1.6f), meet.ToArray());
         }
@@ -259,7 +261,7 @@ namespace GlorifiedBody.Editor.Demo
         /// <summary>W12: the stairwell door, locked by the card (beat 15); the scan C3 shows the card.</summary>
         private static void W12(DemoRoom r)
         {
-            r.LockedLeaf(r.DoorTo("G1"), DemoItems.StairCard().itemId, "the ward sister's card");
+            r.LockedLeaf(r.DoorTo("S1"), DemoItems.StairCard().itemId, "the ward sister's card");
             r.Box(r.Props, "Card_Reader", new Vector3(16f, 1.2f, -13.95f), new Vector3(0.12f, 0.18f, 0.04f), DemoRoom.Colour("reader_red", new Color(0.9f, 0.1f, 0.1f)));
             r.Scan("Scan_Stair_Door", new Vector3(15f, 1.2f, -13.7f), "demo_c3_door", "PLACEHOLDER (C3): a white card on a lanyard, against red scrubs.");
             r.Prop("Stairs_Down", new Vector3(13.8f, 0f, -11f), new Vector3(1.2f, 0.4f, 1.8f), 0.3f);

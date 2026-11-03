@@ -34,7 +34,8 @@ namespace GlorifiedBody.UI
         [SerializeField] private string wardTestScene = "WardTest";     // a patient, a scan on a person, feeding (2026-10-30)
         [SerializeField] private string screenTestScene = "ScreenTest"; // the in-world screens (2026-10-31)
         [SerializeField] private string outfitTestScene = "OutfitTest"; // the outfit change (2026-10-31)
-        [SerializeField] private string demoScene = "Demo_W1";          // START: the demo, in greybox (2026-10-31)
+        /// <summary>START: the demo, one world scene with every room (2026-11-02; a scene per room since 2026-10-31).</summary>
+        public const string DemoScene = "Demo";
         [SerializeField] private string subtitleLabel = "WORK IN PROGRESS";
 
         private Canvas canvas;
@@ -189,7 +190,7 @@ namespace GlorifiedBody.UI
 
         private void OnStartClicked()
         {
-            GameManager.Instance?.LoadLevel(demoScene);
+            GameManager.Instance?.LoadLevel(DemoScene);
         }
 
         private void OnModifiersClicked()

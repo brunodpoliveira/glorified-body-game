@@ -77,7 +77,7 @@ namespace GlorifiedBody.Interaction
         public AudioSource Sound => sound;
         public string SubtitleOwner => "screen:" + name;
         /// <summary>She is near enough to hear its words.</summary>
-        public bool Heard => on && lucy != null && Vector3.Distance(lucy.position, SoundPoint) <= hearing;
+        public bool Heard => on && lucy != null && Vector3.Distance(lucy.position, SoundPoint) <= hearing && GlorifiedBody.Rooms.Room.Same(lucy.position, SoundPoint); // not through a wall (2026-11-02)
 
         private Vector3 SoundPoint
         {

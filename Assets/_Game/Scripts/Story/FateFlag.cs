@@ -23,19 +23,33 @@ namespace GlorifiedBody.Story
         public string SparedFlag => fate + "_spared";
         public string ScannedFlag => fate + "_scanned";
 
-        private void Awake() => health = GetComponent<Health>();
+        // The person's room in the world scene (2026-11-02): "spared" when she leaves that room, not any room.
+        private GlorifiedBody.Rooms.Room room;
+
+        private void Awake()
+        {
+            health = GetComponent<Health>();
+            room = GetComponentInParent<GlorifiedBody.Rooms.Room>();
+        }
 
         private void OnEnable()
         {
             health.OnDeath ??= new UnityEngine.Events.UnityEvent();
             health.OnDeath.AddListener(OnDeath);
             RoomExit.OnLeaving += OnLeaving;
+            GlorifiedBody.Rooms.RoomTracker.OnChanged += OnRoomChanged;
         }
 
         private void OnDisable()
         {
             health.OnDeath?.RemoveListener(OnDeath);
             RoomExit.OnLeaving -= OnLeaving;
+            GlorifiedBody.Rooms.RoomTracker.OnChanged -= OnRoomChanged;
+        }
+
+        private void OnRoomChanged(GlorifiedBody.Rooms.Room from, GlorifiedBody.Rooms.Room to)
+        {
+            if (room != null && from == room) OnLeaving();
         }
 
         private void OnDeath()
@@ -49,6 +63,7 @@ namespace GlorifiedBody.Story
 
         private void OnLeaving()
         {
+            if (room != null && GlorifiedBody.Rooms.RoomTracker.Current == room) return; // a door of a room scene: not hers
             if (string.IsNullOrEmpty(fate) || health.IsDead || StoryFlags.Has(SparedFlag)) return;
             StoryFlags.Raise(SparedFlag);
             RunTelemetry.Event("fate", SparedFlag);

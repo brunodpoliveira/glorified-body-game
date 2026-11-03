@@ -385,13 +385,13 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   `tools/unity.sh build release|dev [linux|windows]` (`Editor/PlayerBuild.cs`, 2 h limit, output in `builds/`, out of
   git and MEGA); a release has the menu, training, tutorial and the Demo_* rooms; `GameBuild.Dev` (editor, development
   build or `-gbDev`) gates the debug keys and the TEST ROOMS column. The triage marks a run that did not end DIRTY.
-  THE DEMO: 22 rooms in plan metres (`Scenes/Demo/Demo_<id>.unity`, `Editor/Demo/`: `DemoRoom` the kit, `DemoWard`
+  THE DEMO: 22 rooms in plan metres (`Scenes/Demo/Demo_<id>.unity` until 2026-11-02, now one world scene, `Editor/Demo/`: `DemoRoom` the kit, `DemoWard`
   W1 to W12, `DemoPublic` G1 to G9 and U1, `DemoContent` the logs and the writers' cutscene lines as subtitles), the
   map floors "THE WARD" and "THE PUBLIC FLOOR". START loads the demo (W1); TRAINING ROOM is dev only since 2026-11-02 (the
   top of the TEST ROOMS column, not in a release). NO BLIND SPOTS (Bruno): each camera cell searches its pose by the coverage rule
   (`CameraCoverage.Sees`) and splits while it misses any point; `DemoTests` fails on one point out of frame (G5 has
   16 cameras, U1 13). A room change: run its BuildAll, then `MapAtlasSetup.BuildAtlas`. Proof: `DemoTests` (4), bot
-  `play Demo_W1 Main_Menu demo 900` (one shot a camera). `FlagSwitch` (a switch that raises a flag),
+  `play Demo Main_Menu demo 900` (one shot a camera). `FlagSwitch` (a switch that raises a flag),
   `ScriptedSequence.runOnStart`, `StepKind.EndDemo`.
   TBD (Bruno): a second way past the W11 stair card, a bit out of the way, that lets her go on without the ward
   sister's death. He reports on the cameras after his playthrough.
@@ -429,6 +429,20 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   waits in the corridor behind the door and talks first (`ScriptStep.Approach`, `SoldierBrain.ScriptHold`: no sight
   alert, he walks to a point and turns to her; the script's Alert, a hit or a power ends it). A demo exit fills its
   doorway (`DemoRoom.Doorway`), not the end of the stub.
+- 2026-11-02, ONE WORLD (`devlog-notes/2026-11-02_one_world.md`, Bruno: "i want all the map to be built and loaded up
+  in one go, we just cull rendering"): the demo is ONE scene, `Scenes/Demo/Demo.unity` (`DemoWorld.BuildAll`, then
+  `MapAtlasSetup.BuildAtlas`), loaded once by START; the room scenes `Demo_W1`.. are gone. A room is a root with a
+  `Room` (`Scripts/Rooms/`); `RoomTracker` finds her room, raises `OnChanged`, culls the far rooms' drawing (colliders
+  stay). Doorways open into the next room (no stubs, no exits); shared walls are built once (`WallLedger`). Floor 1 is
+  at `DemoWorld.Floor1Offset` (12.5, -4, -31); the stair room S1 (a ramp) joins W12 to G1 (his pick: a real stair).
+  One NavMesh: enemies chase her through doors (his pick); hearing reaches her room and next door (`Room.Hear`), a
+  heard death, a whisper and a care search stay in one room (`Room.Same`); lock-on needs a line in the world. RETRY:
+  the retry point moves when she walks into a room (`SaveSystem.OnRoomChanged`). Save version 2 (`visited`). The music,
+  the map, `runOnStart` beats, fate flags and `FlagGate.waitUnseen` follow her room. FMV: the skip key opens a menu
+  (PAUSED, RESUME, SKIP; `CutscenePlayer.MenuOpen`), `ScriptStep.Give(itemId)`, the W1 beats are FMV slots
+  (`DemoScripts.Fmv`; a clip at `Assets/_Game/Cutscenes/<id>.webm` becomes the cutscene). The scientist waits in W2 and
+  talks first (`ScriptStep.Approach`). Bot `play Demo Main_Menu demo 900`. NEXT: doors she locks and soldiers breach,
+  the DOOR TEST room (DEMO_PLAN §13.2). FOR LATER: flanking (§13.1).
 
 ## Rules
 

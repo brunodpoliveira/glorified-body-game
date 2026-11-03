@@ -132,7 +132,7 @@ namespace GlorifiedBody.Enemy
             if (corpse == this || health.IsDead) return;
             Vector3 eye = transform.position + Vector3.up * 1.6f;
             float distance = Vector3.Distance(eye, chest);
-            bool near = distance <= hearRange;
+            bool near = distance <= hearRange && GlorifiedBody.Rooms.Room.Same(transform.position, chest); // not through a wall (2026-11-02)
             bool sees = distance <= witnessRange && !Physics.Linecast(eye, chest, LayerMask.GetMask("Default"), QueryTriggerInteraction.Ignore);
             if (!near && !sees) return;
             See(corpse, gruesome);
@@ -144,7 +144,7 @@ namespace GlorifiedBody.Enemy
             Vector3 eye = transform.position + Vector3.up * 1.6f;
             Vector3 at = body.Point + Vector3.up * 0.3f;
             float distance = Vector3.Distance(eye, at);
-            bool near = distance <= hearRange;
+            bool near = distance <= hearRange && GlorifiedBody.Rooms.Room.Same(transform.position, at);
             bool sees = distance <= witnessRange && !Physics.Linecast(eye, at, LayerMask.GetMask("Default"), QueryTriggerInteraction.Ignore);
             if (near || sees) SeeFeed(body.name);
         }

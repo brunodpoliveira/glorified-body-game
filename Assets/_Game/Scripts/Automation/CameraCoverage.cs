@@ -46,19 +46,26 @@ namespace GlorifiedBody.Automation
             CameraZone[] zones = Object.FindObjectsByType<CameraZone>(FindObjectsSortMode.None);
             // The floors: the RoomFace floors of the look rooms; a room of the kit (boxes, 2026-10-26) has none, so its
             // box colliders named "...Floor" stand in. Each floor is a centre and a size on the ground.
-            var floors = new List<(Vector3 centre, float width, float depth)>();
+            // A box floor carries its collider: a point stands on its top (the floors of the world scene lie at two
+            // heights, the stair's ramp slopes, 2026-11-02).
+            var floors = new List<(Vector3 centre, float width, float depth, BoxCollider box)>();
             foreach (RoomFace face in Object.FindObjectsByType<RoomFace>(FindObjectsSortMode.None).Where(f => f.name.EndsWith("Floor")))
-                floors.Add((face.transform.position, face.width, face.height)); // a floor face: local x along world x, local y along world z
+                floors.Add((face.transform.position, face.width, face.height, null)); // a floor face: local x along world x, local y along world z
             if (floors.Count == 0)
                 foreach (BoxCollider box in Object.FindObjectsByType<BoxCollider>(FindObjectsSortMode.None).Where(b => b.name.EndsWith("Floor") && !b.isTrigger))
-                    floors.Add((new Vector3(box.bounds.center.x, 0f, box.bounds.center.z), box.bounds.size.x, box.bounds.size.z));
-            foreach ((Vector3 c, float width, float depth) in floors)
+                    floors.Add((new Vector3(box.bounds.center.x, box.bounds.max.y, box.bounds.center.z), box.bounds.size.x, box.bounds.size.z, box));
+            foreach ((Vector3 c, float width, float depth, BoxCollider floorBox) in floors)
             {
                 for (float dx = -width * 0.5f + 0.45f; dx <= width * 0.5f - 0.45f; dx += 0.5f)
                 {
                     for (float dz = -depth * 0.5f + 0.45f; dz <= depth * 0.5f - 0.45f; dz += 0.5f)
                     {
-                        Vector3 p = new Vector3(c.x + dx, 0f, c.z + dz);
+                        Vector3 p = new Vector3(c.x + dx, floorBox != null ? c.y : 0f, c.z + dz);
+                        if (floorBox != null)
+                        {
+                            if (!floorBox.Raycast(new Ray(p + Vector3.up * 0.5f, Vector3.down), out RaycastHit top, 20f)) continue;
+                            p.y = top.point.y;
+                        }
                         // The camera zones are trigger boxes on the same layer: both queries ignore triggers.
                         int solid = targetsOcclude ? roomLayers | LayerMask.GetMask("Enemy") : roomLayers;
                         if (Physics.CheckBox(p + Vector3.up * 0.9f, new Vector3(0.2f, 0.8f, 0.2f), Quaternion.identity, solid, QueryTriggerInteraction.Ignore)) continue;

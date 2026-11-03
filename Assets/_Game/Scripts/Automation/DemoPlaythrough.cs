@@ -16,11 +16,12 @@ using GlorifiedBody.Systems;
 namespace GlorifiedBody.Automation
 {
     /// <summary>
-    /// The demo bot (the greybox of floors 2 and 1, 2026-10-31): loads every demo room in turn, waits for its figures,
-    /// holds each fixed camera and saves a 1080p shot, so Bruno sees each room with its people in place. Lucy cannot be
-    /// hurt during the tour. Active only when BotArgs.Bot == "demo". Writes playthrough.json and
-    /// shots/demo_&lt;room&gt;_&lt;camera&gt;.png to BotArgs.RunDir.
-    /// Batch: tools/unity.sh play Demo_W1 Main_Menu demo 900
+    /// The demo bot (the greybox of floors 2 and 1, 2026-10-31): since 2026-11-02 the demo is one world scene, loaded
+    /// once. The bot puts Lucy in every room in turn (her room changes, no scene loads), holds each fixed camera of the
+    /// room and saves a 1080p shot, so Bruno sees each room with its people in place. Lucy cannot be hurt during the
+    /// tour. Active only when BotArgs.Bot == "demo". Writes playthrough.json and shots/demo_&lt;camera&gt;.png to
+    /// BotArgs.RunDir.
+    /// Batch: tools/unity.sh play Demo Main_Menu demo 900
     /// </summary>
     [DefaultExecutionOrder(-1000)]
     public class DemoPlaythrough : MonoBehaviour
@@ -28,7 +29,7 @@ namespace GlorifiedBody.Automation
         public const int ShotWidth = 1920, ShotHeight = 1080;
         public static readonly string[] Rooms =
         {
-            "W1", "W2", "W3", "W4", "W5", "W6", "W7", "W8", "W9", "W10", "W11", "W12",
+            "W1", "W2", "W3", "W4", "W5", "W6", "W7", "W8", "W9", "W10", "W11", "W12", "S1",
             "G1", "G2", "G3", "G4", "G5", "G6", "G7", "G8", "G9", "U1",
         };
 
@@ -86,22 +87,34 @@ namespace GlorifiedBody.Automation
         {
             yield return new WaitForSecondsRealtime(1f);
             string shotsDir = Path.Combine(BotArgs.RunDirOrData, "shots");
+            int loads = 0;
+            UnityEngine.Events.UnityAction<Scene, LoadSceneMode> count = (scene, mode) => loads++;
+            if (SceneManager.GetActiveScene().name != World)
+            {
+                GameManager.Instance.LoadLevel(World);
+                float t0 = Time.realtimeSinceStartup;
+                while ((SceneManager.GetActiveScene().name != World || !GameManager.Instance.IsPlaying) && Time.realtimeSinceStartup - t0 < 60f) yield return null;
+            }
+            yield return new WaitForSecondsRealtime(0.5f);
+            SceneManager.sceneLoaded += count;
+            GameObject lucy = GameObject.FindGameObjectWithTag("Player");
+            Health health = lucy != null ? lucy.GetComponentInChildren<Health>() : null;
+            health?.SetInvulnerable(true);
+            FixedCameraDirector director = FixedCameraDirector.Instance;
+            Record("world", SceneManager.GetActiveScene().name == World && lucy != null && director != null && GlorifiedBody.Rooms.Room.All.Count == Rooms.Length && EnemySpawn.Missing == 0,
+                $"scene={SceneManager.GetActiveScene().name} rooms={GlorifiedBody.Rooms.Room.All.Count} figures={FindObjectsByType<FeedableBody>(FindObjectsSortMode.None).Length} missing={EnemySpawn.Missing}");
             foreach (string id in Rooms)
             {
-                string scene = "Demo_" + id;
-                GameManager.Instance.LoadLevel(scene);
-                float t0 = Time.realtimeSinceStartup;
-                while ((SceneManager.GetActiveScene().name != scene || !GameManager.Instance.IsPlaying) && Time.realtimeSinceStartup - t0 < 30f) yield return null;
-                yield return new WaitForSecondsRealtime(0.5f);
-                GameObject lucy = GameObject.FindGameObjectWithTag("Player");
-                Health health = lucy != null ? lucy.GetComponentInChildren<Health>() : null;
-                health?.SetInvulnerable(true);
-                FixedCameraDirector director = FixedCameraDirector.Instance;
-                FixedCamera[] cameras = FindObjectsByType<FixedCamera>(FindObjectsSortMode.None).OrderBy(c => c.cameraName).ToArray();
-                int figures = FindObjectsByType<FeedableBody>(FindObjectsSortMode.None).Length;
-                Record($"room_{id}", SceneManager.GetActiveScene().name == scene && lucy != null && director != null && cameras.Length > 0 && EnemySpawn.Missing == 0,
-                    $"scene={SceneManager.GetActiveScene().name} cameras={cameras.Length} figures={figures} missing={EnemySpawn.Missing}");
-                if (director == null) continue;
+                GlorifiedBody.Rooms.Room room = GlorifiedBody.Rooms.Room.Of(id);
+                if (room == null || lucy == null || director == null) { Record($"room_{id}", false, "no such room"); continue; }
+                Vector3 at = FreePoint(room);
+                lucy.GetComponent<GlorifiedBody.Player.TankController>().Teleport(at, lucy.transform.eulerAngles.y);
+                float t1 = Time.realtimeSinceStartup;
+                while (GlorifiedBody.Rooms.RoomTracker.CurrentId != id && Time.realtimeSinceStartup - t1 < 3f) yield return null;
+                yield return new WaitForSecondsRealtime(0.3f);
+                FixedCamera[] cameras = room.GetComponentsInChildren<FixedCamera>().OrderBy(c => c.cameraName).ToArray();
+                Record($"room_{id}", GlorifiedBody.Rooms.RoomTracker.CurrentId == id && cameras.Length > 0 && loads == 0,
+                    $"here={GlorifiedBody.Rooms.RoomTracker.CurrentId} cameras={cameras.Length} loads={loads} culled={GlorifiedBody.Rooms.RoomTracker.Instance?.CulledCount}");
                 foreach (FixedCamera fixedCamera in cameras)
                 {
                     director.Override(fixedCamera);
@@ -114,8 +127,31 @@ namespace GlorifiedBody.Automation
                 }
                 director.Override(null);
             }
+            SceneManager.sceneLoaded -= count;
+            Record("one_load", loads == 0, $"scene loads during the tour={loads}");
             GameManager.Instance.LoadMainMenu();
             Finish();
+        }
+
+        private const string World = "Demo";
+
+        /// <summary>A floor point of the room clear of its props, nearest its middle (a ramp too: the ray finds the floor).</summary>
+        private static Vector3 FreePoint(GlorifiedBody.Rooms.Room room)
+        {
+            int solid = LayerMask.GetMask("Default");
+            Vector3 c = room.Centre;
+            float w = room.rect.z - room.rect.x, d = room.rect.w - room.rect.y;
+            for (float r = 0f; r <= Mathf.Max(w, d) * 0.5f; r += 0.5f)
+                for (int k = 0; k < 8; k++)
+                {
+                    float a = k * Mathf.PI / 4f;
+                    Vector3 top = new Vector3(c.x + Mathf.Cos(a) * r, room.BaseY + 2.5f, c.z + Mathf.Sin(a) * r);
+                    if (!room.Contains(new Vector3(top.x, room.BaseY, top.z), -0.5f)) continue;
+                    if (!Physics.Raycast(top, Vector3.down, out RaycastHit hit, 10f, solid, QueryTriggerInteraction.Ignore)) continue;
+                    if (Physics.CheckCapsule(hit.point + Vector3.up * 0.4f, hit.point + Vector3.up * 1.5f, 0.35f, solid, QueryTriggerInteraction.Ignore)) continue;
+                    return hit.point;
+                    }
+            return c;
         }
 
         private void Finish()

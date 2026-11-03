@@ -39,7 +39,10 @@ namespace GlorifiedBody.Map
     [Serializable]
     public sealed class MapRoom
     {
+        /// <summary>The room's key: its scene (a test room), or its room id in a world scene ("W1", 2026-11-02).</summary>
         public string scene = "";
+        /// <summary>The world scene the room lives in ("Demo"), or empty: the room is a scene of its own.</summary>
+        public string world = "";
         public string floor = "";
         public string title = "";
         public Vector2 offset;

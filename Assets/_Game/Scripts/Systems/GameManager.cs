@@ -52,7 +52,10 @@ namespace GlorifiedBody.Systems
         public bool AllowsAction(InputManager.GameAction action)
         {
             if (currentState == GameState.Paused || currentState == GameState.GameOver) return false;
-            if (currentState == GameState.Cutscene) return action == InputManager.GameAction.Interact; // the skip key
+            // The skip key; with the skip menu open (2026-11-02) also forward and back, which choose RESUME or SKIP.
+            if (currentState == GameState.Cutscene)
+                return action == InputManager.GameAction.Interact || (GlorifiedBody.Story.CutscenePlayer.MenuOpen
+                    && (action == InputManager.GameAction.Forward || action == InputManager.GameAction.Back));
             if (currentState == GameState.Inventory) return IsInventoryAction(action);
             if (currentState == GameState.Reading) return IsReadingAction(action);
             return true;

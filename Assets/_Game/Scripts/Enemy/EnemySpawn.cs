@@ -66,6 +66,7 @@ namespace GlorifiedBody.Enemy
             if (!string.IsNullOrEmpty(fate)) figure.AddComponent<GlorifiedBody.Story.FateFlag>().fate = fate;
             if (scanImage != null || scanClip != null) AddScan(figure);
             Spawned++;
+            GlorifiedBody.Audio.AudioHost.Equip(figure.GetComponent<GlorifiedBody.Core.Health>()); // a figure shown by a script later has steps too
             Destroy(gameObject);
             return figure;
         }

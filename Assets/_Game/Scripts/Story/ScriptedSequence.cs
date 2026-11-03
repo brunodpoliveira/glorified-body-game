@@ -34,6 +34,7 @@ namespace GlorifiedBody.Story
         Bulletin,    // the police bulletin card by her body count (T11); waits until she closes it
         EndDemo,     // the demo ends: back to the main menu (the title)
         Approach,    // every soldier under target talks first: no attack on sight, it walks to the point and turns to her (Alert ends it)
+        Give,        // an item (id) into her inventory (a key after a cutscene); no slot free: it lies at her feet
     }
 
     /// <summary>One step of a sequence: what it does and its data (the room builder fills them in code).</summary>
@@ -71,6 +72,7 @@ namespace GlorifiedBody.Story
         public static ScriptStep Outfit(string outfitId) => new ScriptStep { kind = StepKind.Outfit, id = outfitId };
         public static ScriptStep Screen(GameObject screen, bool wait = false) => new ScriptStep { kind = StepKind.Screen, target = screen, id = wait ? "wait" : "" };
         public static ScriptStep Approach(GameObject group, Vector3 point) => new ScriptStep { kind = StepKind.Approach, target = group, point = point };
+        public static ScriptStep Give(string itemId) => new ScriptStep { kind = StepKind.Give, id = itemId };
     }
 
     /// <summary>
@@ -91,9 +93,17 @@ namespace GlorifiedBody.Story
         [Tooltip("It runs by itself when the room starts (the first beat of a room). Its done flag still stops a second run.")]
         public bool runOnStart;
 
-        private void Start()
+        /// <summary>
+        /// A beat that runs "when the room starts": in a room of the world scene (2026-11-02) that is when she first
+        /// enters its room, not when the world loads.
+        /// </summary>
+        private IEnumerator Start()
         {
-            if (runOnStart) Run();
+            if (!runOnStart) yield break;
+            GlorifiedBody.Rooms.Room room = GetComponentInParent<GlorifiedBody.Rooms.Room>();
+            if (room != null && GlorifiedBody.Rooms.RoomTracker.Instance != null)
+                while (GlorifiedBody.Rooms.RoomTracker.Current != room) yield return null;
+            Run();
         }
 
         public string DoneFlag => string.IsNullOrEmpty(doneFlag) ? "seq_" + name : doneFlag;
@@ -160,6 +170,19 @@ namespace GlorifiedBody.Story
                     if (step.target != null)
                         foreach (SoldierBrain brain in step.target.GetComponentsInChildren<SoldierBrain>()) brain.ScriptHold(step.point);
                     break;
+                case StepKind.Give:
+                {
+                    // Bruno, 2026-11-02: a cutscene "will likely change status of the story (i.e spawn enemies, give the
+                    // player a key item etc)".
+                    GlorifiedBody.Interaction.ItemDefinition item = GlorifiedBody.Interaction.ItemDefinition.Find(step.id);
+                    GameObject her = Lucy();
+                    if (item == null || her == null) { Debug.LogWarning($"[ScriptedSequence] {name}: no item '{step.id}' or no Lucy"); break; }
+                    var items = her.GetComponent<GlorifiedBody.Interaction.ItemInventory>();
+                    if (items != null && items.TryAdd(item)) Sfx.Ui(Sfx.Pickup, 0.8f);
+                    else GlorifiedBody.Interaction.FloorItem.Place(item, her.transform.position + her.transform.forward * 0.6f, her.transform.eulerAngles.y);
+                    RunTelemetry.Event("script_give", step.id);
+                    break;
+                }
                 case StepKind.WaitDead:
                     while (step.target != null && AnyAlive(step.target)) yield return null;
                     break;

@@ -71,15 +71,18 @@ namespace GlorifiedBody.Audio
             AudioListener.pause = false;
             Ears.Rebind();
             Music.EnterRoom(scene);
-            foreach (Health health in FindObjectsByType<Health>(FindObjectsSortMode.None))
-            {
-                if (health.GetComponent<Footsteps>() != null || health.GetComponentInChildren<Animator>() == null) continue;
-                bool lucy = health.CompareTag("Player");
-                if (lucy && health.GetComponent<PowerSounds>() == null) health.gameObject.AddComponent<PowerSounds>();
-                if (!lucy && !health.CompareTag("Enemy")) continue;
-                if (!lucy && health.GetComponent<LockOnTargetable>() is LockOnTargetable t && t.IsProp) continue;
-                health.gameObject.AddComponent<Footsteps>().Key = lucy ? Sfx.StepLucy : Sfx.StepBoots;
-            }
+            foreach (Health health in FindObjectsByType<Health>(FindObjectsSortMode.None)) Equip(health);
+        }
+
+        /// <summary>Steps (and her power sounds) on a body with an animator: at a room load, and for a figure that spawns later (EnemySpawn).</summary>
+        public static void Equip(Health health)
+        {
+            if (health == null || health.GetComponent<Footsteps>() != null || health.GetComponentInChildren<Animator>() == null) return;
+            bool lucy = health.CompareTag("Player");
+            if (lucy && health.GetComponent<PowerSounds>() == null) health.gameObject.AddComponent<PowerSounds>();
+            if (!lucy && !health.CompareTag("Enemy")) return;
+            if (!lucy && health.GetComponent<LockOnTargetable>() is LockOnTargetable t && t.IsProp) return;
+            health.gameObject.AddComponent<Footsteps>().Key = lucy ? Sfx.StepLucy : Sfx.StepBoots;
         }
 
         /// <summary>The pause, the inventory and the death screen stop the world sounds. Music and UI go on.</summary>

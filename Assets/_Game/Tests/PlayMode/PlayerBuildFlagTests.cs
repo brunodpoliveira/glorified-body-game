@@ -50,8 +50,8 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.IsNotNull(start, "START in a release menu");
             start.onClick.Invoke();
             float t0 = Time.realtimeSinceStartup;
-            while ((SceneManager.GetActiveScene().name != "Demo_W1" || !GameManager.Instance.IsPlaying) && Time.realtimeSinceStartup - t0 < 10f) yield return null;
-            Assert.AreEqual("Demo_W1", SceneManager.GetActiveScene().name, "START");
+            while ((SceneManager.GetActiveScene().name != "Demo" || !GameManager.Instance.IsPlaying) && Time.realtimeSinceStartup - t0 < 30f) yield return null;
+            Assert.AreEqual("Demo", SceneManager.GetActiveScene().name, "START: the world scene");
         }
 
         [UnityTest]

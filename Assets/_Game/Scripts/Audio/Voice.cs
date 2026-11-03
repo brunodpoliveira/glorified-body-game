@@ -40,6 +40,12 @@ namespace GlorifiedBody.Audio
         public static AudioSource Say(GameObject speaker, string id, string text, VoiceMode mode = VoiceMode.World, float minSeconds = 1.6f)
         {
             if (string.IsNullOrEmpty(text) && string.IsNullOrEmpty(id)) return null;
+            // The world scene (2026-11-02): a bark two rooms away is not heard, and its subtitle does not show.
+            if (speaker != null && mode == VoiceMode.World && GlorifiedBody.Rooms.Room.Any)
+            {
+                GameObject her = GameObject.FindWithTag("Player");
+                if (her != null && !GlorifiedBody.Rooms.Room.Hear(speaker.transform.position, her.transform.position)) return null;
+            }
             if (string.IsNullOrEmpty(id)) id = IdFor(speaker, text);
             AudioClip clip = Clip(id);
             float seconds = clip != null ? Mathf.Max(minSeconds, GameAudio.Length(clip, SubtitleService.ReadSeconds(text)) + 0.25f) : minSeconds;

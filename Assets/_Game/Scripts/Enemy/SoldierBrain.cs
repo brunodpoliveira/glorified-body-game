@@ -203,7 +203,7 @@ namespace GlorifiedBody.Enemy
         private void OnAlertHeard(Vector3 origin, float radius, string reason)
         {
             if (Alerted || Current == Phase.Dead) return;
-            if (Flat(transform.position, origin) <= radius) Alert("heard " + reason, callOthers: false);
+            if (Flat(transform.position, origin) <= radius && GlorifiedBody.Rooms.Room.Hear(transform.position, origin)) Alert("heard " + reason, callOthers: false); // walls stop it two rooms away (2026-11-02)
         }
 
         private void OnHurt(float amount)
@@ -221,7 +221,7 @@ namespace GlorifiedBody.Enemy
         private void OnHitHeard(HitInfo hit)
         {
             if (Alerted || Current == Phase.Dead || hit.Attacker == null || !hit.Attacker.CompareTag("Player")) return;
-            if (Flat(transform.position, hit.HitPoint) <= hearPowerRadius) Alert("power", callOthers: true);
+            if (Flat(transform.position, hit.HitPoint) <= hearPowerRadius && GlorifiedBody.Rooms.Room.Hear(transform.position, hit.HitPoint)) Alert("power", callOthers: true);
         }
 
         private void OnDestroy()

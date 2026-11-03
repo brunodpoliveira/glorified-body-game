@@ -12,20 +12,48 @@ namespace GlorifiedBody.Story
     {
         public string flag = "";
         public bool showWhenRaised = true;
+        [Tooltip("A group of figures in a room of the world scene: it changes only where she cannot see it, or as she enters its room (2026-11-02).")]
+        public bool waitUnseen;
 
         public bool Showing { get; private set; }
+        public bool Waiting { get; private set; }
 
-        private void Awake() => Apply();
-        private void OnEnable() => StoryFlags.OnChanged += OnFlag;
-        private void OnDisable() => StoryFlags.OnChanged -= OnFlag;
+        private GlorifiedBody.Rooms.Room room;
+
+        private void Awake()
+        {
+            room = GetComponentInParent<GlorifiedBody.Rooms.Room>();
+            Apply();
+        }
+
+        private void OnEnable()
+        {
+            StoryFlags.OnChanged += OnFlag;
+            GlorifiedBody.Rooms.RoomTracker.OnChanged += OnRoomChanged;
+        }
+
+        private void OnDisable()
+        {
+            StoryFlags.OnChanged -= OnFlag;
+            GlorifiedBody.Rooms.RoomTracker.OnChanged -= OnRoomChanged;
+        }
 
         private void OnFlag(string changed)
         {
-            if (changed == null || changed == flag) Apply();
+            if (changed != null && changed != flag) return;
+            // A load (changed null) applies at once. In a room she sees (hers or next door) the figures do not pop up in view.
+            if (changed != null && waitUnseen && room != null && GlorifiedBody.Rooms.RoomTracker.IsDrawn(room)) Waiting = true;
+            else Apply();
+        }
+
+        private void OnRoomChanged(GlorifiedBody.Rooms.Room from, GlorifiedBody.Rooms.Room to)
+        {
+            if (Waiting && (to == room || !GlorifiedBody.Rooms.RoomTracker.IsDrawn(room))) Apply();
         }
 
         public void Apply()
         {
+            Waiting = false;
             Showing = StoryFlags.Has(flag) == showWhenRaised;
             for (int i = 0; i < transform.childCount; i++) transform.GetChild(i).gameObject.SetActive(Showing);
         }

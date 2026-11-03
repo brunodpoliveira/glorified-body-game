@@ -49,6 +49,8 @@ namespace GlorifiedBody.Saving
         private static RoomState entryRoom;
         private static string entryDoor;
         private static string currentRoom;
+        // The rooms she was in when she came into this room (the map of a RETRY: the world scene, 2026-11-02).
+        private static readonly List<string> entryVisited = new List<string>();
 
         public static string Folder
         {
@@ -167,6 +169,7 @@ namespace GlorifiedBody.Saving
                 player = CapturePlayer(lucy),
                 room = CaptureRoom(scene),
                 rooms = WorldState.Export(scene.name),
+                visited = GlorifiedBody.Rooms.RoomTracker.Visited.ToList(),
             };
         }
 
@@ -255,6 +258,7 @@ namespace GlorifiedBody.Saving
             HasSessionCheckpoint = true;
             PlaySeconds = data.playSeconds;
             StoryFlags.Set(data.flags);
+            GlorifiedBody.Rooms.RoomTracker.SetVisited(data.visited);
             RoomDamageLedger.Import(data.ledger);
             WorldState.Clear();
             WorldState.Import(data.rooms);
@@ -354,9 +358,45 @@ namespace GlorifiedBody.Saving
             if (shortController != null && p.shortLeft > 0f) shortController.GoOn(p.shortLeft);
         }
 
+        /// <summary>
+        /// She walks into another room of the world scene (2026-11-02): the retry point moves here. Her state, the world
+        /// as she found it, the flags, the rooms she was in and the place where she came in: a RETRY with no checkpoint
+        /// gives these back, as the door of a room scene did before.
+        /// </summary>
+        private static void OnRoomChanged(GlorifiedBody.Rooms.Room from, GlorifiedBody.Rooms.Room to)
+        {
+            if (from == null || to == null) return; // the first room of a load: the load set the retry point
+            GameObject lucy = GameObject.FindWithTag("Player");
+            if (lucy == null) return;
+            entryFlags.Clear();
+            entryFlags.AddRange(StoryFlags.All);
+            entryPlayer = CapturePlayer(lucy);
+            entryRoom = CaptureRoom(SceneManager.GetActiveScene());
+            Vector3 p = lucy.transform.position;
+            entryDoor = PoseSpot(p, lucy.transform.eulerAngles.y);
+            entryVisited.Clear();
+            entryVisited.AddRange(GlorifiedBody.Rooms.RoomTracker.Visited);
+            RunTelemetry.Event("retry_point", to.id);
+        }
+
+        /// <summary>A place as a spot id: "@x;y;z;yaw" (PlaceAt reads it).</summary>
+        public static string PoseSpot(Vector3 p, float yaw) =>
+            string.Format(System.Globalization.CultureInfo.InvariantCulture, "@{0:0.###};{1:0.###};{2:0.###};{3:0.#}", p.x, p.y, p.z, yaw);
+
         private static void PlaceAt(GameObject lucy, string spot)
         {
             if (string.IsNullOrEmpty(spot)) return;
+            if (spot[0] == '@')
+            {
+                string[] v = spot.Substring(1).Split(';');
+                var ci = System.Globalization.CultureInfo.InvariantCulture;
+                var at = new Vector3(float.Parse(v[0], ci), float.Parse(v[1], ci), float.Parse(v[2], ci));
+                float yaw = float.Parse(v[3], ci);
+                TankController her = lucy.GetComponent<TankController>();
+                if (her != null) her.Teleport(at, yaw);
+                else lucy.transform.SetPositionAndRotation(at, Quaternion.Euler(0f, yaw, 0f));
+                return;
+            }
             foreach (MonoBehaviour behaviour in UnityEngine.Object.FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None))
             {
                 if (!(behaviour is ISpot marker) || marker.SpotId != spot) continue;
@@ -389,17 +429,28 @@ namespace GlorifiedBody.Saving
                 currentRoom = null;
                 entryFlags.Clear();
                 entryPlayer = null;
+                entryVisited.Clear();
+                GlorifiedBody.Rooms.RoomTracker.SetVisited(null);
                 return;
             }
+            // The world scene: a door between two rooms is a room change, not a load (2026-11-02).
+            GlorifiedBody.Rooms.RoomTracker.OnChanged -= OnRoomChanged;
+            GlorifiedBody.Rooms.RoomTracker.OnChanged += OnRoomChanged;
             Baseline(scene);
             bool restart = scene.name == currentRoom && pending == null && !WorldState.Travelling;
             currentRoom = scene.name;
-            if (restart) StoryFlags.Set(entryFlags); // the room comes back as she found it, the story too
+            if (restart)
+            {
+                StoryFlags.Set(entryFlags); // the room comes back as she found it, the story too
+                GlorifiedBody.Rooms.RoomTracker.SetVisited(entryVisited);
+            }
             else
             {
                 entryFlags.Clear();
                 entryFlags.AddRange(StoryFlags.All);
                 entryPlayer = null;
+                entryVisited.Clear();
+                entryVisited.AddRange(GlorifiedBody.Rooms.RoomTracker.Visited);
             }
             if (restart && entryPlayer != null)
             {
@@ -477,6 +528,7 @@ namespace GlorifiedBody.Saving
             runner = null;
             entryPlayer = null;
             entryRoom = null;
+            entryVisited.Clear();
             HasSessionCheckpoint = false;
             PlaySeconds = 0f;
             Loads = 0;

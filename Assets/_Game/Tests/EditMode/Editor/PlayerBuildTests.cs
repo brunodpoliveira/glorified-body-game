@@ -13,11 +13,11 @@ namespace GlorifiedBody.Tests.EditMode
         {
             var scenes = PlayerBuild.ReleaseScenes().Select(Path.GetFileNameWithoutExtension).ToList();
             Assert.AreEqual("Main_Menu", scenes[0], "the menu loads first");
-            CollectionAssert.Contains(scenes, "Demo_W1", "START");
+            CollectionAssert.Contains(scenes, "Demo", "START: the world scene (2026-11-02)");
             CollectionAssert.Contains(scenes, "Tutorial", "the tutorial mode");
             CollectionAssert.DoesNotContain(scenes, "TrainingRoom", "the training room is dev only (Bruno, 2026-11-02)");
             Assert.IsFalse(scenes.Any(s => s.EndsWith("Test") || s.StartsWith("LookTest") || s.StartsWith("TravelTest")), "no test or look room: " + string.Join(", ", scenes));
-            Assert.IsTrue(scenes.Skip(2).All(s => s.StartsWith("Demo_")), "the rest are the demo rooms");
+            Assert.AreEqual(new[] { "Main_Menu", "Tutorial", "Demo" }, scenes.ToArray(), "the menu, the tutorial, the demo: one scene, no room scenes");
         }
 
         [Test]

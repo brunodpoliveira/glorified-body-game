@@ -158,7 +158,7 @@ namespace GlorifiedBody.Enemy
                 RunTelemetry.Event("hider_found", name);
                 return;
             }
-            if (gap <= whisperRange && !string.IsNullOrEmpty(hideLine) && Time.time >= nextBark)
+            if (gap <= whisperRange && !string.IsNullOrEmpty(hideLine) && Time.time >= nextBark && GlorifiedBody.Rooms.Room.Same(transform.position, player.position))
             {
                 Bark.Say(gameObject, hideLine);
                 Whispers++;
@@ -263,7 +263,7 @@ namespace GlorifiedBody.Enemy
         private void OnAlertHeard(Vector3 origin, float radius, string reason)
         {
             if (Alerted || Current == Phase.Dead) return;
-            if (EnemyNav.Flat(transform.position, origin) <= radius) Alert("heard " + reason, callOthers: false);
+            if (EnemyNav.Flat(transform.position, origin) <= radius && GlorifiedBody.Rooms.Room.Hear(transform.position, origin)) Alert("heard " + reason, callOthers: false); // walls stop it two rooms away (2026-11-02)
         }
 
         private void OnHurt(float amount)
@@ -285,7 +285,7 @@ namespace GlorifiedBody.Enemy
         private void OnHitHeard(HitInfo hit)
         {
             if (Alerted || Current == Phase.Dead || hit.Attacker == null || !hit.Attacker.CompareTag("Player")) return;
-            if (EnemyNav.Flat(transform.position, hit.HitPoint) <= hearPowerRadius) Alert("power", callOthers: true);
+            if (EnemyNav.Flat(transform.position, hit.HitPoint) <= hearPowerRadius && GlorifiedBody.Rooms.Room.Hear(transform.position, hit.HitPoint)) Alert("power", callOthers: true);
         }
 
         private void OnDeath()

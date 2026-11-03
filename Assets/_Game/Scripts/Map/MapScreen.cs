@@ -113,11 +113,13 @@ namespace GlorifiedBody.Map
             Instance = this;
             Build();
             SceneManager.sceneLoaded += OnSceneLoaded;
+            GlorifiedBody.Rooms.RoomTracker.OnChanged += OnRoomChanged;
         }
 
         private void OnDestroy()
         {
             SceneManager.sceneLoaded -= OnSceneLoaded;
+            GlorifiedBody.Rooms.RoomTracker.OnChanged -= OnRoomChanged;
             if (Instance == this) Instance = null;
         }
 
@@ -127,6 +129,12 @@ namespace GlorifiedBody.Map
             // Through a door it stays on and goes to her new floor; to the menu it goes off.
             if (scene.name == "Main_Menu") Close();
             else newRoom = true;
+        }
+
+        /// <summary>A room of the world scene (2026-11-02): down the stair the map goes to her new floor; a room on the same floor only redraws.</summary>
+        private void OnRoomChanged(GlorifiedBody.Rooms.Room from, GlorifiedBody.Rooms.Room to)
+        {
+            if (from == null || to == null || from.floor != to.floor) newRoom = true;
         }
 
         private void Update()
@@ -212,7 +220,7 @@ namespace GlorifiedBody.Map
         {
             CollectFloors(lucy);
             MapAtlas atlas = MapAtlas.Instance;
-            MapRoom here = atlas != null ? atlas.Room(SceneManager.GetActiveScene().name) : null;
+            MapRoom here = atlas != null ? atlas.Room(MapKnowledge.Here) : null;
             floorIndex = here != null ? floors.IndexOf(here.floor) : 0;
             if (floorIndex < 0) floorIndex = 0;
         }
@@ -242,7 +250,7 @@ namespace GlorifiedBody.Map
             unchecked
             {
                 int hash = 17;
-                hash = hash * 31 + SceneManager.GetActiveScene().name.GetHashCode();
+                hash = hash * 31 + MapKnowledge.Here.GetHashCode();
                 hash = hash * 31 + ShownFloor.GetHashCode();
                 hash = hash * 31 + floors.Count;
                 MapAtlas atlas = MapAtlas.Instance;
@@ -271,7 +279,7 @@ namespace GlorifiedBody.Map
             Draws++;
             signature = Signature(lucy);
             MapAtlas atlas = MapAtlas.Instance;
-            string here = SceneManager.GetActiveScene().name;
+            string here = MapKnowledge.Here;
             string keys = $"{Key(InputManager.GameAction.Map)} hide";
             if (atlas == null || floors.Count == 0)
             {
@@ -347,7 +355,7 @@ namespace GlorifiedBody.Map
             HerPlace = null;
             HerPixel = null;
             MapAtlas atlas = MapAtlas.Instance;
-            MapRoom hers = atlas != null ? atlas.Room(SceneManager.GetActiveScene().name) : null;
+            MapRoom hers = atlas != null ? atlas.Room(MapKnowledge.Here) : null;
             bool on = lucy != null && hers != null && hers.floor == ShownFloor && floors.Count > 0;
             herDot.gameObject.SetActive(on);
             herNose.gameObject.SetActive(on);

@@ -11,6 +11,7 @@ using UnityEngine.TestTools;
 using GlorifiedBody.Audio;
 using GlorifiedBody.Automation;
 using GlorifiedBody.Core;
+using GlorifiedBody.Interaction;
 using GlorifiedBody.Player;
 using GlorifiedBody.Saving;
 using GlorifiedBody.Story;
@@ -188,7 +189,35 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator TheSkipKey_EndsTheCutsceneAtOnce()
+        public IEnumerator TheSkipKey_OpensAMenu_TheMovieHolds_AndSkipEndsIt()
+        {
+            // Bruno, 2026-11-02: "skippable; it opens a menu where the player keeps the movie paused; they can resume or skip".
+            CutsceneAsset asset = Resources.Load<CutsceneAsset>("Cutscenes/cutscene_test");
+            int skipped = CutscenePlayer.Skipped;
+            Assert.IsTrue(CutscenePlayer.Play(asset));
+            yield return WaitUntil(() => CutscenePlayer.ShotIndex >= 0, 3f);
+            yield return new WaitForSecondsRealtime(CutscenePlayer.SkipGuardSeconds + 0.1f);
+            pad.Tap(InputManager.GameAction.Interact);
+            yield return WaitUntil(() => CutscenePlayer.MenuOpen, 2f);
+            Assert.IsTrue(CutscenePlayer.MenuOpen, "the skip key opens the menu");
+            yield return new WaitForSecondsRealtime(3f); // longer than the first shot (2.5 s)
+            Assert.IsTrue(CutscenePlayer.IsPlaying, "the menu does not end it");
+            Assert.AreEqual(0, CutscenePlayer.ShotIndex, "the movie holds on its shot");
+            OverlayShot("cutscene_skip_menu.png");
+            pad.Tap(InputManager.GameAction.Back); // down to SKIP
+            yield return null;
+            yield return null;
+            pad.Tap(InputManager.GameAction.Interact);
+            yield return WaitUntil(() => !CutscenePlayer.IsPlaying, 3f);
+            Assert.IsFalse(CutscenePlayer.IsPlaying, "SKIP ended it");
+            Assert.IsFalse(CutscenePlayer.MenuOpen);
+            Assert.AreEqual(skipped + 1, CutscenePlayer.Skipped);
+            Assert.IsTrue(GameManager.Instance.IsPlaying, "the game plays");
+            Assert.IsTrue(StoryFlags.Has(asset.DoneFlag), "a skipped cutscene counts as seen");
+        }
+
+        [UnityTest]
+        public IEnumerator Resume_PlaysTheMovieOn_ToItsEnd()
         {
             CutsceneAsset asset = Resources.Load<CutsceneAsset>("Cutscenes/cutscene_test");
             int skipped = CutscenePlayer.Skipped;
@@ -196,11 +225,40 @@ namespace GlorifiedBody.Tests.PlayMode
             yield return WaitUntil(() => CutscenePlayer.ShotIndex >= 0, 3f);
             yield return new WaitForSecondsRealtime(CutscenePlayer.SkipGuardSeconds + 0.1f);
             pad.Tap(InputManager.GameAction.Interact);
-            yield return WaitUntil(() => !CutscenePlayer.IsPlaying, 3f);
-            Assert.IsFalse(CutscenePlayer.IsPlaying, "the key ended it");
-            Assert.AreEqual(skipped + 1, CutscenePlayer.Skipped);
-            Assert.IsTrue(GameManager.Instance.IsPlaying, "the game plays");
-            Assert.IsTrue(StoryFlags.Has(asset.DoneFlag), "a skipped cutscene counts as seen");
+            yield return WaitUntil(() => CutscenePlayer.MenuOpen, 2f);
+            yield return new WaitForSecondsRealtime(0.5f);
+            pad.Tap(InputManager.GameAction.Interact); // RESUME is the first choice
+            yield return WaitUntil(() => !CutscenePlayer.MenuOpen, 2f);
+            Assert.IsFalse(CutscenePlayer.MenuOpen, "RESUME closes the menu");
+            Assert.IsTrue(CutscenePlayer.IsPlaying, "the movie plays on");
+            int most = 0;
+            float t0 = Time.realtimeSinceStartup;
+            while (CutscenePlayer.IsPlaying && Time.realtimeSinceStartup - t0 < 30f)
+            {
+                most = Mathf.Max(most, CutscenePlayer.ShotIndex);
+                yield return null;
+            }
+            Assert.AreEqual(2, most, "every shot played");
+            Assert.AreEqual(skipped, CutscenePlayer.Skipped, "not a skip");
+        }
+
+        [UnityTest]
+        public IEnumerator AStoryStep_AfterACutscene_GivesHerAKeyItem()
+        {
+            // Bruno, 2026-11-02: a cutscene "will likely change status of the story (i.e spawn enemies, give the player a key item etc)".
+            var obj = new GameObject("Seq_Give");
+            ScriptedSequence seq = obj.AddComponent<ScriptedSequence>();
+            seq.steps = new List<ScriptStep> { ScriptStep.Play(Resources.Load<CutsceneAsset>("Cutscenes/cutscene_test")), ScriptStep.Give("test_key") };
+            var items = lucy.GetComponent<ItemInventory>();
+            Assert.IsFalse(items.Has("test_key"));
+            Assert.IsTrue(seq.Run());
+            yield return WaitUntil(() => CutscenePlayer.IsPlaying, 3f);
+            yield return new WaitForSecondsRealtime(CutscenePlayer.SkipGuardSeconds + 0.1f);
+            CutscenePlayer.OpenMenu();
+            CutscenePlayer.Skip(); // a skip still runs the steps after it
+            yield return WaitUntil(() => seq.Done, 5f);
+            Assert.IsTrue(items.Has("test_key"), "the key is hers after the cutscene");
+            UnityEngine.Object.Destroy(obj);
         }
 
         /// <summary>The frame with every overlay canvas on it (the cutscene, the subtitles), for Bruno.</summary>

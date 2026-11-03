@@ -1,17 +1,14 @@
 #if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
-using System.IO;
 using UnityEditor;
-using UnityEditor.SceneManagement;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using GlorifiedBody.Automation;
 using GlorifiedBody.Cameras;
 using GlorifiedBody.Characters;
 using GlorifiedBody.Enemy;
 using GlorifiedBody.Interaction;
-using GlorifiedBody.Saving;
+using GlorifiedBody.Rooms;
 using GlorifiedBody.Story;
 
 namespace GlorifiedBody.Editor.Demo
@@ -21,9 +18,9 @@ namespace GlorifiedBody.Editor.Demo
     {
         public char Side;        // 'N' (+z), 'S' (-z), 'E' (+x), 'W' (-x)
         public float At;         // the world x (N, S) or z (E, W) of the doorway's middle
-        public string To;        // the room id behind it, or "" for a closed door (a shape only)
+        public string To;        // the room id behind it, or "" for a fire door that a flag shuts
         public float Width = 1.6f;
-        public string Flag = ""; // the exit works only with this story flag up (RoomExit.requiredFlag)
+        public string Flag = ""; // "": always open; with To "": the leaf shows when the flag goes up (code silver)
         public Door(char side, float at, string to, float width = 1.6f, string flag = "") { Side = side; At = at; To = to; Width = width; Flag = flag; }
     }
 
@@ -34,77 +31,129 @@ namespace GlorifiedBody.Editor.Demo
         public float X0, Z0, X1, Z1, Height = 3f;
         public readonly List<Door> Doors = new List<Door>();
         public Action<DemoRoom> Dress;
-        public string Scene => "Demo_" + Id;
         public float Width => X1 - X0;
         public float Depth => Z1 - Z0;
         public Vector3 Centre => new Vector3((X0 + X1) * 0.5f, 0f, (Z0 + Z1) * 0.5f);
     }
 
     /// <summary>
+    /// The walls, lintels and fire doors of the world, built once (2026-11-02, the world scene: two rooms share a wall
+    /// line, and each used to build its own copy into the other's floor). A wall stands on the room line, half in each
+    /// room, as tall as the taller room on that line.
+    /// </summary>
+    public sealed class WallLedger
+    {
+        private readonly Dictionary<string, List<(float a, float b)>> built = new Dictionary<string, List<(float a, float b)>>();
+        private readonly HashSet<string> once = new HashSet<string>();
+        private readonly List<RoomSpec> specs;
+
+        public WallLedger(List<RoomSpec> allSpecs) { specs = allSpecs; }
+
+        private static string Line(string floor, bool alongX, float at) => $"{floor}|{(alongX ? "z" : "x")}|{at:0.00}";
+
+        /// <summary>The parts of a..b on the line that no room built yet; they count as built now.</summary>
+        public List<(float a, float b)> Claim(string floor, bool alongX, float at, float a, float b)
+        {
+            string key = Line(floor, alongX, at);
+            if (!built.TryGetValue(key, out List<(float a, float b)> done)) built[key] = done = new List<(float a, float b)>();
+            var free = new List<(float a, float b)> { (a, b) };
+            foreach ((float da, float db) in done)
+            {
+                var next = new List<(float a, float b)>();
+                foreach ((float fa, float fb) in free)
+                {
+                    if (db <= fa || da >= fb) { next.Add((fa, fb)); continue; }
+                    if (da > fa) next.Add((fa, da));
+                    if (db < fb) next.Add((db, fb));
+                }
+                free = next;
+            }
+            free.RemoveAll(p => p.b - p.a < 0.05f);
+            done.AddRange(free);
+            return free;
+        }
+
+        /// <summary>True the first time for the key (a lintel, a fire door: two rooms list the same doorway).</summary>
+        public bool Once(string key) => once.Add(key);
+
+        /// <summary>The tallest room with a side on the line over a..b (the wall is as tall as that room).</summary>
+        public float HeightOn(string floor, bool alongX, float at, float a, float b, float own)
+        {
+            float h = own;
+            foreach (RoomSpec s in specs)
+            {
+                if (s.Floor != floor) continue;
+                bool onLine = alongX ? Mathf.Abs(s.Z0 - at) < 0.01f || Mathf.Abs(s.Z1 - at) < 0.01f : Mathf.Abs(s.X0 - at) < 0.01f || Mathf.Abs(s.X1 - at) < 0.01f;
+                if (!onLine) continue;
+                float s0 = alongX ? s.X0 : s.Z0, s1 = alongX ? s.X1 : s.Z1;
+                if (s1 > a && s0 < b) h = Mathf.Max(h, s.Height);
+            }
+            return h;
+        }
+    }
+
+    /// <summary>
     /// The greybox of a demo room (2026-10-31, Bruno: "create the floor 2 and 1 of the demo in greybox"; the demo plan
-    /// §3, §4, §7, round 18: "build the first play-through all in greybox"). One scene per room, in plan coordinates
-    /// (the map needs no offset): the floor, the walls with their doorways, a short stub out of each doorway with the
-    /// exit to the next room and the entry from it, cameras on a grid of cells, the NavMesh, the music key, Lucy, the
-    /// systems, then the room's own dressing (DemoWard, DemoPublic). The rooms are black boxes with grey lines: the people
-    /// read on them (T22). A builder makes a fresh scene each time, so a rebuild leaves nothing old behind.
+    /// §3, §4, §7, round 18: "build the first play-through all in greybox"). Since 2026-11-02 (Bruno: "i want all the map
+    /// to be built and loaded up in one go") a room is a root of the world scene (DemoWorld), not a scene: its Room
+    /// component, the floor, its walls with their doorways (the ledger builds a shared wall once), its cameras on a grid
+    /// of cells, the music key, then the room's own dressing (DemoWard, DemoPublic). A doorway opens straight into the
+    /// next room. The rooms are black boxes with grey lines: the people read on them (T22). The builder makes each room
+    /// at the plan coordinates with the other rooms off, and DemoWorld moves the rooms of floor 1 to their place after.
     /// </summary>
     public sealed class DemoRoom
     {
         public const string Folder = MenuLoopSetup.ScenesFolder + "/Demo";
-        public const float Wall = 0.3f, StubLength = 2.2f, CellMax = 9f;
+        public const float Wall = 0.3f, CellMax = 9f, DoorHeight = 2.3f;
         public const float WallShade = 0.22f; // lighter than the dark clear colour (0.12 was the same tone: the floors seemed to float)
 
-        public readonly RoomSpec Spec;
-        public readonly GameObject Room, Props, Figures, Story, Exits;
-        public readonly CharacterCatalog Catalog;
+        /// <summary>Lucy in the world scene (DemoWorld makes her before the rooms): the W1 dressing places her.</summary>
+        public static GameObject Lucy;
 
-        private DemoRoom(RoomSpec spec, CharacterCatalog catalog)
+        public readonly RoomSpec Spec;
+        public readonly GameObject Root, Room, Props, Figures, Story;
+        public readonly CharacterCatalog Catalog;
+        public readonly List<FixedCamera> Cameras = new List<FixedCamera>();
+        private readonly WallLedger ledger;
+
+        private DemoRoom(RoomSpec spec, GameObject root, CharacterCatalog catalog, WallLedger walls)
         {
             Spec = spec;
+            Root = root;
             Catalog = catalog;
-            Room = MenuLoopSetup.EnsureRoot("[Room]");
-            Props = MenuLoopSetup.EnsureRoot("[Props]");
-            Figures = MenuLoopSetup.EnsureRoot("[Figures]");
-            Story = MenuLoopSetup.EnsureRoot("[Story]");
-            Exits = MenuLoopSetup.EnsureRoot("[Exits]");
+            ledger = walls;
+            Room = MenuLoopSetup.EnsureChild(root, "[Room]");
+            Props = MenuLoopSetup.EnsureChild(root, "[Props]");
+            Figures = MenuLoopSetup.EnsureChild(root, "[Figures]");
+            Story = MenuLoopSetup.EnsureChild(root, "[Story]");
         }
 
-        public static string PathOf(RoomSpec spec) => Folder + "/" + spec.Scene + ".unity";
-        public static string NavPathOf(RoomSpec spec) => Folder + "/" + spec.Scene + "_NavMesh.asset";
-
-        /// <summary>Builds the room's scene from its spec. Lucy stands at the first door, facing in, unless the dressing moves her.</summary>
-        public static void Build(RoomSpec spec)
+        /// <summary>Builds the room under its root (at the world origin, the other rooms off): the shell, the dressing, the cameras, the music.</summary>
+        public static DemoRoom Build(RoomSpec spec, GameObject root, CharacterCatalog catalog, WallLedger walls)
         {
-            Directory.CreateDirectory(Folder);
-            Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
-            CharacterCatalog catalog = MenuLoopSetup.LoadCatalog();
-            var room = new DemoRoom(spec, catalog);
+            var room = new DemoRoom(spec, root, catalog, walls);
+            Room component = MenuLoopSetup.EnsureComponent<Room>(root);
+            component.id = spec.Id;
+            component.title = spec.Title;
+            component.floor = spec.Floor;
+            component.rect = new Vector4(spec.X0, spec.Z0, spec.X1, spec.Z1);
+            component.height = spec.Height;
             room.Shell();
-            MenuLoopSetup.EnsureCamera(spec.Centre + new Vector3(0f, 3f, -4f), spec.Centre, 60f);
-            Vector3 start = spec.Doors.Count > 0 ? room.InsideDoor(spec.Doors[0], 1.4f) : spec.Centre;
-            MenuLoopSetup.EnsureLucy(catalog, start, spec.Doors.Count > 0 ? room.InwardYaw(spec.Doors[0]) : 0f);
             spec.Dress?.Invoke(room);
-            RoomKit.BakeNavMesh(room.Room, NavPathOf(spec));
+            Physics.SyncTransforms();
             room.CamerasOnCells();
-            RoomKit.Music(spec.Music);
-            MenuLoopSetup.EnsureGameplaySystems();
-            MenuLoopSetup.EnsureRuntimeUi();
-            EditorSceneManager.SaveScene(scene, PathOf(spec));
-            Debug.Log($"[DemoRoom] built {spec.Scene}: {spec.Title}, {spec.Width:0} x {spec.Depth:0} m, {spec.Doors.Count} doors");
+            GameObject music = MenuLoopSetup.EnsureChild(root, "[Music]");
+            Audio.RoomMusic key = MenuLoopSetup.EnsureComponent<Audio.RoomMusic>(music);
+            key.Key = spec.Music;
+            EditorUtility.SetDirty(key);
+            Debug.Log($"[DemoRoom] built {spec.Id}: {spec.Title}, {spec.Width:0} x {spec.Depth:0} m, {spec.Doors.Count} doors, {room.Cameras.Count} cameras");
+            return room;
         }
 
         // ── The shell ─────────────────────────────────────────────────
 
         private void Shell()
         {
-            RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
-            RenderSettings.ambientLight = new Color(0.32f, 0.32f, 0.35f);
-            var sun = new GameObject("Light");
-            Light light = sun.AddComponent<Light>();
-            light.type = LightType.Directional;
-            light.intensity = 0.9f;
-            light.shadows = LightShadows.Hard;
-            sun.transform.rotation = Quaternion.Euler(55f, 30f, 0f);
             RoomSpec s = Spec;
             Box(Room, "Floor", new Vector3(s.Centre.x, -0.05f, s.Centre.z), new Vector3(s.Width, 0.1f, s.Depth), Grey(0.42f));
             WallSide('N', s.X0, s.X1, s.Z1);
@@ -117,80 +166,75 @@ namespace GlorifiedBody.Editor.Demo
         /// <summary>One wall with a gap at each doorway on it. along0..along1 run along the wall; at is the wall's line.</summary>
         private void WallSide(char side, float along0, float along1, float at)
         {
+            bool alongX = side == 'N' || side == 'S';
             var gaps = new List<(float a, float b)>();
             foreach (Door d in Spec.Doors) if (d.Side == side) gaps.Add((d.At - d.Width * 0.5f, d.At + d.Width * 0.5f));
             gaps.Sort((p, q) => p.a.CompareTo(q.a));
-            float from = along0 - Wall;
+            float from = along0 - Wall * 0.5f;
             int piece = 0;
+            var pieces = new List<(float a, float b)>();
             foreach ((float a, float b) in gaps)
             {
-                WallPiece(side, from, a, at, piece++);
+                pieces.Add((from, a));
                 from = b;
             }
-            WallPiece(side, from, along1 + Wall, at, piece);
-            // Over each doorway: the lintel.
-            foreach ((float a, float b) in gaps) Lintel(side, a, b, at);
+            pieces.Add((from, along1 + Wall * 0.5f));
+            foreach ((float a, float b) in pieces)
+                foreach ((float fa, float fb) in ledger.Claim(Spec.Floor, alongX, at, a, b))
+                    WallPiece(side, fa, fb, at, ledger.HeightOn(Spec.Floor, alongX, at, fa, fb, Spec.Height), piece++);
+            // Over each doorway: the lintel (once for the two rooms of the doorway).
+            foreach ((float a, float b) in gaps)
+                if (ledger.Once($"lintel|{Spec.Floor}|{(alongX ? "z" : "x")}|{at:0.00}|{a:0.00}"))
+                    Lintel(side, a, b, at, ledger.HeightOn(Spec.Floor, alongX, at, a, b, Spec.Height));
         }
 
-        private void WallPiece(char side, float a, float b, float at, int index)
+        private void WallPiece(char side, float a, float b, float at, float h, int index)
         {
             if (b - a < 0.05f) return;
-            float h = Spec.Height, mid = (a + b) * 0.5f, len = b - a;
-            float off = side == 'N' || side == 'E' ? Wall * 0.5f : -Wall * 0.5f;
-            Vector3 pos = side == 'N' || side == 'S' ? new Vector3(mid, h * 0.5f, at + off) : new Vector3(at + off, h * 0.5f, mid);
+            float mid = (a + b) * 0.5f, len = b - a;
+            Vector3 pos = side == 'N' || side == 'S' ? new Vector3(mid, h * 0.5f, at) : new Vector3(at, h * 0.5f, mid);
             Vector3 size = side == 'N' || side == 'S' ? new Vector3(len, h, Wall) : new Vector3(Wall, h, len);
             Box(Room, $"Wall_{side}_{index}", pos, size, Grey(WallShade));
         }
 
-        private void Lintel(char side, float a, float b, float at)
+        private void Lintel(char side, float a, float b, float at, float h)
         {
-            float h = Spec.Height, doorH = 2.3f;
-            if (h - doorH < 0.05f) return;
-            float off = side == 'N' || side == 'E' ? Wall * 0.5f : -Wall * 0.5f;
-            Vector3 pos = side == 'N' || side == 'S' ? new Vector3((a + b) * 0.5f, (h + doorH) * 0.5f, at + off) : new Vector3(at + off, (h + doorH) * 0.5f, (a + b) * 0.5f);
-            Vector3 size = side == 'N' || side == 'S' ? new Vector3(b - a, h - doorH, Wall) : new Vector3(Wall, h - doorH, b - a);
+            if (h - DoorHeight < 0.05f) return;
+            Vector3 pos = side == 'N' || side == 'S' ? new Vector3((a + b) * 0.5f, (h + DoorHeight) * 0.5f, at) : new Vector3(at, (h + DoorHeight) * 0.5f, (a + b) * 0.5f);
+            Vector3 size = side == 'N' || side == 'S' ? new Vector3(b - a, h - DoorHeight, Wall) : new Vector3(Wall, h - DoorHeight, b - a);
             Box(Room, $"Lintel_{side}_{a:0.0}", pos, size, Grey(WallShade));
         }
 
-        /// <summary>A doorway: the stub corridor out of it, the exit at its end, the entry from that room just inside.</summary>
+        /// <summary>
+        /// A doorway opens into the next room. A fire door (no room named, a flag) gets its steel leaf, shown when the flag
+        /// goes up (code silver): the two rooms list the same doorway, the ledger builds the leaf once.
+        /// </summary>
         private void Doorway(Door d)
         {
-            Vector3 outward = Outward(d.Side);
+            if (!string.IsNullOrEmpty(d.To) || string.IsNullOrEmpty(d.Flag)) return;
             Vector3 mouth = Mouth(d);
+            if (!ledger.Once($"fire|{Spec.Floor}|{mouth.x:0.0}|{mouth.z:0.0}")) return;
+            Vector3 outward = Outward(d.Side);
             Vector3 across = new Vector3(outward.z, 0f, -outward.x);
-            string tag = string.IsNullOrEmpty(d.To) ? "Closed_" + d.Side + "_" + d.At.ToString("0") : d.To;
-            if (string.IsNullOrEmpty(d.To))
-            {
-                // A closed door: a steel leaf in the gap, a shape only. With a flag it shuts when the flag goes up (the
-                // fire door at code silver), and a short dead end lies behind it.
-                GameObject holder = Room;
-                if (!string.IsNullOrEmpty(d.Flag))
-                {
-                    holder = MenuLoopSetup.EnsureChild(Story, "Gate_" + tag);
-                    FlagGate gate = MenuLoopSetup.EnsureComponent<FlagGate>(holder);
-                    gate.flag = d.Flag;
-                    gate.showWhenRaised = true;
-                    Box(Room, "DeadEnd_" + tag, mouth + outward * (Wall + 0.8f) + Vector3.up * 1.2f, Abs(across * (d.Width + 0.6f) + Vector3.up * 2.4f + outward * 0.3f), Grey(WallShade));
-                    Box(Room, "DeadEndFloor_" + tag, mouth + outward * (Wall * 0.5f + 0.35f) + Vector3.down * 0.05f, Abs(across * d.Width + Vector3.up * 0.1f + outward * (Wall + 0.7f)), Grey(0.3f));
-                }
-                Box(holder, "Door_" + tag, mouth + Vector3.up * 1.15f + outward * (Wall * 0.5f), Abs(across * d.Width + Vector3.up * 2.3f + outward * 0.1f), Grey(0.22f));
-                return;
-            }
-            Vector3 stubMid = mouth + outward * (Wall + StubLength * 0.5f);
-            // "Stub" (not "...Floor"): the camera check and the map read the room's floor only.
-            Box(Room, "Stub_" + tag, stubMid + Vector3.down * 0.05f, Abs(across * (d.Width + 0.2f) + Vector3.up * 0.1f + outward * StubLength), Grey(0.3f));
-            foreach (float sign in new[] { -1f, 1f })
-                Box(Room, $"StubWall_{tag}_{(sign < 0 ? "a" : "b")}", stubMid + across * sign * (d.Width * 0.5f + 0.15f) + Vector3.up * 1.2f, Abs(across * 0.3f + Vector3.up * 2.4f + outward * StubLength), Grey(WallShade));
-            Box(Room, "StubEnd_" + tag, mouth + outward * (Wall + StubLength + 0.15f) + Vector3.up * 1.2f, Abs(across * (d.Width + 0.6f) + Vector3.up * 2.4f + outward * 0.3f), Grey(WallShade));
-            // The exit fills the doorway (from 0.15 m into the wall to 0.4 m past it): the room changes as she steps
-            // through, in frame. Bruno, 2026-11-02: at the end of the stub it took "3-4 steps blindly down the doorway".
-            // The stub stays as the dark corridor behind the door; the entry of this room stands 1.2 m inside.
-            const float exitFrom = 0.15f, exitTo = Wall + 0.4f;
-            RoomExit exit = RoomKit.Exit("Exit_To_" + d.To, mouth + outward * ((exitFrom + exitTo) * 0.5f) + Vector3.up * 1.2f,
-                Abs(across * d.Width + Vector3.up * 2.4f + outward * (exitTo - exitFrom)), "Demo_" + d.To, "Entry_From_" + Spec.Id, d.Flag);
-            exit.transform.SetParent(Exits.transform, true);
-            RoomEntry entry = RoomKit.Entry("Entry_From_" + d.To, InsideDoor(d, 1.2f), InwardYaw(d));
-            entry.transform.SetParent(Exits.transform, true);
+            string tag = "Fire_" + d.Side + "_" + d.At.ToString("0");
+            GameObject holder = MenuLoopSetup.EnsureChild(Story, "Gate_" + tag);
+            FlagGate gate = MenuLoopSetup.EnsureComponent<FlagGate>(holder);
+            gate.flag = d.Flag;
+            gate.showWhenRaised = true;
+            Carve(Box(holder, "Door_" + tag, mouth + Vector3.up * DoorHeight * 0.5f, Abs(across * d.Width + Vector3.up * DoorHeight + outward * 0.1f), Grey(0.22f)));
+        }
+
+        /// <summary>
+        /// A door leaf stays out of the NavMesh bake and carves it while it stands in its doorway: a fire door that a flag
+        /// shows, a locked door that a key slides away. The chasers then find the way through an open door only.
+        /// </summary>
+        public static void Carve(GameObject leaf)
+        {
+            MenuLoopSetup.EnsureComponent<Unity.AI.Navigation.NavMeshModifier>(leaf).ignoreFromBuild = true;
+            UnityEngine.AI.NavMeshObstacle obstacle = MenuLoopSetup.EnsureComponent<UnityEngine.AI.NavMeshObstacle>(leaf);
+            obstacle.shape = UnityEngine.AI.NavMeshObstacleShape.Box;
+            obstacle.size = Vector3.one; // the leaf's own scale gives the box
+            obstacle.carving = true;
         }
 
         public Vector3 Mouth(Door d)
@@ -218,21 +262,20 @@ namespace GlorifiedBody.Editor.Demo
         /// A camera for each cell of the room (cells of 9 m or less) and a zone on the cell. Each cell tries camera poses (its
         /// corners and edge middles, and 2 m past an inner edge; two aims; three lenses) and keeps the pose that sees the most
         /// of its floor by the coverage rule (CameraCoverage.Sees). A cell that misses any point splits in two along its
-        /// long side, four times at most (Bruno, 2026-10-31: "I prefer no hiding/blind spots"). The camera coverage test checks every floor point (DemoTests).
+        /// long side, four times at most (Bruno, 2026-10-31: "I prefer no hiding/blind spots"). The camera coverage test
+        /// checks every floor point (DemoTests). The zones end at the room's walls: in a doorway the room she came from
+        /// keeps its camera until she is through (the zone of the next room starts at the wall line).
         /// </summary>
         private void CamerasOnCells()
         {
-            GameObject root = LookTestSetup.ResetCameras();
-            FixedCameraDirector director = MenuLoopSetup.EnsureComponent<FixedCameraDirector>(root);
+            GameObject root = MenuLoopSetup.EnsureChild(Root, "[Cameras]");
             RoomSpec s = Spec;
-            Physics.SyncTransforms();
             int nx = Mathf.Max(1, Mathf.CeilToInt(s.Width / CellMax)), nz = Mathf.Max(1, Mathf.CeilToInt(s.Depth / CellMax));
             float cw = s.Width / nx, cd = s.Depth / nz;
             var cells = new Queue<(Rect cell, int splits)>();
             for (int i = 0; i < nx; i++)
                 for (int j = 0; j < nz; j++)
                     cells.Enqueue((new Rect(s.X0 + i * cw, s.Z0 + j * cd, cw, cd), 0));
-            var cameras = new List<FixedCamera>();
             while (cells.Count > 0)
             {
                 (Rect cell, int splits) = cells.Dequeue();
@@ -246,26 +289,14 @@ namespace GlorifiedBody.Editor.Demo
                     cells.Enqueue((b, splits + 1));
                     continue;
                 }
-                string tag = cameras.Count.ToString("00");
+                string tag = Cameras.Count.ToString("00");
                 FixedCamera fc = MenuLoopSetup.EnsureFixedCamera(root, $"Cam_{s.Id}_{tag}", cam, look, fov);
-                cameras.Add(fc);
+                Cameras.Add(fc);
                 MenuLoopSetup.EnsureCameraZone(root, $"Zone_{s.Id}_{tag}", new Vector3(cell.center.x, 1.5f, cell.center.y), new Vector3(cell.width, 3f, cell.height), fc, 1);
-                if (missed > 0f) Debug.Log($"[DemoRoom] {s.Scene} {fc.cameraName}: {missed:P0} of its cell out of frame");
+                if (missed > 0f) Debug.Log($"[DemoRoom] {s.Id} {fc.cameraName}: {missed:P0} of its cell out of frame");
             }
-            director.SetDefaultCamera(cameras[0]);
-            // The stubs: the camera of the cell at the doorway sees into them; a zone keeps it while she stands there.
-            foreach (Door d in s.Doors)
-            {
-                if (string.IsNullOrEmpty(d.To)) continue;
-                Vector3 mid = Mouth(d) + Outward(d.Side) * (Wall + StubLength * 0.5f);
-                FixedCamera near = Nearest(cameras, Mouth(d));
-                Vector3 size = d.Side == 'N' || d.Side == 'S' ? new Vector3(d.Width, 3f, StubLength + Wall) : new Vector3(StubLength + Wall, 3f, d.Width);
-                MenuLoopSetup.EnsureCameraZone(root, $"Zone_Stub_{d.To}", mid + Vector3.up * 1.5f, size, near, 2);
-            }
-            MenuLoopSetup.EnsureShotPoints(cameras.ToArray());
+            MenuLoopSetup.EnsureShotPoints(Cameras.ToArray());
         }
-
-        private char FirstDoorSide() => Spec.Doors.Count > 0 ? Spec.Doors[0].Side : 'S';
 
         private static readonly float[] Lenses = { 62f, 72f, 84f };
 
@@ -326,18 +357,6 @@ namespace GlorifiedBody.Editor.Demo
             return places.ToArray();
         }
 
-        private static FixedCamera Nearest(List<FixedCamera> cameras, Vector3 p)
-        {
-            FixedCamera best = cameras[0];
-            float bestD = float.MaxValue;
-            foreach (FixedCamera c in cameras)
-            {
-                float d = (c.transform.position - p).sqrMagnitude;
-                if (d < bestD) { bestD = d; best = c; }
-            }
-            return best;
-        }
-
         // ── Helpers for the dressing ──────────────────────────────────
 
         /// <summary>A static box (a prop, a counter, a bed) on the Default layer: it blocks, the NavMesh reads it.</summary>
@@ -356,7 +375,7 @@ namespace GlorifiedBody.Editor.Demo
 
         public static Material Colour(string id, Color c) => ItemAssets.UnlitMaterial("demo_" + id, c);
 
-        private static Vector3 Abs(Vector3 v) => new Vector3(Mathf.Abs(v.x), Mathf.Abs(v.y), Mathf.Abs(v.z));
+        public static Vector3 Abs(Vector3 v) => new Vector3(Mathf.Abs(v.x), Mathf.Abs(v.y), Mathf.Abs(v.z));
 
         /// <summary>A figure (an EnemySpawn marker) under [Figures], or under a parent (a group that a flag shows).</summary>
         public EnemySpawn Figure(string name, string kind, Vector3 at, float yaw, int variant = -1, GameObject parent = null) =>
@@ -369,6 +388,7 @@ namespace GlorifiedBody.Editor.Demo
             FlagGate gate = MenuLoopSetup.EnsureComponent<FlagGate>(group);
             gate.flag = flag;
             gate.showWhenRaised = showWhenRaised;
+            gate.waitUnseen = true; // the figures do not pop up in her view (the world scene)
             return group;
         }
 
@@ -396,7 +416,7 @@ namespace GlorifiedBody.Editor.Demo
         public GameObject Sign(string name, string words, Vector3 point, Vector3 facing, Vector2 size, int fontSize = 56) =>
             RoomKit.Sign(Props, name, words, point, facing, size, fontSize);
 
-        /// <summary>A sequence of steps under [Story], with a trigger box, or run when the room starts (trigger size zero).</summary>
+        /// <summary>A sequence of steps under [Story], with a trigger box, or run when she first enters the room (trigger size zero).</summary>
         public ScriptedSequence Beat(string name, string doneFlag, Vector3 triggerAt, Vector3 triggerSize, params ScriptStep[] steps)
         {
             ScriptedSequence seq = RoomKit.Sequence(name, doneFlag, steps);
@@ -493,14 +513,15 @@ namespace GlorifiedBody.Editor.Demo
             return screen;
         }
 
-        /// <summary>A steel leaf in the doorway, locked: the key opens it (LockedDoor), and the way out behind it works then.</summary>
+        /// <summary>A steel leaf in the doorway, locked: the key opens it (LockedDoor), and the way on behind it opens.</summary>
         public GameObject LockedLeaf(Door d, string keyId, string keyName)
         {
             Vector3 outward = Outward(d.Side);
             Vector3 across = new Vector3(outward.z, 0f, -outward.x);
             GameObject door = MenuLoopSetup.EnsureChild(Props, "Door_" + d.To);
             door.transform.position = Mouth(d);
-            GameObject leaf = Box(door, "Leaf", Mouth(d) + outward * (Wall * 0.5f) + Vector3.up * 1.15f, Abs(across * d.Width + Vector3.up * 2.3f + outward * 0.1f), Grey(0.25f));
+            GameObject leaf = Box(door, "Leaf", Mouth(d) + Vector3.up * DoorHeight * 0.5f, Abs(across * d.Width + Vector3.up * DoorHeight + outward * 0.1f), Grey(0.25f));
+            Carve(leaf);
             LockedDoor locked = MenuLoopSetup.EnsureComponent<LockedDoor>(door);
             locked.keyItemId = keyId;
             locked.keyName = keyName;
@@ -529,8 +550,7 @@ namespace GlorifiedBody.Editor.Demo
         /// <summary>Moves Lucy (the room where the game starts, a bed).</summary>
         public void PlaceLucy(Vector3 at, float yaw)
         {
-            GameObject lucy = GameObject.Find("Lucy");
-            if (lucy != null) lucy.transform.SetPositionAndRotation(at, Quaternion.Euler(0f, yaw, 0f));
+            if (Lucy != null) Lucy.transform.SetPositionAndRotation(at, Quaternion.Euler(0f, yaw, 0f));
         }
     }
 }

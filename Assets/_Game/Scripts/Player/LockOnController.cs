@@ -65,7 +65,7 @@ namespace GlorifiedBody.Player
         public bool SwitchTarget()
         {
             LockOnTargetable next = TargetRegistry.Cycle(CurrentTarget, +1, null, transform.position, transform,
-                lockRange, 360f, obstructionMask, requireLineOfSight, IncludeProps);
+                lockRange, 360f, SightMask, NeedsSight, IncludeProps);
             if (next == null || next == CurrentTarget) return false;
             SetTarget(next);
             return true;
@@ -111,6 +111,17 @@ namespace GlorifiedBody.Player
             UpdateMarker();
         }
 
+        // In the world scene every room is loaded (2026-11-02): a target needs a clear line, or she locks on through a wall.
+        private bool NeedsSight => requireLineOfSight || GlorifiedBody.Rooms.Room.Any;
+        private LayerMask SightMask => obstructionMask.value != 0 ? obstructionMask : (LayerMask)LayerMask.GetMask("Default");
+
+        private bool InSight(LockOnTargetable t)
+        {
+            if (!NeedsSight) return true;
+            Vector3 eye = transform.position + Vector3.up * GlorifiedBody.Characters.Body.ChestHeight;
+            return !Physics.Linecast(eye, t.GetLockPoint(), SightMask, QueryTriggerInteraction.Ignore);
+        }
+
         private LockOnTargetable Nearest()
         {
             LockOnTargetable best = null;
@@ -121,7 +132,7 @@ namespace GlorifiedBody.Player
                 LockOnTargetable t = all[i];
                 if (t == null || !t.Selectable || t.IsProp || t.IsCivilian || !t.IsAlive || t.transform == transform || t.transform.IsChildOf(transform)) continue;
                 float d = (t.GetLockPoint() - transform.position).sqrMagnitude;
-                if (d < bestDistance)
+                if (d < bestDistance && InSight(t))
                 {
                     bestDistance = d;
                     best = t;

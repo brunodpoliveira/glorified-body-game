@@ -23,7 +23,7 @@ namespace GlorifiedBody.Editor.Demo
         {
             return new List<RoomSpec>
             {
-                Room("G1", "STAIR LANDING", 0, 0, 5, 5, 3f, G1, new Door('N', 2.5f, "W12"), new Door('E', 2.5f, "G2")),
+                Room("G1", "STAIR LANDING", 0, 0, 5, 5, 3f, G1, new Door('N', 2.5f, "S1"), new Door('E', 2.5f, "G2")),
                 Room("G2", "THE CONCOURSE", 5, 0, 35, 6, 6f, G2, new Door('W', 2.5f, "G1"), new Door('N', 12, "G3"), new Door('N', 28, "G4"), new Door('S', 20, "G5")),
                 Room("G3", "THE DONOR WALL", 8, 6, 16, 12, 3.5f, G3, new Door('S', 12, "G2")),
                 Room("G4", "THE CHAPEL", 24, 6, 32, 14, 4f, G4, new Door('S', 28, "G2")),
@@ -43,13 +43,8 @@ namespace GlorifiedBody.Editor.Demo
             return spec;
         }
 
-        [MenuItem("GlorifiedBody/Demo/Build Floor 1 (the public floor)")]
-        public static void BuildAll()
-        {
-            foreach (RoomSpec spec in Rooms()) DemoRoom.Build(spec);
-            MenuLoopSetup.CleanBuildSettings();
-            AssetDatabase.SaveAssets();
-        }
+        /// <summary>The public floor is a part of the world scene: this builds the whole world (DemoWorld.BuildAll).</summary>
+        public static void BuildAll() => DemoWorld.BuildAll();
 
         // ── The rooms ─────────────────────────────────────────────────
 
