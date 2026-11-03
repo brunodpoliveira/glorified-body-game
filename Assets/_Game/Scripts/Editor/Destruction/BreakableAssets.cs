@@ -399,11 +399,12 @@ namespace GlorifiedBody.Editor.Destruction
         /// start. The levers stand on the other side of the doorway, on both wall faces. The leaf is on Default: shut, it
         /// stops her, the enemies, the bullets and the sight.
         /// </summary>
-        public static FireDoor Door(GameObject parent, string id, Vector3 mouth, Vector3 outward, float width, float height, float wall, Material face, Material inside, Material trim, Material plate, Material handleColour)
+        public static FireDoor Door(GameObject parent, string id, Vector3 mouth, Vector3 outward, float width, float height, float wall, int pocket, Material face, Material inside, Material trim, Material plate, Material handleColour, Material barColour)
         {
             outward.y = 0f;
             outward.Normalize();
-            Vector3 across = new Vector3(outward.z, 0f, -outward.x);
+            // The pocket side: +1 along (outward.z, 0, -outward.x), -1 the other way (a doorway near a room's corner has wall on one side only).
+            Vector3 across = new Vector3(outward.z, 0f, -outward.x) * (pocket < 0 ? -1f : 1f);
             GameObject root = Root(parent, id, mouth, Quaternion.LookRotation(outward).eulerAngles.y);
             GameObject leaf = Child(root.transform, "Leaf");
             GameObject debris = Child(root.transform, "Debris");
@@ -428,11 +429,27 @@ namespace GlorifiedBody.Editor.Destruction
             door.outward = outward;
             door.width = width;
             door.openOffset = across * (width + 0.05f);
+            // The bars: one across each face of the jammed door, on two brackets in the wall (shown only while jammed).
+            var bars = new List<GameObject>();
+            foreach (float side in new[] { -1f, 1f })
+            {
+                GameObject bar = Child(root.transform, side > 0 ? "Bar_Out" : "Bar_In");
+                Vector3 local = new Vector3(0f, 1.1f, side * (wall * 0.5f + 0.06f));
+                GameObject beam = Block(bar.transform, "Beam", local, new Vector3(width + 0.36f, 0.1f, 0.08f), barColour, room); // clear of the lever plate
+                Object.DestroyImmediate(beam.GetComponent<Collider>());
+                foreach (float end in new[] { -1f, 1f })
+                {
+                    GameObject bracket = Block(bar.transform, end > 0 ? "Bracket_R" : "Bracket_L", local + new Vector3(end * (width * 0.5f + 0.1f), 0f, -side * 0.03f), new Vector3(0.08f, 0.2f, 0.1f), plate, room);
+                    Object.DestroyImmediate(bracket.GetComponent<Collider>());
+                }
+                bars.Add(bar);
+            }
+            door.bars = bars.ToArray();
             EditorUtility.SetDirty(door);
             // The levers: beside the doorway away from the pocket, on both wall faces, at hand height.
             foreach (float side in new[] { -1f, 1f })
             {
-                Vector3 at = mouth - across * (width * 0.5f + 0.45f) + outward * side * (wall * 0.5f + 0.02f) + Vector3.up * 1.2f;
+                Vector3 at = mouth - across * (width * 0.5f + 0.35f) + outward * side * (wall * 0.5f + 0.02f) + Vector3.up * 1.2f;
                 GameObject lever = Child(root.transform, side > 0 ? "Lever_Out" : "Lever_In");
                 lever.transform.SetPositionAndRotation(at, Quaternion.LookRotation(outward * side));
                 GameObject back = Block(lever.transform, "Plate", new Vector3(0f, 0f, 0.015f), new Vector3(0.2f, 0.32f, 0.03f), plate, room);

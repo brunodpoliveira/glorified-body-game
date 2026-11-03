@@ -25,12 +25,12 @@ namespace GlorifiedBody.Editor.Demo
             var rooms = new List<RoomSpec>
             {
                 Room("W1", "RECOVERY ROOM", 1, 14, 7, 19, W1, new Door('S', 4, "W2")),
-                Room("W2", "NORTH CORRIDOR", 0, 11, 24, 14, W2, new Door('N', 4, "W1"), new Door('N', 13, "W3"), new Door('N', 22, "W4"), new Door('S', 1.5f, "W5")),
+                Room("W2", "NORTH CORRIDOR", 0, 11, 24, 14, W2, new Door('N', 4, "W1"), new Door('N', 13, "W3"), new Door('N', 22, "W4"), new Door('S', 1.5f, "W5", fire: true, pocket: -1)),
                 Room("W3", "PATIENT ROOMS", 9, 14, 17, 19, W3, new Door('S', 13, "W2")),
                 Room("W4", "SHOWER ROOM", 19, 14, 25, 20, W4, new Door('S', 22, "W2")),
-                Room("W5", "SOUTH CORRIDOR", 0, -9, 3, 11, W5, new Door('N', 1.5f, "W2"), new Door('W', 5, "W6"), new Door('E', 1.5f, "W7"), new Door('E', -6, "", flag: CodeSilver)),
+                Room("W5", "SOUTH CORRIDOR", 0, -9, 3, 11, W5, new Door('N', 1.5f, "W2", fire: true), new Door('W', 5, "W6"), new Door('E', 1.5f, "W7", fire: true), new Door('E', -6, "", flag: CodeSilver)),
                 Room("W6", "STAFF LOCKERS", -7, 2, 0, 8, W6, new Door('E', 5, "W5")),
-                Room("W7", "THERAPY GYM", 3, -2, 11, 5, W7, new Door('W', 1.5f, "W5"), new Door('E', 1.5f, "W8")),
+                Room("W7", "THERAPY GYM", 3, -2, 11, 5, W7, new Door('W', 1.5f, "W5", fire: true), new Door('E', 1.5f, "W8")),
                 Room("W8", "INDUCTION SUITE", 11, -2, 17, 5, W8, new Door('W', 1.5f, "W7"), new Door('S', 14, "W9")),
                 Room("W9", "NURSES' STATION", 3, -10, 17, -2, W9, new Door('N', 14, "W8"), new Door('W', -6, "", flag: CodeSilver), new Door('E', -7, "W10"), new Door('S', 8, "W11"), new Door('S', 15, "W12")),
                 Room("W10", "RESEARCH OFFICE", 17, -10, 23, -4, W10, new Door('W', -7, "W9")),

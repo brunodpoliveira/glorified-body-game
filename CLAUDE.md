@@ -444,16 +444,16 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   talks first (`ScriptStep.Approach`). Bot `play Demo Main_Menu demo 900`. FOR LATER: flanking (§13.1).
 - 2026-11-03, FIRE DOORS AT CHOKEPOINTS (`devlog-notes/2026-11-03_doors.md`, Bruno: "only certain doors that can open
   and close in selected chokepoints on the map ... a lever that closes+ locks/jams the door shut (justified by them being
-  firebreaks)"; a normal doorway has no door): `Interaction/FireDoor.cs` (open at the start; jammed by a lever, one on
-  each side, `DoorLever`; her lever opens it again, PROPOSED), the leaf a 100 HP breakable (`Destruction/DoorLeaf.cs`:
-  enemy kicks and explosions only). At a jammed door `SoldierBrain` (`Enemy/IDoorWaiter.cs`) stands and swings: soldiers
-  kick (25), the power armour hits (50), guards and scientists bang; the enemies never pull a lever. Card doors stay
-  `LockedDoor`. `new Door(..., fire: true, height:)` in a room spec builds one (`BreakableAssets.Door`); the demo has none
-  yet (OPEN: which chokepoints). The saves keep jammed doors (`RoomState.jammed`). DOOR TEST room
-  (`Demo/DoorTestSetup`, five rooms), `DoorTests` (11), bot `play DoorTest Main_Menu doors 300`. Fixed on the way: the
-  card door leaf and the CRT bodies of the demo stood at twice their place (a local position under a placed parent: the
-  W12 stair card stopped nothing); a held lock drops after 1 s out of her sight in the world
-  (`LockOnController.LostSightSeconds`).
+  firebreaks)"; a normal doorway has no door): `Interaction/FireDoor.cs` (open at the start; a lever on each side,
+  `DoorLever`, jams it and opens it again; a yellow bar across each face while jammed), the leaf a 100 HP breakable
+  (`Destruction/DoorLeaf.cs`: enemy kicks, explosions and her powers' splash; not the enemy bullets or the short). At a
+  jammed door `SoldierBrain` (`Enemy/IDoorWaiter.cs`) stands and swings: soldiers kick (25), the power armour hits (50),
+  guards and scientists bang; the enemies never pull a lever. Card doors stay `LockedDoor`. The demo has three: W2-W5,
+  W5-W7, G2-G5 (his pick). `new Door(..., fire: true, pocket: ±1)` in a room spec builds one (`BreakableAssets.Door`).
+  The saves keep jammed doors (`RoomState.jammed`). DOOR TEST room (`Demo/DoorTestSetup`, five rooms), `DoorTests` (11),
+  bot `play DoorTest Main_Menu doors 300`. Fixed on the way: the card door leaf and the CRT bodies of the demo stood at
+  twice their place (a local position under a placed parent: the W12 stair card stopped nothing); a held lock drops
+  after 1 s out of her sight in the world (`LockOnController.LostSightSeconds`).
 
 ## Rules
 

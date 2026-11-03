@@ -15,7 +15,8 @@ namespace GlorifiedBody.Interaction
     /// on the other side)"; "breachable by the soldier and power armor enemies ... not by scientists and guards, they can
     /// bang on the doors though". A normal doorway has no door: she never stops to open one.
     ///   Open (the start): the leaf stands in its wall pocket. Everyone walks through.
-    ///   Jammed: a lever (DoorLever, one on each side) shut it. Her lever opens it again (PROPOSED). An enemy after her
+    ///   Jammed: a lever (DoorLever, one on each side) shut it, and a bar lies across it on each face. Her lever opens it
+    ///     again (Bruno: "yes"). Her powers can break it too (their splash, DoorLeaf). An enemy after her
     ///     stops at it: a soldier or the power armour breaks it (DoorLeaf), a guard or a scientist bangs on it.
     ///   Broken: a hole. Nothing shuts it again.
     /// A door that needs a card or a puzzle is a LockedDoor, not this: nothing breaks it. The leaf stays out of the NavMesh
@@ -34,6 +35,8 @@ namespace GlorifiedBody.Interaction
         [Min(0.5f)] public float width = 1.6f;
         [Min(0.05f)] public float slideSeconds = 0.6f;
         public bool canBreak = true;
+        [Tooltip("The bars across the doorway, one on each face: shown while the door is jammed (Bruno: \"a horizontal bar to indicate that she is jamming the door\").")]
+        public GameObject[] bars = new GameObject[0];
 
         public const float CatchDepth = 1.1f;     // m each side of the wall: an enemy this near stops at the leaf
         public const float KickDamage = 25f;      // a soldier: four kicks break the 100 HP leaf
@@ -45,6 +48,8 @@ namespace GlorifiedBody.Interaction
         private const float ShakeSeconds = 0.18f;
 
         public State Current { get; private set; } = State.Open;
+        /// <summary>The bars show (the tests).</summary>
+        public bool BarsShown => bars.Length > 0 && bars[0] != null && bars[0].activeSelf;
         /// <summary>Kicks and bangs so far (the tests).</summary>
         public int Kicks { get; private set; }
         public int Bangs { get; private set; }
@@ -84,6 +89,7 @@ namespace GlorifiedBody.Interaction
                 leaf.position = shutPosition + openOffset;
             }
             SetSolid(false);
+            SetBars(false);
         }
 
         private void OnEnable()
@@ -111,6 +117,7 @@ namespace GlorifiedBody.Interaction
             if (!instant && Blocked()) return false;
             Current = State.Jammed;
             SetSolid(true);
+            SetBars(true);
             Move(shutPosition, instant);
             RunTelemetry.Event("door_jammed", $"{name}:{by}");
             if (!instant)
@@ -127,6 +134,7 @@ namespace GlorifiedBody.Interaction
             if (Current != State.Jammed) return;
             Current = State.Open;
             SetSolid(false);
+            SetBars(false);
             Move(shutPosition + openOffset, instant);
             ReleaseAll();
             RunTelemetry.Event("door_opened", $"{name}:{by}");
@@ -137,8 +145,15 @@ namespace GlorifiedBody.Interaction
         {
             if (Current == State.Broken) return;
             Current = State.Broken;
+            SetBars(false);
             ReleaseAll();
             RunTelemetry.Event("door_broken", name);
+        }
+
+        private void SetBars(bool shown)
+        {
+            foreach (GameObject bar in bars)
+                if (bar != null) bar.SetActive(shown);
         }
 
         private void SetSolid(bool solid)

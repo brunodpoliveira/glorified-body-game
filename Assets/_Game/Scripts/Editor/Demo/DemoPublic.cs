@@ -24,10 +24,10 @@ namespace GlorifiedBody.Editor.Demo
             return new List<RoomSpec>
             {
                 Room("G1", "STAIR LANDING", 0, 0, 5, 5, 3f, G1, new Door('N', 2.5f, "S1"), new Door('E', 2.5f, "G2")),
-                Room("G2", "THE CONCOURSE", 5, 0, 35, 6, 6f, G2, new Door('W', 2.5f, "G1"), new Door('N', 12, "G3"), new Door('N', 28, "G4"), new Door('S', 20, "G5")),
+                Room("G2", "THE CONCOURSE", 5, 0, 35, 6, 6f, G2, new Door('W', 2.5f, "G1"), new Door('N', 12, "G3"), new Door('N', 28, "G4"), new Door('S', 20, "G5", fire: true)),
                 Room("G3", "THE DONOR WALL", 8, 6, 16, 12, 3.5f, G3, new Door('S', 12, "G2")),
                 Room("G4", "THE CHAPEL", 24, 6, 32, 14, 4f, G4, new Door('S', 28, "G2")),
-                Room("G5", "RECEPTION HALL", 12, -16, 28, 0, 5f, G5, new Door('N', 20, "G2"), new Door('W', -4, "G6"), new Door('W', -12, "G7"), new Door('E', -4, "G8"), new Door('E', -12, "G9"), new Door('S', 20, "U1", flag: Released)),
+                Room("G5", "RECEPTION HALL", 12, -16, 28, 0, 5f, G5, new Door('N', 20, "G2", fire: true), new Door('W', -4, "G6"), new Door('W', -12, "G7"), new Door('E', -4, "G8"), new Door('E', -12, "G9"), new Door('S', 20, "U1", flag: Released)),
                 Room("G6", "PUBLIC BATHROOMS", 5, -7, 12, -1, 3f, G6, new Door('E', -4, "G5")),
                 Room("G7", "FAMILY ROOMS", 4, -16, 12, -9, 3f, G7, new Door('E', -12, "G5")),
                 Room("G8", "OFFICES AND RECORDS", 28, -8, 36, 0, 3f, G8, new Door('W', -4, "G5")),

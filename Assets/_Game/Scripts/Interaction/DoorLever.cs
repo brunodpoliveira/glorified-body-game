@@ -5,7 +5,7 @@ namespace GlorifiedBody.Interaction
     /// <summary>
     /// The lever of a fire door (2026-11-03, Bruno: "a lever that closes+ locks/jams the door shut"). One on each side of the
     /// doorway. Her Interact on an open door's lever shuts and jams the door (not with a body in the doorway); on a jammed
-    /// door's lever it opens the door again (PROPOSED). The enemies never pull it: a jammed fire door stays shut for them
+    /// door's lever it opens the door again (Bruno: "yes"). The enemies never pull it: a jammed fire door stays shut for them
     /// ("that's why guards can't open them even if they engage the lever on the other side"). The handle shows the state:
     /// up open, down jammed.
     /// </summary>

@@ -4,9 +4,11 @@ using GlorifiedBody.Combat;
 namespace GlorifiedBody.Destruction
 {
     /// <summary>
-    /// The leaf of a FireDoor as a breakable (2026-11-03): the kicks of a soldier or the power armour (EnemyMelee) and the
-    /// explosions wear it down while it stands jammed in its doorway. Her powers and the bullets do not (PROPOSED: Bruno named only the
-    /// soldiers). The pieces fall where the leaf stood, and a broken door stays broken (RoomDamageLedger).
+    /// The leaf of a FireDoor as a breakable (2026-11-03): while it stands jammed in its doorway, the kicks of a soldier or
+    /// the power armour (EnemyMelee), the explosions and her powers wear it down (Bruno: "her powers can break a door as
+    /// well, although there would be little reason for a player to deliberately break a door; but it should be an
+    /// option"). Her powers reach it by their splash: a blast near it, a thrown crate or body. The enemy bullets do not
+    /// (PROPOSED). The pieces fall where the leaf stood, and a broken door stays broken (RoomDamageLedger).
     /// </summary>
     [DefaultExecutionOrder(-50)] // before FireDoor: the bounds of the shut leaf, not of the leaf in its pocket
     public sealed class DoorLeaf : Breakable
@@ -22,12 +24,11 @@ namespace GlorifiedBody.Destruction
             {
                 case DamageType.EnemyMelee:
                     return 1f;
-                case DamageType.Explosion:
-                case DamageType.Grenade:
-                case DamageType.EnemyRocket:
-                    return 2f;
-                default:
+                case DamageType.EnemyBullet:
+                case DamageType.EnemyProjectile:
                     return 0f;
+                default:
+                    return base.Scale(type); // explosions 2, telekinesis 1.5, fire by the material, the short none
             }
         }
 

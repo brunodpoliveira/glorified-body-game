@@ -23,7 +23,8 @@ namespace GlorifiedBody.Editor.Demo
         public string Flag = ""; // "": always open; with To "": the leaf shows when the flag goes up (code silver)
         public bool Fire;        // a fire door at a chokepoint (2026-11-03): open at the start, a lever jams it, the soldiers breach it
         public float Height = DemoRoom.DoorHeight; // the power armour (2.6 m) needs a taller doorway
-        public Door(char side, float at, string to, float width = 1.6f, string flag = "", bool fire = false, float height = DemoRoom.DoorHeight) { Side = side; At = at; To = to; Width = width; Flag = flag; Fire = fire; Height = height; }
+        public int Pocket = 1;   // a fire door's pocket: +1 or -1 along the wall (the room that lists the doorway first builds it)
+        public Door(char side, float at, string to, float width = 1.6f, string flag = "", bool fire = false, float height = DemoRoom.DoorHeight, int pocket = 1) { Side = side; At = at; To = to; Width = width; Flag = flag; Fire = fire; Height = height; Pocket = pocket; }
     }
 
     /// <summary>One room of the demo: its id, its title, its floor, its place on the floor plan, its doors, its dressing.</summary>
@@ -224,8 +225,9 @@ namespace GlorifiedBody.Editor.Demo
                 // A fire door at a chokepoint: the two rooms list the same doorway, the ledger builds it once (in the first room).
                 Vector3 at = Mouth(d);
                 if (ledger.Once($"door|{Spec.Floor}|{at.x:0.0}|{at.z:0.0}"))
-                    GlorifiedBody.Editor.Destruction.BreakableAssets.Door(Props, "FireDoor_" + Spec.Id + "_" + d.To, at, Outward(d.Side), d.Width, d.Height, Wall,
-                        Grey(0.34f), Grey(0.5f), Colour("fire_band", new Color(0.55f, 0.12f, 0.1f)), Grey(0.12f), Colour("fire_lever", new Color(0.85f, 0.15f, 0.1f)));
+                    GlorifiedBody.Editor.Destruction.BreakableAssets.Door(Props, "FireDoor_" + Spec.Id + "_" + d.To, at, Outward(d.Side), d.Width, d.Height, Wall, d.Pocket,
+                        Grey(0.34f), Grey(0.5f), Colour("fire_band", new Color(0.55f, 0.12f, 0.1f)), Grey(0.12f), Colour("fire_lever", new Color(0.85f, 0.15f, 0.1f)),
+                        Colour("jam_bar", new Color(0.8f, 0.66f, 0.18f)));
                 return;
             }
             if (!string.IsNullOrEmpty(d.To) || string.IsNullOrEmpty(d.Flag)) return;

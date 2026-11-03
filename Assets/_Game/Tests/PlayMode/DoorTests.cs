@@ -28,7 +28,7 @@ namespace GlorifiedBody.Tests.PlayMode
     /// every fire door starts open with a lever on each side; her lever jams it and opens it again; a body in the doorway
     /// refuses the jam; an open fire door lets a soldier through; soldiers kick a jammed door down; the power armour breaks
     /// it in two blows; a guard and a scientist only bang; nothing breaks a card door; a jammed door drops her lock; her
-    /// powers do not break a door; the save keeps a jammed door.
+    /// powers break a jammed door; the save keeps a jammed door.
     /// Batch: tools/unity.sh test playmode DoorTests.
     /// </summary>
     public class DoorTests
@@ -86,6 +86,7 @@ namespace GlorifiedBody.Tests.PlayMode
                 Assert.AreEqual(FireDoor.State.Open, door.Current, door.name + ": open at the start");
                 Assert.AreEqual(2, door.GetComponentsInChildren<DoorLever>().Length, door.name + ": a lever on each side");
                 Assert.IsFalse(Through(door), door.name + ": the way is free");
+                Assert.IsFalse(door.BarsShown, door.name + ": no bar on an open door");
             }
             yield return null;
         }
@@ -103,11 +104,13 @@ namespace GlorifiedBody.Tests.PlayMode
             yield return Press(InputManager.GameAction.Interact);
             Assert.AreEqual(FireDoor.State.Jammed, door.Current, "the lever jams it, with no question");
             Assert.AreEqual(Interactor.State.Free, hands.Current);
+            Assert.IsTrue(door.BarsShown, "a bar across the jammed door (Bruno: \"a horizontal bar\")");
             yield return new WaitForSeconds(0.8f);
             Assert.IsTrue(Through(door), "the leaf stops a line through the doorway");
             StringAssert.Contains("open the fire door", lever.Hint);
             yield return Press(InputManager.GameAction.Interact);
-            Assert.AreEqual(FireDoor.State.Open, door.Current, "her lever opens it again (PROPOSED)");
+            Assert.AreEqual(FireDoor.State.Open, door.Current, "her lever opens it again (Bruno: \"yes\")");
+            Assert.IsFalse(door.BarsShown, "the bars go");
             yield return new WaitForSeconds(0.8f);
             Assert.IsFalse(Through(door), "the way is free again");
         }
@@ -223,20 +226,25 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator HerPowers_DoNotBreakADoor_AnExplosionDoes()
+        public IEnumerator HerPowers_BreakAJammedDoor_TheEnemyBulletsDoNot()
         {
+            // Bruno, 2026-11-03: "her powers can break a door as well ... it should be an option".
             FireDoor door = Door("D2");
             DoorLeaf leaf = door.GetComponent<DoorLeaf>();
             Vector3 at = door.transform.position + Vector3.up;
-            leaf.Damage(500f, DamageType.Explosion, at, door.outward);
+            Breakables.Splash(at, 1.5f, 500f, DamageType.PsychicBlast);
             Assert.IsFalse(leaf.IsBroken, "an open door stands in its pocket: nothing reaches it");
             door.Jam("test", instant: true);
-            foreach (DamageType type in new[] { DamageType.PsychicBlast, DamageType.PsychicFire, DamageType.PsychicTelekinesis, DamageType.ShortShock, DamageType.EnemyBullet })
-                leaf.Damage(500f, type, at, door.outward);
-            Assert.AreEqual(leaf.MaxHealth, leaf.Health, "her powers and the bullets leave it whole (PROPOSED)");
-            leaf.Damage(500f, DamageType.Explosion, at, door.outward);
-            Assert.IsTrue(leaf.IsBroken, "an explosion breaks a jammed door");
+            leaf.Damage(500f, DamageType.EnemyBullet, at, door.outward);
+            leaf.Damage(500f, DamageType.EnemyProjectile, at, door.outward);
+            leaf.Damage(500f, DamageType.ShortShock, at, door.outward);
+            Assert.AreEqual(leaf.MaxHealth, leaf.Health, "the enemy bullets and the short leave it whole (PROPOSED)");
+            Breakables.Splash(at - door.outward * 0.8f, 1.5f, 60f, DamageType.PsychicBlast);
+            Assert.Less(leaf.Health, leaf.MaxHealth, "the splash of her blast wears it down");
+            Breakables.Splash(at - door.outward * 0.8f, 1.5f, 200f, DamageType.PsychicTelekinesis);
+            Assert.IsTrue(leaf.IsBroken, "a thrown thing's splash breaks it");
             Assert.AreEqual(FireDoor.State.Broken, door.Current);
+            Assert.IsFalse(door.BarsShown, "no bar on a hole");
             yield return null;
         }
 

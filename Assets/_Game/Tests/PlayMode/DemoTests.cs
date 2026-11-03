@@ -114,6 +114,37 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator TheFireDoors_StandAtTheThreeChokepoints_TheirLeversInTheRooms_TheirLeavesInTheWall()
+        {
+            // Bruno, 2026-11-03: fire doors "in selected chokepoints"; his pick: W2 to W5, W5 to W7, G2 to G5.
+            yield return LoadWorld();
+            var names = GlorifiedBody.Interaction.FireDoor.All.Select(d => d.name).OrderBy(n => n).ToArray();
+            CollectionAssert.AreEqual(new[] { "FireDoor_G2_G5", "FireDoor_W2_W5", "FireDoor_W5_W7" }, names, "three fire doors");
+            var failures = new List<string>();
+            int solid = LayerMask.GetMask("Default");
+            foreach (GlorifiedBody.Interaction.FireDoor door in GlorifiedBody.Interaction.FireDoor.All)
+            {
+                if (door.Current != GlorifiedBody.Interaction.FireDoor.State.Open) failures.Add(door.name + ": not open at the start");
+                var rooms = new HashSet<string>();
+                foreach (GlorifiedBody.Interaction.DoorLever lever in door.GetComponentsInChildren<GlorifiedBody.Interaction.DoorLever>())
+                {
+                    Vector3 front = lever.transform.position + lever.transform.forward * 0.3f;
+                    GlorifiedBody.Rooms.Room room = GlorifiedBody.Rooms.Room.At(new Vector3(front.x, door.transform.position.y + 0.1f, front.z));
+                    if (room == null) failures.Add($"{door.name}/{lever.name}: in no room");
+                    else rooms.Add(room.id);
+                    if (Physics.Linecast(front, lever.transform.position + lever.transform.forward * 0.05f, solid, QueryTriggerInteraction.Ignore)) failures.Add($"{door.name}/{lever.name}: buried");
+                }
+                if (rooms.Count != 2) failures.Add($"{door.name}: its levers in {rooms.Count} rooms ({string.Join(",", rooms)})");
+                // The open leaf lies in its wall pocket: a line to it from each side meets the wall.
+                Vector3 leafCentre = door.leaf.position + Vector3.up * 1.1f;
+                foreach (float side in new[] { -1f, 1f })
+                    if (!Physics.Linecast(leafCentre + door.outward * side * 1f, leafCentre, solid, QueryTriggerInteraction.Ignore))
+                        failures.Add($"{door.name}: the open leaf shows on the {(side > 0 ? "outer" : "inner")} side");
+            }
+            Assert.IsEmpty(failures, string.Join("; ", failures));
+        }
+
+        [UnityTest]
         public IEnumerator EveryCrt_StandsBehindItsFace()
         {
             // 2026-11-03: the CRT boxes stood at twice their place (a local position under a parent at the floor point).
