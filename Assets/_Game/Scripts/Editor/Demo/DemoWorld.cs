@@ -86,7 +86,7 @@ namespace GlorifiedBody.Editor.Demo
         /// marker) never takes one of another room, and the camera search sees this room only. New scene roots of the
         /// build go under the room.
         /// </summary>
-        private static DemoRoom BuildOne(Scene scene, GameObject world, RoomSpec spec, CharacterCatalog catalog, WallLedger ledger)
+        internal static DemoRoom BuildOne(Scene scene, GameObject world, RoomSpec spec, CharacterCatalog catalog, WallLedger ledger)
         {
             foreach (Transform child in world.transform)
                 if (child.GetComponent<Room>() != null) child.gameObject.SetActive(false);
@@ -193,7 +193,7 @@ namespace GlorifiedBody.Editor.Demo
         }
 
         /// <summary>The rooms behind each room's doorways: the doors that name a room, and a fire door's room across (by place).</summary>
-        private static void Neighbours(Dictionary<string, DemoRoom> rooms)
+        internal static void Neighbours(Dictionary<string, DemoRoom> rooms)
         {
             var all = Object.FindObjectsByType<Room>(FindObjectsInactive.Include, FindObjectsSortMode.None);
             foreach (DemoRoom r in rooms.Values)
@@ -208,8 +208,8 @@ namespace GlorifiedBody.Editor.Demo
                 }
                 r.Root.GetComponent<Room>().neighbours = ids.ToArray();
             }
-            Room stair = all.First(o => o.id == Stair);
-            stair.neighbours = rooms.Values.Where(r => r.Spec.Doors.Any(d => d.To == Stair)).Select(r => r.Spec.Id).ToArray();
+            Room stair = all.FirstOrDefault(o => o.id == Stair);
+            if (stair != null) stair.neighbours = rooms.Values.Where(r => r.Spec.Doors.Any(d => d.To == Stair)).Select(r => r.Spec.Id).ToArray();
         }
 
         /// <summary>The scenes of the rooms before 2026-11-02 (Demo_W1 and the rest) and their NavMesh assets.</summary>

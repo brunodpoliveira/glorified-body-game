@@ -21,7 +21,9 @@ namespace GlorifiedBody.Editor.Demo
         public string To;        // the room id behind it, or "" for a fire door that a flag shuts
         public float Width = 1.6f;
         public string Flag = ""; // "": always open; with To "": the leaf shows when the flag goes up (code silver)
-        public Door(char side, float at, string to, float width = 1.6f, string flag = "") { Side = side; At = at; To = to; Width = width; Flag = flag; }
+        public bool Fire;        // a fire door at a chokepoint (2026-11-03): open at the start, a lever jams it, the soldiers breach it
+        public float Height = DemoRoom.DoorHeight; // the power armour (2.6 m) needs a taller doorway
+        public Door(char side, float at, string to, float width = 1.6f, string flag = "", bool fire = false, float height = DemoRoom.DoorHeight) { Side = side; At = at; To = to; Width = width; Flag = flag; Fire = fire; Height = height; }
     }
 
     /// <summary>One room of the demo: its id, its title, its floor, its place on the floor plan, its doors, its dressing.</summary>
@@ -168,7 +170,13 @@ namespace GlorifiedBody.Editor.Demo
         {
             bool alongX = side == 'N' || side == 'S';
             var gaps = new List<(float a, float b)>();
-            foreach (Door d in Spec.Doors) if (d.Side == side) gaps.Add((d.At - d.Width * 0.5f, d.At + d.Width * 0.5f));
+            var tops = new Dictionary<float, float>();
+            foreach (Door d in Spec.Doors)
+                if (d.Side == side)
+                {
+                    gaps.Add((d.At - d.Width * 0.5f, d.At + d.Width * 0.5f));
+                    tops[d.At - d.Width * 0.5f] = d.Height;
+                }
             gaps.Sort((p, q) => p.a.CompareTo(q.a));
             float from = along0 - Wall * 0.5f;
             int piece = 0;
@@ -185,7 +193,7 @@ namespace GlorifiedBody.Editor.Demo
             // Over each doorway: the lintel (once for the two rooms of the doorway).
             foreach ((float a, float b) in gaps)
                 if (ledger.Once($"lintel|{Spec.Floor}|{(alongX ? "z" : "x")}|{at:0.00}|{a:0.00}"))
-                    Lintel(side, a, b, at, ledger.HeightOn(Spec.Floor, alongX, at, a, b, Spec.Height));
+                    Lintel(side, a, b, at, ledger.HeightOn(Spec.Floor, alongX, at, a, b, Spec.Height), tops[a]);
         }
 
         private void WallPiece(char side, float a, float b, float at, float h, int index)
@@ -197,11 +205,11 @@ namespace GlorifiedBody.Editor.Demo
             Box(Room, $"Wall_{side}_{index}", pos, size, Grey(WallShade));
         }
 
-        private void Lintel(char side, float a, float b, float at, float h)
+        private void Lintel(char side, float a, float b, float at, float h, float top)
         {
-            if (h - DoorHeight < 0.05f) return;
-            Vector3 pos = side == 'N' || side == 'S' ? new Vector3((a + b) * 0.5f, (h + DoorHeight) * 0.5f, at) : new Vector3(at, (h + DoorHeight) * 0.5f, (a + b) * 0.5f);
-            Vector3 size = side == 'N' || side == 'S' ? new Vector3(b - a, h - DoorHeight, Wall) : new Vector3(Wall, h - DoorHeight, b - a);
+            if (h - top < 0.05f) return;
+            Vector3 pos = side == 'N' || side == 'S' ? new Vector3((a + b) * 0.5f, (h + top) * 0.5f, at) : new Vector3(at, (h + top) * 0.5f, (a + b) * 0.5f);
+            Vector3 size = side == 'N' || side == 'S' ? new Vector3(b - a, h - top, Wall) : new Vector3(Wall, h - top, b - a);
             Box(Room, $"Lintel_{side}_{a:0.0}", pos, size, Grey(WallShade));
         }
 
@@ -211,6 +219,15 @@ namespace GlorifiedBody.Editor.Demo
         /// </summary>
         private void Doorway(Door d)
         {
+            if (d.Fire && !string.IsNullOrEmpty(d.To))
+            {
+                // A fire door at a chokepoint: the two rooms list the same doorway, the ledger builds it once (in the first room).
+                Vector3 at = Mouth(d);
+                if (ledger.Once($"door|{Spec.Floor}|{at.x:0.0}|{at.z:0.0}"))
+                    GlorifiedBody.Editor.Destruction.BreakableAssets.Door(Props, "FireDoor_" + Spec.Id + "_" + d.To, at, Outward(d.Side), d.Width, d.Height, Wall,
+                        Grey(0.34f), Grey(0.5f), Colour("fire_band", new Color(0.55f, 0.12f, 0.1f)), Grey(0.12f), Colour("fire_lever", new Color(0.85f, 0.15f, 0.1f)));
+                return;
+            }
             if (!string.IsNullOrEmpty(d.To) || string.IsNullOrEmpty(d.Flag)) return;
             Vector3 mouth = Mouth(d);
             if (!ledger.Once($"fire|{Spec.Floor}|{mouth.x:0.0}|{mouth.z:0.0}")) return;
@@ -474,7 +491,8 @@ namespace GlorifiedBody.Editor.Demo
                 for (int col = 0; col < cols; col++)
                 {
                     Vector3 local = new Vector3((col - (cols - 1) * 0.5f) * w, 0.35f + row * h, 0f);
-                    Box(screen, $"Crt_{row}_{col}", floorPoint + turn * local, new Vector3(0.5f, 0.42f, 0.46f), Grey(0.1f)).transform.rotation = turn;
+                    // Box takes a local position under the screen, which stands at the floor point, turned (2026-11-03: the boxes stood at twice their place).
+                    Box(screen, $"Crt_{row}_{col}", local, new Vector3(0.5f, 0.42f, 0.46f), Grey(0.1f)).transform.localRotation = Quaternion.identity;
                     GameObject q = GameObject.CreatePrimitive(PrimitiveType.Quad);
                     q.name = $"CrtFace_{row}_{col}";
                     UnityEngine.Object.DestroyImmediate(q.GetComponent<Collider>());
@@ -520,7 +538,8 @@ namespace GlorifiedBody.Editor.Demo
             Vector3 across = new Vector3(outward.z, 0f, -outward.x);
             GameObject door = MenuLoopSetup.EnsureChild(Props, "Door_" + d.To);
             door.transform.position = Mouth(d);
-            GameObject leaf = Box(door, "Leaf", Mouth(d) + Vector3.up * DoorHeight * 0.5f, Abs(across * d.Width + Vector3.up * DoorHeight + outward * 0.1f), Grey(0.25f));
+            // Box takes a local position: the door stands at the doorway already (2026-11-03: the leaf stood at twice its place).
+            GameObject leaf = Box(door, "Leaf", Vector3.up * d.Height * 0.5f, Abs(across * d.Width + Vector3.up * d.Height + outward * 0.1f), Grey(0.25f));
             Carve(leaf);
             LockedDoor locked = MenuLoopSetup.EnsureComponent<LockedDoor>(door);
             locked.keyItemId = keyId;

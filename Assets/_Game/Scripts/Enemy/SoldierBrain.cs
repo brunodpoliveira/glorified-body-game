@@ -34,9 +34,11 @@ namespace GlorifiedBody.Enemy
     /// A knife (DummyShooter.Weapon.Knife, the knife scientist, 2026-10-27) makes it a rusher: no firing spot and no
     /// cover, it runs at her, finds her again every RushRepathSeconds, and strikes when she is in melee range.
     /// An armed civilian (the lab worker with a pistol) trembles while alerted, and more when it cowers.
+    /// A jammed fire door on its way (FireDoor, 2026-11-03): it stands, faces the door and swings while the door says so
+    /// (IDoorWaiter); a soldier and the power armour kick a jammed door down, the others bang on it.
     /// </summary>
     [RequireComponent(typeof(DummyShooter), typeof(Health))]
-    public sealed class SoldierBrain : MonoBehaviour, IFearful, ICarer
+    public sealed class SoldierBrain : MonoBehaviour, IFearful, ICarer, IDoorWaiter
     {
         public enum Phase { Idle, Move, Shoot, Hold, Dead, Care, Retreat, Cower }
 
@@ -64,6 +66,8 @@ namespace GlorifiedBody.Enemy
         private bool driftLogged;
         private Transform player;
         private Tremble tremble;
+        private float doorWait;
+        private Vector3 doorPoint;
 
         public Phase Current { get; private set; } = Phase.Idle;
         public bool Engaged => Time.frameCount - lastEngageFrame <= 2;
@@ -107,6 +111,7 @@ namespace GlorifiedBody.Enemy
         public string CprLine => IsArmedCivilian ? "Breathe. Please breathe. Please." : IsGuard ? "One. Two. Three. Four. Five. Come on. Come on." : "Come on. Come on, breathe. Don't you do this.";
         private bool IsGuard => GetComponent<EnemyMorale>() is EnemyMorale m && m.RankOf == EnemyMorale.Rank.Guard;
         private bool IsArmedCivilian => GetComponent<EnemyMorale>() is EnemyMorale m && m.RankOf == EnemyMorale.Rank.ArmedCivilian;
+        private EnemyMorale.Rank RankOf => GetComponent<EnemyMorale>() is EnemyMorale m ? m.RankOf : EnemyMorale.Rank.Soldier;
         public string AlertReason { get; private set; } = "";
         /// <summary>Where she is: her real position once alerted, else the last seen position.</summary>
         public Vector3 TargetPosition => Alerted && player != null ? player.position : body.TargetPosition;
@@ -287,6 +292,15 @@ namespace GlorifiedBody.Enemy
                 FaceHerWhileHeld(dt);
                 return;
             }
+            if (doorWait > 0f)
+            {
+                doorWait -= dt;
+                gun.HoldFire = true;
+                body.Stop();
+                body.Face(doorPoint - transform.position);
+                if (doorWait <= 0f) DoorDone();
+                return;
+            }
             if (!Alerted && body.CanSeeTarget) Alert("sight", callOthers: true);
             // An armed civilian is no fighter: its hands shake while it hunts her, and it shakes hard when it cowers.
             if (tremble != null && IsArmedCivilian) tremble.Amount = Current == Phase.Cower ? 1f : Alerted ? ArmedCivilianNerves : 0f;
@@ -355,6 +369,46 @@ namespace GlorifiedBody.Enemy
             }
         }
 
+        // ── Doors ─────────────────────────────────────────────────────
+
+        public bool Hunting => Alerted && !ScriptHeld && Current != Phase.Dead && !Retreating && !suspendedByLift;
+        public Vector3 Quarry => TargetPosition;
+        public bool CanBreach => RankOf == EnemyMorale.Rank.Soldier || RankOf == EnemyMorale.Rank.Heavy;
+        public bool IsHeavy => RankOf == EnemyMorale.Rank.Heavy;
+        /// <summary>A door holds it now (FireDoor).</summary>
+        public bool AtDoor => doorWait > 0f;
+
+        public void WaitAtDoor(Vector3 door, float seconds)
+        {
+            if (Current == Phase.Dead) return;
+            doorPoint = door;
+            if (seconds <= 0f)
+            {
+                if (doorWait > 0f) DoorDone();
+                doorWait = 0f;
+                return;
+            }
+            if (doorWait <= 0f)
+            {
+                if (gun.HoldsSlot) gun.Stagger(0.1f); // no aim through a door
+                if (Current == Phase.Care) GetComponent<CorpseCare>()?.Stop("door");
+            }
+            doorWait = Mathf.Max(doorWait, seconds);
+        }
+
+        public void SwingAtDoor()
+        {
+            if (Current == Phase.Dead) return;
+            gun.SwingAtDoor();
+        }
+
+        /// <summary>The door let it go (open, broken, or no reason left): a new path, through the doorway if it is free.</summary>
+        private void DoorDone()
+        {
+            doorWait = 0f;
+            if (Current == Phase.Move || Current == Phase.Shoot) Current = Phase.Idle;
+        }
+
         // ── Morale and care ───────────────────────────────────────────
 
         /// <summary>A colleague died in sight: it stops, loses its aim, flinches and barks.</summary>
@@ -418,7 +472,7 @@ namespace GlorifiedBody.Enemy
         public void TickEngage()
         {
             lastEngageFrame = Time.frameCount;
-            if (body == null || Current == Phase.Dead || Current == Phase.Hold || suspendedByLift) return;
+            if (body == null || Current == Phase.Dead || Current == Phase.Hold || suspendedByLift || AtDoor) return;
             if (Current == Phase.Care || Retreating) { gun.HoldFire = true; return; }
             float dt = Time.deltaTime;
 

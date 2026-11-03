@@ -403,6 +403,9 @@ namespace GlorifiedBody.Enemy
             }
         }
 
+        /// <summary>A kick or a bang on a door (FireDoor): the strike's swing and sound, no hit on her.</summary>
+        public void SwingAtDoor() => OnMelee?.Invoke(false);
+
         /// <summary>The melee strike: it lands when she is still within reach and in front of him.</summary>
         private void Strike()
         {

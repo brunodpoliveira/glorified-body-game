@@ -61,6 +61,8 @@ namespace GlorifiedBody.Saving
         public List<string> dead = new List<string>();
         public List<string> taken = new List<string>();
         public List<string> opened = new List<string>();
+        /// <summary>The fire doors she jammed (2026-11-03). A broken one is in the damage ledger.</summary>
+        public List<string> jammed = new List<string>();
         /// <summary>The bodies of the dead, as they lie (Bruno, 2026-10-25: "stay on the floor"). A dead one with no body here is hidden.</summary>
         public List<BodyState> bodies = new List<BodyState>();
         /// <summary>The floor blood and the pools under the bodies (Bruno: "gore should be saved as well").</summary>

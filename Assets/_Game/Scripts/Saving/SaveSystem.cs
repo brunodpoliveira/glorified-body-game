@@ -227,6 +227,8 @@ namespace GlorifiedBody.Saving
                 if (!presentItems.Contains(path)) room.taken.Add(path);
             foreach (LockedDoor door in UnityEngine.Object.FindObjectsByType<LockedDoor>(FindObjectsSortMode.None))
                 if (door.gameObject.scene == scene && door.IsOpen) room.opened.Add(ScenePaths.Of(door.transform));
+            foreach (FireDoor door in UnityEngine.Object.FindObjectsByType<FireDoor>(FindObjectsSortMode.None))
+                if (door.gameObject.scene == scene && door.Current == FireDoor.State.Jammed) room.jammed.Add(ScenePaths.Of(door.transform));
             // What came in play stays too (Bruno, 2026-10-31: "fix both"): the items on the floor, the shield's scars.
             foreach (FloorItem item in UnityEngine.Object.FindObjectsByType<FloorItem>(FindObjectsSortMode.None))
             {
@@ -320,6 +322,13 @@ namespace GlorifiedBody.Saving
             {
                 GameObject door = ScenePaths.Find(scene, path);
                 if (door != null && door.TryGetComponent(out LockedDoor locked)) locked.Open(instant: true);
+            }
+            foreach (FireDoor door in UnityEngine.Object.FindObjectsByType<FireDoor>(FindObjectsSortMode.None))
+            {
+                if (door.gameObject.scene != scene) continue;
+                bool jam = room.jammed != null && room.jammed.Contains(ScenePaths.Of(door.transform));
+                if (jam) door.Jam("load", instant: true);
+                else door.Open("load", instant: true);
             }
             return bodies.Count;
         }

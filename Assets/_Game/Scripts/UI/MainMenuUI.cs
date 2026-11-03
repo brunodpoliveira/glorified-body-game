@@ -34,6 +34,8 @@ namespace GlorifiedBody.UI
         [SerializeField] private string wardTestScene = "WardTest";     // a patient, a scan on a person, feeding (2026-10-30)
         [SerializeField] private string screenTestScene = "ScreenTest"; // the in-world screens (2026-10-31)
         [SerializeField] private string outfitTestScene = "OutfitTest"; // the outfit change (2026-10-31)
+        public const string DoorTestScene = "DoorTest"; // the doors she locks and the soldiers breach (2026-11-03)
+        private const float TestButtonHeight = 36f; // 13 test rooms fit under the title
         /// <summary>START: the demo, one world scene with every room (2026-11-02; a scene per room since 2026-10-31).</summary>
         public const string DemoScene = "Demo";
         [SerializeField] private string subtitleLabel = "WORK IN PROGRESS";
@@ -186,6 +188,7 @@ namespace GlorifiedBody.UI
         private void OnWardTestClicked() => GameManager.Instance?.LoadLevel(wardTestScene);
         private void OnScreenTestClicked() => GameManager.Instance?.LoadLevel(screenTestScene);
         private void OnOutfitTestClicked() => GameManager.Instance?.LoadLevel(outfitTestScene);
+        private void OnDoorTestClicked() => GameManager.Instance?.LoadLevel(DoorTestScene);
         private void OnTrainingClicked() => GameManager.Instance?.LoadGameplay();
 
         private void OnStartClicked()
@@ -382,7 +385,7 @@ namespace GlorifiedBody.UI
             testsRect.pivot = new Vector2(0.5f, 1f);
             testsRect.sizeDelta = new Vector2(320f, 0f);
             var testsLayout = tests.AddComponent<VerticalLayoutGroup>();
-            testsLayout.spacing = 10;
+            testsLayout.spacing = 6; // 13 rooms (2026-11-03: DOOR TEST ran past the bottom)
             testsLayout.childAlignment = TextAnchor.UpperCenter;
             testsLayout.childControlWidth = false;
             testsLayout.childControlHeight = true;
@@ -392,20 +395,21 @@ namespace GlorifiedBody.UI
             Text testsHeader = CreateLabel(tests.transform, "TEST ROOMS", 22, TextAnchor.MiddleCenter, 36, FontStyle.Bold, new Color(0.6f, 0.6f, 0.7f));
             testsHeader.rectTransform.sizeDelta = new Vector2(300f, testsHeader.rectTransform.sizeDelta.y); // the column does not size its children
             // The training room is dev only (Bruno, 2026-11-02: "remove the training room, or set it to dev only").
-            nav.Add(CreateButton(tests.transform, "TRAINING ROOM", 300, OnTrainingClicked, 44));
-            aiTestBtn = CreateButton(tests.transform, "AI TEST", 300, OnAiTestClicked, 44);
-            coverTestBtn = CreateButton(tests.transform, "COVER TEST", 300, OnCoverTestClicked, 44);
-            civilianTestBtn = CreateButton(tests.transform, "CIVILIAN TEST", 300, OnCivilianTestClicked, 44);
+            nav.Add(CreateButton(tests.transform, "TRAINING ROOM", 300, OnTrainingClicked, TestButtonHeight));
+            aiTestBtn = CreateButton(tests.transform, "AI TEST", 300, OnAiTestClicked, TestButtonHeight);
+            coverTestBtn = CreateButton(tests.transform, "COVER TEST", 300, OnCoverTestClicked, TestButtonHeight);
+            civilianTestBtn = CreateButton(tests.transform, "CIVILIAN TEST", 300, OnCivilianTestClicked, TestButtonHeight);
             nav.Add(aiTestBtn);
             nav.Add(coverTestBtn);
             nav.Add(civilianTestBtn);
-            nav.Add(CreateButton(tests.transform, "KIT TEST", 300, OnKitTestClicked, 44));
-            nav.Add(CreateButton(tests.transform, "SCRIPT TEST", 300, OnScriptTestClicked, 44));
-            nav.Add(CreateButton(tests.transform, "TRAVEL TEST", 300, OnTravelTestClicked, 44));
-            nav.Add(CreateButton(tests.transform, "LAB TEST", 300, OnLabTestClicked, 44));
-            nav.Add(CreateButton(tests.transform, "WARD TEST", 300, OnWardTestClicked, 44));
-            nav.Add(CreateButton(tests.transform, "SCREEN TEST", 300, OnScreenTestClicked, 44));
-            nav.Add(CreateButton(tests.transform, "OUTFIT TEST", 300, OnOutfitTestClicked, 44));
+            nav.Add(CreateButton(tests.transform, "KIT TEST", 300, OnKitTestClicked, TestButtonHeight));
+            nav.Add(CreateButton(tests.transform, "SCRIPT TEST", 300, OnScriptTestClicked, TestButtonHeight));
+            nav.Add(CreateButton(tests.transform, "TRAVEL TEST", 300, OnTravelTestClicked, TestButtonHeight));
+            nav.Add(CreateButton(tests.transform, "LAB TEST", 300, OnLabTestClicked, TestButtonHeight));
+            nav.Add(CreateButton(tests.transform, "WARD TEST", 300, OnWardTestClicked, TestButtonHeight));
+            nav.Add(CreateButton(tests.transform, "SCREEN TEST", 300, OnScreenTestClicked, TestButtonHeight));
+            nav.Add(CreateButton(tests.transform, "OUTFIT TEST", 300, OnOutfitTestClicked, TestButtonHeight));
+            nav.Add(CreateButton(tests.transform, "DOOR TEST", 300, OnDoorTestClicked, TestButtonHeight));
 
             if (!GameBuild.Dev) nav.RemoveAll(b => b != null && b.transform.parent == tests.transform); // hidden: not in the keys' path
 

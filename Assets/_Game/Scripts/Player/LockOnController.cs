@@ -20,6 +20,9 @@ namespace GlorifiedBody.Player
     {
         [SerializeField, Min(1f)] private float lockRange = 14f;
         [SerializeField, Min(1f)] private float dropRange = 18f;
+        /// <summary>Seconds a held target may stay out of her sight in the world (PROPOSED).</summary>
+        public const float LostSightSeconds = 1f;
+        private float unseenSince = -1f;
         [SerializeField, Min(0f)] private float faceTurnSpeed = 360f;
         [SerializeField] private LayerMask obstructionMask = 0;
         [SerializeField] private bool requireLineOfSight = false;
@@ -57,6 +60,7 @@ namespace GlorifiedBody.Player
         {
             if (target == CurrentTarget) return;
             CurrentTarget = target;
+            unseenSince = -1f;
             RunTelemetry.Event(target != null ? "lock_on" : "lock_off", target != null ? target.name : "");
             OnTargetChanged?.Invoke(target);
         }
@@ -81,6 +85,15 @@ namespace GlorifiedBody.Player
                 bool gone = !CurrentTarget.Selectable || !CurrentTarget.IsAlive || (CurrentTarget.IsProp && !IncludeProps);
                 bool far = (CurrentTarget.GetLockPoint() - transform.position).sqrMagnitude > dropRange * dropRange;
                 if (gone || far) SetTarget(null);
+            }
+
+            // In the world a held target out of her sight goes after a moment (2026-11-03: a door shut between them, and
+            // the lock held through the leaf). The moment keeps the lock past a pillar.
+            if (CurrentTarget != null && NeedsSight)
+            {
+                if (InSight(CurrentTarget)) unseenSince = -1f;
+                else if (unseenSince < 0f) unseenSince = Time.time;
+                else if (Time.time - unseenSince > LostSightSeconds) SetTarget(null);
             }
 
             // Auto-lock: the nearest live target in range, never a civilian. Distance only, no angle (she turns to it).

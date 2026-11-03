@@ -7,6 +7,7 @@ using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.Rendering;
 using GlorifiedBody.Destruction;
+using GlorifiedBody.Interaction;
 
 namespace GlorifiedBody.Editor.Destruction
 {
@@ -388,6 +389,68 @@ namespace GlorifiedBody.Editor.Destruction
             var b = root.AddComponent<Breakable>();
             b.Bind(id, Breakable.Kind.Wood, 90f, true, intact, debris, null, new Greeble[0], 4f);
             return b;
+        }
+
+        /// <summary>
+        /// A fire door at a chokepoint (FireDoor, 2026-11-03): a leaf that slides out of its wall pocket, its pieces for a
+        /// breach (DoorLeaf, 100 HP), and a lever on each side of the doorway (DoorLever) that jams it. The root stands at
+        /// the doorway's middle on the floor, turned to the outward side; it stays out of the NavMesh bake (a chaser walks
+        /// up to the jammed leaf). The leaf is built shut in the doorway; the game opens it into the pocket (+across) at the
+        /// start. The levers stand on the other side of the doorway, on both wall faces. The leaf is on Default: shut, it
+        /// stops her, the enemies, the bullets and the sight.
+        /// </summary>
+        public static FireDoor Door(GameObject parent, string id, Vector3 mouth, Vector3 outward, float width, float height, float wall, Material face, Material inside, Material trim, Material plate, Material handleColour)
+        {
+            outward.y = 0f;
+            outward.Normalize();
+            Vector3 across = new Vector3(outward.z, 0f, -outward.x);
+            GameObject root = Root(parent, id, mouth, Quaternion.LookRotation(outward).eulerAngles.y);
+            GameObject leaf = Child(root.transform, "Leaf");
+            GameObject debris = Child(root.transform, "Debris");
+            int room = LayerMask.NameToLayer("Default");
+            Vector3 panelSize = new Vector3(width - 0.04f, height - 0.02f, 0.08f);
+            Vector3 panel = new Vector3(0f, panelSize.y * 0.5f + 0.01f, 0f);
+            Block(leaf.transform, "Panel", panel, panelSize, face, room);
+            // Two bands on each face: the leaf reads as a fire door on the dark greybox.
+            foreach (float side in new[] { -1f, 1f })
+                foreach (float y in new[] { 0.35f, panelSize.y - 0.35f })
+                {
+                    GameObject band = Block(leaf.transform, $"Band_{(side > 0 ? "Out" : "In")}_{y:0.0}", new Vector3(0f, y, side * 0.045f), new Vector3(panelSize.x * 0.92f, 0.12f, 0.01f), trim, room);
+                    Object.DestroyImmediate(band.GetComponent<Collider>());
+                }
+            AddPieces(debris.transform, Fragments($"door_leaf_{Mathf.RoundToInt(width * 100f)}", panelSize, 12, 37), panel, Quaternion.identity, face, inside, WoodDensity);
+            HideUntilBroken(debris, null);
+            root.AddComponent<Unity.AI.Navigation.NavMeshModifier>().ignoreFromBuild = true;
+            var breakable = root.AddComponent<DoorLeaf>();
+            breakable.Bind(id, Breakable.Kind.Metal, 100f, false, leaf, debris, null, new Greeble[0], 3.5f);
+            var door = root.AddComponent<FireDoor>();
+            door.leaf = leaf.transform;
+            door.outward = outward;
+            door.width = width;
+            door.openOffset = across * (width + 0.05f);
+            EditorUtility.SetDirty(door);
+            // The levers: beside the doorway away from the pocket, on both wall faces, at hand height.
+            foreach (float side in new[] { -1f, 1f })
+            {
+                Vector3 at = mouth - across * (width * 0.5f + 0.45f) + outward * side * (wall * 0.5f + 0.02f) + Vector3.up * 1.2f;
+                GameObject lever = Child(root.transform, side > 0 ? "Lever_Out" : "Lever_In");
+                lever.transform.SetPositionAndRotation(at, Quaternion.LookRotation(outward * side));
+                GameObject back = Block(lever.transform, "Plate", new Vector3(0f, 0f, 0.015f), new Vector3(0.2f, 0.32f, 0.03f), plate, room);
+                Object.DestroyImmediate(back.GetComponent<Collider>());
+                GameObject pivot = Child(lever.transform, "Handle");
+                pivot.transform.localPosition = new Vector3(0f, 0f, 0.04f);
+                GameObject stick = Block(pivot.transform, "Stick", new Vector3(0f, 0.12f, 0f), new Vector3(0.035f, 0.24f, 0.035f), handleColour, room);
+                Object.DestroyImmediate(stick.GetComponent<Collider>());
+                GameObject knob = Block(pivot.transform, "Knob", new Vector3(0f, 0.25f, 0f), new Vector3(0.07f, 0.06f, 0.07f), handleColour, room);
+                Object.DestroyImmediate(knob.GetComponent<Collider>());
+                DoorLever component = lever.AddComponent<DoorLever>();
+                component.door = door;
+                component.handle = pivot.transform;
+                pivot.transform.localRotation = Quaternion.Euler(component.upAngle, 0f, 0f);
+                component.range = 1.4f;
+                EditorUtility.SetDirty(component);
+            }
+            return door;
         }
 
         /// <summary>A plaster patch on a wall face: it comes down in chunks and leaves the bare concrete.</summary>

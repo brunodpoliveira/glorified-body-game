@@ -552,7 +552,7 @@ MonoBehaviour:
     marks:
     - kind: 0
       path: '[World]/[W12]/[Props]/Door_S1'
-      position: {x: 30, y: -28}
+      position: {x: 15, y: -14}
       label: the ward sister's card
   - scene: G1
     world: Demo

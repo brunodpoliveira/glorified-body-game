@@ -114,6 +114,26 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator EveryCrt_StandsBehindItsFace()
+        {
+            // 2026-11-03: the CRT boxes stood at twice their place (a local position under a parent at the floor point).
+            yield return LoadWorld();
+            var failures = new List<string>();
+            int count = 0;
+            foreach (GlorifiedBody.Interaction.InWorldScreen screen in UnityEngine.Object.FindObjectsByType<GlorifiedBody.Interaction.InWorldScreen>(FindObjectsSortMode.None))
+                foreach (Transform face in screen.GetComponentsInChildren<Transform>().Where(t => t.name.StartsWith("CrtFace_")))
+                {
+                    Transform box = screen.transform.Find(face.name.Replace("CrtFace_", "Crt_"));
+                    if (box == null) continue;
+                    count++;
+                    float gap = Vector3.Distance(box.position, face.position);
+                    if (gap > 0.5f) failures.Add($"{screen.name}/{box.name}: {gap:0.0} m from its face");
+                }
+            Assert.Greater(count, 0, "the demo has CRTs");
+            Assert.IsEmpty(failures, string.Join("; ", failures));
+        }
+
+        [UnityTest]
         public IEnumerator TheStair_SheWalksDown_FromW12_ToG1_OnFloorOne()
         {
             // Bruno, 2026-11-02: "a real stair room" between the floors.
@@ -122,6 +142,9 @@ namespace GlorifiedBody.Tests.PlayMode
             GameObject lucy = GameObject.FindGameObjectWithTag("Player");
             GlorifiedBody.Interaction.LockedDoor door = GlorifiedBody.Rooms.Room.Of("W12").GetComponentInChildren<GlorifiedBody.Interaction.LockedDoor>();
             Assert.IsNotNull(door, "the stair door is locked (the ward sister's card)");
+            // 2026-11-03: the leaf stood at twice its doorway's place (a local position under a parent at the doorway).
+            Assert.IsTrue(Physics.Linecast(new Vector3(15f, 1.2f, -12.5f), new Vector3(15f, 1.2f, -15.5f), out RaycastHit leafHit, LayerMask.GetMask("Default"), QueryTriggerInteraction.Ignore)
+                && leafHit.collider.transform.IsChildOf(door.transform), "the card door's leaf stands in W12's south doorway");
             door.Open();
             yield return new WaitForSeconds(1.5f); // the leaf slides away
             lucy.GetComponent<TankController>().Teleport(new Vector3(15f, 0f, -12f), 180f);

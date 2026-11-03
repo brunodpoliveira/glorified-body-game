@@ -44,6 +44,8 @@ namespace GlorifiedBody.Audio
         public const string DoorLocked = "door_locked";
         public const string DoorOpen = "door_open";
         public const string DoorClose = "door_close";
+        public const string DoorKick = "door_kick";
+        public const string DoorBang = "door_bang";
         public const string Scan = "scan";
         public const string Save = "save";
         public const string Checkpoint = "checkpoint";
