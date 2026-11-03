@@ -13,23 +13,6 @@ namespace GlorifiedBody.Systems
     {
         public static SettingsManager Instance { get; private set; }
 
-        public enum WallRunInputMode
-        {
-            Toggle = 0,
-            Hold = 1
-        }
-
-        public enum SlideInputMode
-        {
-            Toggle = 0,
-            Hold = 1
-        }
-
-        public enum CatchThrowInputMode
-        {
-            Hold = 0,
-            Toggle = 1
-        }
 
         // ── Audio ──────────────────────────────────────────────────────
 
@@ -98,14 +81,8 @@ namespace GlorifiedBody.Systems
         [SerializeField] private float defaultMouseSensitivity = 3f;
         [SerializeField] private float minMouseSensitivity = 0.5f;
         [SerializeField] private float maxMouseSensitivity = 10f;
-        [SerializeField] private WallRunInputMode defaultWallRunMode = WallRunInputMode.Toggle;
-        [SerializeField] private SlideInputMode defaultSlideMode = SlideInputMode.Toggle;
-        [SerializeField] private CatchThrowInputMode defaultCatchThrowMode = CatchThrowInputMode.Hold;
 
         private float mouseSensitivity;
-        private WallRunInputMode wallRunMode;
-        private SlideInputMode slideMode;
-        private CatchThrowInputMode catchThrowMode;
 
         public float MouseSensitivity
         {
@@ -120,36 +97,6 @@ namespace GlorifiedBody.Systems
 
         public float MinMouseSensitivity => minMouseSensitivity;
         public float MaxMouseSensitivity => maxMouseSensitivity;
-        public WallRunInputMode WallRunMode
-        {
-            get => wallRunMode;
-            set
-            {
-                wallRunMode = ClampWallRunMode(value);
-                SaveSettings();
-            }
-        }
-
-        public SlideInputMode SlideMode
-        {
-            get => slideMode;
-            set
-            {
-                slideMode = value;
-                SaveSettings();
-            }
-        }
-
-        public CatchThrowInputMode CatchThrowMode
-        {
-            get => catchThrowMode;
-            set
-            {
-                catchThrowMode = value;
-                SaveSettings();
-            }
-        }
-
         /// <summary>
         /// Fired when mouse sensitivity changes. ThirdPersonOrbitCamera subscribes to this.
         /// </summary>
@@ -158,27 +105,13 @@ namespace GlorifiedBody.Systems
         // ── Display ────────────────────────────────────────────────────
 
         [Header("Display Defaults")]
-        [SerializeField] private bool defaultFullscreen = true;
         [SerializeField] private int defaultVSync = 1;
-        [SerializeField] private bool defaultRainEnabled = true;
-        [SerializeField] private LookQuality defaultLookQuality = LookQuality.Authentic;
 
-        private bool fullscreen;
         private int resolutionIndex;
         private int vSyncCount;
-        private bool rainEnabled;
-        private LookQuality lookQuality;
 
-        public bool Fullscreen
-        {
-            get => fullscreen;
-            set
-            {
-                fullscreen = value;
-                ApplyDisplaySettings();
-                SaveSettings();
-            }
-        }
+        /// <summary>The window is not windowed (the display mode is a graphics option since 2026-11-03).</summary>
+        public bool Fullscreen => GlorifiedBody.Rendering.GraphicsOptions.Display != GlorifiedBody.Rendering.DisplayMode.Windowed;
 
         public int ResolutionIndex
         {
@@ -202,29 +135,8 @@ namespace GlorifiedBody.Systems
             }
         }
 
-        public bool RainEnabled
-        {
-            get => rainEnabled;
-            set
-            {
-                rainEnabled = value;
-                SaveSettings();
-            }
-        }
 
-        /// <summary>The LOOK option (Bruno, 2026-10-22): Authentic, "Sharp" on screen (no anti-aliasing; no dither since 2026-11-03) or Clear (MSAA and SMAA). LookQualityApplier follows it.</summary>
-        public LookQuality LookQuality
-        {
-            get => lookQuality;
-            set
-            {
-                lookQuality = Enum.IsDefined(typeof(LookQuality), value) ? value : LookQuality.Authentic;
-                SaveSettings();
-                OnLookQualityChanged?.Invoke(lookQuality);
-            }
-        }
 
-        public event Action<LookQuality> OnLookQualityChanged;
 
         /// <summary>The Gore option (Bruno, 2026-10-24: the Gore System): 0 Off, 1 Low, 2 Full. GoreBootstrap follows it.</summary>
         public int GoreLevel
@@ -272,14 +184,8 @@ namespace GlorifiedBody.Systems
         private const string KEY_MUSIC_VOL = "settings_musicVolume";
         private const string KEY_VOICE_VOL = "settings_voiceVolume";
         private const string KEY_MOUSE_SENS = "settings_mouseSensitivity";
-        private const string KEY_WALLRUN_MODE = "settings_wallRunMode";
-        private const string KEY_SLIDE_MODE = "settings_slideMode";
-        private const string KEY_CATCHTHROW_MODE = "settings_catchThrowMode";
-        private const string KEY_FULLSCREEN = "settings_fullscreen";
         private const string KEY_RESOLUTION = "settings_resolutionIndex";
         private const string KEY_VSYNC = "settings_vsync";
-        private const string KEY_RAIN_ENABLED = "settings_rainEnabled";
-        private const string KEY_LOOK_QUALITY = "settings_lookQuality";
         private const string KEY_GORE_LEVEL = "settings_goreLevel";
         private const string KEY_SUBTITLES = "settings_subtitles";
         private const string KEY_SUBTITLE_SIZE = "settings_subtitleSize";
@@ -306,20 +212,14 @@ namespace GlorifiedBody.Systems
             musicVolume = PlayerPrefs.GetFloat(KEY_MUSIC_VOL, defaultMusicVolume);
             voiceVolume = PlayerPrefs.GetFloat(KEY_VOICE_VOL, defaultVoiceVolume);
             mouseSensitivity = PlayerPrefs.GetFloat(KEY_MOUSE_SENS, defaultMouseSensitivity);
-            wallRunMode = ClampWallRunMode((WallRunInputMode)PlayerPrefs.GetInt(KEY_WALLRUN_MODE, (int)defaultWallRunMode));
-            slideMode = (SlideInputMode)PlayerPrefs.GetInt(KEY_SLIDE_MODE, (int)defaultSlideMode);
-            catchThrowMode = (CatchThrowInputMode)PlayerPrefs.GetInt(KEY_CATCHTHROW_MODE, (int)defaultCatchThrowMode);
-            fullscreen = PlayerPrefs.GetInt(KEY_FULLSCREEN, defaultFullscreen ? 1 : 0) == 1;
             resolutionIndex = PlayerPrefs.GetInt(KEY_RESOLUTION, GetCurrentResolutionIndex());
             vSyncCount = PlayerPrefs.GetInt(KEY_VSYNC, defaultVSync);
-            rainEnabled = PlayerPrefs.GetInt(KEY_RAIN_ENABLED, defaultRainEnabled ? 1 : 0) == 1;
-            lookQuality = (LookQuality)PlayerPrefs.GetInt(KEY_LOOK_QUALITY, (int)defaultLookQuality);
-            if (!Enum.IsDefined(typeof(LookQuality), lookQuality)) lookQuality = defaultLookQuality;
             goreLevel = Mathf.Clamp(PlayerPrefs.GetInt(KEY_GORE_LEVEL, 2), 0, 2);
             subtitlesOn = PlayerPrefs.GetInt(KEY_SUBTITLES, 1) == 1;
             subtitleSize = Mathf.Clamp(PlayerPrefs.GetInt(KEY_SUBTITLE_SIZE, 1), 0, 2);
 
             ApplyAudioSettings();
+            GlorifiedBody.Rendering.GraphicsOptions.Load();
             ApplyDisplaySettings();
             QualitySettings.vSyncCount = vSyncCount;
         }
@@ -331,14 +231,8 @@ namespace GlorifiedBody.Systems
             PlayerPrefs.SetFloat(KEY_MUSIC_VOL, musicVolume);
             PlayerPrefs.SetFloat(KEY_VOICE_VOL, voiceVolume);
             PlayerPrefs.SetFloat(KEY_MOUSE_SENS, mouseSensitivity);
-            PlayerPrefs.SetInt(KEY_WALLRUN_MODE, (int)wallRunMode);
-            PlayerPrefs.SetInt(KEY_SLIDE_MODE, (int)slideMode);
-            PlayerPrefs.SetInt(KEY_CATCHTHROW_MODE, (int)catchThrowMode);
-            PlayerPrefs.SetInt(KEY_FULLSCREEN, fullscreen ? 1 : 0);
             PlayerPrefs.SetInt(KEY_RESOLUTION, resolutionIndex);
             PlayerPrefs.SetInt(KEY_VSYNC, vSyncCount);
-            PlayerPrefs.SetInt(KEY_RAIN_ENABLED, rainEnabled ? 1 : 0);
-            PlayerPrefs.SetInt(KEY_LOOK_QUALITY, (int)lookQuality);
             PlayerPrefs.SetInt(KEY_GORE_LEVEL, goreLevel);
             PlayerPrefs.SetInt(KEY_SUBTITLES, subtitlesOn ? 1 : 0);
             PlayerPrefs.SetInt(KEY_SUBTITLE_SIZE, subtitleSize);
@@ -359,11 +253,11 @@ namespace GlorifiedBody.Systems
             if (resolutionIndex >= 0 && resolutionIndex < resolutions.Length)
             {
                 Resolution res = resolutions[resolutionIndex];
-                Screen.SetResolution(res.width, res.height, fullscreen);
+                Screen.SetResolution(res.width, res.height, GlorifiedBody.Rendering.GraphicsOptions.ScreenMode);
             }
             else
             {
-                Screen.fullScreen = fullscreen;
+                Screen.fullScreenMode = GlorifiedBody.Rendering.GraphicsOptions.ScreenMode;
             }
         }
 
@@ -389,26 +283,16 @@ namespace GlorifiedBody.Systems
             musicVolume = defaultMusicVolume;
             voiceVolume = defaultVoiceVolume;
             mouseSensitivity = defaultMouseSensitivity;
-            wallRunMode = ClampWallRunMode(defaultWallRunMode);
-            slideMode = defaultSlideMode;
-            catchThrowMode = defaultCatchThrowMode;
-            fullscreen = defaultFullscreen;
             vSyncCount = defaultVSync;
-            rainEnabled = defaultRainEnabled;
-            lookQuality = defaultLookQuality;
             resolutionIndex = GetCurrentResolutionIndex();
 
             ApplyAudioSettings();
             ApplyDisplaySettings();
             QualitySettings.vSyncCount = vSyncCount;
             OnMouseSensitivityChanged?.Invoke(mouseSensitivity);
-            OnLookQualityChanged?.Invoke(lookQuality);
+            GlorifiedBody.Rendering.GraphicsOptions.ResetToDefaults();
             SaveSettings();
         }
 
-        private static WallRunInputMode ClampWallRunMode(WallRunInputMode mode)
-        {
-            return Enum.IsDefined(typeof(WallRunInputMode), mode) ? mode : WallRunInputMode.Toggle;
-        }
     }
 }

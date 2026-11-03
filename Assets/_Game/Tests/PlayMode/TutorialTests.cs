@@ -39,7 +39,7 @@ namespace GlorifiedBody.Tests.PlayMode
             Time.timeScale = 1f;
             SceneManager.LoadScene(MainMenu);
             yield return WaitUntil(() => SceneManager.GetActiveScene().name == MainMenu && GameManager.Instance != null && GameManager.Instance.IsInMenu, 10f);
-            SettingsManager.Instance.LookQuality = LookQuality.Authentic;
+            GlorifiedBody.Rendering.GraphicsOptions.ResetToDefaults();
             GameManager.Instance.LoadLevel(TutorialDirector.SceneName);
             yield return WaitUntil(() => SceneManager.GetActiveScene().name == TutorialDirector.SceneName && GameManager.Instance.IsPlaying, 10f);
             yield return new WaitForSecondsRealtime(0.5f);
@@ -198,7 +198,7 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.IsNotNull(UnityEngine.Object.FindFirstObjectByType<LockedDoor>(), "the locked door");
             Assert.IsNotNull(TutorialDrive.FindPickup("test_key"), "the test key");
             Assert.Greater(LightmapSettings.lightmaps.Length, 0, "the baked bounce (TutorialSetup.BakeTutorial)");
-            Assert.IsNotNull(UnityEngine.Object.FindFirstObjectByType<LookQualityApplier>(), "the LOOK option applies here");
+            Assert.IsNotNull(UnityEngine.Object.FindFirstObjectByType<LookQualityApplier>(), "the graphics options apply here");
             Assert.IsNull(LookDirector.Instance, "no look director: a game room");
         }
 

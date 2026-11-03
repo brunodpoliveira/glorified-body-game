@@ -15,6 +15,10 @@ namespace GlorifiedBody.Enemy
 
         public string Shown => Time.time < hideAt ? line : "";
         public static int Count { get; private set; }
+        /// <summary>The lines of this figure (a test counts one speaker: the whole count takes the others too).</summary>
+        public int Said { get; private set; }
+
+        public static int CountOf(GameObject who) => who != null && who.TryGetComponent(out Bark bark) ? bark.Said : 0;
 
         /// <summary>Says the line as this object for the seconds (the subtitle stays as long as its words need).</summary>
         public static void Say(GameObject who, string line, float seconds = 1.6f)
@@ -23,6 +27,7 @@ namespace GlorifiedBody.Enemy
             Bark bark = who.GetComponent<Bark>() ?? who.AddComponent<Bark>();
             bark.line = line;
             bark.hideAt = Time.time + seconds;
+            bark.Said++;
             // The voice player shows the subtitle, and plays Resources/Voice/<id> when the line has a clip (2026-10-26).
             GlorifiedBody.Audio.Voice.Say(who, GlorifiedBody.Audio.Voice.IdFor(who, line), line, GlorifiedBody.Audio.VoiceMode.World, seconds);
             Count++;

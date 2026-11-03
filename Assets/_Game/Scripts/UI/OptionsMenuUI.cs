@@ -37,24 +37,27 @@ namespace GlorifiedBody.UI
 
         // Display controls
         private Dropdown resolutionDropdown;
-        private Toggle fullscreenToggle;
         private Dropdown vsyncDropdown;
-        private Toggle rainToggle;
-        private Button lookAuthenticButton;
         private Dropdown goreDropdown;
         private Toggle subtitlesToggle;
         private Dropdown subtitleSizeDropdown;
-        private Button lookClearButton;
+
+        // Graphics controls (GraphicsOptions, 2026-11-03)
+        private Dropdown displayModeDropdown;
+        private Dropdown frameLimitDropdown;
+        private Slider brightnessSlider;
+        private Text brightnessValueLabel;
+        private Dropdown presetDropdown;
+        private Dropdown renderScaleDropdown;
+        private Dropdown antiAliasingDropdown;
+        private Dropdown texturesDropdown;
+        private Dropdown filteringDropdown;
+        private Dropdown shadowsDropdown;
+        private Toggle occlusionToggle;
 
         // Mouse
         private Slider sensitivitySlider;
         private Text sensitivityValueLabel;
-        private Button wallrunToggleButton;
-        private Button wallrunHoldButton;
-        private Button slideToggleButton;
-        private Button slideHoldButton;
-        private Button catchThrowHoldButton;
-        private Button catchThrowToggleButton;
 
         // Key remapping
         private Transform keybindContainer;
@@ -168,10 +171,7 @@ namespace GlorifiedBody.UI
                 sensitivitySlider.SetValueWithoutNotify(SettingsManager.Instance.MouseSensitivity);
                 UpdateSensitivityLabel(SettingsManager.Instance.MouseSensitivity);
                 RefreshModeButtons();
-                fullscreenToggle.SetIsOnWithoutNotify(SettingsManager.Instance.Fullscreen);
                 vsyncDropdown.SetValueWithoutNotify(SettingsManager.Instance.VSyncCount);
-                if (rainToggle != null)
-                    rainToggle.SetIsOnWithoutNotify(SettingsManager.Instance.RainEnabled);
                 if (goreDropdown != null)
                     goreDropdown.SetValueWithoutNotify(SettingsManager.Instance.GoreLevel);
                 if (subtitlesToggle != null)
@@ -181,7 +181,31 @@ namespace GlorifiedBody.UI
             }
 
             RefreshResolutionDropdown();
+            RefreshGraphicsControls();
             RefreshKeybindLabels();
+        }
+
+        /// <summary>The graphics rows from GraphicsOptions (a preset moves the knobs, a knob makes the preset Custom).</summary>
+        private void RefreshGraphicsControls()
+        {
+            if (presetDropdown == null) return;
+            GraphicsOptions.Load();
+            displayModeDropdown.SetValueWithoutNotify((int)GraphicsOptions.Display);
+            frameLimitDropdown.SetValueWithoutNotify(Mathf.Max(0, System.Array.IndexOf(GraphicsOptions.FrameLimits, GraphicsOptions.FrameLimit)));
+            brightnessSlider.SetValueWithoutNotify(GraphicsOptions.Brightness);
+            UpdateBrightnessLabel(GraphicsOptions.Brightness);
+            presetDropdown.SetValueWithoutNotify((int)GraphicsOptions.Preset);
+            renderScaleDropdown.SetValueWithoutNotify(Mathf.Max(0, System.Array.IndexOf(GraphicsOptions.RenderScales, GraphicsOptions.RenderScale)));
+            antiAliasingDropdown.SetValueWithoutNotify((int)GraphicsOptions.AntiAliasing);
+            texturesDropdown.SetValueWithoutNotify((int)GraphicsOptions.Textures);
+            filteringDropdown.SetValueWithoutNotify((int)GraphicsOptions.Filtering);
+            shadowsDropdown.SetValueWithoutNotify((int)GraphicsOptions.Shadows);
+            occlusionToggle.SetIsOnWithoutNotify(GraphicsOptions.AmbientOcclusion);
+        }
+
+        private void UpdateBrightnessLabel(float value)
+        {
+            if (brightnessValueLabel != null) brightnessValueLabel.text = (value >= 0f ? "+" : "") + value.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture);
         }
 
         private void RefreshResolutionDropdown()
@@ -216,7 +240,7 @@ namespace GlorifiedBody.UI
         private void UpdateSensitivityLabel(float value)
         {
             if (sensitivityValueLabel != null)
-                sensitivityValueLabel.text = value.ToString("F1");
+                sensitivityValueLabel.text = value.ToString("F1", System.Globalization.CultureInfo.InvariantCulture); // "3.0", not "3,0"
         }
 
         // ── Callbacks ──────────────────────────────────────────────────
@@ -228,14 +252,6 @@ namespace GlorifiedBody.UI
                 return;
             }
 
-            SetModeButtonHighlight(wallrunToggleButton, SettingsManager.Instance.WallRunMode == SettingsManager.WallRunInputMode.Toggle);
-            SetModeButtonHighlight(wallrunHoldButton, SettingsManager.Instance.WallRunMode == SettingsManager.WallRunInputMode.Hold);
-            SetModeButtonHighlight(slideToggleButton, SettingsManager.Instance.SlideMode == SettingsManager.SlideInputMode.Toggle);
-            SetModeButtonHighlight(slideHoldButton, SettingsManager.Instance.SlideMode == SettingsManager.SlideInputMode.Hold);
-            SetModeButtonHighlight(catchThrowHoldButton, SettingsManager.Instance.CatchThrowMode == SettingsManager.CatchThrowInputMode.Hold);
-            SetModeButtonHighlight(catchThrowToggleButton, SettingsManager.Instance.CatchThrowMode == SettingsManager.CatchThrowInputMode.Toggle);
-            SetModeButtonHighlight(lookAuthenticButton, SettingsManager.Instance.LookQuality == LookQuality.Authentic);
-            SetModeButtonHighlight(lookClearButton, SettingsManager.Instance.LookQuality == LookQuality.Clear);
         }
 
         private void SetModeButtonHighlight(Button button, bool active)
@@ -278,37 +294,25 @@ namespace GlorifiedBody.UI
             UpdateSensitivityLabel(value);
         }
 
-        private void OnWallRunModeChanged(int index)
+        // The graphics rows: each sets GraphicsOptions, which saves and applies; a preset refreshes the other rows.
+        private void OnPresetChanged(int index) { GraphicsOptions.SetPreset((GraphicsPreset)index); RefreshGraphicsControls(); }
+        private void OnRenderScaleChanged(int index) { GraphicsOptions.SetRenderScale(GraphicsOptions.RenderScales[Mathf.Clamp(index, 0, GraphicsOptions.RenderScales.Length - 1)]); RefreshGraphicsControls(); }
+        private void OnAntiAliasingChanged(int index) { GraphicsOptions.SetAntiAliasing((AntiAliasing)index); RefreshGraphicsControls(); }
+        private void OnTexturesChanged(int index) { GraphicsOptions.SetTextures((TextureQuality)index); RefreshGraphicsControls(); }
+        private void OnFilteringChanged(int index) { GraphicsOptions.SetFiltering((TextureFiltering)index); RefreshGraphicsControls(); }
+        private void OnShadowsChanged(int index) { GraphicsOptions.SetShadows((ShadowLevel)index); RefreshGraphicsControls(); }
+        private void OnOcclusionChanged(bool on) { GraphicsOptions.SetAmbientOcclusion(on); RefreshGraphicsControls(); }
+        private void OnDisplayModeChanged(int index)
         {
-            if (SettingsManager.Instance != null)
-                SettingsManager.Instance.WallRunMode = (SettingsManager.WallRunInputMode)Mathf.Clamp(index, 0, 1);
-            RefreshModeButtons();
+            GraphicsOptions.SetDisplay((DisplayMode)index);
+            if (SettingsManager.Instance != null) SettingsManager.Instance.ResolutionIndex = SettingsManager.Instance.ResolutionIndex; // the window again, at its resolution
         }
-
-        private void OnSlideModeChanged(int index)
+        private void OnFrameLimitChanged(int index) => GraphicsOptions.SetFrameLimit(GraphicsOptions.FrameLimits[Mathf.Clamp(index, 0, GraphicsOptions.FrameLimits.Length - 1)]);
+        private void OnBrightnessChanged(float value)
         {
-            if (SettingsManager.Instance != null)
-                SettingsManager.Instance.SlideMode = (SettingsManager.SlideInputMode)Mathf.Clamp(index, 0, 1);
-            RefreshModeButtons();
-        }
-
-        private void OnCatchThrowModeChanged(int index)
-        {
-            if (SettingsManager.Instance != null)
-                SettingsManager.Instance.CatchThrowMode = (SettingsManager.CatchThrowInputMode)Mathf.Clamp(index, 0, 1);
-            RefreshModeButtons();
-        }
-
-        private void OnLookQualityChanged(int index)
-        {
-            if (SettingsManager.Instance != null)
-                SettingsManager.Instance.LookQuality = (LookQuality)Mathf.Clamp(index, 0, 1);
-            RefreshModeButtons();
-        }
-
-        private void OnFullscreenChanged(bool value)
-        {
-            if (SettingsManager.Instance != null) SettingsManager.Instance.Fullscreen = value;
+            float stepped = Mathf.Round(value * 10f) / 10f;
+            GraphicsOptions.SetBrightness(stepped);
+            UpdateBrightnessLabel(stepped);
         }
 
         private void OnResolutionChanged(int index)
@@ -326,10 +330,6 @@ namespace GlorifiedBody.UI
             if (SettingsManager.Instance != null) SettingsManager.Instance.GoreLevel = index;
         }
 
-        private void OnRainChanged(bool value)
-        {
-            if (SettingsManager.Instance != null) SettingsManager.Instance.RainEnabled = value;
-        }
 
         private void OnRebindClicked(InputManager.GameAction action)
         {
@@ -428,7 +428,7 @@ namespace GlorifiedBody.UI
             titleLE.preferredHeight = 50;
             var titleImg = titleBar.AddComponent<Image>();
             titleImg.color = new Color(0.08f, 0.08f, 0.1f, 1f);
-            CreateLabel(titleBar.transform, "OPTIONS", 28, TextAnchor.MiddleCenter, 50);
+            CreateLabel(titleBar.transform, "OPTIONS", 28, TextAnchor.MiddleCenter, 50).horizontalOverflow = HorizontalWrapMode.Overflow; // one line (2026-11-03: it wrapped "OPTIO NS")
 
             // Tab bar
             var tabBar = CreateUIElement("TabBar", rootPanel.transform);
@@ -495,6 +495,7 @@ namespace GlorifiedBody.UI
         private GameObject BuildDisplayPanel(Transform parent)
         {
             var panel = CreateScrollablePanel("DisplayPanel", parent, 15f, new RectOffset(40, 40, 30, 20), out Transform content);
+            CreateSectionLabel(content, "DISPLAY");
 
             // Resolution
             var resRow = CreateUIElement("ResolutionRow", content);
@@ -517,8 +518,8 @@ namespace GlorifiedBody.UI
             resolutionDropdown = CreateDropdown(dropdownObj);
             resolutionDropdown.onValueChanged.AddListener(OnResolutionChanged);
 
-            // Fullscreen toggle
-            fullscreenToggle = CreateToggleRow(content, "Fullscreen", OnFullscreenChanged);
+            // The window (2026-11-03: Fullscreen, Borderless or Windowed; it was a fullscreen on/off).
+            displayModeDropdown = CreateDropdownRow(content, "Display Mode", new List<string> { "Fullscreen", "Borderless", "Windowed" }, OnDisplayModeChanged);
 
             // VSync
             var vsyncRow = CreateUIElement("VSyncRow", content);
@@ -543,18 +544,21 @@ namespace GlorifiedBody.UI
             vsyncDropdown.AddOptions(new List<string> { "Off", "Every V-Blank", "Every 2nd V-Blank" });
             vsyncDropdown.onValueChanged.AddListener(OnVSyncChanged);
 
-            rainToggle = CreateToggleRow(content, "Rain Effects", OnRainChanged);
+            frameLimitDropdown = CreateDropdownRow(content, "Frame Rate Limit", new List<string> { "No limit", "30", "60", "120", "144" }, OnFrameLimitChanged);
+            brightnessSlider = CreateSliderRow(content, "Brightness", -GraphicsOptions.BrightnessRange, GraphicsOptions.BrightnessRange, OnBrightnessChanged, out brightnessValueLabel);
 
-            // The LOOK (Bruno, 2026-10-22): the raw pixel edges, or anti-aliasing. The dither went on 2026-11-03.
-            CreateModeRow(
-                content,
-                "Look",
-                OnLookQualityChanged,
-                out lookAuthenticButton,
-                out lookClearButton,
-                firstOptionLabel: "Sharp (no anti-aliasing)",
-                secondOptionLabel: "Clear (anti-aliasing)");
+            // The graphics (Bruno, 2026-11-03: "the usual knobs and changes that most games allow"). A preset sets the
+            // knobs under it; a knob makes it Custom. No soft shadows: the shadows stay hard (ART_LESSONS 1.3).
+            CreateSectionLabel(content, "GRAPHICS");
+            presetDropdown = CreateDropdownRow(content, "Quality Preset", new List<string> { "Low", "Medium", "High", "Ultra", "Custom" }, OnPresetChanged);
+            renderScaleDropdown = CreateDropdownRow(content, "Render Scale", new List<string> { "50%", "67%", "75%", "85%", "100%" }, OnRenderScaleChanged);
+            antiAliasingDropdown = CreateDropdownRow(content, "Anti-Aliasing", new List<string> { "Off", "FXAA", "SMAA", "MSAA 2x", "MSAA 4x", "MSAA 8x" }, OnAntiAliasingChanged);
+            texturesDropdown = CreateDropdownRow(content, "Texture Quality", new List<string> { "Low", "Medium", "High" }, OnTexturesChanged);
+            filteringDropdown = CreateDropdownRow(content, "Texture Filtering", new List<string> { "Trilinear", "Anisotropic 4x", "Anisotropic 8x", "Anisotropic 16x" }, OnFilteringChanged);
+            shadowsDropdown = CreateDropdownRow(content, "Shadows", new List<string> { "Off", "Low", "Medium", "High", "Ultra" }, OnShadowsChanged);
+            occlusionToggle = CreateToggleRow(content, "Ambient Occlusion", OnOcclusionChanged);
 
+            CreateSectionLabel(content, "GAME");
             // The gore (Bruno, 2026-10-24): Off, Low (less blood, no head bursts), Full.
             goreDropdown = CreateDropdownRow(content, "Gore", new List<string> { "Off", "Low", "Full" }, OnGoreChanged);
 
@@ -579,26 +583,7 @@ namespace GlorifiedBody.UI
                 maxSens = SettingsManager.Instance.MaxMouseSensitivity;
             }
             sensitivitySlider = CreateSliderRow(content, "Mouse Sensitivity", minSens, maxSens, OnSensitivityChanged, out sensitivityValueLabel);
-            CreateModeRow(
-                content,
-                "Wallrun Mode",
-                OnWallRunModeChanged,
-                out wallrunToggleButton,
-                out wallrunHoldButton);
-            CreateModeRow(
-                content,
-                "Slide Mode",
-                OnSlideModeChanged,
-                out slideToggleButton,
-                out slideHoldButton);
-            CreateModeRow(
-                content,
-                "Catch/Throw Mode",
-                OnCatchThrowModeChanged,
-                out catchThrowHoldButton,
-                out catchThrowToggleButton,
-                firstOptionLabel: "Hold",
-                secondOptionLabel: "Toggle");
+            // The Warspite modes (wallrun, slide, catch and throw) went on 2026-11-03: nothing in this game read them.
 
             CreateSpacer(content, 10);
 
@@ -755,6 +740,14 @@ namespace GlorifiedBody.UI
             rect.anchorMax = Vector2.one;
             rect.offsetMin = Vector2.zero;
             rect.offsetMax = Vector2.zero;
+        }
+
+        /// <summary>A section name between the rows of a tab.</summary>
+        private void CreateSectionLabel(Transform parent, string text)
+        {
+            Text label = CreateLabel(parent, text, 20, TextAnchor.LowerLeft, 40);
+            label.fontStyle = FontStyle.Bold;
+            label.color = new Color(0.6f, 0.6f, 0.7f);
         }
 
         private Text CreateLabel(Transform parent, string text, int fontSize, TextAnchor alignment, float height)
@@ -1113,6 +1106,8 @@ namespace GlorifiedBody.UI
             btn.onClick.AddListener(onClick);
 
             var txt = CreateLabel(obj.transform, label, 18, TextAnchor.MiddleCenter, 40);
+            StretchFill(txt.rectTransform); // the whole tab, one line (2026-11-03: "Display/Graphics" wrapped)
+            txt.horizontalOverflow = HorizontalWrapMode.Overflow;
 
             return btn;
         }

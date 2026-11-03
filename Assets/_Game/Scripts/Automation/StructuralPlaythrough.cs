@@ -254,6 +254,20 @@ namespace GlorifiedBody.Automation
                 {
                     remapRows = InputManager.Instance != null ? InputManager.Instance.GetAllBindings().Count : 0;
                     yield return OverlayShot.Capture(optionsCanvas.GetComponent<Canvas>(), "options_controls.png", 0.2f);
+                    // The Display/Graphics tab (2026-11-03): its top, then scrolled to the bottom.
+                    var displayTab = typeof(OptionsMenuUI).GetField("displayTabBtn", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.GetValue(options) as UnityEngine.UI.Button;
+                    displayTab?.onClick.Invoke();
+                    yield return null;
+                    yield return null;
+                    yield return OverlayShot.Capture(optionsCanvas.GetComponent<Canvas>(), "options_display.png", 0.2f);
+                    var displayPanel = typeof(OptionsMenuUI).GetField("displayPanel", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.GetValue(options) as GameObject;
+                    UnityEngine.UI.ScrollRect scroll = displayPanel != null ? displayPanel.GetComponent<UnityEngine.UI.ScrollRect>() : null;
+                    if (scroll != null)
+                    {
+                        scroll.verticalNormalizedPosition = 0f;
+                        yield return null;
+                        yield return OverlayShot.Capture(optionsCanvas.GetComponent<Canvas>(), "options_display_lower.png", 0.2f);
+                    }
                 }
                 options.Hide();
                 yield return null;

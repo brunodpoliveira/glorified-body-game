@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using UnityEngine;
+using UnityEngine.Rendering.Universal;
 using UnityEngine.SceneManagement;
 using GlorifiedBody.Cameras;
 using GlorifiedBody.DebugTools;
@@ -134,7 +135,7 @@ namespace GlorifiedBody.Automation
                 look.SetDressing(dressing);
                 yield return null;
                 yield return null;
-                int wantedRenderer = dressing == LookDressing.Greybox ? 0 : dressing == LookDressing.Plate ? 3 : 1;
+                int wantedRenderer = dressing == LookDressing.Plate ? 3 : 0; // the live dressings draw with the game's renderer (2026-11-03)
                 bool bakedOk = dressing == LookDressing.Greybox || dressing == LookDressing.RealTime ? !look.BakedLightOn : look.BakedLightOn == look.HasBakedLight;
                 Record($"dressing_{tag}", look.Dressing == dressing && look.RendererIndex == wantedRenderer && bakedOk, $"renderer={look.RendererIndex} dressed={look.IsDressed} bakedOn={look.BakedLightOn}");
 
@@ -187,30 +188,29 @@ namespace GlorifiedBody.Automation
                 Record($"frames_{tag}", frames > 0, $"frames={frames} avg={avg:0.00} ms max={frameMax:0.00} ms");
             }
 
-            // The LOOK option (Bruno's pick, 2026-10-22): the baked dressing under the default camera, Clear
-            // (the stock renderer, MSAA, SMAA) then Authentic (no anti-aliasing; no dither since 2026-11-03), one shot each for the pixels.
+            // The anti-aliasing (the graphics options, 2026-11-03; the LOOK option before): the baked dressing under the
+            // default camera, SMAA (the High preset) then Off, one shot each for the pixels.
             look.SetDressing(LookDressing.RealTimeBaked);
             director.Override(director.DefaultCamera);
             tank.Teleport(home, homeYaw);
-            if (SettingsManager.Instance != null)
+            foreach (AntiAliasing aa in new[] { AntiAliasing.Smaa, AntiAliasing.Off })
             {
-                foreach (LookQuality quality in new[] { LookQuality.Clear, LookQuality.Authentic })
+                string qualityTag = aa.ToString().ToLowerInvariant();
+                GraphicsOptions.SetAntiAliasing(aa);
+                yield return null;
+                yield return null;
+                if (FrameRecorder.Enabled)
                 {
-                    string qualityTag = quality.ToString().ToLowerInvariant();
-                    SettingsManager.Instance.LookQuality = quality;
-                    yield return null;
-                    yield return null;
-                    if (FrameRecorder.Enabled)
-                    {
-                        FrameRecorder.Ensure().Begin($"{level.ToLowerInvariant()}_option_{qualityTag}");
-                        yield return new WaitForSeconds(2f);
-                        FrameRecorder.Instance.End();
-                    }
-                    string qualityFile = Path.Combine(shotsDir, $"look_quality_{qualityTag}.png");
-                    bool qualitySaved = ShotRenderer.Render(Camera.main, qualityFile, ShotWidth, ShotHeight, useTargetTexture: true);
-                    Record($"quality_{qualityTag}", qualitySaved && look.RendererIndex == LookQualityApplier.RendererIndexFor(quality), $"saved={qualitySaved} renderer={look.RendererIndex}");
+                    FrameRecorder.Ensure().Begin($"{level.ToLowerInvariant()}_option_{qualityTag}");
+                    yield return new WaitForSeconds(2f);
+                    FrameRecorder.Instance.End();
                 }
+                string qualityFile = Path.Combine(shotsDir, $"look_aa_{qualityTag}.png");
+                bool qualitySaved = ShotRenderer.Render(Camera.main, qualityFile, ShotWidth, ShotHeight, useTargetTexture: true);
+                bool applied = Camera.main.GetUniversalAdditionalCameraData().antialiasing == GraphicsOptions.PostAntiAliasing;
+                Record($"aa_{qualityTag}", qualitySaved && applied && look.RendererIndex == LookQualityApplier.GameRendererIndex, $"saved={qualitySaved} renderer={look.RendererIndex}");
             }
+            GraphicsOptions.ResetToDefaults();
 
             GameInput.ClearBotSource(pad);
             Finish();

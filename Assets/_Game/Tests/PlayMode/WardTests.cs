@@ -97,16 +97,18 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.Greater(bed.y, 0.4f, "on the bed, not on the floor");
             Assert.IsFalse(brain.Spoke, "no line while she is far");
 
-            int barks = Bark.Count;
+            // Her own lines only (2026-11-03: the count of every figure failed once, 228 for 226: Marta and the lab worker
+            // spoke in the same seconds).
+            int barks = Bark.CountOf(patient);
             Teleport(new Vector3(bed.x, 0f, bed.z - 1.6f), 0f); // south of the bed head, outside the bed
             yield return WaitUntil(() => brain.Spoke, 2f);
             Assert.IsTrue(brain.Spoke, "she speaks when Lucy comes near");
-            Assert.AreEqual(barks + 1, Bark.Count, "one line");
+            Assert.AreEqual(barks + 1, Bark.CountOf(patient), "one line");
             Teleport(new Vector3(0f, 0f, -3f), 0f);
             yield return new WaitForSeconds(0.3f);
             Teleport(new Vector3(bed.x, 0f, bed.z - 1.6f), 0f); // south of the bed head, outside the bed
             yield return new WaitForSeconds(0.5f);
-            Assert.AreEqual(barks + 1, Bark.Count, "the line comes once");
+            Assert.AreEqual(barks + 1, Bark.CountOf(patient), "the line comes once");
 
             Kill(Marta);
             yield return new WaitForSeconds(2.5f);

@@ -48,7 +48,7 @@ namespace GlorifiedBody.Tests.PlayMode
             Time.timeScale = 1f;
             SceneManager.LoadScene(MainMenu);
             yield return WaitUntil(() => SceneManager.GetActiveScene().name == MainMenu && GameManager.Instance != null && GameManager.Instance.IsInMenu, 10f);
-            SettingsManager.Instance.LookQuality = LookQuality.Authentic;
+            GraphicsOptions.ResetToDefaults();
             GameManager.Instance.LoadLevel(Room);
             yield return WaitUntil(() => SceneManager.GetActiveScene().name == Room && GameManager.Instance.IsPlaying, 10f);
             yield return new WaitForSecondsRealtime(0.5f);
@@ -65,7 +65,7 @@ namespace GlorifiedBody.Tests.PlayMode
         {
             if (look != null) look.PlateSizeOverride = default;
             if (director != null) director.Override(null);
-            if (SettingsManager.Instance != null) SettingsManager.Instance.LookQuality = LookQuality.Authentic;
+            GraphicsOptions.ResetToDefaults();
             yield return null;
         }
 
@@ -132,7 +132,7 @@ namespace GlorifiedBody.Tests.PlayMode
 
             look.SetDressing(LookDressing.RealTime);
             yield return null;
-            Assert.AreEqual(1, look.RendererIndex, "the real-time dressing uses GB_Full");
+            Assert.AreEqual(0, look.RendererIndex, "the real-time dressing uses the game's renderer (GB_Full lost its dither, 2026-11-03)");
             Assert.IsTrue(look.IsDressed);
             Assert.IsFalse(look.BakedLightOn, "no bounce in real time (the ruling)");
             Assert.AreEqual(0, LightmapSettings.lightmaps.Length, "the lightmaps are off");
@@ -141,7 +141,7 @@ namespace GlorifiedBody.Tests.PlayMode
 
             look.SetDressing(LookDressing.RealTimeBaked);
             yield return null;
-            Assert.AreEqual(1, look.RendererIndex, "the baked dressing uses GB_Full too");
+            Assert.AreEqual(0, look.RendererIndex, "the baked dressing too");
             Assert.IsTrue(look.BakedLightOn, "the baked light is on");
             Assert.Greater(LightmapSettings.lightmaps.Length, 0, "the lightmaps are back");
             Assert.IsTrue(floor.lightmapIndex >= 0 && floor.lightmapIndex < LightmapSettings.lightmaps.Length, "the floor reads its lightmap");
@@ -155,24 +155,20 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator TheClearLook_UsesTheStockRenderer_InTheLiveDressings()
+        public IEnumerator TheAntiAliasing_FollowsTheOption_InTheLiveDressings()
         {
-            SettingsManager.Instance.LookQuality = LookQuality.Clear;
+            GraphicsOptions.SetAntiAliasing(AntiAliasing.Smaa);
             yield return null;
-            Assert.AreEqual(LookDressing.RealTimeBaked, look.Dressing, "the quality change keeps the dressing");
-            Assert.AreEqual(0, look.RendererIndex, "Clear: the stock renderer");
+            Assert.AreEqual(LookDressing.RealTimeBaked, look.Dressing, "the option change keeps the dressing");
+            Assert.AreEqual(0, look.RendererIndex, "the game's renderer");
             Assert.IsTrue(look.BakedLightOn, "the bounce stays");
             Assert.AreEqual(AntialiasingMode.SubpixelMorphologicalAntiAliasing, Camera.main.GetUniversalAdditionalCameraData().antialiasing, "SMAA on the camera");
-            look.SetDressing(LookDressing.RealTime);
+            GraphicsOptions.SetAntiAliasing(AntiAliasing.Off);
             yield return null;
-            Assert.AreEqual(0, look.RendererIndex, "Clear: real time without the bounce on the stock renderer too");
+            Assert.AreEqual(AntialiasingMode.None, Camera.main.GetUniversalAdditionalCameraData().antialiasing);
             look.SetDressing(LookDressing.Plate);
             yield return null;
             Assert.AreEqual(3, look.RendererIndex, "the plate keeps its renderer");
-            SettingsManager.Instance.LookQuality = LookQuality.Authentic;
-            look.SetDressing(LookDressing.RealTimeBaked);
-            yield return null;
-            Assert.AreEqual(1, look.RendererIndex, "Authentic: GB_Full");
         }
 
         [UnityTest]

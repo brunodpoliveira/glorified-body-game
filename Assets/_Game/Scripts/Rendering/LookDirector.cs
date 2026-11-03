@@ -111,7 +111,7 @@ namespace GlorifiedBody.Rendering
         {
             director = FixedCameraDirector.Instance;
             if (director != null) director.OnCameraChanged += OnCameraCut;
-            if (SettingsManager.Instance != null) SettingsManager.Instance.OnLookQualityChanged += OnQualityChanged;
+            GraphicsOptions.OnChanged += OnQualityChanged;
             GameObject player = GameObject.FindGameObjectWithTag("Player");
             if (player != null)
             {
@@ -131,7 +131,7 @@ namespace GlorifiedBody.Rendering
         private void OnDestroy()
         {
             if (director != null) director.OnCameraChanged -= OnCameraCut;
-            if (SettingsManager.Instance != null) SettingsManager.Instance.OnLookQualityChanged -= OnQualityChanged;
+            GraphicsOptions.OnChanged -= OnQualityChanged;
             PlateBlitFeature.Plate = null;
             if (plate != null) plate.Release();
             if (captureTarget != null) captureTarget.Release();
@@ -143,20 +143,20 @@ namespace GlorifiedBody.Rendering
             plateDirty = true;
         }
 
-        /// <summary>The LOOK setting changed: the live dressings take the renderer of the new quality.</summary>
-        private void OnQualityChanged(LookQuality quality)
+        /// <summary>A graphics option changed: the dressing again (its renderer, its camera).</summary>
+        private void OnQualityChanged()
         {
             SetDressing(Dressing);
         }
 
-        /// <summary>The renderer of a dressing: the stock one for the greybox and for the Clear look, GB_Full for Sharp (Authentic), GB_Plate for the plate.</summary>
+        /// <summary>The renderer of a dressing: the game's (the stock one), GB_Plate for the plate.</summary>
         private int RendererFor(LookDressing dressing)
         {
             switch (dressing)
             {
                 case LookDressing.Greybox: return 0;
                 case LookDressing.Plate: return plateRendererIndex;
-                default: return LookQualityApplier.Current == LookQuality.Clear ? LookQualityApplier.ClearRendererIndex : fullRendererIndex;
+                default: return LookQualityApplier.GameRendererIndex; // the game's renderer (GB_Full lost its dither, 2026-11-03)
             }
         }
 
@@ -307,7 +307,7 @@ namespace GlorifiedBody.Rendering
         {
             string camName = director != null ? director.CurrentName : "none";
             string baked = HasBakedLight ? (BakedLightOn ? "on" : "off") : "none";
-            GUI.Label(new Rect(12f, 8f, 1200f, 24f), $"LOOK TEST  {Dressing}  (F3 cycles, F11 the next room)   look {LookQualityApplier.Current}   camera {camName}   baked light {baked}   plate {PlateCameraName} x{PlateCaptures}");
+            GUI.Label(new Rect(12f, 8f, 1200f, 24f), $"LOOK TEST  {Dressing}  (F3 cycles, F11 the next room)   graphics {GraphicsOptions.Preset} {GraphicsOptions.AntiAliasing}   camera {camName}   baked light {baked}   plate {PlateCameraName} x{PlateCaptures}");
         }
     }
 }

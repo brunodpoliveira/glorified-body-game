@@ -14,6 +14,20 @@ namespace GlorifiedBody.Rendering
     public static class ShadowDistance
     {
         private static float? original;
+        private static float wanted;
+        private static bool shadowsOn = true;
+
+        /// <summary>The Shadows option (GraphicsOptions): off holds the distance at 0, so no light casts a shadow.</summary>
+        public static bool ShadowsOn
+        {
+            get => shadowsOn;
+            set
+            {
+                if (shadowsOn == value) return;
+                shadowsOn = value;
+                Set(wanted);
+            }
+        }
 
         public static float Current => Pipeline != null ? Pipeline.shadowDistance : 0f;
 
@@ -22,8 +36,15 @@ namespace GlorifiedBody.Rendering
         /// <summary>The distance in metres, or 0 for the asset's own.</summary>
         public static void Set(float metres)
         {
+            wanted = metres;
             UniversalRenderPipelineAsset asset = Pipeline;
             if (asset == null) return;
+            if (!shadowsOn)
+            {
+                if (!original.HasValue) original = asset.shadowDistance;
+                asset.shadowDistance = 0f;
+                return;
+            }
             if (metres <= 0f)
             {
                 Restore();
@@ -44,6 +65,8 @@ namespace GlorifiedBody.Rendering
         private static void Hook()
         {
             original = null;
+            wanted = 0f;
+            shadowsOn = true;
             SceneManager.sceneLoaded -= OnLoaded;
             SceneManager.sceneLoaded += OnLoaded;
             Application.quitting -= Restore;
@@ -52,7 +75,10 @@ namespace GlorifiedBody.Rendering
 
         private static void OnLoaded(Scene scene, LoadSceneMode mode)
         {
-            if (mode == LoadSceneMode.Single) Restore();
+            if (mode != LoadSceneMode.Single) return;
+            wanted = 0f;
+            Restore();
+            if (!shadowsOn) Set(0f);
         }
     }
 }

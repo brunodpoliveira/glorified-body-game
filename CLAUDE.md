@@ -324,7 +324,7 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   `FateFlag` (`<fate>_killed/_spared/_scanned`, `RoomExit.OnLeaving`). WARD TEST room (`WardTestSetup`), `WardTests` (9),
   bot `play WardTest Main_Menu ward 400`. Later that night (his answers): the feed sprays blood (`Feeding.Bleed`, the gore
   driver's `PlayForCheck`), witnesses react (`EnemyMorale.SeeFeed`, placeholder lines), a tutorial "feed" step (23 steps,
-  record the tutorial with a 900 s limit). FOR LATER: the armour knee test fails in about half the runs.
+  record the tutorial with a 900 s limit). The armour knee test failed in about half the runs until the locked hinges of 2026-10-31; it passed in every run since (checked 2026-11-03).
   His answers after his manual test: rank 11 (fire, firemen) is NOT in the demo, rank 14 on hold, the short starts at
   the attack press and lasts 16 s (as built), the tutorial goes into the story path, the writer makes the death
   screens. A restart of a room puts back the story flags she came in with (`SaveSystem`, the ward's mark stayed up).
@@ -456,8 +456,14 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   after 1 s out of her sight in the world (`LockOnController.LostSightSeconds`).
 - 2026-11-03, NO DITHER (`devlog-notes/2026-11-03_no_dither.md`, Bruno: "since we're reformulating the art style, you
   may remove the dithering effect"): the Dither pass, its CharacterStencil pass, the shader and the material are gone
-  (`LookTestSetup.RemoveDither`). The LOOK option: "Sharp (no anti-aliasing)" (code `Authentic`) or "Clear". OPEN: keep
-  the option or always use Clear.
+  (`LookTestSetup.RemoveDither`).
+- 2026-11-03, THE GRAPHICS OPTIONS (`devlog-notes/2026-11-03_graphics_options.md`, Bruno: "the usual knobs and changes
+  that most games allow"): `Rendering/GraphicsOptions.cs` (the store, the presets Low/Medium/High/Ultra/Custom, the
+  apply). Display: display mode, resolution, VSync, frame rate limit, brightness (a volume). Graphics: render scale,
+  anti-aliasing (Off, FXAA, SMAA, MSAA 2x/4x/8x), texture quality, filtering, shadows (Off to Ultra, hard only),
+  ambient occlusion. High is the default. The LOOK option and "Rain Effects" are gone; the game draws with the stock
+  renderer. `LookQualityApplier` keeps its name (every room holds it) and applies the options. Batch runs use their own
+  keys (`batch_gfx_`). `GraphicsOptionsTests` (4).
 
 ## Rules
 

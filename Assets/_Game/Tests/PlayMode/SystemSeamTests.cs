@@ -184,18 +184,23 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.IsFalse(GlorifiedBody.Enemy.CorpseCare.DebugHidden, "the debug flag is off");
         }
 
-        /// <summary>The Clear look must not leave the shared URP asset changed (the gaps sweep, row 32).</summary>
+        /// <summary>The graphics options must not leave the shared URP asset changed (the gaps sweep, row 32; the LOOK option before 2026-11-03).</summary>
         [UnityTest]
-        public IEnumerator TheClearLook_GivesTheUrpAssetItsOwnSettingBack()
+        public IEnumerator TheGraphicsOptions_GiveTheUrpAssetItsOwnSettingsBack()
         {
             var asset = UnityEngine.Rendering.Universal.UniversalRenderPipeline.asset;
-            int own = asset.msaaSampleCount;
-            GlorifiedBody.Rendering.LookQualityApplier.Apply(GlorifiedBody.Rendering.LookQuality.Clear);
+            GlorifiedBody.Rendering.GraphicsOptions.RestoreAsset();
+            int ownMsaa = asset.msaaSampleCount;
+            float ownScale = asset.renderScale;
+            GlorifiedBody.Rendering.GraphicsOptions.SetAntiAliasing(GlorifiedBody.Rendering.AntiAliasing.Msaa4);
+            GlorifiedBody.Rendering.GraphicsOptions.SetRenderScale(75);
             yield return null;
-            Assert.AreEqual(GlorifiedBody.Rendering.LookQualityApplier.ClearMsaa, asset.msaaSampleCount, "Clear: MSAA 4x");
-            GlorifiedBody.Rendering.LookQualityApplier.RestoreAsset();
-            Assert.AreEqual(own, asset.msaaSampleCount, "the asset's own value back (the end of play does this)");
-            GlorifiedBody.Rendering.LookQualityApplier.Apply(GlorifiedBody.Rendering.LookQuality.Authentic);
+            Assert.AreEqual(4, asset.msaaSampleCount, "MSAA 4x");
+            Assert.AreEqual(0.75f, asset.renderScale, 0.001f);
+            GlorifiedBody.Rendering.GraphicsOptions.RestoreAsset();
+            Assert.AreEqual(ownMsaa, asset.msaaSampleCount, "the asset's own value back (the end of play does this)");
+            Assert.AreEqual(ownScale, asset.renderScale, 0.001f);
+            GlorifiedBody.Rendering.GraphicsOptions.ResetToDefaults();
         }
 
         private IEnumerator FrozenShort()
