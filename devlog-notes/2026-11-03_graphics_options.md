@@ -45,7 +45,11 @@ The presets (PROPOSED):
 - Fixed on the way: the title "OPTIONS" and the tab "Display/Graphics" wrapped onto two lines at 1366 x 768. The
   brightness and the mouse sensitivity values showed a comma ("3,0") on this machine's locale.
 - The Controls tab lost the three Warspite rows (Wallrun Mode, Slide Mode, Catch/Throw Mode). No code of this game read
-  them. Mouse Sensitivity stays, but nothing reads it either (the tank controls use no mouse look).
+  them.
+- Mouse Sensitivity now does something (Bruno: "keep it and have it actually do something"): a left or right move of the
+  mouse turns her, on top of A and D, Mouse Sensitivity degrees for each unit of "Mouse X". A new row, Mouse Turn (on by
+  default), turns it off for pure tank controls. During a charge she still turns to her target. Test:
+  `TankControlTests.TheMouse_TurnsHer_BySensitivity_AndTheOptionTurnsItOff`.
 
 ## Proof
 

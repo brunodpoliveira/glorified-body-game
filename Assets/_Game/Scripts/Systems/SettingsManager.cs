@@ -83,6 +83,21 @@ namespace GlorifiedBody.Systems
         [SerializeField] private float maxMouseSensitivity = 10f;
 
         private float mouseSensitivity;
+        private bool mouseTurn;
+
+        /// <summary>
+        /// The mouse turns her (2026-11-03, Bruno: "keep it and have it actually do something"): a left or right move of the
+        /// mouse adds to A and D, MouseSensitivity degrees for each unit of "Mouse X". Off: the keys alone (pure tank controls).
+        /// </summary>
+        public bool MouseTurn
+        {
+            get => mouseTurn;
+            set
+            {
+                mouseTurn = value;
+                SaveSettings();
+            }
+        }
 
         public float MouseSensitivity
         {
@@ -184,6 +199,7 @@ namespace GlorifiedBody.Systems
         private const string KEY_MUSIC_VOL = "settings_musicVolume";
         private const string KEY_VOICE_VOL = "settings_voiceVolume";
         private const string KEY_MOUSE_SENS = "settings_mouseSensitivity";
+        private const string KEY_MOUSE_TURN = "settings_mouseTurn";
         private const string KEY_RESOLUTION = "settings_resolutionIndex";
         private const string KEY_VSYNC = "settings_vsync";
         private const string KEY_GORE_LEVEL = "settings_goreLevel";
@@ -212,6 +228,7 @@ namespace GlorifiedBody.Systems
             musicVolume = PlayerPrefs.GetFloat(KEY_MUSIC_VOL, defaultMusicVolume);
             voiceVolume = PlayerPrefs.GetFloat(KEY_VOICE_VOL, defaultVoiceVolume);
             mouseSensitivity = PlayerPrefs.GetFloat(KEY_MOUSE_SENS, defaultMouseSensitivity);
+            mouseTurn = PlayerPrefs.GetInt(KEY_MOUSE_TURN, 1) == 1;
             resolutionIndex = PlayerPrefs.GetInt(KEY_RESOLUTION, GetCurrentResolutionIndex());
             vSyncCount = PlayerPrefs.GetInt(KEY_VSYNC, defaultVSync);
             goreLevel = Mathf.Clamp(PlayerPrefs.GetInt(KEY_GORE_LEVEL, 2), 0, 2);
@@ -231,6 +248,7 @@ namespace GlorifiedBody.Systems
             PlayerPrefs.SetFloat(KEY_MUSIC_VOL, musicVolume);
             PlayerPrefs.SetFloat(KEY_VOICE_VOL, voiceVolume);
             PlayerPrefs.SetFloat(KEY_MOUSE_SENS, mouseSensitivity);
+            PlayerPrefs.SetInt(KEY_MOUSE_TURN, mouseTurn ? 1 : 0);
             PlayerPrefs.SetInt(KEY_RESOLUTION, resolutionIndex);
             PlayerPrefs.SetInt(KEY_VSYNC, vSyncCount);
             PlayerPrefs.SetInt(KEY_GORE_LEVEL, goreLevel);
@@ -283,6 +301,7 @@ namespace GlorifiedBody.Systems
             musicVolume = defaultMusicVolume;
             voiceVolume = defaultVoiceVolume;
             mouseSensitivity = defaultMouseSensitivity;
+            mouseTurn = true;
             vSyncCount = defaultVSync;
             resolutionIndex = GetCurrentResolutionIndex();
 

@@ -57,6 +57,7 @@ namespace GlorifiedBody.UI
 
         // Mouse
         private Slider sensitivitySlider;
+        private Toggle mouseTurnToggle;
         private Text sensitivityValueLabel;
 
         // Key remapping
@@ -169,6 +170,7 @@ namespace GlorifiedBody.UI
                 musicSlider.SetValueWithoutNotify(SettingsManager.Instance.MusicVolume);
                 voiceSlider.SetValueWithoutNotify(SettingsManager.Instance.VoiceVolume);
                 sensitivitySlider.SetValueWithoutNotify(SettingsManager.Instance.MouseSensitivity);
+                if (mouseTurnToggle != null) mouseTurnToggle.SetIsOnWithoutNotify(SettingsManager.Instance.MouseTurn);
                 UpdateSensitivityLabel(SettingsManager.Instance.MouseSensitivity);
                 RefreshModeButtons();
                 vsyncDropdown.SetValueWithoutNotify(SettingsManager.Instance.VSyncCount);
@@ -582,6 +584,8 @@ namespace GlorifiedBody.UI
                 minSens = SettingsManager.Instance.MinMouseSensitivity;
                 maxSens = SettingsManager.Instance.MaxMouseSensitivity;
             }
+            // The mouse turns her (2026-11-03): on or off, and how far.
+            mouseTurnToggle = CreateToggleRow(content, "Mouse Turn", value => { if (SettingsManager.Instance != null) SettingsManager.Instance.MouseTurn = value; });
             sensitivitySlider = CreateSliderRow(content, "Mouse Sensitivity", minSens, maxSens, OnSensitivityChanged, out sensitivityValueLabel);
             // The Warspite modes (wallrun, slide, catch and throw) went on 2026-11-03: nothing in this game read them.
 

@@ -468,7 +468,9 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   her head-on, soldiers and power armor flank her"): `Enemy/FlankBoard.cs` holds the sides of a fight (the axis from her
   to the first flanker; the flanks first, then her back, then the corners: two take opposite sides, the pinch).
   `SoldierBrain.Style`: soldiers and the power armour flank (they circle her at range, 60 degrees a move, and a spot in
-  her view costs 8 m), guards keep to their line, the knife runs to her side, the pistol scientist as before. Fixed on the
+  her view costs 8 m), guards and the pistol scientist keep to their line (head-on), the knife runs to her side.
+  The mouse turns her (`SettingsManager.MouseTurn`, Mouse Sensitivity degrees a unit; Bruno: "have it actually do
+  something"). Fixed on the
   way: a spot lies inside the weapon's distances (`DummyShooter.MinAttackDistance`), the brain asks the gun for melee
   reach (`DummyShooter.HerInReach`). `FlankingTests` (2), `ArmedCivilianTests.TheKnife_ComesInFromHerSide`. Numbers
   PROPOSED.

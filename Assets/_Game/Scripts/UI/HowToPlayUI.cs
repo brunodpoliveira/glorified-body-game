@@ -135,6 +135,7 @@ namespace GlorifiedBody.UI
                     string key = InputManager.GetKeyDisplayName(InputManager.Instance.GetKey(binding.action));
                     CreateControl(p, key, binding.DisplayName);
                 }
+                CreateControl(p, "Mouse left / right", "Turn left / right (OPTIONS > CONTROLS: Mouse Turn)");
             }
             else
             {

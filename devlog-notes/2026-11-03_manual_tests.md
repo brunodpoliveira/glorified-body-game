@@ -50,13 +50,14 @@ If the console shows a red line, copy it too.
 | 26 | Set Shadows to Off, walk into a lit room. Then set High. | No shadows, then the shadows come back. | Shadows stay off after High. |
 | 27 | Move Brightness to +1.0 and to -1.0. | The picture gets brighter, then darker. At 0 it is as before. | No change. |
 | 28 | Quit the game and start it again. | Your choices stay. | The defaults come back. |
-| 29 | Open the Controls tab. | Mouse Sensitivity and the key rows only. No Wallrun, Slide or Catch/Throw row. | The old rows show. |
+| 29 | Open the Controls tab. | Mouse Turn, Mouse Sensitivity and the key rows. No Wallrun, Slide or Catch/Throw row. | The old rows show. |
+| 29b | In a room, move the mouse left and right. Then set Mouse Turn off and move it again. | She turns with the mouse, faster at a higher sensitivity. With Mouse Turn off, the mouse does nothing. | No turn, or a turn with the option off. |
 
 ## E. Flanking (TEST ROOMS > AI TEST, or the demo)
 
 | # | Do | Expected | If faulty |
 |---|---|---|---|
-| 30 | In AI TEST, stand still and let the soldiers see you. | The rifle soldier, the gas soldier and the power armour circle you: one to each side, one behind you. The shield guard comes straight at you. | They all come at you from the front. |
+| 30 | In AI TEST, stand still and let the soldiers see you. | The rifle soldier, the gas soldier and the power armour circle you: one to each side, one behind you. The shield guard comes straight at you, and so does the pistol scientist in LAB TEST. | They all come at you from the front. |
 | 31 | Watch them move. | They walk around you at a distance, stop, aim, fire. Never at arm's reach on the way. | A soldier walks right past you and strikes. |
 | 32 | Turn to face one flanker. | The others move again to spots out of your view. | They stay in front of you. |
 | 33 | In LAB TEST, let the knife scientist see you. | It runs to your side, then strikes. | It runs straight at your face. |

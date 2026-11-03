@@ -39,7 +39,7 @@ namespace GlorifiedBody.Enemy
     /// The approach (2026-11-03, DEMO_PLAN 13.1, Bruno: "guards would try to face her head-on, soldiers and power armor
     /// flank her"): a soldier or the power armour claims a side of the fight (FlankBoard: two take opposite sides, the
     /// pinch) and prefers firing spots out of her view; a guard keeps to his own line to her; the knife runs to her side
-    /// before it strikes. The armed scientist with a pistol keeps the old random side.
+    /// before it strikes. The armed scientist with a pistol comes head-on too (Bruno, 2026-11-03: "head on").
     /// </summary>
     [RequireComponent(typeof(DummyShooter), typeof(Health))]
     public sealed class SoldierBrain : MonoBehaviour, IFearful, ICarer, IDoorWaiter
@@ -107,8 +107,8 @@ namespace GlorifiedBody.Enemy
         /// <summary>The knife's runs to her side (the flanking tests).</summary>
         public int SideRuns { get; private set; }
         public enum Approach { Free, HeadOn, Flank }
-        /// <summary>How it closes in (Bruno, 2026-11-03): guards head-on, soldiers and the power armour flank.</summary>
-        public Approach Style => Rusher ? Approach.Free : RankOf == EnemyMorale.Rank.Guard ? Approach.HeadOn
+        /// <summary>How it closes in (Bruno, 2026-11-03): guards and the pistol scientist head-on, soldiers and the power armour flank.</summary>
+        public Approach Style => Rusher ? Approach.Free : RankOf == EnemyMorale.Rank.Guard || RankOf == EnemyMorale.Rank.ArmedCivilian ? Approach.HeadOn
             : RankOf == EnemyMorale.Rank.Soldier || RankOf == EnemyMorale.Rank.Heavy ? Approach.Flank : Approach.Free;
         public int ShootPhases { get; private set; }
         public IEnemyBody Body => body;

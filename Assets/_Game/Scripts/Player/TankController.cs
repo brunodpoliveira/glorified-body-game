@@ -298,7 +298,7 @@ namespace GlorifiedBody.Player
             else
             {
                 float turnRate = IsRunning ? runTurnSpeed : turnSpeed;
-                transform.Rotate(0f, TurnInput * turnRate * dt, 0f, Space.World);
+                transform.Rotate(0f, TurnInput * turnRate * dt + MouseTurnDegrees(), 0f, Space.World);
                 float speed = MoveInput > 0f ? (IsRunning ? runSpeed : walkSpeed) : MoveInput < 0f ? -backSpeed : 0f;
                 if (SlowWalk) speed *= slowWalkScale;
                 planar = transform.forward * speed;
@@ -309,6 +309,14 @@ namespace GlorifiedBody.Player
 
             controller.Move(planar * dt + Vector3.up * (verticalVelocity * dt));
             PlanarVelocity = planar;
+        }
+
+        /// <summary>The mouse's part of the turn this frame (SettingsManager.MouseTurn, MouseSensitivity degrees a unit).</summary>
+        private static float MouseTurnDegrees()
+        {
+            SettingsManager settings = SettingsManager.Instance;
+            if (settings == null || !settings.MouseTurn) return 0f;
+            return GameInput.GetAxis(GameInput.AxisLookX) * settings.MouseSensitivity;
         }
 
         private void ReadInput()

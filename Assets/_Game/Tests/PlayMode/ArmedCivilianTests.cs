@@ -69,6 +69,7 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.IsTrue(knife.CanMelee);
             Assert.AreEqual("labworker_knife", knife.EnemyId);
             Assert.IsTrue(GameObject.Find(Knife).GetComponent<SoldierBrain>().Rusher, "a knife runs at her");
+            Assert.AreEqual(SoldierBrain.Approach.HeadOn, GameObject.Find(Gunman).GetComponent<SoldierBrain>().Style, "the pistol scientist comes head-on (Bruno, 2026-11-03)");
             EnemyGun knifeHold = GameObject.Find(Knife).GetComponent<EnemyGun>();
             Assert.IsNotNull(knifeHold.Model, "the knife model in the hand");
             Assert.IsNotNull(knifeHold.Model.Find("Blade"), "the vendor short sword as the knife (Bruno, 2026-10-29)");

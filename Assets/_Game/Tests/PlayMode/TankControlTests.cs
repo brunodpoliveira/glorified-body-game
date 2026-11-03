@@ -83,6 +83,49 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator TheMouse_TurnsHer_BySensitivity_AndTheOptionTurnsItOff()
+        {
+            // Bruno, 2026-11-03, on Mouse Sensitivity: "keep it and have it actually do something".
+            SettingsManager settings = SettingsManager.Instance;
+            bool ownTurn = settings.MouseTurn;
+            float ownSens = settings.MouseSensitivity;
+            try
+            {
+                settings.MouseTurn = true;
+                settings.MouseSensitivity = 2f;
+                yield return null;
+                float yaw = player.transform.eulerAngles.y;
+                pad.Look = new Vector2(5f, 0f);
+                yield return null;
+                yield return null;
+                pad.Look = Vector2.zero;
+                yield return null;
+                float turned = Mathf.DeltaAngle(yaw, player.transform.eulerAngles.y);
+                Assert.Greater(turned, 9f, "five mouse units at sensitivity 2: ten degrees a frame, to the right");
+                pad.Look = new Vector2(-5f, 0f);
+                yaw = player.transform.eulerAngles.y;
+                yield return null;
+                yield return null;
+                pad.Look = Vector2.zero;
+                yield return null;
+                Assert.Less(Mathf.DeltaAngle(yaw, player.transform.eulerAngles.y), -9f, "and to the left");
+
+                settings.MouseTurn = false;
+                yaw = player.transform.eulerAngles.y;
+                pad.Look = new Vector2(5f, 0f);
+                yield return null;
+                yield return null;
+                pad.Look = Vector2.zero;
+                Assert.AreEqual(0f, Mathf.DeltaAngle(yaw, player.transform.eulerAngles.y), 0.01f, "Mouse Turn off: the keys alone");
+            }
+            finally
+            {
+                settings.MouseTurn = ownTurn;
+                settings.MouseSensitivity = ownSens;
+            }
+        }
+
+        [UnityTest]
         public IEnumerator Forward_MovesAlongTheFacing_NotTheCamera()
         {
             Vector3 start = player.transform.position;
