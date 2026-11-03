@@ -134,7 +134,7 @@ namespace GlorifiedBody.Editor
 
         /// <summary>
         /// GB_Remake: the stock renderer (its ambient occlusion, set to contact distance) plus decals and the light in
-        /// the air. GB_RemakeDither: GB_Expensive (A's stencil mark and 32-level dither, ambient occlusion) plus the same.
+        /// the air. GB_RemakeDither: GB_Expensive (ambient occlusion; its dither went on 2026-11-03) plus the same.
         /// </summary>
         private static bool EnsureRenderers(out UniversalRendererData remake, out UniversalRendererData remakeDither)
         {

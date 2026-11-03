@@ -454,6 +454,10 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   bot `play DoorTest Main_Menu doors 300`. Fixed on the way: the card door leaf and the CRT bodies of the demo stood at
   twice their place (a local position under a placed parent: the W12 stair card stopped nothing); a held lock drops
   after 1 s out of her sight in the world (`LockOnController.LostSightSeconds`).
+- 2026-11-03, NO DITHER (`devlog-notes/2026-11-03_no_dither.md`, Bruno: "since we're reformulating the art style, you
+  may remove the dithering effect"): the Dither pass, its CharacterStencil pass, the shader and the material are gone
+  (`LookTestSetup.RemoveDither`). The LOOK option: "Sharp (no anti-aliasing)" (code `Authentic`) or "Clear". OPEN: keep
+  the option or always use Clear.
 
 ## Rules
 

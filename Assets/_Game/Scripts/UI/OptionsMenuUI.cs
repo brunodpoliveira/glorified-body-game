@@ -545,14 +545,14 @@ namespace GlorifiedBody.UI
 
             rainToggle = CreateToggleRow(content, "Rain Effects", OnRainChanged);
 
-            // The LOOK (Bruno, 2026-10-22): the 1999 frame with the dither, or the same picture clear with anti-aliasing.
+            // The LOOK (Bruno, 2026-10-22): the raw pixel edges, or anti-aliasing. The dither went on 2026-11-03.
             CreateModeRow(
                 content,
                 "Look",
                 OnLookQualityChanged,
                 out lookAuthenticButton,
                 out lookClearButton,
-                firstOptionLabel: "Authentic (1999)",
+                firstOptionLabel: "Sharp (no anti-aliasing)",
                 secondOptionLabel: "Clear (anti-aliasing)");
 
             // The gore (Bruno, 2026-10-24): Off, Low (less blood, no head bursts), Full.

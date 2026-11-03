@@ -160,7 +160,7 @@ namespace GlorifiedBody.Tests.PlayMode
             SettingsManager.Instance.LookQuality = LookQuality.Clear;
             yield return null;
             Assert.AreEqual(LookDressing.RealTimeBaked, look.Dressing, "the quality change keeps the dressing");
-            Assert.AreEqual(0, look.RendererIndex, "Clear: the stock renderer, no dither");
+            Assert.AreEqual(0, look.RendererIndex, "Clear: the stock renderer");
             Assert.IsTrue(look.BakedLightOn, "the bounce stays");
             Assert.AreEqual(AntialiasingMode.SubpixelMorphologicalAntiAliasing, Camera.main.GetUniversalAdditionalCameraData().antialiasing, "SMAA on the camera");
             look.SetDressing(LookDressing.RealTime);
@@ -172,7 +172,7 @@ namespace GlorifiedBody.Tests.PlayMode
             SettingsManager.Instance.LookQuality = LookQuality.Authentic;
             look.SetDressing(LookDressing.RealTimeBaked);
             yield return null;
-            Assert.AreEqual(1, look.RendererIndex, "Authentic: GB_Full with the dither");
+            Assert.AreEqual(1, look.RendererIndex, "Authentic: GB_Full");
         }
 
         [UnityTest]

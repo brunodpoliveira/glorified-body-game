@@ -20,7 +20,7 @@ namespace GlorifiedBody.Rendering
         Grade = 5,       // 6. tone map, colour grade, film grain, bloom, vignette
         Live = 6,        // 7. the flicker, the fan, the curtain
         Reflections = 7, // 8. the reflection probe (off: no environment reflection, as A)
-        Clarity = 8,     // 9. no dither, MSAA 4x, SMAA (off: A's Authentic dither, no anti-aliasing)
+        Clarity = 8,     // 9. MSAA 4x, SMAA (off: no anti-aliasing; the dither of A went on 2026-11-03)
         Lens = 9,        // 10. the long lens on Cam_Recovery_Long (off: 60 degrees)
     }
 
@@ -203,7 +203,7 @@ namespace GlorifiedBody.Rendering
                 QualitySettings.renderPipeline = wanted;
                 pipelineSwapped = true;
             }
-            // 9: the dither, MSAA and SMAA.
+            // 9: MSAA and SMAA (the dither renderer has no dither since 2026-11-03).
             bool clear = IsOn(RemakeSwitch.Clarity);
             foreach (UniversalRenderPipelineAsset asset in new[] { pipelineHigh, pipelineLow, pipelineMid })
             {

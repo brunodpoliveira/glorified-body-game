@@ -12,9 +12,9 @@ namespace GlorifiedBody.Rendering
     /// <summary>The four looks of the look test (build order step 4).</summary>
     public enum LookDressing
     {
-        /// <summary>The room as a greybox: flat grey materials, the stock renderer, no dither.</summary>
+        /// <summary>The room as a greybox: flat grey materials, the stock renderer.</summary>
         Greybox = 0,
-        /// <summary>Dressed, lit live every frame, the 720p frame with the dither on the background. No bounce light (the ruling).</summary>
+        /// <summary>Dressed, lit live every frame. No bounce light (the ruling). The dither went on 2026-11-03.</summary>
         RealTime = 1,
         /// <summary>The real-time dressing plus the baked bounce light (the lightmaps and the probes of LookTestSetup.BakeAll).</summary>
         RealTimeBaked = 2,
@@ -25,8 +25,7 @@ namespace GlorifiedBody.Rendering
     /// <summary>
     /// Runs the look test in a room (CONCEPTS 7, the 1999 sheen in real time): switches the dressing (F3
     /// cycles, the bot and the tests call SetDressing), swaps the room materials between greybox and dressed,
-    /// picks the renderer of the main camera (the stock one, GB_Full with the dither, GB_Plate with the plate
-    /// blit), turns the baked light on or off (the lightmaps of the room and the probes of the characters: off
+    /// picks the renderer of the main camera (the stock one, GB_Full, GB_Plate with the plate blit), turns the baked light on or off (the lightmaps of the room and the probes of the characters: off
     /// in the real-time dressing by Bruno's ruling of no bounce, on in the baked dressing and in the plate) and,
     /// in the plate dressing, renders the static room once per camera with the expensive renderer (GB_Expensive:
     /// ambient occlusion, 4096 shadow maps, the baked bounce) into the plate. A camera cut marks the plate dirty
@@ -150,7 +149,7 @@ namespace GlorifiedBody.Rendering
             SetDressing(Dressing);
         }
 
-        /// <summary>The renderer of a dressing: the stock one for the greybox and for the Clear look, GB_Full with the dither for Authentic, GB_Plate for the plate.</summary>
+        /// <summary>The renderer of a dressing: the stock one for the greybox and for the Clear look, GB_Full for Sharp (Authentic), GB_Plate for the plate.</summary>
         private int RendererFor(LookDressing dressing)
         {
             switch (dressing)

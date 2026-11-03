@@ -12,7 +12,7 @@ using GlorifiedBody.Systems;
 namespace GlorifiedBody.Tests.PlayMode
 {
     /// <summary>
-    /// The LOOK option (Bruno, 2026-10-22): Authentic puts the dither renderer on the room's camera with no
+    /// The LOOK option (Bruno, 2026-10-22): Authentic ("Sharp", no dither since 2026-11-03) puts GB_Full on the room's camera with no
     /// anti-aliasing, Clear puts the stock renderer with MSAA 4x and SMAA, the choice persists, and the
     /// applier follows a change while the room is open. Batch: tools/unity.sh test playmode.
     /// </summary>
@@ -43,17 +43,17 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator Authentic_UsesTheDitherRenderer_WithoutAntiAliasing()
+        public IEnumerator Authentic_UsesGbFull_WithoutAntiAliasing()
         {
             yield return null;
             Assert.AreEqual(LookQuality.Authentic, SettingsManager.Instance.LookQuality);
             Assert.IsNotNull(UnityEngine.Object.FindFirstObjectByType<LookQualityApplier>(), "the applier on the gameplay systems");
             UniversalRenderPipelineAsset asset = UniversalRenderPipeline.asset;
             UniversalAdditionalCameraData data = Camera.main.GetUniversalAdditionalCameraData();
-            Assert.AreSame(asset.GetRenderer(LookQualityApplier.AuthenticRendererIndex), data.scriptableRenderer, "GB_Full with the dither");
+            Assert.AreSame(asset.GetRenderer(LookQualityApplier.AuthenticRendererIndex), data.scriptableRenderer, "GB_Full (no dither since 2026-11-03)");
             Assert.AreEqual(1, asset.msaaSampleCount, "no MSAA");
             Assert.AreEqual(AntialiasingMode.None, data.antialiasing, "no anti-aliasing: the authentic frame");
-            Assert.AreEqual(LayerMask.NameToLayer("Player"), GameObject.FindGameObjectWithTag("Player").layer, "Lucy on the Player layer: the dither skips her");
+            Assert.AreEqual(LayerMask.NameToLayer("Player"), GameObject.FindGameObjectWithTag("Player").layer, "Lucy on the Player layer");
             Assert.AreEqual(LayerMask.NameToLayer("Enemy"), GameObject.Find("Dummy_A").layer, "the dummies on the Enemy layer");
         }
 
@@ -64,7 +64,7 @@ namespace GlorifiedBody.Tests.PlayMode
             yield return null;
             UniversalRenderPipelineAsset asset = UniversalRenderPipeline.asset;
             UniversalAdditionalCameraData data = Camera.main.GetUniversalAdditionalCameraData();
-            Assert.AreSame(asset.GetRenderer(LookQualityApplier.ClearRendererIndex), data.scriptableRenderer, "the stock renderer: no dither");
+            Assert.AreSame(asset.GetRenderer(LookQualityApplier.ClearRendererIndex), data.scriptableRenderer, "the stock renderer");
             Assert.AreEqual(LookQualityApplier.ClearMsaa, asset.msaaSampleCount, "MSAA 4x");
             Assert.AreEqual(AntialiasingMode.SubpixelMorphologicalAntiAliasing, data.antialiasing, "SMAA");
             Assert.AreEqual(AntialiasingQuality.High, data.antialiasingQuality);
@@ -72,7 +72,7 @@ namespace GlorifiedBody.Tests.PlayMode
 
             SettingsManager.Instance.LookQuality = LookQuality.Authentic;
             yield return null;
-            Assert.AreSame(asset.GetRenderer(LookQualityApplier.AuthenticRendererIndex), data.scriptableRenderer, "back to the dither");
+            Assert.AreSame(asset.GetRenderer(LookQualityApplier.AuthenticRendererIndex), data.scriptableRenderer, "back to GB_Full");
             Assert.AreEqual(1, asset.msaaSampleCount);
             Assert.AreEqual(AntialiasingMode.None, data.antialiasing);
         }

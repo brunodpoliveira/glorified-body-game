@@ -22,9 +22,9 @@ namespace GlorifiedBody.Editor
     /// light, the plate: the room rendered once per camera, the characters drawn over it):
     ///   LookTest  = the Gallery of floor 1 (raw concrete, planters, hard pools of light).
     ///   LookTest2 = the skylight corridor (T12 GALLERY_v3), the recovery room and the therapy gym (T18 rooms).
-    /// Assets, all from code: the three renderers next to the stock one on the URP assets (GB_Full with the
-    /// dither, GB_Expensive with ambient occlusion for the plate, GB_Plate with the plate blit and the room
-    /// depth), the materials (Simple Lit: the Blinn-Phong highlight of 1999), the 2K textures made by
+    /// Assets, all from code: the three renderers next to the stock one on the URP assets (GB_Full with no feature
+    /// since the dither went on 2026-11-03, GB_Expensive with ambient occlusion for the plate, GB_Plate with the plate
+    /// blit and the room depth), the materials (Simple Lit: the Blinn-Phong highlight of 1999), the 2K textures made by
     /// tools/look_textures.sh (RFab, the dogfood rule) and tools/look_textures_procedural.py, the scenes, the
     /// light probes, the lighting settings of the bake, the build list.
     /// Menu: GlorifiedBody > Build Look Tests. Batch: tools/unity.sh exec GlorifiedBody.Editor.LookTestSetup.BuildAll
@@ -51,10 +51,9 @@ namespace GlorifiedBody.Editor
         public const int FullRendererIndex = 1;
         public const int ExpensiveRendererIndex = 2;
         public const int PlateRendererIndex = 3;
-        public const string DitherShaderName = "Hidden/GB/Dither";
+        public const string DitherShaderPath = "Assets/_Game/Shaders/GB_Dither.shader"; // removed 2026-11-03
         public const string DepthOnlyShaderName = "Hidden/GB/DepthOnly";
         public const string SimpleLitShaderName = "Universal Render Pipeline/Simple Lit";
-        public const float DitherLevels = 32f;
         /// <summary>Bruno (2026-10-22): "i prefer 1080p textures, we can scale it down if necessary. I want clarity as much as possible."</summary>
         public const int TextureSize = 2048;
         public const int TextureAniso = 8;
@@ -96,14 +95,9 @@ namespace GlorifiedBody.Editor
             }
             AssetDatabase.Refresh();
 
-            Material dither = EnsureMaterial(MaterialsFolder + "/GB_Dither.mat", DitherShaderName, m =>
-            {
-                m.SetFloat("_Levels", DitherLevels);
-                m.SetFloat("_DitherStrength", 1f);
-            });
             Material depthOnly = EnsureMaterial(MaterialsFolder + "/GB_DepthOnly.mat", DepthOnlyShaderName, null);
-            if (dither == null || depthOnly == null) return;
-            EnsureRenderers(dither, depthOnly);
+            if (depthOnly == null) return;
+            EnsureRenderers(depthOnly);
             EnsureTextures();
             EnsureLightingSettings();
             if (gallery) BuildGallery();
@@ -208,7 +202,7 @@ namespace GlorifiedBody.Editor
         /// with shadows in a 4096 atlas (eleven spots did not fit the 2048 one: Unity halved them, Bruno's
         /// console of 2026-10-22).
         /// </summary>
-        internal static void EnsureRenderers(Material dither, Material depthOnly)
+        internal static void EnsureRenderers(Material depthOnly)
         {
             var stock = AssetDatabase.LoadAssetAtPath<UniversalRendererData>(StockRendererPath);
             if (stock == null)
@@ -223,17 +217,14 @@ namespace GlorifiedBody.Editor
             int characters = CharacterLayerMask;
             int room = RoomLayerMask;
 
-            // GB_Full: the room lit live, the characters marked in the stencil, the dither on the rest.
+            // GB_Full: the room lit live. The dither and its stencil mark of the characters are gone (Bruno, 2026-11-03:
+            // "you may remove the dithering effect, with the new artstyle it won't make sense").
             ClearFeatures(full, keepAmbientOcclusion: false);
-            AddFeature(full, CharacterStencil(characters));
-            AddFeature(full, Dither(dither));
             full.opaqueLayerMask = -1;
             full.transparentLayerMask = -1;
 
             // GB_Expensive: the same plus the stock ambient occlusion, for the plate capture.
             ClearFeatures(expensive, keepAmbientOcclusion: true);
-            AddFeature(expensive, CharacterStencil(characters));
-            AddFeature(expensive, Dither(dither));
             expensive.opaqueLayerMask = -1;
             expensive.transparentLayerMask = -1;
 
@@ -284,7 +275,7 @@ namespace GlorifiedBody.Editor
                 so.ApplyModifiedPropertiesWithoutUndo();
                 EditorUtility.SetDirty(pipeline);
             }
-            Debug.Log("[LookTestSetup] renderers: 0 stock, 1 GB_Full (stencil, dither), 2 GB_Expensive (plus ambient occlusion), 3 GB_Plate (plate blit, room depth).");
+            Debug.Log("[LookTestSetup] renderers: 0 stock, 1 GB_Full (no feature), 2 GB_Expensive (ambient occlusion), 3 GB_Plate (plate blit, room depth).");
         }
 
         private static UniversalRendererData EnsureRendererCopy(UniversalRendererData stock, string path)
@@ -354,40 +345,55 @@ namespace GlorifiedBody.Editor
             so.ApplyModifiedPropertiesWithoutUndo();
         }
 
-        /// <summary>The characters redrawn where they are visible (depth Equal, no write) to put 1 in the stencil: the dither skips them.</summary>
-        private static RenderObjects CharacterStencil(int characterLayers)
+        /// <summary>
+        /// Takes the dither out of the project (Bruno, 2026-11-03: "since we're reformulating the art style, you may remove
+        /// the dithering effect"): the Dither pass and the CharacterStencil pass (it marked the characters only so that the
+        /// dither skipped them) leave every renderer (GB_Full, GB_Expensive, the remake's GB_RemakeDither), and the shader
+        /// and its material go. Run once: tools/unity.sh exec GlorifiedBody.Editor.LookTestSetup.RemoveDither
+        /// </summary>
+        [MenuItem("GlorifiedBody/Rendering/Remove the dither")]
+        public static void RemoveDither()
         {
-            var feature = ScriptableObject.CreateInstance<RenderObjects>();
-            feature.name = "CharacterStencil";
-            feature.settings.passTag = "GB CharacterStencil";
-            feature.settings.Event = RenderPassEvent.AfterRenderingOpaques;
-            feature.settings.filterSettings.RenderQueueType = RenderQueueType.Opaque;
-            feature.settings.filterSettings.LayerMask = characterLayers;
-            feature.settings.overrideMode = RenderObjects.RenderObjectsSettings.OverrideMaterialMode.None;
-            feature.settings.overrideDepthState = true;
-            feature.settings.depthCompareFunction = CompareFunction.Equal;
-            feature.settings.enableWrite = false;
-            feature.settings.stencilSettings.overrideStencilState = true;
-            feature.settings.stencilSettings.stencilReference = 1;
-            feature.settings.stencilSettings.stencilCompareFunction = CompareFunction.Always;
-            feature.settings.stencilSettings.passOperation = StencilOp.Replace;
-            feature.settings.stencilSettings.failOperation = StencilOp.Keep;
-            feature.settings.stencilSettings.zFailOperation = StencilOp.Keep;
-            return feature;
+            int removed = 0;
+            foreach (string guid in AssetDatabase.FindAssets("t:UniversalRendererData", new[] { "Assets/_Game" }))
+            {
+                var data = AssetDatabase.LoadAssetAtPath<UniversalRendererData>(AssetDatabase.GUIDToAssetPath(guid));
+                if (data != null) removed += RemoveFeatures(data, "Dither", "CharacterStencil");
+            }
+            AssetDatabase.DeleteAsset(MaterialsFolder + "/GB_Dither.mat");
+            AssetDatabase.DeleteAsset(DitherShaderPath);
+            AssetDatabase.SaveAssets();
+            Debug.Log($"[LookTestSetup] the dither is gone: {removed} passes removed, the shader and its material deleted.");
         }
 
-        /// <summary>The 32-level dither on every pixel without the stencil mark, before post-processing.</summary>
-        private static FullScreenPassRendererFeature Dither(Material dither)
+        /// <summary>Removes the features with these names from the renderer (the list, its id map, the sub-assets).</summary>
+        private static int RemoveFeatures(UniversalRendererData data, params string[] names)
         {
-            var feature = ScriptableObject.CreateInstance<FullScreenPassRendererFeature>();
-            feature.name = "Dither";
-            feature.injectionPoint = FullScreenPassRendererFeature.InjectionPoint.BeforeRenderingPostProcessing;
-            feature.fetchColorBuffer = true;
-            feature.requirements = ScriptableRenderPassInput.None;
-            feature.passMaterial = dither;
-            feature.passIndex = 0;
-            feature.bindDepthStencilAttachment = true;
-            return feature;
+            var so = new SerializedObject(data);
+            SerializedProperty list = so.FindProperty("m_RendererFeatures");
+            SerializedProperty map = so.FindProperty("m_RendererFeatureMap");
+            var gone = new List<ScriptableRendererFeature>();
+            for (int i = list.arraySize - 1; i >= 0; i--)
+            {
+                var feature = list.GetArrayElementAtIndex(i).objectReferenceValue as ScriptableRendererFeature;
+                if (feature == null || Array.IndexOf(names, feature.name) < 0) continue;
+                list.GetArrayElementAtIndex(i).objectReferenceValue = null;
+                list.DeleteArrayElementAtIndex(i);
+                map.DeleteArrayElementAtIndex(i);
+                gone.Add(feature);
+            }
+            so.ApplyModifiedPropertiesWithoutUndo();
+            foreach (ScriptableRendererFeature feature in gone)
+            {
+                AssetDatabase.RemoveObjectFromAsset(feature);
+                UnityEngine.Object.DestroyImmediate(feature, true);
+            }
+            if (gone.Count > 0)
+            {
+                data.SetDirty();
+                EditorUtility.SetDirty(data);
+            }
+            return gone.Count;
         }
 
         private static PlateBlitFeature PlateBlit()

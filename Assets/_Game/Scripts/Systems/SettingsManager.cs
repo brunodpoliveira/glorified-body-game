@@ -212,7 +212,7 @@ namespace GlorifiedBody.Systems
             }
         }
 
-        /// <summary>The LOOK option (Bruno, 2026-10-22): Authentic (the dither, no anti-aliasing) or Clear (MSAA and SMAA, no dither). LookQualityApplier follows it.</summary>
+        /// <summary>The LOOK option (Bruno, 2026-10-22): Authentic, "Sharp" on screen (no anti-aliasing; no dither since 2026-11-03) or Clear (MSAA and SMAA). LookQualityApplier follows it.</summary>
         public LookQuality LookQuality
         {
             get => lookQuality;

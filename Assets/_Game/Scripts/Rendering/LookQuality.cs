@@ -12,23 +12,26 @@ namespace GlorifiedBody.Rendering
     /// </summary>
     public enum LookQuality
     {
-        /// <summary>The 1999 frame: the 32-level Bayer dither on the background, no anti-aliasing.</summary>
+        /// <summary>
+        /// "Sharp" on screen: no anti-aliasing, the raw pixel edges. It had the 32-level Bayer dither until 2026-11-03
+        /// (Bruno: "with the new artstyle it won't make sense"). The name stays: the settings keep the number.
+        /// </summary>
         Authentic = 0,
-        /// <summary>The same picture at its best: no dither, MSAA 4x and SMAA on the edges.</summary>
+        /// <summary>The same picture with MSAA 4x and SMAA on the edges.</summary>
         Clear = 1
     }
 
     /// <summary>
-    /// Applies the LOOK setting to the main camera of a room: the renderer (GB_Full with the dither for
-    /// Authentic, the stock one for Clear), the MSAA count of the pipeline and the camera's anti-aliasing.
+    /// Applies the LOOK setting to the main camera of a room: the renderer (GB_Full for Authentic, the stock one
+    /// for Clear), the MSAA count of the pipeline and the camera's anti-aliasing.
     /// On "[GameplaySystems]" in every playable room; it follows the setting while the room is open. In a
     /// look test room the LookDirector owns the renderer (a dressing may use the plate) and reads the
     /// quality itself.
     /// </summary>
     public sealed class LookQualityApplier : MonoBehaviour
     {
-        public const int AuthenticRendererIndex = 1; // GB_Full: the stencil mark and the dither
-        public const int ClearRendererIndex = 0;     // the stock renderer: no dither
+        public const int AuthenticRendererIndex = 1; // GB_Full (no feature since the dither went)
+        public const int ClearRendererIndex = 0;     // the stock renderer
         public const int ClearMsaa = 4;
 
         public static LookQuality Current => SettingsManager.Instance != null ? SettingsManager.Instance.LookQuality : LookQuality.Authentic;

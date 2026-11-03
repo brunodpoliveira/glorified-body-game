@@ -22,21 +22,16 @@ namespace GlorifiedBody.Tests.EditMode
             Assert.IsNotNull(expensive, "GB_Expensive");
             Assert.IsNotNull(plate, "GB_Plate");
 
-            string[] fullNames = full.rendererFeatures.Select(f => f.name).ToArray();
-            CollectionAssert.AreEqual(new[] { "CharacterStencil", "Dither" }, fullNames, "GB_Full: the stencil mark, then the dither");
-            var dither = full.rendererFeatures.OfType<FullScreenPassRendererFeature>().First();
-            Assert.IsTrue(dither.bindDepthStencilAttachment, "the dither reads the stencil");
-            Assert.IsTrue(dither.fetchColorBuffer, "the dither reads the frame");
-            Assert.AreEqual(FullScreenPassRendererFeature.InjectionPoint.BeforeRenderingPostProcessing, dither.injectionPoint);
-            Assert.IsNotNull(dither.passMaterial, "the dither material");
-            Assert.AreEqual(LookTestSetup.DitherShaderName, dither.passMaterial.shader.name);
-            Assert.AreEqual(LookTestSetup.DitherLevels, dither.passMaterial.GetFloat("_Levels"), 0.01f, "32 levels per channel");
-            var stencil = full.rendererFeatures.OfType<RenderObjects>().First();
-            Assert.AreEqual(1, stencil.settings.stencilSettings.stencilReference, "the characters write 1");
-            Assert.AreEqual(LayerMask.GetMask("Player", "Enemy"), stencil.settings.filterSettings.LayerMask.value, "the character layers");
-
+            // No dither (Bruno, 2026-11-03: "you may remove the dithering effect"), and no stencil mark of the characters
+            // (it served the dither only), in any renderer.
+            Assert.IsEmpty(full.rendererFeatures, "GB_Full: no feature");
             Assert.IsTrue(expensive.rendererFeatures.Any(f => f is ScreenSpaceAmbientOcclusion), "GB_Expensive keeps the ambient occlusion");
-            Assert.IsTrue(expensive.rendererFeatures.Any(f => f.name == "Dither"), "GB_Expensive dithers the plate");
+            foreach (string guid in AssetDatabase.FindAssets("t:UniversalRendererData", new[] { "Assets/_Game" }))
+            {
+                var data = AssetDatabase.LoadAssetAtPath<UniversalRendererData>(AssetDatabase.GUIDToAssetPath(guid));
+                Assert.IsFalse(data.rendererFeatures.Any(f => f != null && (f.name == "Dither" || f.name == "CharacterStencil")), data.name + ": no dither pass");
+            }
+            Assert.IsNull(AssetDatabase.LoadAssetAtPath<Shader>(LookTestSetup.DitherShaderPath), "the dither shader is gone");
 
             string[] plateNames = plate.rendererFeatures.Select(f => f.name).ToArray();
             CollectionAssert.AreEqual(new[] { "PlateBlit", "RoomDepth" }, plateNames, "GB_Plate: the plate, then the room depth");

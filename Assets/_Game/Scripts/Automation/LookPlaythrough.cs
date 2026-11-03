@@ -188,7 +188,7 @@ namespace GlorifiedBody.Automation
             }
 
             // The LOOK option (Bruno's pick, 2026-10-22): the baked dressing under the default camera, Clear
-            // (the stock renderer, MSAA, SMAA) then Authentic (the dither), one shot each for the pixels.
+            // (the stock renderer, MSAA, SMAA) then Authentic (no anti-aliasing; no dither since 2026-11-03), one shot each for the pixels.
             look.SetDressing(LookDressing.RealTimeBaked);
             director.Override(director.DefaultCamera);
             tank.Teleport(home, homeYaw);

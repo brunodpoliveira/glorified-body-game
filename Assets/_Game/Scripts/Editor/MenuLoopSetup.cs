@@ -203,7 +203,7 @@ namespace GlorifiedBody.Editor
             healthSo.FindProperty("enableSecondWind").boolValue = true;
             healthSo.FindProperty("secondWindInvulnerabilityDuration").floatValue = 2.5f;
             healthSo.ApplyModifiedPropertiesWithoutUndo();
-            SetLayer(player, "Player"); // the stencil mark of the look: the dither skips the characters
+            SetLayer(player, "Player"); // the character layers (the plate draws them over the room)
             return player;
         }
 
