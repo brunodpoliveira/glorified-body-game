@@ -464,6 +464,17 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   ambient occlusion. High is the default. The LOOK option and "Rain Effects" are gone; the game draws with the stock
   renderer. `LookQualityApplier` keeps its name (every room holds it) and applies the options. Batch runs use their own
   keys (`batch_gfx_`). `GraphicsOptionsTests` (4).
+- 2026-11-03, night, FLANKING (`devlog-notes/2026-11-03_flanking.md`, DEMO_PLAN 13.1, Bruno: "guards would try to face
+  her head-on, soldiers and power armor flank her"): `Enemy/FlankBoard.cs` holds the sides of a fight (the axis from her
+  to the first flanker; the flanks first, then her back, then the corners: two take opposite sides, the pinch).
+  `SoldierBrain.Style`: soldiers and the power armour flank (they circle her at range, 60 degrees a move, and a spot in
+  her view costs 8 m), guards keep to their line, the knife runs to her side, the pistol scientist as before. Fixed on the
+  way: a spot lies inside the weapon's distances (`DummyShooter.MinAttackDistance`), the brain asks the gun for melee
+  reach (`DummyShooter.HerInReach`). `FlankingTests` (2), `ArmedCivilianTests.TheKnife_ComesInFromHerSide`. Numbers
+  PROPOSED.
+- 2026-11-03, night, the backlog sweep: the armour knee test was already fixed (2026-10-31); the patient test counts her
+  own lines (`Bark.CountOf`); the gas cloud test camera leaves out the figures. Manual list for the morning:
+  `devlog-notes/2026-11-03_manual_tests.md` (33 steps).
 
 ## Rules
 

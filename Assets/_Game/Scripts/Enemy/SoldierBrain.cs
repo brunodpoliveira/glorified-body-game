@@ -36,6 +36,10 @@ namespace GlorifiedBody.Enemy
     /// An armed civilian (the lab worker with a pistol) trembles while alerted, and more when it cowers.
     /// A jammed fire door on its way (FireDoor, 2026-11-03): it stands, faces the door and swings while the door says so
     /// (IDoorWaiter); a soldier and the power armour kick a jammed door down, the others bang on it.
+    /// The approach (2026-11-03, DEMO_PLAN 13.1, Bruno: "guards would try to face her head-on, soldiers and power armor
+    /// flank her"): a soldier or the power armour claims a side of the fight (FlankBoard: two take opposite sides, the
+    /// pinch) and prefers firing spots out of her view; a guard keeps to his own line to her; the knife runs to her side
+    /// before it strikes. The armed scientist with a pistol keeps the old random side.
     /// </summary>
     [RequireComponent(typeof(DummyShooter), typeof(Health))]
     public sealed class SoldierBrain : MonoBehaviour, IFearful, ICarer, IDoorWaiter
@@ -76,6 +80,11 @@ namespace GlorifiedBody.Enemy
         public Breakable Cover { get; private set; }
 
         private const float RushRepathSeconds = 0.3f; // the knife finds her again this often
+        private const float FrontCone = 60f;          // degrees each side of her facing: her view, PROPOSED
+        private const float FrontCost = 8f;           // m added to a spot in her view (a flanker), PROPOSED
+        private const float FlankStep = 60f;          // degrees around her a flanker turns in one move, PROPOSED
+        private const float RushSideFrom = 3f;        // m: farther than this the knife runs to her side
+        private const float RushSideOffset = 2f;      // m beside her (1.6 brought it in at 47 degrees, 2026-11-03)
         private const float ArmedCivilianNerves = 0.35f; // the tremble of an alerted armed civilian, PROPOSED
         private const float CoverStandOff = 0.9f;    // m behind the barricade's middle
         private const float CoverMinRange = 2.5f;    // m from her: closer is no cover
@@ -90,6 +99,17 @@ namespace GlorifiedBody.Enemy
         /// <summary>Frames in which the body moved while the gun held a slot. The rule wants zero.</summary>
         public int MovedWhileShootingFrames { get; private set; }
         public int Moves { get; private set; }
+        /// <summary>The firing spots it picked, and those in her view at the pick (the flanking tests).</summary>
+        public int SpotsPicked { get; private set; }
+        public int SpotsInHerView { get; private set; }
+        /// <summary>The angle of the last spot from his own line to her, at the pick (a guard keeps it small).</summary>
+        public float LastSpotOffLine { get; private set; }
+        /// <summary>The knife's runs to her side (the flanking tests).</summary>
+        public int SideRuns { get; private set; }
+        public enum Approach { Free, HeadOn, Flank }
+        /// <summary>How it closes in (Bruno, 2026-11-03): guards head-on, soldiers and the power armour flank.</summary>
+        public Approach Style => Rusher ? Approach.Free : RankOf == EnemyMorale.Rank.Guard ? Approach.HeadOn
+            : RankOf == EnemyMorale.Rank.Soldier || RankOf == EnemyMorale.Rank.Heavy ? Approach.Flank : Approach.Free;
         public int ShootPhases { get; private set; }
         public IEnemyBody Body => body;
         /// <summary>A knife: it runs at her and strikes, it never stops at a firing spot.</summary>
@@ -232,12 +252,14 @@ namespace GlorifiedBody.Enemy
         private void OnDestroy()
         {
             if (gun != null) gun.OnStaggered -= Hold;
+            FlankBoard.Release(this);
         }
 
         private void OnDeath()
         {
             Current = Phase.Dead;
             ReleaseCover();
+            FlankBoard.Release(this);
             gun.HoldFire = true;
             body?.Stop();
         }
@@ -434,6 +456,7 @@ namespace GlorifiedBody.Enemy
             if (Current == Phase.Dead || Retreating) return;
             if (Current == Phase.Care) GetComponent<CorpseCare>()?.Stop("retreat");
             RetreatReason = reason;
+            FlankBoard.Release(this);
             gun.HoldFire = true;
             if (gun.HoldsSlot) gun.Stagger(0.1f); // drop the aim
             // The aim braced the body (kinematic): the retreat phase skips the release, and a braced body runs in
@@ -486,7 +509,7 @@ namespace GlorifiedBody.Enemy
                     gun.HoldFire = true;
                     timer -= dt;
                     bool arrived = Time.time - moveStarted >= minMoveSeconds && Flat(transform.position, Spot) <= (Cover != null ? CoverArriveRadius : arriveRadius);
-                    bool close = gun.CanMelee && Distance() <= gun.MeleeRange;
+                    bool close = gun.HerInReach;
                     if (close)
                     {
                         StartShoot(); // she came close: stop and strike
@@ -505,7 +528,7 @@ namespace GlorifiedBody.Enemy
                     gun.HoldFire = body.IsMoving && !gun.HoldsSlot;
                     timer -= dt;
                     bool fired = gun.ShotsFired > shotsAtShootStart && !gun.HoldsSlot;
-                    bool gotAway = Rusher && !gun.HoldsSlot && Distance() > gun.MeleeRange; // a knife does not wait for her
+                    bool gotAway = Rusher && !gun.HoldsSlot && !gun.HerInReach; // a knife does not wait for her
                     if (fired || gotAway || (timer <= 0f && !gun.HoldsSlot)) StartMove();
                     break;
             }
@@ -551,30 +574,71 @@ namespace GlorifiedBody.Enemy
         private Vector3 PickSpot()
         {
             Vector3 target = TargetPosition;
-            if (Rusher)
-            {
-                // A knife goes for her: the NavMesh point next to her.
-                return NavMesh.SamplePosition(target, out NavMeshHit at, 1.5f, NavMesh.AllAreas) ? at.position : target;
-            }
+            if (Rusher) return RushSpot(target);
             Vector3 chest = target + Vector3.up * GlorifiedBody.Characters.Body.ChestHeight;
-            if (TryCoverSpot(target, chest, out Vector3 covered)) return covered;
+            Approach style = Style;
+            Vector3? side = style == Approach.Flank ? FlankBoard.Claim(this, target) : (Vector3?)null;
             Vector3 away = transform.position - target;
             away.y = 0f;
             if (away.sqrMagnitude < 0.01f) away = -transform.forward;
             away.Normalize();
-            int blockers = LayerMask.GetMask("Default");
-            float start = Random.Range(-flankDegrees, flankDegrees);
-            Vector3 best = Vector3.zero;
-            float bestCost = float.MaxValue;
-            for (int i = 0; i < 8; i++)
+            // Cover on his side (a flanker) or on his line (a guard); the others take any.
+            Vector3? coverDir = style == Approach.Flank ? side : style == Approach.HeadOn ? away : (Vector3?)null;
+            float coverTolerance = style == Approach.Flank ? 50f : 30f;
+            if (TryCoverSpot(target, chest, coverDir, coverTolerance, out Vector3 covered)) return Note(covered, target);
+            // The directions to try: a flanker around his side, a guard around his own line, the others a random side.
+            float[] turns;
+            Vector3 from;
+            if (style == Approach.Flank)
             {
-                float turn = start + i * 45f;
+                // He circles her at range toward his side: each move turns at most FlankStep around her (2026-11-03: one
+                // straight walk to the far side passed her at arm's reach, and he stopped to strike instead of firing).
+                float toSide = Vector3.SignedAngle(away, side.Value, Vector3.up);
+                from = Quaternion.Euler(0f, Mathf.Clamp(toSide, -FlankStep, FlankStep), 0f) * away;
+                turns = new[] { 0f, 20f, -20f, 40f, -40f };
+            }
+            else if (style == Approach.HeadOn) { from = away; turns = new[] { 0f, 15f, -15f, 30f, -30f }; }
+            else
+            {
+                from = away;
+                float start = Random.Range(-flankDegrees, flankDegrees);
+                turns = new float[8];
+                for (int i = 0; i < 8; i++) turns[i] = start + i * 45f;
+            }
+            if (BestSpot(target, chest, from, turns, style, out Vector3 best)) return Note(best, target);
+            // A flanker whose side has no spot (a wall behind her, 2026-11-03: the armour stood at the wall and never shot)
+            // looks all around her, with the cost of her view still on.
+            if (style == Approach.Flank)
+            {
+                float[] around = new float[8];
+                for (int i = 0; i < 8; i++) around[i] = i * 45f;
+                if (BestSpot(target, chest, away, around, style, out best)) return Note(best, target);
+            }
+            Vector3 fallback = target + away * preferredRange;
+            if (NavMesh.SamplePosition(fallback, out NavMeshHit near, 2.5f, NavMesh.AllAreas)) fallback = near.position;
+            return Note(fallback, target);
+        }
+
+        /// <summary>The cheapest spot on the NavMesh with a clear line to her chest, at the turns from the direction.</summary>
+        private bool BestSpot(Vector3 target, Vector3 chest, Vector3 from, float[] turns, Approach style, out Vector3 best)
+        {
+            int blockers = LayerMask.GetMask("Default");
+            best = Vector3.zero;
+            float bestCost = float.MaxValue;
+            // The spot lies where the weapon fires (2026-11-03: the armour stood 3.45 m from her, its launchers refuse
+            // under 3.5 m, and it never attacked).
+            float nearest = gun.MinAttackDistance > 0f ? gun.MinAttackDistance + 0.6f : 0f;
+            for (int i = 0; i < turns.Length; i++)
+            {
                 foreach (float range in new[] { preferredRange, preferredRange * 0.65f })
                 {
-                    Vector3 candidate = target + Quaternion.Euler(0f, turn, 0f) * away * range;
+                    Vector3 candidate = target + Quaternion.Euler(0f, turns[i], 0f) * from * Mathf.Max(range, nearest);
                     if (!NavMesh.SamplePosition(candidate, out NavMeshHit hit, 1.5f, NavMesh.AllAreas)) continue;
+                    float reach = Flat(hit.position, target);
+                    if (reach < nearest || reach > gun.Range) continue;
                     if (Physics.Linecast(hit.position + Vector3.up * GlorifiedBody.Characters.Body.MuzzleHeight, chest, blockers, QueryTriggerInteraction.Ignore)) continue;
-                    float cost = Flat(transform.position, hit.position) + (i == 0 ? 0f : 0.5f);
+                    float cost = Flat(transform.position, hit.position) + (style == Approach.Free ? (i == 0 ? 0f : 0.5f) : Mathf.Abs(Mathf.DeltaAngle(0f, turns[i])) * 0.05f);
+                    if (style == Approach.Flank && InHerView(hit.position, target)) cost += FrontCost;
                     if (cost < bestCost)
                     {
                         bestCost = cost;
@@ -582,10 +646,57 @@ namespace GlorifiedBody.Enemy
                     }
                 }
             }
-            if (bestCost < float.MaxValue) return best;
-            Vector3 fallback = target + Quaternion.Euler(0f, start, 0f) * away * preferredRange;
-            if (NavMesh.SamplePosition(fallback, out NavMeshHit near, 2.5f, NavMesh.AllAreas)) fallback = near.position;
-            return fallback;
+            return bestCost < float.MaxValue;
+        }
+
+        /// <summary>Her facing, flat.</summary>
+        private Vector3 HerForward()
+        {
+            if (player == null)
+            {
+                GameObject p = GameObject.FindGameObjectWithTag("Player");
+                player = p != null ? p.transform : null;
+            }
+            Vector3 f = player != null ? player.forward : Vector3.forward;
+            f.y = 0f;
+            return f.sqrMagnitude > 0.0001f ? f.normalized : Vector3.forward;
+        }
+
+        /// <summary>The point stands in her front cone (she sees it).</summary>
+        private bool InHerView(Vector3 point, Vector3 her)
+        {
+            Vector3 to = point - her;
+            to.y = 0f;
+            return to.sqrMagnitude > 0.01f && Vector3.Angle(HerForward(), to) < FrontCone;
+        }
+
+        /// <summary>Counts the pick for the tests: in her view or not, and how far off his own line it lies.</summary>
+        private Vector3 Note(Vector3 spot, Vector3 her)
+        {
+            SpotsPicked++;
+            if (InHerView(spot, her)) SpotsInHerView++;
+            Vector3 line = transform.position - her, to = spot - her;
+            line.y = to.y = 0f;
+            LastSpotOffLine = line.sqrMagnitude > 0.01f && to.sqrMagnitude > 0.01f ? Vector3.Angle(line, to) : 0f;
+            return spot;
+        }
+
+        /// <summary>
+        /// The knife (2026-11-03, DEMO_PLAN 13.1): far from her it runs to the point beside her on its own side, so it
+        /// comes in from her flank; near, straight at her.
+        /// </summary>
+        private Vector3 RushSpot(Vector3 target)
+        {
+            Vector3 point = target;
+            if (Distance() > RushSideFrom)
+            {
+                Vector3 forward = HerForward();
+                Vector3 right = new Vector3(forward.z, 0f, -forward.x);
+                float side = Vector3.Dot(transform.position - target, right) >= 0f ? 1f : -1f;
+                point = target + right * side * RushSideOffset;
+                SideRuns++;
+            }
+            return NavMesh.SamplePosition(point, out NavMeshHit at, 1.5f, NavMesh.AllAreas) ? at.position : target;
         }
 
         /// <summary>
@@ -593,7 +704,7 @@ namespace GlorifiedBody.Enemy
         /// barricade, on its far side from her, with a line over it from the muzzle to her chest. Her powers stop on
         /// the barricade until it breaks; then he moves on. One soldier for each barricade. Numbers PROPOSED.
         /// </summary>
-        private bool TryCoverSpot(Vector3 target, Vector3 chest, out Vector3 spot)
+        private bool TryCoverSpot(Vector3 target, Vector3 chest, Vector3? side, float tolerance, out Vector3 spot)
         {
             spot = Vector3.zero;
             int blockers = LayerMask.GetMask("Default");
@@ -609,6 +720,7 @@ namespace GlorifiedBody.Enemy
                 float range = away.magnitude;
                 if (range < CoverMinRange || range > preferredRange + CoverExtraRange) continue;
                 away /= range;
+                if (side.HasValue && Vector3.Angle(side.Value, away) > tolerance) continue; // on his side or on his line only
                 Vector3 candidate = new Vector3(centre.x, transform.position.y, centre.z) + away * CoverStandOff;
                 if (!NavMesh.SamplePosition(candidate, out NavMeshHit hit, 0.7f, NavMesh.AllAreas)) continue;
                 if (Flat(hit.position, candidate) > 0.6f) continue;

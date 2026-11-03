@@ -92,11 +92,23 @@ namespace GlorifiedBody.Enemy
         public Weapon WeaponKind { get => weapon; set => weapon = value; }
         public bool CanMelee { get => canMelee; set => canMelee = value; }
         public float MeleeRange => meleeRange;
+        /// <summary>She stands in melee reach now, by the gun's own measure (the brain asks this: 2026-11-03, the brain and
+        /// the gun measured 1.80 m two ways, the brain stopped to strike, the gun chose nothing, twelve times).</summary>
+        public bool HerInReach => canMelee && player != null && Vector3.Distance(transform.position, player.position) <= meleeRange;
         public float AimSpread { get => aimSpread; set => aimSpread = Mathf.Max(0f, value); }
         /// <summary>How far the last lock landed off her chest (the spread), in metres.</summary>
         public float LastMissDistance { get; private set; }
         public float GrenadeRadius => grenadeRadius;
         public float GrenadeMinDistance => grenadeMinDistance;
+        /// <summary>The nearest a ranged attack of this weapon fires: a grenade or a rocket not under 3.5 m (it would hit him).</summary>
+        public float MinAttackDistance
+        {
+            get
+            {
+                Attack ranged = RangedAttackOf(weapon);
+                return IsLobbed(ranged) || ranged == Attack.Rocket || weapon == Weapon.ArmourLaunchers ? grenadeMinDistance : 0f;
+            }
+        }
         /// <summary>The ranged attack of a weapon.</summary>
         public static Attack RangedAttackOf(Weapon w)
         {

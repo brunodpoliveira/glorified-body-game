@@ -119,6 +119,29 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator TheKnife_ComesInFromHerSide()
+        {
+            // Bruno, 2026-11-02 (DEMO_PLAN 13.1): flank her. The knife runs to the point beside her, then strikes.
+            Remove(Carrier);
+            Remove(Gunman);
+            GameObject figure = GameObject.Find(Knife);
+            SoldierBrain brain = figure.GetComponent<SoldierBrain>();
+            Vector3 forward = lucy.transform.forward;
+            forward.y = 0f;
+            Vector3 toHimAtStart = figure.transform.position - lucy.transform.position;
+            toHimAtStart.y = 0f;
+            brain.Alert("test", callOthers: false);
+            yield return WaitUntil(() => Flat(figure.transform.position, lucy.transform.position) <= 2.2f, 15f);
+            Vector3 toHim = figure.transform.position - lucy.transform.position;
+            toHim.y = 0f;
+            float atStart = Vector3.Angle(forward, toHimAtStart), atArrival = Vector3.Angle(forward, toHim);
+            Debug.Log($"[ArmedCivilianTests] the knife from {atStart:0} degrees off her facing, arrives at {atArrival:0} degrees, side runs {brain.SideRuns}");
+            Assert.Less(atStart, 40f, "it starts in front of her");
+            Assert.Greater(brain.SideRuns, 0, "it ran to her side");
+            Assert.Greater(atArrival, 45f, "it comes in from her flank, not from her front");
+        }
+
+        [UnityTest]
         public IEnumerator TheKnife_FindsHerAgain_WhenSheMoves()
         {
             Remove(Carrier);

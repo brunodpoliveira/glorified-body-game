@@ -276,9 +276,17 @@ namespace GlorifiedBody.Tests.PlayMode
             yield return WaitUntil(() => soldiers.Any(bulletTelegraph), 15f);
             SoldierBrain shooter = soldiers.First(bulletTelegraph);
             EnemyGun shooterGun = shooter.GetComponent<EnemyGun>();
+            // The others leave: with the pinch a soldier can stand beyond her, and the miss would hit him, not the wall.
+            foreach (SoldierBrain other in soldiers)
+                if (other != shooter) other.gameObject.SetActive(false);
             int shots = shooterGun.Shots;
+            // Aside from the shooter's line (2026-11-03: a flanker can stand east of her, and a step east took her into the shot).
             Vector3 p = lucy.transform.position;
-            lucy.GetComponent<TankController>().Teleport(p + Vector3.right * 2.5f, 0f);
+            Vector3 line = p - shooter.transform.position;
+            line.y = 0f;
+            Vector3 aside = new Vector3(line.z, 0f, -line.x).normalized;
+            if (!UnityEngine.AI.NavMesh.SamplePosition(p + aside * 2.5f, out UnityEngine.AI.NavMeshHit free, 0.5f, UnityEngine.AI.NavMesh.AllAreas)) aside = -aside;
+            lucy.GetComponent<TankController>().Teleport(p + aside * 2.5f, 0f);
             yield return WaitUntil(() => shooterGun.Shots > shots, 3f);
             Assert.Greater(shooterGun.Shots, shots, "the gun fired");
             Assert.GreaterOrEqual(shooterGun.AimClicks, 1, "the aim click played");
@@ -336,7 +344,10 @@ namespace GlorifiedBody.Tests.PlayMode
             // Wait for every aim of the old preset to end, then catch a new one at its first frame.
             yield return WaitUntil(() => soldiers.All(s => !s.Gun.HoldsSlot), 8f);
             DummyShooter gun = null;
-            yield return WaitUntil(() => (gun = soldiers.Select(s => s.Gun).FirstOrDefault(g => g.Current == DummyShooter.State.Aiming)) != null, 15f);
+            // A shot or a burst: a melee warning is half a shot's by design (MeleeWindowShare), and a flanker that passes
+            // close to her strikes (2026-11-03).
+            yield return WaitUntil(() => (gun = soldiers.Select(s => s.Gun).FirstOrDefault(g => g.Current == DummyShooter.State.Aiming
+                && g.CurrentAttack != DummyShooter.Attack.Melee)) != null, 15f);
             Assert.IsNotNull(gun, "a soldier aims");
             float t0 = Time.time - Time.deltaTime;
             int attacks = gun.ShotsFired;
@@ -510,8 +521,14 @@ namespace GlorifiedBody.Tests.PlayMode
             var kinds = new System.Collections.Generic.List<DummyShooter.Attack>();
             int attacks = armour.Gun.ShotsFired;
             float t0 = Time.time;
+            float nextLog = 0f;
             while (Time.time - t0 < 40f && kinds.Count < 2)
             {
+                if (Time.time >= nextLog)
+                {
+                    nextLog = Time.time + 2f;
+                    Debug.Log($"[EnemyAiTests] armour side {FlankBoard.SlotOf(armour)?.ToString("0") ?? "none"} " + Line(armour, t0));
+                }
                 if (armour.Gun.ShotsFired > attacks)
                 {
                     attacks = armour.Gun.ShotsFired;
@@ -535,6 +552,7 @@ namespace GlorifiedBody.Tests.PlayMode
             Vector3 Chest() => lucy.transform.position + Vector3.up * GlorifiedBody.Characters.Body.ChestHeight;
             EnemyRocket rocket = null;
             yield return WaitUntil(() => (rocket = UnityEngine.Object.FindObjectsByType<EnemyRocket>(FindObjectsSortMode.None).FirstOrDefault(r => r.Catchable)) != null, 40f);
+            Debug.Log($"[EnemyAiTests] the armour: side {FlankBoard.SlotOf(armour)?.ToString("0") ?? "none"}, at {armour.transform.position}, phase {armour.Current}, spot {armour.Spot}, gun {armour.Gun.Current}, attacks {armour.Gun.ShotsFired}");
             Assert.IsNotNull(rocket, "the power armour fired a rocket");
             yield return WaitUntil(() => rocket == null || Vector3.Distance(rocket.transform.position, Chest()) < PsychicPowers.CatchRadius - 0.3f, 3f);
             Assert.IsTrue(rocket != null, "the rocket reached the catch radius");
@@ -594,6 +612,9 @@ namespace GlorifiedBody.Tests.PlayMode
             Camera cam = go.AddComponent<Camera>();
             cam.clearFlags = CameraClearFlags.SolidColor;
             cam.backgroundColor = Color.black;
+            // The smoke only: a soldier between this camera and the cloud hid part of it (it failed 2026-10-31 and, with the
+            // flankers on that side, 2026-11-03).
+            cam.cullingMask = ~LayerMask.GetMask("Enemy", "Player");
             go.transform.position = cloud.transform.position + new Vector3(4.5f, 1.4f, -1.3f);
             go.transform.LookAt(cloud.transform.position + Vector3.up);
             var rt = new RenderTexture(320, 180, 24);
