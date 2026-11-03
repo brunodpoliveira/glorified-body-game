@@ -425,6 +425,10 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
 - 2026-11-02, THE TRAINING ROOM IS DEV ONLY (`devlog-notes/2026-11-02_training_room_dev_only.md`, Bruno: "remove the
   training room, or set it to dev only"): its button is the first of the TEST ROOMS column, and
   `PlayerBuild.ReleaseScenes` leaves the scene out. The tests and the bots still use the room.
+- 2026-11-02, THE W1 SCIENTIST AND THE DOORWAYS (`devlog-notes/2026-11-02_scientist_and_doorways.md`): the scientist
+  waits in the corridor behind the door and talks first (`ScriptStep.Approach`, `SoldierBrain.ScriptHold`: no sight
+  alert, he walks to a point and turns to her; the script's Alert, a hit or a power ends it). A demo exit fills its
+  doorway (`DemoRoom.Doorway`), not the end of the stub.
 
 ## Rules
 

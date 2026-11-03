@@ -154,12 +154,51 @@ namespace GlorifiedBody.Enemy
                 player = p != null ? p.transform : null;
                 if (player == null) return;
             }
+            ScriptHeld = false;
             Alerted = true;
             AlertReason = reason;
             body.Track(player);
             RunTelemetry.Event("soldier_alerted", $"{name}:{reason}");
             if (callOthers) EnemyAlert.Raise(transform.position, alertRadius, reason);
         }
+
+        /// <summary>
+        /// A scripted talk (the scientist of W1, Bruno, 2026-11-02: "it should do the dialogue then he attacks her"): he
+        /// sees her but does not attack, walks where the script sends him and turns to her. The script's Alert ends it,
+        /// and so does a hurt or a power near him (she attacks first).
+        /// </summary>
+        public bool ScriptHeld { get; private set; }
+
+        public void ScriptHold(Vector3? walkTo)
+        {
+            if (Alerted || Current == Phase.Dead) return;
+            ScriptHeld = true;
+            scriptWalk = walkTo; // sent from Update: the vendor AI takes a path only after its Start
+        }
+
+        private Vector3? scriptWalk;
+
+        private void FaceHerWhileHeld(float dt)
+        {
+            if (scriptWalk.HasValue)
+            {
+                body.MoveTo(scriptWalk.Value, MoveSpeed.Walk);
+                scriptWalk = null;
+                return;
+            }
+            if (player == null)
+            {
+                GameObject p = GameObject.FindWithTag("Player");
+                player = p != null ? p.transform : null;
+            }
+            if (player == null || body.IsMoving) return;
+            Vector3 to = player.position - transform.position;
+            to.y = 0f;
+            if (to.sqrMagnitude < 0.01f) return;
+            body.Face(Vector3.RotateTowards(transform.forward, to.normalized, ScriptTurnRate * Mathf.Deg2Rad * dt, 0f));
+        }
+
+        private const float ScriptTurnRate = 180f; // degrees a second, a held talker turns to her
 
         private void OnAlertHeard(Vector3 origin, float radius, string reason)
         {
@@ -243,6 +282,11 @@ namespace GlorifiedBody.Enemy
                 Hold(recoverSeconds);
             }
 
+            if (ScriptHeld)
+            {
+                FaceHerWhileHeld(dt);
+                return;
+            }
             if (!Alerted && body.CanSeeTarget) Alert("sight", callOthers: true);
             // An armed civilian is no fighter: its hands shake while it hunts her, and it shakes hard when it cowers.
             if (tremble != null && IsArmedCivilian) tremble.Amount = Current == Phase.Cower ? 1f : Alerted ? ArmedCivilianNerves : 0f;

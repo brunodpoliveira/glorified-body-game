@@ -182,8 +182,12 @@ namespace GlorifiedBody.Editor.Demo
             foreach (float sign in new[] { -1f, 1f })
                 Box(Room, $"StubWall_{tag}_{(sign < 0 ? "a" : "b")}", stubMid + across * sign * (d.Width * 0.5f + 0.15f) + Vector3.up * 1.2f, Abs(across * 0.3f + Vector3.up * 2.4f + outward * StubLength), Grey(WallShade));
             Box(Room, "StubEnd_" + tag, mouth + outward * (Wall + StubLength + 0.15f) + Vector3.up * 1.2f, Abs(across * (d.Width + 0.6f) + Vector3.up * 2.4f + outward * 0.3f), Grey(WallShade));
-            RoomExit exit = RoomKit.Exit("Exit_To_" + d.To, mouth + outward * (Wall + StubLength - 0.6f) + Vector3.up * 1.2f,
-                Abs(across * d.Width + Vector3.up * 2.4f + outward * 0.6f), "Demo_" + d.To, "Entry_From_" + Spec.Id, d.Flag);
+            // The exit fills the doorway (from 0.15 m into the wall to 0.4 m past it): the room changes as she steps
+            // through, in frame. Bruno, 2026-11-02: at the end of the stub it took "3-4 steps blindly down the doorway".
+            // The stub stays as the dark corridor behind the door; the entry of this room stands 1.2 m inside.
+            const float exitFrom = 0.15f, exitTo = Wall + 0.4f;
+            RoomExit exit = RoomKit.Exit("Exit_To_" + d.To, mouth + outward * ((exitFrom + exitTo) * 0.5f) + Vector3.up * 1.2f,
+                Abs(across * d.Width + Vector3.up * 2.4f + outward * (exitTo - exitFrom)), "Demo_" + d.To, "Entry_From_" + Spec.Id, d.Flag);
             exit.transform.SetParent(Exits.transform, true);
             RoomEntry entry = RoomKit.Entry("Entry_From_" + d.To, InsideDoor(d, 1.2f), InwardYaw(d));
             entry.transform.SetParent(Exits.transform, true);

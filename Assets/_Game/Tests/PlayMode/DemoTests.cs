@@ -175,6 +175,80 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.IsFalse(carrier.Dropped, "no second card beside the body");
         }
 
+        [UnityTest]
+        public IEnumerator W1_TheScientist_ComesInFromOutside_TalksFirst_ThenAttacks()
+        {
+            // Bruno, 2026-11-02: "the dude just pops into the room and begins attacking her immediately (even as the
+            // dialogue continues) ... it should do the dialogue then he attacks her".
+            GameManager.Instance.LoadLevel("Demo_W1");
+            yield return Room("Demo_W1");
+            yield return WaitUntil(() => StoryFlags.Has("demo_w1_wake"), 120f);
+            Assert.IsTrue(StoryFlags.Has("demo_w1_wake"), "the wake ends");
+            ScriptedSequence meet = GameObject.Find("W1_Scientist").GetComponent<ScriptedSequence>();
+            GameObject lucy = GameObject.FindGameObjectWithTag("Player");
+            lucy.GetComponent<TankController>().Teleport(new Vector3(4f, 0f, 15.8f), 180f);
+            yield return WaitUntil(() => meet.Running, 3f);
+            Assert.IsTrue(meet.Running, "she nears the door: the beat starts");
+            GameObject scientist = null;
+            yield return WaitUntil(() => (scientist = GameObject.Find("Scientist_Knife")) != null && scientist.GetComponent<GlorifiedBody.Enemy.SoldierBrain>() != null, 3f);
+            Assert.IsNotNull(scientist, "the scientist spawns");
+            float startZ = scientist.transform.position.z;
+            var brain = scientist.GetComponent<GlorifiedBody.Enemy.SoldierBrain>();
+            int alertStep = meet.steps.FindIndex(s => s.kind == StepKind.Alert);
+            Assert.Greater(alertStep, 0);
+            string early = null;
+            while (meet.Running && meet.StepIndex < alertStep)
+            {
+                if (brain.Alerted && early == null) early = $"alerted at step {meet.StepIndex} of {alertStep} ({meet.steps[meet.StepIndex].kind} {meet.steps[meet.StepIndex].text})";
+                yield return null;
+            }
+            Assert.IsNull(early, "he talks first, he attacks after the last line");
+            Assert.Less(startZ, 14f - DemoRoomWall, "he starts outside the room, behind the doorway (the cutscene: he stops in the doorway)");
+            Assert.GreaterOrEqual(scientist.transform.position.z, 14f - 0.2f, "by the last line he stands in the doorway or in the room");
+            yield return null;
+            Assert.IsTrue(brain.Alerted, "then he attacks");
+        }
+
+        [UnityTest]
+        public IEnumerator ADoorway_ChangesTheRoom_AsSheStepsThrough_InFrame()
+        {
+            // Bruno, 2026-11-02: "a huge gap between all rooms ... at least 3-4 steps blindly down the doorway before it
+            // switches room". W3's door to W2: the south wall (z 14), at x 13.
+            GameManager.Instance.LoadLevel("Demo_W3");
+            yield return Room("Demo_W3");
+            GameObject lucy = GameObject.FindGameObjectWithTag("Player");
+            var tank = lucy.GetComponent<TankController>();
+            tank.Teleport(new Vector3(13f, 0f, 15.2f), 180f);
+            yield return new WaitForSeconds(0.3f);
+            var pad = new VirtualPad();
+            GameInput.SetBotSource(pad);
+            var driver = new GameObject("[Pad]").AddComponent<PadDriver>();
+            UnityEngine.Object.DontDestroyOnLoad(driver.gameObject);
+            driver.pad = pad;
+            pad.SetHeld(InputManager.GameAction.Forward, true);
+            float t0 = Time.realtimeSinceStartup;
+            Vector3 last = lucy.transform.position;
+            bool seen = false;
+            while (!WorldState.Travelling && Time.realtimeSinceStartup - t0 < 8f)
+            {
+                last = lucy.transform.position;
+                Vector3 v = Camera.main.WorldToViewportPoint(last + Vector3.up * GlorifiedBody.Characters.Body.ChestHeight);
+                seen = v.z > 0f && v.x > 0f && v.x < 1f && v.y > 0f && v.y < 1f;
+                yield return null;
+            }
+            pad.SetHeld(InputManager.GameAction.Forward, false);
+            GameInput.ClearBotSource(pad);
+            UnityEngine.Object.Destroy(driver.gameObject);
+            Assert.IsTrue(WorldState.Travelling, "she leaves the room through the door");
+            float past = 14f - last.z;
+            Debug.Log($"[DemoTests] the room changes {past:0.00} m past the wall line, in frame: {seen}");
+            Assert.LessOrEqual(past, DemoRoomWall + 0.3f, "the room changes as she steps through the doorway, not metres past it");
+            Assert.IsTrue(seen, "the camera sees her when the room changes");
+            yield return WaitUntil(() => SceneManager.GetActiveScene().name == "Demo_W2" && GameManager.Instance.IsPlaying, 10f);
+        }
+
+        private const float DemoRoomWall = 0.3f; // DemoRoom.Wall (editor code)
+
         [DefaultExecutionOrder(-1000)]
         private sealed class PadDriver : MonoBehaviour
         {

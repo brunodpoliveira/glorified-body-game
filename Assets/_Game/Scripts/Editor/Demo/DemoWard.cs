@@ -80,12 +80,17 @@ namespace GlorifiedBody.Editor.Demo
             wake.Add(ScriptStep.FreeHer());
             r.Beat("W1_Wake", "demo_w1_wake", Vector3.zero, Vector3.zero, wake.ToArray());
 
-            // The scientist comes in at the door once she nears it with the printout (beat 3, cutscene 02).
+            // The scientist comes in at the door once she nears it with the printout (beat 3, cutscene 02). Bruno,
+            // 2026-11-02: "the first scientist should be in a secondary room ... it should do the dialogue then he
+            // attacks her". He waits in the corridor behind the door, stops in the doorway (the cutscene), talks, steps
+            // in on the second ultimatum, and attacks after "Or else." A hit from her ends the talk early.
             GameObject scientist = MenuLoopSetup.EnsureChild(r.Figures, "Group_Scientist");
-            r.Figure("Scientist_Knife", "labworker_knife", new Vector3(4f, 0f, 14.5f), 0f, parent: scientist);
+            r.Figure("Scientist_Knife", "labworker_knife", new Vector3(4f, 0f, 12.3f), 0f, parent: scientist);
             scientist.SetActive(false);
-            var meet = new List<ScriptStep> { ScriptStep.Show(scientist), ScriptStep.Wait(0.6f) };
+            var meet = new List<ScriptStep> { ScriptStep.Show(scientist), ScriptStep.Approach(scientist, new Vector3(4f, 0f, 13.85f)), ScriptStep.Wait(0.6f) };
             meet.AddRange(DemoScripts.Steps("cutscenes/02_the_scientist.md", "cs02"));
+            int stepIn = meet.FindIndex(s => s.text.StartsWith("Lie down. On the ground."));
+            if (stepIn > 0) meet.Insert(stepIn, ScriptStep.Approach(scientist, new Vector3(4f, 0f, 14.7f)));
             meet.Add(ScriptStep.Alert(scientist));
             r.Beat("W1_Scientist", "demo_w1_scientist", new Vector3(4f, 1f, 15.6f), new Vector3(5.6f, 2f, 1.6f), meet.ToArray());
         }

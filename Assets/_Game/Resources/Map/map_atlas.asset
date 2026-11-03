@@ -296,7 +296,7 @@ MonoBehaviour:
       height: 5
     exits:
     - path: '[Exits]/Exit_To_W2'
-      position: {x: 4, y: 12.1}
+      position: {x: 4, y: 13.575}
       targetScene: Demo_W2
     marks:
     - kind: 1
@@ -319,16 +319,16 @@ MonoBehaviour:
       height: 3
     exits:
     - path: '[Exits]/Exit_To_W1'
-      position: {x: 4, y: 15.9}
+      position: {x: 4, y: 14.425}
       targetScene: Demo_W1
     - path: '[Exits]/Exit_To_W3'
-      position: {x: 13, y: 15.9}
+      position: {x: 13, y: 14.425}
       targetScene: Demo_W3
     - path: '[Exits]/Exit_To_W4'
-      position: {x: 22, y: 15.9}
+      position: {x: 22, y: 14.425}
       targetScene: Demo_W4
     - path: '[Exits]/Exit_To_W5'
-      position: {x: 1.5, y: 9.1}
+      position: {x: 1.5, y: 10.575}
       targetScene: Demo_W5
     marks:
     - kind: 2
@@ -347,7 +347,7 @@ MonoBehaviour:
       height: 5
     exits:
     - path: '[Exits]/Exit_To_W2'
-      position: {x: 13, y: 12.1}
+      position: {x: 13, y: 13.575}
       targetScene: Demo_W2
     marks:
     - kind: 2
@@ -366,7 +366,7 @@ MonoBehaviour:
       height: 6
     exits:
     - path: '[Exits]/Exit_To_W2'
-      position: {x: 22, y: 12.1}
+      position: {x: 22, y: 13.575}
       targetScene: Demo_W2
     marks: []
   - scene: Demo_W5
@@ -381,13 +381,13 @@ MonoBehaviour:
       height: 20
     exits:
     - path: '[Exits]/Exit_To_W2'
-      position: {x: 1.5, y: 12.9}
+      position: {x: 1.5, y: 11.425}
       targetScene: Demo_W2
     - path: '[Exits]/Exit_To_W6'
-      position: {x: -1.9, y: 5}
+      position: {x: -0.425, y: 5}
       targetScene: Demo_W6
     - path: '[Exits]/Exit_To_W7'
-      position: {x: 4.9, y: 1.5}
+      position: {x: 3.425, y: 1.5}
       targetScene: Demo_W7
     marks: []
   - scene: Demo_W6
@@ -402,7 +402,7 @@ MonoBehaviour:
       height: 6
     exits:
     - path: '[Exits]/Exit_To_W5'
-      position: {x: 1.9, y: 5}
+      position: {x: 0.425, y: 5}
       targetScene: Demo_W5
     marks:
     - kind: 2
@@ -425,10 +425,10 @@ MonoBehaviour:
       height: 7
     exits:
     - path: '[Exits]/Exit_To_W5'
-      position: {x: 1.1, y: 1.5}
+      position: {x: 2.575, y: 1.5}
       targetScene: Demo_W5
     - path: '[Exits]/Exit_To_W8'
-      position: {x: 12.9, y: 1.5}
+      position: {x: 11.425, y: 1.5}
       targetScene: Demo_W8
     marks: []
   - scene: Demo_W8
@@ -443,10 +443,10 @@ MonoBehaviour:
       height: 7
     exits:
     - path: '[Exits]/Exit_To_W7'
-      position: {x: 9.1, y: 1.5}
+      position: {x: 10.575, y: 1.5}
       targetScene: Demo_W7
     - path: '[Exits]/Exit_To_W9'
-      position: {x: 14, y: -3.9}
+      position: {x: 14, y: -2.425}
       targetScene: Demo_W9
     marks: []
   - scene: Demo_W9
@@ -461,16 +461,16 @@ MonoBehaviour:
       height: 8
     exits:
     - path: '[Exits]/Exit_To_W8'
-      position: {x: 14, y: -0.100000024}
+      position: {x: 14, y: -1.575}
       targetScene: Demo_W8
     - path: '[Exits]/Exit_To_W10'
-      position: {x: 18.9, y: -7}
+      position: {x: 17.425, y: -7}
       targetScene: Demo_W10
     - path: '[Exits]/Exit_To_W11'
-      position: {x: 8, y: -11.9}
+      position: {x: 8, y: -10.425}
       targetScene: Demo_W11
     - path: '[Exits]/Exit_To_W12'
-      position: {x: 15, y: -11.9}
+      position: {x: 15, y: -10.425}
       targetScene: Demo_W12
     marks: []
   - scene: Demo_W10
@@ -485,7 +485,7 @@ MonoBehaviour:
       height: 6
     exits:
     - path: '[Exits]/Exit_To_W9'
-      position: {x: 15.1, y: -7}
+      position: {x: 16.575, y: -7}
       targetScene: Demo_W9
     marks:
     - kind: 2
@@ -504,7 +504,7 @@ MonoBehaviour:
       height: 8
     exits:
     - path: '[Exits]/Exit_To_W9'
-      position: {x: 8, y: -8.1}
+      position: {x: 8, y: -9.575}
       targetScene: Demo_W9
     marks:
     - kind: 2
@@ -523,10 +523,10 @@ MonoBehaviour:
       height: 4
     exits:
     - path: '[Exits]/Exit_To_W9'
-      position: {x: 15, y: -8.1}
+      position: {x: 15, y: -9.575}
       targetScene: Demo_W9
     - path: '[Exits]/Exit_To_G1'
-      position: {x: 15, y: -15.9}
+      position: {x: 15, y: -14.425}
       targetScene: Demo_G1
     marks:
     - kind: 0
@@ -545,10 +545,10 @@ MonoBehaviour:
       height: 5
     exits:
     - path: '[Exits]/Exit_To_W12'
-      position: {x: 2.5, y: 6.9}
+      position: {x: 2.5, y: 5.425}
       targetScene: Demo_W12
     - path: '[Exits]/Exit_To_G2'
-      position: {x: 6.9, y: 2.5}
+      position: {x: 5.425, y: 2.5}
       targetScene: Demo_G2
     marks:
     - kind: 3
@@ -567,16 +567,16 @@ MonoBehaviour:
       height: 6
     exits:
     - path: '[Exits]/Exit_To_G1'
-      position: {x: 3.1, y: 2.5}
+      position: {x: 4.575, y: 2.5}
       targetScene: Demo_G1
     - path: '[Exits]/Exit_To_G3'
-      position: {x: 12, y: 7.9}
+      position: {x: 12, y: 6.425}
       targetScene: Demo_G3
     - path: '[Exits]/Exit_To_G4'
-      position: {x: 28, y: 7.9}
+      position: {x: 28, y: 6.425}
       targetScene: Demo_G4
     - path: '[Exits]/Exit_To_G5'
-      position: {x: 20, y: -1.9}
+      position: {x: 20, y: -0.425}
       targetScene: Demo_G5
     marks: []
   - scene: Demo_G3
@@ -591,7 +591,7 @@ MonoBehaviour:
       height: 6
     exits:
     - path: '[Exits]/Exit_To_G2'
-      position: {x: 12, y: 4.1}
+      position: {x: 12, y: 5.575}
       targetScene: Demo_G2
     marks: []
   - scene: Demo_G4
@@ -606,7 +606,7 @@ MonoBehaviour:
       height: 8
     exits:
     - path: '[Exits]/Exit_To_G2'
-      position: {x: 28, y: 4.1}
+      position: {x: 28, y: 5.575}
       targetScene: Demo_G2
     marks:
     - kind: 2
@@ -625,22 +625,22 @@ MonoBehaviour:
       height: 16
     exits:
     - path: '[Exits]/Exit_To_G2'
-      position: {x: 20, y: 1.9}
+      position: {x: 20, y: 0.425}
       targetScene: Demo_G2
     - path: '[Exits]/Exit_To_G6'
-      position: {x: 10.1, y: -4}
+      position: {x: 11.575, y: -4}
       targetScene: Demo_G6
     - path: '[Exits]/Exit_To_G7'
-      position: {x: 10.1, y: -12}
+      position: {x: 11.575, y: -12}
       targetScene: Demo_G7
     - path: '[Exits]/Exit_To_G8'
-      position: {x: 29.9, y: -4}
+      position: {x: 28.425, y: -4}
       targetScene: Demo_G8
     - path: '[Exits]/Exit_To_G9'
-      position: {x: 29.9, y: -12}
+      position: {x: 28.425, y: -12}
       targetScene: Demo_G9
     - path: '[Exits]/Exit_To_U1'
-      position: {x: 20, y: -17.9}
+      position: {x: 20, y: -16.425}
       targetScene: Demo_U1
     marks: []
   - scene: Demo_G6
@@ -655,7 +655,7 @@ MonoBehaviour:
       height: 6
     exits:
     - path: '[Exits]/Exit_To_G5'
-      position: {x: 13.9, y: -4}
+      position: {x: 12.425, y: -4}
       targetScene: Demo_G5
     marks: []
   - scene: Demo_G7
@@ -670,7 +670,7 @@ MonoBehaviour:
       height: 7
     exits:
     - path: '[Exits]/Exit_To_G5'
-      position: {x: 13.9, y: -12}
+      position: {x: 12.425, y: -12}
       targetScene: Demo_G5
     marks: []
   - scene: Demo_G8
@@ -685,7 +685,7 @@ MonoBehaviour:
       height: 8
     exits:
     - path: '[Exits]/Exit_To_G5'
-      position: {x: 26.1, y: -4}
+      position: {x: 27.575, y: -4}
       targetScene: Demo_G5
     marks: []
   - scene: Demo_G9
@@ -700,7 +700,7 @@ MonoBehaviour:
       height: 7
     exits:
     - path: '[Exits]/Exit_To_G5'
-      position: {x: 26.1, y: -12}
+      position: {x: 27.575, y: -12}
       targetScene: Demo_G5
     marks:
     - kind: 2
@@ -723,7 +723,7 @@ MonoBehaviour:
       height: 12
     exits:
     - path: '[Exits]/Exit_To_G5'
-      position: {x: 20, y: -14.1}
+      position: {x: 20, y: -15.575}
       targetScene: Demo_G5
     marks:
     - kind: 3
