@@ -105,7 +105,7 @@ namespace GlorifiedBody.Editor.Demo
                 ScriptStep.Approach(scientist, new Vector3(4.3f, 0f, 16f)),
                 ScriptStep.Wait(1.8f),
                 ScriptStep.Play(DemoScripts.Fmv("cutscenes/02_the_scientist.md", "02_the_scientist", "cs02")),
-                ScriptStep.Approach(scientist, new Vector3(4.1f, 0f, 16.6f)), // "he steps in. Louder. Worse."
+                ScriptStep.Approach(scientist, new Vector3(4.1f, 0f, 16.6f)), // "he steps closer. Louder. Worse."
                 ScriptStep.Wait(0.5f),
                 ScriptStep.FreeHer(),
                 ScriptStep.AlertAlone(scientist), // he calls nobody: the three behind the door stay unaware

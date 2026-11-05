@@ -488,6 +488,7 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   doorway. W1B, TREATMENT ROOM (x 1..7, z 14..19, the old footprint): the scientist behind a privacy screen (no line from W1),
   a wall-to-wall trigger just past the doorway, the talk, then he attacks. `FireDoor_W1B_W2` stays shut through it, her lever
   opens it after the talk (`demo_w1b_scientist`), the three of W2 behind it. `ScriptStep.DoorOpen` and `DoorJam` are gone.
+  His answer: no control hints in W1.
 
 ## Rules
 
