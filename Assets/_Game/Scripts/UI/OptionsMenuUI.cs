@@ -1020,7 +1020,9 @@ namespace GlorifiedBody.UI
             StretchFill(vpRect);
             var mask = vpObj.AddComponent<Mask>();
             mask.showMaskGraphic = false;
-            vpObj.AddComponent<Image>().color = Color.clear;
+            // Opaque: a mask writes its shape where its image has alpha (2026-11-05: Color.clear wrote nothing, and every row
+            // was clipped away). showMaskGraphic false keeps it invisible.
+            vpObj.AddComponent<Image>().color = Color.white;
             scrollRect.viewport = vpRect;
 
             // Content

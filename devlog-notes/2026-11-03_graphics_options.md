@@ -64,6 +64,17 @@ The presets (PROPOSED):
 Shots: `~/MEGA/glorified-body-renders/game/options/2026-11-03/` (`options_display.png` the top of the tab,
 `options_display_lower.png` the rest).
 
+## The empty dropdown lists (2026-11-05)
+
+Bruno, with two screenshots: "THe dropdowns are not showing the options". Confirmed: a render of an open list showed the
+panel and 0 bright pixels, though the row objects stood there with the right words. The list's viewport had a `Mask` on an
+image with `Color.clear`. A mask writes its shape where its image has alpha, so it wrote nothing and clipped every row. The
+image is opaque now, and `showMaskGraphic = false` keeps it invisible. Every dropdown of the Options screen shares this
+builder, so Resolution, VSync, Gore and Subtitle Size were empty too. The code came with the Warspite port.
+
+Test: `GraphicsOptionsTests.AnOpenDropdown_ShowsItsRows` (0 bright pixels before the fix, 792 after). It waits 0.6 s for the
+list's fade: a first version rendered mid-fade and counted the buttons behind the list.
+
 ## Open for Bruno
 
 1. The presets and their numbers are PROPOSED.

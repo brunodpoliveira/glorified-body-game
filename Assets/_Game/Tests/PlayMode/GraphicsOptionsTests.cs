@@ -158,6 +158,61 @@ namespace GlorifiedBody.Tests.PlayMode
             options.Hide();
         }
 
+        [UnityTest]
+        public IEnumerator AnOpenDropdown_ShowsItsRows()
+        {
+            // Bruno, 2026-11-05: "THe dropdowns are not showing the options" (two screenshots: an empty list).
+            GlorifiedBody.UI.OptionsMenuUI options = UnityEngine.Object.FindFirstObjectByType<GlorifiedBody.UI.OptionsMenuUI>(FindObjectsInactive.Include);
+            options.Show(null);
+            yield return null;
+            var tab = typeof(GlorifiedBody.UI.OptionsMenuUI).GetField("displayTabBtn", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(options) as UnityEngine.UI.Button;
+            tab.onClick.Invoke();
+            yield return null;
+            UnityEngine.UI.Dropdown preset = Dropdown(options, "Quality Preset");
+            preset.Show();
+            yield return new WaitForSecondsRealtime(0.6f); // the list fades in
+            Transform list = preset.transform.Find("Dropdown List");
+            Assert.IsNotNull(list, "the list opens");
+            Assert.AreEqual(5, list.GetComponentsInChildren<UnityEngine.UI.Toggle>().Length, "a row for each preset");
+
+            // The screen with the list, through a camera: the rows' words are white on the dark panel.
+            Canvas canvas = options.GetComponentInChildren<Canvas>();
+            var go = new GameObject("DropdownCheckCamera");
+            Camera cam = go.AddComponent<Camera>();
+            cam.clearFlags = CameraClearFlags.SolidColor;
+            cam.backgroundColor = Color.black;
+            cam.cullingMask = 1 << canvas.gameObject.layer;
+            var rt = new RenderTexture(1920, 1080, 24);
+            cam.targetTexture = rt;
+            RenderMode ownMode = canvas.renderMode;
+            canvas.renderMode = RenderMode.ScreenSpaceCamera;
+            canvas.worldCamera = cam;
+            canvas.planeDistance = 1f;
+            Canvas.ForceUpdateCanvases();
+            cam.Render();
+            RenderTexture.active = rt;
+            var tex = new Texture2D(1920, 1080, TextureFormat.RGB24, false);
+            tex.ReadPixels(new Rect(0, 0, 1920, 1080), 0, 0);
+            tex.Apply();
+            RenderTexture.active = null;
+            var corners = new Vector3[4];
+            ((RectTransform)list).GetWorldCorners(corners);
+            Vector2 min = RectTransformUtility.WorldToScreenPoint(cam, corners[0]), max = RectTransformUtility.WorldToScreenPoint(cam, corners[2]);
+            int bright = 0;
+            for (int y = Mathf.Max(0, (int)min.y); y < Mathf.Min(1080, (int)max.y); y++)
+                for (int x = Mathf.Max(0, (int)min.x); x < Mathf.Min(1920, (int)max.x); x++)
+                {
+                    Color c = tex.GetPixel(x, y);
+                    if (c.r > 0.6f && c.g > 0.6f && c.b > 0.6f) bright++;
+                }
+            Debug.Log($"[GraphicsOptionsTests] the open list: {bright} bright pixels in {max - min}");
+            canvas.renderMode = ownMode;
+            preset.Hide();
+            UnityEngine.Object.Destroy(go);
+            options.Hide();
+            Assert.Greater(bright, 200, "the words of the rows show in the list");
+        }
+
         private static UnityEngine.UI.Dropdown Dropdown(Component root, string label)
         {
             Transform row = root.GetComponentsInChildren<Transform>(true).FirstOrDefault(t => t.name == "DropdownRow_" + label);
