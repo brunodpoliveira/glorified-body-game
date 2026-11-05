@@ -188,7 +188,7 @@ namespace GlorifiedBody.Enemy
         }
 
         /// <summary>
-        /// A scripted talk (the scientist of W1, Bruno, 2026-11-02: "it should do the dialogue then he attacks her"): he
+        /// A scripted talk (the scientist of W1B, Bruno, 2026-11-02: "it should do the dialogue then he attacks her"): he
         /// sees her but does not attack, walks where the script sends him and turns to her. The script's Alert ends it,
         /// and so does a hurt or a power near him (she attacks first).
         /// </summary>
@@ -203,8 +203,8 @@ namespace GlorifiedBody.Enemy
         }
 
         /// <summary>
-        /// It waits where it stands, unaware, until the story flag goes up (the corridor W2 before the talk of cutscene 02,
-        /// 2026-11-04: their sight alert would break the talk). An Alert, a hurt or a power near it ends the wait too. A load
+        /// It waits where it stands, unaware, until the story flag goes up (the scientist of W1B at his bed before the talk of
+        /// cutscene 02). An Alert, a hurt or a power near it ends the wait too. A load
         /// past the flag lets it go at once.
         /// </summary>
         public void ScriptHoldUntil(string flag)

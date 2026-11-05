@@ -34,7 +34,7 @@ namespace GlorifiedBody.Enemy
         public string foundLine = "";
         [Tooltip("A hider is found this near (metres). 0: never (the nurse who prays on).")]
         public float foundAt = 2f;
-        [Tooltip("It waits, unaware, until this story flag goes up, or the script or a hit wakes it (the corridor before a talk).")]
+        [Tooltip("It waits, unaware, until this story flag goes up, or the script or a hit wakes it (a figure at its work before a talk).")]
         public string heldUntilFlag = "";
 
         public static int Spawned { get; private set; }

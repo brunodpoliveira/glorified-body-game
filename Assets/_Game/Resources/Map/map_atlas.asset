@@ -300,23 +300,42 @@ MonoBehaviour:
     offset: {x: 0, y: 0}
     areas:
     - serializedVersion: 2
+      x: 0
+      y: 19
+      width: 8
+      height: 7
+    exits:
+    - path: W1/W1B
+      position: {x: 4, y: 19}
+      targetScene: W1B
+    marks:
+    - kind: 1
+      path: '[World]/[W1]/[Props]/L1_Printout'
+      position: {x: 2.2, y: 19.5}
+      label: STEVENS' PRINTOUT
+    - kind: 1
+      path: '[World]/[W1]/Capsule_W1'
+      position: {x: 1, y: 25.2}
+      label: MK CAPSULE
+  - scene: W1B
+    world: Demo
+    floor: demo_2
+    title: TREATMENT
+    offset: {x: 0, y: 0}
+    areas:
+    - serializedVersion: 2
       x: 1
       y: 14
       width: 6
       height: 5
     exits:
-    - path: W1/W2
+    - path: W1B/W1
+      position: {x: 4, y: 19}
+      targetScene: W1
+    - path: W1B/W2
       position: {x: 4, y: 14}
       targetScene: W2
-    marks:
-    - kind: 1
-      path: '[World]/[W1]/[Props]/L1_Printout'
-      position: {x: 2.6, y: 14.5}
-      label: STEVENS' PRINTOUT
-    - kind: 1
-      path: '[World]/[W1]/Capsule_W1'
-      position: {x: 1.6, y: 18.2}
-      label: MK CAPSULE
+    marks: []
   - scene: W2
     world: Demo
     floor: demo_2
@@ -329,9 +348,9 @@ MonoBehaviour:
       width: 24
       height: 3
     exits:
-    - path: W2/W1
+    - path: W2/W1B
       position: {x: 4, y: 14}
-      targetScene: W1
+      targetScene: W1B
     - path: W2/W3
       position: {x: 13, y: 14}
       targetScene: W3

@@ -23,10 +23,10 @@ If the console shows a red line, copy it too.
 
 | # | Do | Expected | If faulty |
 |---|---|---|---|
-| 11b | Press START. Walk to the W1 door. | The game opens on the cutscene with no game frame first. The door is shut, and its lever does nothing. At the door it opens, he talks, steps in, it shuts behind him, and he attacks. | The game shows first, or the three in W2 join the fight. |
-| 11c | Kill him. Pull the lever by the door and walk out. | The door opens. W2 holds one pistol and two knives. | The door stays shut. |
-| 12 | Walk from W1 into W2, then through the other doorways. | No fade and no load screen at a doorway. The camera changes at the wall. | A black fade or a pause at a door. |
-| 13 | Watch the scientist in W2. | He comes into the doorway and talks first (the placeholder card shows the lines). He attacks only after the talk. | He shoots during the talk. |
+| 11b | Press START. Walk around W1. | The game opens on the cutscene with no game frame first. W1 is quiet: no enemy, no talk, however long you stay. | The game shows first, or something happens in W1. |
+| 11c | Walk through the doorway into W1B. | A step past the doorway she stops. The scientist walks out from behind the screen, the talk plays, and he attacks after the last line. The door to W2 stays shut, and its lever does nothing before the talk. | The talk starts in W1, or the three in W2 join the fight. |
+| 11d | Kill him. Pull the lever by the door and walk out. | The door opens. W2 holds one pistol and two knives. | The door stays shut. |
+| 12 | Walk from W1 into W1B, then through the other doorways. | No fade and no load screen at a doorway. The camera changes at the wall. | A black fade or a pause at a door. |
 | 14 | During a cutscene, press E. | A menu: PAUSED, RESUME, SKIP. The picture holds. Up and down choose, E confirms, Escape resumes. | The cutscene ends at once, or keeps playing under the menu. |
 | 15 | At the W2 to W5 doorway, and at W5 to W7, use a lever. | A fire door with a lever on each side, as in DOOR TEST. | No door, or a leaf sticks out of a wall. |
 | 16 | In W7, look at the wall of TVs. | The TV bodies stand behind the screens. | Floating screens with no bodies. |

@@ -10,8 +10,8 @@ using GlorifiedBody.Story;
 namespace GlorifiedBody.Editor.Demo
 {
     /// <summary>
-    /// Floor 2 of the demo, the ward (the demo plan §3.1): W1 to W12, in greybox. The plan coordinates (metres, x east,
-    /// z north) put the rooms side by side as the map shows them. The way: W1, W2, W5, W7, W8, W9, W11, back to W9, W12,
+    /// Floor 2 of the demo, the ward (the demo plan §3.1): W1, W1B and W2 to W12, in greybox. The plan coordinates (metres, x east,
+    /// z north) put the rooms side by side as the map shows them. The way: W1, W1B, W2, W5, W7, W8, W9, W11, back to W9, W12,
     /// down. Side rooms: W3, W4, W6, W10. The beats of §4 (1 to 16) run as sequences; the cutscenes play as subtitles
     /// from the writers' scripts. Batch: tools/unity.sh exec GlorifiedBody.Editor.Demo.DemoWard.BuildAll
     /// </summary>
@@ -24,8 +24,9 @@ namespace GlorifiedBody.Editor.Demo
         {
             var rooms = new List<RoomSpec>
             {
-                Room("W1", "RECOVERY ROOM", 1, 14, 7, 19, W1, new Door('S', 4, "W2", fire: true, jammed: true, leverFlag: ScientistDone)),
-                Room("W2", "NORTH CORRIDOR", 0, 11, 24, 14, W2, new Door('N', 4, "W1", fire: true), new Door('N', 13, "W3"), new Door('N', 22, "W4"), new Door('S', 1.5f, "W5", fire: true, pocket: -1)),
+                Room("W1", "RECOVERY ROOM", 0, 19, 8, 26, W1, new Door('S', 4, "W1B")),
+                Room("W1B", "TREATMENT ROOM", 1, 14, 7, 19, W1B, new Door('N', 4, "W1"), new Door('S', 4, "W2", fire: true, jammed: true, leverFlag: ScientistDone)),
+                Room("W2", "NORTH CORRIDOR", 0, 11, 24, 14, W2, new Door('N', 4, "W1B", fire: true), new Door('N', 13, "W3"), new Door('N', 22, "W4"), new Door('S', 1.5f, "W5", fire: true, pocket: -1)),
                 Room("W3", "PATIENT ROOMS", 9, 14, 17, 19, W3, new Door('S', 13, "W2")),
                 Room("W4", "SHOWER ROOM", 19, 14, 25, 20, W4, new Door('S', 22, "W2")),
                 Room("W5", "SOUTH CORRIDOR", 0, -9, 3, 11, W5, new Door('N', 1.5f, "W2", fire: true), new Door('W', 5, "W6"), new Door('E', 1.5f, "W7", fire: true), new Door('E', -6, "", flag: CodeSilver)),
@@ -52,20 +53,24 @@ namespace GlorifiedBody.Editor.Demo
 
         // ── The rooms ─────────────────────────────────────────────────
 
-        private const string ScientistDone = "demo_w1_scientist";
+        private const string ScientistDone = "demo_w1b_scientist";
 
-        /// <summary>W1: she wakes (beat 1), Stevens on the speaker and the printout (2), the scientist (3).</summary>
+        /// <summary>
+        /// W1: she wakes (beat 1), Stevens on the speaker and the printout (2). The quiet room: no enemy and no beat until she
+        /// leaves it (Bruno, 2026-11-05: "a mini-tutorial/safe space, one where the player has a chance to situate themsevles
+        /// and acclimatize to the controls before moving on towards their firswt combat").
+        /// </summary>
         private static void W1(DemoRoom r)
         {
-            r.Prop("Bed", new Vector3(5.2f, 0f, 17.6f), new Vector3(2.1f, 0.6f, 1f), 0.55f);
-            r.Prop("Strap_Burned", new Vector3(5.2f, 0.6f, 17.6f), new Vector3(0.1f, 0.05f, 1.02f), 0.05f);
-            r.Prop("Drip_Stand", new Vector3(6.6f, 0f, 18.5f), new Vector3(0.1f, 1.8f, 0.1f), 0.7f);
-            r.Prop("Cabinet", new Vector3(1.6f, 0f, 18.4f), new Vector3(0.8f, 1.1f, 0.5f), 0.25f);
-            MenuLoopSetup.EnsurePickup("Capsule_W1", DrugType.Nalcon, new Vector3(1.6f, 1.3f, 18.2f)); // MK capsules only (the cutscene's note 2)
-            r.Prop("Screen_By_Door", new Vector3(2.6f, 1.2f, 14.2f), new Vector3(0.8f, 0.5f, 0.06f), 0.6f);
-            r.Prop("Printer", new Vector3(2.6f, 0f, 14.5f), new Vector3(0.5f, 0.9f, 0.4f), 0.35f);
-            r.Item("L1_Printout", DemoItems.Plan(), new Vector3(2.6f, 0.95f, 14.5f), new Vector3(0.24f, 0.02f, 0.32f));
-            r.PlaceLucy(new Vector3(3.3f, 0f, 17.2f), 180f);
+            r.Prop("Bed", new Vector3(5.6f, 0f, 24.6f), new Vector3(2.1f, 0.6f, 1f), 0.55f);
+            r.Prop("Strap_Burned", new Vector3(5.6f, 0.6f, 24.6f), new Vector3(0.1f, 0.05f, 1.02f), 0.05f);
+            r.Prop("Drip_Stand", new Vector3(7f, 0f, 25.4f), new Vector3(0.1f, 1.8f, 0.1f), 0.7f);
+            r.Prop("Cabinet", new Vector3(1f, 0f, 25.4f), new Vector3(0.8f, 1.1f, 0.5f), 0.25f);
+            MenuLoopSetup.EnsurePickup("Capsule_W1", DrugType.Nalcon, new Vector3(1f, 1.3f, 25.2f)); // MK capsules only (the cutscene's note 2)
+            r.Prop("Screen_By_Door", new Vector3(2.2f, 1.2f, 19.2f), new Vector3(0.8f, 0.5f, 0.06f), 0.6f);
+            r.Prop("Printer", new Vector3(2.2f, 0f, 19.5f), new Vector3(0.5f, 0.9f, 0.4f), 0.35f);
+            r.Item("L1_Printout", DemoItems.Plan(), new Vector3(2.2f, 0.95f, 19.5f), new Vector3(0.24f, 0.02f, 0.32f));
+            r.PlaceLucy(new Vector3(3.9f, 0f, 24.2f), 180f);
             var wake = new List<ScriptStep>
             {
                 ScriptStep.Raise(Feeding.LockFlag),  // round 18: the feed starts locked
@@ -76,51 +81,45 @@ namespace GlorifiedBody.Editor.Demo
             wake.Add(ScriptStep.FreeHer());
             // The game opens on the cutscene, black from the first frame (Bruno, 2026-11-04).
             r.Beat("W1_Wake", "demo_w1_wake", Vector3.zero, Vector3.zero, wake.ToArray()).startsBlack = true;
+        }
 
-            // The scientist at the door (beat 3, cutscene 02). Bruno, 2026-11-02: "the first scientist should be in a secondary
-            // room ... it should do the dialogue then he attacks her"; 2026-11-04: "the second cutsene triggers even before i
-            // leave the room"; 2026-11-05: one in one room, the three in the other, "the door should be close so that the other
-            // 3 won't bum rush the player at once". The door to W2 is shut. She walks up to it, it opens, he stands in the
-            // doorway, the FMV plays, he steps in, it shuts behind him, and he attacks. Her lever opens it after the talk.
-            GameObject door = r.Props.transform.Find("FireDoor_W1_W2").gameObject;
+        /// <summary>
+        /// W1B: the scientist and the collar computer (beat 3, cutscene 02). Bruno, 2026-11-05: "add a second room that the
+        /// first scientist will be in, not at the corridor". He works at a bed behind a screen, so no line from W1 reaches him.
+        /// A line across the room stops her a step past the doorway, he walks out and talks (the FMV), and he attacks after the
+        /// last line. The door to W2 stays shut, with the three behind it. Her lever opens it after the talk.
+        /// </summary>
+        private static void W1B(DemoRoom r)
+        {
+            r.Prop("Treatment_Bed", new Vector3(6.5f, 0f, 15.6f), new Vector3(1f, 0.6f, 2f), 0.55f);
+            r.Prop("Sleeper_Under_Sheet", new Vector3(6.5f, 0.6f, 15.6f), new Vector3(0.6f, 0.22f, 1.7f), 0.75f); // "a patient who sleeps" (the script)
+            r.Prop("Dressing_Cart", new Vector3(6.4f, 0f, 17f), new Vector3(0.7f, 0.9f, 0.4f), 0.45f);
+            r.Prop("Privacy_Screen", new Vector3(5.6f, 0f, 17.5f), new Vector3(2.8f, 1.9f, 0.06f), 0.65f);
             GameObject scientist = MenuLoopSetup.EnsureChild(r.Figures, "Group_Scientist");
-            EnemySpawn knife = r.Figure("Scientist_Knife", "labworker_knife", new Vector3(4f, 0f, 12.9f), 0f, parent: scientist);
+            EnemySpawn knife = r.Figure("Scientist_Knife", "labworker_knife", new Vector3(5.6f, 0f, 16f), 90f, parent: scientist);
             knife.heldUntilFlag = ScientistDone;
             EditorUtility.SetDirty(knife);
             var meet = new List<ScriptStep>
             {
                 ScriptStep.LockHer(),
-                ScriptStep.DoorOpen(door),
-                ScriptStep.Approach(scientist, new Vector3(4f, 0f, 13.85f)),
+                ScriptStep.Approach(scientist, new Vector3(4.3f, 0f, 16f)),
                 ScriptStep.Wait(1.8f),
                 ScriptStep.Play(DemoScripts.Fmv("cutscenes/02_the_scientist.md", "02_the_scientist", "cs02")),
-                ScriptStep.Approach(scientist, new Vector3(4f, 0f, 14.8f)),
-                ScriptStep.Wait(1f),
-                ScriptStep.DoorJam(door),
+                ScriptStep.Approach(scientist, new Vector3(4.1f, 0f, 16.6f)), // "he steps in. Louder. Worse."
+                ScriptStep.Wait(0.5f),
                 ScriptStep.FreeHer(),
                 ScriptStep.AlertAlone(scientist), // he calls nobody: the three behind the door stay unaware
             };
-            r.Beat("W1_Scientist", ScientistDone, new Vector3(4f, 1f, 15f), new Vector3(2f, 2f, 1.6f), meet.ToArray());
-            // The door end has its own camera: the cell's camera saw the door wall at a steep angle, and only his arm in the
-            // doorway (Bruno, 2026-11-05: "yes do it").
-            r.ExtraCamera("door", new Vector3(4f, 2.6f, 18.8f), new Vector3(4f, 1f, 14.3f), 62f, new Vector3(4f, 1.5f, 15.2f), new Vector3(4f, 3f, 2.4f));
+            r.Beat("W1B_Scientist", ScientistDone, new Vector3(4f, 1f, 17.9f), new Vector3(6f, 2f, 0.6f), meet.ToArray()); // wall to wall: no way past it
         }
 
         /// <summary>W2: three armed scientists outside (beat 4), her care chart on the floor (5, L9 unlocks the feed).</summary>
         private static void W2(DemoRoom r)
         {
-            // One pistol and two knives (Bruno, 2026-11-05: "helps to escalate better"). They wait until the talk at the W1 door
-            // ends: the door stands open during it, and a sight alert would break it.
-            foreach (EnemySpawn waits in new[]
-            {
-                r.Figure("Scientist_A", "labworker_pistol", new Vector3(6.5f, 0f, 12.2f), 300f),
-                r.Figure("Scientist_B", "labworker_knife", new Vector3(8.5f, 0f, 13f), 280f),
-                r.Figure("Scientist_C", "labworker_knife", new Vector3(10.5f, 0f, 12.2f), 270f),
-            })
-            {
-                waits.heldUntilFlag = ScientistDone;
-                EditorUtility.SetDirty(waits);
-            }
+            // One pistol and two knives (Bruno, 2026-11-05: "helps to escalate better"), behind the shut door of W1B.
+            r.Figure("Scientist_A", "labworker_pistol", new Vector3(6.5f, 0f, 12.2f), 300f);
+            r.Figure("Scientist_B", "labworker_knife", new Vector3(8.5f, 0f, 13f), 280f);
+            r.Figure("Scientist_C", "labworker_knife", new Vector3(10.5f, 0f, 12.2f), 270f);
             r.Item("L9_Care_Chart", DemoItems.L9(), new Vector3(9.5f, 0.04f, 11.8f), new Vector3(0.24f, 0.03f, 0.32f));
             r.Sign("Sign_Pain", "YOUR PAIN IS SEEN. ASK FOR RELIEF.", new Vector3(18f, 1.9f, 13.98f), Vector3.back, new Vector2(2.6f, 0.5f));
             r.Prop("Bench_A", new Vector3(16f, 0f, 11.4f), new Vector3(1.6f, 0.45f, 0.45f));

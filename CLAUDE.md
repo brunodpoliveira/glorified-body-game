@@ -483,6 +483,11 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   (`FireDoor.startsJammed`, `leverFlag`). At the door it opens, the scientist talks in the doorway, steps in, it shuts
   behind him (`ScriptStep.DoorOpen`, `DoorJam`, `AlertAlone`), the fight is in W1, her lever opens the way on. The three of
   W2 (one pistol, two knives) wait behind it (`EnemySpawn.heldUntilFlag`, `SoldierBrain.ScriptHoldUntil`).
+- 2026-11-05, THE SECOND ROOM (same note, Bruno: "add a second room that the first scientist will be in ... a
+  mini-tutorial/safe space"): W1 (x 0..8, z 19..26) is the quiet room, no enemy, no beat after the wake, 5.2 m to the plain
+  doorway. W1B, TREATMENT ROOM (x 1..7, z 14..19, the old footprint): the scientist behind a privacy screen (no line from W1),
+  a wall-to-wall trigger just past the doorway, the talk, then he attacks. `FireDoor_W1B_W2` stays shut through it, her lever
+  opens it after the talk (`demo_w1b_scientist`), the three of W2 behind it. `ScriptStep.DoorOpen` and `DoorJam` are gone.
 
 ## Rules
 

@@ -30,8 +30,8 @@ namespace GlorifiedBody.Tests.PlayMode
     public class DemoTests
     {
         private const string World = "Demo";
-        private static readonly string[] Rooms = { "W1", "W2", "W3", "W4", "W5", "W6", "W7", "W8", "W9", "W10", "W11", "W12", "S1", "G1", "G2", "G3", "G4", "G5", "G6", "G7", "G8", "G9", "U1" };
-        private static readonly string[] MainWay = { "W1", "W2", "W5", "W7", "W8", "W9", "W11", "W9", "W12", "S1", "G1", "G2", "G5", "G9", "G5", "U1" };
+        private static readonly string[] Rooms = { "W1", "W1B", "W2", "W3", "W4", "W5", "W6", "W7", "W8", "W9", "W10", "W11", "W12", "S1", "G1", "G2", "G3", "G4", "G5", "G6", "G7", "G8", "G9", "U1" };
+        private static readonly string[] MainWay = { "W1", "W1B", "W2", "W5", "W7", "W8", "W9", "W11", "W9", "W12", "S1", "G1", "G2", "G5", "G9", "G5", "U1" };
 
         [UnitySetUp]
         public IEnumerator SetUp()
@@ -120,13 +120,13 @@ namespace GlorifiedBody.Tests.PlayMode
             // Bruno, 2026-11-03: fire doors "in selected chokepoints"; his pick: W2 to W5, W5 to W7, G2 to G5.
             yield return LoadWorld();
             var names = GlorifiedBody.Interaction.FireDoor.All.Select(d => d.name).OrderBy(n => n).ToArray();
-            CollectionAssert.AreEqual(new[] { "FireDoor_G2_G5", "FireDoor_W1_W2", "FireDoor_W2_W5", "FireDoor_W5_W7" }, names, "the fire doors");
+            CollectionAssert.AreEqual(new[] { "FireDoor_G2_G5", "FireDoor_W1B_W2", "FireDoor_W2_W5", "FireDoor_W5_W7" }, names, "the fire doors");
             var failures = new List<string>();
             int solid = LayerMask.GetMask("Default");
             foreach (GlorifiedBody.Interaction.FireDoor door in GlorifiedBody.Interaction.FireDoor.All)
             {
-                // The W1 door starts shut (Bruno, 2026-11-05). The others stand open.
-                if (door.name == "FireDoor_W1_W2") door.Open("test", instant: true);
+                // The door of W1B to W2 starts shut (Bruno, 2026-11-05). The others stand open.
+                if (door.name == "FireDoor_W1B_W2") door.Open("test", instant: true);
                 if (door.Current != GlorifiedBody.Interaction.FireDoor.State.Open) failures.Add(door.name + ": not open at the start");
                 var rooms = new HashSet<string>();
                 foreach (GlorifiedBody.Interaction.DoorLever lever in door.GetComponentsInChildren<GlorifiedBody.Interaction.DoorLever>())
@@ -377,16 +377,97 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator TheScientist_MeetsHerAtTheShutDoor_TheThreeStayBehindIt()
+        public IEnumerator W1_IsTheQuietRoom_NoBeatAnywhereInIt_NoLineToTheScientist()
         {
-            // Bruno, 2026-11-05: "the one knife scientis is in one room, and the three in the other one. the door should be close
-            // so that the other 3 won't bum rush the player at once; also, one has a pistol and two have a knife".
+            // Bruno, 2026-11-05: "i can barely walk and the guy barges into the room even before i leave it ... add a second room
+            // that the first scientist will be in, not at the corridor. that gives the first room a mini-tutorial/safe space".
             yield return LoadWorld();
             yield return WaitUntil(() => CutscenePlayer.IsPlaying && CutscenePlayer.ShotIndex >= 0, 10f);
             CutscenePlayer.Skip();
             yield return WaitUntil(() => StoryFlags.Has("demo_w1_wake"), 10f);
-            ScriptedSequence meet = GameObject.Find("W1_Scientist").GetComponent<ScriptedSequence>();
-            GlorifiedBody.Interaction.FireDoor door = GlorifiedBody.Interaction.FireDoor.All.First(d => d.name == "FireDoor_W1_W2");
+            ScriptedSequence meet = GameObject.Find("W1B_Scientist").GetComponent<ScriptedSequence>();
+            GameObject lucy = GameObject.FindGameObjectWithTag("Player");
+            TankController tank = lucy.GetComponent<TankController>();
+            GlorifiedBody.Rooms.Room w1 = GlorifiedBody.Rooms.Room.Of("W1");
+            Assert.AreEqual("W1", GlorifiedBody.Rooms.RoomTracker.CurrentId, "she wakes in W1");
+            float toDoor = lucy.transform.position.z - 19f;
+            Debug.Log($"[DemoTests] from her start to the doorway: {toDoor:0.0} m");
+            Assert.GreaterOrEqual(toDoor, 5f, "room to walk before the door");
+
+            yield return WaitUntil(() => UnityEngine.Object.FindObjectsByType<SoldierBrain>(FindObjectsSortMode.None).Any(b => b.name == "Scientist_Knife"), 5f);
+            SoldierBrain knife = UnityEngine.Object.FindObjectsByType<SoldierBrain>(FindObjectsSortMode.None).First(b => b.name == "Scientist_Knife");
+            Assert.AreEqual("W1B", GlorifiedBody.Rooms.Room.At(knife.transform.position + Vector3.up * 0.1f).id, "he stands in the next room");
+            int solid = LayerMask.GetMask("Default");
+            Vector3 hisChest = knife.transform.position + Vector3.up * GlorifiedBody.Characters.Body.ChestHeight;
+            int checkedPoints = 0;
+            var openLines = new List<string>();
+            for (float x = 0.5f; x < 8f; x += 0.5f)
+                for (float z = 19.5f; z < 26f; z += 0.5f)
+                {
+                    Vector3 from = new Vector3(x, GlorifiedBody.Characters.Body.ChestHeight, z);
+                    checkedPoints++;
+                    if (!Physics.Linecast(from, hisChest, solid, QueryTriggerInteraction.Ignore)) openLines.Add($"({x},{z})");
+                }
+            Assert.IsEmpty(openLines, $"no line to him from {checkedPoints} points of W1: she cannot lock on or wake him from the quiet room");
+
+            foreach (Vector3 point in new[] { new Vector3(1f, 0f, 20f), new Vector3(7f, 0f, 20f), new Vector3(4f, 0f, 19.6f), new Vector3(1f, 0f, 24f), new Vector3(7f, 0f, 23.5f) })
+            {
+                tank.Teleport(point, 180f);
+                yield return new WaitForSeconds(0.3f);
+                Assert.AreEqual("W1", GlorifiedBody.Rooms.RoomTracker.CurrentId, $"at {point}");
+                Assert.IsFalse(meet.Running || meet.Done, $"at {point}: no scientist yet");
+                Assert.IsFalse(knife.Alerted, $"at {point}: he does not know");
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator SheWalks_FromHerStart_ThroughTheDoorway_AndTheTalkStartsOnlyInTheNextRoom()
+        {
+            // The real walk on the pad, because Bruno met the talk twice before he left the room (2026-11-04, 2026-11-05).
+            yield return LoadWorld();
+            yield return WaitUntil(() => CutscenePlayer.IsPlaying && CutscenePlayer.ShotIndex >= 0, 10f);
+            CutscenePlayer.Skip();
+            yield return WaitUntil(() => StoryFlags.Has("demo_w1_wake"), 10f);
+            yield return new WaitForSeconds(0.5f);
+            ScriptedSequence meet = GameObject.Find("W1B_Scientist").GetComponent<ScriptedSequence>();
+            GameObject lucy = GameObject.FindGameObjectWithTag("Player");
+            var pad = new VirtualPad();
+            GameInput.SetBotSource(pad);
+            var driver = new GameObject("[Pad]").AddComponent<PadDriver>();
+            UnityEngine.Object.DontDestroyOnLoad(driver.gameObject);
+            driver.pad = pad;
+            pad.SetHeld(InputManager.GameAction.Forward, true);
+            float t0 = Time.time;
+            float wallAt = -1f;
+            while (!meet.Running && Time.time - t0 < 15f)
+            {
+                if (wallAt < 0f && lucy.transform.position.z < 19f) wallAt = Time.time - t0;
+                Assert.IsTrue(lucy.transform.position.z < 19f || !meet.Done, "no talk in W1");
+                yield return null;
+            }
+            float walked = Time.time - t0;
+            pad.SetHeld(InputManager.GameAction.Forward, false);
+            GameInput.ClearBotSource(pad);
+            UnityEngine.Object.Destroy(driver.gameObject);
+            Debug.Log($"[DemoTests] the walk: the doorway after {wallAt:0.0} s, the talk after {walked:0.0} s, at z {lucy.transform.position.z:0.00}");
+            Assert.IsTrue(meet.Running, "she walks into the beat");
+            Assert.AreEqual("W1B", GlorifiedBody.Rooms.RoomTracker.CurrentId, "she stands in the next room");
+            Assert.Less(lucy.transform.position.z, 19f, "past the wall line");
+            Assert.GreaterOrEqual(wallAt, 2f, "seconds of walk in the quiet room, in a straight line");
+        }
+
+        [UnityTest]
+        public IEnumerator TheScientist_InTheNextRoom_TalksFirst_ThenAttacks_TheThreeStayBehindTheShutDoor()
+        {
+            // Bruno, 2026-11-05: "the one knife scientis is in one room, and the three in the other one. the door should be close
+            // so that the other 3 won't bum rush the player at once; also, one has a pistol and two have a knife". And 2026-11-02:
+            // "it should do the dialogue then he attacks her".
+            yield return LoadWorld();
+            yield return WaitUntil(() => CutscenePlayer.IsPlaying && CutscenePlayer.ShotIndex >= 0, 10f);
+            CutscenePlayer.Skip();
+            yield return WaitUntil(() => StoryFlags.Has("demo_w1_wake"), 10f);
+            ScriptedSequence meet = GameObject.Find("W1B_Scientist").GetComponent<ScriptedSequence>();
+            GlorifiedBody.Interaction.FireDoor door = GlorifiedBody.Interaction.FireDoor.All.First(d => d.name == "FireDoor_W1B_W2");
             GlorifiedBody.Interaction.DoorLever[] levers = door.GetComponentsInChildren<GlorifiedBody.Interaction.DoorLever>();
             GameObject lucy = GameObject.FindGameObjectWithTag("Player");
             TankController tank = lucy.GetComponent<TankController>();
@@ -400,26 +481,36 @@ namespace GlorifiedBody.Tests.PlayMode
             SoldierBrain knife = all.First(b => b.name == "Scientist_Knife");
             Assert.IsTrue(three.All(b => GlorifiedBody.Rooms.Room.At(b.transform.position + Vector3.up * 0.1f).id == "W2"), "the three stand in W2");
 
-            foreach (Vector3 away in new[] { new Vector3(3.3f, 0f, 16.5f), new Vector3(2.3f, 0f, 15.2f) }) // the second: at the printer
-            {
-                tank.Teleport(away, 180f);
-                yield return new WaitForSeconds(0.3f);
-                Assert.IsFalse(meet.Running || meet.Done, $"at {away}: no scientist yet");
-            }
-            tank.Teleport(new Vector3(4f, 0f, 15.4f), 180f);
+            tank.Teleport(new Vector3(4f, 0f, 18.6f), 180f); // through the doorway, before the line
+            yield return new WaitForSeconds(0.3f);
+            Assert.AreEqual("W1B", GlorifiedBody.Rooms.RoomTracker.CurrentId, "in the next room");
+            Assert.IsFalse(meet.Running || meet.Done, "a step past the doorway: no talk yet");
+            tank.Teleport(new Vector3(4f, 0f, 17.9f), 180f);
             yield return WaitUntil(() => meet.Running, 3f);
-            Assert.IsTrue(meet.Running, "at the door: the beat starts");
-            yield return WaitUntil(() => door.Current == GlorifiedBody.Interaction.FireDoor.State.Open, 2f);
-            Assert.AreEqual(GlorifiedBody.Interaction.FireDoor.State.Open, door.Current, "the door opens for him");
-            yield return WaitUntil(() => CutscenePlayer.IsPlaying, 6f);
-            Assert.AreEqual("02_the_scientist", CutscenePlayer.Current);
-            Assert.IsFalse(three.Any(b => b.Alerted), "the three stay unaware during the talk, with the door open");
-            CutscenePlayer.Skip();
+            Assert.IsTrue(meet.Running, "at the line: the beat starts");
+            int alertStep = meet.steps.FindIndex(s => s.kind == StepKind.Alert);
+            Assert.Greater(alertStep, 0);
+            string early = null;
+            while (meet.Running && meet.StepIndex < alertStep)
+            {
+                if (knife.Alerted && early == null) early = $"alerted at step {meet.StepIndex} of {alertStep} ({meet.steps[meet.StepIndex].kind} {meet.steps[meet.StepIndex].text})";
+                if (CutscenePlayer.IsPlaying)
+                {
+                    Assert.AreEqual("02_the_scientist", CutscenePlayer.Current);
+                    Assert.IsFalse(three.Any(b => b.Alerted), "the three stay unaware during the talk");
+                    Assert.AreEqual(GlorifiedBody.Interaction.FireDoor.State.Jammed, door.Current, "the door stays shut during the talk");
+                    Vector3 chest = Vector3.up * GlorifiedBody.Characters.Body.ChestHeight;
+                    Assert.IsFalse(Physics.Linecast(lucy.transform.position + chest, knife.transform.position + chest, LayerMask.GetMask("Default"), QueryTriggerInteraction.Ignore), "he stands out from behind the screen when he talks");
+                    CutscenePlayer.Skip();
+                }
+                yield return null;
+            }
+            Assert.IsNull(early, "he talks first, he attacks after the last line");
             yield return WaitUntil(() => meet.Done, 10f);
             Assert.IsTrue(meet.Done, "the beat ends");
             Debug.Log($"[DemoTests] after the talk: the knife at {knife.transform.position}, her at {lucy.transform.position}, the door {door.Current}");
-            Assert.AreEqual(GlorifiedBody.Interaction.FireDoor.State.Jammed, door.Current, "the door shuts behind him");
-            Assert.Greater(knife.transform.position.z, 14f, "he stands in W1 with her");
+            Assert.AreEqual(GlorifiedBody.Interaction.FireDoor.State.Jammed, door.Current, "the door stays shut for the first fight");
+            Assert.AreEqual("W1B", GlorifiedBody.Rooms.Room.At(knife.transform.position + Vector3.up * 0.1f).id, "he fights her in W1B");
             Assert.IsTrue(knife.Alerted, "he attacks");
             yield return new WaitForSeconds(2f);
             Assert.IsFalse(three.Any(b => b.Alerted), "the three do not come: they saw nothing, and he called nobody");
@@ -428,41 +519,6 @@ namespace GlorifiedBody.Tests.PlayMode
             levers.First(l => l.name == "Lever_In").Confirm(lucy.GetComponent<GlorifiedBody.Interaction.Interactor>());
             Assert.AreEqual(GlorifiedBody.Interaction.FireDoor.State.Open, door.Current, "her lever opens the way on");
         }
-
-        [UnityTest]
-        public IEnumerator W1_TheScientist_ComesInFromOutside_TalksFirst_ThenAttacks()
-        {
-            // Bruno, 2026-11-02: "the dude just pops into the room and begins attacking her immediately (even as the
-            // dialogue continues) ... it should do the dialogue then he attacks her".
-            yield return LoadWorld();
-            yield return WaitUntil(() => StoryFlags.Has("demo_w1_wake"), 120f);
-            Assert.IsTrue(StoryFlags.Has("demo_w1_wake"), "the wake ends");
-            ScriptedSequence meet = GameObject.Find("W1_Scientist").GetComponent<ScriptedSequence>();
-            GameObject lucy = GameObject.FindGameObjectWithTag("Player");
-            lucy.GetComponent<TankController>().Teleport(new Vector3(4f, 0f, 15.4f), 180f);
-            yield return WaitUntil(() => meet.Running, 3f);
-            Assert.IsTrue(meet.Running, "at the door: the beat starts");
-            GameObject scientist = null;
-            yield return WaitUntil(() => (scientist = GameObject.Find("Scientist_Knife")) != null && scientist.GetComponent<GlorifiedBody.Enemy.SoldierBrain>() != null, 3f);
-            Assert.IsNotNull(scientist, "the scientist spawns");
-            float startZ = scientist.transform.position.z;
-            var brain = scientist.GetComponent<GlorifiedBody.Enemy.SoldierBrain>();
-            int alertStep = meet.steps.FindIndex(s => s.kind == StepKind.Alert);
-            Assert.Greater(alertStep, 0);
-            string early = null;
-            while (meet.Running && meet.StepIndex < alertStep)
-            {
-                if (brain.Alerted && early == null) early = $"alerted at step {meet.StepIndex} of {alertStep} ({meet.steps[meet.StepIndex].kind} {meet.steps[meet.StepIndex].text})";
-                yield return null;
-            }
-            Assert.IsNull(early, "he talks first, he attacks after the last line");
-            Assert.Less(startZ, 14f - DemoRoomWall, "he waits outside the room, in the corridor W2 behind the door");
-            Assert.GreaterOrEqual(scientist.transform.position.z, 14f - 0.2f, "by the last line he stands in the doorway or in the room");
-            yield return null;
-            Assert.IsTrue(brain.Alerted, "then he attacks");
-        }
-
-        private const float DemoRoomWall = 0.3f; // DemoRoom.Wall (editor code)
 
         [DefaultExecutionOrder(-1000)]
         private sealed class PadDriver : MonoBehaviour

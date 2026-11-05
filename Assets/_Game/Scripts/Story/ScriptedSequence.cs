@@ -35,8 +35,6 @@ namespace GlorifiedBody.Story
         EndDemo,     // the demo ends: back to the main menu (the title)
         Approach,    // every soldier under target talks first: no attack on sight, it walks to the point and turns to her (Alert ends it)
         Give,        // an item (id) into her inventory (a key after a cutscene); no slot free: it lies at her feet
-        DoorOpen,    // the fire door at target opens
-        DoorJam,     // the fire door at target shuts and jams, when the doorway is free (3 s at most)
     }
 
     /// <summary>One step of a sequence: what it does and its data (the room builder fills them in code).</summary>
@@ -62,10 +60,8 @@ namespace GlorifiedBody.Story
         public static ScriptStep Show(GameObject what) => new ScriptStep { kind = StepKind.Show, target = what };
         public static ScriptStep Hide(GameObject what) => new ScriptStep { kind = StepKind.Hide, target = what };
         public static ScriptStep Alert(GameObject group) => new ScriptStep { kind = StepKind.Alert, target = group };
-        /// <summary>Alert, but the figures call nobody (the three behind the shut door of W1 stay unaware).</summary>
+        /// <summary>Alert, but the figures call nobody (the three behind the shut door of W1B stay unaware).</summary>
         public static ScriptStep AlertAlone(GameObject group) => new ScriptStep { kind = StepKind.Alert, target = group, id = "alone" };
-        public static ScriptStep DoorOpen(GameObject door) => new ScriptStep { kind = StepKind.DoorOpen, target = door };
-        public static ScriptStep DoorJam(GameObject door) => new ScriptStep { kind = StepKind.DoorJam, target = door };
         public static ScriptStep WaitDead(GameObject group) => new ScriptStep { kind = StepKind.WaitDead, target = group };
         public static ScriptStep SetShort(float value) => new ScriptStep { kind = StepKind.SetShort, seconds = value };
         public static ScriptStep HoldMusic(string state) => new ScriptStep { kind = StepKind.HoldMusic, id = state };
@@ -195,21 +191,6 @@ namespace GlorifiedBody.Story
                 case StepKind.Approach:
                     if (step.target != null)
                         foreach (SoldierBrain brain in step.target.GetComponentsInChildren<SoldierBrain>()) brain.ScriptHold(step.point);
-                    break;
-                case StepKind.DoorOpen:
-                    if (step.target != null && step.target.TryGetComponent(out GlorifiedBody.Interaction.FireDoor opens)) opens.Open("script");
-                    break;
-                case StepKind.DoorJam:
-                    if (step.target != null && step.target.TryGetComponent(out GlorifiedBody.Interaction.FireDoor shuts))
-                    {
-                        float waited = 0f;
-                        while (shuts.Blocked() && waited < 3f)
-                        {
-                            waited += Time.deltaTime;
-                            yield return null;
-                        }
-                        shuts.Jam("script");
-                    }
                     break;
                 case StepKind.Give:
                 {
