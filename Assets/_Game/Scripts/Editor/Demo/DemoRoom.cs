@@ -147,6 +147,7 @@ namespace GlorifiedBody.Editor.Demo
             spec.Dress?.Invoke(room);
             Physics.SyncTransforms();
             room.CamerasOnCells();
+            foreach (Action add in room.extraCameras) add();
             GameObject music = MenuLoopSetup.EnsureChild(root, "[Music]");
             Audio.RoomMusic key = MenuLoopSetup.EnsureComponent<Audio.RoomMusic>(music);
             key.Key = spec.Music;
@@ -287,6 +288,24 @@ namespace GlorifiedBody.Editor.Demo
         /// checks every floor point (DemoTests). The zones end at the room's walls: in a doorway the room she came from
         /// keeps its camera until she is through (the zone of the next room starts at the wall line).
         /// </summary>
+        private readonly List<Action> extraCameras = new List<Action>();
+
+        /// <summary>
+        /// One more camera with its zone, over the cells of the room (a beat the cell's camera shows badly: the W1 door,
+        /// 2026-11-05). The zone takes priority over the cells, and its floor points must be in this camera's frame.
+        /// </summary>
+        public void ExtraCamera(string tag, Vector3 cam, Vector3 look, float fov, Vector3 zoneCentre, Vector3 zoneSize)
+        {
+            extraCameras.Add(() =>
+            {
+                GameObject root = MenuLoopSetup.EnsureChild(Root, "[Cameras]");
+                FixedCamera fc = MenuLoopSetup.EnsureFixedCamera(root, $"Cam_{Spec.Id}_{tag}", cam, look, fov);
+                Cameras.Add(fc);
+                MenuLoopSetup.EnsureCameraZone(root, $"Zone_{Spec.Id}_{tag}", zoneCentre, zoneSize, fc, 2);
+                MenuLoopSetup.EnsureShotPoints(new[] { fc });
+            });
+        }
+
         private void CamerasOnCells()
         {
             GameObject root = MenuLoopSetup.EnsureChild(Root, "[Cameras]");

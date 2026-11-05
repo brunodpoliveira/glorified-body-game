@@ -101,6 +101,9 @@ namespace GlorifiedBody.Editor.Demo
                 ScriptStep.AlertAlone(scientist), // he calls nobody: the three behind the door stay unaware
             };
             r.Beat("W1_Scientist", ScientistDone, new Vector3(4f, 1f, 15f), new Vector3(2f, 2f, 1.6f), meet.ToArray());
+            // The door end has its own camera: the cell's camera saw the door wall at a steep angle, and only his arm in the
+            // doorway (Bruno, 2026-11-05: "yes do it").
+            r.ExtraCamera("door", new Vector3(4f, 2.6f, 18.8f), new Vector3(4f, 1f, 14.3f), 62f, new Vector3(4f, 1.5f, 15.2f), new Vector3(4f, 3f, 2.4f));
         }
 
         /// <summary>W2: three armed scientists outside (beat 4), her care chart on the floor (5, L9 unlocks the feed).</summary>
