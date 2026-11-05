@@ -75,6 +75,22 @@ builder, so Resolution, VSync, Gore and Subtitle Size were empty too. The code c
 Test: `GraphicsOptionsTests.AnOpenDropdown_ShowsItsRows` (0 bright pixels before the fix, 792 after). It waits 0.6 s for the
 list's fade: a first version rendered mid-fade and counted the buttons behind the list.
 
+## The list scroll and the resolution order (2026-11-05)
+
+Bruno: "the options on the dropdown scroll very slowly plus the resolution is not properly organized; it should be from
+lowest to highest res".
+
+- Scroll: the list never set `scrollSensitivity`, so it had Unity's default of 1. It is 30 now (the height of a row), and
+  the list stops at its ends (`Clamped`).
+- Order: `Screen.resolutions` on this machine sorts by height ("1024 x 576, 800 x 600, 1024 x 600, 960 x 640"). The list
+  now comes from `SettingsManager.Resolutions()`: by width, then by height, one row for each size at its best refresh
+  rate. It runs from 640 x 480 to 1920 x 1080.
+- The save holds the width and the height (`settings_resolutionWidth`, `settings_resolutionHeight`). The old key held a
+  place in the raw list, so an old choice resets to the desktop size once.
+
+Test: `GraphicsOptionsTests.TheLists_ScrollARowANotch_AndTheResolutionsRunFromLowToHigh`. The options and menu tests pass 12
+of 12 (run `20261105-012319-test-playmode-144303`). Nobody measured the feel of the scroll: a batch run has no mouse wheel.
+
 ## Open for Bruno
 
 1. The presets and their numbers are PROPOSED.

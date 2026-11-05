@@ -213,6 +213,37 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.Greater(bright, 200, "the words of the rows show in the list");
         }
 
+        [UnityTest]
+        public IEnumerator TheLists_ScrollARowANotch_AndTheResolutionsRunFromLowToHigh()
+        {
+            // Bruno, 2026-11-05: "the options on the dropdown scroll very slowly plus the resolution is not properly organized;
+            // it should be from lowest to highest res".
+            GlorifiedBody.UI.OptionsMenuUI options = UnityEngine.Object.FindFirstObjectByType<GlorifiedBody.UI.OptionsMenuUI>(FindObjectsInactive.Include);
+            options.Show(null);
+            yield return null;
+            Debug.Log("[GraphicsOptionsTests] the screen's list: " + string.Join(", ", Screen.resolutions.Select(r => $"{r.width}x{r.height}@{r.refreshRateRatio.value:0}")));
+            var tab = typeof(GlorifiedBody.UI.OptionsMenuUI).GetField("displayTabBtn", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(options) as UnityEngine.UI.Button;
+            tab.onClick.Invoke();
+            yield return null;
+            UnityEngine.UI.Dropdown aa = Dropdown(options, "Anti-Aliasing");
+            aa.Show();
+            yield return new WaitForSecondsRealtime(0.3f);
+            UnityEngine.UI.ScrollRect scroll = aa.transform.Find("Dropdown List").GetComponent<UnityEngine.UI.ScrollRect>();
+            Debug.Log($"[GraphicsOptionsTests] list scroll: sensitivity {scroll.scrollSensitivity}");
+            Assert.GreaterOrEqual(scroll.scrollSensitivity, 30f, "one wheel notch moves a whole row (30 px)");
+            aa.Hide();
+
+            var resolution = typeof(GlorifiedBody.UI.OptionsMenuUI).GetField("resolutionDropdown", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(options) as UnityEngine.UI.Dropdown;
+            string[] rows = resolution.options.Select(o => o.text).ToArray();
+            Debug.Log("[GraphicsOptionsTests] the rows: " + string.Join(", ", rows));
+            Assert.Greater(rows.Length, 0);
+            Assert.AreEqual(rows.Length, rows.Distinct().Count(), "one row for each size: " + string.Join(", ", rows));
+            long Pixels(string row) { string[] p = row.Split(new[] { " x " }, StringSplitOptions.None); return long.Parse(p[0]) * 100000 + long.Parse(p[1]); }
+            for (int i = 1; i < rows.Length; i++)
+                Assert.Greater(Pixels(rows[i]), Pixels(rows[i - 1]), "lowest to highest: " + string.Join(", ", rows));
+            options.Hide();
+        }
+
         private static UnityEngine.UI.Dropdown Dropdown(Component root, string label)
         {
             Transform row = root.GetComponentsInChildren<Transform>(true).FirstOrDefault(t => t.name == "DropdownRow_" + label);

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using GlorifiedBody.Rendering;
 
@@ -128,6 +129,26 @@ namespace GlorifiedBody.Systems
         /// <summary>The window is not windowed (the display mode is a graphics option since 2026-11-03).</summary>
         public bool Fullscreen => GlorifiedBody.Rendering.GraphicsOptions.Display != GlorifiedBody.Rendering.DisplayMode.Windowed;
 
+        /// <summary>
+        /// The screen's sizes from lowest to highest, one row for each size at its best refresh rate (Bruno, 2026-11-05: "it
+        /// should be from lowest to highest res"; Screen.resolutions holds no promise of an order and lists a size once for
+        /// each rate). ResolutionIndex is a place in this list.
+        /// </summary>
+        public static Resolution[] Resolutions()
+        {
+            var bySize = new Dictionary<long, Resolution>();
+            foreach (Resolution r in Screen.resolutions)
+            {
+                long size = r.width * 100000L + r.height;
+                if (!bySize.TryGetValue(size, out Resolution best) || r.refreshRateRatio.value > best.refreshRateRatio.value) bySize[size] = r;
+            }
+            var sizes = new List<long>(bySize.Keys);
+            sizes.Sort();
+            var list = new Resolution[sizes.Count];
+            for (int i = 0; i < sizes.Count; i++) list[i] = bySize[sizes[i]];
+            return list;
+        }
+
         public int ResolutionIndex
         {
             get => resolutionIndex;
@@ -200,7 +221,9 @@ namespace GlorifiedBody.Systems
         private const string KEY_VOICE_VOL = "settings_voiceVolume";
         private const string KEY_MOUSE_SENS = "settings_mouseSensitivity";
         private const string KEY_MOUSE_TURN = "settings_mouseTurn";
-        private const string KEY_RESOLUTION = "settings_resolutionIndex";
+        // The size, not a place in the list (2026-11-05: the list changed order, and "settings_resolutionIndex" meant nothing after it).
+        private const string KEY_RES_WIDTH = "settings_resolutionWidth";
+        private const string KEY_RES_HEIGHT = "settings_resolutionHeight";
         private const string KEY_VSYNC = "settings_vsync";
         private const string KEY_GORE_LEVEL = "settings_goreLevel";
         private const string KEY_SUBTITLES = "settings_subtitles";
@@ -229,7 +252,8 @@ namespace GlorifiedBody.Systems
             voiceVolume = PlayerPrefs.GetFloat(KEY_VOICE_VOL, defaultVoiceVolume);
             mouseSensitivity = PlayerPrefs.GetFloat(KEY_MOUSE_SENS, defaultMouseSensitivity);
             mouseTurn = PlayerPrefs.GetInt(KEY_MOUSE_TURN, 1) == 1;
-            resolutionIndex = PlayerPrefs.GetInt(KEY_RESOLUTION, GetCurrentResolutionIndex());
+            resolutionIndex = IndexOfSize(PlayerPrefs.GetInt(KEY_RES_WIDTH, 0), PlayerPrefs.GetInt(KEY_RES_HEIGHT, 0));
+            if (resolutionIndex < 0) resolutionIndex = GetCurrentResolutionIndex();
             vSyncCount = PlayerPrefs.GetInt(KEY_VSYNC, defaultVSync);
             goreLevel = Mathf.Clamp(PlayerPrefs.GetInt(KEY_GORE_LEVEL, 2), 0, 2);
             subtitlesOn = PlayerPrefs.GetInt(KEY_SUBTITLES, 1) == 1;
@@ -249,7 +273,12 @@ namespace GlorifiedBody.Systems
             PlayerPrefs.SetFloat(KEY_VOICE_VOL, voiceVolume);
             PlayerPrefs.SetFloat(KEY_MOUSE_SENS, mouseSensitivity);
             PlayerPrefs.SetInt(KEY_MOUSE_TURN, mouseTurn ? 1 : 0);
-            PlayerPrefs.SetInt(KEY_RESOLUTION, resolutionIndex);
+            Resolution[] sizes = Resolutions();
+            if (resolutionIndex >= 0 && resolutionIndex < sizes.Length)
+            {
+                PlayerPrefs.SetInt(KEY_RES_WIDTH, sizes[resolutionIndex].width);
+                PlayerPrefs.SetInt(KEY_RES_HEIGHT, sizes[resolutionIndex].height);
+            }
             PlayerPrefs.SetInt(KEY_VSYNC, vSyncCount);
             PlayerPrefs.SetInt(KEY_GORE_LEVEL, goreLevel);
             PlayerPrefs.SetInt(KEY_SUBTITLES, subtitlesOn ? 1 : 0);
@@ -267,7 +296,7 @@ namespace GlorifiedBody.Systems
 
         private void ApplyDisplaySettings()
         {
-            Resolution[] resolutions = Screen.resolutions;
+            Resolution[] resolutions = Resolutions();
             if (resolutionIndex >= 0 && resolutionIndex < resolutions.Length)
             {
                 Resolution res = resolutions[resolutionIndex];
@@ -282,13 +311,17 @@ namespace GlorifiedBody.Systems
         private int GetCurrentResolutionIndex()
         {
             Resolution current = Screen.currentResolution;
-            Resolution[] resolutions = Screen.resolutions;
+            int here = IndexOfSize(current.width, current.height);
+            return here >= 0 ? here : Resolutions().Length - 1;
+        }
+
+        /// <summary>The place of the size in Resolutions(), or -1.</summary>
+        private static int IndexOfSize(int width, int height)
+        {
+            Resolution[] resolutions = Resolutions();
             for (int i = 0; i < resolutions.Length; i++)
-            {
-                if (resolutions[i].width == current.width && resolutions[i].height == current.height)
-                    return i;
-            }
-            return resolutions.Length - 1;
+                if (resolutions[i].width == width && resolutions[i].height == height) return i;
+            return -1;
         }
 
         /// <summary>

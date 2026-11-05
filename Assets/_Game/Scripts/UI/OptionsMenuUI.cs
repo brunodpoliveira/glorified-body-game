@@ -213,7 +213,7 @@ namespace GlorifiedBody.UI
         private void RefreshResolutionDropdown()
         {
             resolutionDropdown.ClearOptions();
-            Resolution[] resolutions = Screen.resolutions;
+            Resolution[] resolutions = SettingsManager.Resolutions(); // lowest to highest, one row for each size
             List<string> options = new List<string>();
             int current = 0;
 
@@ -1013,6 +1013,9 @@ namespace GlorifiedBody.UI
 
             var scrollRect = templateObj.AddComponent<ScrollRect>();
             scrollRect.horizontal = false;
+            // One wheel notch moves one row (Bruno, 2026-11-05: "scroll very slowly"; the default is 1 px).
+            scrollRect.scrollSensitivity = itemHeight;
+            scrollRect.movementType = ScrollRect.MovementType.Clamped;
 
             // Viewport
             var vpObj = CreateUIElement("Viewport", templateObj.transform);
