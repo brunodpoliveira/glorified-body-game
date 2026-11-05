@@ -16,6 +16,7 @@ MonoBehaviour:
   shots:
   - still: {fileID: 2800000, guid: ac9c33c1e928167c79fe8e580e38f6ef, type: 3}
     video: {fileID: 0}
+    sound: {fileID: 0}
     seconds: 2
     panFrom: {x: 0, y: 0, z: 1}
     panTo: {x: 0, y: 0, z: 1}
@@ -24,6 +25,7 @@ MonoBehaviour:
     text: Lucy.
   - still: {fileID: 2800000, guid: ac9c33c1e928167c79fe8e580e38f6ef, type: 3}
     video: {fileID: 0}
+    sound: {fileID: 0}
     seconds: 2.19
     panFrom: {x: 0, y: 0, z: 1}
     panTo: {x: 0, y: 0, z: 1}
@@ -32,6 +34,7 @@ MonoBehaviour:
     text: Your name is Lucy.
   - still: {fileID: 2800000, guid: ac9c33c1e928167c79fe8e580e38f6ef, type: 3}
     video: {fileID: 0}
+    sound: {fileID: 0}
     seconds: 4.775
     panFrom: {x: 0, y: 0, z: 1}
     panTo: {x: 0, y: 0, z: 1}
@@ -40,6 +43,7 @@ MonoBehaviour:
     text: You're confused. You're dizzy. That's normal, and I can't fix it.
   - still: {fileID: 2800000, guid: ac9c33c1e928167c79fe8e580e38f6ef, type: 3}
     video: {fileID: 0}
+    sound: {fileID: 0}
     seconds: 2.74
     panFrom: {x: 0, y: 0, z: 1}
     panTo: {x: 0, y: 0, z: 1}
@@ -48,6 +52,7 @@ MonoBehaviour:
     text: Neither of us has much time.
   - still: {fileID: 2800000, guid: ac9c33c1e928167c79fe8e580e38f6ef, type: 3}
     video: {fileID: 0}
+    sound: {fileID: 0}
     seconds: 2.4650002
     panFrom: {x: 0, y: 0, z: 1}
     panTo: {x: 0, y: 0, z: 1}
@@ -56,6 +61,7 @@ MonoBehaviour:
     text: The screen by the door.
   - still: {fileID: 2800000, guid: ac9c33c1e928167c79fe8e580e38f6ef, type: 3}
     video: {fileID: 0}
+    sound: {fileID: 0}
     seconds: 6
     panFrom: {x: 0, y: 0, z: 1}
     panTo: {x: 0, y: 0, z: 1}
@@ -65,6 +71,7 @@ MonoBehaviour:
       make sure it's empty.
   - still: {fileID: 2800000, guid: ac9c33c1e928167c79fe8e580e38f6ef, type: 3}
     video: {fileID: 0}
+    sound: {fileID: 0}
     seconds: 2.025
     panFrom: {x: 0, y: 0, z: 1}
     panTo: {x: 0, y: 0, z: 1}
@@ -73,6 +80,7 @@ MonoBehaviour:
     text: Take the sheet.
   - still: {fileID: 2800000, guid: ac9c33c1e928167c79fe8e580e38f6ef, type: 3}
     video: {fileID: 0}
+    sound: {fileID: 0}
     seconds: 4.335
     panFrom: {x: 0, y: 0, z: 1}
     panTo: {x: 0, y: 0, z: 1}

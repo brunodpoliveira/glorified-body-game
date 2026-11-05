@@ -368,6 +368,12 @@ MonoBehaviour:
     - path: W2/W5
       position: {x: 1.5, y: 11}
       targetScene: W5
+    - path: W2/W14
+      position: {x: 0, y: 12.75}
+      targetScene: W14
+    - path: W2/W15
+      position: {x: 24, y: 12.75}
+      targetScene: W15
     marks: []
   - scene: W3
     world: Demo
@@ -529,6 +535,9 @@ MonoBehaviour:
     - path: W10/W9
       position: {x: 17, y: -7}
       targetScene: W9
+    - path: W10/W13
+      position: {x: 20, y: -10}
+      targetScene: W13
     marks:
     - kind: 2
       path: '[World]/[W10]/[Props]/L7_Session_Note'
@@ -549,10 +558,16 @@ MonoBehaviour:
     - path: W11/W9
       position: {x: 8, y: -10}
       targetScene: W9
+    - path: W11/W16
+      position: {x: 5.25, y: -18}
+      targetScene: W16
+    - path: W11/W17
+      position: {x: 11.25, y: -18}
+      targetScene: W17
     marks:
     - kind: 2
       path: '[World]/[W11]/[Props]/L4_Whiteboard'
-      position: {x: 3.2, y: -13.5}
+      position: {x: 3.22, y: -13.5}
       label: THE WHITEBOARD
   - scene: W12
     world: Demo
@@ -572,11 +587,97 @@ MonoBehaviour:
     - path: W12/S1
       position: {x: 15, y: -14}
       targetScene: S1
+    - path: W12/W13
+      position: {x: 17, y: -12}
+      targetScene: W13
     marks:
     - kind: 0
       path: '[World]/[W12]/[Props]/Door_S1'
       position: {x: 15, y: -14}
       label: the ward sister's card
+  - scene: W13
+    world: Demo
+    floor: demo_2
+    title: SECURITY POST
+    offset: {x: 0, y: 0}
+    areas:
+    - serializedVersion: 2
+      x: 17
+      y: -14
+      width: 6
+      height: 4
+    exits:
+    - path: W13/W12
+      position: {x: 17, y: -12}
+      targetScene: W12
+    - path: W13/W10
+      position: {x: 20, y: -10}
+      targetScene: W10
+    marks: []
+  - scene: W14
+    world: Demo
+    floor: demo_2
+    title: DAY ROOM
+    offset: {x: 0, y: 0}
+    areas:
+    - serializedVersion: 2
+      x: -10
+      y: 9
+      width: 10
+      height: 5
+    exits:
+    - path: W14/W2
+      position: {x: 0, y: 12.75}
+      targetScene: W2
+    marks: []
+  - scene: W15
+    world: Demo
+    floor: demo_2
+    title: BREAK ROOM
+    offset: {x: 0, y: 0}
+    areas:
+    - serializedVersion: 2
+      x: 24
+      y: 9
+      width: 10
+      height: 5
+    exits:
+    - path: W15/W2
+      position: {x: 24, y: 12.75}
+      targetScene: W2
+    marks: []
+  - scene: W16
+    world: Demo
+    floor: demo_2
+    title: COLD ROOM
+    offset: {x: 0, y: 0}
+    areas:
+    - serializedVersion: 2
+      x: 3
+      y: -23
+      width: 5
+      height: 5
+    exits:
+    - path: W16/W11
+      position: {x: 5.25, y: -18}
+      targetScene: W11
+    marks: []
+  - scene: W17
+    world: Demo
+    floor: demo_2
+    title: STORAGE
+    offset: {x: 0, y: 0}
+    areas:
+    - serializedVersion: 2
+      x: 8
+      y: -22
+      width: 5
+      height: 4
+    exits:
+    - path: W17/W11
+      position: {x: 11.25, y: -18}
+      targetScene: W11
+    marks: []
   - scene: G1
     world: Demo
     floor: demo_1
@@ -624,6 +725,12 @@ MonoBehaviour:
     - path: G2/G5
       position: {x: 32.5, y: -31}
       targetScene: G5
+    - path: G2/G13
+      position: {x: 20.5, y: -31}
+      targetScene: G13
+    - path: G2/G10
+      position: {x: 42.5, y: -31}
+      targetScene: G10
     marks: []
   - scene: G3
     world: Demo
@@ -676,21 +783,27 @@ MonoBehaviour:
     - path: G5/G2
       position: {x: 32.5, y: -31}
       targetScene: G2
-    - path: G5/G6
-      position: {x: 24.5, y: -35}
-      targetScene: G6
     - path: G5/G7
       position: {x: 24.5, y: -43}
       targetScene: G7
-    - path: G5/G8
-      position: {x: 40.5, y: -35}
-      targetScene: G8
     - path: G5/G9
       position: {x: 40.5, y: -43}
       targetScene: G9
     - path: G5/U1
       position: {x: 32.5, y: -47}
       targetScene: U1
+    - path: G5/G10
+      position: {x: 40.5, y: -34.5}
+      targetScene: G10
+    - path: G5/G6
+      position: {x: 40.5, y: -38}
+      targetScene: G6
+    - path: G5/G8
+      position: {x: 25.5, y: -47}
+      targetScene: G8
+    - path: G5/G12
+      position: {x: 39.5, y: -47}
+      targetScene: G12
     marks: []
   - scene: G6
     world: Demo
@@ -699,13 +812,13 @@ MonoBehaviour:
     offset: {x: 0, y: 0}
     areas:
     - serializedVersion: 2
-      x: 17.5
-      y: -38
-      width: 7
-      height: 6
+      x: 40.5
+      y: -40
+      width: 8
+      height: 4
     exits:
     - path: G6/G5
-      position: {x: 24.5, y: -35}
+      position: {x: 40.5, y: -38}
       targetScene: G5
     marks: []
   - scene: G7
@@ -723,6 +836,9 @@ MonoBehaviour:
     - path: G7/G5
       position: {x: 24.5, y: -43}
       targetScene: G5
+    - path: G7/G13
+      position: {x: 20.5, y: -40}
+      targetScene: G13
     marks: []
   - scene: G8
     world: Demo
@@ -731,14 +847,17 @@ MonoBehaviour:
     offset: {x: 0, y: 0}
     areas:
     - serializedVersion: 2
-      x: 40.5
-      y: -39
+      x: 18.5
+      y: -53
       width: 8
-      height: 8
+      height: 6
     exits:
     - path: G8/G5
-      position: {x: 40.5, y: -35}
+      position: {x: 25.5, y: -47}
       targetScene: G5
+    - path: G8/G11
+      position: {x: 18.5, y: -50}
+      targetScene: G11
     marks: []
   - scene: G9
     world: Demo
@@ -755,6 +874,9 @@ MonoBehaviour:
     - path: G9/G5
       position: {x: 40.5, y: -43}
       targetScene: G5
+    - path: G9/G9b
+      position: {x: 46.5, y: -45.5}
+      targetScene: G9b
     marks:
     - kind: 2
       path: '[World]/[G9]/[Props]/L5_Logbook'
@@ -779,11 +901,135 @@ MonoBehaviour:
     - path: U1/G5
       position: {x: 32.5, y: -47}
       targetScene: G5
+    - path: U1/G14
+      position: {x: 38.5, y: -54}
+      targetScene: G14
     marks:
     - kind: 3
       path: '[World]/[U1]/[Props]/Save_U1'
       position: {x: 27.5, y: -49}
       label: SAVE
+  - scene: G9b
+    world: Demo
+    floor: demo_1
+    title: COMMS
+    offset: {x: 0, y: 0}
+    areas:
+    - serializedVersion: 2
+      x: 46.5
+      y: -47
+      width: 4
+      height: 7
+    exits:
+    - path: G9b/G9
+      position: {x: 46.5, y: -45.5}
+      targetScene: G9
+    marks: []
+  - scene: G10
+    world: Demo
+    floor: demo_1
+    title: CAFETERIA
+    offset: {x: 0, y: 0}
+    areas:
+    - serializedVersion: 2
+      x: 40.5
+      y: -36
+      width: 10
+      height: 5
+    exits:
+    - path: G10/G2
+      position: {x: 42.5, y: -31}
+      targetScene: G2
+    - path: G10/G5
+      position: {x: 40.5, y: -34.5}
+      targetScene: G5
+    marks: []
+  - scene: G11
+    world: Demo
+    floor: demo_1
+    title: BREAK ROOM
+    offset: {x: 0, y: 0}
+    areas:
+    - serializedVersion: 2
+      x: 10.5
+      y: -53
+      width: 8
+      height: 6
+    exits:
+    - path: G11/G8
+      position: {x: 18.5, y: -50}
+      targetScene: G8
+    - path: G11/G15
+      position: {x: 14.5, y: -53}
+      targetScene: G15
+    marks: []
+  - scene: G12
+    world: Demo
+    floor: demo_1
+    title: CONFERENCE
+    offset: {x: 0, y: 0}
+    areas:
+    - serializedVersion: 2
+      x: 38.5
+      y: -53
+      width: 12
+      height: 6
+    exits:
+    - path: G12/G5
+      position: {x: 39.5, y: -47}
+      targetScene: G5
+    marks: []
+  - scene: G13
+    world: Demo
+    floor: demo_1
+    title: ADMISSIONS
+    offset: {x: 0, y: 0}
+    areas:
+    - serializedVersion: 2
+      x: 16.5
+      y: -40
+      width: 8
+      height: 9
+    exits:
+    - path: G13/G2
+      position: {x: 20.5, y: -31}
+      targetScene: G2
+    - path: G13/G7
+      position: {x: 20.5, y: -40}
+      targetScene: G7
+    marks: []
+  - scene: G14
+    world: Demo
+    floor: demo_1
+    title: BUILDERS' STORE
+    offset: {x: 0, y: 0}
+    areas:
+    - serializedVersion: 2
+      x: 38.5
+      y: -59
+      width: 6
+      height: 6
+    exits:
+    - path: G14/U1
+      position: {x: 38.5, y: -54}
+      targetScene: U1
+    marks: []
+  - scene: G15
+    world: Demo
+    floor: demo_1
+    title: STAFF TOILETS
+    offset: {x: 0, y: 0}
+    areas:
+    - serializedVersion: 2
+      x: 10.5
+      y: -58
+      width: 8
+      height: 5
+    exits:
+    - path: G15/G11
+      position: {x: 14.5, y: -53}
+      targetScene: G11
+    marks: []
   - scene: S1
     world: Demo
     floor: demo_2

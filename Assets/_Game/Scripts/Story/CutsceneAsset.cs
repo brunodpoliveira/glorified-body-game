@@ -19,6 +19,8 @@ namespace GlorifiedBody.Story
         {
             public Texture2D still;
             public VideoClip video;
+            [Tooltip("A sound that starts with the shot and runs on under the next ones (the flashback of 07b: gravel, a metronome, a blow). A skip stops it.")]
+            public AudioClip sound;
             [Min(0.5f)] public float seconds = 4f;
             [Tooltip("The still's view at the start and at the end: x, y the corner of the view, z its zoom (1 = all).")]
             public Vector3 panFrom = new Vector3(0f, 0f, 1f);

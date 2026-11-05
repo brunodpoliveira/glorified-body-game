@@ -501,6 +501,16 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   the chart is no floor item. The bulletin closes by itself after 12 s, with a hint. Kind `soldier_shield`. The cowering guard is the fear rule, as
   designed. FOR LATER (`devlog-notes/2026-11-05_study_squad_ai.md`, `DEMO_PLAN.md` §13.6, Bruno: "they need to be ... an organized team"): Invector
   has no team AI, so a `FireTeam` on `FlankBoard` with the v2 level design.
+- 2026-11-05, night, THE FLOORPLAN V2 (`devlog-notes/2026-11-05_floorplan_v2.md`, Bruno: "you can get started on the v2 map";
+  the writer's `game/act1_map_v2.py`, `DEMO_PLAN.md` §3.4): twelve rooms in greybox (`Editor/Demo/DemoV2.cs`: W13 to W17,
+  G9b to G15), the doors of the map (two loops: G10 and G13), G6 and G8 moved to make room. The fixtures of round 30
+  (`Interaction/Fixture.cs`: microwave, coffee machine, toilet, faucet; placeholder sounds from `tools/fixture_placeholders.py`).
+  The conference room beat (`Interaction/NameCard.cs`, cutscene 07b as black and text cards with sounds, `CutsceneAsset.Shot.sound`,
+  the flag `demo_g12_card`, "Encore." in U1 under a flag gate). Two older faults fixed: the cull keeps the wall pieces drawn
+  (a shared wall vanished with its builder), and every wall-mounted sign stands 0.17 m off the room line (it stood inside the
+  0.3 m wall). A NavMesh rule for the dressing: the agent is 0.5 m, so an aisle needs 1.2 m and a gap between chairs 0.9 m or
+  less (1.0 m makes a sliver island). `DemoV2.NavMeshReport` prints the mesh per room. `FloorplanV2Tests` (4).
+  OPEN for Bruno: in the note.
 
 ## Rules
 

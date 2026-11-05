@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Video;
@@ -220,11 +221,22 @@ namespace GlorifiedBody.Story
             canvas.enabled = true;
             ScreenFade.In(FadeSeconds);
             float startedAt = Time.unscaledTime;
+            var sounds = new List<AudioSource>();
 
             for (ShotIndex = 0; ShotIndex < asset.shots.Length && !skipped; ShotIndex++)
             {
                 CutsceneAsset.Shot shot = asset.shots[ShotIndex];
                 if (shot == null) continue;
+                if (shot.sound != null)
+                {
+                    // The shot's own sound (2026-11-05, the flashback of 07b): it starts with the shot and runs on under the next ones.
+                    AudioSource fx = GameAudio.PlayClip(shot.sound, Vector3.zero, SoundChannel.Sfx, 1f, false, 1f, "cutscene_sound");
+                    if (fx != null)
+                    {
+                        fx.ignoreListenerPause = true;
+                        sounds.Add(fx);
+                    }
+                }
                 AudioSource line = null;
                 if (!string.IsNullOrEmpty(shot.text))
                 {
@@ -281,6 +293,7 @@ namespace GlorifiedBody.Story
             }
 
             ShotIndex = -1; // the shots are over (the loop left it past the last one)
+            foreach (AudioSource fx in sounds) if (fx != null && fx.isPlaying) fx.Stop();
             MenuOpen = false;
             ShowMenu();
             if (skipped) Skipped++;

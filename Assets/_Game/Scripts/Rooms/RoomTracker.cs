@@ -88,7 +88,11 @@ namespace GlorifiedBody.Rooms
                     foreach (string part in new[] { "[Room]", "[Props]" })
                     {
                         Transform t = room.transform.Find(part);
-                        if (t != null) list.AddRange(t.GetComponentsInChildren<Renderer>(true));
+                        if (t == null) continue;
+                        // The walls and lintels stay drawn (2026-11-05): two rooms share a wall line and one of them builds the
+                        // piece (WallLedger). Culled with its builder, the piece left a hole in the other room's wall.
+                        foreach (Renderer r in t.GetComponentsInChildren<Renderer>(true))
+                            if (!r.name.StartsWith("Wall_") && !r.name.StartsWith("Lintel_")) list.Add(r);
                     }
                     drawn[room] = list;
                 }

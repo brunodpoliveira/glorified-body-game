@@ -29,8 +29,8 @@ namespace GlorifiedBody.Automation
         public const int ShotWidth = 1920, ShotHeight = 1080;
         public static readonly string[] Rooms =
         {
-            "W1", "W1B", "W2", "W3", "W4", "W5", "W6", "W7", "W8", "W9", "W10", "W11", "W12", "S1",
-            "G1", "G2", "G3", "G4", "G5", "G6", "G7", "G8", "G9", "U1",
+            "W1", "W1B", "W2", "W3", "W4", "W5", "W6", "W7", "W8", "W9", "W10", "W11", "W12", "W13", "W14", "W15", "W16", "W17", "S1",
+            "G1", "G2", "G3", "G4", "G5", "G6", "G7", "G8", "G9", "G9b", "G10", "G11", "G12", "G13", "G14", "G15", "U1",
         };
 
         [Serializable]

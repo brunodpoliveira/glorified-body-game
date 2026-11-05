@@ -1,0 +1,99 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4b009882ac86ab7df88ae9f6a98ca8d5, type: 3}
+  m_Name: cutscene_07b_the_conference_room
+  m_EditorClassIdentifier: Assembly-CSharp::GlorifiedBody.Story.CutsceneAsset
+  cutsceneId: 07b_the_conference_room
+  shots:
+  - still: {fileID: 2800000, guid: 9384577671d1a36bdbbb027c5f5e2958, type: 3}
+    video: {fileID: 0}
+    sound: {fileID: 8300000, guid: 7eb7b05dd14f4bff99055a671a36b0ac, type: 3}
+    seconds: 2.5
+    panFrom: {x: 0, y: 0, z: 1}
+    panTo: {x: 0, y: 0, z: 1}
+    speaker: 
+    lineId: 
+    text: 
+  - still: {fileID: 2800000, guid: ef14b68414f3fde24b490ece0597f4ef, type: 3}
+    video: {fileID: 0}
+    sound: {fileID: 0}
+    seconds: 0.8
+    panFrom: {x: 0, y: 0, z: 1}
+    panTo: {x: 0, y: 0, z: 1}
+    speaker: 
+    lineId: 
+    text: 
+  - still: {fileID: 2800000, guid: 9384577671d1a36bdbbb027c5f5e2958, type: 3}
+    video: {fileID: 0}
+    sound: {fileID: 8300000, guid: 44de1544fcded1c1d8156604b4421e1d, type: 3}
+    seconds: 2
+    panFrom: {x: 0, y: 0, z: 1}
+    panTo: {x: 0, y: 0, z: 1}
+    speaker: 
+    lineId: 
+    text: 
+  - still: {fileID: 2800000, guid: 6d3b93ce72cbbcb3e9cc063dbdaa0665, type: 3}
+    video: {fileID: 0}
+    sound: {fileID: 0}
+    seconds: 0.8
+    panFrom: {x: 0, y: 0, z: 1}
+    panTo: {x: 0, y: 0, z: 1}
+    speaker: 
+    lineId: 
+    text: 
+  - still: {fileID: 2800000, guid: 9384577671d1a36bdbbb027c5f5e2958, type: 3}
+    video: {fileID: 0}
+    sound: {fileID: 0}
+    seconds: 1.2
+    panFrom: {x: 0, y: 0, z: 1}
+    panTo: {x: 0, y: 0, z: 1}
+    speaker: 
+    lineId: cs07b_00
+    text: Encore.
+  - still: {fileID: 2800000, guid: 2c406e77d94aaa11a8a9f74cca6ca179, type: 3}
+    video: {fileID: 0}
+    sound: {fileID: 8300000, guid: ef8c11a16ed2199e0a3e90b963f42134, type: 3}
+    seconds: 0.8
+    panFrom: {x: 0, y: 0, z: 1}
+    panTo: {x: 0, y: 0, z: 1}
+    speaker: 
+    lineId: 
+    text: 
+  - still: {fileID: 2800000, guid: 9384577671d1a36bdbbb027c5f5e2958, type: 3}
+    video: {fileID: 0}
+    sound: {fileID: 0}
+    seconds: 2.2
+    panFrom: {x: 0, y: 0, z: 1}
+    panTo: {x: 0, y: 0, z: 1}
+    speaker: 
+    lineId: cs07b_01
+    text: Un. Deux. Trois.
+  - still: {fileID: 2800000, guid: 9384577671d1a36bdbbb027c5f5e2958, type: 3}
+    video: {fileID: 0}
+    sound: {fileID: 0}
+    seconds: 1.6
+    panFrom: {x: 0, y: 0, z: 1}
+    panTo: {x: 0, y: 0, z: 1}
+    speaker: 
+    lineId: cs07b_02
+    text: Elle ne pleure pas.
+  - still: {fileID: 2800000, guid: 9384577671d1a36bdbbb027c5f5e2958, type: 3}
+    video: {fileID: 0}
+    sound: {fileID: 0}
+    seconds: 1.6
+    panFrom: {x: 0, y: 0, z: 1}
+    panTo: {x: 0, y: 0, z: 1}
+    speaker: 
+    lineId: cs07b_03
+    text: Pas elle. L'autre.
+  music: {fileID: 0}
+  doneFlag: 

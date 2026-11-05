@@ -12,7 +12,7 @@ namespace GlorifiedBody.Editor.Demo
     /// <summary>
     /// Floor 2 of the demo, the ward (the demo plan §3.1): W1, W1B and W2 to W12, in greybox. The plan coordinates (metres, x east,
     /// z north) put the rooms side by side as the map shows them. The way: W1, W1B, W2, W5, W7, W8, W9, W11, back to W9, W12,
-    /// down. Side rooms: W3, W4, W6, W10. The beats of §4 (1 to 16) run as sequences; the cutscenes play as subtitles
+    /// down. Side rooms: W3, W4, W6, W10, and since 2026-11-05 W13 to W17 (DemoV2, the floorplan v2). The beats of §4 (1 to 16) run as sequences; the cutscenes play as subtitles
     /// from the writers' scripts. Batch: tools/unity.sh exec GlorifiedBody.Editor.Demo.DemoWard.BuildAll
     /// </summary>
     public static class DemoWard
@@ -26,7 +26,8 @@ namespace GlorifiedBody.Editor.Demo
             {
                 Room("W1", "RECOVERY ROOM", 0, 19, 8, 26, W1, new Door('S', 4, "W1B")),
                 Room("W1B", "TREATMENT ROOM", 1, 14, 7, 19, W1B, new Door('N', 4, "W1"), new Door('S', 4, "W2", fire: true, jammed: true, leverFlag: ScientistDone)),
-                Room("W2", "NORTH CORRIDOR", 0, 11, 24, 14, W2, new Door('N', 4, "W1B", fire: true), new Door('N', 13, "W3"), new Door('N', 22, "W4"), new Door('S', 1.5f, "W5", fire: true, pocket: -1)),
+                Room("W2", "NORTH CORRIDOR", 0, 11, 24, 14, W2, new Door('N', 4, "W1B", fire: true), new Door('N', 13, "W3"), new Door('N', 22, "W4"), new Door('S', 1.5f, "W5", fire: true, pocket: -1),
+                    new Door('W', 12.75f, "W14"), new Door('E', 12.75f, "W15")),
                 Room("W3", "PATIENT ROOMS", 9, 14, 17, 19, W3, new Door('S', 13, "W2")),
                 Room("W4", "SHOWER ROOM", 19, 14, 25, 20, W4, new Door('S', 22, "W2")),
                 Room("W5", "SOUTH CORRIDOR", 0, -9, 3, 11, W5, new Door('N', 1.5f, "W2", fire: true), new Door('W', 5, "W6"), new Door('E', 1.5f, "W7", fire: true), new Door('E', -6, "", flag: CodeSilver)),
@@ -34,10 +35,11 @@ namespace GlorifiedBody.Editor.Demo
                 Room("W7", "THERAPY GYM", 3, -2, 11, 5, W7, new Door('W', 1.5f, "W5", fire: true), new Door('E', 1.5f, "W8")),
                 Room("W8", "INDUCTION SUITE", 11, -2, 17, 5, W8, new Door('W', 1.5f, "W7"), new Door('S', 14, "W9")),
                 Room("W9", "NURSES' STATION", 3, -10, 17, -2, W9, new Door('N', 14, "W8"), new Door('W', -6, "", flag: CodeSilver), new Door('E', -7, "W10"), new Door('S', 8, "W11"), new Door('S', 15, "W12")),
-                Room("W10", "RESEARCH OFFICE", 17, -10, 23, -4, W10, new Door('W', -7, "W9")),
-                Room("W11", "MAPPING LAB", 3, -18, 13, -10, W11, new Door('N', 8, "W9")),
-                Room("W12", "STAIRWELL", 13, -14, 17, -10, W12, new Door('N', 15, "W9"), new Door('S', 15, "S1")),
+                Room("W10", "RESEARCH OFFICE", 17, -10, 23, -4, W10, new Door('W', -7, "W9"), new Door('S', 20, "W13")),
+                Room("W11", "MAPPING LAB", 3, -18, 13, -10, W11, new Door('N', 8, "W9"), new Door('S', 5.25f, "W16"), new Door('S', 11.25f, "W17")),
+                Room("W12", "STAIRWELL", 13, -14, 17, -10, W12, new Door('N', 15, "W9"), new Door('S', 15, "S1"), new Door('E', -12, "W13")),
             };
+            rooms.AddRange(DemoV2.WardRooms()); // the floorplan v2 (2026-11-05): W13 to W17
             return rooms;
         }
 
@@ -152,7 +154,7 @@ namespace GlorifiedBody.Editor.Demo
             var chart = new List<ScriptStep> { ScriptStep.WaitDead(three), ScriptStep.Wait(1.5f), ScriptStep.StopIfFlag(ChartDone) };
             chart.AddRange(Chart());
             r.Beat("W2_Chart", ChartDone, Vector3.zero, Vector3.zero, chart.ToArray());
-            r.Sign("Sign_Pain", "YOUR PAIN IS SEEN. ASK FOR RELIEF.", new Vector3(18f, 1.9f, 13.98f), Vector3.back, new Vector2(2.6f, 0.5f));
+            r.Sign("Sign_Pain", "YOUR PAIN IS SEEN. ASK FOR RELIEF.", new Vector3(18f, 1.9f, 13.83f), Vector3.back, new Vector2(2.6f, 0.5f));
             r.Prop("Bench_A", new Vector3(16f, 0f, 11.4f), new Vector3(1.6f, 0.45f, 0.45f));
             r.Prop("Cart", new Vector3(20f, 0f, 11.5f), new Vector3(0.9f, 0.9f, 0.5f), 0.45f);
             PropAssets.Crate("Extinguisher", new Vector3(23f, 0f, 11.5f), 0f, 0.4f); // a throw for telekinesis
@@ -174,7 +176,7 @@ namespace GlorifiedBody.Editor.Demo
         /// <summary>W4: the long mirror (beat 7), the showers, a nurse who hides in a stall (a hider).</summary>
         private static void W4(DemoRoom r)
         {
-            r.Box(r.Props, "Mirror", new Vector3(19.05f, 1.4f, 17f), new Vector3(0.04f, 1f, 3.6f), DemoRoom.Colour("mirror", new Color(0.62f, 0.68f, 0.72f)));
+            r.Box(r.Props, "Mirror", new Vector3(19.17f, 1.4f, 17f), new Vector3(0.04f, 1f, 3.6f), DemoRoom.Colour("mirror", new Color(0.62f, 0.68f, 0.72f)));
             for (int i = 0; i < 3; i++) r.Prop($"Shower_{i}", new Vector3(24.6f, 0f, 15.2f + i * 1.6f), new Vector3(0.2f, 2.1f, 0.06f), 0.5f);
             // Two stalls in the north-west corner: the nurse hides in the second.
             r.Prop("Stall_Wall_A", new Vector3(20.6f, 0f, 18.9f), new Vector3(0.06f, 2f, 2.2f), 0.35f);
@@ -185,6 +187,10 @@ namespace GlorifiedBody.Editor.Demo
             nurse.foundLine = "I'm not here. Please. I'm not here.";
             EditorUtility.SetDirty(nurse);
             r.Prop("Laundry_Cart", new Vector3(23.6f, 0f, 14.8f), new Vector3(0.7f, 0.9f, 0.5f), 0.4f);
+            // The fixtures (round 30): a toilet in the stall west of the nurse's, a sink under the long mirror (the Crown, the slit).
+            DemoV2.Toilet(r, "Toilet", new Vector3(19.9f, 0f, 19.4f), Vector3.back);
+            r.Prop("Sink", new Vector3(19.4f, 0f, 17f), new Vector3(0.5f, 0.85f, 0.6f), 0.55f);
+            DemoV2.Faucet(r, "Faucet", new Vector3(19.4f, 0.85f, 17f), Vector3.right);
         }
 
         /// <summary>W5: two guards (beat 8), code silver and the fire door (9), the scan C5 on a guard.</summary>
@@ -197,7 +203,7 @@ namespace GlorifiedBody.Editor.Demo
             EditorUtility.SetDirty(second);
             r.Prop("Gurney", new Vector3(2.4f, 0f, 7f), new Vector3(0.7f, 0.8f, 1.9f), 0.5f);
             r.Prop("Wall_Phone", new Vector3(0.05f, 1.3f, 8.5f), new Vector3(0.1f, 0.25f, 0.18f), 0.6f);
-            r.Sign("Sign_Fire_Door", "FIRE DOOR. KEEP CLEAR.", new Vector3(2.98f, 2.45f, -6f), Vector3.left, new Vector2(1.4f, 0.3f), 40);
+            r.Sign("Sign_Fire_Door", "FIRE DOOR. KEEP CLEAR.", new Vector3(2.83f, 2.45f, -6f), Vector3.left, new Vector2(1.4f, 0.3f), 40);
             r.Beat("W5_Chart", ChartDone, new Vector3(1.5f, 1f, 10.1f), new Vector3(3f, 2f, 0.6f), Chart().ToArray()); // she ran past the three: the feed still opens
             var silver = new List<ScriptStep> { ScriptStep.Wait(1.5f) };
             silver.AddRange(DemoScripts.Steps("cutscenes/03_code_silver.md", "cs03", 5));
@@ -213,10 +219,15 @@ namespace GlorifiedBody.Editor.Demo
                 if (i != 1) r.Prop($"Locker_{i}", new Vector3(-6f + i * 1f, 0f, 7.7f), new Vector3(0.9f, 1.9f, 0.55f), 0.08f);
             r.Item("L3_Card", DemoItems.L3(), new Vector3(-2.2f, 1.2f, 7.4f), new Vector3(0.2f, 0.28f, 0.02f));
             SaveAssets.SavePoint("Save_W6", new Vector3(-6.4f, 0f, 3f), 90f).transform.SetParent(r.Props.transform, true);
-            r.Sign("Sign_Hard_Days", "THANK YOU FOR THE HARD DAYS.", new Vector3(-3.5f, 2.35f, 7.98f), Vector3.back, new Vector2(2.4f, 0.4f));
+            r.Sign("Sign_Hard_Days", "THANK YOU FOR THE HARD DAYS.", new Vector3(-3.5f, 2.35f, 7.83f), Vector3.back, new Vector2(2.4f, 0.4f));
             r.Prop("Bench", new Vector3(-3.5f, 0f, 5f), new Vector3(2f, 0.45f, 0.4f));
             r.Prop("Kettle", new Vector3(-6.6f, 0.9f, 5.2f), new Vector3(0.2f, 0.25f, 0.2f), 0.6f);
             r.Prop("Kettle_Shelf", new Vector3(-6.6f, 0f, 5.2f), new Vector3(0.6f, 0.9f, 0.5f), 0.2f);
+            // The fixtures (round 30): a toilet in a stall in the south-east corner, a sink by it.
+            r.Prop("Stall_Wall", new Vector3(-1.7f, 0f, 2.95f), new Vector3(0.06f, 2f, 1.9f), 0.35f);
+            DemoV2.Toilet(r, "Toilet", new Vector3(-0.9f, 0f, 2.5f), Vector3.forward);
+            r.Prop("Sink", new Vector3(-3f, 0f, 2.3f), new Vector3(0.5f, 0.85f, 0.6f), 0.55f);
+            DemoV2.Faucet(r, "Faucet", new Vector3(-3f, 0.85f, 2.3f), Vector3.forward);
         }
 
         /// <summary>W7: the CRT wall plays the rehearsal tape when she walks in (beat 11), the dummy and its scan C1.</summary>
@@ -256,7 +267,7 @@ namespace GlorifiedBody.Editor.Demo
             tech.foundLine = "Please. I only ran the pain.";
             EditorUtility.SetDirty(tech);
             r.Prop("Monitor_Cart", new Vector3(12f, 0f, 3.8f), new Vector3(0.6f, 1.2f, 0.5f), 0.35f);
-            r.Sign("Sign_Induction", "INDUCTION SUITE 2. PAIN MANAGEMENT PROTOCOL IN EFFECT.\nTHE PATIENT MAY NOT REMEMBER THE SESSION. THIS IS NORMAL.", new Vector3(14f, 2.3f, 4.98f), Vector3.back, new Vector2(3.6f, 0.6f), 32);
+            r.Sign("Sign_Induction", "INDUCTION SUITE 2. PAIN MANAGEMENT PROTOCOL IN EFFECT.\nTHE PATIENT MAY NOT REMEMBER THE SESSION. THIS IS NORMAL.", new Vector3(14f, 2.3f, 4.83f), Vector3.back, new Vector2(3.6f, 0.6f), 32);
             r.Scan("Scan_Chair", new Vector3(14f, 1f, 2.2f), "demo_c9_chair", "PLACEHOLDER (C9): \"You're doing so well.\"");
         }
 
@@ -265,7 +276,7 @@ namespace GlorifiedBody.Editor.Demo
         {
             r.Prop("Counter", new Vector3(11f, 0f, -6f), new Vector3(3f, 1.05f, 1.6f), 0.1f);
             r.Prop("Counter_Monitors", new Vector3(11f, 1.05f, -6f), new Vector3(1.2f, 0.4f, 0.2f), 0.35f);
-            r.Box(r.Props, "Window", new Vector3(6f, 1.6f, -2.05f), new Vector3(3f, 1.4f, 0.04f), DemoRoom.Colour("window", new Color(0.35f, 0.45f, 0.55f)));
+            r.Box(r.Props, "Window", new Vector3(6f, 1.6f, -2.17f), new Vector3(3f, 1.4f, 0.04f), DemoRoom.Colour("window", new Color(0.35f, 0.45f, 0.55f)));
             EnemySpawn marta = r.Figure("Marta", "nurse", new Vector3(4f, 0f, -8.6f), 45f, variant: 1);
             marta.fate = "marta";
             marta.scanImage = TutorialSetup.EnsureScanImage();
@@ -282,18 +293,19 @@ namespace GlorifiedBody.Editor.Demo
             r.Prop("Desk_A", new Vector3(19f, 0f, -5.2f), new Vector3(1.4f, 0.75f, 0.7f), 0.25f);
             r.Prop("Desk_B", new Vector3(21.5f, 0f, -5.2f), new Vector3(1.4f, 0.75f, 0.7f), 0.25f);
             r.Prop("Filing", new Vector3(22.6f, 0f, -9.4f), new Vector3(0.6f, 1.3f, 0.5f), 0.2f);
-            r.Box(r.Props, "Pinboard", new Vector3(20f, 1.6f, -4.05f), new Vector3(1.6f, 0.9f, 0.04f), DemoRoom.Colour("pinboard", new Color(0.4f, 0.32f, 0.22f)));
+            r.Box(r.Props, "Pinboard", new Vector3(20f, 1.6f, -4.17f), new Vector3(1.6f, 0.9f, 0.04f), DemoRoom.Colour("pinboard", new Color(0.4f, 0.32f, 0.22f)));
             r.Item("L7_Session_Note", DemoItems.L7(), new Vector3(19f, 0.78f, -5.2f), new Vector3(0.22f, 0.02f, 0.3f));
         }
 
         /// <summary>W11: the ward sister with the card, two armed lab workers, the small chairs, the whiteboard L4, the scan C4 (beat 16).</summary>
         private static void W11(DemoRoom r)
         {
+            // Two groups of three, 1.8 m from the south wall (v2: the NavMesh agent, 0.5 m, reaches the doors to W16 and W17 behind them).
             for (int i = 0; i < 6; i++)
-                r.Prop($"Small_Chair_{i}", new Vector3(4.5f + i * 1.5f, 0f, -16.8f), new Vector3(0.6f, 0.7f, 0.9f), 0.5f);
-            r.Box(r.Props, "Whiteboard", new Vector3(3.05f, 1.5f, -13.5f), new Vector3(0.04f, 1f, 2.2f), DemoRoom.Grey(0.85f));
-            r.Item("L4_Whiteboard", DemoItems.L4(), new Vector3(3.2f, 1.1f, -13.5f), new Vector3(0.05f, 0.2f, 0.3f));
-            r.Scan("Scan_Small_Chair", new Vector3(6f, 0.8f, -16.8f), "demo_c4_chair", "PLACEHOLDER (C4): \"Imagine your hand.\"");
+                r.Prop($"Small_Chair_{i}", new Vector3(4.5f + i * 1.5f + (i >= 3 ? 0.6f : 0f), 0f, -16.2f), new Vector3(0.6f, 0.7f, 0.9f), 0.5f);
+            r.Box(r.Props, "Whiteboard", new Vector3(3.17f, 1.5f, -13.5f), new Vector3(0.04f, 1f, 2.2f), DemoRoom.Grey(0.85f)); // 0.17 off the line: the wall is 0.3 m thick on it (2026-11-05)
+            r.Item("L4_Whiteboard", DemoItems.L4(), new Vector3(3.22f, 1.1f, -13.5f), new Vector3(0.05f, 0.2f, 0.3f));
+            r.Scan("Scan_Small_Chair", new Vector3(6f, 0.8f, -16.2f), "demo_c4_chair", "PLACEHOLDER (C4): \"Imagine your hand.\"");
             // The ward sister carries the stairwell card (ItemCarrier): a hidden pickup she drops at her death.
             ItemPickup card = r.Item("Stair_Card", DemoItems.StairCard(), new Vector3(11f, 0.05f, -13f), new Vector3(0.1f, 0.02f, 0.15f));
             card.gameObject.SetActive(false);
@@ -311,10 +323,10 @@ namespace GlorifiedBody.Editor.Demo
         private static void W12(DemoRoom r)
         {
             r.LockedLeaf(r.DoorTo("S1"), DemoItems.StairCard().itemId, "the ward sister's card");
-            r.Box(r.Props, "Card_Reader", new Vector3(16f, 1.2f, -13.95f), new Vector3(0.12f, 0.18f, 0.04f), DemoRoom.Colour("reader_red", new Color(0.9f, 0.1f, 0.1f)));
+            r.Box(r.Props, "Card_Reader", new Vector3(16f, 1.2f, -13.83f), new Vector3(0.12f, 0.18f, 0.04f), DemoRoom.Colour("reader_red", new Color(0.9f, 0.1f, 0.1f)));
             r.Scan("Scan_Stair_Door", new Vector3(15f, 1.2f, -13.7f), "demo_c3_door", "PLACEHOLDER (C3): a white card on a lanyard, against red scrubs.");
             r.Prop("Stairs_Down", new Vector3(13.8f, 0f, -11f), new Vector3(1.2f, 0.4f, 1.8f), 0.3f);
-            r.Prop("Handrail", new Vector3(16.9f, 0.9f, -12f), new Vector3(0.05f, 0.05f, 3f), 0.7f);
+            r.Prop("Handrail", new Vector3(13.1f, 0.9f, -12f), new Vector3(0.05f, 0.05f, 3f), 0.7f); // the west wall: the east wall opens to W13 (v2)
         }
     }
 }

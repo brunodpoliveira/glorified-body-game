@@ -16,6 +16,7 @@ MonoBehaviour:
   shots:
   - still: {fileID: 2800000, guid: ac9c33c1e928167c79fe8e580e38f6ef, type: 3}
     video: {fileID: 0}
+    sound: {fileID: 0}
     seconds: 3.07
     panFrom: {x: 0, y: 0, z: 1}
     panTo: {x: 0, y: 0, z: 1}
@@ -24,6 +25,7 @@ MonoBehaviour:
     text: 'V3. DAILY CARE. ORAL INTAKE: NONE.'
   - still: {fileID: 2800000, guid: ac9c33c1e928167c79fe8e580e38f6ef, type: 3}
     video: {fileID: 0}
+    sound: {fileID: 0}
     seconds: 4.445
     panFrom: {x: 0, y: 0, z: 1}
     panTo: {x: 0, y: 0, z: 1}
@@ -32,6 +34,7 @@ MonoBehaviour:
     text: 'PCDH-Y: DONOR TISSUE PER PROTOCOL 7 (ALL DONORS CONSENTED).'
   - still: {fileID: 2800000, guid: ac9c33c1e928167c79fe8e580e38f6ef, type: 3}
     video: {fileID: 0}
+    sound: {fileID: 0}
     seconds: 3.8400002
     panFrom: {x: 0, y: 0, z: 1}
     panTo: {x: 0, y: 0, z: 1}
@@ -40,6 +43,7 @@ MonoBehaviour:
     text: 'LAST DOSE: 6 DAYS AGO, HELD FOR THE V4 TRANSFER.'
   - still: {fileID: 2800000, guid: ac9c33c1e928167c79fe8e580e38f6ef, type: 3}
     video: {fileID: 0}
+    sound: {fileID: 0}
     seconds: 3.18
     panFrom: {x: 0, y: 0, z: 1}
     panTo: {x: 0, y: 0, z: 1}
@@ -48,6 +52,7 @@ MonoBehaviour:
     text: EXPECT THE SUBJECT TO SEEK A SOURCE.
   - still: {fileID: 2800000, guid: ac9c33c1e928167c79fe8e580e38f6ef, type: 3}
     video: {fileID: 0}
+    sound: {fileID: 0}
     seconds: 2.19
     panFrom: {x: 0, y: 0, z: 1}
     panTo: {x: 0, y: 0, z: 1}
@@ -56,6 +61,7 @@ MonoBehaviour:
     text: NEVER ENTER ALONE.
   - still: {fileID: 2800000, guid: ac9c33c1e928167c79fe8e580e38f6ef, type: 3}
     video: {fileID: 0}
+    sound: {fileID: 0}
     seconds: 5.325
     panFrom: {x: 0, y: 0, z: 1}
     panTo: {x: 0, y: 0, z: 1}
