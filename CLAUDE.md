@@ -489,6 +489,11 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   a wall-to-wall trigger just past the doorway, the talk, then he attacks. `FireDoor_W1B_W2` stays shut through it, her lever
   opens it after the talk (`demo_w1b_scientist`), the three of W2 behind it. `ScriptStep.DoorOpen` and `DoorJam` are gone.
   His answer: no control hints in W1.
+- 2026-11-05, THE FLOATER AND WALLS (`devlog-notes/2026-11-05_floater_walls_capsules.md`, Bruno: "the soldier that floats can
+  phase through walls"): `TelekinesisLift.HangMove` sweeps the hang move, a wall stops it and it slides, the hold goes on;
+  `Obstacle` also sweeps the middle line. Two MK capsules in W1B fall in the talk (`FlagGate`, `demo_w1b_capsules`). FOR LATER
+  (Bruno, `DEMO_PLAN.md` §13.5): one pose for every power, one arm up with the palm out, and with mk_orzabal the arm follows
+  the floater.
 
 ## Rules
 

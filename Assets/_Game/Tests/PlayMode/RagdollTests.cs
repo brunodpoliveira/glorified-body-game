@@ -105,6 +105,130 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.Greater(soldier.Moves + soldier.ShootPhases, phases, "he fights again");
         }
 
+        /// <summary>A wall across the way of the body: thick as a demo wall, on the layer of the walls.</summary>
+        private static GameObject Wall(Vector3 centre, Vector3 normal)
+        {
+            var wall = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            wall.name = "Test_Wall";
+            wall.transform.position = centre;
+            wall.transform.rotation = Quaternion.LookRotation(normal, Vector3.up);
+            wall.transform.localScale = new Vector3(8f, 6f, 0.3f);
+            return wall;
+        }
+
+        /// <summary>A lift of one soldier with the others gone (a stray bullet from them drops the floater).</summary>
+        private IEnumerator LiftAlone(SoldierBrain soldier)
+        {
+            foreach (SoldierBrain other in soldiers)
+                if (other != soldier) other.gameObject.SetActive(false);
+            powers.Select(PowerKind.Telekinesis);
+            powers.FireAt(powers.Selected, 1f, soldier.GetComponent<LockOnTargetable>(), 1f);
+            yield return new WaitForSeconds(1.0f);
+            Assert.IsNotNull(soldier.GetComponent<TelekinesisLift>(), "he hangs");
+        }
+
+        private static float Past(Transform body, GameObject wall, Vector3 normal) => Vector3.Dot(body.position - wall.transform.position, normal);
+
+        [UnityTest]
+        public IEnumerator TheFloater_StopsAtAWall_WhenSheWalksTowardIt()
+        {
+            // Bruno, 2026-11-05: "when using telekinesis, the soldier that floats can phase through walls".
+            SoldierBrain soldier = Find("Soldier_A");
+            yield return LiftAlone(soldier);
+            Transform hips = soldier.GetComponent<EnemyRagdoll>().Hips;
+            Vector3 away = Flat(soldier.transform.position - lucy.transform.position).normalized;
+            GameObject wall = Wall(soldier.transform.position + away * 1f, away);
+            yield return new WaitForFixedUpdate();
+            var tank = lucy.GetComponent<TankController>();
+            Vector3 from = lucy.transform.position;
+            float yaw = lucy.transform.eulerAngles.y;
+            float worst = float.MinValue;
+            for (float t = 0f; t < 1f; t += Time.deltaTime)
+            {
+                tank.Teleport(from + away * 3f * t, yaw);
+                yield return null;
+                worst = Mathf.Max(worst, Past(soldier.transform, wall, away), Past(hips, wall, away));
+            }
+            Debug.Log($"[RagdollTests] walk: the body at most {worst:0.00} m past the wall's centre");
+            Assert.Less(worst, -0.15f, "the root and the hips stay on her side of the wall");
+            Assert.IsTrue(soldier.GetComponent<TelekinesisLift>().CanLaunch, "he still hangs: only a throw, a slam or a hit ends it");
+            UnityEngine.Object.Destroy(wall);
+            Vector3 was = soldier.transform.position;
+            yield return null;
+            yield return null;
+            Assert.Greater(Vector3.Dot(soldier.transform.position - was, away), 0.5f, "the wall gone: he follows her again");
+        }
+
+        [UnityTest]
+        public IEnumerator TheFloater_StopsAtAWall_WhenSheTurns_AndComesBackWhenSheTurnsBack()
+        {
+            SoldierBrain soldier = Find("Soldier_A");
+            yield return LiftAlone(soldier);
+            Vector3 centre = lucy.transform.position;
+            Vector3 toHim = Flat(soldier.transform.position - centre).normalized;
+            float radius = Flat(soldier.transform.position - centre).magnitude;
+            // A wall on his arc: a slab along the line from her 45 degrees to his right, from 0.5 m beside her to past his radius.
+            Vector3 along = Quaternion.Euler(0f, 45f, 0f) * toHim;
+            var wall = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            wall.name = "Test_Wall";
+            wall.transform.position = centre + along * (radius * 0.5f + 1f);
+            wall.transform.rotation = Quaternion.LookRotation(along, Vector3.up);
+            wall.transform.localScale = new Vector3(0.3f, 6f, radius + 1f);
+            yield return new WaitForFixedUpdate();
+            Vector3 wallSide = wall.transform.right;
+            float startSide = Mathf.Sign(Vector3.Dot(soldier.transform.position - wall.transform.position, wallSide));
+            var tank = lucy.GetComponent<TankController>();
+            float yaw = lucy.transform.eulerAngles.y;
+            float crossed = 0f;
+            for (float t = 0f; t < 1f; t += Time.deltaTime)
+            {
+                tank.Teleport(centre, yaw + 120f * t);
+                yield return null;
+                crossed = Mathf.Max(crossed, -startSide * Vector3.Dot(soldier.transform.position - wall.transform.position, wallSide));
+            }
+            Debug.Log($"[RagdollTests] turn: the root at most {crossed:0.00} m on the far side of the wall");
+            Assert.Less(crossed, 0.05f, "he stays on his side of the wall");
+            for (float t = 0f; t < 1f; t += Time.deltaTime)
+            {
+                tank.Teleport(centre, yaw + 120f * (1f - t));
+                yield return null;
+            }
+            yield return null;
+            Assert.Less(Flat(soldier.transform.position - (centre + toHim * radius)).magnitude, 0.3f, "she turns back: he is back on his place");
+        }
+
+        [UnityTest]
+        public IEnumerator TheFloater_LiftedAgainstAWall_DoesNotGoThroughIt()
+        {
+            // The sweep skips what it starts in: a body lifted with the wall inside its width needs its own check.
+            SoldierBrain soldier = Find("Soldier_A");
+            Vector3 away = Flat(soldier.transform.position - lucy.transform.position).normalized;
+            GameObject wall = Wall(soldier.transform.position + away * 0.3f, away); // the near face 0.15 m from his root
+            yield return new WaitForFixedUpdate();
+            yield return LiftAlone(soldier);
+            Transform hips = soldier.GetComponent<EnemyRagdoll>().Hips;
+            var tank = lucy.GetComponent<TankController>();
+            Vector3 from = lucy.transform.position;
+            float yaw = lucy.transform.eulerAngles.y;
+            float worst = float.MinValue;
+            for (float t = 0f; t < 1f; t += Time.deltaTime)
+            {
+                tank.Teleport(from + away * 3f * t, yaw);
+                yield return null;
+                worst = Mathf.Max(worst, Past(soldier.transform, wall, away), Past(hips, wall, away));
+            }
+            Debug.Log($"[RagdollTests] against a wall, walk: at most {worst:0.00} m past the wall's centre");
+            Assert.Less(worst, 0f, "the walk does not push him through");
+            soldier.GetComponent<TelekinesisLift>().Launch(soldier.transform.position + away * 6f, null);
+            for (float t = 0f; t < 1f; t += Time.deltaTime)
+            {
+                yield return null;
+                worst = Mathf.Max(worst, Past(soldier.transform, wall, away));
+            }
+            Debug.Log($"[RagdollTests] against a wall, throw: at most {worst:0.00} m past the wall's centre");
+            Assert.Less(worst, 0f, "the throw does not send him through");
+        }
+
         [UnityTest]
         public IEnumerator Throw_IntoAnother_BothFallLimp_ThenBothStandUp()
         {

@@ -421,6 +421,45 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator TheCapsules_FallInTheTalk_SheCanTakeThem_ARetryKeepsTheTakenOneGone()
+        {
+            // Cutscene 02, note 1: the capsules roll off his tray, and the player can take them after the fight.
+            yield return LoadWorld();
+            yield return WaitUntil(() => CutscenePlayer.IsPlaying && CutscenePlayer.ShotIndex >= 0, 10f);
+            CutscenePlayer.Skip();
+            yield return WaitUntil(() => StoryFlags.Has("demo_w1_wake"), 10f);
+            GlorifiedBody.Interaction.ItemPickup[] All() => UnityEngine.Object.FindObjectsByType<GlorifiedBody.Interaction.ItemPickup>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            GlorifiedBody.Interaction.ItemPickup a = All().First(p => p.name == "Capsule_W1B_A");
+            GlorifiedBody.Interaction.ItemPickup b = All().First(p => p.name == "Capsule_W1B_B");
+            Assert.IsFalse(a.gameObject.activeInHierarchy || b.gameObject.activeInHierarchy, "on his tray before the talk");
+            GameObject lucy = GameObject.FindGameObjectWithTag("Player");
+            lucy.GetComponentInChildren<Health>().SetInvulnerable(true);
+            ScriptedSequence meet = GameObject.Find("W1B_Scientist").GetComponent<ScriptedSequence>();
+            lucy.GetComponent<TankController>().Teleport(new Vector3(4f, 0f, 17.9f), 180f);
+            yield return WaitUntil(() => CutscenePlayer.IsPlaying, 8f);
+            Assert.IsTrue(a.gameObject.activeInHierarchy && b.gameObject.activeInHierarchy, "they fall under the cut");
+            CutscenePlayer.Skip();
+            yield return WaitUntil(() => meet.Done, 10f);
+            foreach (GlorifiedBody.Interaction.ItemPickup capsule in new[] { a, b })
+            {
+                Assert.AreEqual("W1B", GlorifiedBody.Rooms.Room.At(capsule.transform.position).id, capsule.name + " lies in W1B");
+                Assert.AreEqual(0.15f, capsule.transform.position.y, 0.01f, capsule.name + " lies on the floor");
+                Assert.IsTrue(capsule.Available, capsule.name + " can be taken");
+            }
+            a.Confirm(lucy.GetComponent<GlorifiedBody.Interaction.Interactor>());
+            Assert.IsTrue(a.Taken, "she takes one");
+            lucy.GetComponent<TankController>().Teleport(new Vector3(13f, 0f, 12.5f), 0f); // W2: the retry point moves there
+            yield return WaitUntil(() => GlorifiedBody.Rooms.RoomTracker.CurrentId == "W2", 3f);
+            yield return null;
+            GameManager.Instance.RestartLevel();
+            yield return WaitUntil(() => GameManager.Instance.IsPlaying && GlorifiedBody.Rooms.RoomTracker.CurrentId == "W2", 15f);
+            yield return new WaitForSeconds(0.3f);
+            b = All().First(p => p.name == "Capsule_W1B_B");
+            Assert.IsNull(All().FirstOrDefault(p => p.name == "Capsule_W1B_A" && p.gameObject.activeInHierarchy), "the taken capsule stays gone after a retry");
+            Assert.IsTrue(b.gameObject.activeInHierarchy && b.Available, "the other one still lies there");
+        }
+
+        [UnityTest]
         public IEnumerator SheWalks_FromHerStart_ThroughTheDoorway_AndTheTalkStartsOnlyInTheNextRoom()
         {
             // The real walk on the pad, because Bruno met the talk twice before he left the room (2026-11-04, 2026-11-05).

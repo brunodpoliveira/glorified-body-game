@@ -335,7 +335,15 @@ MonoBehaviour:
     - path: W1B/W2
       position: {x: 4, y: 14}
       targetScene: W2
-    marks: []
+    marks:
+    - kind: 1
+      path: '[World]/[W1B]/[Story]/Gate_Capsules/Capsule_W1B_A'
+      position: {x: 4.7, y: 15.6}
+      label: MK CAPSULE
+    - kind: 1
+      path: '[World]/[W1B]/[Story]/Gate_Capsules/Capsule_W1B_B'
+      position: {x: 3.5, y: 15.9}
+      label: MK CAPSULE
   - scene: W2
     world: Demo
     floor: demo_2

@@ -54,6 +54,7 @@ namespace GlorifiedBody.Editor.Demo
         // ── The rooms ─────────────────────────────────────────────────
 
         private const string ScientistDone = "demo_w1b_scientist";
+        private const string CapsulesFall = "demo_w1b_capsules";
 
         /// <summary>
         /// W1: she wakes (beat 1), Stevens on the speaker and the printout (2). The quiet room: no enemy and no beat until she
@@ -99,11 +100,20 @@ namespace GlorifiedBody.Editor.Demo
             EnemySpawn knife = r.Figure("Scientist_Knife", "labworker_knife", new Vector3(5.6f, 0f, 16f), 90f, parent: scientist);
             knife.heldUntilFlag = ScientistDone;
             EditorUtility.SetDirty(knife);
+            // The capsules roll off his tray in the talk (cutscene 02, note 1, Bruno: "yes add the capsules"). They show under
+            // the cut, so nothing pops up in view, and she can take them after the fight. MK capsules only (01, note 2).
+            GameObject tray = MenuLoopSetup.EnsureChild(r.Story, "Gate_Capsules");
+            FlagGate fallen = MenuLoopSetup.EnsureComponent<FlagGate>(tray);
+            fallen.flag = CapsulesFall;
+            fallen.showWhenRaised = true;
+            foreach (var capsule in new[] { ("Capsule_W1B_A", new Vector3(4.7f, 0.15f, 15.6f)), ("Capsule_W1B_B", new Vector3(3.5f, 0.15f, 15.9f)) })
+                ItemAssets.Pickup(tray, capsule.Item1, ItemAssets.Drug(DrugType.Nalcon), PrimitiveType.Capsule, capsule.Item2, Vector3.one * 0.3f, Quaternion.Euler(0f, 0f, 90f));
             var meet = new List<ScriptStep>
             {
                 ScriptStep.LockHer(),
                 ScriptStep.Approach(scientist, new Vector3(4.3f, 0f, 16f)),
                 ScriptStep.Wait(1.8f),
+                ScriptStep.Raise(CapsulesFall),
                 ScriptStep.Play(DemoScripts.Fmv("cutscenes/02_the_scientist.md", "02_the_scientist", "cs02")),
                 ScriptStep.Approach(scientist, new Vector3(4.1f, 0f, 16.6f)), // "he steps closer. Louder. Worse."
                 ScriptStep.Wait(0.5f),

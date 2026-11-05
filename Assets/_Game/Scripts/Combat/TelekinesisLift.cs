@@ -35,6 +35,8 @@ namespace GlorifiedBody.Combat
         private const float SlamSplashRadius = 1.3f;
         private const float ThrowLowRoot = 0.3f;      // m: the root's height at the target (the hips near his chest)
         private const float BodySweepLow = 0.25f, BodySweepHigh = 1.4f, BodySweepRadius = 0.25f;
+        private const float BodyCoreRadius = 0.02f;   // its middle line: a wall inside the body's width at the start still stops it
+        private const float HangSkin = 0.03f;         // m: the gap a hanging body keeps from a wall
         private static int DebrisMask => Breakables.DebrisLayer >= 0 ? 1 << Breakables.DebrisLayer : 0;
 
         public bool IsLifted { get; private set; }
@@ -224,7 +226,11 @@ namespace GlorifiedBody.Combat
             Destroy(gameObject);
         }
 
-        /// <summary>The hang point: her position plus the start offset, turned by her yaw change since the lift.</summary>
+        /// <summary>
+        /// The hang point: her position plus the start offset, turned by her yaw change since the lift. A wall stops the body
+        /// on the way there and it slides along it (Bruno, 2026-11-05: "the soldier that floats can phase through walls"). It
+        /// goes back to the hang point when the way is free. Only a throw, a slam or a hit ends the hold.
+        /// </summary>
         private void FollowHolder(Transform holder)
         {
             if (holder == null)
@@ -234,8 +240,23 @@ namespace GlorifiedBody.Combat
             }
             Vector3 offset = Quaternion.Euler(0f, holder.eulerAngles.y - holdYaw, 0f) * holdOffset;
             Vector3 flat = holder.position + offset;
-            transform.position = new Vector3(flat.x, floor.y + holdHeight, flat.z);
-            floor = new Vector3(flat.x, floor.y, flat.z); // the slam lands where it hangs
+            float y = floor.y + holdHeight;
+            Vector3 settled = HangMove(new Vector3(transform.position.x, y, transform.position.z), new Vector3(flat.x, y, flat.z));
+            transform.position = settled;
+            floor = new Vector3(settled.x, floor.y, settled.z); // the slam lands where it hangs
+        }
+
+        /// <summary>The move to the hang point, as far as the walls let it: to the first wall, then along that wall.</summary>
+        private Vector3 HangMove(Vector3 from, Vector3 to)
+        {
+            Vector3 move = to - from;
+            if (!Obstacle(from, move, HangSkin, out RaycastHit wall)) return to;
+            Vector3 direction = move.normalized;
+            Vector3 stop = from + direction * Mathf.Max(0f, wall.distance - HangSkin);
+            Vector3 slide = Vector3.ProjectOnPlane(to - stop, wall.normal);
+            slide.y = 0f;
+            if (!Obstacle(stop, slide, HangSkin, out RaycastHit corner)) return stop + slide;
+            return stop + slide.normalized * Mathf.Max(0f, corner.distance - HangSkin);
         }
 
         private IEnumerator Fly()
@@ -347,7 +368,10 @@ namespace GlorifiedBody.Combat
             return true;
         }
 
-        /// <summary>The first wall or breakable on the move, swept with the body (a capsule from its feet to its chest). Bodies do not count.</summary>
+        /// <summary>
+        /// The first wall or breakable on the move, swept with the body (a capsule from its feet to its chest) and with its
+        /// middle line (the wide sweep skips what it starts in). Bodies do not count.
+        /// </summary>
         private bool Obstacle(Vector3 from, Vector3 move, float reach, out RaycastHit wall)
         {
             wall = default;
@@ -356,13 +380,14 @@ namespace GlorifiedBody.Combat
             Vector3 direction = move / length;
             Vector3 low = from + Vector3.up * BodySweepLow, high = from + Vector3.up * BodySweepHigh;
             float best = float.MaxValue;
-            foreach (RaycastHit hit in Physics.CapsuleCastAll(low, high, BodySweepRadius, direction, length + reach, ~DebrisMask, QueryTriggerInteraction.Ignore))
-            {
-                if (hit.distance <= 0f || hit.distance >= best) continue; // a collider it starts in (its own bones, the floor under it) does not stop it
-                if (hit.collider.transform == transform || hit.collider.transform.IsChildOf(transform) || hit.collider.GetComponentInParent<Health>() != null) continue;
-                best = hit.distance;
-                wall = hit;
-            }
+            foreach (float radius in new[] { BodySweepRadius, BodyCoreRadius })
+                foreach (RaycastHit hit in Physics.CapsuleCastAll(low, high, radius, direction, length + reach, ~DebrisMask, QueryTriggerInteraction.Ignore))
+                {
+                    if (hit.distance <= 0f || hit.distance >= best) continue; // a collider it starts in (its own bones, the floor under it) does not stop it
+                    if (hit.collider.transform == transform || hit.collider.transform.IsChildOf(transform) || hit.collider.GetComponentInParent<Health>() != null) continue;
+                    best = hit.distance;
+                    wall = hit;
+                }
             return best < float.MaxValue;
         }
 
