@@ -479,8 +479,10 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   `devlog-notes/2026-11-03_manual_tests.md` (33 steps).
 - 2026-11-04, THE OPENING (`devlog-notes/2026-11-04_opening.md`, Bruno: "it needs to start on the curscene right away";
   "the second cutsene triggers even before i leave the room"): `ScriptedSequence.startsBlack` + `ScreenFade.Cover` (black
-  from the first frame, no game frame before the wake). The scientist's trigger stands in W2 past the door; he waits at the
-  corridor's west end; the three of W2 wait too (`EnemySpawn.heldUntilFlag`, `SoldierBrain.ScriptHoldUntil`).
+  from the first frame, no game frame before the wake). 2026-11-05 (his pick): the W1 door is a fire door, shut at the start
+  (`FireDoor.startsJammed`, `leverFlag`). At the door it opens, the scientist talks in the doorway, steps in, it shuts
+  behind him (`ScriptStep.DoorOpen`, `DoorJam`, `AlertAlone`), the fight is in W1, her lever opens the way on. The three of
+  W2 (one pistol, two knives) wait behind it (`EnemySpawn.heldUntilFlag`, `SoldierBrain.ScriptHoldUntil`).
 
 ## Rules
 

@@ -23,6 +23,8 @@ If the console shows a red line, copy it too.
 
 | # | Do | Expected | If faulty |
 |---|---|---|---|
+| 11b | Press START. Walk to the W1 door. | The game opens on the cutscene with no game frame first. The door is shut, and its lever does nothing. At the door it opens, he talks, steps in, it shuts behind him, and he attacks. | The game shows first, or the three in W2 join the fight. |
+| 11c | Kill him. Pull the lever by the door and walk out. | The door opens. W2 holds one pistol and two knives. | The door stays shut. |
 | 12 | Walk from W1 into W2, then through the other doorways. | No fade and no load screen at a doorway. The camera changes at the wall. | A black fade or a pause at a door. |
 | 13 | Watch the scientist in W2. | He comes into the doorway and talks first (the placeholder card shows the lines). He attacks only after the talk. | He shoots during the talk. |
 | 14 | During a cutscene, press E. | A menu: PAUSED, RESUME, SKIP. The picture holds. Up and down choose, E confirms, Escape resumes. | The cutscene ends at once, or keeps playing under the menu. |

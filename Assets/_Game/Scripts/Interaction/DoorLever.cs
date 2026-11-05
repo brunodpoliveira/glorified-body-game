@@ -16,7 +16,8 @@ namespace GlorifiedBody.Interaction
         public Transform handle;
         public float upAngle = 25f, downAngle = 155f; // about the wall's horizontal: up and out, down and out
 
-        public override bool Available => base.Available && door != null && door.Current != FireDoor.State.Broken;
+        public override bool Available => base.Available && door != null && door.Current != FireDoor.State.Broken
+            && (string.IsNullOrEmpty(door.leverFlag) || GlorifiedBody.Saving.StoryFlags.Has(door.leverFlag));
 
         public override string Hint => door != null && door.Current == FireDoor.State.Jammed ? "open the fire door" : "jam the fire door";
 

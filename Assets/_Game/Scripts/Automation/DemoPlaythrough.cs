@@ -103,7 +103,7 @@ namespace GlorifiedBody.Automation
             FixedCameraDirector director = FixedCameraDirector.Instance;
             Record("world", SceneManager.GetActiveScene().name == World && lucy != null && director != null && GlorifiedBody.Rooms.Room.All.Count == Rooms.Length && EnemySpawn.Missing == 0,
                 $"scene={SceneManager.GetActiveScene().name} rooms={GlorifiedBody.Rooms.Room.All.Count} figures={FindObjectsByType<FeedableBody>(FindObjectsSortMode.None).Length} missing={EnemySpawn.Missing}");
-            // The opening (2026-11-04): the wake plays first, and the scientist meets her in the corridor, past the door.
+            // The opening: the wake plays first (2026-11-04), and the scientist meets her at the shut door (2026-11-05).
             if (lucy != null)
             {
                 float t2 = Time.realtimeSinceStartup;
@@ -112,15 +112,16 @@ namespace GlorifiedBody.Automation
                 GlorifiedBody.Story.CutscenePlayer.Skip();
                 while (GlorifiedBody.Story.CutscenePlayer.IsPlaying && Time.realtimeSinceStartup - t2 < 15f) yield return null;
                 yield return new WaitForSecondsRealtime(0.8f);
-                lucy.GetComponent<GlorifiedBody.Player.TankController>().Teleport(new Vector3(4f, 0f, 13.3f), 180f);
+                ShotRenderer.Render(Camera.main, Path.Combine(shotsDir, "demo_meet_0_shut_door.png"), ShotWidth, ShotHeight, useTargetTexture: true);
+                lucy.GetComponent<GlorifiedBody.Player.TankController>().Teleport(new Vector3(4f, 0f, 15.4f), 180f);
                 yield return new WaitForSecondsRealtime(1.5f);
                 ShotRenderer.Render(Camera.main, Path.Combine(shotsDir, "demo_meet_1_he_comes.png"), ShotWidth, ShotHeight, useTargetTexture: true);
                 t2 = Time.realtimeSinceStartup;
                 while (!GlorifiedBody.Story.CutscenePlayer.IsPlaying && Time.realtimeSinceStartup - t2 < 5f) yield return null;
-                Record("the_talk_in_the_corridor", GlorifiedBody.Story.CutscenePlayer.Current == "02_the_scientist", GlorifiedBody.Story.CutscenePlayer.Current);
+                Record("the_talk_at_the_door", GlorifiedBody.Story.CutscenePlayer.Current == "02_the_scientist", GlorifiedBody.Story.CutscenePlayer.Current);
                 GlorifiedBody.Story.CutscenePlayer.Skip();
                 while (GlorifiedBody.Story.CutscenePlayer.IsPlaying && Time.realtimeSinceStartup - t2 < 15f) yield return null;
-                yield return new WaitForSecondsRealtime(0.8f);
+                yield return new WaitForSecondsRealtime(2.2f); // he steps in, the door shuts
                 ShotRenderer.Render(Camera.main, Path.Combine(shotsDir, "demo_meet_2_after_the_talk.png"), ShotWidth, ShotHeight, useTargetTexture: true);
             }
             foreach (string id in Rooms)

@@ -35,6 +35,10 @@ namespace GlorifiedBody.Interaction
         [Min(0.5f)] public float width = 1.6f;
         [Min(0.05f)] public float slideSeconds = 0.6f;
         public bool canBreak = true;
+        [Tooltip("Shut and jammed at the start (the W1 door: Bruno, 2026-11-05, the three in W2 \"won't bum rush the player at once\").")]
+        public bool startsJammed;
+        [Tooltip("Her levers do nothing until this story flag goes up (a script opens the door first). Empty: always.")]
+        public string leverFlag = "";
         [Tooltip("The bars across the doorway, one on each face: shown while the door is jammed (Bruno: \"a horizontal bar to indicate that she is jamming the door\").")]
         public GameObject[] bars = new GameObject[0];
 
@@ -83,11 +87,15 @@ namespace GlorifiedBody.Interaction
                 breakable.Broken = OnLeafBroken;
             }
             // The builder leaves the leaf shut in the doorway (DoorLeaf measures it there first): it opens into its pocket.
-            if (leaf != null)
+            if (leaf != null) shutPosition = leaf.position;
+            if (startsJammed)
             {
-                shutPosition = leaf.position;
-                leaf.position = shutPosition + openOffset;
+                Current = State.Jammed;
+                SetSolid(true);
+                SetBars(true);
+                return;
             }
+            if (leaf != null) leaf.position = shutPosition + openOffset;
             SetSolid(false);
             SetBars(false);
         }
