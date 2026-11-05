@@ -31,6 +31,7 @@ If the console shows a red line, copy it too.
 | 11g | In each room, walk up to each doorway. | The camera there shows the doorway. | A door out of frame, or seen edge on. |
 | 11h | In G2, meet the second pair. | One soldier carries a shield and a pistol. He circles you, and your powers stop on his front. | He comes straight at you, or he has the guard's clothes. |
 | 11i | At the end of the demo, on the bulletin card, press nothing. | "E  continue" shows. About 12 s later the title shows. | The card stays. |
+| 11j | In W5, scare a guard: kill the other guard with two full charges in his view, or feed in his view. Walk up to him where he hides. | He runs, crouches with his back to you, and his gun lies on the floor. Within 4 m he says a line, for example "I'm done. I'm not gonna shoot." | He keeps the gun, or says nothing. |
 | 12 | Walk from W1 into W1B, then through the other doorways. | No fade and no load screen at a doorway. The camera changes at the wall. | A black fade or a pause at a door. |
 | 14 | During a cutscene, press E. | A menu: PAUSED, RESUME, SKIP. The picture holds. Up and down choose, E confirms, Escape resumes. | The cutscene ends at once, or keeps playing under the menu. |
 | 15 | At the W2 to W5 doorway, and at W5 to W7, use a lever. | A fire door with a lever on each side, as in DOOR TEST. | No door, or a leaf sticks out of a wall. |

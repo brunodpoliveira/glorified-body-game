@@ -230,6 +230,30 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator TheShieldGuard_DropsGunAndShield_WhenHeCowers()
+        {
+            // Bruno, 2026-11-05: "cowering figure drop its weapon". A shield up would still read as a fight.
+            SoldierBrain guard = Find("Guard_B");
+            foreach (SoldierBrain other in soldiers)
+                if (other != guard) other.gameObject.SetActive(false);
+            EnemyShield shield = guard.GetComponent<EnemyShield>();
+            EnemyGun weapon = guard.GetComponent<EnemyGun>();
+            Assert.IsNotNull(shield, "he has a shield");
+            Assert.IsFalse(shield.Dropped || weapon.Dropped, "he holds them while he fights");
+            EnemyMorale morale = guard.GetComponent<EnemyMorale>();
+            morale.SeeFeed("test");
+            morale.SeeFeed("test");
+            yield return null;
+            Assert.IsTrue(guard.Current == SoldierBrain.Phase.Retreat, "he runs first");
+            Assert.IsFalse(weapon.Dropped, "he keeps it while he runs");
+            yield return WaitUntil(() => guard.Current == SoldierBrain.Phase.Cower, 12f);
+            Assert.AreEqual(SoldierBrain.Phase.Cower, guard.Current);
+            Assert.IsTrue(weapon.Dropped, "the gun falls");
+            Assert.IsTrue(shield.Dropped, "the shield falls");
+            Assert.IsFalse(shield.Blocks(guard.transform.position + guard.transform.forward * 3f), "no front stops a power now");
+        }
+
+        [UnityTest]
         public IEnumerator Throw_IntoAnother_BothFallLimp_ThenBothStandUp()
         {
             SoldierBrain thrown = Find("Soldier_A");

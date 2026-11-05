@@ -1,6 +1,7 @@
 using UnityEngine;
 using GlorifiedBody.Core;
 using GlorifiedBody.Combat;
+using GlorifiedBody.DebugTools;
 
 namespace GlorifiedBody.Enemy
 {
@@ -243,9 +244,37 @@ namespace GlorifiedBody.Enemy
             if (animator != null && hasShotId) animator.SetFloat(ShotId, shotId);
         }
 
+        /// <summary>He gave up (Bruno, 2026-11-05: "cowering figure drop its weapon"): the weapon falls and stays on the floor, his hands are free.</summary>
+        public bool Dropped { get; private set; }
+
+        public void Drop()
+        {
+            if (Dropped || gun == null) return;
+            Dropped = true;
+            gun.SetParent(null, true);
+            var box = gun.gameObject.AddComponent<BoxCollider>();
+            Renderer r = gun.GetComponentInChildren<Renderer>();
+            if (r != null)
+            {
+                box.center = gun.InverseTransformPoint(r.bounds.center);
+                Vector3 size = gun.InverseTransformVector(r.bounds.size);
+                box.size = new Vector3(Mathf.Abs(size.x), Mathf.Abs(size.y), Mathf.Abs(size.z));
+            }
+            var body = gun.gameObject.AddComponent<Rigidbody>();
+            body.mass = 2f;
+            body.AddForce((transform.forward + Vector3.up * 0.5f) * 0.8f, ForceMode.VelocityChange);
+            int debris = GlorifiedBody.Destruction.Breakables.DebrisLayer;
+            if (debris >= 0)
+                foreach (Transform t in gun.GetComponentsInChildren<Transform>(true)) t.gameObject.layer = debris; // a dropped gun blocks no one
+            if (flashLight != null) flashLight.enabled = false;
+            upperBodyId = 0; // the vendor animator's unarmed set
+            if (animator != null && hasUpperBody) animator.SetFloat(UpperBodyId, 0f);
+            RunTelemetry.Event("gun_dropped", name);
+        }
+
         private void LateUpdate()
         {
-            if (gun == null) return;
+            if (gun == null || Dropped) return;
             if (flashLight != null && flashLight.enabled && Time.time >= lightOffAt) flashLight.enabled = false;
             if (hand == null) return;
             // The care (CPR, the drag): the gun hangs on him, out of his hands (Bruno, 2026-10-24: it floated in the CPR).

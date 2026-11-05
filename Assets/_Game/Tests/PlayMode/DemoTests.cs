@@ -478,6 +478,61 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator AFigureThatCowers_SaysItGaveUp_WhenSheComesNear_OnlyThen()
+        {
+            // Bruno, 2026-11-05: yes to a clearer sign for a guard who cowers. The lines are the writer's (barks.csv, cower_*).
+            yield return LoadWorld();
+            yield return WaitUntil(() => CutscenePlayer.IsPlaying && CutscenePlayer.ShotIndex >= 0, 10f);
+            CutscenePlayer.Skip();
+            yield return WaitUntil(() => StoryFlags.Has("demo_w1_wake"), 10f);
+            GameObject lucy = GameObject.FindGameObjectWithTag("Player");
+            lucy.GetComponentInChildren<Health>().SetInvulnerable(true);
+            TankController tank = lucy.GetComponent<TankController>();
+            SoldierBrain[] all = UnityEngine.Object.FindObjectsByType<SoldierBrain>(FindObjectsSortMode.None);
+            foreach ((string who, string[] lines, Vector3 start) in new[]
+            {
+                ("Guard_A", SoldierBrain.GuardCowerLines, new Vector3(1.5f, 0f, 3f)),
+                ("Scientist_B", SoldierBrain.LabWorkerCowerLines, new Vector3(20f, 0f, 12.5f)),
+            })
+            {
+                SoldierBrain figure = all.First(b => b.name == who);
+                tank.Teleport(start, 180f);
+                yield return new WaitForSeconds(0.2f);
+                EnemyMorale morale = figure.GetComponent<EnemyMorale>();
+                morale.SeeFeed("test");
+                morale.SeeFeed("test");
+                yield return WaitUntil(() => figure.Current == SoldierBrain.Phase.Cower, 12f);
+                Assert.AreEqual(SoldierBrain.Phase.Cower, figure.Current, who + " cowers");
+                // Bruno, 2026-11-05: "cowering figure drop its weapon".
+                EnemyGun weapon = figure.GetComponent<EnemyGun>();
+                Assert.IsTrue(weapon.Dropped, who + " drops his weapon");
+                Assert.IsNull(weapon.Model.parent, who + ": the weapon left his hands");
+                yield return new WaitForSeconds(2f);
+                Debug.Log($"[DemoTests] {who}: the weapon lies at y {weapon.Model.position.y:0.00}, his root at y {figure.transform.position.y:0.00}, {Vector3.Distance(weapon.Model.position, figure.transform.position):0.00} m from him");
+                Assert.Less(Mathf.Abs(weapon.Model.position.y - figure.transform.position.y), 0.4f, who + ": the weapon lies on the floor");
+                Vector3 at = figure.transform.position;
+                Vector3 far = at + (start - at).normalized * Mathf.Min(6f, Vector3.Distance(start, at));
+                bool startFar = Vector3.Distance(far, at) > 4.5f;
+                if (startFar) tank.Teleport(far, 180f);
+                yield return new WaitForSeconds(0.3f);
+                int before = Bark.CountOf(figure.gameObject);
+                if (startFar)
+                {
+                    yield return new WaitForSeconds(1f);
+                    Assert.AreEqual(before, Bark.CountOf(figure.gameObject), who + ": she is far, he says nothing");
+                }
+                tank.Teleport(at + Vector3.forward * 1.5f, 180f);
+                yield return new WaitForSeconds(0.5f);
+                Assert.AreEqual(before + 1, Bark.CountOf(figure.gameObject), who + ": she comes near, he speaks");
+                Assert.AreEqual(lines[0], figure.GetComponent<Bark>().Shown, who + ": the plainest line first");
+                yield return new WaitForSeconds(6.5f);
+                Assert.AreEqual(before + 2, Bark.CountOf(figure.gameObject), who + ": another line after the gap");
+                Assert.Contains(figure.GetComponent<Bark>().Shown, lines, who + ": from his own list");
+                Assert.AreNotEqual(lines[0], figure.GetComponent<Bark>().Shown, who + ": no repeat");
+            }
+        }
+
+        [UnityTest]
         public IEnumerator TheBulletin_ClosesByItself_ToTheTitle_WithNoKey()
         {
             // Bruno, 2026-11-05: "it needs to exit after the demo is complete". The card waited for E, and no hint said so.

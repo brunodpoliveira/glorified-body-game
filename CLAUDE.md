@@ -501,6 +501,8 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   the chart is no floor item. The bulletin closes by itself after 12 s, with a hint. Kind `soldier_shield`. The cowering guard is the fear rule, as
   designed. FOR LATER (`devlog-notes/2026-11-05_study_squad_ai.md`, `DEMO_PLAN.md` §13.6, Bruno: "they need to be ... an organized team"): Invector
   has no team AI, so a `FireTeam` on `FlankBoard` with the v2 level design.
+  Later that day: a figure that cowers says a line within 4 m (`SoldierBrain.CowerLine`, `barks.csv` `cower_*`) and drops its weapon and shield
+  (`EnemyGun.Drop`, Bruno: "cowering figure drop its weapon").
 - 2026-11-05, night, THE FLOORPLAN V2 (`devlog-notes/2026-11-05_floorplan_v2.md`, Bruno: "you can get started on the v2 map";
   the writer's `game/act1_map_v2.py`, `DEMO_PLAN.md` §3.4): twelve rooms in greybox (`Editor/Demo/DemoV2.cs`: W13 to W17,
   G9b to G15), the doors of the map (two loops: G10 and G13), G6 and G8 moved to make room. The fixtures of round 30

@@ -85,6 +85,9 @@ namespace GlorifiedBody.Enemy
         private const float FlankStep = 60f;          // degrees around her a flanker turns in one move, PROPOSED
         private const float RushSideFrom = 3f;        // m: farther than this the knife runs to her side
         private const float RushSideOffset = 2f;      // m beside her (1.6 brought it in at 47 degrees, 2026-11-03)
+        private const float CowerLineRange = 4f;      // m: she comes this near, and a figure that cowers speaks, PROPOSED
+        private const float CowerLineGap = 6f;        // s between its lines, PROPOSED
+        private const float CowerLineSeconds = 3f;
         private const float ArmedCivilianNerves = 0.35f; // the tremble of an alerted armed civilian, PROPOSED
         private const float CoverStandOff = 0.9f;    // m behind the barricade's middle
         private const float CoverMinRange = 2.5f;    // m from her: closer is no cover
@@ -129,6 +132,43 @@ namespace GlorifiedBody.Enemy
         public string CareStartLine => IsArmedCivilian ? "Oh no. No no no. Can you hear me?" : IsGuard ? "Hey. Hey buddy. Look at me. Look at me." : "Casualty. I'm on it.";
         public string DragLine => IsArmedCivilian ? "I've got you. I've got you. Please." : IsGuard ? "Come on. I'm getting you out of here. I'm getting you out." : "Pulling out. Cover me. Cover me.";
         public string CprLine => IsArmedCivilian ? "Breathe. Please breathe. Please." : IsGuard ? "One. Two. Three. Four. Five. Come on. Come on." : "Come on. Come on, breathe. Don't you do this.";
+        // What a figure that cowers says when she comes near (barks.csv, cower_*, the writer, PROPOSED). Bruno, 2026-11-05: "he
+        // won't attack and keeps turning its back on me?": the line tells the player that he gave up. The first line is the plainest.
+        public static readonly string[] GuardCowerLines =
+        {
+            "I'm done. I'm not gonna shoot.", "Gun's down, ma'am. Go on past.", "I'm not looking. Just walk by me.",
+            "I'm staying right here. I won't follow.", "Dispatch, I'm not engaging. I'm staying down.", "Please, ma'am. I'm not your problem.",
+        };
+        public static readonly string[] LabWorkerCowerLines =
+        {
+            "I won't hurt you. I can't do this.", "I'm not security. I'm not fighting you.", "They handed me this. I won't use it.",
+            "My eyes are closed. Please just go.", "This isn't my department. Please, just go past.", "I'll stay here. I won't report this.",
+        };
+        private readonly System.Collections.Generic.List<int> cowerLinesLeft = new System.Collections.Generic.List<int>();
+        private bool cowerSpoke;
+        private float nextCowerLine;
+
+        /// <summary>Line 1 first, then the others at random, with no repeat until all have played.</summary>
+        private void CowerLine()
+        {
+            if (Time.time < nextCowerLine) return;
+            Vector3 her = TargetPosition;
+            if (Flat(transform.position, her) > CowerLineRange || !GlorifiedBody.Rooms.Room.Same(transform.position, her)) return;
+            string[] lines = IsArmedCivilian ? LabWorkerCowerLines : GuardCowerLines;
+            if (cowerLinesLeft.Count == 0)
+                for (int i = cowerSpoke ? 0 : 1; i < lines.Length; i++) cowerLinesLeft.Add(i);
+            int line = 0;
+            if (cowerSpoke)
+            {
+                int pick = Random.Range(0, cowerLinesLeft.Count);
+                line = cowerLinesLeft[pick];
+                cowerLinesLeft.RemoveAt(pick);
+            }
+            cowerSpoke = true;
+            nextCowerLine = Time.time + CowerLineGap;
+            Bark.Say(gameObject, lines[line], CowerLineSeconds);
+        }
+
         private bool IsGuard => GetComponent<EnemyMorale>() is EnemyMorale m && m.RankOf == EnemyMorale.Rank.Guard;
         private bool IsArmedCivilian => GetComponent<EnemyMorale>() is EnemyMorale m && m.RankOf == EnemyMorale.Rank.ArmedCivilian;
         private EnemyMorale.Rank RankOf => GetComponent<EnemyMorale>() is EnemyMorale m ? m.RankOf : EnemyMorale.Rank.Soldier;
@@ -353,6 +393,8 @@ namespace GlorifiedBody.Enemy
                     Current = Phase.Cower;
                     body.Stop();
                     body.Crouch(true);
+                    if (TryGetComponent(out EnemyGun weapon)) weapon.Drop();
+                    if (TryGetComponent(out EnemyShield shield)) shield.Drop();
                     RunTelemetry.Event("soldier_cower", name);
                 }
                 return;
@@ -362,6 +404,7 @@ namespace GlorifiedBody.Enemy
                 gun.HoldFire = true;
                 body.Stop();
                 body.Face(transform.position - TargetPosition); // its back to her, head down
+                CowerLine();
                 return;
             }
 
@@ -488,7 +531,7 @@ namespace GlorifiedBody.Enemy
             body.Crouch(false);
             body.MoveTo(Spot, MoveSpeed.Sprint);
             timer = 8f;
-            Bark.Say(gameObject, IsArmedCivilian ? "I CAN'T. I CAN'T DO THIS!" : "FALL BACK! FALL BACK!"); // PLACEHOLDER lines
+            Bark.Say(gameObject, IsArmedCivilian ? "I can't. I can't do this!" : "That's not a patient. That's not a patient!"); // PLACEHOLDER lines
             RunTelemetry.Event("soldier_retreat", $"{name}:{reason} to {Spot.x:0.0},{Spot.z:0.0}");
         }
 

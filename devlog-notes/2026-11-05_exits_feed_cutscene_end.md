@@ -77,4 +77,28 @@ Shots: `~/MEGA/glorified-body-renders/game/demo/opening_2026-11-05c/`.
 
 1. The CROWN line of cutscene 02b says it in plain words ("FEED ON ONE TO HEAL"). The writer recommends it, and it is built. The options are in
    the script's note.
-2. A guard who cowers is not a clear sight for a new player. A clearer sign is possible (a line each time she comes near, for example).
+2. Answered: a guard who cowers needs a clearer sign, and the writer writes it ("yes, the writer'll take care of it"). The game plays the lines when she comes near.
+
+## The cowering figure: the lines and the drop (later, same day)
+
+Bruno: "cowering figure drop its weapon. you can add the lines now".
+
+1. A figure that cowers says one line when she comes within 4 m (`SoldierBrain.CowerLine`), 6 s between lines (PROPOSED). The lines are the
+   writer's (`game/barks.csv`, `cower_guard_*`, `cower_labworker_*`): line 1 first, then at random with no repeat until all have played.
+2. When it reaches its hiding place it drops its weapon (`EnemyGun.Drop`) and its shield. It keeps them while it runs. The weapon falls with
+   physics and stays on the floor, on the Debris layer, so it blocks no one. The animator goes to its unarmed set.
+3. A shield guard who cowers has no front that stops a power now.
+4. The retreat lines lost their capitals, and "FALL BACK" is gone (the writer): a guard says "That's not a patient. That's not a patient!".
+
+A load brings a living figure back with its weapon, by the rule of 2026-10-26: only the dead are saved.
+
+| Check | Result |
+|---|---|
+| `DemoTests.AFigureThatCowers_SaysItGaveUp_WhenSheComesNear_OnlyThen` (a guard and a knife lab worker) | pass. The weapons lie at y 0.01 and 0.00, about 0.8 m from them |
+| `RagdollTests.TheShieldGuard_DropsGunAndShield_WhenHeCowers`, `DemoTests.TheGuardWithTheScan...`, `ArmedCivilianTests`, run `20261105-130954-test-playmode-210969` | 12 of 12 |
+
+Limits: the whole PlayMode suite and the bot did not run. In the shots the knife lies beside the crouched lab worker, but the guard's camera
+does not show his gun: the test measures it. Nobody saw the unarmed crouch up close.
+
+Shots: `~/MEGA/glorified-body-renders/game/demo/cower_2026-11-05/`.
+
