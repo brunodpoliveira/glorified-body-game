@@ -119,6 +119,11 @@ namespace GlorifiedBody.Editor.Demo
             GameObject shell = MenuLoopSetup.EnsureChild(root, "[Room]");
             GameObject props = MenuLoopSetup.EnsureChild(root, "[Props]");
             float mid = (StairX0 + StairX1) * 0.5f, width = StairX1 - StairX0, drop = -Floor1Offset.y;
+            room.exits = new[]
+            {
+                new Room.Exit { mouth = new Vector3(mid, 0f, StairTop), outward = Vector3.forward, width = 1.6f, to = "W12" },
+                new Room.Exit { mouth = new Vector3(mid, -drop, StairBottom), outward = Vector3.back, width = 1.6f, to = "G1" },
+            };
             Material floor = DemoRoom.Grey(0.42f), wall = DemoRoom.Grey(DemoRoom.WallShade);
             Box(shell, "Landing_Top_Floor", new Vector3(mid, -0.05f, (StairTop + StairRampTop) * 0.5f), new Vector3(width, 0.1f, StairTop - StairRampTop), floor);
             Box(shell, "Landing_Bottom_Floor", new Vector3(mid, -drop - 0.05f, (StairRampBottom + StairBottom) * 0.5f), new Vector3(width, 0.1f, StairRampBottom - StairBottom), floor);

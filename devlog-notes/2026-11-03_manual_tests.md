@@ -27,6 +27,10 @@ If the console shows a red line, copy it too.
 | 11c | Walk through the doorway into W1B. | A step past the doorway she stops. The scientist walks out from behind the screen, the talk plays, and he attacks after the last line. The door to W2 stays shut, and its lever does nothing before the talk. | The talk starts in W1, or the three in W2 join the fight. |
 | 11d | Kill him. Take the two green capsules on the floor. Pull the lever by the door and walk out. | The capsules go to your items. The door opens. W2 holds one pistol and two knives. | No capsules, or the door stays shut. |
 | 11e | In AI TEST, lift a soldier beside a wall (key 3). Turn and walk so that he swings into the wall. | He stops at the wall and slides along it. Turn back: he comes back. | He goes through the wall. |
+| 11f | In W2, kill the three. Do it again from a fresh start, but run past them into W5. | About 1.5 s after the last one falls, or as you step into W5, the chart cutscene plays. After it, E on a body asks "Feed on the body?", and the chart is in your items. | No cutscene, or the feed stays locked. |
+| 11g | In each room, walk up to each doorway. | The camera there shows the doorway. | A door out of frame, or seen edge on. |
+| 11h | In G2, meet the second pair. | One soldier carries a shield and a pistol. He circles you, and your powers stop on his front. | He comes straight at you, or he has the guard's clothes. |
+| 11i | At the end of the demo, on the bulletin card, press nothing. | "E  continue" shows. About 12 s later the title shows. | The card stays. |
 | 12 | Walk from W1 into W1B, then through the other doorways. | No fade and no load screen at a doorway. The camera changes at the wall. | A black fade or a pause at a door. |
 | 14 | During a cutscene, press E. | A menu: PAUSED, RESUME, SKIP. The picture holds. Up and down choose, E confirms, Escape resumes. | The cutscene ends at once, or keeps playing under the menu. |
 | 15 | At the W2 to W5 doorway, and at W5 to W7, use a lever. | A fire door with a lever on each side, as in DOOR TEST. | No door, or a leaf sticks out of a wall. |

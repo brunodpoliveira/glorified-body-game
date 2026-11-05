@@ -55,6 +55,20 @@ namespace GlorifiedBody.Editor.Demo
 
         private const string ScientistDone = "demo_w1b_scientist";
         private const string CapsulesFall = "demo_w1b_capsules";
+        private const string ChartDone = "demo_w2_chart";
+
+        /// <summary>
+        /// The feed opens by a cutscene (Bruno, 2026-11-05: "the unlocking oif the eating/feeding should be a cutscene; i missed
+        /// the log note so i had to do the entire demo without healing"). A skip still opens it. The chart goes to her items.
+        /// </summary>
+        private static List<ScriptStep> Chart() => new List<ScriptStep>
+        {
+            ScriptStep.LockHer(),
+            ScriptStep.Play(DemoScripts.Fmv("cutscenes/02b_the_chart.md", "02b_the_chart", "cs02b")),
+            ScriptStep.Give(DemoItems.L9().itemId),
+            ScriptStep.Raise(Feeding.UnlockFlag),
+            ScriptStep.FreeHer(),
+        };
 
         /// <summary>
         /// W1: she wakes (beat 1), Stevens on the speaker and the printout (2). The quiet room: no enemy and no beat until she
@@ -95,7 +109,7 @@ namespace GlorifiedBody.Editor.Demo
             r.Prop("Treatment_Bed", new Vector3(6.5f, 0f, 15.6f), new Vector3(1f, 0.6f, 2f), 0.55f);
             r.Prop("Sleeper_Under_Sheet", new Vector3(6.5f, 0.6f, 15.6f), new Vector3(0.6f, 0.22f, 1.7f), 0.75f); // "a patient who sleeps" (the script)
             r.Prop("Dressing_Cart", new Vector3(6.4f, 0f, 17f), new Vector3(0.7f, 0.9f, 0.4f), 0.45f);
-            r.Prop("Privacy_Screen", new Vector3(5.6f, 0f, 17.5f), new Vector3(2.8f, 1.9f, 0.06f), 0.65f);
+            r.Prop("Privacy_Screen", new Vector3(5.6f, 0f, 17.5f), new Vector3(2.8f, 1.8f, 0.06f), 0.65f);
             GameObject scientist = MenuLoopSetup.EnsureChild(r.Figures, "Group_Scientist");
             EnemySpawn knife = r.Figure("Scientist_Knife", "labworker_knife", new Vector3(5.6f, 0f, 16f), 90f, parent: scientist);
             knife.heldUntilFlag = ScientistDone;
@@ -121,16 +135,23 @@ namespace GlorifiedBody.Editor.Demo
                 ScriptStep.AlertAlone(scientist), // he calls nobody: the three behind the door stay unaware
             };
             r.Beat("W1B_Scientist", ScientistDone, new Vector3(4f, 1f, 17.9f), new Vector3(6f, 2f, 0.6f), meet.ToArray()); // wall to wall: no way past it
+            // The talk has its own camera on the west wall: her, him, both doors. The cell cameras split the room down the line she
+            // walks, and one stood in the bay with the screen between it and her.
+            r.ExtraCamera("talk", new Vector3(1.35f, 2.75f, 16.5f), new Vector3(4.6f, 1f, 17.5f), 72f, new Vector3(3.9f, 1.5f, 17.35f), new Vector3(2.6f, 3f, 3.3f));
         }
 
-        /// <summary>W2: three armed scientists outside (beat 4), her care chart on the floor (5, L9 unlocks the feed).</summary>
+        /// <summary>W2: three armed scientists outside (beat 4), then her care chart: a cutscene opens the feed (5, cutscene 02b).</summary>
         private static void W2(DemoRoom r)
         {
             // One pistol and two knives (Bruno, 2026-11-05: "helps to escalate better"), behind the shut door of W1B.
-            r.Figure("Scientist_A", "labworker_pistol", new Vector3(6.5f, 0f, 12.2f), 300f);
-            r.Figure("Scientist_B", "labworker_knife", new Vector3(8.5f, 0f, 13f), 280f);
-            r.Figure("Scientist_C", "labworker_knife", new Vector3(10.5f, 0f, 12.2f), 270f);
-            r.Item("L9_Care_Chart", DemoItems.L9(), new Vector3(9.5f, 0.04f, 11.8f), new Vector3(0.24f, 0.03f, 0.32f));
+            GameObject three = MenuLoopSetup.EnsureChild(r.Figures, "Group_Three");
+            r.Figure("Scientist_A", "labworker_pistol", new Vector3(6.5f, 0f, 12.2f), 300f, parent: three);
+            r.Figure("Scientist_B", "labworker_knife", new Vector3(8.5f, 0f, 13f), 280f, parent: three);
+            r.Figure("Scientist_C", "labworker_knife", new Vector3(10.5f, 0f, 12.2f), 270f, parent: three);
+            // The chart: when the three are dead, or in W5 when she runs past them (W5_Chart). The bodies fall first.
+            var chart = new List<ScriptStep> { ScriptStep.WaitDead(three), ScriptStep.Wait(1.5f), ScriptStep.StopIfFlag(ChartDone) };
+            chart.AddRange(Chart());
+            r.Beat("W2_Chart", ChartDone, Vector3.zero, Vector3.zero, chart.ToArray());
             r.Sign("Sign_Pain", "YOUR PAIN IS SEEN. ASK FOR RELIEF.", new Vector3(18f, 1.9f, 13.98f), Vector3.back, new Vector2(2.6f, 0.5f));
             r.Prop("Bench_A", new Vector3(16f, 0f, 11.4f), new Vector3(1.6f, 0.45f, 0.45f));
             r.Prop("Cart", new Vector3(20f, 0f, 11.5f), new Vector3(0.9f, 0.9f, 0.5f), 0.45f);
@@ -177,6 +198,7 @@ namespace GlorifiedBody.Editor.Demo
             r.Prop("Gurney", new Vector3(2.4f, 0f, 7f), new Vector3(0.7f, 0.8f, 1.9f), 0.5f);
             r.Prop("Wall_Phone", new Vector3(0.05f, 1.3f, 8.5f), new Vector3(0.1f, 0.25f, 0.18f), 0.6f);
             r.Sign("Sign_Fire_Door", "FIRE DOOR. KEEP CLEAR.", new Vector3(2.98f, 2.45f, -6f), Vector3.left, new Vector2(1.4f, 0.3f), 40);
+            r.Beat("W5_Chart", ChartDone, new Vector3(1.5f, 1f, 10.1f), new Vector3(3f, 2f, 0.6f), Chart().ToArray()); // she ran past the three: the feed still opens
             var silver = new List<ScriptStep> { ScriptStep.Wait(1.5f) };
             silver.AddRange(DemoScripts.Steps("cutscenes/03_code_silver.md", "cs03", 5));
             silver.Add(ScriptStep.Raise(CodeSilver)); // the fire door to W9 shuts: the way on is through the gym

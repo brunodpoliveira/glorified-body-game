@@ -494,6 +494,13 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   `Obstacle` also sweeps the middle line. Two MK capsules in W1B fall in the talk (`FlagGate`, `demo_w1b_capsules`). FOR LATER
   (Bruno, `DEMO_PLAN.md` §13.5): one pose for every power, one arm up with the palm out, and with mk_orzabal the arm follows
   the floater.
+  His answer: a floater left behind does not drop.
+- 2026-11-05, after his playthrough (`devlog-notes/2026-11-05_exits_feed_cutscene_end.md`): THE EXIT RULE (Bruno: "i also need to see the
+  exits"): the camera of the floor in front of a doorway shows that doorway (`CameraCoverage.SeesExit`, `Room.exits`, `DemoRoom.BestPose`),
+  0 of 48 out of view. THE FEED opens by cutscene 02b (`W2_Chart` when the three die, `W5_Chart` if she runs past them, `ScriptStep.StopIfFlag`);
+  the chart is no floor item. The bulletin closes by itself after 12 s, with a hint. Kind `soldier_shield`. The cowering guard is the fear rule, as
+  designed. FOR LATER (`devlog-notes/2026-11-05_study_squad_ai.md`, `DEMO_PLAN.md` §13.6, Bruno: "they need to be ... an organized team"): Invector
+  has no team AI, so a `FireTeam` on `FlankBoard` with the v2 level design.
 
 ## Rules
 

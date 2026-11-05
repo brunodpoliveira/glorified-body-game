@@ -21,7 +21,7 @@ MonoBehaviour:
   logText: 'V3. DAILY CARE. ORAL INTAKE: NONE. PCDH-Y: DONOR TISSUE PER PROTOCOL
     7 (ALL DONORS CONSENTED). LAST DOSE: 6 DAYS AGO, HELD FOR THE V4 TRANSFER. EXPECT
     THE SUBJECT TO SEEK A SOURCE. NEVER ENTER ALONE.'
-  readFlag: feed_unlocked
+  readFlag: 
   mapFloor: 
   audioClip: {fileID: 0}
   tapeLines: []

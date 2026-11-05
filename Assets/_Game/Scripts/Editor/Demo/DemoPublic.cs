@@ -68,7 +68,7 @@ namespace GlorifiedBody.Editor.Demo
             r.Figure("Soldier_Pair1_A", "soldier_rifle", new Vector3(24f, 0f, 2f), 270f);
             r.Figure("Soldier_Pair1_B", "soldier_pistol", new Vector3(25.5f, 0f, 4.2f), 270f);
             r.Figure("Soldier_Pair2_A", "soldier_rifle", new Vector3(31f, 0f, 1.6f), 270f);
-            r.Figure("Soldier_Pair2_B", "guard_shield", new Vector3(32.5f, 0f, 4f), 270f);
+            r.Figure("Soldier_Pair2_B", "soldier_shield", new Vector3(32.5f, 0f, 4f), 270f);
             // The mission statement (the plan names the company: it waits for the name check, so only the motto for now).
             r.Sign("Sign_Mission", "SO THAT HUMANITY ENDURES.", new Vector3(20f, 4.2f, 5.98f), Vector3.back, new Vector2(6f, 0.8f), 72);
             r.Sign("Sign_Directory", "THE WARD  -  2ND FLOOR\nTHE CHAPEL\nRECEPTION\nSECURITY", new Vector3(5.05f, 1.6f, 4.6f), Vector3.right, new Vector2(1.2f, 1.2f), 36);

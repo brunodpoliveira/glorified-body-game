@@ -126,7 +126,7 @@ namespace GlorifiedBody.Editor.Demo
 
     /// <summary>
     /// The items of the demo (the demo plan §5, round 9: "the logs are few"): the plan L1, the logs L2 to L9 with the
-    /// plan's PROPOSED words, the card of the stairwell. L9 unlocks the feed (round 18). Assets in Resources/Items.
+    /// plan's PROPOSED words, the card of the stairwell. Cutscene 02b opens the feed and gives L9 (Bruno, 2026-11-05). Assets in Resources/Items.
     /// </summary>
     public static class DemoItems
     {
@@ -155,7 +155,7 @@ namespace GlorifiedBody.Editor.Demo
         public static ItemDefinition L5() => Log("l5_security_logbook", "THE SECURITY LOGBOOK", "01:52 SECTOR C CAMERAS OFF FOR MAINTENANCE. AUTH: STEVENS.");
         public static ItemDefinition L7() => Log("l7_session_note", "A SESSION NOTE", "SESSION 4,211. V3 HELD THE CUP FOR NINE SECONDS WITHOUT HELP. THE WHOLE TEAM CRIED. SHE SMILED, WE THINK. THIS IS WHY WE DO IT.");
         public static ItemDefinition L8() => Log("l8_prayer_card", "A PRAYER CARD", "Tonight we pray for the candidates in surgery, for the children of the programme, and for all who give the body so that humanity endures.");
-        public static ItemDefinition L9() => Log("l9_care_chart", "HER CARE CHART", "V3. DAILY CARE. ORAL INTAKE: NONE. PCDH-Y: DONOR TISSUE PER PROTOCOL 7 (ALL DONORS CONSENTED). LAST DOSE: 6 DAYS AGO, HELD FOR THE V4 TRANSFER. EXPECT THE SUBJECT TO SEEK A SOURCE. NEVER ENTER ALONE.", Feeding.UnlockFlag);
+        public static ItemDefinition L9() => Log("l9_care_chart", "HER CARE CHART", "V3. DAILY CARE. ORAL INTAKE: NONE. PCDH-Y: DONOR TISSUE PER PROTOCOL 7 (ALL DONORS CONSENTED). LAST DOSE: 6 DAYS AGO, HELD FOR THE V4 TRANSFER. EXPECT THE SUBJECT TO SEEK A SOURCE. NEVER ENTER ALONE.");
 
         public static ItemDefinition StairCard()
         {

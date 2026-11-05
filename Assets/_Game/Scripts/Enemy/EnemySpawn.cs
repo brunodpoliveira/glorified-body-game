@@ -14,7 +14,7 @@ namespace GlorifiedBody.Enemy
     {
         public const string Folder = "Enemies/";
 
-        [Tooltip("The prefab name in Resources/Enemies: soldier_pistol, soldier_rifle, soldier_gas, guard_pistol, guard_shield, power_armour, labworker, nurse, labworker_pistol, labworker_knife, patient.")]
+        [Tooltip("The prefab name in Resources/Enemies: soldier_pistol, soldier_rifle, soldier_gas, soldier_shield, guard_pistol, guard_shield, power_armour, labworker, nurse, labworker_pistol, labworker_knife, patient.")]
         public string kind = "soldier_pistol";
         [Tooltip("A civilian's pose variant (CivilianBrain.SetVariant), or -1 for the prefab's own.")]
         public int variant = -1;

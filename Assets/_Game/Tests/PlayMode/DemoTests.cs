@@ -421,6 +421,156 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator EveryExit_ShowsInTheCameraOfTheFloorInFrontOfIt()
+        {
+            // Bruno, 2026-11-05: "although i get good visuals on the room i also need to see the exits; in some rooms the
+            // doors/exits are in a blind spot".
+            yield return LoadWorld();
+            yield return new WaitForSeconds(0.2f);
+            FixedCameraDirector director = UnityEngine.Object.FindAnyObjectByType<FixedCameraDirector>();
+            int exits = GlorifiedBody.Rooms.Room.All.Sum(r => r.exits.Length);
+            List<string> missing = GlorifiedBody.Automation.CameraCoverage.ExitsOutOfView(director);
+            Debug.Log($"[DemoTests] exits: {missing.Count} of {exits} out of view: {string.Join("; ", missing)}");
+            Assert.Greater(exits, 40, "the demo's doorways");
+            Assert.IsEmpty(missing, "every exit shows in its camera");
+        }
+
+        [UnityTest]
+        public IEnumerator TheGuardWithTheScan_FightsLikeTheOther_AndCowersOnlyByFear()
+        {
+            // Bruno, 2026-11-05: "what is the deal with this scannable guard? he won't attack and keeps turning its back on me?"
+            yield return LoadWorld();
+            yield return WaitUntil(() => CutscenePlayer.IsPlaying && CutscenePlayer.ShotIndex >= 0, 10f);
+            CutscenePlayer.Skip();
+            yield return WaitUntil(() => StoryFlags.Has("demo_w1_wake"), 10f);
+            GameObject lucy = GameObject.FindGameObjectWithTag("Player");
+            lucy.GetComponentInChildren<Health>().SetInvulnerable(true);
+            TankController tank = lucy.GetComponent<TankController>();
+            tank.Teleport(new Vector3(1.5f, 0f, 3f), 180f); // W5, in front of the two guards
+            SoldierBrain[] all = UnityEngine.Object.FindObjectsByType<SoldierBrain>(FindObjectsSortMode.None);
+            SoldierBrain plain = all.First(b => b.name == "Guard_A");
+            SoldierBrain scanned = all.First(b => b.name == "Guard_B");
+            Assert.IsNull(plain.GetComponent<GlorifiedBody.Interaction.Scannable>(), "the other guard has no scan");
+            Assert.IsNotNull(scanned.GetComponent<GlorifiedBody.Interaction.Scannable>(), "this guard has a scan");
+            bool aims = false;
+            float t0 = Time.time;
+            while (!aims && Time.time - t0 < 25f) { aims = scanned.Gun.HoldsSlot; yield return null; }
+            Assert.IsTrue(aims, "with no fear he aims at her, as the other one does");
+            Assert.AreEqual(0, scanned.GetComponent<EnemyMorale>().Fear);
+            scanned.GetComponent<EnemyMorale>().SeeFeed("test"); // +2: one gruesome sight
+            yield return new WaitForSeconds(0.5f);
+            Assert.IsFalse(scanned.Retreating, "one gruesome sight is not enough (the limit of a guard is 3)");
+            scanned.GetComponent<EnemyMorale>().SeeFeed("test"); // +2: at the limit
+            yield return WaitUntil(() => scanned.Current == SoldierBrain.Phase.Cower, 12f);
+            Assert.AreEqual(SoldierBrain.Phase.Cower, scanned.Current, "at the limit he runs and cowers");
+            foreach (Vector3 her in new[] { scanned.transform.position + Vector3.forward * 2f, scanned.transform.position + Vector3.right * 1.5f })
+            {
+                tank.Teleport(her, 180f);
+                yield return new WaitForSeconds(1.5f);
+                Vector3 toHer = lucy.transform.position - scanned.transform.position;
+                toHer.y = 0f;
+                float dot = Vector3.Dot(scanned.transform.forward, toHer.normalized);
+                Debug.Log($"[DemoTests] the cowering guard: facing dot {dot:0.00} with her at {her}");
+                Assert.Less(dot, -0.5f, "he turns his back to her, wherever she stands");
+                Assert.IsFalse(scanned.Gun.HoldsSlot, "and he does not aim");
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator TheBulletin_ClosesByItself_ToTheTitle_WithNoKey()
+        {
+            // Bruno, 2026-11-05: "it needs to exit after the demo is complete". The card waited for E, and no hint said so.
+            yield return LoadWorld();
+            GameObject lucy = GameObject.FindGameObjectWithTag("Player");
+            GlorifiedBody.Interaction.OutfitChange.Change(lucy, GlorifiedBody.Interaction.OutfitChange.Load(GlorifiedBody.Interaction.OutfitChange.GuardId));
+            lucy.GetComponent<TankController>().Teleport(GlorifiedBody.Rooms.Room.Of("U1").transform.position + new Vector3(20f, 0f, -25.5f), 180f);
+            yield return WaitUntil(() => Bulletin.IsShowing, 60f);
+            Assert.IsTrue(Bulletin.IsShowing);
+            float t0 = Time.realtimeSinceStartup;
+            yield return WaitUntil(() => SceneManager.GetActiveScene().name == "Main_Menu", 45f);
+            Debug.Log($"[DemoTests] the title {Time.realtimeSinceStartup - t0:0.0} s after the card");
+            Assert.AreEqual("Main_Menu", SceneManager.GetActiveScene().name, "the demo ends by itself");
+        }
+
+        private static void KillThree()
+        {
+            foreach (SoldierBrain brain in UnityEngine.Object.FindObjectsByType<SoldierBrain>(FindObjectsSortMode.None).Where(b => b.name.StartsWith("Scientist_") && b.name != "Scientist_Knife").ToArray())
+                brain.GetComponent<Health>().TakeDamage(9999f);
+        }
+
+        [UnityTest]
+        public IEnumerator TheFeed_OpensByACutscene_WhenTheThreeDie_AndASkipStillOpensIt()
+        {
+            // Bruno, 2026-11-05: "the unlocking oif the eating/feeding should be a cutscene; i missed the log note".
+            yield return LoadWorld();
+            yield return WaitUntil(() => CutscenePlayer.IsPlaying && CutscenePlayer.ShotIndex >= 0, 10f);
+            CutscenePlayer.Skip();
+            yield return WaitUntil(() => StoryFlags.Has("demo_w1_wake"), 10f);
+            Assert.IsNull(GameObject.Find("L9_Care_Chart"), "no chart on the floor to miss");
+            Assert.IsTrue(Feeding.Locked, "the feed starts locked");
+            GameObject lucy = GameObject.FindGameObjectWithTag("Player");
+            lucy.GetComponentInChildren<Health>().SetInvulnerable(true);
+            lucy.GetComponent<TankController>().Teleport(new Vector3(20f, 0f, 12.5f), 90f); // W2, far from the three
+            yield return WaitUntil(() => GlorifiedBody.Rooms.RoomTracker.CurrentId == "W2", 3f);
+            yield return new WaitForSeconds(0.5f);
+            Assert.IsFalse(CutscenePlayer.IsPlaying, "they live: no cutscene");
+            Assert.IsTrue(Feeding.Locked);
+            KillThree();
+            yield return WaitUntil(() => CutscenePlayer.IsPlaying, 6f);
+            Assert.AreEqual("02b_the_chart", CutscenePlayer.Current, "the three are dead: the chart");
+            Assert.IsTrue(Feeding.Locked, "it opens at the end of the cutscene");
+            CutscenePlayer.Skip();
+            yield return WaitUntil(() => StoryFlags.Has("demo_w2_chart"), 5f);
+            Assert.IsFalse(Feeding.Locked, "a skip still opens the feed");
+            Assert.IsTrue(lucy.GetComponent<GlorifiedBody.Interaction.ItemInventory>().Has("l9_care_chart"), "the chart is in her items, to read again");
+        }
+
+        [UnityTest]
+        public IEnumerator TheFeed_OpensInW5_WhenSheRunsPastTheThree_AndPlaysOnce()
+        {
+            yield return LoadWorld();
+            yield return WaitUntil(() => CutscenePlayer.IsPlaying && CutscenePlayer.ShotIndex >= 0, 10f);
+            CutscenePlayer.Skip();
+            yield return WaitUntil(() => StoryFlags.Has("demo_w1_wake"), 10f);
+            GameObject lucy = GameObject.FindGameObjectWithTag("Player");
+            lucy.GetComponentInChildren<Health>().SetInvulnerable(true);
+            TankController tank = lucy.GetComponent<TankController>();
+            tank.Teleport(new Vector3(1.5f, 0f, 12.5f), 180f); // W2 at the W5 door
+            yield return WaitUntil(() => GlorifiedBody.Rooms.RoomTracker.CurrentId == "W2", 3f);
+            yield return null;
+            tank.Teleport(new Vector3(1.5f, 0f, 10.1f), 180f);
+            yield return WaitUntil(() => CutscenePlayer.IsPlaying, 4f);
+            Assert.AreEqual("02b_the_chart", CutscenePlayer.Current, "she ran past them: the chart in W5");
+            CutscenePlayer.Skip();
+            yield return WaitUntil(() => !Feeding.Locked, 5f);
+            Assert.IsFalse(Feeding.Locked, "the feed opens with the three alive");
+            yield return WaitUntil(() => StoryFlags.Has("demo_w2_chart"), 3f);
+            KillThree();
+            yield return new WaitForSeconds(3f);
+            Assert.AreNotEqual("02b_the_chart", CutscenePlayer.IsPlaying ? CutscenePlayer.Current : "", "their death later does not play it again");
+        }
+
+        [UnityTest]
+        public IEnumerator TheSoldierWithAShield_IsASoldier_HisShieldStopsAFrontPower()
+        {
+            // Bruno, 2026-11-05: "shield dude also needs to have a soldier variant". The pair of G2 had a guard with a shield.
+            yield return LoadWorld();
+            SoldierBrain soldier = null;
+            yield return WaitUntil(() => (soldier = UnityEngine.Object.FindObjectsByType<SoldierBrain>(FindObjectsSortMode.None).FirstOrDefault(b => b.name == "Soldier_Pair2_B")) != null, 5f);
+            Assert.IsNotNull(soldier);
+            Assert.AreEqual(EnemyMorale.Rank.Soldier, soldier.GetComponent<EnemyMorale>().RankOf, "the rank of a soldier: he never runs");
+            Assert.AreEqual(SoldierBrain.Approach.Flank, soldier.Style, "he flanks, as soldiers do");
+            GlorifiedBody.Combat.IFrontGuard shield = soldier.GetComponent<GlorifiedBody.Combat.IFrontGuard>();
+            Assert.IsNotNull(shield, "he has the shield");
+            Assert.AreEqual(DummyShooter.Weapon.Pistol, soldier.Gun.WeaponKind, "one hand for the pistol");
+            yield return null;
+            Vector3 front = soldier.transform.position + soldier.transform.forward * 3f;
+            Vector3 back = soldier.transform.position - soldier.transform.forward * 3f;
+            Assert.IsTrue(shield.Blocks(front), "a power from his front stops");
+            Assert.IsFalse(shield.Blocks(back), "a power from his back goes in");
+        }
+
+        [UnityTest]
         public IEnumerator TheCapsules_FallInTheTalk_SheCanTakeThem_ARetryKeepsTheTakenOneGone()
         {
             // Cutscene 02, note 1: the capsules roll off his tray, and the player can take them after the fight.
@@ -540,6 +690,9 @@ namespace GlorifiedBody.Tests.PlayMode
                     Assert.AreEqual(GlorifiedBody.Interaction.FireDoor.State.Jammed, door.Current, "the door stays shut during the talk");
                     Vector3 chest = Vector3.up * GlorifiedBody.Characters.Body.ChestHeight;
                     Assert.IsFalse(Physics.Linecast(lucy.transform.position + chest, knife.transform.position + chest, LayerMask.GetMask("Default"), QueryTriggerInteraction.Ignore), "he stands out from behind the screen when he talks");
+                    Camera view = Camera.main;
+                    foreach (Vector3 body in new[] { lucy.transform.position + chest, knife.transform.position + chest })
+                        Assert.IsFalse(Physics.Linecast(view.transform.position, body, LayerMask.GetMask("Default"), QueryTriggerInteraction.Ignore), "nothing hides them from the camera of the talk");
                     CutscenePlayer.Skip();
                 }
                 yield return null;

@@ -11,13 +11,14 @@ namespace GlorifiedBody.Story
     /// The police bulletin, the last card of the demo (T11 of the writers' room, 2026-10-31: "A text card after cutscene
     /// 10, before the title. White monospace on black, like a teleprinter, one line at a time. The game picks the wording
     /// from the number of people Lucy killed"). The count is PsychicStats.People (every person she killed, in the saves).
-    /// The world stops while it shows (the cutscene state). Interact skips the typing, then closes the card. The words
+    /// The world stops while it shows (the cutscene state). Interact skips the typing, then closes the card, and the card closes by itself after AutoCloseSeconds. The words
     /// are the writer's draft. The bands are PROPOSED: the map forces about 8 kills.
     /// </summary>
     public sealed class Bulletin : MonoBehaviour
     {
         public const int LowMax = 10, MiddleMax = 20; // PROPOSED: up to 10 low, up to 20 middle, more high
         public const float CharSeconds = 0.03f, LineGap = 0.35f;
+        public const float AutoCloseSeconds = 12f; // PROPOSED: the demo ends by itself (Bruno, 2026-11-05: "it needs to exit after the demo is complete")
 
         public static readonly string[] Low =
         {
@@ -47,9 +48,13 @@ namespace GlorifiedBody.Story
         /// <summary>The text on the card now (tests).</summary>
         public static string Shown => instance != null && instance.text != null ? instance.text.text : "";
         public static string Band { get; private set; } = "";
+        /// <summary>The key's hint shows: the card has typed all its lines (tests).</summary>
+        public static bool HintShown => instance != null && instance.hint != null && instance.hint.enabled;
+        public static Canvas Card => instance != null ? instance.canvas : null;
 
         private Canvas canvas;
         private Text text;
+        private Text hint;
         private bool skip;
 
         /// <summary>The wording for the count: the band's lines, [N] the count.</summary>
@@ -103,8 +108,12 @@ namespace GlorifiedBody.Story
                 while (Time.unscaledTime < gap && !skip) { skip |= Pressed(); yield return null; }
             }
             text.text = string.Join("\n", lines) + "\n";
+            hint.text = $"{InputManager.GetKeyDisplayName(InputManager.Instance != null ? InputManager.Instance.GetKey(InputManager.GameAction.Interact) : KeyCode.E)}  continue";
+            hint.enabled = true;
             yield return null;
-            while (!Pressed()) yield return null;
+            float closeAt = Time.unscaledTime + AutoCloseSeconds;
+            while (!Pressed() && Time.unscaledTime < closeAt) yield return null;
+            hint.enabled = false;
             canvas.enabled = false;
             IsShowing = false;
             if (stopped) GameManager.Instance?.EndCutscene();
@@ -140,6 +149,17 @@ namespace GlorifiedBody.Story
             text.lineSpacing = 1.3f;
             text.color = new Color(0.93f, 0.93f, 0.93f);
             text.alignment = TextAnchor.MiddleLeft;
+            var hintObj = new GameObject("Hint", typeof(RectTransform));
+            hintObj.transform.SetParent(transform, false);
+            RectTransform hintRect = hintObj.GetComponent<RectTransform>();
+            hintRect.anchorMin = hintRect.anchorMax = new Vector2(0.5f, 0.08f);
+            hintRect.sizeDelta = new Vector2(1500f, 50f);
+            hint = hintObj.AddComponent<Text>();
+            hint.font = text.font;
+            hint.fontSize = 24;
+            hint.color = new Color(0.6f, 0.6f, 0.6f);
+            hint.alignment = TextAnchor.MiddleRight;
+            hint.enabled = false;
             canvas.enabled = false;
         }
 

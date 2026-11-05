@@ -146,6 +146,7 @@ namespace GlorifiedBody.Editor.Demo
             room.Shell();
             spec.Dress?.Invoke(room);
             Physics.SyncTransforms();
+            component.exits = spec.Doors.ConvertAll(d => new Room.Exit { mouth = room.Mouth(d), outward = Outward(d.Side), width = d.Width, to = d.To }).ToArray();
             room.CamerasOnCells();
             foreach (Action add in room.extraCameras) add();
             GameObject music = MenuLoopSetup.EnsureChild(root, "[Music]");
@@ -356,6 +357,13 @@ namespace GlorifiedBody.Editor.Demo
                     if (Physics.CheckBox(p + Vector3.up * 0.9f, new Vector3(0.2f, 0.8f, 0.2f), Quaternion.identity, solid, QueryTriggerInteraction.Ignore)) continue;
                     points.Add(p);
                 }
+            // The exits of the cell (Bruno, 2026-11-05: "i also need to see the exits"): where she stands as she goes to them.
+            List<Door> exits = s.Doors.FindAll(d =>
+            {
+                Vector3 p = InsideDoor(d, 0.7f);
+                return p.x >= cell.xMin - 0.3f && p.x <= cell.xMax + 0.3f && p.z >= cell.yMin - 0.3f && p.z <= cell.yMax + 0.3f;
+            });
+            const int ExitWeight = 100000; // an exit counts before any floor point
             float camY = Mathf.Min(s.Height - 0.25f, 3.4f);
             float[] xs = Places(cell.xMin, cell.xMax, s.X0, s.X1), zs = Places(cell.yMin, cell.yMax, s.Z0, s.Z1);
             Vector3 middle = new Vector3(cell.center.x, 0.7f, cell.center.y);
@@ -368,7 +376,8 @@ namespace GlorifiedBody.Editor.Demo
                     if (Mathf.Abs(x - cell.center.x) < 0.5f && Mathf.Abs(z - cell.center.y) < 0.5f) continue; // the middle sees nothing behind it
                     if (Physics.CheckSphere(cam, 0.2f, solid, QueryTriggerInteraction.Ignore)) continue;     // inside a column or a lintel
                     Vector3 away = new Vector3(middle.x - x, 0f, middle.z - z);
-                    Vector3[] aims = { middle, middle + away.normalized * Mathf.Min(cell.width, cell.height) * 0.25f };
+                    var aims = new List<Vector3> { middle, middle + away.normalized * Mathf.Min(cell.width, cell.height) * 0.25f };
+                    foreach (Door d in exits) aims.Add(Vector3.Lerp(middle, Mouth(d) + Vector3.up, 0.5f));
                     foreach (Vector3 look in aims)
                     {
                         Quaternion rotation = Quaternion.LookRotation(look - cam);
@@ -376,12 +385,14 @@ namespace GlorifiedBody.Editor.Demo
                         {
                             int seen = 0;
                             foreach (Vector3 p in points) if (CameraCoverage.Sees(cam, rotation, fov, p, CameraCoverage.GameRoomNear, solid)) seen++;
+                            foreach (Door d in exits) if (CameraCoverage.SeesExit(cam, rotation, fov, Mouth(d), Outward(d.Side), d.Width, solid)) seen += ExitWeight;
                             if (seen > best.seen) best = (cam, look, fov, seen); // equal counts keep the narrower lens (the earlier one)
                         }
                     }
                 }
             }
-            float missed = points.Count == 0 ? 0f : 1f - (float)best.seen / points.Count;
+            int exitsSeen = best.seen / ExitWeight, pointsSeen = best.seen % ExitWeight;
+            float missed = exitsSeen < exits.Count ? 1f : points.Count == 0 ? 0f : 1f - (float)pointsSeen / points.Count;
             return (best.cam, best.look, best.fov, missed);
         }
 

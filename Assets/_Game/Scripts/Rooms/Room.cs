@@ -23,6 +23,19 @@ namespace GlorifiedBody.Rooms
         [Tooltip("The rooms behind its doorways (their ids).")]
         public string[] neighbours = new string[0];
 
+        /// <summary>A way out of the room: the middle of its doorway on the floor (local to the root), the way out, its width.</summary>
+        [System.Serializable]
+        public struct Exit
+        {
+            public Vector3 mouth;
+            public Vector3 outward;
+            public float width;
+            public string to;
+        }
+
+        [Tooltip("Its ways out. The camera of the floor in front of each one shows it (Bruno, 2026-11-05: \"i also need to see the exits\").")]
+        public Exit[] exits = new Exit[0];
+
         private static readonly List<Room> all = new List<Room>();
         private static readonly Dictionary<string, Room> byId = new Dictionary<string, Room>();
 

@@ -35,6 +35,7 @@ namespace GlorifiedBody.Story
         EndDemo,     // the demo ends: back to the main menu (the title)
         Approach,    // every soldier under target talks first: no attack on sight, it walks to the point and turns to her (Alert ends it)
         Give,        // an item (id) into her inventory (a key after a cutscene); no slot free: it lies at her feet
+        StopIfFlag,  // the sequence ends here when the flag (id) is up (another beat played this one's content)
     }
 
     /// <summary>One step of a sequence: what it does and its data (the room builder fills them in code).</summary>
@@ -75,6 +76,7 @@ namespace GlorifiedBody.Story
         public static ScriptStep Screen(GameObject screen, bool wait = false) => new ScriptStep { kind = StepKind.Screen, target = screen, id = wait ? "wait" : "" };
         public static ScriptStep Approach(GameObject group, Vector3 point) => new ScriptStep { kind = StepKind.Approach, target = group, point = point };
         public static ScriptStep Give(string itemId) => new ScriptStep { kind = StepKind.Give, id = itemId };
+        public static ScriptStep StopIfFlag(string flag) => new ScriptStep { kind = StepKind.StopIfFlag, id = flag };
     }
 
     /// <summary>
@@ -149,6 +151,7 @@ namespace GlorifiedBody.Story
             {
                 ScriptStep step = steps[StepIndex];
                 if (step == null) continue;
+                if (step.kind == StepKind.StopIfFlag && StoryFlags.Has(step.id)) break;
                 yield return Do(step);
             }
             ClearCover();

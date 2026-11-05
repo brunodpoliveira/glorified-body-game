@@ -76,7 +76,7 @@ namespace GlorifiedBody.Integration.Invector.Build
         /// <summary>The kinds a room can place (EnemySpawn.kind): a class and its weapon.</summary>
         public static readonly string[] Kinds =
         {
-            "soldier_pistol", "soldier_rifle", "soldier_gas", "guard_pistol", "guard_shield", "power_armour", "labworker", "nurse",
+            "soldier_pistol", "soldier_rifle", "soldier_gas", "soldier_shield", "guard_pistol", "guard_shield", "power_armour", "labworker", "nurse",
             "labworker_pistol", "labworker_knife", "patient",
         };
 
@@ -87,6 +87,7 @@ namespace GlorifiedBody.Integration.Invector.Build
             {
                 case "soldier_rifle": { Spec s = SpecFor("soldier"); s.weapon = DummyShooter.Weapon.Rifle; return s; }
                 case "soldier_gas": { Spec s = SpecFor("soldier"); s.weapon = DummyShooter.Weapon.GasLauncher; return s; }
+                case "soldier_shield": { Spec s = SpecFor("soldier"); s.shield = true; return s; } // Bruno, 2026-11-05: "shield dude also needs to have a soldier variant"
                 case "guard_pistol": return SpecFor("guard");
                 case "guard_shield": { Spec s = SpecFor("guard"); s.shield = true; return s; }
                 case "power_armour": { Spec s = SpecFor("power_armour"); s.weapon = DummyShooter.Weapon.ArmourLaunchers; return s; }

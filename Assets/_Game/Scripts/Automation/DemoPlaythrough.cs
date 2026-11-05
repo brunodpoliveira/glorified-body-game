@@ -153,6 +153,15 @@ namespace GlorifiedBody.Automation
             }
             SceneManager.sceneLoaded -= count;
             Record("one_load", loads == 0, $"scene loads during the tour={loads}");
+            // The last card: its hint and its own end (Bruno, 2026-11-05: "it needs to exit after the demo is complete").
+            GlorifiedBody.Story.Bulletin.Show(15);
+            float t3 = Time.realtimeSinceStartup;
+            while (!GlorifiedBody.Story.Bulletin.HintShown && Time.realtimeSinceStartup - t3 < 20f) yield return null;
+            yield return GlorifiedBody.UI.OverlayShot.Capture(GlorifiedBody.Story.Bulletin.Card, "demo_bulletin.png", 0.2f);
+            Record("bulletin_hint", GlorifiedBody.Story.Bulletin.HintShown, GlorifiedBody.Story.Bulletin.Shown.Length.ToString());
+            t3 = Time.realtimeSinceStartup;
+            while (GlorifiedBody.Story.Bulletin.IsShowing && Time.realtimeSinceStartup - t3 < 15f) yield return null;
+            Record("bulletin_closes_itself", !GlorifiedBody.Story.Bulletin.IsShowing, $"{Time.realtimeSinceStartup - t3:0.0} s");
             GameManager.Instance.LoadMainMenu();
             Finish();
         }

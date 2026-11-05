@@ -368,11 +368,7 @@ MonoBehaviour:
     - path: W2/W5
       position: {x: 1.5, y: 11}
       targetScene: W5
-    marks:
-    - kind: 2
-      path: '[World]/[W2]/[Props]/L9_Care_Chart'
-      position: {x: 9.5, y: 11.8}
-      label: HER CARE CHART
+    marks: []
   - scene: W3
     world: Demo
     floor: demo_2

@@ -107,6 +107,50 @@ namespace GlorifiedBody.Automation
                 && !Physics.Linecast(camPos, head, solid, QueryTriggerInteraction.Ignore);
         }
 
+        private const float ExitWidthOnScreen = 0.06f; // of the frame's -1..1: a doorway seen edge on is no doorway
+        private const float ExitStandOff = 0.7f;       // m in from the doorway: where she stands as she goes to it
+
+        /// <summary>
+        /// The exit rule (Bruno, 2026-11-05: "although i get good visuals on the room i also need to see the exits; in some
+        /// rooms the doors/exits are in a blind spot"). From this pose the doorway is in frame from foot to head height and
+        /// edge to edge, it does not show edge on, and nothing solid hides it. The camera stands on the room's side of it.
+        /// </summary>
+        public static bool SeesExit(Vector3 camPos, Quaternion rotation, float fieldOfView, Vector3 mouth, Vector3 outward, float width, int solid)
+        {
+            if (Vector3.Dot(camPos - mouth, outward) >= 0f) return false;
+            Vector3 middle = mouth + Vector3.up * 1.2f;
+            Vector3 side = new Vector3(outward.z, 0f, -outward.x) * (width * 0.5f - 0.1f);
+            foreach (Vector3 p in new[] { middle + side, middle - side, mouth + Vector3.up * 0.3f, mouth + Vector3.up * 1.8f })
+                if (!InFrame(camPos, rotation, fieldOfView, p, 0f)) return false;
+            if (Mathf.Abs(ScreenX(camPos, rotation, fieldOfView, middle + side) - ScreenX(camPos, rotation, fieldOfView, middle - side)) < ExitWidthOnScreen) return false;
+            return !Physics.Linecast(camPos, middle - outward * 0.3f, solid, QueryTriggerInteraction.Ignore); // short of the leaf of a shut door
+        }
+
+        /// <summary>Every exit of every room whose camera, the one for the floor in front of it, does not show it. Empty: the rule holds.</summary>
+        public static List<string> ExitsOutOfView(FixedCameraDirector director)
+        {
+            var missing = new List<string>();
+            int solid = 1 << LayerMask.NameToLayer("Default");
+            CameraZone[] zones = Object.FindObjectsByType<CameraZone>(FindObjectsSortMode.None);
+            foreach (GlorifiedBody.Rooms.Room room in GlorifiedBody.Rooms.Room.All)
+                foreach (GlorifiedBody.Rooms.Room.Exit exit in room.exits)
+                {
+                    Vector3 mouth = room.transform.position + exit.mouth;
+                    FixedCamera cam = CameraFor(mouth - exit.outward * ExitStandOff, zones, director);
+                    if (cam == null) { missing.Add($"{room.id} to {exit.to}: no camera"); continue; }
+                    if (!SeesExit(cam.transform.position, cam.transform.rotation, cam.fieldOfView, mouth, exit.outward, exit.width, solid))
+                        missing.Add($"{room.id} to {exit.to}: {cam.cameraName}");
+                }
+            return missing;
+        }
+
+        private static float ScreenX(Vector3 camPos, Quaternion rotation, float fieldOfView, Vector3 point)
+        {
+            Matrix4x4 view = Matrix4x4.Scale(new Vector3(1f, 1f, -1f)) * Matrix4x4.TRS(camPos, rotation, Vector3.one).inverse;
+            Vector4 clip = Matrix4x4.Perspective(fieldOfView, Aspect, 0.1f, 100f) * view * new Vector4(point.x, point.y, point.z, 1f);
+            return clip.w > 0.01f ? clip.x / clip.w : 0f;
+        }
+
         public static bool InFrame(FixedCamera cam, Vector3 point, float margin) =>
             InFrame(cam.transform.position, cam.transform.rotation, cam.fieldOfView, point, margin);
 
