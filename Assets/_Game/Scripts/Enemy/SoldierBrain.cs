@@ -198,10 +198,26 @@ namespace GlorifiedBody.Enemy
         {
             if (Alerted || Current == Phase.Dead) return;
             ScriptHeld = true;
+            scriptFacesHer = true;
             scriptWalk = walkTo; // sent from Update: the vendor AI takes a path only after its Start
         }
 
+        /// <summary>
+        /// It waits where it stands, unaware, until the story flag goes up (the corridor W2 before the talk of cutscene 02,
+        /// 2026-11-04: their sight alert would break the talk). An Alert, a hurt or a power near it ends the wait too. A load
+        /// past the flag lets it go at once.
+        /// </summary>
+        public void ScriptHoldUntil(string flag)
+        {
+            if (Alerted || Current == Phase.Dead) return;
+            ScriptHeld = true;
+            scriptFacesHer = false;
+            holdFlag = flag;
+        }
+
         private Vector3? scriptWalk;
+        private bool scriptFacesHer;
+        private string holdFlag = "";
 
         private void FaceHerWhileHeld(float dt)
         {
@@ -216,7 +232,7 @@ namespace GlorifiedBody.Enemy
                 GameObject p = GameObject.FindWithTag("Player");
                 player = p != null ? p.transform : null;
             }
-            if (player == null || body.IsMoving) return;
+            if (!scriptFacesHer || player == null || body.IsMoving) return;
             Vector3 to = player.position - transform.position;
             to.y = 0f;
             if (to.sqrMagnitude < 0.01f) return;
@@ -309,6 +325,7 @@ namespace GlorifiedBody.Enemy
                 Hold(recoverSeconds);
             }
 
+            if (ScriptHeld && !string.IsNullOrEmpty(holdFlag) && GlorifiedBody.Saving.StoryFlags.Has(holdFlag)) ScriptHeld = false;
             if (ScriptHeld)
             {
                 FaceHerWhileHeld(dt);

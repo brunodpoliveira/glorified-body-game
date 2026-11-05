@@ -92,6 +92,8 @@ namespace GlorifiedBody.Story
 
         [Tooltip("It runs by itself when the room starts (the first beat of a room). Its done flag still stops a second run.")]
         public bool runOnStart;
+        [Tooltip("With runOnStart: the screen is black from the first frame, because the beat opens on a cutscene (Bruno, 2026-11-04: \"it needs to start on the curscene right away\").")]
+        public bool startsBlack;
 
         /// <summary>
         /// A beat that runs "when the room starts": in a room of the world scene (2026-11-02) that is when she first
@@ -101,9 +103,26 @@ namespace GlorifiedBody.Story
         {
             if (!runOnStart) yield break;
             GlorifiedBody.Rooms.Room room = GetComponentInParent<GlorifiedBody.Rooms.Room>();
+            // Start, not Awake: the flags of a load stand now. A load past this beat, or a start in another room, stays clear.
+            GameObject her = Lucy();
+            if (startsBlack && !Done && (room == null || (her != null && room.Contains(her.transform.position + Vector3.up * 0.1f))))
+            {
+                covered = true;
+                GlorifiedBody.UI.ScreenFade.Cover();
+            }
             if (room != null && GlorifiedBody.Rooms.RoomTracker.Instance != null)
                 while (GlorifiedBody.Rooms.RoomTracker.Current != room) yield return null;
-            Run();
+            if (!Run()) ClearCover();
+        }
+
+        private bool covered;
+
+        /// <summary>A black start with no cutscene to take it over clears here (the cutscene clears it itself).</summary>
+        private void ClearCover()
+        {
+            if (!covered) return;
+            covered = false;
+            if (!CutscenePlayer.IsPlaying && GlorifiedBody.UI.ScreenFade.Alpha > 0.5f) GlorifiedBody.UI.ScreenFade.In(0.5f);
         }
 
         public string DoneFlag => string.IsNullOrEmpty(doneFlag) ? "seq_" + name : doneFlag;
@@ -130,6 +149,7 @@ namespace GlorifiedBody.Story
                 if (step == null) continue;
                 yield return Do(step);
             }
+            ClearCover();
             StoryFlags.Raise(DoneFlag);
             Running = false;
             RunTelemetry.Event("sequence_done", name);

@@ -52,6 +52,8 @@ namespace GlorifiedBody.Editor.Demo
 
         // ── The rooms ─────────────────────────────────────────────────
 
+        private const string ScientistDone = "demo_w1_scientist";
+
         /// <summary>W1: she wakes (beat 1), Stevens on the speaker and the printout (2), the scientist (3).</summary>
         private static void W1(DemoRoom r)
         {
@@ -69,40 +71,49 @@ namespace GlorifiedBody.Editor.Demo
                 ScriptStep.Raise(Feeding.LockFlag),  // round 18: the feed starts locked
                 ScriptStep.SetShort(88f),            // round 8: she starts nearly full on the SHORT
                 ScriptStep.LockHer(),
-                ScriptStep.Wait(1f),
             };
             wake.Add(ScriptStep.Play(DemoScripts.Fmv("cutscenes/01_the_wake.md", "01_the_wake", "cs01"))); // FMV (Bruno, 2026-11-02)
             wake.Add(ScriptStep.FreeHer());
-            r.Beat("W1_Wake", "demo_w1_wake", Vector3.zero, Vector3.zero, wake.ToArray());
+            // The game opens on the cutscene, black from the first frame (Bruno, 2026-11-04).
+            r.Beat("W1_Wake", "demo_w1_wake", Vector3.zero, Vector3.zero, wake.ToArray()).startsBlack = true;
 
-            // The scientist comes in at the door once she nears it with the printout (beat 3, cutscene 02). Bruno,
-            // 2026-11-02: "the first scientist should be in a secondary room ... it should do the dialogue then he
-            // attacks her". He waits in the corridor W2 behind the door, stops in the doorway (the cutscene), and attacks
-            // after it. A hit from her ends the talk early.
+            // The scientist meets her when she leaves the room (beat 3, cutscene 02). Bruno, 2026-11-02: "the first scientist
+            // should be in a secondary room ... it should do the dialogue then he attacks her"; 2026-11-04: "the second cutsene
+            // triggers even before i leave the room ... lucy didn't even escape yet". He waits at the west end of the corridor
+            // W2. She steps through the door and stops, he walks to her, the FMV plays, he steps closer and attacks. A hit from
+            // her ends the talk early.
             GameObject scientist = MenuLoopSetup.EnsureChild(r.Figures, "Group_Scientist");
-            r.Figure("Scientist_Knife", "labworker_knife", new Vector3(4f, 0f, 12.3f), 0f, parent: scientist);
-            scientist.SetActive(false);
-            // The talk is an FMV (Bruno, 2026-11-02): she sees him come into the doorway, the cutscene plays, he steps in after
-            // it and attacks.
+            EnemySpawn knife = r.Figure("Scientist_Knife", "labworker_knife", new Vector3(0.7f, 0f, 12.4f), 90f, parent: scientist);
+            knife.heldUntilFlag = ScientistDone;
+            EditorUtility.SetDirty(knife);
             var meet = new List<ScriptStep>
             {
-                ScriptStep.Show(scientist),
-                ScriptStep.Approach(scientist, new Vector3(4f, 0f, 13.85f)),
+                ScriptStep.LockHer(),
+                ScriptStep.Approach(scientist, new Vector3(1.9f, 0f, 12.7f)),
                 ScriptStep.Wait(1.8f),
                 ScriptStep.Play(DemoScripts.Fmv("cutscenes/02_the_scientist.md", "02_the_scientist", "cs02")),
-                ScriptStep.Approach(scientist, new Vector3(4f, 0f, 14.7f)),
+                ScriptStep.Approach(scientist, new Vector3(2.5f, 0f, 13f)),
                 ScriptStep.Wait(0.5f),
+                ScriptStep.FreeHer(),
             };
             meet.Add(ScriptStep.Alert(scientist));
-            r.Beat("W1_Scientist", "demo_w1_scientist", new Vector3(4f, 1f, 15.6f), new Vector3(5.6f, 2f, 1.6f), meet.ToArray());
+            r.Beat("W1_Scientist", ScientistDone, new Vector3(4f, 1f, 13.3f), new Vector3(3.4f, 2f, 0.6f), meet.ToArray());
         }
 
         /// <summary>W2: three armed scientists outside (beat 4), her care chart on the floor (5, L9 unlocks the feed).</summary>
         private static void W2(DemoRoom r)
         {
-            r.Figure("Scientist_A", "labworker_pistol", new Vector3(6.5f, 0f, 12.2f), 300f);
-            r.Figure("Scientist_B", "labworker_pistol", new Vector3(8.5f, 0f, 13f), 280f);
-            r.Figure("Scientist_C", "labworker_pistol", new Vector3(10.5f, 0f, 12.2f), 270f);
+            // They wait until the talk of cutscene 02 ends (its Alert calls them): a sight alert would break the talk.
+            foreach (EnemySpawn waits in new[]
+            {
+                r.Figure("Scientist_A", "labworker_pistol", new Vector3(6.5f, 0f, 12.2f), 300f),
+                r.Figure("Scientist_B", "labworker_pistol", new Vector3(8.5f, 0f, 13f), 280f),
+                r.Figure("Scientist_C", "labworker_pistol", new Vector3(10.5f, 0f, 12.2f), 270f),
+            })
+            {
+                waits.heldUntilFlag = ScientistDone;
+                EditorUtility.SetDirty(waits);
+            }
             r.Item("L9_Care_Chart", DemoItems.L9(), new Vector3(9.5f, 0.04f, 11.8f), new Vector3(0.24f, 0.03f, 0.32f));
             r.Sign("Sign_Pain", "YOUR PAIN IS SEEN. ASK FOR RELIEF.", new Vector3(18f, 1.9f, 13.98f), Vector3.back, new Vector2(2.6f, 0.5f));
             r.Prop("Bench_A", new Vector3(16f, 0f, 11.4f), new Vector3(1.6f, 0.45f, 0.45f));

@@ -34,6 +34,8 @@ namespace GlorifiedBody.Enemy
         public string foundLine = "";
         [Tooltip("A hider is found this near (metres). 0: never (the nurse who prays on).")]
         public float foundAt = 2f;
+        [Tooltip("It waits, unaware, until this story flag goes up, or the script or a hit wakes it (the corridor before a talk).")]
+        public string heldUntilFlag = "";
 
         public static int Spawned { get; private set; }
         public static int Missing { get; private set; }
@@ -63,6 +65,7 @@ namespace GlorifiedBody.Enemy
             if (drop != null && figure.GetComponent<CivilianBrain>() != null) figure.AddComponent<GlorifiedBody.Interaction.CarrierTalk>();
             if (!string.IsNullOrEmpty(line) && figure.TryGetComponent(out PatientBrain patient)) patient.Line = line;
             if (hides && figure.TryGetComponent(out CivilianBrain hider)) hider.SetHider(hideLine, foundLine, foundAt);
+            if (!string.IsNullOrEmpty(heldUntilFlag) && figure.TryGetComponent(out SoldierBrain held)) held.ScriptHoldUntil(heldUntilFlag);
             if (!string.IsNullOrEmpty(fate)) figure.AddComponent<GlorifiedBody.Story.FateFlag>().fate = fate;
             if (scanImage != null || scanClip != null) AddScan(figure);
             Spawned++;

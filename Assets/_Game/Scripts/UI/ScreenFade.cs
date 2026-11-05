@@ -20,6 +20,14 @@ namespace GlorifiedBody.UI
         public static void Out(float seconds, Action then) => Ensure().Run(1f, seconds, then);
         public static void In(float seconds) => Ensure().Run(0f, seconds, null);
 
+        /// <summary>Black at once, with no fade (a world that opens on a cutscene: no frame of the game shows first).</summary>
+        public static void Cover()
+        {
+            ScreenFade fade = Ensure();
+            fade.Run(1f, 0f, null);
+            fade.image.color = new Color(0f, 0f, 0f, 1f);
+        }
+
         private static ScreenFade Ensure()
         {
             if (instance != null) return instance;

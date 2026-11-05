@@ -59,6 +59,9 @@ namespace GlorifiedBody.Story
             return true;
         }
 
+        /// <summary>The cutscene's picture is on the screen (the fade may still clear over it).</summary>
+        public static bool ShowsPicture => instance != null && instance.canvas != null && instance.canvas.enabled;
+
         /// <summary>Ends the playing cutscene now (SKIP in the menu, and tests).</summary>
         public static void Skip()
         {
@@ -208,8 +211,12 @@ namespace GlorifiedBody.Story
             RunTelemetry.Event("cutscene_start", asset.cutsceneId);
             MusicDirector.Score(asset.music);
             bool fadeDone = false;
-            ScreenFade.Out(FadeSeconds, () => fadeDone = true);
-            while (!fadeDone) yield return null;
+            // Already black (a world that opens on this cutscene, ScriptedSequence.startsBlack): no fade first.
+            if (ScreenFade.Alpha < 0.99f)
+            {
+                ScreenFade.Out(FadeSeconds, () => fadeDone = true);
+                while (!fadeDone) yield return null;
+            }
             canvas.enabled = true;
             ScreenFade.In(FadeSeconds);
             float startedAt = Time.unscaledTime;

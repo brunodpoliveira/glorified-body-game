@@ -477,6 +477,10 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
 - 2026-11-03, night, the backlog sweep: the armour knee test was already fixed (2026-10-31); the patient test counts her
   own lines (`Bark.CountOf`); the gas cloud test camera leaves out the figures. Manual list for the morning:
   `devlog-notes/2026-11-03_manual_tests.md` (33 steps).
+- 2026-11-04, THE OPENING (`devlog-notes/2026-11-04_opening.md`, Bruno: "it needs to start on the curscene right away";
+  "the second cutsene triggers even before i leave the room"): `ScriptedSequence.startsBlack` + `ScreenFade.Cover` (black
+  from the first frame, no game frame before the wake). The scientist's trigger stands in W2 past the door; he waits at the
+  corridor's west end; the three of W2 wait too (`EnemySpawn.heldUntilFlag`, `SoldierBrain.ScriptHoldUntil`).
 
 ## Rules
 

@@ -11,6 +11,7 @@ using UnityEngine.TestTools;
 using GlorifiedBody.Automation;
 using GlorifiedBody.Cameras;
 using GlorifiedBody.Core;
+using GlorifiedBody.Enemy;
 using GlorifiedBody.Player;
 using GlorifiedBody.Saving;
 using GlorifiedBody.Story;
@@ -278,7 +279,7 @@ namespace GlorifiedBody.Tests.PlayMode
         public IEnumerator W1_StartsTheStory_TheFeedLocked_TheShortNearlyFull_StevensSpeaks()
         {
             yield return LoadWorld();
-            // The wake is an FMV slot (Bruno, 2026-11-02): it starts after a breath and a fade.
+            // The wake is an FMV slot (Bruno, 2026-11-02): the game opens on it (2026-11-04).
             yield return WaitUntil(() => CutscenePlayer.IsPlaying && CutscenePlayer.ShotIndex >= 0, 10f);
             Assert.AreEqual("01_the_wake", CutscenePlayer.Current, "the wake plays as a cutscene");
             yield return null;
@@ -350,6 +351,54 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator Start_OpensOnTheWake_NoFrameOfTheGameBeforeIt()
+        {
+            // Bruno, 2026-11-04: "we see the game screen, then it fades to the cutscene. it needs to start on the curscene
+            // right away".
+            GameManager.Instance.LoadLevel(World);
+            yield return WaitUntil(() => SceneManager.GetActiveScene().name == World, 30f);
+            Assert.AreEqual(World, SceneManager.GetActiveScene().name);
+            int frames = 0;
+            float shown = -1f;
+            float t0 = Time.realtimeSinceStartup;
+            while (!CutscenePlayer.ShowsPicture && Time.realtimeSinceStartup - t0 < 5f)
+            {
+                Assert.Greater(GlorifiedBody.UI.ScreenFade.Alpha, 0.99f, $"frame {frames} of the world: the screen stays black until the cutscene shows");
+                frames++;
+                yield return null;
+            }
+            shown = Time.realtimeSinceStartup - t0;
+            Debug.Log($"[DemoTests] the wake shows after {frames} frames, {shown:0.00} s");
+            Assert.IsTrue(CutscenePlayer.ShowsPicture, "the wake shows");
+            Assert.AreEqual("01_the_wake", CutscenePlayer.Current);
+            Assert.Less(shown, 0.5f, "right away: no breath and no fade before it");
+        }
+
+        [UnityTest]
+        public IEnumerator TheScientist_WaitsUntilSheLeavesTheRoom()
+        {
+            // Bruno, 2026-11-04: "the second cutsene triggers even before i leave the room ... lucy didn't even escape yet".
+            yield return LoadWorld();
+            yield return WaitUntil(() => CutscenePlayer.IsPlaying && CutscenePlayer.ShotIndex >= 0, 10f);
+            CutscenePlayer.Skip();
+            yield return WaitUntil(() => StoryFlags.Has("demo_w1_wake"), 10f);
+            ScriptedSequence meet = GameObject.Find("W1_Scientist").GetComponent<ScriptedSequence>();
+            TankController tank = GameObject.FindGameObjectWithTag("Player").GetComponent<TankController>();
+            foreach (Vector3 inRoom in new[] { new Vector3(3.3f, 0f, 16f), new Vector3(4f, 0f, 15f), new Vector3(4f, 0f, 14.6f) })
+            {
+                tank.Teleport(inRoom, 180f);
+                yield return new WaitForSeconds(0.3f);
+                Assert.IsFalse(meet.Running || meet.Done, $"at {inRoom}, inside W1: no scientist yet");
+            }
+            SoldierBrain[] corridor = UnityEngine.Object.FindObjectsByType<SoldierBrain>(FindObjectsSortMode.None);
+            Assert.GreaterOrEqual(corridor.Length, 4, "the scientist and the three of W2 wait in the corridor");
+            tank.Teleport(new Vector3(4f, 0f, 13.3f), 180f);
+            yield return WaitUntil(() => meet.Running, 3f);
+            Assert.IsTrue(meet.Running, "through the door: the beat starts");
+            Assert.AreEqual("W2", GlorifiedBody.Rooms.RoomTracker.CurrentId, "she stands in the corridor");
+        }
+
+        [UnityTest]
         public IEnumerator W1_TheScientist_ComesInFromOutside_TalksFirst_ThenAttacks()
         {
             // Bruno, 2026-11-02: "the dude just pops into the room and begins attacking her immediately (even as the
@@ -359,9 +408,9 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.IsTrue(StoryFlags.Has("demo_w1_wake"), "the wake ends");
             ScriptedSequence meet = GameObject.Find("W1_Scientist").GetComponent<ScriptedSequence>();
             GameObject lucy = GameObject.FindGameObjectWithTag("Player");
-            lucy.GetComponent<TankController>().Teleport(new Vector3(4f, 0f, 15.8f), 180f);
+            lucy.GetComponent<TankController>().Teleport(new Vector3(4f, 0f, 13.3f), 180f);
             yield return WaitUntil(() => meet.Running, 3f);
-            Assert.IsTrue(meet.Running, "she nears the door: the beat starts");
+            Assert.IsTrue(meet.Running, "through the door: the beat starts");
             GameObject scientist = null;
             yield return WaitUntil(() => (scientist = GameObject.Find("Scientist_Knife")) != null && scientist.GetComponent<GlorifiedBody.Enemy.SoldierBrain>() != null, 3f);
             Assert.IsNotNull(scientist, "the scientist spawns");
@@ -376,8 +425,9 @@ namespace GlorifiedBody.Tests.PlayMode
                 yield return null;
             }
             Assert.IsNull(early, "he talks first, he attacks after the last line");
-            Assert.Less(startZ, 14f - DemoRoomWall, "he starts outside the room, in the corridor W2 behind the door (the cutscene: he stops in the doorway)");
-            Assert.GreaterOrEqual(scientist.transform.position.z, 14f - 0.2f, "by the last line he stands in the doorway or in the room");
+            Assert.Less(startZ, 14f - DemoRoomWall, "he waits outside the room, in the corridor W2");
+            Assert.Less(Vector3.Distance(scientist.transform.position, lucy.transform.position), 3.5f, "by the last line he stands near her in the corridor");
+            Assert.Less(scientist.transform.position.z, 14f, "and the talk happens outside W1 (Bruno, 2026-11-04)");
             yield return null;
             Assert.IsTrue(brain.Alerted, "then he attacks");
         }
