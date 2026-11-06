@@ -32,7 +32,14 @@ namespace GlorifiedBody.UI
             public ItemDefinition Item;
             public DrugType? Drug;
             public int Count;
+            public int Category;
         }
+
+        // Bruno, 2026-11-06: "three categories: consumables, keys, logs, in that order; can be scrolled each cat by going up or down".
+        public const int Consumables = 0, Keys = 1, Logs = 2;
+        public static readonly string[] CategoryNames = { "CONSUMABLES", "KEYS", "LOGS" };
+        public const int VisibleRows = 6;
+        private static readonly DrugType[] DrugOrder = { DrugType.Nalcon, DrugType.NalconFire, DrugType.NalconLift, DrugType.Red, DrugType.DFelon };
 
         private Canvas canvas;
         private GameObject root;
@@ -40,11 +47,12 @@ namespace GlorifiedBody.UI
         private Text wordsText;
         private Text keysText;
         private Text slotsText;
-        private RectTransform cellRow;
         private GameObject readerPanel;
         private Text readerTitle;
         private Text readerBody;
-        private readonly List<Image> cells = new List<Image>();
+        private readonly Image[,] cells = new Image[CategoryNames.Length, VisibleRows];
+        private readonly Text[] categoryHeaders = new Text[CategoryNames.Length];
+        private readonly int[] scrolls = new int[CategoryNames.Length];
 
         private ItemInventory inventory;
         private DrugInventory drugs;
@@ -153,13 +161,15 @@ namespace GlorifiedBody.UI
                 else if (back || toggle) { pendingDrug = -1; Select(Selected); }
                 return;
             }
-            if (toggle || back)
+            if (toggle)
             {
                 Close();
                 return;
             }
-            if (GameInput.GetActionDown(InputManager.GameAction.TurnLeft, KeyCode.A)) Select(Selected - 1);
-            if (GameInput.GetActionDown(InputManager.GameAction.TurnRight, KeyCode.D)) Select(Selected + 1);
+            if (GameInput.GetActionDown(InputManager.GameAction.Forward, KeyCode.W)) Scroll(-1);
+            if (back) Scroll(1);
+            if (GameInput.GetActionDown(InputManager.GameAction.TurnLeft, KeyCode.A)) ChangeCategory(-1);
+            if (GameInput.GetActionDown(InputManager.GameAction.TurnRight, KeyCode.D)) ChangeCategory(1);
             if (use) Act();
             else if (drop) Drop();
         }
@@ -229,41 +239,120 @@ namespace GlorifiedBody.UI
             OnClosed?.Invoke();
         }
 
-        /// <summary>The entries: the key items, the carried objects, then one entry per drug type held.</summary>
+        /// <summary>The entries, category by category: the drugs and the carried objects, the keys, the logs.</summary>
         private void Rebuild()
         {
             entries.Clear();
-            foreach (ItemDefinition item in inventory.Critical) entries.Add(FromItem(item, 1));
-            foreach (ItemDefinition item in inventory.Carried) entries.Add(FromItem(item, 1));
             if (drugs != null)
             {
-                foreach (DrugType type in (DrugType[])Enum.GetValues(typeof(DrugType)))
+                foreach (DrugType type in DrugOrder)
                 {
                     int count = drugs.Count(type);
                     if (count <= 0) continue;
                     ItemDefinition def = Resources.Load<ItemDefinition>("Items/item_" + type.ToString().ToLowerInvariant());
                     Entry e = FromItem(def, count);
                     e.Drug = type;
+                    e.Category = Consumables;
                     if (def == null)
                     {
                         e.Name = type.ToString().ToUpperInvariant();
                         e.Words = "A drug.";
                         e.Colour = new Color(0.4f, 0.8f, 0.4f);
                     }
-                    e.Label = $"{e.Name}\nx{count}";
+                    e.Label = $"{e.Name}  x{count}";
                     entries.Add(e);
                 }
             }
-            for (int i = 0; i < cells.Count; i++)
-            {
-                bool used = i < entries.Count;
-                cells[i].gameObject.SetActive(used);
-                if (!used) continue;
-                cells[i].color = entries[i].Colour * 0.8f + new Color(0f, 0f, 0f, 0.2f);
-                cells[i].GetComponentInChildren<Text>().text = entries[i].Label;
-            }
+            foreach (ItemDefinition item in inventory.Carried) entries.Add(FromItem(item, 1));
+            for (int category = Keys; category <= Logs; category++)
+                foreach (ItemDefinition item in inventory.Critical)
+                    if (CategoryOf(item) == category) entries.Add(FromItem(item, 1));
             slotsText.text = $"SLOTS {inventory.UsedSlots} / {inventory.Capacity}      KEY ITEMS {inventory.Critical.Count} (no slot)";
+            Draw();
         }
+
+        private static int CategoryOf(ItemDefinition item)
+        {
+            if (item == null) return Consumables;
+            return item.kind == ItemKind.Log || item.kind == ItemKind.AudioLog ? Logs : item.IsCritical ? Keys : Consumables;
+        }
+
+        /// <summary>The entries of one category, as indexes into the flat list.</summary>
+        private List<int> InCategory(int category)
+        {
+            var list = new List<int>();
+            for (int i = 0; i < entries.Count; i++)
+                if (entries[i].Category == category) list.Add(i);
+            return list;
+        }
+
+        /// <summary>Up or down inside the category of the selected entry. It wraps, and the list scrolls to keep it in view.</summary>
+        private void Scroll(int step)
+        {
+            if (entries.Count == 0) return;
+            List<int> list = InCategory(entries[Selected].Category);
+            int at = list.IndexOf(Selected);
+            Select(list[((at + step) % list.Count + list.Count) % list.Count]);
+        }
+
+        /// <summary>Left or right to the next category that holds anything, at the same row or its last row.</summary>
+        private void ChangeCategory(int step)
+        {
+            if (entries.Count == 0) return;
+            int category = entries[Selected].Category;
+            int row = InCategory(category).IndexOf(Selected);
+            for (int i = 1; i <= CategoryNames.Length; i++)
+            {
+                List<int> list = InCategory(((category + step * i) % CategoryNames.Length + CategoryNames.Length) % CategoryNames.Length);
+                if (list.Count == 0) continue;
+                Select(list[Mathf.Min(row, list.Count - 1)]);
+                return;
+            }
+        }
+
+        /// <summary>The three lists: each shows VisibleRows entries from its scroll, the selected one outlined.</summary>
+        private void Draw()
+        {
+            for (int c = 0; c < CategoryNames.Length; c++)
+            {
+                List<int> list = InCategory(c);
+                int at = entries.Count > 0 && Selected < entries.Count ? list.IndexOf(Selected) : -1;
+                if (at >= 0)
+                {
+                    if (at < scrolls[c]) scrolls[c] = at;
+                    if (at >= scrolls[c] + VisibleRows) scrolls[c] = at - VisibleRows + 1;
+                }
+                scrolls[c] = Mathf.Clamp(scrolls[c], 0, Mathf.Max(0, list.Count - VisibleRows));
+                bool more = list.Count > VisibleRows;
+                categoryHeaders[c].text = CategoryNames[c] + (more ? $"  {(scrolls[c] > 0 ? "^" : " ")}{(scrolls[c] + VisibleRows < list.Count ? "v" : " ")}" : "");
+                categoryHeaders[c].color = at >= 0 ? new Color(1f, 0.95f, 0.6f) : new Color(0.7f, 0.75f, 0.75f);
+                for (int r = 0; r < VisibleRows; r++)
+                {
+                    Image cell = cells[c, r];
+                    int index = scrolls[c] + r < list.Count ? list[scrolls[c] + r] : -1;
+                    bool empty = list.Count == 0 && r == 0;
+                    cell.gameObject.SetActive(index >= 0 || empty);
+                    Text label = cell.GetComponentInChildren<Text>();
+                    Outline outline = cell.GetComponent<Outline>();
+                    if (empty)
+                    {
+                        cell.color = new Color(0f, 0f, 0f, 0.2f);
+                        label.text = "(nothing)";
+                        outline.effectColor = new Color(0f, 0f, 0f, 0f);
+                        continue;
+                    }
+                    if (index < 0) continue;
+                    cell.color = entries[index].Colour * 0.8f + new Color(0f, 0f, 0f, 0.2f);
+                    label.text = entries[index].Label;
+                    bool selected = index == Selected;
+                    outline.effectColor = selected ? new Color(1f, 0.95f, 0.6f, 1f) : new Color(0f, 0f, 0f, 0.6f);
+                    outline.effectDistance = selected ? new Vector2(4f, 4f) : new Vector2(1f, 1f);
+                }
+            }
+        }
+
+        /// <summary>The first row of a category on screen now (the tests).</summary>
+        public int ScrollOf(int category) => scrolls[category];
 
         private static Entry FromItem(ItemDefinition item, int count)
         {
@@ -276,7 +365,8 @@ namespace GlorifiedBody.UI
                 Words = $"{tag}. {item.description}",
                 Colour = item.colour,
                 Item = item,
-                Count = count
+                Count = count,
+                Category = CategoryOf(item)
             };
         }
 
@@ -289,25 +379,21 @@ namespace GlorifiedBody.UI
                 Selected = 0;
                 titleText.text = "Item...  (nothing)";
                 wordsText.text = "She carries nothing yet.";
-                keysText.text = $"{Key(InputManager.GameAction.Inventory)} / {Key(InputManager.GameAction.Back)}  close";
+                keysText.text = $"{Key(InputManager.GameAction.Inventory)}  close";
+                Draw();
                 return;
             }
             Selected = (index % entries.Count + entries.Count) % entries.Count;
             pendingDrug = -1;
             askingDrop = false;
-            for (int i = 0; i < entries.Count && i < cells.Count; i++)
-            {
-                Outline outline = cells[i].GetComponent<Outline>();
-                outline.effectColor = i == Selected ? new Color(1f, 0.95f, 0.6f, 1f) : new Color(0f, 0f, 0f, 0.6f);
-                outline.effectDistance = i == Selected ? new Vector2(4f, 4f) : new Vector2(1f, 1f);
-            }
+            Draw();
             Entry e = entries[Selected];
             titleText.text = "Item...  " + e.Name;
             wordsText.text = e.Words;
             string action = e.Drug.HasValue ? "use" : e.Item != null && e.Item.kind == ItemKind.Log ? "read"
                 : e.Item != null && e.Item.kind == ItemKind.AudioLog ? (TapePlaying(e.Item) ? "pause" : "play") : "look";
             string dropKey = e.Drug.HasValue || (e.Item != null && !e.Item.IsCritical) ? $"      {Key(InputManager.GameAction.Drop)}  drop" : "";
-            keysText.text = $"{Key(InputManager.GameAction.TurnLeft)} {Key(InputManager.GameAction.TurnRight)}  select      {Key(InputManager.GameAction.Interact)}  {action}{dropKey}      {Key(InputManager.GameAction.Inventory)} / {Key(InputManager.GameAction.Back)}  close";
+            keysText.text = $"{Key(InputManager.GameAction.Forward)} {Key(InputManager.GameAction.Back)}  scroll      {Key(InputManager.GameAction.TurnLeft)} {Key(InputManager.GameAction.TurnRight)}  category      {Key(InputManager.GameAction.Interact)}  {action}{dropKey}      {Key(InputManager.GameAction.Inventory)}  close";
         }
 
         /// <summary>Interact on the selected entry: read a log, use a drug, or say where a key goes.</summary>
@@ -389,34 +475,25 @@ namespace GlorifiedBody.UI
 
             root = Panel(canvasObj.transform, "Root", new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(1920f, 1080f), new Color(0f, 0f, 0f, 0.35f));
 
-            // Left: the item row under its title (Galerians: "Ability... Nalcon" over the icons).
-            GameObject titleBox = Panel(root.transform, "TitleBox", new Vector2(0.5f, 0f), new Vector2(-330f, 330f), new Vector2(1000f, 70f), new Color(0.08f, 0.1f, 0.12f, 0.92f));
+            // Left: the title, and under it the three lists.
+            GameObject titleBox = Panel(root.transform, "TitleBox", new Vector2(0.5f, 0f), new Vector2(-330f, 450f), new Vector2(1000f, 70f), new Color(0.08f, 0.1f, 0.12f, 0.92f));
             titleBox.AddComponent<Outline>().effectColor = new Color(0.85f, 0.88f, 0.9f, 0.9f);
             titleText = Label(titleBox.transform, "Title", 32, FontStyle.Bold, new Color(0.7f, 0.95f, 0.95f), TextAnchor.MiddleLeft, new Vector2(960f, 60f));
-            GameObject rowBox = Panel(root.transform, "RowBox", new Vector2(0.5f, 0f), new Vector2(-330f, 185f), new Vector2(1000f, 200f), new Color(0.08f, 0.1f, 0.12f, 0.92f));
+            GameObject rowBox = Panel(root.transform, "RowBox", new Vector2(0.5f, 0f), new Vector2(-330f, 240f), new Vector2(1000f, 340f), new Color(0.08f, 0.1f, 0.12f, 0.92f));
             rowBox.AddComponent<Outline>().effectColor = new Color(0.85f, 0.88f, 0.9f, 0.9f);
-            var rowObj = new GameObject("Cells", typeof(RectTransform));
-            rowObj.transform.SetParent(rowBox.transform, false);
-            cellRow = rowObj.GetComponent<RectTransform>();
-            cellRow.anchorMin = cellRow.anchorMax = new Vector2(0.5f, 0.5f);
-            cellRow.sizeDelta = new Vector2(960f, 150f);
-            var layout = rowObj.AddComponent<HorizontalLayoutGroup>();
-            layout.spacing = 14f;
-            layout.childAlignment = TextAnchor.MiddleLeft;
-            layout.childControlWidth = false;
-            layout.childControlHeight = false;
-            layout.childForceExpandWidth = false; // the cells sit side by side from the left, no stretched gaps
-            layout.childForceExpandHeight = false;
-            for (int i = 0; i < 8; i++)
+            for (int c = 0; c < CategoryNames.Length; c++)
             {
-                GameObject cell = new GameObject("Cell_" + i, typeof(RectTransform));
-                cell.transform.SetParent(rowObj.transform, false);
-                cell.GetComponent<RectTransform>().sizeDelta = new Vector2(104f, 140f);
-                Image image = cell.AddComponent<Image>();
-                cell.AddComponent<Outline>();
-                Text label = Label(cell.transform, "Label", 16, FontStyle.Bold, Color.white, TextAnchor.MiddleCenter, new Vector2(100f, 136f));
-                label.gameObject.AddComponent<Outline>().effectColor = new Color(0f, 0f, 0f, 0.9f);
-                cells.Add(image);
+                float x = -330f + c * 330f;
+                categoryHeaders[c] = Label(rowBox.transform, "Header_" + CategoryNames[c], 22, FontStyle.Bold, Color.white, TextAnchor.MiddleCenter, new Vector2(310f, 34f));
+                categoryHeaders[c].rectTransform.anchoredPosition = new Vector2(x, 142f);
+                for (int r = 0; r < VisibleRows; r++)
+                {
+                    GameObject cell = Panel(rowBox.transform, $"Cell_{c}_{r}", new Vector2(0.5f, 0.5f), new Vector2(x, 100f - r * 46f), new Vector2(310f, 40f), Color.grey);
+                    cell.AddComponent<Outline>();
+                    Text label = Label(cell.transform, "Label", 18, FontStyle.Bold, Color.white, TextAnchor.MiddleCenter, new Vector2(300f, 36f));
+                    label.gameObject.AddComponent<Outline>().effectColor = new Color(0f, 0f, 0f, 0.9f);
+                    cells[c, r] = cell.GetComponent<Image>();
+                }
             }
 
             // Right: the words and the keys (Galerians: "FACULTY  Select Shock Wave?  X SELECT  Δ CANCEL").
@@ -428,7 +505,7 @@ namespace GlorifiedBody.UI
             keysText = Label(wordsBox.transform, "Keys", 18, FontStyle.Bold, new Color(0.85f, 0.85f, 0.85f), TextAnchor.LowerCenter, new Vector2(580f, 240f));
             slotsText = Label(root.transform, "Slots", 22, FontStyle.Bold, new Color(0.95f, 0.92f, 0.8f), TextAnchor.MiddleCenter, new Vector2(1400f, 40f));
             slotsText.rectTransform.anchorMin = slotsText.rectTransform.anchorMax = new Vector2(0.5f, 0f);
-            slotsText.rectTransform.anchoredPosition = new Vector2(-330f, 395f);
+            slotsText.rectTransform.anchoredPosition = new Vector2(-330f, 510f);
 
             readerPanel = Panel(root.transform, "Reader", new Vector2(0.5f, 0.5f), new Vector2(0f, 120f), new Vector2(1000f, 640f), new Color(0.06f, 0.06f, 0.07f, 0.96f));
             readerTitle = Label(readerPanel.transform, "Title", 30, FontStyle.Bold, new Color(0.96f, 0.93f, 0.9f), TextAnchor.UpperCenter, new Vector2(900f, 600f));

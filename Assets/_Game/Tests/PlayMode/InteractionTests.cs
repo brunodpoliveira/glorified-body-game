@@ -306,12 +306,16 @@ namespace GlorifiedBody.Tests.PlayMode
             pad.SetHeld(InputManager.GameAction.Forward, false);
             Assert.AreEqual(lucyBefore, tank.transform.position, "she does not walk while it is open");
 
-            yield return Press(InputManager.GameAction.Interact); // the log is first: read it
+            Assert.AreEqual(InventoryUI.Consumables, screen.Entries[screen.Selected].Category, "it opens on the first category");
+            yield return Press(InputManager.GameAction.TurnRight); // the keys are empty: to the logs
+            Assert.AreEqual(InventoryUI.Logs, screen.Entries[screen.Selected].Category, "the next category that holds anything");
+            yield return Press(InputManager.GameAction.Interact);
             Assert.IsTrue(screen.ReaderOpen, "Interact reads the log from the inventory");
             yield return Press(InputManager.GameAction.Back);
             Assert.IsFalse(screen.ReaderOpen);
-            yield return Press(InputManager.GameAction.TurnRight);
-            Assert.AreEqual(1, screen.Selected, "the next cell");
+            Assert.IsTrue(screen.IsOpen, "the page closes, the inventory stays");
+            yield return Press(InputManager.GameAction.TurnLeft);
+            Assert.AreEqual(InventoryUI.Consumables, screen.Entries[screen.Selected].Category, "back to the drugs");
             yield return Press(InputManager.GameAction.Interact); // "Use the red?"
             Assert.IsTrue(screen.AskingDrug, "it asks first (Bruno, 2026-10-22)");
             Assert.AreEqual(2, tank.GetComponent<DrugInventory>().Count(GlorifiedBody.Player.DrugType.Red), "nothing used yet");
@@ -323,6 +327,70 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.IsFalse(screen.IsOpen, "the Inventory key closes it");
             Assert.IsTrue(GameManager.Instance.IsPlaying);
             Assert.AreEqual(1f, Time.timeScale, "the room runs again");
+        }
+
+        [UnityTest]
+        public IEnumerator TheInventory_HasThreeCategories_InOrder_AndUpAndDownScrollEach()
+        {
+            // Bruno, 2026-11-06: "three categories: consumables, keys, logs, in that order; can be scrolled each cat by going up or down".
+            var items = tank.GetComponent<ItemInventory>();
+            DrugInventory carried = tank.GetComponent<DrugInventory>();
+            carried.DebugSet(GlorifiedBody.Player.DrugType.Red, 1);
+            carried.DebugSet(GlorifiedBody.Player.DrugType.NalconFire, 1);
+            ItemDefinition Make(string id, ItemKind kind)
+            {
+                ItemDefinition item = ScriptableObject.CreateInstance<ItemDefinition>();
+                item.itemId = id;
+                item.displayName = id.ToUpperInvariant();
+                item.kind = kind;
+                return item;
+            }
+            items.TryAdd(Make("key_a", ItemKind.Key));
+            items.TryAdd(Make("plan_a", ItemKind.Map));
+            for (int i = 0; i < 8; i++) items.TryAdd(Make("log_" + i, i % 2 == 0 ? ItemKind.Log : ItemKind.AudioLog));
+            InventoryUI screen = UnityEngine.Object.FindFirstObjectByType<InventoryUI>();
+            yield return Press(InputManager.GameAction.Inventory);
+            Assert.IsTrue(screen.IsOpen);
+
+            var categories = new System.Collections.Generic.List<int>();
+            foreach (InventoryUI.Entry e in screen.Entries) categories.Add(e.Category);
+            var sorted = new System.Collections.Generic.List<int>(categories);
+            sorted.Sort();
+            CollectionAssert.AreEqual(sorted, categories, "consumables, keys, logs, in that order");
+            Assert.AreEqual(GlorifiedBody.Player.DrugType.NalconFire, screen.Entries[0].Drug, "the capsule before the SHORT capsule");
+            Assert.AreEqual(2, categories.FindAll(c => c == InventoryUI.Consumables).Count);
+            Assert.AreEqual(2, categories.FindAll(c => c == InventoryUI.Keys).Count, "a key and a floor plan");
+            Assert.AreEqual(8, categories.FindAll(c => c == InventoryUI.Logs).Count, "the logs and the tapes");
+
+            // Up and down stay inside the category and wrap.
+            int first = screen.Selected;
+            yield return Press(InputManager.GameAction.Back);
+            Assert.AreEqual(first + 1, screen.Selected, "down: the next one");
+            Assert.AreEqual(InventoryUI.Consumables, screen.Entries[screen.Selected].Category);
+            Assert.IsTrue(screen.IsOpen, "the down key does not close it");
+            yield return Press(InputManager.GameAction.Back);
+            Assert.AreEqual(first, screen.Selected, "it wraps inside the category");
+            yield return Press(InputManager.GameAction.Forward);
+            Assert.AreEqual(first + 1, screen.Selected, "up wraps too");
+
+            // A list longer than the screen scrolls.
+            yield return Press(InputManager.GameAction.TurnRight);
+            Assert.AreEqual(InventoryUI.Keys, screen.Entries[screen.Selected].Category, "right: the next category");
+            yield return Press(InputManager.GameAction.TurnRight);
+            Assert.AreEqual(InventoryUI.Logs, screen.Entries[screen.Selected].Category);
+            Assert.AreEqual(0, screen.ScrollOf(InventoryUI.Logs));
+            int row = 1; // the same row as before
+            for (; row < InventoryUI.VisibleRows - 1; row++) yield return Press(InputManager.GameAction.Back);
+            Assert.AreEqual(0, screen.ScrollOf(InventoryUI.Logs), "the sixth row still shows");
+            yield return Press(InputManager.GameAction.Back);
+            Assert.AreEqual(1, screen.ScrollOf(InventoryUI.Logs), "the seventh scrolls the list");
+            yield return Press(InputManager.GameAction.Back);
+            Assert.AreEqual(2, screen.ScrollOf(InventoryUI.Logs), "the last one");
+            yield return Press(InputManager.GameAction.Back);
+            Assert.AreEqual(0, screen.ScrollOf(InventoryUI.Logs), "it wraps to the top");
+
+            yield return Press(InputManager.GameAction.Inventory);
+            Assert.IsFalse(screen.IsOpen, "the inventory key closes it");
         }
 
         // ── Helpers ───────────────────────────────────────────────────

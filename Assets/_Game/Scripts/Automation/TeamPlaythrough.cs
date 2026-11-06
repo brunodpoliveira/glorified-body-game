@@ -112,6 +112,16 @@ namespace GlorifiedBody.Automation
             drugs.DebugSet(DrugType.Nalcon, 1);
             drugs.DebugSet(DrugType.NalconFire, 2);
             drugs.DebugSet(DrugType.Red, 1);
+            InventoryUI inventory = FindAnyObjectByType<InventoryUI>();
+            if (inventory != null)
+            {
+                inventory.Open();
+                yield return BotClock.Wait(0.2f);
+                yield return OverlayShot.Capture(inventory.Canvas, "team_00_inventory.png", 0.1f);
+                Record("inventory", inventory.IsOpen, $"{inventory.Entries.Count} entries");
+                inventory.Close();
+                yield return BotClock.Wait(0.2f);
+            }
             tank.Teleport(Room.Of("G2").transform.position + new Vector3(16f, 0f, 1f), 90f);
             yield return Until(() => RoomTracker.CurrentId == "G2", 3f);
             SoldierBrain[] four = FindObjectsByType<SoldierBrain>(FindObjectsSortMode.None).Where(b => b.name.StartsWith("Soldier_Pair")).ToArray();
