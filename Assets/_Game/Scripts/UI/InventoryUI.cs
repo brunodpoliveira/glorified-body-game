@@ -338,12 +338,16 @@ namespace GlorifiedBody.UI
                     {
                         cell.color = new Color(0f, 0f, 0f, 0.2f);
                         label.text = "(nothing)";
+                        label.color = Color.white;
                         outline.effectColor = new Color(0f, 0f, 0f, 0f);
                         continue;
                     }
                     if (index < 0) continue;
                     cell.color = entries[index].Colour * 0.8f + new Color(0f, 0f, 0f, 0.2f);
                     label.text = entries[index].Label;
+                    Color c2 = entries[index].Colour;
+                    label.color = c2.r * 0.3f + c2.g * 0.6f + c2.b * 0.1f > 0.65f ? new Color(0.05f, 0.05f, 0.06f) : Color.white; // dark words on a white capsule
+                    label.GetComponent<Outline>().enabled = label.color == Color.white;
                     bool selected = index == Selected;
                     outline.effectColor = selected ? new Color(1f, 0.95f, 0.6f, 1f) : new Color(0f, 0f, 0f, 0.6f);
                     outline.effectDistance = selected ? new Vector2(4f, 4f) : new Vector2(1f, 1f);
@@ -357,7 +361,7 @@ namespace GlorifiedBody.UI
         private static Entry FromItem(ItemDefinition item, int count)
         {
             if (item == null) return new Entry { Label = "?", Name = "?", Words = "", Colour = Color.grey, Count = count };
-            string tag = item.kind == ItemKind.AudioLog ? "AUDIO LOG" : item.IsCritical ? "KEY ITEM" : "CARRIED";
+            string tag = item.kind == ItemKind.AudioLog ? "AUDIO LOG" : item.kind == ItemKind.Log ? "LOG" : item.IsCritical ? "KEY ITEM" : item.kind == ItemKind.Drug ? "CONSUMABLE" : "CARRIED";
             return new Entry
             {
                 Label = item.displayName,

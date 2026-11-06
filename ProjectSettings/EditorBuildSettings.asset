@@ -68,5 +68,8 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/_Game/Scenes/DoorTest.unity
     guid: 8e1e7b21b4f45c1edb16a027006f3158
+  - enabled: 1
+    path: Assets/_Game/Scenes/PhysicsTest.unity
+    guid: 327819568580a9c089b8b90ca2f17767
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0

@@ -18,6 +18,9 @@ namespace GlorifiedBody.Combat
     /// A body with a ragdoll (IRagdollBody, Bruno, 2026-10-24: "orzabal should ragdoll the floater, and cause the
     /// people hit by it to ragdoll as well") hangs limp from the hips, falls limp at every ending and stands up
     /// after the down time; the enemy a thrown body hits falls limp too.
+    /// The mouse moves what she holds (Bruno, 2026-11-06: "the tk'd object should be able to be moved with a mouse. this will
+    /// allow us to do physics puzzles with boxes"): SteerBy. A prop with a Rigidbody goes by velocity, so a wall or another box
+    /// stops it and it pushes a loose box, and a release leaves it to gravity.
     /// </summary>
     public sealed class TelekinesisLift : MonoBehaviour
     {
@@ -37,6 +40,10 @@ namespace GlorifiedBody.Combat
         private const float BodySweepLow = 0.25f, BodySweepHigh = 1.4f, BodySweepRadius = 0.25f;
         private const float BodyCoreRadius = 0.02f;   // its middle line: a wall inside the body's width at the start still stops it
         private const float HangSkin = 0.03f;         // m: the gap a hanging body keeps from a wall
+        public const float MinHeight = 0.1f, MaxHeight = 2.6f; // m over where it lay, the wheel's limits, PROPOSED
+        private const float NearestToHer = 1f;        // m: the mouse brings it no nearer
+        private const float MaxLead = 0.6f;           // m: the hold point leads the thing by this at most
+        private const float CarrySpeed = 7f;          // m/s: a carried box follows the mouse this fast at most, PROPOSED
         private static int DebrisMask => Breakables.DebrisLayer >= 0 ? 1 << Breakables.DebrisLayer : 0;
 
         public bool IsLifted { get; private set; }
@@ -61,6 +68,18 @@ namespace GlorifiedBody.Combat
         private bool released;
         private Health self;
         private IRagdollBody ragdoll; // null: the body moves as one piece (a crate, a capsule dummy)
+        private Rigidbody box;        // a physics prop: it goes by velocity while it hangs
+        private Vector3 boxTarget;
+        private Collider boxCollider;
+        private PhysicsMaterial boxMaterial;
+        private static PhysicsMaterial slippery;
+        private static PhysicsMaterial Slippery => slippery != null ? slippery : slippery = new PhysicsMaterial("TK slippery")
+        {
+            staticFriction = 0f,
+            dynamicFriction = 0f,
+            frictionCombine = PhysicsMaterialCombine.Minimum,
+            bounciness = 0f,
+        };
 
         public static TelekinesisLift Apply(GameObject victim, GameObject attacker, float liftHeight, float liftSeconds, float holdSeconds, float slamDamage)
         {
@@ -71,6 +90,22 @@ namespace GlorifiedBody.Combat
             lift.attacker = attacker;
             lift.slamDamage = slamDamage;
             lift.self = victim.GetComponent<Health>() ?? victim.GetComponentInParent<Health>();
+            lift.box = victim.GetComponent<Rigidbody>();
+            if (lift.box != null && victim.TryGetComponent(out LockOnTargetable lockable) && lockable.IsProp)
+            {
+                lift.box.isKinematic = false;
+                lift.box.useGravity = false;
+                lift.box.constraints = RigidbodyConstraints.FreezeRotation;
+                lift.boxTarget = victim.transform.position;
+                // Friction held a box still while the mouse pressed it against a wall: it could not rise or slide along it.
+                lift.boxCollider = victim.GetComponent<Collider>();
+                if (lift.boxCollider != null)
+                {
+                    lift.boxMaterial = lift.boxCollider.sharedMaterial;
+                    lift.boxCollider.sharedMaterial = Slippery;
+                }
+            }
+            else lift.box = null;
             IRagdollBody ragdoll = victim.GetComponent<IRagdollBody>();
             lift.ragdoll = ragdoll != null && ragdoll.BeginHold() ? ragdoll : null;
             lift.StartCoroutine(lift.Run(liftHeight, liftSeconds, holdSeconds));
@@ -108,6 +143,40 @@ namespace GlorifiedBody.Combat
             released = true;
             RunTelemetry.Event("tk_released", $"{name} by {(by != null ? by.name : "?")}");
             return true;
+        }
+
+        /// <summary>The mouse moves it: flat metres in the world, height metres, inside her reach. A wall stops it on the way.</summary>
+        public void SteerBy(Vector3 flat, float height, float reach)
+        {
+            if (!CanLaunch || attacker == null) return;
+            Quaternion toWorld = Quaternion.Euler(0f, HoldYawNow(attacker.transform), 0f);
+            Vector3 her = attacker.transform.position;
+            Vector3 point = her + toWorld * holdOffset + flat;
+            // The hold point stays close to the thing: a wall stops the thing, and the mouse must not wind up behind that wall.
+            Vector3 lead = Vector3.ProjectOnPlane(point - transform.position, Vector3.up);
+            if (lead.magnitude > MaxLead) point = transform.position + lead.normalized * MaxLead;
+            Vector3 offset = Vector3.ProjectOnPlane(point - her, Vector3.up);
+            float distance = offset.magnitude;
+            if (distance > 0.001f) offset *= Mathf.Clamp(distance, NearestToHer, reach) / distance;
+            holdOffset = Quaternion.Inverse(toWorld) * offset;
+            float now = transform.position.y - floor.y;
+            holdHeight = Mathf.Clamp(Mathf.Clamp(holdHeight + height, now - MaxLead, now + MaxLead), MinHeight, MaxHeight);
+        }
+
+        private void FixedUpdate()
+        {
+            if (box == null || !CanLaunch) return;
+            Vector3 velocity = (boxTarget - box.position) / Time.fixedDeltaTime;
+            box.linearVelocity = Vector3.ClampMagnitude(velocity, CarrySpeed);
+            box.angularVelocity = Vector3.zero;
+        }
+
+        /// <summary>A box leaves the physics while it flies or slams (the lift moves it), and it breaks at the end.</summary>
+        private void StopBoxPhysics()
+        {
+            if (box == null) return;
+            box.linearVelocity = Vector3.zero;
+            box.isKinematic = true;
         }
 
         private void OnEnable() => HitEventBus.OnHit += OnHit;
@@ -153,11 +222,23 @@ namespace GlorifiedBody.Combat
             if (launched)
             {
                 Ending = "throw";
+                StopBoxPhysics();
                 yield return Fly();
             }
             else if (released)
             {
                 Ending = "released";
+                if (box != null)
+                {
+                    // It falls by itself, and it stays where it lands: the puzzle needs that.
+                    box.linearVelocity = Vector3.zero; // a drop, not a throw: it falls straight down
+                    box.useGravity = true;
+                    box.constraints = RigidbodyConstraints.None;
+                    if (boxCollider != null) boxCollider.sharedMaterial = boxMaterial;
+                    IsLifted = false;
+                    Destroy(this);
+                    yield break;
+                }
                 if (ragdoll != null)
                 {
                     ragdoll.EndHold(Vector3.zero, ReleaseDownSeconds);
@@ -180,6 +261,7 @@ namespace GlorifiedBody.Combat
             {
                 Ending = "slam";
                 slamming = true;
+                StopBoxPhysics();
                 Vector3 from = transform.position;
                 t = 0f;
                 const float slamSeconds = 0.15f;
@@ -238,13 +320,27 @@ namespace GlorifiedBody.Combat
                 transform.position = new Vector3(floor.x, floor.y + holdHeight, floor.z);
                 return;
             }
-            Vector3 offset = Quaternion.Euler(0f, holder.eulerAngles.y - holdYaw, 0f) * holdOffset;
+            Vector3 offset = Quaternion.Euler(0f, HoldYawNow(holder), 0f) * holdOffset;
             Vector3 flat = holder.position + offset;
             float y = floor.y + holdHeight;
+            if (box != null)
+            {
+                boxTarget = new Vector3(flat.x, y, flat.z);
+                floor = new Vector3(transform.position.x, floor.y, transform.position.z);
+                return;
+            }
             Vector3 settled = HangMove(new Vector3(transform.position.x, y, transform.position.z), new Vector3(flat.x, y, flat.z));
             transform.position = settled;
             floor = new Vector3(settled.x, floor.y, settled.z); // the slam lands where it hangs
         }
+
+        /// <summary>
+        /// A floater turns with her, so she aims the throw with the tank turn. A carried box stays where the mouse puts it: she
+        /// turns to face it, and if it turned with her, each turn would move it again.
+        /// </summary>
+        public bool StaysWhenSheTurns { get; set; }
+
+        private float HoldYawNow(Transform holder) => StaysWhenSheTurns ? 0f : holder.eulerAngles.y - holdYaw;
 
         /// <summary>The move to the hang point, as far as the walls let it: to the first wall, then along that wall.</summary>
         private Vector3 HangMove(Vector3 from, Vector3 to)

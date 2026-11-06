@@ -34,6 +34,7 @@ namespace GlorifiedBody.UI
         [SerializeField] private string wardTestScene = "WardTest";     // a patient, a scan on a person, feeding (2026-10-30)
         [SerializeField] private string screenTestScene = "ScreenTest"; // the in-world screens (2026-10-31)
         [SerializeField] private string outfitTestScene = "OutfitTest"; // the outfit change (2026-10-31)
+        [SerializeField] private string physicsTestScene = "PhysicsTest"; // the carry and the boxes (2026-11-06)
         public const string DoorTestScene = "DoorTest"; // the doors she locks and the soldiers breach (2026-11-03)
         private const float TestButtonHeight = 36f; // 13 test rooms fit under the title
         /// <summary>START: the demo, one world scene with every room (2026-11-02; a scene per room since 2026-10-31).</summary>
@@ -188,6 +189,7 @@ namespace GlorifiedBody.UI
         private void OnWardTestClicked() => GameManager.Instance?.LoadLevel(wardTestScene);
         private void OnScreenTestClicked() => GameManager.Instance?.LoadLevel(screenTestScene);
         private void OnOutfitTestClicked() => GameManager.Instance?.LoadLevel(outfitTestScene);
+        private void OnPhysicsTestClicked() => GameManager.Instance?.LoadLevel(physicsTestScene);
         private void OnDoorTestClicked() => GameManager.Instance?.LoadLevel(DoorTestScene);
         private void OnTrainingClicked() => GameManager.Instance?.LoadGameplay();
 
@@ -410,6 +412,7 @@ namespace GlorifiedBody.UI
             nav.Add(CreateButton(tests.transform, "SCREEN TEST", 300, OnScreenTestClicked, TestButtonHeight));
             nav.Add(CreateButton(tests.transform, "OUTFIT TEST", 300, OnOutfitTestClicked, TestButtonHeight));
             nav.Add(CreateButton(tests.transform, "DOOR TEST", 300, OnDoorTestClicked, TestButtonHeight));
+            nav.Add(CreateButton(tests.transform, "PHYSICS TEST", 300, OnPhysicsTestClicked, TestButtonHeight));
 
             if (!GameBuild.Dev) nav.RemoveAll(b => b != null && b.transform.parent == tests.transform); // hidden: not in the keys' path
 

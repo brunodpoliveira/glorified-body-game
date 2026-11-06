@@ -162,6 +162,7 @@ namespace GlorifiedBody.Player
             }
 
             UpdateShield(dt);
+            UpdateHeld();
 
             // The bar filled during a held charge (a hit): the short starts now, not at the release (Bruno,
             // 2026-10-25: "shock should trigger the moment player presses attack"). The charge is lost.
@@ -229,6 +230,11 @@ namespace GlorifiedBody.Player
             }
             defendHeldFor += dt;
             if (defendHeldFor < ShieldHoldDelay) return;
+            if (TryCarry(Selected))
+            {
+                defendHeldFor = 0f;
+                return;
+            }
             if (!shieldLocked && tank != null)
             {
                 tank.LockMovement(true);
@@ -258,6 +264,112 @@ namespace GlorifiedBody.Player
                 shieldLocked = false;
                 if (tank != null) tank.LockMovement(false); // the lock counts: the charge keeps its own
             }
+        }
+
+        public const float CarryHeight = 0.8f;        // m it rises, PROPOSED
+        public const float CarryRise = 0.25f;         // s
+        public const float CarryMetresPerUnit = 0.02f; // m for each unit of the mouse axes, times Mouse Sensitivity, PROPOSED
+        public const float CarryMetresPerWheel = 6f;   // m for each unit of the wheel axis, PROPOSED
+        private const float CarryFrontCone = 60f;      // degrees each side of her facing, PROPOSED
+        private const float CarrySightHeight = 2f;     // m over her feet: the level of the line that a wall stops
+        private const float CarryCostPerMetre = 3f;    // degrees of her facing a metre is worth, PROPOSED
+        private bool carrying;
+
+        /// <summary>She carries a prop with the defend key held (Bruno, 2026-11-06: hold to select and lift, the mouse moves it, release to drop).</summary>
+        public bool Carrying => carrying && HeldLift != null;
+
+        /// <summary>
+        /// The defend key held with mk_orzabal lifts a prop, for no MK: a puzzle must not eat the ammunition, and MK does not come
+        /// back. The prop is the target she has switched to, or with no enemy locked, the nearest one in front of her. With an
+        /// enemy locked the key still makes the floor shield. A throw from the carry costs a full charge.
+        /// </summary>
+        private bool TryCarry(PowerDefinition power)
+        {
+            LockOnTargetable locked = lockOn.CurrentTarget;
+            LockOnTargetable prop = locked != null ? (locked.IsProp ? locked : null) : PropInFront(power.range);
+            if (prop == null || !prop.IsAlive || Vector3.Distance(transform.position, prop.GetLockPoint()) > power.range) return false;
+            if (prop.IsHeavy)
+            {
+                Result("too_heavy", 0f);
+                return false;
+            }
+            EndShieldCharge();
+            if (!prop.TryGetComponent(out Rigidbody body))
+            {
+                body = prop.gameObject.AddComponent<Rigidbody>(); // a crate of the rooms: it falls and rests like a box
+                body.mass = 30f;
+            }
+            activeLift = TelekinesisLift.Apply(prop.gameObject, gameObject, CarryHeight, CarryRise, 0f, power.baseDamage * DamageScale);
+            if (activeLift == null) return false;
+            activeLift.StaysWhenSheTurns = true;
+            carrying = true;
+            if (tank != null) tank.LockMovement(true);
+            LastResult = "carry";
+            LastResultTime = Time.time;
+            RunTelemetry.Event("tk_carry", prop.name);
+            OnChanged?.Invoke();
+            return true;
+        }
+
+        private LockOnTargetable PropInFront(float range)
+        {
+            LockOnTargetable best = null;
+            float bestCost = float.MaxValue;
+            Vector3 forward = Vector3.ProjectOnPlane(transform.forward, Vector3.up).normalized;
+            int walls = LayerMask.GetMask("Default");
+            foreach (LockOnTargetable candidate in TargetRegistry.All)
+            {
+                if (candidate == null || !candidate.IsProp || !candidate.Selectable || candidate.IsHeavy) continue;
+                Vector3 point = candidate.GetLockPoint();
+                Vector3 to = Vector3.ProjectOnPlane(point - transform.position, Vector3.up);
+                float angle = Vector3.Angle(forward, to);
+                if (to.magnitude > range || angle > CarryFrontCone) continue;
+                // A wall stops her reach. A low rail does not: the line runs level over it.
+                Vector3 high = Vector3.up * CarrySightHeight;
+                if (Physics.Linecast(transform.position + high, new Vector3(point.x, transform.position.y, point.z) + high, walls, QueryTriggerInteraction.Ignore)) continue;
+                float cost = angle + to.magnitude * CarryCostPerMetre; // what she faces, then what is near
+                if (cost >= bestCost) continue;
+                best = candidate;
+                bestCost = cost;
+            }
+            return best;
+        }
+
+        /// <summary>The mouse and the wheel move what she holds, seen from the fixed camera: the mouse left and right, up is away, the wheel is the height.</summary>
+        private void UpdateHeld()
+        {
+            TelekinesisLift lift = HeldLift;
+            bool mine = lift != null && Selected.kind == PowerKind.Telekinesis;
+            if (tank != null) tank.MouseTurnPaused = mine;
+            if (carrying)
+            {
+                if (lift == null) EndCarry();
+                else if (!mine || !GameInput.GetAction(InputManager.GameAction.Defend, KeyCode.Mouse1))
+                {
+                    lift.Release(gameObject);
+                    EndCarry();
+                    LastResult = "carry_drop";
+                    OnChanged?.Invoke();
+                    return;
+                }
+                else if (tank != null) tank.FaceTowards(lift.transform.position, 540f);
+            }
+            if (!mine) return;
+            Camera cam = Camera.main;
+            if (cam == null) return;
+            float x = GameInput.GetAxis(GameInput.AxisLookX), y = GameInput.GetAxis(GameInput.AxisLookY), wheel = GameInput.GetAxis(GameInput.AxisScroll);
+            if (Mathf.Approximately(x, 0f) && Mathf.Approximately(y, 0f) && Mathf.Approximately(wheel, 0f)) return;
+            float scale = CarryMetresPerUnit * (SettingsManager.Instance != null ? SettingsManager.Instance.MouseSensitivity : 3f);
+            Vector3 right = Vector3.ProjectOnPlane(cam.transform.right, Vector3.up).normalized;
+            Vector3 away = Vector3.ProjectOnPlane(cam.transform.forward, Vector3.up).normalized;
+            lift.SteerBy((right * x + away * y) * scale, wheel * CarryMetresPerWheel, Selected.range);
+        }
+
+        private void EndCarry()
+        {
+            carrying = false;
+            defendAfterCancel = true; // the key of this carry starts no shield and no new carry: it must rise first
+            if (tank != null) tank.LockMovement(false);
         }
 
         /// <summary>The full circle of the shield: the slab tears out and rises. Tests call it directly.</summary>
@@ -593,6 +705,8 @@ namespace GlorifiedBody.Player
             TelekinesisLift lift = HeldLift;
             if (lift == null) return false;
             PowerDefinition power = Selected;
+            // A carry lifted for free: the throw pays.
+            if (carrying && power != null && !stats.TrySpendMk(power.kind, power.nalconCost)) return Result("no_nalcon", 0f);
             float range = power != null ? power.range : 12f;
             LockOnTargetable victim = FindAimedTarget(lift.transform, range) ?? FindLaunchTarget(lift.transform, range);
             Vector3 destination = victim != null

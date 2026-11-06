@@ -38,6 +38,25 @@ namespace GlorifiedBody.Editor
             return obj;
         }
 
+        /// <summary>
+        /// A box for the physics puzzles (2026-11-06): a crate with a Rigidbody. It rests, falls and stacks, a dropped one stays
+        /// whole, and the NavMesh goes around it where it lies. The edge is its size in metres.
+        /// </summary>
+        public static GameObject Box(string name, Vector3 floorPoint, float size = 0.8f, float mass = 30f)
+        {
+            GameObject obj = Crate(name, floorPoint, 0f, size);
+            Rigidbody body = MenuLoopSetup.EnsureComponent<Rigidbody>(obj);
+            body.mass = mass;
+            body.interpolation = RigidbodyInterpolation.Interpolate;
+            body.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative; // ContinuousDynamic stops all motion at a contact: a box against a rail could not rise along it
+            UnityEngine.AI.NavMeshObstacle obstacle = MenuLoopSetup.EnsureComponent<UnityEngine.AI.NavMeshObstacle>(obj);
+            obstacle.shape = UnityEngine.AI.NavMeshObstacleShape.Box;
+            obstacle.size = Vector3.one;
+            obstacle.carving = true;
+            obstacle.carveOnlyStationary = true;
+            return obj;
+        }
+
         public static Material CrateMaterial()
         {
             Shader shader = Shader.Find(ItemAssets.UnlitShaderName);

@@ -871,6 +871,28 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator TheMouse_MovesTheFloater_AndDoesNotTurnHer()
+        {
+            // Bruno, 2026-11-06: "the tk'd object should be able to be moved with a mouse".
+            powers.Select(PowerKind.Telekinesis);
+            stats.DebugSet(100f, 0f);
+            lockOn.SetTarget(dummyB);
+            Assert.IsTrue(powers.Release(1f), powers.LastResult);
+            yield return new WaitForSeconds(powers.Selected.liftSeconds + 0.1f);
+            Assert.IsNotNull(powers.HeldLift, "she holds it");
+            Vector3 at = dummyB.transform.position;
+            float heading = tank.transform.eulerAngles.y;
+            Camera cam = Camera.main;
+            Vector3 right = Vector3.ProjectOnPlane(cam.transform.right, Vector3.up).normalized;
+            pad.Look = new Vector2(1f, 0f);
+            yield return new WaitForSeconds(0.3f);
+            pad.Look = Vector2.zero;
+            Assert.Greater(Vector3.Dot(dummyB.transform.position - at, right), 0.2f, "mouse right: it goes right on the screen");
+            Assert.AreEqual(heading, tank.transform.eulerAngles.y, 0.5f, "the mouse does not turn her while she holds it");
+            powers.HeldLift.Release(tank.gameObject);
+        }
+
+        [UnityTest]
         public IEnumerator TheHud_ShowsOnlyTheBarOfTheSelectedPower()
         {
             // Bruno, 2026-11-06: "only the bar of the power that it activated is visible".
