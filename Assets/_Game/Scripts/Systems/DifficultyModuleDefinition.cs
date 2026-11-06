@@ -44,7 +44,7 @@ namespace GlorifiedBody.Systems
         // Multipliers: the values of the active modules multiply.
         public const string ParamEnemyDamageScale = "enemyDamageScale";
         public const string ParamPlayerMaxHpScale = "playerMaxHpScale";
-        public const string ParamMkRegenScale = "mkRegenScale";
+        public const string ParamMkSupplyScale = "mkSupplyScale";
         public const string ParamShortGainScale = "shortGainScale";
         public const string ParamFeedScale = "feedScale";
 

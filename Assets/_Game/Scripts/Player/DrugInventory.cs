@@ -5,15 +5,15 @@ using GlorifiedBody.DebugTools;
 namespace GlorifiedBody.Player
 {
     /// <summary>
-    /// The drugs she carries. Each does one thing (Bruno, 2026-10-30, PsychicPowers.UseDrug): the MK capsule
-    /// (Nalcon) fills MK, the SHORT capsule (Red) lowers the SHORT bar and ends a short, the second wind pill
-    /// (DFelon) gives the second wind back. No drug gives HP. The code names stay (the saves use them).
+    /// The drugs she carries. Each does one thing (Bruno, 2026-10-30, PsychicPowers.UseDrug): a capsule (Nalcon,
+    /// NalconFire, NalconLift) fills the bar of its power, the SHORT capsule (Red) lowers the SHORT bar and ends a short,
+    /// the second wind pill (DFelon) gives the second wind back. No drug gives HP. The code names stay (the saves use them).
     /// Each drug takes one slot of the item inventory (Bruno, 2026-10-22: the grabbables take space, the slots
     /// come from the outfit); without an item inventory the outfit's per-type cap applies.
     /// </summary>
     public sealed class DrugInventory : MonoBehaviour
     {
-        private readonly int[] counts = new int[3];
+        private readonly int[] counts = new int[Enum.GetValues(typeof(DrugType)).Length];
         private PsychicStats stats;
         private GlorifiedBody.Interaction.ItemInventory items;
 
@@ -27,7 +27,15 @@ namespace GlorifiedBody.Player
 
         public int Count(DrugType type) => counts[(int)type];
 
-        public int Total => counts[0] + counts[1] + counts[2];
+        public int Total
+        {
+            get
+            {
+                int total = 0;
+                foreach (int count in counts) total += count;
+                return total;
+            }
+        }
 
         /// <summary>The most of one type she could hold now: the free slots plus the ones held, or the outfit's per-type cap without an item inventory.</summary>
         public int Capacity => items != null ? items.Free + Total : stats != null && stats.Outfit != null ? stats.Outfit.drugSlotsPerType : 2;

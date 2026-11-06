@@ -15,6 +15,9 @@ namespace GlorifiedBody.Player
     /// THE SHORT (design §2.8). When the SHORT bar is full, the next power starts a short: a migraine, and
     /// electric shocks fly everywhere out of her control. They do huge damage around her, and they take about
     /// half of her HP before she stabilises. The SHORT capsule ends the short at once. Numbers are PROPOSED.
+    /// It can kill her (Bruno, 2026-11-06: "the short should kill the player if their health goes to 0; if they have second
+    /// wind, it'll use it and not kill them. otherwise it'll straight up kill them"): a shock at her last HP kills her
+    /// (KillerId, the death screen), or takes the second wind, and then the short ends.
     /// Bruno, 2026-10-20: it lasts 16 s. She can walk, slowly: no run, no dodge, no powers (TankController.SlowWalk).
     /// The HP drain spreads over the 16 s, and each shock does the same damage to the others as before.
     /// One enemy at a time (Bruno, 2026-10-22, design §11.4: "i want the enemies to see their colleagues dying in
@@ -41,6 +44,8 @@ namespace GlorifiedBody.Player
         private const float SurgeRadius = 5f; // the lamps the short's start pops, PROPOSED
         public const float StartFreeze = 2.5f;     // s of frozen world at the start (Bruno, 2026-10-25)
         public const string ScreamCaptionKey = "short_scream";
+        /// <summary>Who killed her when her own short did (DeathScreenContent).</summary>
+        public const string KillerId = "short";
 
         private static System.Collections.IEnumerator EndScreamCaption()
         {
@@ -146,7 +151,7 @@ namespace GlorifiedBody.Player
         }
 
         /// <summary>Ends the short. The SHORT capsule ends it early (the caller lowers the bar).</summary>
-        public void End(bool byDrug)
+        public void End(bool byDrug, string reason = null)
         {
             if (!IsActive) return;
             IsActive = false;
@@ -154,7 +159,7 @@ namespace GlorifiedBody.Player
             stats.RegenPaused = false;
             if (tank != null) tank.SetSlowWalk(false);
             stats.ResetShort();
-            RunTelemetry.Event("short_end", byDrug ? "drug" : "timeout");
+            RunTelemetry.Event("short_end", reason ?? (byDrug ? "drug" : "timeout"));
             OnShortEnded?.Invoke();
         }
 
@@ -166,7 +171,13 @@ namespace GlorifiedBody.Player
             while (IsActive && InPain) yield return null;
             while (IsActive && Remaining > 0f)
             {
+                if (health.IsDead)
+                {
+                    End(byDrug: false); // no shocks from a body
+                    yield break;
+                }
                 Shock(selfPerShock);
+                if (!IsActive) yield break;
                 yield return new WaitForSeconds(shockInterval);
                 Remaining -= shockInterval;
             }
@@ -212,17 +223,26 @@ namespace GlorifiedBody.Player
                 }
             }
 
-            // The migraine: it never kills her by itself, it stops at 1 HP. Invulnerable frames (the second wind)
-            // block a shock, so a shock that lands in them waits for the next one. The total stays about half her HP.
+            // The migraine. Invulnerable frames (the second wind, the tutorial) block a shock, so a shock that lands in them
+            // waits for the next one. The total stays about half her HP.
             if (health.IsInvulnerable)
             {
                 pendingSelf += selfDamage;
             }
             else
             {
-                float self = Mathf.Min(selfDamage + pendingSelf, health.CurrentHealth - 1f);
+                float self = selfDamage + pendingSelf;
                 pendingSelf = 0f;
+                bool lethal = self >= health.CurrentHealth;
+                if (lethal) GlorifiedBody.UI.DeathMenuUI.LastKillerId = KillerId;
                 if (self > 0f) health.TakeDamage(self);
+                if (lethal)
+                {
+                    // Dead: no shocks from a body. Or the second wind took it: a short that went on would kill her 2.5 s later,
+                    // and the wind must save her.
+                    End(byDrug: false, health.IsDead ? "death" : "second_wind");
+                    return;
+                }
             }
 
             for (int i = 0; i < 3; i++) Spark(origin + UnityEngine.Random.insideUnitSphere * (shockRadius * 0.5f) + Vector3.up);

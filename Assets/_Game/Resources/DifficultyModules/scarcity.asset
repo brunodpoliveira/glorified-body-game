@@ -15,7 +15,7 @@ MonoBehaviour:
   moduleId: scarcity
   displayName: SCARCITY
   symbol: "\u26A0"
-  description: MK recharges at half speed.
+  description: Every power costs twice the MK.
   difficultyPercent: 15
   moduleType: 8
   section: 1
@@ -24,5 +24,5 @@ MonoBehaviour:
   exclusiveGroup: mk
   presets: 
   parameters:
-  - key: mkRegenScale
+  - key: mkSupplyScale
     value: 0.5

@@ -34,7 +34,7 @@ MonoBehaviour:
     hint: The red line is where the shot goes. Step out of it before the ring closes.
       Once he has aimed, he cannot aim again.
     voiceLine: {fileID: 0}
-    voiceText: 'COMPUTER: Subject contained. Log the time.'
+    voiceText: 'GUARD: It''s all right. It''s all right. You''re going back to bed.'
   - killerId: scientist
     picture: {fileID: 0}
     pictureNote: the blue hood from below, the knife, the collar piece with its green
@@ -54,8 +54,9 @@ MonoBehaviour:
     picture: {fileID: 0}
     pictureNote: the shield from the floor, the gas mask above it, the SMG resting
       on the shield's edge
-    hint: Behind the shield he is safe. Lift the shield with telekinesis, or stagger
-      his aim with a blast, then fire.
+    hint: 'Behind the shield he is safe. Lift the shield with telekinesis, or stagger
+      his aim with a blast, then fire. Two aim at once on normal: dodge the first
+      ring, blast the second.'
     voiceLine: {fileID: 0}
     voiceText: 'SOLDIER: Target down. Clear. (then, quieter) Was that a kid?'
   - killerId: soldier_pair
@@ -71,14 +72,19 @@ MonoBehaviour:
     hint: Fire spreads. Start it, leave the room, and come back when it is out. The
       firemen will not shoot.
     voiceLine: {fileID: 0}
-    voiceText: 'STEVENS: Not the fire. Not like that.'
+    voiceText: 'PA: Fire, records. Fire doors are closing. Please remain where you
+      are.'
   - killerId: short
     picture: {fileID: 0}
-    pictureNote: the corridor from the floor, four bodies, the lights flickering
-    hint: A short does not kill you. The shooters do, while you cannot move. Keep
-      the third light low. Use an ampoule before it fills.
+    pictureNote: 'through the slit: her gold-seamed hands open on the black tile,
+      the last arc crawling off her fingers into the floor, the ceiling light dead
+      above her, the lights of the Crown going out one by one'
+    hint: 'A short takes about half your HP: below that, it kills you. A SHORT capsule
+      ends it, and a second wind saves you once. Every power you use fills the SHORT
+      bar.'
     voiceLine: {fileID: 0}
-    voiceText: 'STEVENS: It''s over. Lie still. I''m sorry.'
+    voiceText: 'PA: Electrical fault, this floor. A member of staff will come to
+      you.'
   - killerId: soldier_rifle
     picture: {fileID: 0}
     pictureNote: 'PLACEHOLDER: the soldier with the rifle, the laser on her'
@@ -128,3 +134,28 @@ MonoBehaviour:
       then strike.'
     voiceLine: {fileID: 0}
     voiceText: 
+  - killerId: labworker
+    picture: {fileID: 0}
+    pictureNote: the blue hood from below, the scalpel, the collar piece with its
+      green light
+    hint: 'He aims slowly and his hands shake. Close the distance, or make him come
+      to you. Against a group, strike first, from a distance: every hit on you fills
+      the SHORT bar.'
+    voiceLine: {fileID: 0}
+    voiceText: 'LAB WORKER: Hold her head. I need the jugular.'
+  - killerId: ward_sister
+    picture: {fileID: 0}
+    pictureNote: red scrubs, the white hood, the pistol held wrong, the card swinging
+      on its lanyard
+    hint: She fires wide and slowly. Come at her from the side. The card is on her.
+    voiceLine: {fileID: 0}
+    voiceText: 'WARD SISTER: I was aiming at the floor. I was aiming at the floor.'
+  - killerId: brain
+    picture: {fileID: 0}
+    pictureNote: the corridor from high above, the brain's eye, Lucy small and bare-headed
+      in grey folds
+    hint: 'A short does not touch it. Keep moving: it strikes where you stand when
+      the ring closes. Break the grip of a grabber with a blast.'
+    voiceLine: {fileID: 0}
+    voiceText: 'BRAIN: Your life has been full of suffering. But don''t worry. It''ll
+      be over soon.'

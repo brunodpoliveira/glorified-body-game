@@ -158,6 +158,17 @@ namespace GlorifiedBody.Enemy
         public event System.Action<bool> OnMelee;
         /// <summary>The muzzle of a gun model (EnemyGun). Without one, a point in front of the chest.</summary>
         public Transform MuzzleOverride { get; set; }
+        /// <summary>
+        /// Suppression (Bruno, 2026-11-06, DEMO_PLAN §13.6): the place to fire at, while she hides. Null: the gun hunts her as
+        /// usual. It takes no slot of the difficulty: the slots count the guns on her, and this one points at a place. The
+        /// laser and the tracer are its warning. A bullet still hurts her if she walks into it.
+        /// </summary>
+        public Vector3? SuppressPoint { get; set; }
+        /// <summary>The aim now running is at a place, not at her.</summary>
+        public bool Suppressing { get; private set; }
+        public int SuppressShots { get; private set; }
+        private const float SuppressSpread = 0.6f; // m around the place, PROPOSED
+
         /// <summary>He fires over cover: the gun hangs low behind it until the aim raises it, so the line counts from the shoulder.</summary>
         public bool FromCover { get; set; }
         public Vector3 Muzzle => MuzzleOverride != null ? MuzzleOverride.position : transform.position + Vector3.up * Body.MuzzleHeight + transform.forward * 0.5f;
@@ -220,11 +231,12 @@ namespace GlorifiedBody.Enemy
 
             Vector3 chest = player.position + Vector3.up * Body.ChestHeight;
             float distance = Vector3.Distance(transform.position, player.position);
-            if (!HoldFire || HoldsSlot) FaceYaw(player.position);
+            if (!HoldFire || HoldsSlot) FaceYaw(Suppressing ? aimPoint : SuppressPoint ?? player.position);
 
             switch (Current)
             {
                 case State.Idle:
+                    if (SuppressPoint.HasValue && !HoldFire && distance > meleeRange && PlayerAlive() && TrySuppress(SuppressPoint.Value)) break;
                     Attack next = ChooseAttack(distance);
                     if (!HoldFire && next != Attack.None && PlayerAlive() && Sees(chest) && ShooterScheduler.TryAcquire(this))
                     {
@@ -247,7 +259,7 @@ namespace GlorifiedBody.Enemy
                     break;
 
                 case State.Aiming:
-                    aimPoint = AimFor(CurrentAttack, chest);
+                    if (!Suppressing) aimPoint = AimFor(CurrentAttack, chest);
                     DrawLaser();
                     timer -= dt;
                     if (timer <= 0f)
@@ -278,6 +290,25 @@ namespace GlorifiedBody.Enemy
             }
         }
 
+        /// <summary>The aim at a place: the same laser and the same time as an aim at her, with no slot and no circle on her.</summary>
+        private bool TrySuppress(Vector3 place)
+        {
+            Attack attack = RangedAttackOf(weapon);
+            float reach = Vector3.Distance(transform.position, place);
+            if (attack == Attack.None || reach > range || ((IsLobbed(attack) || attack == Attack.Rocket) && reach < grenadeMinDistance) || !Sees(place)) return false;
+            CurrentAttack = attack;
+            Suppressing = true;
+            SuppressShots++;
+            SplitTiming(out float aim, out telegraphLength);
+            Current = State.Aiming;
+            timer = aim;
+            aimPoint = IsLobbed(attack) ? new Vector3(place.x, player.position.y, place.z) : place;
+            laser.enabled = true;
+            RunTelemetry.Event("enemy_suppress", $"{enemyId}:{place.x:0.0},{place.z:0.0}");
+            OnAimStarted?.Invoke();
+            return true;
+        }
+
         /// <summary>The attack for her distance now: melee when close (if it may), else the weapon's, in its range.</summary>
         private Attack ChooseAttack(float distance)
         {
@@ -300,11 +331,12 @@ namespace GlorifiedBody.Enemy
         private void LockWithSpread()
         {
             LastMissDistance = 0f;
-            if (aimSpread <= 0f || (CurrentAttack != Attack.Shot && CurrentAttack != Attack.Burst)) return;
+            float spread = Suppressing ? Mathf.Max(aimSpread, SuppressSpread) : aimSpread;
+            if (spread <= 0f || (CurrentAttack != Attack.Shot && CurrentAttack != Attack.Burst)) return;
             Vector3 line = aimPoint - Muzzle;
             if (line.sqrMagnitude < 0.0001f) return;
             Vector3 side = Vector3.Cross(Vector3.up, line).normalized;
-            Vector2 offset = Random.insideUnitCircle * aimSpread;
+            Vector2 offset = Random.insideUnitCircle * spread;
             aimPoint += side * offset.x + Vector3.up * offset.y;
             LastMissDistance = offset.magnitude;
             RunTelemetry.Event("enemy_aim_spread", $"{enemyId}:{LastMissDistance:0.00}");
@@ -460,6 +492,7 @@ namespace GlorifiedBody.Enemy
         {
             bool wasAiming = HoldsSlot;
             if (HoldsSlot) ShooterScheduler.Release(this);
+            Suppressing = false;
             laser.enabled = false;
             Current = next;
             timer = seconds;

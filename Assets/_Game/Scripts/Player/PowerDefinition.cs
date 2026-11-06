@@ -4,8 +4,21 @@ namespace GlorifiedBody.Player
 {
     public enum PowerKind { Blast, Fire, Telekinesis }
 
-    /// <summary>The drugs, one per power (design §2.2). The names are Galerians' (PROPOSED).</summary>
-    public enum DrugType { Nalcon, Red, DFelon }
+    /// <summary>
+    /// The drugs. Each does one thing (PsychicPowers.UseDrug). Nalcon, NalconFire and NalconLift fill the bar of one power
+    /// (Bruno, 2026-11-06: "each power has its own separate mk bar (and a respective pill to restore said power bar)").
+    /// New members go at the end: a save holds the counts by this order.
+    /// </summary>
+    public enum DrugType { Nalcon, Red, DFelon, NalconFire, NalconLift }
+
+    public static class Capsules
+    {
+        /// <summary>The capsule that fills the bar of a power.</summary>
+        public static DrugType Of(PowerKind kind) => kind == PowerKind.Fire ? DrugType.NalconFire : kind == PowerKind.Telekinesis ? DrugType.NalconLift : DrugType.Nalcon;
+
+        /// <summary>The power whose bar the drug fills, or null (the SHORT capsule, the second wind pill).</summary>
+        public static PowerKind? PowerOf(DrugType type) => type == DrugType.Nalcon ? PowerKind.Blast : type == DrugType.NalconFire ? PowerKind.Fire : type == DrugType.NalconLift ? PowerKind.Telekinesis : (PowerKind?)null;
+    }
 
     /// <summary>
     /// One psychic power. Every attack is a circle charge: the longer the charge, the stronger the attack,

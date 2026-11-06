@@ -10,7 +10,7 @@ using GlorifiedBody.Systems;
 namespace GlorifiedBody.UI
 {
     /// <summary>
-    /// The greybox HUD: the three bars (HP, MK, SHORT), the selected power and the drug counts, the
+    /// The greybox HUD: the bars (HP, one MK bar per power, SHORT), the selected power and the drug counts, the
     /// charge circle over the target, and the SHORT warning. Built in code like the menus. The final art
     /// comes with the look test.
     /// </summary>
@@ -19,7 +19,8 @@ namespace GlorifiedBody.UI
         private Canvas canvas;
         private RectTransform canvasRect;
         private Image hpFill;
-        private Image nalconFill;
+        private Image mkFill;
+        private Text mkLabel;
         private Text boostText;
         public bool BoostShown => boostText != null && boostText.enabled;
         private Image shortFill;
@@ -67,6 +68,11 @@ namespace GlorifiedBody.UI
         // first triggers (DOOM 2016 style), not again until it clears and triggers again. Thresholds PROPOSED.
         public const float LowHpFraction = 0.25f;
         public const float LowNalconFraction = 0.25f;
+        private const float RowHeight = 36f;
+        private const int ShortRow = 2;
+        private static readonly string[] MkNames = { "WARSPITE", "EREBUS", "ORZABAL" }; // by PowerKind
+        // The colours of the capsules (ItemAssets).
+        private static readonly Color[] MkColours = { new Color(0.92f, 0.92f, 0.95f), new Color(1f, 0.6f, 0.15f), new Color(0.3f, 0.85f, 1f) };
         public const float HighShortFraction = 0.75f;
         private GameObject hpWarning;
         private GameObject nalconWarning;
@@ -153,16 +159,20 @@ namespace GlorifiedBody.UI
             barsRect.anchoredPosition = new Vector2(32f, 32f);
             barsRect.sizeDelta = new Vector2(420f, 110f);
             hpFill = Bar(bars.transform, "HP", 0, new Color(0.85f, 0.15f, 0.15f));
-            nalconFill = Bar(bars.transform, "MK", 1, new Color(0.25f, 0.5f, 1f));
-            shortFill = Bar(bars.transform, "SHORT", 2, new Color(1f, 0.85f, 0.2f));
+            // Each power has its own MK bar (Bruno, 2026-11-06), and "only the bar of the power that it activated is visible": one
+            // row, in the colour of the capsule of the selected power, with its name.
+            mkFill = Bar(bars.transform, MkNames[0], 1, MkColours[0]);
+            mkLabel = bars.transform.Find(MkNames[0]).GetComponent<Text>();
+            mkLabel.color = new Color(1f, 0.82f, 0.3f);
+            shortFill = Bar(bars.transform, "SHORT", ShortRow, new Color(1f, 0.85f, 0.2f));
 
-            // The MK boost (Bruno, 2026-10-22): a tick at half the NALCON bar, and "x2" on the bar while it is
+            // The MK boost (Bruno, 2026-10-22): a tick at half the MK bar, and "x2" on the bar while it is
             // at or over the tick (2x damage, 2x charge speed).
             var tick = Element("BoostTick", bars.transform);
             var tickRect = tick.GetComponent<RectTransform>();
             tickRect.anchorMin = tickRect.anchorMax = new Vector2(0f, 1f);
             tickRect.pivot = new Vector2(0.5f, 1f);
-            tickRect.anchoredPosition = new Vector2(96f + 160f, -36f + 3f);
+            tickRect.anchoredPosition = new Vector2(96f + 160f, -RowHeight + 3f);
             tickRect.sizeDelta = new Vector2(3f, 28f);
             var tickImage = tick.AddComponent<Image>();
             tickImage.sprite = white;
@@ -172,11 +182,12 @@ namespace GlorifiedBody.UI
             boostText.fontStyle = FontStyle.Bold;
             boostText.color = new Color(1f, 1f, 1f, 0.95f);
             boostText.text = "x2";
+            boostText.gameObject.AddComponent<Outline>().effectColor = Color.black; // the white bar lies under it
 
             // The warnings, right of each bar: a heart, a drop, a bolt. The text blinks, the icon stays.
             hpWarning = WarningBadge(bars.transform, "HpWarning", 0, MakeShapeSprite(Heart), "LOW", new Color(1f, 0.35f, 0.3f), out hpWarningText);
             nalconWarning = WarningBadge(bars.transform, "NalconWarning", 1, MakeShapeSprite(Drop), "LOW", new Color(0.45f, 0.7f, 1f), out nalconWarningText);
-            shortWarning = WarningBadge(bars.transform, "ShortWarning", 2, MakeShapeSprite(Bolt), "HIGH", new Color(1f, 0.85f, 0.2f), out shortWarningText);
+            shortWarning = WarningBadge(bars.transform, "ShortWarning", ShortRow, MakeShapeSprite(Bolt), "HIGH", new Color(1f, 0.85f, 0.2f), out shortWarningText);
             beepSource = canvasObj.AddComponent<AudioSource>();
             beepSource.playOnAwake = false;
             beepSource.spatialBlend = 0f;
@@ -230,7 +241,7 @@ namespace GlorifiedBody.UI
 
             // Power and drugs, bottom-right.
             powerText = Label(canvasObj.transform, "Power", 24, TextAnchor.LowerRight, new Vector2(1f, 0f), new Vector2(-32f, 64f), new Vector2(700f, 36f));
-            drugText = Label(canvasObj.transform, "Drugs", 20, TextAnchor.LowerRight, new Vector2(1f, 0f), new Vector2(-32f, 32f), new Vector2(700f, 30f));
+            drugText = Label(canvasObj.transform, "Drugs", 20, TextAnchor.LowerRight, new Vector2(1f, 0f), new Vector2(-32f, 32f), new Vector2(1200f, 30f));
             // A refusal for a moment over the power line: "TOO HEAVY" (a lift on a heavy target), "NOT ENOUGH MK".
             noticeText = Label(canvasObj.transform, "Notice", 24, TextAnchor.LowerRight, new Vector2(1f, 0f), new Vector2(-32f, 104f), new Vector2(700f, 36f));
             noticeText.color = new Color(1f, 0.55f, 0.35f);
@@ -312,7 +323,7 @@ namespace GlorifiedBody.UI
 
         private Image Bar(Transform parent, string label, int row, Color color)
         {
-            float y = -row * 36f;
+            float y = -row * RowHeight;
             Text text = Label(parent, label, 18, TextAnchor.MiddleLeft, new Vector2(0f, 1f), new Vector2(0f, y), new Vector2(90f, 24f));
             text.fontStyle = FontStyle.Bold;
 
@@ -477,7 +488,9 @@ namespace GlorifiedBody.UI
             if (health != null) hpFill.fillAmount = health.MaxHealth > 0f ? health.CurrentHealth / health.MaxHealth : 0f;
             if (stats != null)
             {
-                nalconFill.fillAmount = stats.Nalcon / PsychicStats.MaxNalcon;
+                mkFill.fillAmount = stats.Nalcon / PsychicStats.MaxNalcon;
+                mkFill.color = MkColours[(int)stats.Selected];
+                mkLabel.text = MkNames[(int)stats.Selected];
                 if (boostText != null) boostText.enabled = powers != null && powers.IsBoosted;
                 shortFill.fillAmount = stats.Short / PsychicStats.MaxShort;
                 shortFill.color = stats.IsShortFull ? new Color(1f, 0.3f, 0.2f) : new Color(1f, 0.85f, 0.2f);
@@ -498,7 +511,7 @@ namespace GlorifiedBody.UI
 
             if (drugs != null)
             {
-                drugText.text = $"MK CAPSULE {drugs.Count(DrugType.Nalcon)}   SHORT CAPSULE {drugs.Count(DrugType.Red)}   SECOND WIND {drugs.Count(DrugType.DFelon)}";
+                drugText.text = $"CAPSULES  mk_warspite {drugs.Count(DrugType.Nalcon)}  mk_erebus {drugs.Count(DrugType.NalconFire)}  mk_orzabal {drugs.Count(DrugType.NalconLift)}   SHORT {drugs.Count(DrugType.Red)}   SECOND WIND {drugs.Count(DrugType.DFelon)}";
             }
 
             bool shortActive = shortController != null && shortController.IsActive;
@@ -587,7 +600,7 @@ namespace GlorifiedBody.UI
             rect.anchorMin = new Vector2(0f, 1f);
             rect.anchorMax = new Vector2(0f, 1f);
             rect.pivot = new Vector2(0f, 1f);
-            rect.anchoredPosition = new Vector2(426f, -row * 36f);
+            rect.anchoredPosition = new Vector2(426f, -row * RowHeight);
             rect.sizeDelta = new Vector2(160f, 24f);
 
             var iconObj = Element("Icon", badge.transform);
@@ -744,7 +757,7 @@ namespace GlorifiedBody.UI
 
                 foreach (DummyShooter shooter in shooters)
                 {
-                    if (shooter == null || !shooter.isActiveAndEnabled) continue;
+                    if (shooter == null || !shooter.isActiveAndEnabled || shooter.Suppressing) continue; // suppression aims at a place, not at her: its laser is the warning
                     bool telegraph = shooter.Current == DummyShooter.State.Telegraph;
                     bool aiming = shooter.Current == DummyShooter.State.Aiming;
                     if (!telegraph && !aiming) continue;

@@ -13,11 +13,12 @@ MonoBehaviour:
   m_Name: item_nalcon
   m_EditorClassIdentifier: Assembly-CSharp::GlorifiedBody.Interaction.ItemDefinition
   itemId: nalcon
-  displayName: MK CAPSULE
+  displayName: WARSPITE CAPSULE
   kind: 3
   drugType: 0
-  colour: {r: 0.35, g: 0.95, b: 0.45, a: 1}
-  description: A drug. It fills MK. No drug gives HP. One slot.
+  colour: {r: 0.92, g: 0.92, b: 0.95, a: 1}
+  description: A drug. A white capsule of tincture, ward stock. It fills the mk_warspite
+    bar, and only that bar. No drug gives HP. One slot.
   logText: 
   readFlag: 
   mapFloor: 

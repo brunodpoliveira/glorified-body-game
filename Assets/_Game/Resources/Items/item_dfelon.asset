@@ -17,8 +17,8 @@ MonoBehaviour:
   kind: 3
   drugType: 2
   colour: {r: 0.35, g: 0.6, b: 1, a: 1}
-  description: 'A drug. It gives the second wind back: the next lethal hit leaves
-    her at 1 HP. No drug gives HP. One slot.'
+  description: 'A drug. It gives the second wind back: the next lethal hit or shock
+    leaves her at 1 HP. No drug gives HP. One slot.'
   logText: 
   readFlag: 
   mapFloor: 

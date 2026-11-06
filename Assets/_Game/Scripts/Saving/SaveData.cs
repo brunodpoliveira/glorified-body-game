@@ -36,6 +36,7 @@ namespace GlorifiedBody.Saving
         public float health;
         public float maxHealth;
         public float nalcon;
+        public List<float> mk = new List<float>(); // the bar of each power (2026-11-06); empty in an older file: nalcon for all
         public float shortBar;
         public int kills;
         /// <summary>Her exp (2026-10-26); the level comes from it. An older file has none: level 1.</summary>

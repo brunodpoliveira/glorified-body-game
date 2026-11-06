@@ -338,10 +338,10 @@ namespace GlorifiedBody.Tutorial
                 "Lock the dummy behind it ({SwitchTarget}). mk_warspite, {PowerBlast}: the barricade takes the blast until it breaks. A thrown body breaks it too.",
                 () => Cover == null || Cover.IsBroken,
                 onEnter: () => { if (Cover != null) Cover.gameObject.SetActive(true); }));
-            // Each drug does one thing (Bruno, 2026-10-30): the MK capsule fills MK, so the step lowers MK first.
+            // Each drug does one thing (Bruno, 2026-10-30): a capsule fills the bar of its power, so the step lowers the bars first.
             steps.Add(new TutorialStep("capsule",
-                "Your MK runs low. A capsule lies by the bars. Take it. Use it.",
-                "Face the capsule. {Interact} asks, {Interact} again takes it. {UseDrug} opens your drugs: {Interact} asks, {Interact} again uses it, and MK fills.",
+                "Your MK runs low. Each faculty has its own bar, and nothing refills it but its own capsule. One lies by the parallel bars. Take it. Use it.",
+                "Face the capsule. {Interact} asks, {Interact} again takes it. {UseDrug} opens your drugs: {Interact} asks, {Interact} again uses it, and the mk_warspite bar fills.",
                 () => drugUsed,
                 onEnter: () => { if (stats != null) stats.DebugSet(CapsuleStepMk, stats.Short); }));
             // The feed (Bruno, 2026-10-30: her only HP; "yes" to a tutorial step, placeholder lines): a dead lab worker
@@ -387,12 +387,12 @@ namespace GlorifiedBody.Tutorial
                 "Face the monitors. {Scan} scans them: a short clip. It closes at its end, or with {Scan}.",
                 () => monitorsScanned));
             steps.Add(new TutorialStep("short",
-                "The overflow. Your bar is full: the next faculty shorts. The SHORT capsule ends it.",
+                "The overflow. Your SHORT bar is full: the next faculty shorts. Every faculty you use brings it closer. Below half your body, a short kills you. The SHORT capsule ends it.",
                 "{Charge} starts the short. {UseDrug} opens your drugs on the SHORT capsule: {Interact} twice ends it.",
                 () => shortBegan && shortEnded,
                 onEnter: () =>
                 {
-                    if (stats != null) stats.DebugSet(stats.Nalcon, PsychicStats.MaxShort);
+                    if (stats != null) stats.DebugSetShort(PsychicStats.MaxShort);
                     if (drugs != null) drugs.Add(DrugType.Red, 1);
                 }));
             steps.Add(new TutorialStep("complete",
@@ -456,9 +456,11 @@ namespace GlorifiedBody.Tutorial
                 Advance();
                 return;
             }
-            // The MK never runs out here, but in the capsule step: the MK capsule needs room to fill.
+            // The MK never runs out here, but in the capsule step: the capsule needs room to fill.
             bool capsuleStep = Current.Id == "capsule" && !drugUsed;
-            if (!capsuleStep && stats != null && stats.Nalcon < PsychicStats.MaxNalcon) stats.DebugSet(PsychicStats.MaxNalcon, stats.Short);
+            if (!capsuleStep && stats != null) stats.DebugSet(PsychicStats.MaxNalcon, stats.Short);
+            // Every power fills SHORT now (Bruno, 2026-11-06): only the short step may start a short.
+            if (Current.Id != "short" && stats != null && stats.Short > 0f && (shortController == null || !shortController.IsActive)) stats.DebugSetShort(0f);
             if (Current.Id == "short") RearmShort();
             if (Current.Id == "capsule") RearmCapsule();
             if (Current.IsDone != null && Current.IsDone()) Advance();
@@ -471,7 +473,7 @@ namespace GlorifiedBody.Tutorial
         private void RearmShort()
         {
             if (stats != null && !shortBegan && !stats.IsShortFull && (shortController == null || !shortController.IsActive))
-                stats.DebugSet(stats.Nalcon, PsychicStats.MaxShort);
+                stats.DebugSetShort(PsychicStats.MaxShort);
             if (drugs != null && !shortEnded && drugs.Count(DrugType.Red) == 0) drugs.Add(DrugType.Red, 1);
         }
 

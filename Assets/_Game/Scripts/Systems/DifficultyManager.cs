@@ -95,7 +95,7 @@ namespace GlorifiedBody.Systems
         /// <summary>Any hit kills her, and she has no second wind.</summary>
         public bool OneHitKills => IsModuleActive(DifficultyModuleDefinition.ModuleType.OneHitWonder);
 
-        public float MkRegenScale => Product(DifficultyModuleDefinition.ParamMkRegenScale);
+        public float MkSupplyScale => Product(DifficultyModuleDefinition.ParamMkSupplyScale);
 
         public float ShortGainScale => Product(DifficultyModuleDefinition.ParamShortGainScale);
 

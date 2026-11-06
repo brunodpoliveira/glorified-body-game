@@ -42,7 +42,7 @@ MonoBehaviour:
     - kind: 1
       path: Drug_Nalcon
       position: {x: -3, y: 0}
-      label: MK CAPSULE
+      label: WARSPITE CAPSULE
     - kind: 1
       path: Drug_Red
       position: {x: -3.5, y: 1.2}
@@ -76,7 +76,7 @@ MonoBehaviour:
     - kind: 1
       path: Capsule
       position: {x: -2.6, y: 13.5}
-      label: MK CAPSULE
+      label: WARSPITE CAPSULE
     - kind: 1
       path: Closet_Pill
       position: {x: 0, y: 8.9}
@@ -117,7 +117,7 @@ MonoBehaviour:
     - kind: 1
       path: Drug_Nalcon
       position: {x: -3, y: -3}
-      label: MK CAPSULE
+      label: WARSPITE CAPSULE
     - kind: 2
       path: Log_Travel
       position: {x: 3, y: 3}
@@ -179,7 +179,7 @@ MonoBehaviour:
     - kind: 1
       path: Drug_Nalcon
       position: {x: -8.5, y: -5.8}
-      label: MK CAPSULE
+      label: WARSPITE CAPSULE
     - kind: 3
       path: Save_Kit
       position: {x: -9, y: -3}
@@ -316,7 +316,7 @@ MonoBehaviour:
     - kind: 1
       path: '[World]/[W1]/Capsule_W1'
       position: {x: 1, y: 25.2}
-      label: MK CAPSULE
+      label: WARSPITE CAPSULE
   - scene: W1B
     world: Demo
     floor: demo_2
@@ -339,11 +339,11 @@ MonoBehaviour:
     - kind: 1
       path: '[World]/[W1B]/[Story]/Gate_Capsules/Capsule_W1B_A'
       position: {x: 4.7, y: 15.6}
-      label: MK CAPSULE
+      label: EREBUS CAPSULE
     - kind: 1
       path: '[World]/[W1B]/[Story]/Gate_Capsules/Capsule_W1B_B'
       position: {x: 3.5, y: 15.9}
-      label: MK CAPSULE
+      label: ORZABAL CAPSULE
   - scene: W2
     world: Demo
     floor: demo_2
@@ -395,6 +395,10 @@ MonoBehaviour:
       path: '[World]/[W3]/[Props]/L2_Chart'
       position: {x: 16.1, y: 17.8}
       label: THE PATIENT'S CHART
+    - kind: 1
+      path: '[World]/[W3]/[Props]/Capsule_W3'
+      position: {x: 10, y: 15}
+      label: WARSPITE CAPSULE
   - scene: W4
     world: Demo
     floor: demo_2
@@ -410,7 +414,11 @@ MonoBehaviour:
     - path: W4/W2
       position: {x: 22, y: 14}
       targetScene: W2
-    marks: []
+    marks:
+    - kind: 1
+      path: '[World]/[W4]/[Props]/Capsule_W4'
+      position: {x: 21.5, y: 14.8}
+      label: EREBUS CAPSULE
   - scene: W5
     world: Demo
     floor: demo_2
@@ -453,6 +461,10 @@ MonoBehaviour:
       path: '[World]/[W6]/[Props]/L3_Card'
       position: {x: -2.2, y: 7.4}
       label: A LAMINATED CARD
+    - kind: 1
+      path: '[World]/[W6]/[Props]/Capsule_W6'
+      position: {x: -1, y: 3}
+      label: ORZABAL CAPSULE
     - kind: 3
       path: '[World]/[W6]/[Props]/Save_W6'
       position: {x: -6.4, y: 3}
@@ -747,7 +759,11 @@ MonoBehaviour:
     - path: G3/G2
       position: {x: 24.5, y: -25}
       targetScene: G2
-    marks: []
+    marks:
+    - kind: 1
+      path: '[World]/[G3]/[Props]/Capsule_G3'
+      position: {x: 21.5, y: -24}
+      label: WARSPITE CAPSULE
   - scene: G4
     world: Demo
     floor: demo_1
@@ -764,6 +780,10 @@ MonoBehaviour:
       position: {x: 40.5, y: -25}
       targetScene: G2
     marks:
+    - kind: 1
+      path: '[World]/[G4]/[Props]/Capsule_G4'
+      position: {x: 37.5, y: -17.8}
+      label: ORZABAL CAPSULE
     - kind: 2
       path: '[World]/[G4]/[Props]/L8_Prayer_Card'
       position: {x: 38.7, y: -21.4}
@@ -804,7 +824,11 @@ MonoBehaviour:
     - path: G5/G12
       position: {x: 39.5, y: -47}
       targetScene: G12
-    marks: []
+    marks:
+    - kind: 1
+      path: '[World]/[G5]/[Props]/Capsule_G5'
+      position: {x: 25.5, y: -32.2}
+      label: WARSPITE CAPSULE
   - scene: G6
     world: Demo
     floor: demo_1
@@ -839,7 +863,11 @@ MonoBehaviour:
     - path: G7/G13
       position: {x: 20.5, y: -40}
       targetScene: G13
-    marks: []
+    marks:
+    - kind: 1
+      path: '[World]/[G7]/[Props]/Capsule_G7'
+      position: {x: 18.5, y: -41}
+      label: EREBUS CAPSULE
   - scene: G8
     world: Demo
     floor: demo_1

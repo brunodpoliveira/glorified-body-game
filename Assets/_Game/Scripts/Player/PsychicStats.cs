@@ -9,9 +9,11 @@ using GlorifiedBody.Systems;
 namespace GlorifiedBody.Player
 {
     /// <summary>
-    /// The three bars (design §2.7): HP lives in Health. NALCON is the psychic energy the powers spend.
-    /// SHORT rises with every kill and with damage taken. The outfit sets the maximums and the passive recharge.
-    /// The difficulty scales them (Bruno, 2026-10-26): her maximum HP, the MK and HP recharge, the SHORT gain, and
+    /// The bars (design §2.7): HP lives in Health. Each power has its own MK bar (the code name is Nalcon; Bruno, 2026-11-06:
+    /// "that basically makes mk an ammo counter and the pills clips to restore the ammo"): no bar comes back by itself in any
+    /// outfit, only its capsule fills it. SHORT rises with every kill, with damage taken and with every point of MK she
+    /// spends (Bruno, 2026-11-06: "the short bar should increase when the player uses a power"). The outfit sets the maximums.
+    /// The difficulty scales them (Bruno, 2026-10-26): her maximum HP, what a power costs, the SHORT gain, and
     /// ONE-HIT WONDER (1 HP, no second wind).
     /// </summary>
     [RequireComponent(typeof(Health))]
@@ -23,12 +25,21 @@ namespace GlorifiedBody.Player
         [SerializeField] private OutfitProfile outfit;
         [SerializeField, Min(0f)] private float shortPerKill = 25f;
         [SerializeField, Min(0f)] private float shortPerDamagePoint = 0.6f;
+        /// <summary>The SHORT of one point of MK spent: a whole bar spent counts as one kill, a full mk_warspite gives 5. PROPOSED.</summary>
+        public const float ShortPerMkPoint = 0.25f;
 
         private Health health;
 
         public Health Health => health;
         public OutfitProfile Outfit => outfit;
-        public float Nalcon { get; private set; } = MaxNalcon;
+        private readonly float[] bars = { MaxNalcon, MaxNalcon, MaxNalcon };
+
+        /// <summary>The power she has selected (PsychicPowers sets it): Nalcon reads its bar.</summary>
+        public PowerKind Selected { get; set; } = PowerKind.Blast;
+        /// <summary>The bar of the selected power.</summary>
+        public float Nalcon => bars[(int)Selected];
+        /// <summary>The bar of a power.</summary>
+        public float Mk(PowerKind kind) => bars[(int)kind];
         public float Short { get; private set; }
         public bool IsShortFull => Short >= MaxShort - 0.001f;
         public int Kills { get; private set; }
@@ -142,9 +153,11 @@ namespace GlorifiedBody.Player
             if (RegenPaused || outfit == null || Time.deltaTime <= 0f) return;
             float dt = Time.deltaTime;
             bool changed = false;
-            if (outfit.nalconRegenPerSecond > 0f && Nalcon < MaxNalcon)
+            // Ammunition (Bruno, 2026-11-06): both outfits hold 0 now, the field stays for one number to bring it back.
+            for (int i = 0; i < bars.Length && outfit.nalconRegenPerSecond > 0f; i++)
             {
-                Nalcon = Mathf.Min(MaxNalcon, Nalcon + outfit.nalconRegenPerSecond * Scale(d => d.MkRegenScale) * dt);
+                if (bars[i] >= MaxNalcon) continue;
+                bars[i] = Mathf.Min(MaxNalcon, bars[i] + outfit.nalconRegenPerSecond * dt);
                 changed = true;
             }
             // A full SHORT bar holds (Bruno, 2026-10-20). Only the short (ResetShort at its end) or the SHORT capsule
@@ -158,27 +171,32 @@ namespace GlorifiedBody.Player
             if (changed) OnChanged?.Invoke();
         }
 
-        public bool CanSpendNalcon(float amount) => Nalcon >= amount - 0.001f;
+        /// <summary>What an amount costs now: SCARCITY doubles it, DEEP WELL halves it.</summary>
+        public static float CostOf(float amount) => amount / Mathf.Max(0.01f, Scale(d => d.MkSupplyScale));
 
-        public bool TrySpendNalcon(float amount)
+        public bool CanSpendMk(PowerKind kind, float amount) => bars[(int)kind] >= CostOf(amount) - 0.001f;
+
+        /// <summary>A power spends its own bar, and the use fills the SHORT bar.</summary>
+        public bool TrySpendMk(PowerKind kind, float amount)
         {
-            if (!CanSpendNalcon(amount)) return false;
-            Nalcon = Mathf.Max(0f, Nalcon - amount);
-            OnChanged?.Invoke();
+            if (!CanSpendMk(kind, amount)) return false;
+            float cost = CostOf(amount);
+            bars[(int)kind] = Mathf.Max(0f, bars[(int)kind] - cost);
+            AddShort(cost * ShortPerMkPoint * Scale(d => d.ShortGainScale));
             return true;
         }
 
-        /// <summary>The MK capsule: MK full.</summary>
-        public void FillMk()
+        /// <summary>The capsule of a power: its bar full. A clip, not a sip (Bruno, 2026-11-06).</summary>
+        public void FillMk(PowerKind kind)
         {
-            Nalcon = MaxNalcon;
+            bars[(int)kind] = MaxNalcon;
             OnChanged?.Invoke();
         }
 
         /// <summary>Debug key and bots only (F7): every bar as new. No drug does this since 2026-10-30.</summary>
         public void RefillAll()
         {
-            Nalcon = MaxNalcon;
+            for (int i = 0; i < bars.Length; i++) bars[i] = MaxNalcon;
             Short = 0f;
             health.ReviveToFull();
             OnChanged?.Invoke();
@@ -244,8 +262,8 @@ namespace GlorifiedBody.Player
             OnChanged?.Invoke();
         }
 
-        /// <summary>A loaded save: the bars, the kill count and the exp as they were. The saved maximum HP already holds the level's.</summary>
-        public void Restore(float nalcon, float shortValue, int kills, int exp = 0, int people = -1)
+        /// <summary>A loaded save: the bars, the kill count and the exp as they were. The saved maximum HP already holds the level's. An older file has one MK: every bar takes it.</summary>
+        public void Restore(float nalcon, float shortValue, int kills, int exp = 0, int people = -1, IReadOnlyList<float> mk = null)
         {
             Kills = Mathf.Max(0, kills);
             People = people >= 0 ? people : Kills; // an older file has no count: its kills stand in
@@ -253,12 +271,28 @@ namespace GlorifiedBody.Player
             Level = ExperienceRules.LevelFor(Exp);
             RefreshMaxHp(); // the difficulty of now, not of the save
             DebugSet(nalcon, shortValue);
+            for (int i = 0; mk != null && i < bars.Length && i < mk.Count; i++) bars[i] = Mathf.Clamp(mk[i], 0f, MaxNalcon);
+            if (mk != null) OnChanged?.Invoke();
         }
 
-        /// <summary>Tests and bots: set the bars directly.</summary>
+        /// <summary>Tests and bots: set the SHORT bar directly.</summary>
+        public void DebugSetShort(float value)
+        {
+            Short = Mathf.Clamp(value, 0f, MaxShort);
+            OnChanged?.Invoke();
+        }
+
+        /// <summary>Tests and bots: set one bar directly.</summary>
+        public void DebugSetMk(PowerKind kind, float value)
+        {
+            bars[(int)kind] = Mathf.Clamp(value, 0f, MaxNalcon);
+            OnChanged?.Invoke();
+        }
+
+        /// <summary>Tests and bots: set the bars directly (every MK bar takes the value).</summary>
         public void DebugSet(float nalcon, float shortValue)
         {
-            Nalcon = Mathf.Clamp(nalcon, 0f, MaxNalcon);
+            for (int i = 0; i < bars.Length; i++) bars[i] = Mathf.Clamp(nalcon, 0f, MaxNalcon);
             Short = Mathf.Clamp(shortValue, 0f, MaxShort);
             OnChanged?.Invoke();
         }

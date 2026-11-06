@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GlorifiedBody.Player.PowerDefinition
   kind: 1
   displayName: mk_erebus
-  drug: 1
+  drug: 3
   fullChargeTime: 1.5
   minCharge: 0.2
   range: 12

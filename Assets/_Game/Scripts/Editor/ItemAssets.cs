@@ -18,7 +18,9 @@ namespace GlorifiedBody.Editor
         public const string MaterialsFolder = "Assets/_Game/Rendering/Materials";
         public const string UnlitShaderName = "Universal Render Pipeline/Unlit";
 
-        public static readonly Color NalconColour = new Color(0.35f, 0.95f, 0.45f);
+        public static readonly Color NalconColour = new Color(0.92f, 0.92f, 0.95f);
+        public static readonly Color ErebusColour = new Color(1f, 0.6f, 0.15f);
+        public static readonly Color OrzabalColour = new Color(0.3f, 0.85f, 1f);
         public static readonly Color RedColour = new Color(0.95f, 0.25f, 0.22f);
         public static readonly Color DFelonColour = new Color(0.35f, 0.6f, 1f);
         public static readonly Color LogColour = new Color(0.96f, 0.95f, 0.88f);
@@ -30,7 +32,10 @@ namespace GlorifiedBody.Editor
         public static void CreateAll()
         {
             Directory.CreateDirectory(ItemsFolder);
-            Drug(DrugType.Nalcon, "MK CAPSULE", NalconColour); // NALCON before 2026-10-26 (Bruno: no "nalcon" on screen)
+            // One capsule per power (Bruno, 2026-11-06). The colour of a capsule is the colour of its bar on the HUD.
+            Drug(DrugType.Nalcon, "WARSPITE CAPSULE", NalconColour);
+            Drug(DrugType.NalconFire, "EREBUS CAPSULE", ErebusColour);
+            Drug(DrugType.NalconLift, "ORZABAL CAPSULE", OrzabalColour);
             // Each drug does one thing (Bruno, 2026-10-30). PLACEHOLDER names until Bruno picks them (design §10.5).
             Drug(DrugType.Red, "SHORT CAPSULE", RedColour);
             Drug(DrugType.DFelon, "SECOND WIND PILL", DFelonColour);
@@ -50,9 +55,11 @@ namespace GlorifiedBody.Editor
 
         private static ItemDefinition Drug(DrugType type, string name, Color colour)
         {
-            string effect = type == DrugType.Nalcon ? "It fills MK."
+            string effect = type == DrugType.Nalcon ? "A white capsule of tincture, ward stock. It fills the mk_warspite bar, and only that bar."
+                : type == DrugType.NalconFire ? "An amber capsule of tincture, ward stock. It fills the mk_erebus bar, and only that bar."
+                : type == DrugType.NalconLift ? "A cyan capsule of tincture, ward stock. It fills the mk_orzabal bar, and only that bar."
                 : type == DrugType.Red ? "It takes half the SHORT bar away, and it ends a short."
-                : "It gives the second wind back: the next lethal hit leaves her at 1 HP.";
+                : "It gives the second wind back: the next lethal hit or shock leaves her at 1 HP.";
             return Item(type.ToString().ToLowerInvariant(), name, ItemKind.Drug, colour, $"A drug. {effect} No drug gives HP. One slot.", "", type);
         }
 

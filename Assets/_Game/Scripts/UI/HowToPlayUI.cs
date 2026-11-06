@@ -122,8 +122,8 @@ namespace GlorifiedBody.UI
             CreateBody(p,
                 "You are Lucy. You wake in the lab with no memory and three psychic powers: mk_warspite (blast), " +
                 "mk_erebus (fire), mk_orzabal (telekinesis). Every attack is a circle charge: hold to charge, release to strike. You stand " +
-                "still while you charge. Three bars: HP, MK (psychic energy) and SHORT (it fills with " +
-                "every kill and every hit you take). PLACEHOLDER TEXT: the writer supplies the final words.");
+                "still while you charge. Your bars: HP, one MK bar for each power, and SHORT. MK does not come back by itself: only the capsule " +
+                "of that power fills its bar. Every power you use, every kill and every hit you take fills SHORT. A short takes about half your HP, and below that it kills you. PLACEHOLDER TEXT: the writer supplies the final words.");
             CreateSpacer(p, 10);
 
             // ── Controls: the live bindings, so a remap shows here too ──
@@ -156,7 +156,7 @@ namespace GlorifiedBody.UI
             {
                 CreateControl(p, "F4", "Debug: kill Lucy (shows the death screen)");
                 CreateControl(p, "F5 / F6 / F7", "Debug: fill SHORT / start the short / refill (debug only) + drugs");
-                CreateControl(p, "F8 / F9", "Debug: MK -25 / +25");
+                CreateControl(p, "F8 / F9", "Debug: selected MK -25 / +25");
                 CreateControl(p, "F11 / F3", "Debug: the next look test room / cycle its dressings");
             }
             CreateSpacer(p, 14);

@@ -11,6 +11,7 @@ using GlorifiedBody.Automation;
 using GlorifiedBody.Cameras;
 using GlorifiedBody.Characters;
 using GlorifiedBody.Rooms;
+using GlorifiedBody.Story;
 
 namespace GlorifiedBody.Editor.Demo
 {
@@ -66,6 +67,7 @@ namespace GlorifiedBody.Editor.Demo
             Physics.SyncTransforms();
             List<FixedCamera> stairCameras = StairRoom(world);
             Neighbours(rooms);
+            Reinforcement(rooms);
 
             GameObject director = MenuLoopSetup.EnsureChild(world, "[CameraDirector]");
             MenuLoopSetup.EnsureComponent<FixedCameraDirector>(director).SetDefaultCamera(rooms["W1"].Cameras[0]);
@@ -80,6 +82,19 @@ namespace GlorifiedBody.Editor.Demo
             AssetDatabase.SaveAssets();
             int cameras = rooms.Values.Sum(r => r.Cameras.Count) + stairCameras.Count;
             Debug.Log($"[DemoWorld] built {ScenePath}: {rooms.Count + 1} rooms, {cameras} cameras");
+        }
+
+        /// <summary>The soldiers after the fireteam of G2 (TeamReinforcement): it needs both rooms, so it comes after them.</summary>
+        private static void Reinforcement(Dictionary<string, DemoRoom> rooms)
+        {
+            GameObject watcher = MenuLoopSetup.EnsureChild(rooms["G2"].Story, "Team_Reinforcement");
+            TeamReinforcement reinforcement = MenuLoopSetup.EnsureComponent<TeamReinforcement>(watcher);
+            reinforcement.afterFlag = DemoPublic.Released;
+            reinforcement.reinforcementFlag = DemoPublic.Reinforced;
+            reinforcement.teamParent = rooms["G2"].Figures.transform;
+            reinforcement.team = new[] { "Soldier_Pair1_A", "Soldier_Pair1_B", "Soldier_Pair2_A", "Soldier_Pair2_B" };
+            reinforcement.group = rooms["G2"].Figures.transform.Find(DemoPublic.ReinforcementGroup);
+            reinforcement.room = rooms["G2"].Root.GetComponent<Room>();
         }
 
         /// <summary>

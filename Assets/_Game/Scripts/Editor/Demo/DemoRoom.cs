@@ -9,6 +9,7 @@ using GlorifiedBody.Characters;
 using GlorifiedBody.Destruction;
 using GlorifiedBody.Enemy;
 using GlorifiedBody.Interaction;
+using GlorifiedBody.Player;
 using GlorifiedBody.Rooms;
 using GlorifiedBody.Story;
 
@@ -490,6 +491,13 @@ namespace GlorifiedBody.Editor.Demo
         public ItemPickup Item(string name, ItemDefinition item, Vector3 at, Vector3 size)
         {
             GameObject obj = ItemAssets.Pickup(Props, name, item, PrimitiveType.Cube, at, size, Quaternion.identity);
+            return obj.GetComponent<ItemPickup>();
+        }
+
+        /// <summary>A capsule on the floor (MK is ammunition, Bruno, 2026-11-06: the room builder places the clips).</summary>
+        public ItemPickup Capsule(string name, DrugType type, Vector3 at)
+        {
+            GameObject obj = ItemAssets.Pickup(Props, name, ItemAssets.Drug(type), PrimitiveType.Capsule, at, Vector3.one * 0.3f, Quaternion.Euler(0f, 0f, 90f));
             return obj.GetComponent<ItemPickup>();
         }
 

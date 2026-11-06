@@ -15,7 +15,7 @@ MonoBehaviour:
   outfitId: nude
   displayName: NUDE
   maxHp: 100
-  nalconRegenPerSecond: 2
+  nalconRegenPerSecond: 0
   shortDecayPerSecond: 1
   drugSlotsPerType: 2
   itemSlots: 4

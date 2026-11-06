@@ -40,11 +40,13 @@ namespace GlorifiedBody.Enemy
     /// flank her"): a soldier or the power armour claims a side of the fight (FlankBoard: two take opposite sides, the
     /// pinch) and prefers firing spots out of her view; a guard keeps to his own line to her; the knife runs to her side
     /// before it strikes. The armed scientist with a pistol comes head-on too (Bruno, 2026-11-03: "head on").
+    /// A team soldier knows only what his team saw (FireTeam, 2026-11-06): when she hides, he holds and fires at the place
+    /// where they last saw her (suppression), and when she stays lost, he goes through the rooms with a partner (Phase.Search).
     /// </summary>
     [RequireComponent(typeof(DummyShooter), typeof(Health))]
     public sealed class SoldierBrain : MonoBehaviour, IFearful, ICarer, IDoorWaiter
     {
-        public enum Phase { Idle, Move, Shoot, Hold, Dead, Care, Retreat, Cower, Duck }
+        public enum Phase { Idle, Move, Shoot, Hold, Dead, Care, Retreat, Cower, Duck, Search }
 
         [SerializeField, Min(1f)] private float preferredRange = 6f;
         [SerializeField] private Vector2 moveSeconds = new Vector2(1.5f, 3f);
@@ -190,8 +192,38 @@ namespace GlorifiedBody.Enemy
         private bool IsArmedCivilian => GetComponent<EnemyMorale>() is EnemyMorale m && m.RankOf == EnemyMorale.Rank.ArmedCivilian;
         private EnemyMorale.Rank RankOf => GetComponent<EnemyMorale>() is EnemyMorale m ? m.RankOf : EnemyMorale.Rank.Soldier;
         public string AlertReason { get; private set; } = "";
-        /// <summary>Where she is: her real position once alerted, else the last seen position.</summary>
-        public Vector3 TargetPosition => Alerted && player != null ? player.position : body.TargetPosition;
+        /// <summary>Where she is: her real position once alerted (a team: what the team saw), else the last seen position.</summary>
+        public Vector3 TargetPosition => Alerted && player != null ? (Team != null && Team.HerHidden ? Team.LastSeen : player.position) : body.TargetPosition;
+
+        /// <summary>
+        /// He sees her now, for his team. In the fight a clear line is enough: he watches her. When she is lost he must look
+        /// the right way too, or stand near (FireTeam).
+        /// </summary>
+        public bool SpotsHer(bool lost)
+        {
+            if (player == null || Current == Phase.Dead || suspendedByLift || !ClearLineToHer()) return false;
+            if (!lost) return true;
+            float distance = Flat(transform.position, player.position);
+            if (distance <= SearchNearSight) return true;
+            if (distance > SearchFarSight) return false;
+            Vector3 to = player.position - transform.position;
+            to.y = 0f;
+            return Vector3.Angle(transform.forward, to) <= SearchCone;
+        }
+
+        private bool ClearLineToHer() => gun.Sees(player.position + Vector3.up * GlorifiedBody.Characters.Body.ChestHeight);
+
+        public Vector3 HerPosition => player != null ? player.position : transform.position;
+
+        private const float SearchNearSight = 4f;  // m: he notices her this near, whichever way he looks, PROPOSED
+        private const float SearchFarSight = 18f;  // m, PROPOSED
+        private const float SearchCone = 75f;      // degrees each side of his facing, PROPOSED
+        private const float SearchLegSeconds = 12f; // s a leg of the search may take
+        private const float SearchTurnRate = 120f; // degrees a second, the partner who covers turns to the walker's goal
+        private Vector3? searchGoal;
+        private float searchLegStart;
+        private Vector3? suppressPlace;
+        private bool suppressTried;
 
         private void Awake()
         {
@@ -239,7 +271,7 @@ namespace GlorifiedBody.Enemy
             ScriptHeld = false;
             Alerted = true;
             AlertReason = reason;
-            if (RankOf == EnemyMorale.Rank.Soldier) Team = FireTeam.Join(this);
+            if (RankOf == EnemyMorale.Rank.Soldier) Team = FireTeam.Join(this, player.position);
             body.Track(player);
             RunTelemetry.Event("soldier_alerted", $"{name}:{reason}");
             if (callOthers) EnemyAlert.Raise(transform.position, alertRadius, reason);
@@ -309,6 +341,7 @@ namespace GlorifiedBody.Enemy
         {
             if (health.IsDead) return;
             Alert("hurt", callOthers: true);
+            Team?.Heard(player != null ? player.position : transform.position); // she did this: he knows where she is
         }
 
         private void OnOwnShot(Vector3 origin, Vector3 direction)
@@ -319,8 +352,10 @@ namespace GlorifiedBody.Enemy
         /// <summary>A power that hits something near it is loud: a blast on a crate, a burn on a fellow soldier.</summary>
         private void OnHitHeard(HitInfo hit)
         {
-            if (Alerted || Current == Phase.Dead || hit.Attacker == null || !hit.Attacker.CompareTag("Player")) return;
-            if (Flat(transform.position, hit.HitPoint) <= hearPowerRadius && GlorifiedBody.Rooms.Room.Hear(transform.position, hit.HitPoint)) Alert("power", callOthers: true);
+            if (Current == Phase.Dead || hit.Attacker == null || !hit.Attacker.CompareTag("Player")) return;
+            if (Flat(transform.position, hit.HitPoint) > hearPowerRadius || !GlorifiedBody.Rooms.Room.Hear(transform.position, hit.HitPoint)) return;
+            if (!Alerted) Alert("power", callOthers: true);
+            else Team?.Heard(hit.Attacker.transform.position); // a power is loud: it gives her away
         }
 
         private void OnDestroy()
@@ -333,6 +368,7 @@ namespace GlorifiedBody.Enemy
         {
             Current = Phase.Dead;
             ReleaseCover();
+            ClearSuppression();
             FlankBoard.Release(this);
             gun.HoldFire = true;
             body?.Stop();
@@ -579,6 +615,17 @@ namespace GlorifiedBody.Enemy
             if (Current == Phase.Care || Retreating) { gun.HoldFire = true; return; }
             float dt = Time.deltaTime;
 
+            if (Team != null && Team.Lost)
+            {
+                TickSearch(dt);
+                return;
+            }
+            if (Current == Phase.Search)
+            {
+                searchGoal = null;
+                Current = Phase.Idle; // contact
+            }
+
             switch (Current)
             {
                 case Phase.Idle:
@@ -607,6 +654,7 @@ namespace GlorifiedBody.Enemy
                     body.Stop();
                     // The walk carries the body for a moment after the stop: no aim until it stands.
                     gun.HoldFire = body.IsMoving && !gun.HoldsSlot;
+                    UpdateSuppression();
                     timer -= dt;
                     bool fired = gun.ShotsFired > shotsAtShootStart && !gun.HoldsSlot;
                     bool gotAway = Rusher && !gun.HoldsSlot && !gun.HerInReach; // a knife does not wait for her
@@ -666,9 +714,95 @@ namespace GlorifiedBody.Enemy
             return Vector3.Distance(a, b);
         }
 
+        /// <summary>
+        /// She hides (FireTeam.HerHidden): the gun fires at the place where the team last saw her, or just beside it when he
+        /// has no line to that place, so she cannot step out and the others can move. Without a line to it he moves. She shows
+        /// again: the place is forgotten, and the gun goes back to her.
+        /// </summary>
+        private void UpdateSuppression()
+        {
+            if (Team == null || !Team.HerHidden)
+            {
+                gun.SuppressPoint = null;
+                return;
+            }
+            if (!suppressTried)
+            {
+                suppressTried = true;
+                suppressPlace = SuppressPlace();
+                if (suppressPlace.HasValue) Team.CallSuppression(this);
+            }
+            gun.SuppressPoint = suppressPlace;
+        }
+
+        private Vector3? SuppressPlace()
+        {
+            Vector3 place = Team.LastSeen + Vector3.up * GlorifiedBody.Characters.Body.ChestHeight;
+            if (gun.Sees(place)) return place;
+            Vector3 line = place - transform.position;
+            line.y = 0f;
+            Vector3 side = Vector3.Cross(Vector3.up, line).normalized;
+            foreach (float step in new[] { 0.8f, -0.8f, 1.6f, -1.6f })
+                if (gun.Sees(place + side * step)) return place + side * step;
+            return null;
+        }
+
+        private void ClearSuppression()
+        {
+            suppressTried = false;
+            suppressPlace = null;
+            gun.SuppressPoint = null;
+        }
+
+        /// <summary>
+        /// She is lost: he goes through the rooms with his partner (FireTeam). One walks while the other stands, faces the
+        /// walker's goal and covers him. He walks: a search is no charge. The gun stays down until somebody sees her.
+        /// </summary>
+        private void TickSearch(float dt)
+        {
+            if (gun.HoldsSlot) return; // the shot first
+            if (Current != Phase.Search)
+            {
+                if (ducked) StandUp();
+                ReleaseCover();
+                ClearSuppression();
+                gun.FromCover = false;
+                Current = Phase.Search;
+                searchGoal = null;
+                body.Stop();
+            }
+            gun.HoldFire = true;
+            Vector3? order = Team.SearchOrder(this, out Vector3 watch);
+            if (order.HasValue)
+            {
+                if (!searchGoal.HasValue || (searchGoal.Value - order.Value).sqrMagnitude > 0.01f)
+                {
+                    searchGoal = order;
+                    searchLegStart = Time.time;
+                    Spot = order.Value;
+                    body.MoveTo(order.Value, MoveSpeed.Walk);
+                    Moves++;
+                    RunTelemetry.Event("soldier_search", $"{name}:{order.Value.x:0.0},{order.Value.z:0.0}");
+                }
+                bool there = Flat(transform.position, order.Value) <= arriveRadius || (Time.time - searchLegStart >= minMoveSeconds && !body.IsMoving && Flat(transform.position, order.Value) <= CoverStallRadius);
+                if (there || Time.time - searchLegStart >= SearchLegSeconds)
+                {
+                    searchGoal = null;
+                    Team.LegDone(this);
+                }
+                return;
+            }
+            searchGoal = null;
+            body.Stop();
+            Vector3 to = watch - transform.position;
+            to.y = 0f;
+            if (to.sqrMagnitude > 0.01f) body.Face(Vector3.RotateTowards(transform.forward, to.normalized, SearchTurnRate * Mathf.Deg2Rad * dt, 0f));
+        }
+
         private void StartMove()
         {
             if (gun.HoldsSlot) return; // the shot first, then the legs
+            ClearSuppression();
             // A team: not his element's turn, and he can fire from where he stands: he holds and covers the others.
             if (Team != null && !Team.MayMove(this) && (HeldCover != null ? CoverStillHolds() : ClearLine() && Distance() <= gun.Range))
             {
@@ -920,6 +1054,7 @@ namespace GlorifiedBody.Enemy
         /// <summary>Between shots he hides: he crouches behind low cover, or goes back behind the corner.</summary>
         private void BeginDuck()
         {
+            ClearSuppression();
             Current = Phase.Duck;
             Ducks++;
             ducked = true;
@@ -969,6 +1104,7 @@ namespace GlorifiedBody.Enemy
         {
             body.Stop();
             gun.FromCover = HeldCover != null;
+            ClearSuppression();
             shotsAtShootStart = gun.ShotsFired;
             timer = shootWaitSeconds;
             Current = Phase.Shoot;

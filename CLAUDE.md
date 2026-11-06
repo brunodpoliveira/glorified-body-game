@@ -548,3 +548,9 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
 9. The game is RFab's dogfood (Bruno, 2026-10-22). Every RFab bug, limit or missing piece found while building
    goes the same day as one row in `/home/pc/MEGA/code/the-glorified-body/RFAB_GAPS.md`,
    with the evidence file. The RFab agent works that list.
+
+- 2026-11-06, day, MK AS AMMUNITION (`devlog-notes/2026-11-06_mk_ammo_short_death_search.md`, Bruno: "that basically makes mk an ammo counter and the pills clips"): one MK bar for each power
+  (`PsychicStats.Mk(kind)`; `Nalcon` reads the selected bar; only that bar shows on the HUD), no recharge, one capsule for each power (`DrugType.Nalcon`, `NalconFire`, `NalconLift`). Every point of MK spent fills
+  SHORT (`ShortPerMkPoint`). A short can kill her (killer id `short`, its own death screen row); a second wind saves her and ends the short. SCARCITY and DEEP WELL change the cost. `FireTeam`: suppression
+  (`DummyShooter.SuppressPoint`, 1.5 s with no line), the team knows only what it saw (`LastSeen`), the search in pairs (`Phase.Search`, 8 s). `Story/TeamReinforcement.cs`: the four of G2 dead and sector C released = a
+  second fireteam of four after 20 s. Bot `play Demo Main_Menu team 300`. Numbers PROPOSED.

@@ -773,20 +773,204 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator Nalcon_Recharges_Nude_NotGuard()
+        public IEnumerator NoMkBar_ComesBack_ByItself_InAnyOutfit()
         {
-            // Bruno, 2026-10-20: 6 per second was too quick. 2 per second (PROPOSED): a full bar in 50 s.
-            Assert.AreEqual(2f, stats.Outfit.nalconRegenPerSecond, 0.01f, "the nude outfit recharges 2 nalcon per second (the asset must carry the new number)");
+            // Bruno, 2026-11-06: "that basically makes mk an ammo counter and the pills clips to restore the ammo".
             stats.RegenPaused = false;
             stats.DebugSet(50f, 0f);
             yield return new WaitForSeconds(1f);
-            Assert.That(stats.Nalcon, Is.InRange(51.5f, 52.7f), "the nude outfit recharges nalcon, slowly");
-
+            Assert.AreEqual(50f, stats.Nalcon, 0.01f, "the nude outfit: no MK back");
             stats.SetOutfit(Resources.Load<OutfitProfile>("Outfits/outfit_guard"));
             Assert.AreEqual(150f, health.MaxHealth, "the guard outfit has more HP");
             stats.DebugSet(50f, 0f);
             yield return new WaitForSeconds(1f);
-            Assert.AreEqual(50f, stats.Nalcon, 0.01f, "the guard outfit has no passive recharge");
+            Assert.AreEqual(50f, stats.Nalcon, 0.01f, "the guard outfit: no MK back");
+        }
+
+        [UnityTest]
+        public IEnumerator EachPower_SpendsItsOwnBar_AndItsCapsuleFillsOnlyThatBar()
+        {
+            // Bruno, 2026-11-06: "each power has its own separate mk bar (and a respective pill to restore said power bar)".
+            stats.DebugSet(100f, 0f);
+            powers.Select(PowerKind.Fire);
+            Assert.AreEqual(100f, stats.Nalcon, 0.01f);
+            Assert.IsTrue(powers.Release(1f), powers.LastResult);
+            Assert.AreEqual(75f, stats.Mk(PowerKind.Fire), 0.01f, "mk_erebus spends its own bar");
+            Assert.AreEqual(100f, stats.Mk(PowerKind.Blast), 0.01f, "the mk_warspite bar stays");
+            Assert.AreEqual(100f, stats.Mk(PowerKind.Telekinesis), 0.01f, "the mk_orzabal bar stays");
+            drugs.DebugSet(DrugType.Nalcon, 1);
+            drugs.DebugSet(DrugType.NalconFire, 1);
+            Assert.IsFalse(powers.UseDrug(DrugType.Nalcon), "the mk_warspite capsule on a full bar: it stays");
+            Assert.AreEqual("mk_full", powers.LastResult);
+            Assert.AreEqual(1, drugs.Count(DrugType.Nalcon));
+            Assert.IsTrue(powers.UseDrug(DrugType.NalconFire));
+            Assert.AreEqual(100f, stats.Mk(PowerKind.Fire), 0.01f, "its capsule fills its bar");
+            Assert.AreEqual(0, drugs.Count(DrugType.NalconFire));
+
+            // An empty bar stops only its own power.
+            stats.DebugSetMk(PowerKind.Fire, 0f);
+            Assert.IsFalse(powers.Release(1f));
+            Assert.AreEqual("no_nalcon", powers.LastResult);
+            powers.Select(PowerKind.Blast);
+            Assert.IsTrue(powers.Release(1f), "mk_warspite still has its bar");
+            yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator TheHud_ShowsOnlyTheBarOfTheSelectedPower()
+        {
+            // Bruno, 2026-11-06: "only the bar of the power that it activated is visible".
+            PlayerHud hud = UnityEngine.Object.FindFirstObjectByType<PlayerHud>();
+            Assert.IsNotNull(hud);
+            stats.DebugSet(100f, 0f);
+            stats.DebugSetMk(PowerKind.Fire, 10f);
+            powers.Select(PowerKind.Blast);
+            yield return null;
+            yield return null;
+            Transform bars = hud.transform.Find("PlayerHudCanvas/Bars");
+            Image[] fills = bars.GetComponentsInChildren<Image>(true);
+            Image fill = System.Array.Find(fills, i => i.name == "WARSPITEFill");
+            Assert.IsNotNull(fill, "one MK row");
+            Assert.AreEqual(1f, fill.fillAmount, 0.01f);
+            Assert.IsFalse(hud.LowNalconWarning);
+            powers.Select(PowerKind.Fire);
+            yield return null;
+            yield return null;
+            Assert.AreEqual(0.1f, fill.fillAmount, 0.01f, "the row shows the bar of the selected power");
+            Assert.IsTrue(hud.LowNalconWarning, "its warning too");
+            Text label = System.Array.Find(bars.GetComponentsInChildren<Text>(true), t => t.text == "EREBUS");
+            Assert.IsNotNull(label, "with its name");
+            Assert.IsNull(System.Array.Find(fills, i => i.name == "EREBUSFill"), "no second MK row");
+        }
+
+        [UnityTest]
+        public IEnumerator TheBoost_ReadsTheBarOfTheSelectedPower_AndADrugGoesToTheSelectedPowerFirst()
+        {
+            stats.DebugSet(100f, 0f);
+            stats.DebugSetMk(PowerKind.Fire, 10f);
+            stats.DebugSetMk(PowerKind.Telekinesis, 40f);
+            powers.Select(PowerKind.Blast);
+            Assert.IsTrue(powers.IsBoosted, "mk_warspite over half");
+            powers.Select(PowerKind.Fire);
+            Assert.IsFalse(powers.IsBoosted, "mk_erebus under half");
+
+            drugs.DebugSet(DrugType.NalconFire, 1);
+            drugs.DebugSet(DrugType.NalconLift, 1);
+            Assert.AreEqual(DrugType.NalconFire, powers.MostNeededDrug(), "the capsule of the selected power");
+            powers.Select(PowerKind.Blast); // its bar is full, and she has no capsule for it
+            Assert.AreEqual(DrugType.NalconFire, powers.MostNeededDrug(), "then the lowest bar");
+            yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator MkBars_StayInASave_AndAnOlderFileGivesEveryBarItsOneValue()
+        {
+            stats.DebugSet(100f, 30f);
+            stats.DebugSetMk(PowerKind.Fire, 10f);
+            stats.DebugSetMk(PowerKind.Telekinesis, 55f);
+            drugs.DebugSet(DrugType.NalconLift, 1);
+            var state = GlorifiedBody.Saving.SaveSystem.CapturePlayer(player);
+            stats.DebugSet(1f, 0f);
+            drugs.DebugSet(DrugType.NalconLift, 0);
+            GlorifiedBody.Saving.SaveSystem.ApplyPlayer(player, state);
+            Assert.AreEqual(100f, stats.Mk(PowerKind.Blast), 0.01f);
+            Assert.AreEqual(10f, stats.Mk(PowerKind.Fire), 0.01f);
+            Assert.AreEqual(55f, stats.Mk(PowerKind.Telekinesis), 0.01f);
+            Assert.AreEqual(1, drugs.Count(DrugType.NalconLift));
+
+            state.mk.Clear();
+            state.nalcon = 70f;
+            GlorifiedBody.Saving.SaveSystem.ApplyPlayer(player, state);
+            Assert.AreEqual(70f, stats.Mk(PowerKind.Blast), 0.01f, "an older file has one MK");
+            Assert.AreEqual(70f, stats.Mk(PowerKind.Fire), 0.01f);
+            Assert.AreEqual(70f, stats.Mk(PowerKind.Telekinesis), 0.01f);
+            yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator UsingAPower_FillsTheShortBar_ByTheMkItSpends()
+        {
+            // Bruno, 2026-11-06: "the short bar should increase when the player uses a power".
+            stats.SetOutfit(Resources.Load<OutfitProfile>("Outfits/outfit_guard")); // no drain
+            stats.DebugSet(100f, 0f);
+            dummyA.GetComponent<Health>().SetMaxHealth(1000f); // it stands through both blasts
+            Assert.IsTrue(powers.Release(1f), powers.LastResult);
+            Assert.AreEqual(20f * PsychicStats.ShortPerMkPoint, stats.Short, 0.01f, "a full mk_warspite");
+            float before = stats.Short;
+            Assert.IsTrue(powers.Release(0.5f), powers.LastResult);
+            Assert.AreEqual(before + 10f * PsychicStats.ShortPerMkPoint, stats.Short, 0.01f, "half a charge, half the MK, half the SHORT");
+            before = stats.Short;
+            powers.Release(0.05f); // under the minimum charge: a fizzle spends nothing
+            Assert.AreEqual(before, stats.Short, 0.01f, "no MK spent, no SHORT");
+            yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator TheShort_KillsHer_WhenHerHpRunsOut_AndTheGameOverScreenNamesIt()
+        {
+            // Bruno, 2026-11-06: "otherwise it'll straight up kill them. confirm we have a game over screen for shorting to death".
+            health.SetSecondWindEnabled(false);
+            health.SetInvulnerable(false);
+            health.SetRuntimeInvulnerable(false);
+            health.SetHealth(5f);
+            DeathMenuUI.LastKillerId = "soldier_rifle"; // an older hit must not take the credit
+            shortController.Begin();
+            yield return WaitUntil(() => health.IsDead, ShortController.StartFreeze + 8f);
+            Assert.IsTrue(health.IsDead, "the shocks took her last HP");
+            Assert.AreEqual(ShortController.KillerId, DeathMenuUI.LastKillerId, "the short killed her");
+            Assert.IsFalse(shortController.IsActive, "no shocks from a body");
+            yield return WaitUntil(() => GameManager.Instance.IsGameOver, 5f);
+            Assert.IsTrue(GameManager.Instance.IsGameOver, "game over");
+            DeathMenuUI screen = UnityEngine.Object.FindAnyObjectByType<DeathMenuUI>();
+            Assert.IsNotNull(screen);
+            yield return WaitUntil(() => screen.Shown != null, 2f);
+            Assert.IsNotNull(screen.Shown, "the death screen is up");
+            Assert.AreEqual(ShortController.KillerId, screen.Shown.killerId, "the death screen has its own row for the short");
+            StringAssert.Contains("SHORT", screen.Shown.hint);
+            Assert.IsFalse(string.IsNullOrEmpty(screen.Shown.voiceText), "the writer's line");
+            GameObject canvas = GameObject.Find("DeathMenuUICanvas");
+            Assert.IsNotNull(canvas, "the screen shows");
+            Assert.IsTrue(canvas.activeInHierarchy);
+        }
+
+        [UnityTest]
+        public IEnumerator TheShort_TakesTheSecondWind_InsteadOfHerLife_AndThenItEnds()
+        {
+            health.SetSecondWindEnabled(true);
+            health.RearmSecondWind();
+            health.SetInvulnerable(false);
+            health.SetRuntimeInvulnerable(false);
+            health.SetHealth(5f);
+            stats.DebugSet(45f, PsychicStats.MaxShort);
+            shortController.Begin();
+            yield return WaitUntil(() => !health.IsSecondWindAvailable, ShortController.StartFreeze + 8f);
+            Assert.IsFalse(health.IsSecondWindAvailable, "the shock took the second wind");
+            yield return null;
+            Assert.IsFalse(health.IsDead, "she lives");
+            Assert.AreEqual(1f, health.CurrentHealth, 0.001f, "at 1 HP");
+            Assert.IsFalse(shortController.IsActive, "the second wind ends the short: the next shock would kill her");
+            Assert.AreEqual(0f, stats.Short, 0.01f);
+            yield return new WaitForSeconds(3.5f);
+            Assert.IsFalse(health.IsDead, "she still lives after the invulnerable frames");
+
+            // The second wind is gone: the next short kills her.
+            stats.DebugSet(45f, PsychicStats.MaxShort);
+            shortController.Begin();
+            yield return WaitUntil(() => health.IsDead, ShortController.StartFreeze + 3f);
+            Assert.IsTrue(health.IsDead, "no second wind: the short kills her");
+        }
+
+        [UnityTest]
+        public IEnumerator TheShort_AtHighHp_StillLeavesHerAlive()
+        {
+            health.SetSecondWindEnabled(false);
+            health.SetInvulnerable(false);
+            health.SetRuntimeInvulnerable(false);
+            health.SetHealth(health.MaxHealth);
+            shortController.Begin();
+            yield return new WaitForSeconds(shortController.Duration + 0.6f);
+            Assert.IsFalse(health.IsDead, "half her HP is gone, no more");
+            Assert.IsFalse(shortController.IsActive);
         }
 
         [UnityTest]

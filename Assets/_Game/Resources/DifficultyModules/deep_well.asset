@@ -15,7 +15,7 @@ MonoBehaviour:
   moduleId: deep_well
   displayName: DEEP WELL
   symbol: "\u25C9"
-  description: MK recharges twice as fast.
+  description: Every power costs half the MK.
   difficultyPercent: -15
   moduleType: 14
   section: 2
@@ -24,5 +24,5 @@ MonoBehaviour:
   exclusiveGroup: mk
   presets: 
   parameters:
-  - key: mkRegenScale
+  - key: mkSupplyScale
     value: 2

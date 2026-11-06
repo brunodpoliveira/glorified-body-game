@@ -132,19 +132,18 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator MkRecharge_FollowsScarcityAndDeepWell()
+        public IEnumerator MkCost_FollowsScarcityAndDeepWell()
         {
+            // MK is ammunition (Bruno, 2026-11-06): the two modules change what a power costs.
             yield return InRoom();
-            float normal = 0f, scarce = 0f, deep = 0f;
-            yield return MkGain(v => normal = v);
+            float normal = Cost();
             Toggle("scarcity");
-            yield return MkGain(v => scarce = v);
+            float scarce = Cost();
             Toggle("deep_well");
-            yield return MkGain(v => deep = v);
-            Debug.Log($"[DifficultyTests] MK in 1 s: {normal:0.00} / scarcity {scarce:0.00} / deep well {deep:0.00}");
-            Assert.AreEqual(stats.Outfit.nalconRegenPerSecond, normal, 0.25f, "the outfit rate");
-            Assert.AreEqual(normal * 0.5f, scarce, 0.25f, "SCARCITY: half");
-            Assert.AreEqual(normal * 2f, deep, 0.4f, "DEEP WELL (it turns SCARCITY off): twice");
+            float deep = Cost();
+            Assert.AreEqual(20f, normal, 0.01f, "20 MK");
+            Assert.AreEqual(40f, scarce, 0.01f, "SCARCITY: twice");
+            Assert.AreEqual(10f, deep, 0.01f, "DEEP WELL (it turns SCARCITY off): half");
         }
 
         [UnityTest]
@@ -219,13 +218,11 @@ namespace GlorifiedBody.Tests.PlayMode
             result(hp0 - health.CurrentHealth);
         }
 
-        private IEnumerator MkGain(Action<float> result)
+        private float Cost()
         {
-            stats.RegenPaused = false;
-            stats.DebugSet(10f, 0f);
-            float t0 = Time.time;
-            yield return new WaitForSeconds(1f);
-            result((stats.Nalcon - 10f) / (Time.time - t0));
+            stats.DebugSet(100f, 0f);
+            stats.TrySpendMk(GlorifiedBody.Player.PowerKind.Blast, 20f);
+            return 100f - stats.Mk(GlorifiedBody.Player.PowerKind.Blast);
         }
 
         private float KillGain()

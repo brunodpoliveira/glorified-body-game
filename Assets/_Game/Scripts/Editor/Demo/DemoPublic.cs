@@ -4,6 +4,7 @@ using UnityEditor;
 using UnityEngine;
 using GlorifiedBody.Enemy;
 using GlorifiedBody.Interaction;
+using GlorifiedBody.Player;
 using GlorifiedBody.Story;
 
 namespace GlorifiedBody.Editor.Demo
@@ -18,6 +19,8 @@ namespace GlorifiedBody.Editor.Demo
     {
         public const string Music = "public";
         public const string Released = "sector_c_released";
+        public const string Reinforced = "demo_g5_reinforced";
+        public const string ReinforcementGroup = "Group_Reinforcements";
 
         public static List<RoomSpec> Rooms()
         {
@@ -75,6 +78,15 @@ namespace GlorifiedBody.Editor.Demo
             r.Figure("Soldier_Pair1_B", "soldier_pistol", new Vector3(25.5f, 0f, 4.2f), 270f);
             r.Figure("Soldier_Pair2_A", "soldier_rifle", new Vector3(31f, 0f, 1.6f), 270f);
             r.Figure("Soldier_Pair2_B", "soldier_shield", new Vector3(32.5f, 0f, 4f), 270f);
+            // When these four are dead and sector C is released, a second fireteam of four comes (Bruno, 2026-11-06: "if the
+            // player kills all four soldiers, then spawn in more soldiers"; the writer: round 32, no pairs; TeamReinforcement).
+            // They stand beside the door to G5, hidden from that room by the wall, and run to the door of sector C.
+            GameObject after = r.Group(ReinforcementGroup, Reinforced);
+            after.GetComponent<FlagGate>().waitUnseen = false; // TeamReinforcement waits until she is out of this room
+            r.Figure("Reinforcement_A", "soldier_rifle", new Vector3(16f, 0f, 1f), 90f, parent: after);
+            r.Figure("Reinforcement_B", "soldier_pistol", new Vector3(24.5f, 0f, 1f), 270f, parent: after);
+            r.Figure("Reinforcement_C", "soldier_rifle", new Vector3(16f, 0f, 4f), 90f, parent: after);
+            r.Figure("Reinforcement_D", "soldier_shield", new Vector3(24.5f, 0f, 4f), 270f, parent: after);
             // The mission statement (the plan names the company: it waits for the name check, so only the motto for now).
             r.Sign("Sign_Mission", "SO THAT HUMANITY ENDURES.", new Vector3(20f, 4.2f, 5.83f), Vector3.back, new Vector2(6f, 0.8f), 72);
             r.Sign("Sign_Directory", "THE WARD  -  2ND FLOOR\nTHE CHAPEL\nRECEPTION\nSECURITY", new Vector3(5.17f, 1.6f, 4.6f), Vector3.right, new Vector2(1.2f, 1.2f), 36);
@@ -86,6 +98,7 @@ namespace GlorifiedBody.Editor.Demo
             r.Box(r.Props, "Donor_Wall", new Vector3(12f, 1.75f, 11.83f), new Vector3(7.6f, 3.5f, 0.04f), DemoRoom.Colour("donor_wall", new Color(0.55f, 0.32f, 0.36f)));
             r.Sign("Sign_Plaque", "FOR THOSE WHO GAVE THE BODY.", new Vector3(12f, 1.2f, 11.79f), Vector3.back, new Vector2(2.2f, 0.35f), 40);
             r.Prop("Bench", new Vector3(12f, 0f, 8f), new Vector3(2f, 0.45f, 0.45f));
+            r.Capsule("Capsule_G3", DrugType.Nalcon, new Vector3(9f, 0.15f, 7f));
             r.Scan("Scan_Donor_Wall", new Vector3(12f, 1.4f, 11.6f), "demo_c6_donor_wall", "PLACEHOLDER (C6): a hand pressed into wet paint, a larger hand on top of it.");
         }
 
@@ -95,6 +108,7 @@ namespace GlorifiedBody.Editor.Demo
             for (int i = 0; i < 6; i++)
                 r.Prop($"Pew_{i}", new Vector3(i % 2 == 0 ? 26.2f : 29.8f, 0f, 8f + (i / 2) * 1.6f), new Vector3(2.6f, 0.5f, 0.5f), 0.1f);
             r.Prop("Lectern", new Vector3(28f, 0f, 12.6f), new Vector3(0.6f, 1.1f, 0.5f), 0.15f);
+            r.Capsule("Capsule_G4", DrugType.NalconLift, new Vector3(25f, 0.15f, 13.2f));
             r.Box(r.Props, "Gear", new Vector3(28f, 2.6f, 13.83f), new Vector3(1.2f, 1.2f, 0.04f), DemoRoom.Grey(0.9f));
             r.Sign("Sign_Verse", "IT IS SOWN IN WEAKNESS. IT IS RAISED IN POWER.", new Vector3(28f, 1.7f, 13.83f), Vector3.back, new Vector2(3.4f, 0.4f), 40);
             EnemySpawn nurse = r.Figure("Praying_Nurse", "nurse", new Vector3(29.8f, 0f, 11.4f), 0f, variant: 0);
@@ -124,10 +138,7 @@ namespace GlorifiedBody.Editor.Demo
             gate.showWhenRaised = false;
             r.Box(sheet, "Sheeting", new Vector3(20f, 1.2f, -16.1f), new Vector3(1.8f, 2.4f, 0.1f), DemoRoom.Colour("sheeting", new Color(0.7f, 0.72f, 0.7f)));
             r.Sign("Sign_Sector_C", "SECTOR C. CONSTRUCTION. ACCESS: SECURITY OFFICE.", new Vector3(20f, 2.7f, -15.83f), Vector3.forward, new Vector2(3.2f, 0.4f), 36);
-            // A soldier pair comes in from the security office's side when she leaves it (the plan: G9).
-            GameObject pair = r.Group("Group_Return_Pair", Released);
-            r.Figure("Return_Soldier_A", "soldier_rifle", new Vector3(26.5f, 0f, -12.5f), 270f, parent: pair);
-            r.Figure("Return_Soldier_B", "soldier_pistol", new Vector3(26.5f, 0f, -10.5f), 270f, parent: pair);
+            r.Capsule("Capsule_G5", DrugType.Nalcon, new Vector3(13f, 0.15f, -1.2f));
         }
 
         /// <summary>G6: the public bathrooms, a clerk who hides in a stall ("Occupied."). Since v2 at x 28..36, z -9..-5, east of the hall. A toilet that flushes (the hider answers it once), a faucet.</summary>
@@ -151,6 +162,7 @@ namespace GlorifiedBody.Editor.Demo
         private static void G7(DemoRoom r)
         {
             r.Prop("Table", new Vector3(8f, 0f, -12.5f), new Vector3(1.6f, 0.75f, 1f), 0.3f);
+            r.Capsule("Capsule_G7", DrugType.NalconFire, new Vector3(6f, 0.15f, -10f));
             var lines = new List<TapeLine>();
             float at = 1f;
             // The voice is Kyoko, not named in act 1 (P5): the subtitle names the program.

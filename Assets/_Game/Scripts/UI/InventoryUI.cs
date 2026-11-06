@@ -332,7 +332,7 @@ namespace GlorifiedBody.UI
                 if (used || powers == null) return used ? "used:" + e.Drug.Value : "none";
                 // A drug with nothing to do stays in the inventory: say why (Bruno, 2026-10-30: each drug does one thing).
                 string why = powers.LastResult;
-                wordsText.text = why == "mk_full" ? "MK is full." : why == "short_empty" ? "The SHORT bar is empty."
+                wordsText.text = why == "mk_full" ? "That MK bar is full." : why == "short_empty" ? "The SHORT bar is empty."
                     : why == "second_wind_ready" ? "The second wind is ready." : "It does nothing now.";
                 return "refused:" + why;
             }

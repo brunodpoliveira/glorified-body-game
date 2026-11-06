@@ -30,14 +30,14 @@ namespace GlorifiedBody.Editor
             });
             Power("power_fire", p =>
             {
-                p.kind = PowerKind.Fire; p.displayName = "mk_erebus"; p.drug = DrugType.Red;
+                p.kind = PowerKind.Fire; p.displayName = "mk_erebus"; p.drug = DrugType.NalconFire;
                 p.fullChargeTime = 1.5f; p.minCharge = 0.2f; p.range = 12f;
                 // staggerSeconds: the flash of a part charge, times the charge (Bruno, 2026-10-20, option c).
                 p.nalconCost = 25f; p.baseDamage = 10f; p.burnSeconds = 4f; p.burnPerSecond = 6f; p.staggerSeconds = 1f;
             });
             Power("power_telekinesis", p =>
             {
-                p.kind = PowerKind.Telekinesis; p.displayName = "mk_orzabal"; p.drug = DrugType.DFelon;
+                p.kind = PowerKind.Telekinesis; p.displayName = "mk_orzabal"; p.drug = DrugType.NalconLift;
                 p.fullChargeTime = 1.8f; p.minCharge = 0.2f; p.range = 12f;
                 // The hold is the launch window (Bruno, 2026-10-20): 1.5 s to press again and throw it.
                 p.nalconCost = 30f; p.baseDamage = 40f; p.liftHeight = 1.5f; p.liftSeconds = 0.4f; p.holdSeconds = 1.5f;
@@ -46,8 +46,8 @@ namespace GlorifiedBody.Editor
             Outfit("outfit_nude", o =>
             {
                 o.outfitId = "nude"; o.displayName = "NUDE"; o.maxHp = 100f;
-                // nalconRegenPerSecond: 6 was too quick (Bruno, 2026-10-20). 2 = a full bar in 50 s, PROPOSED.
-                o.nalconRegenPerSecond = 2f; o.shortDecayPerSecond = 1f; o.drugSlotsPerType = 2; o.itemSlots = 4;
+                // MK is ammunition (Bruno, 2026-11-06): no bar comes back by itself.
+                o.nalconRegenPerSecond = 0f; o.shortDecayPerSecond = 1f; o.drugSlotsPerType = 2; o.itemSlots = 4;
                 o.modelClass = "lucy_bare";
             });
             Outfit("outfit_guard", o =>

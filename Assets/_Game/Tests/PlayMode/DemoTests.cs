@@ -13,6 +13,7 @@ using GlorifiedBody.Cameras;
 using GlorifiedBody.Combat;
 using GlorifiedBody.Core;
 using GlorifiedBody.Enemy;
+using GlorifiedBody.Interaction;
 using GlorifiedBody.Player;
 using GlorifiedBody.Saving;
 using GlorifiedBody.Story;
@@ -718,7 +719,196 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.Greater(moves0, 0, "the first element moves");
             Assert.Greater(moves1, 0, "the second element moves");
             Assert.Greater(shots0 + shots1, 2, "they fire");
-            Assert.Greater(nearest, 4.5f, "no charge: they stay off her");
+            // The door to G5 lies 4 m from where she stands: the two who come from G5 pass near her. The runs gave 4.5 to 4.6 m.
+            Assert.Greater(nearest, 4.2f, "no charge: they stay off her");
+        }
+
+        /// <summary>A room on the other floor: no soldier finds her there in the time of the test (in G3 and G9 they walked up and saw her, as they should).</summary>
+        private static Vector3 HidingPlace() => FloorPoint(GlorifiedBody.Rooms.Room.Of("W6"));
+
+        /// <summary>A floor point 3 m from him with a clear line.</summary>
+        private static Vector3 InSight(SoldierBrain soldier)
+        {
+            Vector3 eye = soldier.transform.position + Vector3.up * 1.3f;
+            for (int i = 0; i < 12; i++)
+            {
+                Vector3 point = soldier.transform.position + Quaternion.Euler(0f, i * 30f, 0f) * soldier.transform.forward * 3f;
+                if (!UnityEngine.AI.NavMesh.SamplePosition(point, out UnityEngine.AI.NavMeshHit hit, 0.5f, UnityEngine.AI.NavMesh.AllAreas)) continue;
+                if (!Physics.Linecast(eye, hit.position + Vector3.up * 1.2f, LayerMask.GetMask("Default"), QueryTriggerInteraction.Ignore)) return hit.position;
+            }
+            Assert.Fail("no clear point near " + soldier.name);
+            return soldier.transform.position;
+        }
+
+        [UnityTest]
+        public IEnumerator TheFireteam_SheHides_TheyFireAtThePlace_ThenSearchInPairs_ThenContact()
+        {
+            // DEMO_PLAN §13.6: suppression and the search in pairs.
+            yield return LoadWorld();
+            SoldierBrain[] team = null;
+            PsychicStats stats = null;
+            yield return InG2((t, s) => { team = t; stats = s; });
+            yield return WaitUntil(() => team.All(b => b.Team != null), 8f);
+            FireTeam fire = team[0].Team;
+            yield return new WaitForSeconds(3f);
+            team = fire.Members.ToArray();
+            GameObject lucy = GameObject.FindGameObjectWithTag("Player");
+            TankController tank = lucy.GetComponent<TankController>();
+            Vector3 fight = lucy.transform.position;
+            Assert.IsFalse(fire.HerHidden, "they see her");
+
+            // She hides.
+            tank.Teleport(HidingPlace(), 0f);
+            int[] shots = team.Select(b => b.Gun.SuppressShots).ToArray();
+            bool sawPlaceAim = false, sawSlotFree = false;
+            float t0 = Time.time;
+            yield return WaitUntil(() => fire.HerHidden, 4f);
+            Assert.IsTrue(fire.HerHidden, "no line for 1.5 s");
+            Assert.Greater(Vector3.Distance(team[0].TargetPosition, lucy.transform.position), 3f, "they know only what they saw: not where she is now");
+            while (!fire.Lost && Time.time - t0 < FireTeam.LostAfter + 2f)
+            {
+                stats.AddShort(-PsychicStats.MaxShort);
+                foreach (SoldierBrain b in team)
+                {
+                    if (b.Current == SoldierBrain.Phase.Dead || !b.Gun.Suppressing) continue;
+                    sawPlaceAim |= Vector3.Distance(b.Gun.AimPoint, fire.LastSeen) < 4f;
+                }
+                // An aim at her that began before she hid runs out in the first seconds.
+                sawSlotFree |= Time.time - t0 > 4f && ShooterScheduler.ActiveCount == 0 && team.Any(b => b.Gun.Suppressing);
+                yield return null;
+            }
+            int suppressed = 0;
+            for (int i = 0; i < team.Length; i++) suppressed += team[i].Gun.SuppressShots - shots[i];
+            Debug.Log($"[DemoTests] she hid: {suppressed} shots at the place in {Time.time - t0:0.0} s by {team.Length} soldiers, last seen {fire.LastSeen}, she stands at {lucy.transform.position}");
+            Assert.Greater(suppressed, 0, "the holders fire at the place");
+            Assert.IsTrue(sawPlaceAim, "the aim lies at the place where they saw her");
+            Assert.IsTrue(sawSlotFree, "suppression takes no slot: the slots count the guns on her");
+            Assert.IsTrue(fire.Lost, "nobody has seen her for 8 s");
+
+            // The search.
+            yield return WaitUntil(() => team.Count(b => b.Current == SoldierBrain.Phase.Search) >= 2, 8f);
+            Assert.GreaterOrEqual(team.Count(b => b.Current == SoldierBrain.Phase.Search), 2, "they go into the search");
+            Assert.GreaterOrEqual(fire.Route.Count, 2, "the place, then the rooms next to it");
+            Assert.Less(Vector3.Distance(fire.Route[0], fire.LastSeen), 3.5f, "the first point: where they lost her");
+            int frames = 0, bothWalk = 0, walkOne = 0;
+            t0 = Time.time;
+            while (Time.time - t0 < 25f && fire.Lost)
+            {
+                stats.AddShort(-PsychicStats.MaxShort);
+                foreach (SoldierBrain b in team)
+                {
+                    SoldierBrain partner = fire.PartnerOf(b);
+                    if (partner == null || b.GetInstanceID() > partner.GetInstanceID() || b.Current != SoldierBrain.Phase.Search || partner.Current != SoldierBrain.Phase.Search) continue;
+                    frames++;
+                    if (b.Body.IsMoving && partner.Body.IsMoving) bothWalk++;
+                    else if (b.Body.IsMoving || partner.Body.IsMoving) walkOne++;
+                }
+                yield return null;
+            }
+            Debug.Log($"[DemoTests] the search in 25 s: {fire.LegsDone} legs, {fire.Route.Count} points, pair frames {frames}: one walks {walkOne}, both walk {bothWalk}; {string.Join("; ", team.Select(b => $"{b.name} {b.Current} {b.transform.position}"))}");
+            Assert.Greater(fire.LegsDone, 1, "the pairs go from point to point");
+            Assert.Greater(walkOne, bothWalk * 3, "one walks, and the other covers him");
+        }
+
+        [UnityTest]
+        public IEnumerator TheFireteam_SeesHerInTheSearch_AndTheFightStartsAgain()
+        {
+            yield return LoadWorld();
+            SoldierBrain[] team = null;
+            PsychicStats stats = null;
+            yield return InG2((t, s) => { team = t; stats = s; });
+            yield return WaitUntil(() => team.All(b => b.Team != null), 8f);
+            FireTeam fire = team[0].Team;
+            GameObject lucy = GameObject.FindGameObjectWithTag("Player");
+            TankController tank = lucy.GetComponent<TankController>();
+            tank.Teleport(HidingPlace(), 0f);
+            yield return WaitUntil(() => fire.Lost && team.Count(b => b.Current == SoldierBrain.Phase.Search) >= 2, FireTeam.LostAfter + 6f);
+            Assert.IsTrue(fire.Lost);
+            SoldierBrain seeker = team.First(b => b.Current == SoldierBrain.Phase.Search);
+            tank.Teleport(InSight(seeker), 0f);
+            yield return WaitUntil(() => !fire.Lost, 2f);
+            Assert.IsFalse(fire.Lost, "a soldier sees her");
+            yield return new WaitForSeconds(0.3f);
+            Assert.AreEqual(0, team.Count(b => b.Current == SoldierBrain.Phase.Search), "contact: the search ends");
+            int before = team.Sum(b => b.Gun.ShotsFired);
+            yield return WaitUntil(() => team.Sum(b => b.Gun.ShotsFired) > before, 8f);
+            Assert.Greater(team.Sum(b => b.Gun.ShotsFired), before, "they fire at her again");
+            Assert.Less(Vector3.Distance(team[0].TargetPosition, lucy.transform.position), 2f, "they know where she is");
+        }
+
+        [UnityTest]
+        public IEnumerator AHitFromHer_EndsTheSearch()
+        {
+            yield return LoadWorld();
+            SoldierBrain[] team = null;
+            yield return InG2((t, s) => team = t);
+            yield return WaitUntil(() => team.All(b => b.Team != null), 8f);
+            FireTeam fire = team[0].Team;
+            GameObject lucy = GameObject.FindGameObjectWithTag("Player");
+            lucy.GetComponent<TankController>().Teleport(HidingPlace(), 0f);
+            yield return WaitUntil(() => fire.Lost, FireTeam.LostAfter + 3f);
+            Assert.IsTrue(fire.Lost);
+            team[0].GetComponent<Health>().TakeDamage(1f);
+            yield return null;
+            Assert.IsFalse(fire.Lost, "a hurt soldier knows where she is");
+            Assert.Less(Vector3.Distance(fire.LastSeen, lucy.transform.position), 1f);
+        }
+
+        [UnityTest]
+        public IEnumerator TheFourDie_SectorCIsReleased_AndASecondFireteamComes_AfterASilence()
+        {
+            // Bruno, 2026-11-06: "if the player kills all four soldiers, then spawn in more soldiers".
+            yield return LoadWorld();
+            SoldierBrain[] team = null;
+            yield return InG2((t, s) => team = t);
+            Assert.AreEqual(4, team.Length);
+            Assert.AreEqual(0, UnityEngine.Object.FindObjectsByType<SoldierBrain>(FindObjectsSortMode.None).Count(b => b.name.StartsWith("Reinforcement_")), "no second team before its time");
+            GameObject lucy = GameObject.FindGameObjectWithTag("Player");
+            lucy.GetComponent<TankController>().Teleport(GlorifiedBody.Rooms.Room.Of("G9").Centre + Vector3.back * 2f, 90f);
+            yield return WaitUntil(() => GlorifiedBody.Rooms.RoomTracker.CurrentId == "G9", 3f);
+            for (int i = 0; i < 3; i++) team[i].GetComponent<Health>().TakeDamage(9999f);
+            StoryFlags.Raise(SectorCReleased);
+            float wait = TeamReinforcement.SilenceSeconds * 0.5f;
+            yield return new WaitForSeconds(wait);
+            Assert.IsFalse(StoryFlags.Has(Reinforced), "one lives: no new soldiers");
+            Assert.IsTrue(team[3].Alerted, "Control tells the one who lives");
+            float t0 = Time.time;
+            team[3].GetComponent<Health>().TakeDamage(9999f);
+            yield return new WaitForSeconds(TeamReinforcement.SilenceSeconds - 3f);
+            Assert.IsFalse(StoryFlags.Has(Reinforced), "the kill has its silence");
+            yield return WaitUntil(() => StoryFlags.Has(Reinforced), 5f);
+            Assert.IsTrue(StoryFlags.Has(Reinforced), "all four dead: they come");
+            yield return null;
+            yield return new WaitForSeconds(0.7f);
+            SoldierBrain[] second = UnityEngine.Object.FindObjectsByType<SoldierBrain>(FindObjectsSortMode.None).Where(b => b.name.StartsWith("Reinforcement_")).ToArray();
+            Assert.AreEqual(4, second.Length, "a fireteam of four (round 32: no pairs)");
+            Assert.IsTrue(second.All(b => b.Alerted && b.Team != null), "they know");
+            Vector3 her = lucy.transform.position;
+            float far = second.Min(b => Vector3.Distance(b.transform.position, her));
+            yield return WaitUntil(() => second.Min(b => Vector3.Distance(b.transform.position, her)) < far - 5f, 15f);
+            float near = second.Min(b => Vector3.Distance(b.transform.position, her));
+            Debug.Log($"[DemoTests] the second team: from {far:0.0} m to {near:0.0} m in {Time.time - t0:0} s after the kill");
+            Assert.Less(near, far - 5f, "they come for her");
+        }
+
+        [UnityTest]
+        public IEnumerator TheCapsules_LieOnTheWay_OnTheNavMesh_AtLeastThreeForEachPower()
+        {
+            yield return LoadWorld();
+            var counts = new Dictionary<DrugType, int>();
+            foreach (ItemPickup pickup in UnityEngine.Object.FindObjectsByType<ItemPickup>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                if (pickup.item == null || pickup.item.kind != ItemKind.Drug) continue;
+                counts[pickup.item.drugType] = counts.TryGetValue(pickup.item.drugType, out int n) ? n + 1 : 1;
+                Assert.IsNotNull(GlorifiedBody.Rooms.Room.At(pickup.transform.position), pickup.name + " lies in a room");
+                Vector3 floor = pickup.transform.position;
+                floor.y = GlorifiedBody.Rooms.Room.At(floor).BaseY; // one lies on a cabinet
+                Assert.IsTrue(UnityEngine.AI.NavMesh.SamplePosition(floor, out UnityEngine.AI.NavMeshHit hit, 1f, UnityEngine.AI.NavMesh.AllAreas), pickup.name + " lies by the floor she walks");
+            }
+            Debug.Log($"[DemoTests] capsules: {string.Join(", ", counts.Select(c => $"{c.Key} {c.Value}"))}");
+            Assert.GreaterOrEqual(counts[DrugType.Nalcon], 3);
+            Assert.GreaterOrEqual(counts[DrugType.NalconFire], 3);
+            Assert.GreaterOrEqual(counts[DrugType.NalconLift], 3);
         }
 
         [UnityTest]
@@ -994,6 +1184,9 @@ namespace GlorifiedBody.Tests.PlayMode
         {
             public const string Released = "sector_c_released";
         }
+
+        private const string SectorCReleased = "sector_c_released"; // DemoPublic.Released (editor code)
+        private const string Reinforced = "demo_g5_reinforced";     // DemoPublic.Reinforced
 
         private static IEnumerator LoadWorld()
         {

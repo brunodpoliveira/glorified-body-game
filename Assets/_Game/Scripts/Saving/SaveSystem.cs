@@ -183,6 +183,7 @@ namespace GlorifiedBody.Saving
             if (stats != null)
             {
                 p.nalcon = stats.Nalcon;
+                foreach (PowerKind kind in (PowerKind[])System.Enum.GetValues(typeof(PowerKind))) p.mk.Add(stats.Mk(kind));
                 p.shortBar = stats.Short;
                 p.kills = stats.Kills;
                 p.exp = stats.Exp;
@@ -198,7 +199,7 @@ namespace GlorifiedBody.Saving
                 foreach (ItemDefinition item in items.Carried) if (item != null) p.carried.Add(item.itemId);
             }
             DrugInventory drugs = lucy.GetComponentInChildren<DrugInventory>();
-            if (drugs != null) for (int i = 0; i < 3; i++) p.drugs.Add(drugs.Count((DrugType)i));
+            if (drugs != null) for (int i = 0; i < System.Enum.GetValues(typeof(DrugType)).Length; i++) p.drugs.Add(drugs.Count((DrugType)i));
             return p;
         }
 
@@ -351,7 +352,7 @@ namespace GlorifiedBody.Saving
                 health.SetMaxHealth(p.maxHealth, fillToMax: false);
                 health.SetHealth(p.health);
             }
-            if (stats != null) stats.Restore(p.nalcon, p.shortBar, p.kills, p.exp, p.people);
+            if (stats != null) stats.Restore(p.nalcon, p.shortBar, p.kills, p.exp, p.people, p.mk != null && p.mk.Count > 0 ? p.mk : null);
             if (items != null)
             {
                 items.Clear();
@@ -362,7 +363,7 @@ namespace GlorifiedBody.Saving
                     else Debug.LogWarning($"[SaveSystem] no item '{id}'");
                 }
             }
-            if (drugs != null) for (int i = 0; i < 3 && i < p.drugs.Count; i++) drugs.DebugSet((DrugType)i, p.drugs[i]);
+            if (drugs != null) for (int i = 0; i < System.Enum.GetValues(typeof(DrugType)).Length; i++) drugs.DebugSet((DrugType)i, i < p.drugs.Count ? p.drugs[i] : 0);
             ShortController shortController = lucy.GetComponentInChildren<ShortController>();
             if (shortController != null && p.shortLeft > 0f) shortController.GoOn(p.shortLeft);
         }

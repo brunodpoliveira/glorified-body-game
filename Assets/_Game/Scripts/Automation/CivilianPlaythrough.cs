@@ -239,7 +239,7 @@ namespace GlorifiedBody.Automation
             tank.Teleport(stand, Quaternion.LookRotation(toNurse).eulerAngles.y);
             DevlogClip.Room("civ_short");
             yield return BotClock.Wait(0.3f);
-            stats.DebugSet(stats.Nalcon, PsychicStats.MaxShort);
+            stats.DebugSetShort(PsychicStats.MaxShort);
             shortController.Begin();
             yield return new WaitForSecondsRealtime(0.25f);
             bool frozen = Time.timeScale < 0.01f;

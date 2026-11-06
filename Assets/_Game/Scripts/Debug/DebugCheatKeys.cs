@@ -56,7 +56,7 @@ namespace GlorifiedBody.DebugTools
         {
             PsychicStats stats = FindStats(out _);
             if (stats == null) return false;
-            stats.DebugSet(stats.Nalcon, PsychicStats.MaxShort);
+            stats.DebugSetShort(PsychicStats.MaxShort);
             Debug.Log("[DebugCheatKeys] SHORT bar filled. The next attack or defend press starts a short.");
             return true;
         }
@@ -67,7 +67,7 @@ namespace GlorifiedBody.DebugTools
             PsychicStats stats = FindStats(out GameObject player);
             ShortController shortController = player != null ? player.GetComponent<ShortController>() : null;
             if (stats == null || shortController == null || shortController.IsActive) return false;
-            stats.DebugSet(stats.Nalcon, PsychicStats.MaxShort);
+            stats.DebugSetShort(PsychicStats.MaxShort);
             shortController.Begin();
             Debug.Log("[DebugCheatKeys] Short started.");
             return true;
@@ -85,6 +85,8 @@ namespace GlorifiedBody.DebugTools
                 drugs.DebugSet(DrugType.Nalcon, 2);
                 drugs.DebugSet(DrugType.Red, 2);
                 drugs.DebugSet(DrugType.DFelon, 2);
+                drugs.DebugSet(DrugType.NalconFire, 2);
+                drugs.DebugSet(DrugType.NalconLift, 2);
             }
             Debug.Log("[DebugCheatKeys] HP and MK refilled, two drugs of each.");
             return true;
@@ -100,7 +102,7 @@ namespace GlorifiedBody.DebugTools
         {
             PsychicStats stats = FindStats(out _);
             if (stats == null) return false;
-            stats.DebugSet(stats.Nalcon + delta, stats.Short);
+            stats.DebugSetMk(stats.Selected, stats.Nalcon + delta);
             Debug.Log($"[DebugCheatKeys] MK {(delta < 0f ? "-" : "+")}{Mathf.Abs(delta):0}: now {stats.Nalcon:0}.");
             return true;
         }

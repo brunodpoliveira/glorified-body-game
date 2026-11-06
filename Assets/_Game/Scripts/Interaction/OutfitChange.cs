@@ -49,7 +49,7 @@ namespace GlorifiedBody.Interaction
             }
             if (drugs != null)
             {
-                DrugType[] order = { DrugType.DFelon, DrugType.Red, DrugType.Nalcon }; // the rarest falls first, PROPOSED
+                DrugType[] order = { DrugType.DFelon, DrugType.Red, DrugType.NalconLift, DrugType.NalconFire, DrugType.Nalcon }; // the rarest falls first, PROPOSED
                 foreach (DrugType type in order)
                     while (over > 0 && drugs.Drop(type))
                     {

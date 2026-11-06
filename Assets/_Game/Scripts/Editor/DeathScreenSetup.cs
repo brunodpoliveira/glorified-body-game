@@ -33,6 +33,7 @@ namespace GlorifiedBody.Editor
             ("power_armour", "", "PLACEHOLDER: the power armour from the floor", "PLACEHOLDER HINT: it is too heavy to lift. Break its aim with mk_warspite, then burn it with mk_erebus."),
             ("labworker_pistol", "labworker", "PLACEHOLDER: the lab worker's pistol, both hands shaking", "PLACEHOLDER HINT: the lab worker's aim shakes and can miss. Do not stand still in the circle."),
             ("labworker_knife", "labworker", "PLACEHOLDER: the knife over her, the lab coat behind it", "PLACEHOLDER HINT: the knife runs at you. Dodge when it raises the knife, then strike."),
+            ("short", "", "PLACEHOLDER: Lucy on the floor, the arcs still on her", "PLACEHOLDER HINT: a short takes half your HP. Under that it kills you. The SHORT capsule ends it, and every power fills the bar."),
             ("power_armour_launchers", "power_armour", "PLACEHOLDER: the rocket's trail, the armour behind it", "PLACEHOLDER HINT: a rocket follows the laser. Dodge to the side, or catch it with mk_orzabal and send it back."),
         };
 

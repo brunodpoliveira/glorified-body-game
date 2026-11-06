@@ -83,7 +83,7 @@ namespace GlorifiedBody.Editor.Demo
             r.Prop("Strap_Burned", new Vector3(5.6f, 0.6f, 24.6f), new Vector3(0.1f, 0.05f, 1.02f), 0.05f);
             r.Prop("Drip_Stand", new Vector3(7f, 0f, 25.4f), new Vector3(0.1f, 1.8f, 0.1f), 0.7f);
             r.Prop("Cabinet", new Vector3(1f, 0f, 25.4f), new Vector3(0.8f, 1.1f, 0.5f), 0.25f);
-            MenuLoopSetup.EnsurePickup("Capsule_W1", DrugType.Nalcon, new Vector3(1f, 1.3f, 25.2f)); // MK capsules only (the cutscene's note 2)
+            MenuLoopSetup.EnsurePickup("Capsule_W1", DrugType.Nalcon, new Vector3(1f, 1.3f, 25.2f)); // the capsule of the power she starts with
             r.Prop("Screen_By_Door", new Vector3(2.2f, 1.2f, 19.2f), new Vector3(0.8f, 0.5f, 0.06f), 0.6f);
             r.Prop("Printer", new Vector3(2.2f, 0f, 19.5f), new Vector3(0.5f, 0.9f, 0.4f), 0.35f);
             r.Item("L1_Printout", DemoItems.Plan(), new Vector3(2.2f, 0.95f, 19.5f), new Vector3(0.24f, 0.02f, 0.32f));
@@ -117,13 +117,13 @@ namespace GlorifiedBody.Editor.Demo
             knife.heldUntilFlag = ScientistDone;
             EditorUtility.SetDirty(knife);
             // The capsules roll off his tray in the talk (cutscene 02, note 1, Bruno: "yes add the capsules"). They show under
-            // the cut, so nothing pops up in view, and she can take them after the fight. MK capsules only (01, note 2).
+            // the cut, so nothing pops up in view, and she can take them after the fight. One for each of the other two powers.
             GameObject tray = MenuLoopSetup.EnsureChild(r.Story, "Gate_Capsules");
             FlagGate fallen = MenuLoopSetup.EnsureComponent<FlagGate>(tray);
             fallen.flag = CapsulesFall;
             fallen.showWhenRaised = true;
-            foreach (var capsule in new[] { ("Capsule_W1B_A", new Vector3(4.7f, 0.15f, 15.6f)), ("Capsule_W1B_B", new Vector3(3.5f, 0.15f, 15.9f)) })
-                ItemAssets.Pickup(tray, capsule.Item1, ItemAssets.Drug(DrugType.Nalcon), PrimitiveType.Capsule, capsule.Item2, Vector3.one * 0.3f, Quaternion.Euler(0f, 0f, 90f));
+            foreach (var capsule in new[] { ("Capsule_W1B_A", DrugType.NalconFire, new Vector3(4.7f, 0.15f, 15.6f)), ("Capsule_W1B_B", DrugType.NalconLift, new Vector3(3.5f, 0.15f, 15.9f)) })
+                ItemAssets.Pickup(tray, capsule.Item1, ItemAssets.Drug(capsule.Item2), PrimitiveType.Capsule, capsule.Item3, Vector3.one * 0.3f, Quaternion.Euler(0f, 0f, 90f));
             var meet = new List<ScriptStep>
             {
                 ScriptStep.LockHer(),
@@ -171,6 +171,7 @@ namespace GlorifiedBody.Editor.Demo
             EditorUtility.SetDirty(patient);
             r.Item("L2_Chart", DemoItems.L2(), new Vector3(16.1f, 0.6f, 17.8f), new Vector3(0.24f, 0.03f, 0.32f));
             r.Prop("Curtain_Rail", new Vector3(12.6f, 2.2f, 17.8f), new Vector3(0.05f, 0.05f, 2.4f), 0.6f);
+            r.Capsule("Capsule_W3", DrugType.Nalcon, new Vector3(10f, 0.15f, 15f));
         }
 
         /// <summary>W4: the long mirror (beat 7), the showers, a nurse who hides in a stall (a hider).</summary>
@@ -187,6 +188,7 @@ namespace GlorifiedBody.Editor.Demo
             nurse.foundLine = "I'm not here. Please. I'm not here.";
             EditorUtility.SetDirty(nurse);
             r.Prop("Laundry_Cart", new Vector3(23.6f, 0f, 14.8f), new Vector3(0.7f, 0.9f, 0.5f), 0.4f);
+            r.Capsule("Capsule_W4", DrugType.NalconFire, new Vector3(21.5f, 0.15f, 14.8f));
             // The fixtures (round 30): a toilet in the stall west of the nurse's, a sink under the long mirror (the Crown, the slit).
             DemoV2.Toilet(r, "Toilet", new Vector3(19.9f, 0f, 19.4f), Vector3.back);
             r.Prop("Sink", new Vector3(19.4f, 0f, 17f), new Vector3(0.5f, 0.85f, 0.6f), 0.55f);
@@ -221,6 +223,7 @@ namespace GlorifiedBody.Editor.Demo
             SaveAssets.SavePoint("Save_W6", new Vector3(-6.4f, 0f, 3f), 90f).transform.SetParent(r.Props.transform, true);
             r.Sign("Sign_Hard_Days", "THANK YOU FOR THE HARD DAYS.", new Vector3(-3.5f, 2.35f, 7.83f), Vector3.back, new Vector2(2.4f, 0.4f));
             r.Prop("Bench", new Vector3(-3.5f, 0f, 5f), new Vector3(2f, 0.45f, 0.4f));
+            r.Capsule("Capsule_W6", DrugType.NalconLift, new Vector3(-1f, 0.15f, 3f));
             r.Prop("Kettle", new Vector3(-6.6f, 0.9f, 5.2f), new Vector3(0.2f, 0.25f, 0.2f), 0.6f);
             r.Prop("Kettle_Shelf", new Vector3(-6.6f, 0f, 5.2f), new Vector3(0.6f, 0.9f, 0.5f), 0.2f);
             // The fixtures (round 30): a toilet in a stall in the south-east corner, a sink by it.

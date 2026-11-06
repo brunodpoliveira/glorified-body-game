@@ -45,7 +45,7 @@ namespace GlorifiedBody.Player
         /// <summary>The circle the HUD shows: the attack's or the shield's.</summary>
         public float ShownCharge => Mathf.Max(Charge, ShieldCharge);
 
-        /// <summary>The MK boost (Bruno, 2026-10-22): at half a nalcon bar or more, attacks do 2x damage and charge 2x as fast.</summary>
+        /// <summary>The MK boost (Bruno, 2026-10-22): at half the bar of the selected power or more, attacks do 2x damage and charge 2x as fast.</summary>
         public const float BoostThreshold = 0.5f;
         public const float BoostMultiplier = 2f;
         public bool IsBoosted => stats != null && stats.Nalcon >= PsychicStats.MaxNalcon * BoostThreshold - 0.001f;
@@ -85,6 +85,7 @@ namespace GlorifiedBody.Player
                 powers = Resources.LoadAll<PowerDefinition>("Powers");
                 Array.Sort(powers, (a, b) => a.kind.CompareTo(b.kind));
             }
+            if (Selected != null) stats.Selected = Selected.kind;
             SyncProps();
         }
 
@@ -100,6 +101,7 @@ namespace GlorifiedBody.Player
             index = Mathf.Clamp(index, 0, powers.Length - 1);
             if (index == SelectedIndex) return;
             SelectedIndex = index;
+            stats.Selected = Selected.kind;
             SyncProps();
             RunTelemetry.Event("power_selected", Selected.kind.ToString());
             OnChanged?.Invoke();
@@ -232,11 +234,11 @@ namespace GlorifiedBody.Player
         {
             PowerDefinition power = Selected;
             if (power == null || power.kind != PowerKind.Telekinesis || FloorShield.Current != null || activeLift != null) return false;
-            if (stats.Nalcon < power.nalconCost - 0.001f) return Result("no_nalcon", 1f);
+            if (!stats.CanSpendMk(power.kind, power.nalconCost)) return Result("no_nalcon", 1f);
             float scale = DamageScale;
             FloorShield shield = FloorShield.Tear(gameObject);
             if (shield == null) return Result("no_floor", 1f);
-            stats.TrySpendNalcon(power.nalconCost);
+            stats.TrySpendMk(power.kind, power.nalconCost);
             // A held prop: it turns with her, the attack key throws it (the power's full damage), a full circle slams it.
             activeLift = TelekinesisLift.Apply(shield.gameObject, gameObject, FloorShield.HangHeight, FloorShield.RiseSeconds, 0f, power.baseDamage * scale);
             shield.HeldBy(activeLift);
@@ -274,7 +276,7 @@ namespace GlorifiedBody.Player
 
             float cost = power.nalconCost * charge;
             float scale = DamageScale; // the boost is read before the cost lowers the bar
-            if (!stats.TrySpendNalcon(cost))
+            if (!stats.TrySpendMk(power.kind, cost))
             {
                 return Result("no_nalcon", charge);
             }
@@ -436,8 +438,8 @@ namespace GlorifiedBody.Player
 
         /// <summary>
         /// The drug key without the drug choice (a room with no InventoryUI, the bots): the drug she needs most that
-        /// she carries. The SHORT capsule while a short runs or the bar is half full or more, else the MK capsule when MK
-        /// is not full, else the second wind pill when the second wind is used. PROPOSED.
+        /// she carries. The SHORT capsule while a short runs or the bar is half full or more, else the capsule of the
+        /// selected power, then of the lowest bar, else the second wind pill when the second wind is used. PROPOSED.
         /// </summary>
         public bool UseDrug()
         {
@@ -449,9 +451,17 @@ namespace GlorifiedBody.Player
         public DrugType? MostNeededDrug()
         {
             bool shortNeed = (shortController != null && shortController.IsActive) || stats.Short >= PsychicStats.MaxShort * 0.5f;
-            foreach (DrugType type in shortNeed
-                ? new[] { DrugType.Red, DrugType.Nalcon, DrugType.DFelon }
-                : new[] { DrugType.Nalcon, DrugType.Red, DrugType.DFelon })
+            var order = new List<DrugType>();
+            if (shortNeed) order.Add(DrugType.Red);
+            PowerKind selected = Selected != null ? Selected.kind : PowerKind.Blast;
+            order.Add(Capsules.Of(selected));
+            var others = new List<PowerKind> { PowerKind.Blast, PowerKind.Fire, PowerKind.Telekinesis };
+            others.Remove(selected);
+            others.Sort((a, b) => stats.Mk(a).CompareTo(stats.Mk(b)));
+            foreach (PowerKind kind in others) order.Add(Capsules.Of(kind));
+            if (!shortNeed) order.Add(DrugType.Red);
+            order.Add(DrugType.DFelon);
+            foreach (DrugType type in order)
             {
                 if (drugs.Has(type) && NeedOf(type) == null) return type;
             }
@@ -463,7 +473,7 @@ namespace GlorifiedBody.Player
 
         /// <summary>
         /// Uses one drug of the type (the inventory screen calls it). Each drug does one thing (Bruno, 2026-10-30):
-        /// the MK capsule fills MK, the SHORT capsule takes half the SHORT bar away and ends a short that runs, the
+        /// a capsule fills the bar of its power, the SHORT capsule takes half the SHORT bar away and ends a short that runs, the
         /// second wind pill gives the second wind back. No drug gives HP: only feeding does (Feeding). A drug that
         /// has nothing to do is refused and kept ("mk_full", "short_empty", "second_wind_ready").
         /// </summary>
@@ -478,7 +488,9 @@ namespace GlorifiedBody.Player
             switch (used)
             {
                 case DrugType.Nalcon:
-                    stats.FillMk();
+                case DrugType.NalconFire:
+                case DrugType.NalconLift:
+                    stats.FillMk(Capsules.PowerOf(used).Value);
                     break;
                 case DrugType.Red:
                     shortController?.End(byDrug: true);
@@ -498,7 +510,10 @@ namespace GlorifiedBody.Player
         {
             switch (type)
             {
-                case DrugType.Nalcon: return stats.Nalcon >= PsychicStats.MaxNalcon - 0.001f ? "mk_full" : null;
+                case DrugType.Nalcon:
+                case DrugType.NalconFire:
+                case DrugType.NalconLift:
+                    return stats.Mk(Capsules.PowerOf(type).Value) >= PsychicStats.MaxNalcon - 0.001f ? "mk_full" : null;
                 case DrugType.Red: return stats.Short <= 0.001f && (shortController == null || !shortController.IsActive) ? "short_empty" : null;
                 case DrugType.DFelon:
                     Health h = stats.Health;
@@ -520,7 +535,7 @@ namespace GlorifiedBody.Player
             PowerDefinition power = Selected;
             if (lift == null || power == null) return false;
             float scale = DamageScale;
-            if (!stats.TrySpendNalcon(power.nalconCost)) return Result("no_nalcon", 1f);
+            if (!stats.TrySpendMk(power.kind, power.nalconCost)) return Result("no_nalcon", 1f);
             if (!lift.Slam(power.baseDamage * scale)) return false;
             LastScale = scale;
             LastResult = "slam";
@@ -615,7 +630,7 @@ namespace GlorifiedBody.Player
             }
             if (rocket != null)
             {
-                if (!stats.TrySpendNalcon(RocketCatchNalconCost)) return Result("no_nalcon", 0f);
+                if (!stats.TrySpendMk(PowerKind.Telekinesis, RocketCatchNalconCost)) return Result("no_nalcon", 0f);
                 rocket.Return(gameObject);
                 LastResult = "catch_rocket";
                 LastResultTime = Time.time;
@@ -634,7 +649,7 @@ namespace GlorifiedBody.Player
             }
             if (grenade != null)
             {
-                if (!stats.TrySpendNalcon(GrenadeCatchNalconCost)) return Result("no_nalcon", 0f);
+                if (!stats.TrySpendMk(PowerKind.Telekinesis, GrenadeCatchNalconCost)) return Result("no_nalcon", 0f);
                 grenade.Return(gameObject);
                 LastResult = "catch_grenade";
                 LastResultTime = Time.time;
@@ -643,7 +658,7 @@ namespace GlorifiedBody.Player
                 return true;
             }
             if (best == null) return false;
-            if (!stats.TrySpendNalcon(CatchNalconCost)) return Result("no_nalcon", 0f);
+            if (!stats.TrySpendMk(PowerKind.Telekinesis, CatchNalconCost)) return Result("no_nalcon", 0f);
             best.Return(gameObject);
             LastResult = "catch";
             RunTelemetry.Event("bullet_caught", best.KillerId);

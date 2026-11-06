@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GlorifiedBody.Player.PowerDefinition
   kind: 2
   displayName: mk_orzabal
-  drug: 2
+  drug: 4
   fullChargeTime: 1.8
   minCharge: 0.2
   range: 12

@@ -13,7 +13,7 @@ namespace GlorifiedBody.Player
         public string outfitId = "nude";
         public string displayName = "NUDE";
         [Min(1f)] public float maxHp = 100f;
-        [Min(0f)] public float nalconRegenPerSecond = 2f; // Bruno, 2026-10-20: 6 was too quick
+        [Min(0f)] public float nalconRegenPerSecond = 0f; // MK is ammunition (Bruno, 2026-11-06)
         [Min(0f)] public float shortDecayPerSecond = 1f;
         [Min(0)] public int drugSlotsPerType = 2;
         /// <summary>The item slots of the inventory (keys, logs, objects). Bruno, 2026-10-22: the guard outfit has more. PROPOSED numbers.</summary>

@@ -65,8 +65,8 @@ namespace GlorifiedBody.Editor
                 20, Type.Fragile, Section.Harder, "", None, false, P(DifficultyModuleDefinition.ParamPlayerMaxHpScale, 0.5f)));
             made.Add(CreateModule("one_hit_wonder", "ONE-HIT WONDER", "☢", "Any hit kills her. No second wind.",
                 80, Type.OneHitWonder, Section.Harder, "", None, false));
-            made.Add(CreateModule("scarcity", "SCARCITY", "⚠", "MK recharges at half speed.",
-                15, Type.Scarcity, Section.Harder, Mk, None, false, P(DifficultyModuleDefinition.ParamMkRegenScale, 0.5f)));
+            made.Add(CreateModule("scarcity", "SCARCITY", "⚠", "Every power costs twice the MK.",
+                15, Type.Scarcity, Section.Harder, Mk, None, false, P(DifficultyModuleDefinition.ParamMkSupplyScale, 0.5f)));
             made.Add(CreateModule("short_fuse", "SHORT FUSE", "ϟ", "The SHORT bar fills 1.5x as fast.",
                 15, Type.ShortFuse, Section.Harder, Short, None, false, P(DifficultyModuleDefinition.ParamShortGainScale, 1.5f)));
 
@@ -79,8 +79,8 @@ namespace GlorifiedBody.Editor
                 -25, Type.ThickSkin, Section.Easier, Damage, None, false, P(DifficultyModuleDefinition.ParamEnemyDamageScale, 0.5f)));
             made.Add(CreateModule("steady_mind", "STEADY MIND", "≈", "The SHORT bar fills half as fast.",
                 -20, Type.SteadyMind, Section.Easier, Short, None, false, P(DifficultyModuleDefinition.ParamShortGainScale, 0.5f)));
-            made.Add(CreateModule("deep_well", "DEEP WELL", "◉", "MK recharges twice as fast.",
-                -15, Type.DeepWell, Section.Easier, Mk, None, false, P(DifficultyModuleDefinition.ParamMkRegenScale, 2f)));
+            made.Add(CreateModule("deep_well", "DEEP WELL", "◉", "Every power costs half the MK.",
+                -15, Type.DeepWell, Section.Easier, Mk, None, false, P(DifficultyModuleDefinition.ParamMkSupplyScale, 2f)));
             made.Add(CreateModule("mending", "MENDING", "✙", "Feeding on a body gives twice the HP.",
                 -10, Type.Mending, Section.Easier, Hp, None, false, P(DifficultyModuleDefinition.ParamFeedScale, 2f)));
 

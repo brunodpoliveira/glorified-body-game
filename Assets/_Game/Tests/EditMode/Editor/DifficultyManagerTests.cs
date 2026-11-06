@@ -121,7 +121,7 @@ namespace GlorifiedBody.Tests.EditMode
             Assert.AreEqual(1.5f, manager.EnemyDamageScale, 0.001f);
             manager.EnableModule(skin);
             Assert.AreEqual(0.75f, manager.EnemyDamageScale, 0.001f);
-            Assert.AreEqual(1f, manager.MkRegenScale, 0.001f, "no module carries it");
+            Assert.AreEqual(1f, manager.MkSupplyScale, 0.001f, "no module carries it");
         }
 
         private static ModuleParam P(string key, float value) => new ModuleParam { key = key, value = value };
