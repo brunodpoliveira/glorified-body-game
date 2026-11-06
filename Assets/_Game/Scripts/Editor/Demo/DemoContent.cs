@@ -17,7 +17,7 @@ namespace GlorifiedBody.Editor.Demo
     /// </summary>
     public static class DemoScripts
     {
-        public const string WriterGame = "../reality-fabricator/the-glorified-body/game";
+        public const string WriterGame = "../the-glorified-body/game";
         private static readonly Regex LineRx = new Regex(@"^\s*([A-Z][A-Z .'\-]*[A-Z]):\s+(.+?)\s*(\(.*\))?\s*$");
 
         public static List<(string speaker, string text)> Lines(string file)

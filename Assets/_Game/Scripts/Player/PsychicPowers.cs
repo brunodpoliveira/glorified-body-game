@@ -344,6 +344,13 @@ namespace GlorifiedBody.Player
                     Result("cover", charge);
                     return;
                 }
+                // A thing that does not break stops it too, while he hides behind it. He stands to fire: then it reaches him.
+                if (target.InCover && Physics.Linecast(eye, point, LayerMask.GetMask("Default"), QueryTriggerInteraction.Ignore))
+                {
+                    RunTelemetry.Event("cover_took", $"{power.kind}:{charge:0.00}:solid");
+                    Result("cover", charge);
+                    return;
+                }
             }
 
             switch (power.kind)

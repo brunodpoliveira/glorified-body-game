@@ -158,6 +158,8 @@ namespace GlorifiedBody.Enemy
         public event System.Action<bool> OnMelee;
         /// <summary>The muzzle of a gun model (EnemyGun). Without one, a point in front of the chest.</summary>
         public Transform MuzzleOverride { get; set; }
+        /// <summary>He fires over cover: the gun hangs low behind it until the aim raises it, so the line counts from the shoulder.</summary>
+        public bool FromCover { get; set; }
         public Vector3 Muzzle => MuzzleOverride != null ? MuzzleOverride.position : transform.position + Vector3.up * Body.MuzzleHeight + transform.forward * 0.5f;
 
         private void Awake()
@@ -329,7 +331,7 @@ namespace GlorifiedBody.Enemy
         public bool Sees(Vector3 chest)
         {
             if (!requireLineOfSight) return true;
-            Vector3 from = Muzzle;
+            Vector3 from = FromCover ? transform.position + Vector3.up * Body.MuzzleHeight : Muzzle;
             return !Physics.Linecast(from, chest, sightBlockers, QueryTriggerInteraction.Ignore);
         }
 

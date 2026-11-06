@@ -287,7 +287,7 @@ namespace GlorifiedBody.Tests.PlayMode
             SoldierBrain[] covered = UnityEngine.Object.FindObjectsByType<SoldierBrain>(FindObjectsSortMode.None).Where(s => s.Cover != null).ToArray();
             Assert.GreaterOrEqual(covered.Length, 1, "a soldier picks a barricade");
             SoldierBrain s0 = covered[0];
-            yield return WaitUntil(() => Vector3.Distance(Flat(s0.transform.position), Flat(s0.Spot)) < 1f, 12f);
+            yield return WaitUntil(() => s0.Current == SoldierBrain.Phase.Shoot || s0.Current == SoldierBrain.Phase.Duck, 12f);
             Debug.Log($"[BreakableTests] {s0.name} spot {s0.Spot}, at {s0.transform.position}, phase {s0.Current}");
             Vector3 eye = lucy.transform.position + Vector3.up * Body.ChestHeight;
             Debug.Log($"[BreakableTests] {s0.name} behind {s0.Cover.Id} at {s0.transform.position}");
@@ -297,6 +297,11 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.Greater(Vector3.Dot(behind, fromHer), 0f, "on its far side from her");
             Assert.IsNotNull(Breakables.CoverOnLine(eye, s0.GetComponent<LockOnTargetable>().GetLockPoint(), out _), "cover stands between them");
             Assert.AreEqual(covered.Length, covered.Select(s => s.Cover).Distinct().Count(), "one soldier for each barricade");
+            Assert.AreNotEqual(SoldierBrain.Phase.Move, s0.Current, "he stopped at his spot");
+            int shots = s0.Gun.ShotsFired;
+            yield return WaitUntil(() => s0.Gun.ShotsFired > shots || s0.Cover == null, 15f);
+            Debug.Log($"[BreakableTests] {s0.name} shots {shots} to {s0.Gun.ShotsFired}, cover {(s0.Cover != null ? s0.Cover.Id : "none")}, phase {s0.Current}");
+            Assert.Greater(s0.Gun.ShotsFired, shots, "he fires over it");
         }
 
         private static Vector3 Flat(Vector3 v) => new Vector3(v.x, 0f, v.z);

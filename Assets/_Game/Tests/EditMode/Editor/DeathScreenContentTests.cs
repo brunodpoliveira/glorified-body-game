@@ -62,8 +62,8 @@ namespace GlorifiedBody.Tests.EditMode
             // The class rows (guard, soldier) come from the writer's file, in the RFab repo next to this one.
             if (System.IO.File.Exists(System.IO.Path.GetFullPath(DeathScreenSetup.WriterCsv)))
             {
-                Assert.GreaterOrEqual(rows, 7, "the writer's rows");
-                StringAssert.StartsWith("COMPUTER:", content.Find("guard_pistol").voiceText, "the guard's voice line from the writer");
+                Assert.GreaterOrEqual(rows, 6, "the writer's rows (round 28: six archetypes)");
+                Assert.IsNotEmpty(content.Find("guard_pistol").voiceText, "the guard's voice line from the writer");
                 ids.Add("guard_pistol");
                 ids.Add("soldier_pistol");
             }

@@ -22,7 +22,7 @@ namespace GlorifiedBody.Editor
     public static class DeathScreenSetup
     {
         /// <summary>The writer's file, from the project root (the two repos sit side by side in ~/MEGA/code).</summary>
-        public const string WriterCsv = "../reality-fabricator/the-glorified-body/game/death_screens.csv";
+        public const string WriterCsv = "../the-glorified-body/game/death_screens.csv";
 
         private static readonly (string id, string classId, string note, string hint)[] Placeholders =
         {

@@ -95,6 +95,10 @@ namespace GlorifiedBody.Combat
         /// World-space aim point. Prefers the bound transform; otherwise falls back to a
         /// deterministic chest-height offset above this transform.
         /// </summary>
+        /// <summary>He hides behind cover (SoldierBrain): he aims lower, and a thing that stands on her line stops her power.</summary>
+        public bool InCover { get; set; }
+        private const float InCoverDrop = 0.5f; // m: a crouched chest
+
         public Vector3 GetLockPoint()
         {
             if (lockPoint != null)
@@ -102,7 +106,7 @@ namespace GlorifiedBody.Combat
                 return lockPoint.position;
             }
 
-            return transform.position + Vector3.up * fallbackHeight;
+            return transform.position + Vector3.up * (InCover ? fallbackHeight - InCoverDrop : fallbackHeight);
         }
 
         public Vector3 GetDisplayPoint()

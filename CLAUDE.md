@@ -3,10 +3,10 @@
 A tank-control horror game in Unity 6, a refinement of Galerians (PS1, 1999). Lucy, a young adult woman with no
 memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the pivot from the video series).
 
-- **Design (CANON):** `/home/pc/MEGA/code/reality-fabricator/the-glorified-body/03_GAME_DESIGN.md`.
-- **World and story:** `/home/pc/MEGA/code/reality-fabricator/the-glorified-body/01_SERIES_BIBLE.md`.
+- **Design (CANON):** `/home/pc/MEGA/code/the-glorified-body/03_GAME_DESIGN.md`.
+- **World and story:** `/home/pc/MEGA/code/the-glorified-body/01_SERIES_BIBLE.md`.
 - **Art rules, read before any art work:** `ART_LESSONS.md` (this folder).
-- **Asset lessons, full detail:** `/home/pc/MEGA/code/reality-fabricator/the-glorified-body/tests/T15_3d_set/LESSONS_LEARNED.md`.
+- **Asset lessons, full detail:** `/home/pc/MEGA/code/the-glorified-body/tests/T15_3d_set/LESSONS_LEARNED.md`.
 - **Agents:** `glorified-body-game` builds the game, `glorified-body-writer` writes the story, the cutscenes, the
   barks and the devlog scripts. Bruno decides.
 
@@ -514,6 +514,12 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   less (1.0 m makes a sliver island). `DemoV2.NavMeshReport` prints the mesh per room. `FloorplanV2Tests` (4).
   OPEN for Bruno: in the note.
 
+- 2026-11-06, COVER THAT FINDS ITSELF (`devlog-notes/2026-11-06_cover_scan_prop_types.md`, Bruno: "adding them manuially one by one is a
+  non-starter"; "add some prop types"): `Enemy/CoverMap.cs` scans the live NavMesh at the first need (rays at 0.7 m and 1.35 m: low cover, corners; 512
+  spots in 48 ms). `SoldierBrain`: `Phase.Duck` between shots, `DummyShooter.FromCover`, `LockOnTargetable.InCover` (a thing on her line stops her power while
+  he hides). `DemoRoom.Prop` makes fifteen types breakable by name (`BreakableAssets.PropBox`). The whole PlayMode suite takes 31 minutes: run it with
+  `GB_BATCH_TIMEOUT=5400`. The writer's folder is now `/home/pc/MEGA/code/the-glorified-body`.
+
 ## Rules
 
 1. Unity 6000.3.15f1 (installed at `/home/pc/Unity/Hub/Editor/6000.3.15f1`). Start it only through `tools/unity.sh`
@@ -536,5 +542,5 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
 7. Writing style for anything Bruno reads: ASD-STE100.
 8. Every step ends with a note in `devlog-notes/` and the shots Bruno can open, checked at full size first.
 9. The game is RFab's dogfood (Bruno, 2026-10-22). Every RFab bug, limit or missing piece found while building
-   goes the same day as one row in `/home/pc/MEGA/code/reality-fabricator/the-glorified-body/RFAB_GAPS.md`,
+   goes the same day as one row in `/home/pc/MEGA/code/the-glorified-body/RFAB_GAPS.md`,
    with the evidence file. The RFab agent works that list.

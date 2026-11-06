@@ -13,7 +13,7 @@
 set -uo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TOP="$(cd "$HERE/../.." && pwd)"
-SCRIPTS="${GB_SCRIPTS:-/home/pc/MEGA/code/reality-fabricator/the-glorified-body/devlog}"
+SCRIPTS="${GB_SCRIPTS:-/home/pc/MEGA/code/the-glorified-body/devlog}"
 RENDERS="${GB_RENDERS:-$HOME/MEGA/glorified-body-renders}"
 
 ep="${1:?episode folder required, for example ep00}"; shift

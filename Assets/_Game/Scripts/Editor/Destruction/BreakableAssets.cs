@@ -366,6 +366,30 @@ namespace GlorifiedBody.Editor.Destruction
             return b;
         }
 
+        public const float PropCoverHeight = 0.7f; // m: lower than this covers no one
+
+        /// <summary>
+        /// A prop of the demo that breaks (Bruno, 2026-11-06: "add some prop types"): a box, cut into pieces. It stays out of the
+        /// NavMesh bake and carves it, so the way opens when it breaks. Chest high, it is cover (CoverMap finds it).
+        /// </summary>
+        public static Breakable PropBox(GameObject parent, string name, string id, Vector3 floor, Vector3 size, Breakable.Kind kind, float health, Material outside, Material inside)
+        {
+            GameObject root = Root(parent, name, floor, 0f);
+            GameObject intact = Child(root.transform, "Intact");
+            GameObject debris = Child(root.transform, "Debris");
+            Vector3 centre = Vector3.up * size.y * 0.5f;
+            Block(intact.transform, "Body", centre, size, outside, LayerMask.NameToLayer("Default"));
+            string design = $"prop_{Mathf.RoundToInt(size.x * 100f)}x{Mathf.RoundToInt(size.y * 100f)}x{Mathf.RoundToInt(size.z * 100f)}";
+            int count = Mathf.Clamp(Mathf.RoundToInt(size.x * size.y * size.z * 12f) + 6, 6, 14);
+            AddPieces(debris.transform, Fragments(design, size, count, Mathf.RoundToInt((size.x + size.y * 7f + size.z * 53f) * 100f)), centre, Quaternion.identity, outside, inside, kind == Breakable.Kind.Metal ? 1500f : WoodDensity);
+            root.AddComponent<Unity.AI.Navigation.NavMeshModifier>().ignoreFromBuild = true;
+            Obstacle(root, centre, size);
+            HideUntilBroken(debris, null);
+            var b = root.AddComponent<Breakable>();
+            b.Bind(id, kind, health, size.y >= PropCoverHeight, intact, debris, null, new Greeble[0], 3f);
+            return b;
+        }
+
         /// <summary>
         /// A tall office screen (1.9 m): cover for her (Bruno, 2026-10-24: the enemy bullets wear down her cover; the
         /// 1.2 m barricade let them shoot over it). It stops their bullets and her powers alike, so the soldiers never

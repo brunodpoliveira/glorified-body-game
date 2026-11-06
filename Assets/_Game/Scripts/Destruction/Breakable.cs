@@ -165,11 +165,30 @@ namespace GlorifiedBody.Destruction
             }
             foreach (Greeble item in resting)
                 if (item != null) item.Disturb(point, kick * 0.5f);
+            DropWhatRests();
             DestructionFx.Break(kind, centre, Bounds.size.magnitude);
             RoomDamageLedger.NoteBroken(this);
             RunTelemetry.Event("breakable_broken", $"{Id}:{kind}:{pieces.Length} pieces");
             OnBreak(point);
             OnBroken?.Invoke(this);
+        }
+
+        /// <summary>What stood on it: an item falls to the floor, so she can still take it. A prop of the room goes with the break.</summary>
+        private void DropWhatRests()
+        {
+            Vector3 size = Bounds.size;
+            var above = new Vector3(size.x * 0.5f, 0.3f, size.z * 0.5f);
+            foreach (Collider c in Physics.OverlapBox(new Vector3(Bounds.center.x, Bounds.max.y + 0.3f, Bounds.center.z), above, Quaternion.identity, ~0, QueryTriggerInteraction.Collide))
+            {
+                if (c.bounds.min.y < Bounds.max.y - 0.05f || c.GetComponentInParent<Breakable>() != null) continue;
+                if (c.TryGetComponent(out GlorifiedBody.Interaction.ItemPickup item))
+                {
+                    Vector3 at = item.transform.position;
+                    at.y = Bounds.min.y + c.bounds.extents.y + 0.02f;
+                    item.transform.position = at;
+                }
+                else if (c.transform.parent != null && c.transform.parent.name == "[Props]") c.gameObject.SetActive(false);
+            }
         }
 
         /// <summary>A subclass adds its own break (the lamp goes dark).</summary>

@@ -6,6 +6,7 @@ using UnityEngine;
 using GlorifiedBody.Automation;
 using GlorifiedBody.Cameras;
 using GlorifiedBody.Characters;
+using GlorifiedBody.Destruction;
 using GlorifiedBody.Enemy;
 using GlorifiedBody.Interaction;
 using GlorifiedBody.Rooms;
@@ -419,8 +420,50 @@ namespace GlorifiedBody.Editor.Demo
         }
 
         /// <summary>A prop on the floor: its foot at the point, its size in metres.</summary>
-        public GameObject Prop(string name, Vector3 floorPoint, Vector3 size, float shade = 0.3f) =>
-            Box(Props, name, floorPoint + Vector3.up * size.y * 0.5f, size, Grey(shade));
+        public GameObject Prop(string name, Vector3 floorPoint, Vector3 size, float shade = 0.3f)
+        {
+            if (BreakableType(name, out Breakable.Kind kind, out float health))
+                return GlorifiedBody.Editor.Destruction.BreakableAssets.PropBox(Props, name, Spec.Id + "_" + name, floorPoint, size, kind, health, Grey(shade), Grey(Mathf.Min(1f, shade + 0.25f))).gameObject;
+            return Box(Props, name, floorPoint + Vector3.up * size.y * 0.5f, size, Grey(shade));
+        }
+
+        // The props that break, by type (Bruno, 2026-11-06: "add some prop types"): the name, or the name before its "_tag".
+        // Whatever stands chest high among them is cover (BreakableAssets.PropBox). Counters, racks, fridges, lockers and walls
+        // do not break. Health PROPOSED.
+        private static readonly Dictionary<string, (Breakable.Kind kind, float health)> BreakableTypes = new Dictionary<string, (Breakable.Kind, float)>
+        {
+            { "Planter", (Breakable.Kind.Plaster, 60f) },
+            { "Desk", (Breakable.Kind.Wood, 70f) },
+            { "Reception_Desk", (Breakable.Kind.Wood, 140f) },
+            { "Lectern", (Breakable.Kind.Wood, 40f) },
+            { "Low_Table", (Breakable.Kind.Wood, 30f) },
+            { "Cart", (Breakable.Kind.Metal, 50f) },
+            { "Laundry_Cart", (Breakable.Kind.Metal, 50f) },
+            { "Dressing_Cart", (Breakable.Kind.Metal, 50f) },
+            { "Monitor_Cart", (Breakable.Kind.Metal, 50f) },
+            { "Gurney", (Breakable.Kind.Metal, 40f) },
+            { "Filing", (Breakable.Kind.Metal, 70f) },
+            { "Cabinet", (Breakable.Kind.Metal, 60f) },
+            { "Copier", (Breakable.Kind.Plastic, 50f) },
+            { "Box", (Breakable.Kind.Wood, 20f) },
+            { "Bin", (Breakable.Kind.Plastic, 15f) },
+        };
+
+        private static bool BreakableType(string name, out Breakable.Kind kind, out float health)
+        {
+            kind = Breakable.Kind.Wood;
+            health = 0f;
+            string type = name;
+            if (!BreakableTypes.ContainsKey(type))
+            {
+                int tag = name.LastIndexOf('_');
+                if (tag <= 0) return false;
+                type = name.Substring(0, tag);
+                if (!BreakableTypes.ContainsKey(type)) return false;
+            }
+            (kind, health) = BreakableTypes[type];
+            return true;
+        }
 
         public static Material Grey(float v) => ItemAssets.UnlitMaterial("demo_grey_" + Mathf.RoundToInt(v * 100f), new Color(v, v, v * 1.05f));
 

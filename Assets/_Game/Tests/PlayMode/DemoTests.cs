@@ -10,6 +10,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 using GlorifiedBody.Automation;
 using GlorifiedBody.Cameras;
+using GlorifiedBody.Combat;
 using GlorifiedBody.Core;
 using GlorifiedBody.Enemy;
 using GlorifiedBody.Player;
@@ -530,6 +531,130 @@ namespace GlorifiedBody.Tests.PlayMode
                 Assert.Contains(figure.GetComponent<Bark>().Shown, lines, who + ": from his own list");
                 Assert.AreNotEqual(lines[0], figure.GetComponent<Bark>().Shown, who + ": no repeat");
             }
+        }
+
+        [UnityTest]
+        public IEnumerator TheCoverMap_FindsCover_InTheRooms_WithNoMarks()
+        {
+            // Bruno, 2026-11-06: "the ai does not take cover because there are no places assigned ... adding them manuially one by
+            // one is a non-starter".
+            yield return LoadWorld();
+            yield return WaitUntil(() => CutscenePlayer.IsPlaying && CutscenePlayer.ShotIndex >= 0, 10f);
+            CutscenePlayer.Skip();
+            yield return WaitUntil(() => StoryFlags.Has("demo_w1_wake"), 10f);
+            yield return new WaitForSeconds(0.5f); // the carving of the props
+            IReadOnlyList<CoverSpot> spots = CoverMap.Spots;
+            var perRoom = spots.GroupBy(c => GlorifiedBody.Rooms.Room.At(c.Position + Vector3.up * 0.1f)?.id ?? "?").OrderBy(g => g.Key).Select(g => $"{g.Key}={g.Count()}");
+            Debug.Log($"[DemoTests] cover: {spots.Count} spots in {CoverMap.BuildMilliseconds:0} ms: low {spots.Count(c => c.Low)}, corners {spots.Count(c => !c.Low)}, on a breakable {spots.Count(c => c.Piece != null)}; {string.Join(" ", perRoom)}");
+            Assert.Less(CoverMap.BuildMilliseconds, 1500f, "the scan costs little at the first fight");
+            Assert.IsTrue(spots.Any(c => c.Low && c.Piece != null && c.Piece.name.StartsWith("Planter_")), "low cover that breaks: a planter");
+            Assert.IsTrue(spots.Any(c => c.Low && c.Piece == null), "low cover that does not break: a counter");
+            GlorifiedBody.Rooms.Room g2 = GlorifiedBody.Rooms.Room.Of("G2");
+            Assert.IsTrue(spots.Any(c => !c.Low && g2.Contains(c.Position + Vector3.up * 0.1f)), "a corner in G2: its columns");
+            foreach (CoverSpot c in spots.Take(50))
+            {
+                Assert.IsTrue(UnityEngine.AI.NavMesh.SamplePosition(c.FirePoint, out _, 0.3f, UnityEngine.AI.NavMesh.AllAreas), "a soldier can stand there");
+                Assert.AreEqual(1f, c.Facing.magnitude, 0.01f);
+            }
+            Assert.IsFalse(spots.Any(c => c.Piece != null && !c.Piece.IsCover), "a door leaf or a low box is no cover");
+        }
+
+        [UnityTest]
+        public IEnumerator TheProps_BreakByType_AnItemFalls_AndTheWayOpens()
+        {
+            // Bruno, 2026-11-06: "add some prop types".
+            yield return LoadWorld();
+            yield return new WaitForSeconds(0.5f);
+            Destruction.Breakable[] all = UnityEngine.Object.FindObjectsByType<Destruction.Breakable>(FindObjectsSortMode.None);
+            Destruction.Breakable Named(string n) => all.FirstOrDefault(b => b.name == n);
+            Assert.IsTrue(Named("Planter_0").IsCover, "a planter is cover that breaks");
+            Assert.IsNotNull(Named("Desk_A"), "a desk breaks");
+            Assert.IsNull(all.FirstOrDefault(b => b.name == "Counter"), "a counter does not");
+            Destruction.Breakable bin = all.FirstOrDefault(b => b.name.StartsWith("Box_"));
+            Assert.IsNotNull(bin, "a box breaks");
+            Assert.IsFalse(bin.IsCover, "a low box is no cover");
+            // L7 lies on Desk_A in W10.
+            GameObject note = GameObject.Find("L7_Session_Note");
+            Assert.IsNotNull(note);
+            Destruction.Breakable desk = Named("Desk_A");
+            Vector3 middle = desk.Bounds.center;
+            middle.y = desk.Bounds.min.y;
+            Assert.IsFalse(UnityEngine.AI.NavMesh.SamplePosition(middle, out _, 0.2f, UnityEngine.AI.NavMesh.AllAreas), "she and they walk around the desk");
+            desk.Break(desk.Bounds.center, Vector3.forward);
+            yield return new WaitForSeconds(1f);
+            Assert.IsTrue(desk.IsBroken);
+            Assert.Less(note.transform.position.y - desk.Bounds.min.y, 0.2f, "the note lies on the floor");
+            Assert.IsTrue(note.GetComponent<GlorifiedBody.Interaction.ItemPickup>().Available, "she can still take it");
+            Assert.IsTrue(UnityEngine.AI.NavMesh.SamplePosition(middle, out _, 0.2f, UnityEngine.AI.NavMesh.AllAreas), "the way opens");
+        }
+
+        [UnityTest]
+        public IEnumerator ASoldier_TakesCover_HidesBetweenShots_StandsToFire_AndLeavesWhenSheGetsPast()
+        {
+            yield return LoadWorld();
+            yield return WaitUntil(() => CutscenePlayer.IsPlaying && CutscenePlayer.ShotIndex >= 0, 10f);
+            CutscenePlayer.Skip();
+            yield return WaitUntil(() => StoryFlags.Has("demo_w1_wake"), 10f);
+            GameObject lucy = GameObject.FindGameObjectWithTag("Player");
+            lucy.GetComponentInChildren<Health>().SetInvulnerable(true);
+            PsychicStats stats = lucy.GetComponent<PsychicStats>();
+            stats.AddShort(-PsychicStats.MaxShort);
+            TankController tank = lucy.GetComponent<TankController>();
+            Vector3 g2 = GlorifiedBody.Rooms.Room.Of("G2").transform.position;
+            tank.Teleport(g2 + new Vector3(19f, 0f, 1f), 90f);
+            yield return WaitUntil(() => GlorifiedBody.Rooms.RoomTracker.CurrentId == "G2", 3f);
+            SoldierBrain[] pairs = UnityEngine.Object.FindObjectsByType<SoldierBrain>(FindObjectsSortMode.None).Where(b => b.name.StartsWith("Soldier_Pair")).ToArray();
+            Assert.AreEqual(4, pairs.Length, "the fireteam of G2");
+            SoldierBrain ducking = null;
+            float t0 = Time.time;
+            while (ducking == null && Time.time - t0 < 40f)
+            {
+                stats.AddShort(-PsychicStats.MaxShort);
+                ducking = pairs.FirstOrDefault(b => b.Current == SoldierBrain.Phase.Duck && b.GetComponent<GlorifiedBody.Combat.IFrontGuard>() == null);
+                if (ducking == null) yield return null;
+            }
+            Debug.Log($"[DemoTests] after {Time.time - t0:0.0} s: " + string.Join("; ", pairs.Select(b => $"{b.name} {b.Current} cover={(b.HeldCover == null ? "none" : (b.HeldCover.Low ? "low " : "corner ") + (b.Cover != null ? b.Cover.name : "solid"))} ducks={b.Ducks}")));
+            Assert.IsNotNull(ducking, "a soldier takes cover in the fight, and hides between shots");
+            Assert.Greater(Vector3.Distance(ducking.transform.position, lucy.transform.position), 2.5f, "he stays off her: no charge to cover");
+            CoverSpot spot = ducking.HeldCover;
+            Assert.IsNotNull(spot);
+            LockOnTargetable lockable = ducking.GetComponent<LockOnTargetable>();
+            Assert.IsTrue(lockable.InCover, "he is hidden");
+            yield return new WaitForSeconds(spot.Low ? 0.3f : 1.2f); // the crouch, or the walk back behind the corner
+            Debug.Log($"[DemoTests] {ducking.name} at {ducking.transform.position}, her at {lucy.transform.position}, phase {ducking.Current}, {(spot.Low ? "low" : "corner")} {(spot.Piece != null ? spot.Piece.name : "solid")}");
+            Health health = ducking.GetComponent<Health>();
+            float before = health.CurrentHealth;
+            PsychicPowers powers = lucy.GetComponent<PsychicPowers>();
+            powers.Select(PowerKind.Blast);
+            stats.DebugSet(45f, 0f);
+            if (ducking.Current == SoldierBrain.Phase.Duck)
+            {
+                powers.FireAt(powers.Selected, 0.5f, lockable, 1f);
+                Assert.AreEqual(before, health.CurrentHealth, 0.01f, "her power stops on the cover while he hides");
+            }
+            int shots = ducking.Gun.ShotsFired;
+            t0 = Time.time;
+            bool stood = false;
+            while (ducking.Gun.ShotsFired == shots && Time.time - t0 < 15f)
+            {
+                stats.AddShort(-PsychicStats.MaxShort);
+                stood |= !lockable.InCover;
+                yield return null;
+            }
+            Assert.IsTrue(stood, "he stands");
+            Assert.Greater(ducking.Gun.ShotsFired, shots, "and fires");
+            Assert.IsFalse(lockable.InCover, "he is open while he fires");
+            // She gets past the thing: the spot no longer works, and he leaves it.
+            Vector3 past = ducking.transform.position - spot.Facing * 3f;
+            Assert.IsTrue(UnityEngine.AI.NavMesh.SamplePosition(past, out UnityEngine.AI.NavMeshHit on, 2f, UnityEngine.AI.NavMesh.AllAreas));
+            tank.Teleport(on.position, 0f);
+            t0 = Time.time;
+            while (ducking.HeldCover == spot && Time.time - t0 < 10f)
+            {
+                stats.AddShort(-PsychicStats.MaxShort);
+                yield return null;
+            }
+            Assert.AreNotEqual(spot, ducking.HeldCover, "she stands on his side: he leaves that spot");
         }
 
         [UnityTest]

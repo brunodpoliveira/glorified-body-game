@@ -39,6 +39,7 @@ namespace GlorifiedBody.Editor.Demo
         public static void BuildAll()
         {
             Directory.CreateDirectory(DemoRoom.Folder);
+            GlorifiedBody.Editor.Destruction.BreakableAssets.EnsureAll();
             Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             CharacterCatalog catalog = MenuLoopSetup.LoadCatalog();
             RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;

@@ -44,7 +44,7 @@ namespace GlorifiedBody.Enemy
     [RequireComponent(typeof(DummyShooter), typeof(Health))]
     public sealed class SoldierBrain : MonoBehaviour, IFearful, ICarer, IDoorWaiter
     {
-        public enum Phase { Idle, Move, Shoot, Hold, Dead, Care, Retreat, Cower }
+        public enum Phase { Idle, Move, Shoot, Hold, Dead, Care, Retreat, Cower, Duck }
 
         [SerializeField, Min(1f)] private float preferredRange = 6f;
         [SerializeField] private Vector2 moveSeconds = new Vector2(1.5f, 3f);
@@ -77,7 +77,11 @@ namespace GlorifiedBody.Enemy
         public bool Engaged => Time.frameCount - lastEngageFrame <= 2;
         public Vector3 Spot { get; private set; }
         /// <summary>The barricade he stands behind, or null.</summary>
-        public Breakable Cover { get; private set; }
+        /// <summary>The spot he holds (CoverMap), or null.</summary>
+        public CoverSpot HeldCover { get; private set; }
+        /// <summary>The breakable he holds as cover, or null (a spot behind a thing that does not break).</summary>
+        public Breakable Cover => HeldCover != null ? HeldCover.Piece : null;
+        public int Ducks { get; private set; }
 
         private const float RushRepathSeconds = 0.3f; // the knife finds her again this often
         private const float FrontCone = 60f;          // degrees each side of her facing: her view, PROPOSED
@@ -89,16 +93,18 @@ namespace GlorifiedBody.Enemy
         private const float CowerLineGap = 6f;        // s between its lines, PROPOSED
         private const float CowerLineSeconds = 3f;
         private const float ArmedCivilianNerves = 0.35f; // the tremble of an alerted armed civilian, PROPOSED
-        private const float CoverStandOff = 0.9f;    // m behind the barricade's middle
         private const float CoverMinRange = 2.5f;    // m from her: closer is no cover
         private const float CoverExtraRange = 4f;    // m beyond the preferred range
         private const float CoverSearch = 14f;       // m he walks for cover at most
         private const float CoverWalkSeconds = 6f;   // s the walk to cover may take
-        private const float CoverArriveRadius = 1f;  // m: the vendor AI stops about 0.8 m short of its point
-        private static readonly Dictionary<Breakable, SoldierBrain> coverClaims = new Dictionary<Breakable, SoldierBrain>();
-
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void ResetCoverClaims() => coverClaims.Clear();
+        private const float CoverFacing = 0.5f;      // the thing lies within 60 degrees of his line to her
+        private const float CoverHolds = 0.3f;       // it still counts until she stands past 72 degrees
+        private const float CornerCost = 3f;         // m added to a corner: low cover first, he fires from it with no walk
+        private const float CoverPathClear = 3f;     // m: his way to cover keeps this far from her
+        private const int CoverTries = 12;           // the nearest spots that get the costly line checks
+        private static readonly Vector2 DuckSeconds = new Vector2(1.5f, 3f); // PROPOSED
+        private const float CoverArriveRadius = 0.4f; // m: he stands behind the thing, not beside it
+        private const float CoverStallRadius = 1.2f;  // m: the vendor AI can stop this short: a stop this near counts as there
         /// <summary>Frames in which the body moved while the gun held a slot. The rule wants zero.</summary>
         public int MovedWhileShootingFrames { get; private set; }
         public int Moves { get; private set; }
@@ -123,7 +129,7 @@ namespace GlorifiedBody.Enemy
         public string RetreatReason { get; private set; } = "";
         /// <summary>Free to tend a body: alive, not retreating or cowering, not held, no aim.</summary>
         public bool CanCare => Current != Phase.Dead && Current != Phase.Retreat && Current != Phase.Cower
-            && Current != Phase.Hold && Current != Phase.Care && !suspendedByLift && !gun.HoldsSlot;
+            && Current != Phase.Hold && Current != Phase.Care && Current != Phase.Duck && !suspendedByLift && !gun.HoldsSlot;
         public bool Retreating => Current == Phase.Retreat || Current == Phase.Cower;
         /// <summary>A soldier tends a body only while he does not see her (CorpseCare).</summary>
         public bool CareIgnoresHer => false;
@@ -338,6 +344,7 @@ namespace GlorifiedBody.Enemy
 
         private void Update()
         {
+            if (ducked && Current != Phase.Duck) StandUp(); // a hit, a lift or a fear took him out of the duck
             if (body == null || Current == Phase.Dead) return;
             float dt = Time.deltaTime;
             if (dt <= 0f) return;
@@ -488,7 +495,7 @@ namespace GlorifiedBody.Enemy
         private void DoorDone()
         {
             doorWait = 0f;
-            if (Current == Phase.Move || Current == Phase.Shoot) Current = Phase.Idle;
+            if (Current == Phase.Move || Current == Phase.Shoot || Current == Phase.Duck) Current = Phase.Idle;
         }
 
         // ── Morale and care ───────────────────────────────────────────
@@ -568,16 +575,17 @@ namespace GlorifiedBody.Enemy
                 case Phase.Move:
                     gun.HoldFire = true;
                     timer -= dt;
-                    bool arrived = Time.time - moveStarted >= minMoveSeconds && Flat(transform.position, Spot) <= (Cover != null ? CoverArriveRadius : arriveRadius);
+                    bool arrived = Time.time - moveStarted >= minMoveSeconds && (HeldCover != null ? Flat(transform.position, Spot) <= CoverArriveRadius || (!body.IsMoving && Flat(transform.position, Spot) <= CoverStallRadius) : Flat(transform.position, Spot) <= arriveRadius);
                     bool close = gun.HerInReach;
                     if (close)
                     {
                         StartShoot(); // she came close: stop and strike
                     }
                     // A walk to cover runs to the end (CoverWalkSeconds at most): no shot from the open on the way.
-                    else if ((timer <= 0f && (Cover == null || Time.time - moveStarted >= CoverWalkSeconds)) || arrived)
+                    else if ((timer <= 0f && (HeldCover == null || Time.time - moveStarted >= CoverWalkSeconds)) || arrived)
                     {
-                        if (ClearLine() && Distance() <= gun.Range) StartShoot();
+                        // From cover the line counts from where he stands to fire: his gun still hangs low behind the thing.
+                        if (HeldCover != null ? CoverStillHolds() : ClearLine() && Distance() <= gun.Range) StartShoot();
                         else StartMove();
                     }
                     break;
@@ -589,7 +597,34 @@ namespace GlorifiedBody.Enemy
                     timer -= dt;
                     bool fired = gun.ShotsFired > shotsAtShootStart && !gun.HoldsSlot;
                     bool gotAway = Rusher && !gun.HoldsSlot && !gun.HerInReach; // a knife does not wait for her
-                    if (fired || gotAway || (timer <= 0f && !gun.HoldsSlot)) StartMove();
+                    if (fired || gotAway || (timer <= 0f && !gun.HoldsSlot))
+                    {
+                        if (!gotAway && CoverStillHolds()) BeginDuck();
+                        else StartMove();
+                    }
+                    break;
+
+                case Phase.Duck:
+                    gun.HoldFire = true;
+                    timer -= dt;
+                    if (gun.HerInReach)
+                    {
+                        StandUp();
+                        StartShoot(); // she came close: stand and strike
+                    }
+                    else if (!CoverStillHolds())
+                    {
+                        StandUp();
+                        ReleaseCover();
+                        StartMove();
+                    }
+                    else if (timer <= 0f)
+                    {
+                        StandUp();
+                        if (HeldCover.Low) StartShoot();
+                        else StepOutToFire();
+                    }
+                    else if (HeldCover.Low || Flat(transform.position, HeldCover.Position) <= CoverArriveRadius) body.Stop();
                     break;
             }
         }
@@ -616,6 +651,7 @@ namespace GlorifiedBody.Enemy
         {
             if (gun.HoldsSlot) return; // the shot first, then the legs
             gun.HoldFire = true;
+            gun.FromCover = false;
             Vector3 spot = PickSpot();
             Spot = spot;
             bool sprint = (spot - transform.position).magnitude > sprintOver;
@@ -760,61 +796,143 @@ namespace GlorifiedBody.Enemy
         }
 
         /// <summary>
-        /// Cover first (Bruno, 2026-10-24: "cover only enemies, on purpose"): a spot behind an intact chest-high
-        /// barricade, on its far side from her, with a line over it from the muzzle to her chest. Her powers stop on
-        /// the barricade until it breaks; then he moves on. One soldier for each barricade. Numbers PROPOSED.
+        /// Cover first (Bruno, 2026-10-24: "cover only enemies, on purpose"; 2026-11-06: every room, by itself, CoverMap): the
+        /// nearest free spot with the thing between him and her, inside the range of his gun, a clear line from where he fires,
+        /// and no line from where he hides. Numbers PROPOSED.
         /// </summary>
         private bool TryCoverSpot(Vector3 target, Vector3 chest, Vector3? side, float tolerance, out Vector3 spot)
         {
             spot = Vector3.zero;
-            int blockers = LayerMask.GetMask("Default");
-            Breakable best = null;
-            float bestCost = float.MaxValue;
-            foreach (Breakable cover in Breakable.All)
+            if (RankOf == EnemyMorale.Rank.Heavy) return false; // the power armour stands 2.6 m tall
+            float nearest = Mathf.Max(CoverMinRange, gun.MinAttackDistance + 0.6f);
+            float farthest = Mathf.Min(gun.Range, preferredRange + CoverExtraRange);
+            var options = new List<(float cost, CoverSpot spot)>();
+            foreach (CoverSpot option in CoverMap.Spots)
             {
-                if (cover == null || !cover.IsCover) continue;
-                if (coverClaims.TryGetValue(cover, out SoldierBrain owner) && owner != null && owner != this && owner.Current != Phase.Dead) continue;
-                Vector3 centre = cover.Bounds.center;
-                Vector3 away = centre - target;
+                if (!option.Usable || (option.Owner != null && option.Owner != this)) continue;
+                Vector3 fire = option.FirePoint;
+                if (Mathf.Abs(fire.y - transform.position.y) > 1.5f) continue;
+                Vector3 away = fire - target;
                 away.y = 0f;
                 float range = away.magnitude;
-                if (range < CoverMinRange || range > preferredRange + CoverExtraRange) continue;
-                away /= range;
+                if (range < nearest || range > farthest) continue;
+                if (Vector3.Dot(option.Facing, -away / range) < CoverFacing) continue;
                 if (side.HasValue && Vector3.Angle(side.Value, away) > tolerance) continue; // on his side or on his line only
-                Vector3 candidate = new Vector3(centre.x, transform.position.y, centre.z) + away * CoverStandOff;
-                if (!NavMesh.SamplePosition(candidate, out NavMeshHit hit, 0.7f, NavMesh.AllAreas)) continue;
-                if (Flat(hit.position, candidate) > 0.6f) continue;
-                if (Physics.Linecast(hit.position + Vector3.up * GlorifiedBody.Characters.Body.MuzzleHeight, chest, blockers, QueryTriggerInteraction.Ignore)) continue;
-                float cost = Flat(transform.position, hit.position);
-                if (cost > CoverSearch || cost >= bestCost) continue;
-                best = cover;
-                bestCost = cost;
-                spot = hit.position;
+                float cost = Flat(transform.position, fire);
+                if (cost > CoverSearch) continue;
+                if (Style == Approach.Flank && InHerView(fire, target)) cost += FrontCost;
+                if (!option.Low) cost += CornerCost;
+                options.Add((cost, option));
             }
-            if (best == null)
+            options.Sort((a, b) => a.cost.CompareTo(b.cost));
+            int blockers = LayerMask.GetMask("Default");
+            int tries = 0;
+            foreach ((float cost, CoverSpot option) in options)
             {
-                ReleaseCover();
-                return false;
+                if (!CoverMap.Free(option, this)) continue;
+                if (++tries > CoverTries) break;
+                if (Physics.Linecast(option.FirePoint + Vector3.up * GlorifiedBody.Characters.Body.MuzzleHeight, chest, blockers, QueryTriggerInteraction.Ignore)) continue;
+                float hideHeight = option.Low ? 0.7f : GlorifiedBody.Characters.Body.ChestHeight;
+                if (!Physics.Linecast(option.Position + Vector3.up * hideHeight, chest, blockers, QueryTriggerInteraction.Ignore)) continue;
+                var path = new NavMeshPath();
+                if (!NavMesh.CalculatePath(transform.position, option.FirePoint, NavMesh.AllAreas, path) || path.status != NavMeshPathStatus.PathComplete) continue;
+                if (PathPassesHer(path, target)) continue; // a walk to cover past her is a charge (2026-11-06)
+                if (option != HeldCover)
+                {
+                    ReleaseCover();
+                    HeldCover = option;
+                    CoverMap.Claim(option, this);
+                    RunTelemetry.Event("soldier_cover", $"{name}:{(option.Low ? "low" : "corner")}:{(option.Piece != null ? option.Piece.Id : "solid")}");
+                }
+                spot = option.FirePoint;
+                return true;
             }
-            if (best != Cover)
+            ReleaseCover();
+            return false;
+        }
+
+        private bool PathPassesHer(NavMeshPath path, Vector3 her)
+        {
+            Vector3[] corners = path.corners;
+            for (int i = 0; i + 1 < corners.Length; i++)
             {
-                ReleaseCover();
-                coverClaims[best] = this;
-                Cover = best;
-                RunTelemetry.Event("soldier_cover", $"{name}:{best.Id}");
+                Vector3 line = corners[i + 1] - corners[i];
+                line.y = 0f;
+                float length = line.magnitude;
+                if (length < 0.01f) continue;
+                Vector3 from = her - corners[i];
+                from.y = 0f;
+                float along = Mathf.Clamp(Vector3.Dot(from, line / length), 0f, length);
+                if ((from - line / length * along).sqrMagnitude < CoverPathClear * CoverPathClear) return true;
             }
-            return true;
+            return false;
         }
 
         private void ReleaseCover()
         {
-            if (Cover != null && coverClaims.TryGetValue(Cover, out SoldierBrain owner) && owner == this) coverClaims.Remove(Cover);
-            Cover = null;
+            if (HeldCover != null) CoverMap.Release(HeldCover);
+            HeldCover = null;
         }
+
+        /// <summary>The spot still works: it stands, the thing lies between them, and he has his line and his range.</summary>
+        private bool CoverStillHolds()
+        {
+            if (HeldCover == null || !HeldCover.Usable) return false;
+            Vector3 her = TargetPosition;
+            Vector3 fire = HeldCover.FirePoint;
+            Vector3 to = her - fire;
+            to.y = 0f;
+            float range = to.magnitude;
+            if (range < CoverMinRange || range > gun.Range) return false;
+            if (Vector3.Dot(HeldCover.Facing, to / range) < CoverHolds) return false;
+            return !Physics.Linecast(fire + Vector3.up * GlorifiedBody.Characters.Body.MuzzleHeight, her + Vector3.up * GlorifiedBody.Characters.Body.ChestHeight,
+                LayerMask.GetMask("Default"), QueryTriggerInteraction.Ignore);
+        }
+
+        /// <summary>Between shots he hides: he crouches behind low cover, or goes back behind the corner.</summary>
+        private void BeginDuck()
+        {
+            Current = Phase.Duck;
+            Ducks++;
+            ducked = true;
+            timer = Random.Range(DuckSeconds.x, DuckSeconds.y);
+            if (TryGetComponent(out LockOnTargetable lockable)) lockable.InCover = true;
+            if (HeldCover.Low)
+            {
+                body.Stop();
+                body.Crouch(true);
+            }
+            else
+            {
+                Spot = HeldCover.Position;
+                body.MoveTo(HeldCover.Position, MoveSpeed.Run);
+            }
+            RunTelemetry.Event("soldier_duck", name);
+        }
+
+        private void StandUp()
+        {
+            ducked = false;
+            if (TryGetComponent(out LockOnTargetable lockable)) lockable.InCover = false;
+            body.Crouch(false);
+        }
+
+        private void StepOutToFire()
+        {
+            Spot = HeldCover.Step;
+            body.MoveTo(Spot, MoveSpeed.Run);
+            timer = CoverWalkSeconds;
+            moveStarted = Time.time;
+            Current = Phase.Move;
+            Moves++;
+        }
+
+        private bool ducked;
 
         private void StartShoot()
         {
             body.Stop();
+            gun.FromCover = HeldCover != null;
             shotsAtShootStart = gun.ShotsFired;
             timer = shootWaitSeconds;
             Current = Phase.Shoot;

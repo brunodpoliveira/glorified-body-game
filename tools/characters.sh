@@ -13,7 +13,7 @@ set -u
 TOP="$(cd "$(dirname "$0")/.." && pwd)"
 SRC="${GB_CHARACTER_SRC:-$HOME/MEGA/glorified-body-renders/T19_characters/models}"
 OUT="$TOP/Assets/_Game/Characters/Models"
-RUNNER="${GB_BLENDER_RUNNER:-$HOME/MEGA/code/reality-fabricator/the-glorified-body/kit/run_blender.sh}"
+RUNNER="${GB_BLENDER_RUNNER:-$HOME/MEGA/code/the-glorified-body/kit/run_blender.sh}"
 BLENDER="${GB_BLENDER:-/snap/blender/current/blender}"
 classes=("$@")
 [ ${#classes[@]} -eq 0 ] && classes=(lucy_bare lucy_guard patient nurse labworker guard soldier fireman power_armour)
