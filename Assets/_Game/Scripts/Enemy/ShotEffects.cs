@@ -40,7 +40,7 @@ namespace GlorifiedBody.Enemy
         [Min(0.1f)] public float explosionLifetime = 4f;
 
         [Header("Gas and rockets (Bruno, 2026-10-24)")]
-        [Tooltip("The poison cloud: the vendor smoke particles, scripts removed. GasCloud tints it green.")]
+        [Tooltip("The poison cloud: the vendor smoke particles, scripts removed. GasCloud tints it white.")]
         public GameObject gasPrefab;
         public AudioClip gasClip;
         public AudioClip[] rocketFireClips;

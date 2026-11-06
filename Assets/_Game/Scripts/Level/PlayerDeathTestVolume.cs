@@ -43,7 +43,7 @@ namespace GlorifiedBody.Level
                     health.SetRuntimeInvulnerable(false);
                 }
 
-                health.TakeDamage(health.CurrentHealth + health.MaxHealth + 999f);
+                health.Kill();
             }
         }
 

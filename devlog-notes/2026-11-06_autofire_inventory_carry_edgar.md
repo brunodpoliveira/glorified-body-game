@@ -79,6 +79,21 @@ actually the short goes on as normal, but it doesn't detract health while using 
 
 The shock that would kill her takes the second wind and leaves her at 1 HP. The short then runs to its end, and it takes no more HP. The next short with no second wind can kill her.
 
+## The 1 HP rule (Bruno, the same evening)
+
+```text
+any hit that would kill the player will first degrade them to 1 hp and then the next one triggers second wind or kills them. reason: this makes impossible for any enemy to wipe out the player in one hit
+yes, the 0.5s window is a good idea
+```
+
+| Hit | Result |
+|---|---|
+| Lethal, from above 1 HP | She stays at 1 HP. For 0.5 s no hit lands, so a burst cannot finish her. The second wind stays |
+| At 1 HP, second wind ready | The second wind goes |
+| At 1 HP, no second wind | She dies |
+
+`Health.TakeDamage`, for her only. `Health.Kill` is the death with no hit, for the debug key and the tests. ONE-HIT WONDER stays: she has 1 HP, so any hit kills her. The short follows the rule.
+
 ## Tutorial and the riser room
 
 ```text

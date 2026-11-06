@@ -69,8 +69,8 @@ MonoBehaviour:
   - killerId: fire
     picture: {fileID: 0}
     pictureNote: the records room burning, her own hand in the flame
-    hint: Fire spreads. Start it, leave the room, and come back when it is out. The
-      firemen will not shoot.
+    hint: 'Fire spreads. Start it, leave the room, and come back when it is out.
+      The firemen fire CO2 canisters at the fire: do not stand in it.'
     voiceLine: {fileID: 0}
     voiceText: 'PA: Fire, records. Fire doors are closing. Please remain where you
       are.'
@@ -79,9 +79,9 @@ MonoBehaviour:
     pictureNote: 'through the slit: her gold-seamed hands open on the black tile,
       the last arc crawling off her fingers into the floor, the ceiling light dead
       above her, the lights of the Crown going out one by one'
-    hint: 'A short takes about half your HP: below that, it kills you. A SHORT capsule
-      ends it, and a second wind saves you once. Every power you use fills the SHORT
-      bar.'
+    hint: 'A short takes about half your HP: below that, it kills you. With a second
+      wind you live, and the short goes on and takes no more HP. A SHORT capsule
+      ends it. Every power you use fills the SHORT bar.'
     voiceLine: {fileID: 0}
     voiceText: 'PA: Electrical fault, this floor. A member of staff will come to
       you.'
@@ -94,11 +94,12 @@ MonoBehaviour:
     voiceText: 'SOLDIER: Target down. Clear. (then, quieter) Was that a kid?'
   - killerId: soldier_gas
     picture: {fileID: 0}
-    pictureNote: 'PLACEHOLDER: the green cloud, the gas mask in it'
-    hint: 'PLACEHOLDER HINT: a green ring is gas. Leave it before the grenade lands,
-      and stay out of the cloud.'
+    pictureNote: 'from the floor: a white cloud, boots in it, a gas mask with round
+      lenses looking down'
+    hint: The ring shows where it lands. Leave it before the grenade lands, stay
+      out of the white cloud, or catch the grenade with mk_orzabal.
     voiceLine: {fileID: 0}
-    voiceText: 'SOLDIER: Target down. Clear. (then, quieter) Was that a kid?'
+    voiceText: 'SOLDIER: Knock-out''s working. She''s out. Control, she''s out.'
   - killerId: soldier_grenades
     picture: {fileID: 0}
     pictureNote: 'PLACEHOLDER: the red ring on the floor, her feet in it'
@@ -159,3 +160,20 @@ MonoBehaviour:
     voiceLine: {fileID: 0}
     voiceText: 'BRAIN: Your life has been full of suffering. But don''t worry. It''ll
       be over soon.'
+  - killerId: halon
+    picture: {fileID: 0}
+    pictureNote: 'through the slit: server racks in a thin white fog, the red strobe
+      of the horn, her hand on the floor one metre short of the panel'
+    hint: The horn gives you 30 seconds, and the door seals. Press ABORT on the panel,
+      or turn the lockout outside before you light anything. Read the sign.
+    voiceLine: {fileID: 0}
+    voiceText: 'PA: Fire suppression complete, server room. A member of staff will
+      come to you.'
+  - killerId: fireman_gas
+    picture: {fileID: 0}
+    pictureNote: 'from the floor: a white cloud, a fireman''s mask over her, a gloved
+      hand on her neck'
+    hint: They fire at the fire. Leave the ring before the canister lands, stay out
+      of the white cloud, or catch it with mk_orzabal.
+    voiceLine: {fileID: 0}
+    voiceText: 'FIREMAN: I got one breathing! Get a mask on her, get a mask on her!'

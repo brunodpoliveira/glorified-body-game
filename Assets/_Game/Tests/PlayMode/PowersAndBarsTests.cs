@@ -679,9 +679,23 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.IsTrue(health.IsSecondWindAvailable, "and unused");
             PlayerHud hud = UnityEngine.Object.FindFirstObjectByType<PlayerHud>();
 
+            // Bruno, 2026-11-06: the lethal hit from full HP only leaves her at 1 HP, and the second wind stays.
             health.TakeDamage(health.MaxHealth * 2f);
             yield return null;
-            Assert.IsFalse(health.IsDead, "she survives the first lethal hit");
+            Assert.IsFalse(health.IsDead, "no hit kills her from above 1 HP");
+            Assert.AreEqual(1f, health.CurrentHealth, 0.01f, "at 1 HP");
+            Assert.IsTrue(health.IsSecondWindAvailable, "the second wind stays");
+            Assert.IsTrue(health.IsInvulnerable, "for 0.5 s no hit lands: a burst cannot finish her");
+            health.TakeDamage(50f);
+            Assert.AreEqual(1f, health.CurrentHealth, 0.01f, "the next round of the burst does nothing");
+            Assert.IsFalse(health.IsSecondWindActive);
+            yield return new WaitForSeconds(Health.LastHpInvulnerableSeconds + 0.1f);
+            Assert.IsFalse(health.IsInvulnerable, "the window closed");
+
+            health.TakeDamage(health.MaxHealth * 2f);
+            yield return null;
+            Assert.IsFalse(health.IsDead, "she survives the hit at 1 HP");
+            Assert.IsFalse(health.IsSecondWindAvailable, "it took the second wind");
             Assert.AreEqual(1f, health.CurrentHealth, 0.01f, "at 1 HP");
             Assert.IsTrue(health.IsInvulnerable, "invulnerable");
             Assert.IsTrue(hud == null || hud.SecondWindShown, "the HUD says SECOND WIND");

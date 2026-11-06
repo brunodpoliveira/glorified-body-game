@@ -248,13 +248,13 @@ namespace GlorifiedBody.Player
                 bool lethal = self >= health.CurrentHealth;
                 if (lethal) GlorifiedBody.UI.DeathMenuUI.LastKillerId = KillerId;
                 if (self > 0f) health.TakeDamage(self);
-                if (lethal)
+                if (health.IsDead)
                 {
-                    if (health.IsDead)
-                    {
-                        End(byDrug: false, "death"); // no shocks from a body
-                        return;
-                    }
+                    End(byDrug: false, "death"); // no shocks from a body
+                    return;
+                }
+                if (lethal && health.IsSecondWindInvulnerable)
+                {
                     windTaken = true;
                     RunTelemetry.Event("short_took_second_wind", $"hp={health.CurrentHealth:0}");
                 }

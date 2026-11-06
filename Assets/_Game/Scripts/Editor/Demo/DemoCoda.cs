@@ -47,21 +47,19 @@ namespace GlorifiedBody.Editor.Demo
         private static void X1(DemoRoom r)
         {
             Entry(r, EntryX1, new Vector3(61.5f, 0.05f, 1.5f), 45f);
-            for (int i = 0; i < 4; i++)
-            {
-                r.Prop($"Car_South_{i}", new Vector3(62f + i * 2.8f, 0f, 3.4f), new Vector3(1.8f, 1.3f, 4.2f), 0.25f);
-                if (i != 2) r.Prop($"Car_North_{i}", new Vector3(62f + i * 2.8f, 0f, 8.6f), new Vector3(1.8f, 1.3f, 2.4f), 0.25f);
-            }
-            r.Prop("Car_Human", new Vector3(70.2f, 0f, 6f), new Vector3(1.9f, 1.3f, 4.6f), 0.05f);
-            r.Sign("Sign_Plate", "HUMAN", new Vector3(70.2f, 0.7f, 3.68f), Vector3.back, new Vector2(1f, 0.25f), 48);
-            r.Prop("Glove_Box", new Vector3(68.6f, 0f, 5f), new Vector3(0.5f, 0.9f, 0.5f), 0.15f);
-            r.Item("Sunglasses", DemoItems.Sunglasses(), new Vector3(68.6f, 0.95f, 4.85f), new Vector3(0.2f, 0.04f, 0.1f));
-            r.Capsule("Tin_Unknown", DrugType.NalconMind, new Vector3(68.6f, 1f, 5.15f));
-            FlagSwitch door = r.Switch("Car_Door", new Vector3(69.1f, 1f, 6.6f), CarDoor, "Get in?", "get in", "");
+            // She starts by the south wall. The lane runs east along it, then north to the car (the first layout started her inside a car).
+            foreach (float x in new[] { 62.5f, 65.3f }) r.Prop($"Car_West_{x:0}", new Vector3(x, 0f, 4.8f), new Vector3(1.8f, 1.3f, 2.8f), 0.25f);
+            foreach (float x in new[] { 62f, 64.8f, 67.6f, 70.4f }) r.Prop($"Car_North_{x:0}", new Vector3(x, 0f, 8.8f), new Vector3(1.8f, 1.3f, 2.2f), 0.25f);
+            r.Prop("Car_Human", new Vector3(70.4f, 0f, 4.8f), new Vector3(1.9f, 1.3f, 4.6f), 0.05f);
+            r.Sign("Sign_Plate", "HUMAN", new Vector3(70.4f, 0.7f, 2.48f), Vector3.back, new Vector2(1f, 0.25f), 48);
+            r.Prop("Glove_Box", new Vector3(68.9f, 0f, 3.9f), new Vector3(0.5f, 0.9f, 0.5f), 0.15f);
+            r.Item("Sunglasses", DemoItems.Sunglasses(), new Vector3(68.9f, 0.95f, 3.75f), new Vector3(0.2f, 0.04f, 0.1f));
+            r.Capsule("Tin_Unknown", DrugType.NalconMind, new Vector3(68.9f, 1f, 4.05f));
+            FlagSwitch door = r.Switch("Car_Door", new Vector3(69.4f, 1f, 5.6f), CarDoor, "Get in?", "get in", "");
             door.requiredItem = SunglassesId;
             EditorUtility.SetDirty(door);
             List<ScriptStep> lines = DemoScripts.Steps(File, "cs11");
-            r.Beat("X1_Clothes", "demo_x1_clothes", new Vector3(68.2f, 1f, 6f), new Vector3(2f, 2f, 5f),
+            r.Beat("X1_Clothes", "demo_x1_clothes", new Vector3(68f, 1f, 4.6f), new Vector3(2f, 2f, 5f),
                 ScriptStep.Radio("", "cs11_clothes", "[Folded clothes on the seat, a cap on top. She wears them. The glove box is open.]"));
             var readout = new List<ScriptStep> { ScriptStep.WaitItem(SunglassesId), ScriptStep.Raise(ReadoutOn) };
             if (lines.Count > 0) readout.Add(lines[0]);

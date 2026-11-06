@@ -34,6 +34,14 @@ namespace GlorifiedBody.Core
         private bool secondWindAvailable = true;
         private bool secondWindActive = false;
         private float secondWindInvulnerableUntil = -1f;
+        private float lastHpInvulnerableUntil = -1f;
+
+        /// <summary>
+        /// Her last HP (Bruno, 2026-11-06: "any hit that would kill the player will first degrade them to 1 hp and then the next one
+        /// triggers second wind or kills them. reason: this makes impossible for any enemy to wipe out the player in one hit"): for
+        /// this long no hit lands, so the next round of a burst cannot finish her.
+        /// </summary>
+        public const float LastHpInvulnerableSeconds = 0.5f;
 
         [Header("Events")]
         public UnityEvent<float> OnDamaged;
@@ -47,7 +55,7 @@ namespace GlorifiedBody.Core
         public bool IsDead { get; private set; }
         /// <summary>The frame of the death: a "fatal" hit on a body dead before that frame is not the kill.</summary>
         public int DeathFrame { get; private set; } = -1;
-        public bool IsInvulnerable => invulnerable || runtimeInvulnerable || IsSecondWindInvulnerable;
+        public bool IsInvulnerable => invulnerable || runtimeInvulnerable || IsSecondWindInvulnerable || lastHpInvulnerableUntil > Time.time;
         public bool IsSecondWindEnabled => enableSecondWind;
         public bool IsSecondWindAvailable => secondWindAvailable;
         public bool IsSecondWindActive => secondWindActive;
@@ -72,6 +80,13 @@ namespace GlorifiedBody.Core
         {
             if (IsDead || IsInvulnerable) return;
 
+            // A hit that would kill her from above 1 HP leaves her at 1 HP. Only the next one can take the second wind or kill her.
+            if (isPlayerHealth && currentHealth > 1f && amount >= currentHealth)
+            {
+                amount = currentHealth - 1f;
+                lastHpInvulnerableUntil = Time.time + LastHpInvulnerableSeconds;
+            }
+
             currentHealth -= amount;
             currentHealth = Mathf.Max(currentHealth, 0);
 
@@ -91,6 +106,16 @@ namespace GlorifiedBody.Core
 
                 Die();
             }
+        }
+
+        /// <summary>A death with no hit (a debug key, a test, a script): it passes the 1 HP rule and the second wind.</summary>
+        public void Kill()
+        {
+            if (IsDead) return;
+            float was = currentHealth;
+            currentHealth = 0f;
+            OnDamaged?.Invoke(was);
+            Die();
         }
 
         public void Heal(float amount)

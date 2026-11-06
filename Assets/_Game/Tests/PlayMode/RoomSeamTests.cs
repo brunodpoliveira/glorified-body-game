@@ -191,7 +191,7 @@ namespace GlorifiedBody.Tests.PlayMode
         {
             Health.SetInvulnerable(false);
             Health.SetSecondWindEnabled(false);
-            Health.TakeDamage(Health.MaxHealth * 10f);
+            Health.Kill();
         }
 
         private IEnumerator Die()

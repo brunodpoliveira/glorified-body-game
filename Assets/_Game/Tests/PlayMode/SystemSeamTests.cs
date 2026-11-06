@@ -91,7 +91,7 @@ namespace GlorifiedBody.Tests.PlayMode
             drugs.DebugSet(DrugType.Nalcon, 1);
             health.SetInvulnerable(false);
             health.SetSecondWindEnabled(false);
-            health.TakeDamage(health.MaxHealth * 10f);
+            health.Kill();
             Assert.IsTrue(health.IsDead, "she died");
             yield return null;
             powers.UseDrug();
@@ -131,6 +131,7 @@ namespace GlorifiedBody.Tests.PlayMode
             health.SetInvulnerable(false);
             health.SetSecondWindEnabled(true);
             health.RearmSecondWind();
+            health.SetHealth(1f); // at her last HP: this hit takes the second wind
             health.TakeDamage(health.MaxHealth * 10f);
             Assert.IsTrue(health.IsSecondWindActive, "the second wind");
             GameManager.Instance.Pause();

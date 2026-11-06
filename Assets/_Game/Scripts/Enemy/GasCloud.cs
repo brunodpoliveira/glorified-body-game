@@ -9,7 +9,7 @@ namespace GlorifiedBody.Enemy
     /// The poison cloud of a gas grenade (Bruno, 2026-10-24: the gas is poison; "the soldiers and guards have
     /// masks"). For its seconds it hurts Lucy while she stands in its radius, damagePerSecond in ticks of 0.25 s.
     /// The enemies wear masks: it never hurts them. A green ring on the floor shows its edge, and the vendor smoke
-    /// (tinted green, ShotEffects.gasPrefab) fills it. The dodge's invulnerability skips a tick. Numbers PROPOSED.
+    /// (tinted white, Bruno, 2026-11-06: "change the smoke from green to white"; ShotEffects.gasPrefab) fills it. The dodge's invulnerability skips a tick. Numbers PROPOSED.
     /// </summary>
     public sealed class GasCloud : MonoBehaviour
     {
@@ -47,7 +47,7 @@ namespace GlorifiedBody.Enemy
                 // The vendor smoke grenade's own burst (Explosion_A) stays off: the gas sound below is the only one.
                 GameObject smoke = ShotEffects.SpawnSilent(fx.gasPrefab, centre, Quaternion.identity, obj.transform);
                 smoke.transform.localScale = Vector3.one * radius / 6f; // the vendor smoke spreads about 6 m: fit the ring
-                Color gas = new Color(0.75f, 1f, 0.35f, 0.6f); // with the smoke texture's own alpha
+                Color gas = new Color(0.93f, 0.93f, 0.9f, 0.6f); // with the smoke texture's own alpha
                 foreach (ParticleSystem ps in smoke.GetComponentsInChildren<ParticleSystem>())
                 {
                     var main = ps.main;

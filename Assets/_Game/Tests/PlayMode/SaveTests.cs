@@ -115,7 +115,7 @@ namespace GlorifiedBody.Tests.PlayMode
             lucy.GetComponent<TankController>().Teleport(new Vector3(2f, 0f, -2f), 0f);
             health.SetInvulnerable(false);
             health.SetSecondWindEnabled(false);
-            health.TakeDamage(health.MaxHealth * 10f);
+            health.Kill();
             yield return WaitUntil(() => GameManager.Instance.IsGameOver, 5f);
             Assert.IsTrue(GameManager.Instance.IsGameOver, "she died");
             int applied = SaveSystem.Applies;

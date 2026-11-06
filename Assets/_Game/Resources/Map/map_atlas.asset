@@ -1112,11 +1112,11 @@ MonoBehaviour:
     marks:
     - kind: 1
       path: '[World]/[X1]/[Props]/Sunglasses'
-      position: {x: 81.1, y: -26.15}
+      position: {x: 81.4, y: -27.25}
       label: SUNGLASSES
     - kind: 1
       path: '[World]/[X1]/[Props]/Tin_Unknown'
-      position: {x: 81.1, y: -25.85}
+      position: {x: 81.4, y: -26.95}
       label: EDGAR CAPSULE
   - scene: R1
     world: Demo

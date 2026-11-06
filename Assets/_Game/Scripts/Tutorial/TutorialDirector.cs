@@ -477,7 +477,7 @@ namespace GlorifiedBody.Tutorial
                 () => Guard == null || Guard.IsDominated || Guard.Current == SoldierBrain.Phase.Dead,
                 onEnter: () => SetFigureSelectable(Guard != null ? Guard.gameObject : null, true)));
             steps.Add(new TutorialStep("short",
-                "The overflow. Your SHORT bar is full: the next faculty shorts. Every faculty you use brings it closer. Below half your body, a short kills you. A second wind saves you once. The SHORT capsule ends it.",
+                "The overflow. Your SHORT bar is full: the next faculty shorts. Every faculty you use brings it closer. Below half your body, a short kills you. A second wind saves you once, and the short then takes no more HP. The SHORT capsule ends it.",
                 "{Charge} starts the short. {UseDrug} opens your drugs on the SHORT capsule: {Interact} twice ends it.",
                 () => shortBegan && shortEnded,
                 onEnter: () =>

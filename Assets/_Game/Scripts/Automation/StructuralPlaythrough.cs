@@ -279,7 +279,7 @@ namespace GlorifiedBody.Automation
             playerHealth.SetSecondWindEnabled(false);
             playerHealth.SetInvulnerable(false);
             playerHealth.SetRuntimeInvulnerable(false);
-            playerHealth.TakeDamage(playerHealth.MaxHealth * 10f);
+            playerHealth.Kill();
             yield return WaitUntilReal(() => gm.IsGameOver, 8f);
             Record("force_death", gm.IsGameOver && playerHealth.IsDead, $"dead={playerHealth.IsDead} state={gm.CurrentState} timeScale={Time.timeScale:0.00}");
 

@@ -23,7 +23,7 @@ namespace GlorifiedBody.DebugTools
 
             health.SetSecondWindEnabled(false);
             health.SetRuntimeInvulnerable(false);
-            health.TakeDamage(health.MaxHealth * 10f);
+            health.Kill();
             Debug.Log($"[DebugKillKey] {key}: player killed.");
         }
     }

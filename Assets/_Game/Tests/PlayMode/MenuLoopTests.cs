@@ -85,7 +85,7 @@ namespace GlorifiedBody.Tests.PlayMode
 
             float t0 = Time.realtimeSinceStartup;
             health.SetSecondWindEnabled(false); // the second wind has its own test; this one is the death flow
-            health.TakeDamage(9999f);
+            health.Kill();
             yield return WaitUntil(() => GameManager.Instance.IsGameOver, 4f); // her fall first (PlayerDeathFall, 1.6 s)
             float elapsed = Time.realtimeSinceStartup - t0;
             Assert.IsTrue(health.IsDead, "player dead");

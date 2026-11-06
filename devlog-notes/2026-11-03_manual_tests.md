@@ -135,3 +135,20 @@ If the console shows a red line, copy it too.
 | 61 | Stay away for 8 s. | "Lost her." They walk in pairs, one at a time. | All run at once. |
 | 62 | Step into a soldier's sight. | "Contact!" The fight starts again. | They walk past you. |
 | 63 | Kill all four of G2, then take the release in G9, and wait 20 s. | Four new soldiers come for you. | Nobody comes. |
+
+## L. The tutorial, the gap, the coda (2026-11-06)
+
+| # | Do | Expected | If faulty |
+|---|---|---|---|
+| 64 | Main menu > TUTORIAL. Walk through the steps. | Grey boxes only. 34 steps. No step blocks you, even if you break the box or kill a figure. | A texture shows, or a step cannot end. |
+| 65 | In the demo, G2: the door north at x 18, the riser room. Walk into the shaft. | You stand again on your side, unhurt. | You stay in the pit. |
+| 66 | Press 3, lift a crate, drop it in the shaft, walk over. | It lies level with the floor. Two capsules wait behind it. | You trip or fall. |
+| 67 | In a short with the second wind ready and low HP. | At 1 HP the short goes on to its end. HP stays at 1. | It ends, or you die. |
+| 68 | Play the demo to the end of U1. | A cut to the car park, no HUD. The car door gives no prompt. | The title comes, or the door opens. |
+| 69 | Take the sunglasses from the glove box, then the tin. | The HUD comes back. The tin says UNKNOWN CAPSULE, and it does not work. | The tin works. |
+| 70 | Use the car door. | The tail lights text, the bulletin, then the shop. | Nothing. |
+| 71 | Walk to the counter in the shop. | The attendant's lines, the flashback, "Get up.", "...Yes." Key 4 works now. He follows you. | Key 4 stays dead. |
+| 72 | In the service bay, take the mechanic with a full circle. Press the defend key. | The attendant wakes and runs. The mechanic uses the switch, and the shutter opens. | The shutter stays. |
+| 73 | Kill the mechanic instead. | After 15 s a spare comes out, and the shutter stays shut. | The shutter opens, or nobody comes. |
+| 74 | In the toll yard, try the guard unhurt, then hurt him, take him, send him. | NOT WEAK ENOUGH, then the barrier rises, then the title. | |
+| 75 | A gas grenade in AI TEST. | The smoke is white. The ring on the floor is still green. | Green smoke. |

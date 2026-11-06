@@ -625,11 +625,11 @@ namespace GlorifiedBody.Tests.PlayMode
             tex.ReadPixels(new Rect(0, 0, 320, 180), 0, 0);
             tex.Apply();
             RenderTexture.active = null;
-            int green = tex.GetPixels().Count(c => c.g > 0.25f && c.g > c.r * 1.15f && c.g > c.b * 1.3f);
+            int white = tex.GetPixels().Count(c => c.g > 0.25f && Mathf.Abs(c.r - c.g) < 0.12f && Mathf.Abs(c.b - c.g) < 0.15f);
             UnityEngine.Object.Destroy(go);
-            Debug.Log($"[EnemyAiTests] gas: {particles} particles, {green} green pixels of {320 * 180}");
+            Debug.Log($"[EnemyAiTests] gas: {particles} particles, {white} grey or white pixels of {320 * 180}");
             Assert.Greater(particles, 10, "the cloud emits smoke");
-            Assert.Greater(green, 320 * 180 / 50, "the smoke shows green (2 percent of the frame or more)");
+            Assert.Greater(white, 320 * 180 / 50, "the smoke shows white (Bruno, 2026-11-06), 2 percent of the frame or more");
         }
 
         private static Vector3 Flat(Vector3 v) => new Vector3(v.x, 0f, v.z);

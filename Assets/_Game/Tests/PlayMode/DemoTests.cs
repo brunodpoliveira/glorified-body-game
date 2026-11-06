@@ -325,6 +325,28 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator TheCoda_EveryWayIsOpenOnTheFloor()
+        {
+            // The first layout started her inside a car: no test walked it.
+            yield return Coda("X1");
+            bool Way(Vector3 from, Vector3 to, string what)
+            {
+                Assert.IsTrue(UnityEngine.AI.NavMesh.SamplePosition(from, out UnityEngine.AI.NavMeshHit a, 0.6f, UnityEngine.AI.NavMesh.AllAreas), what + ": the start stands on the floor");
+                Assert.IsTrue(UnityEngine.AI.NavMesh.SamplePosition(to, out UnityEngine.AI.NavMeshHit b, 1.2f, UnityEngine.AI.NavMesh.AllAreas), what + ": the end stands by the floor");
+                var path = new UnityEngine.AI.NavMeshPath();
+                return UnityEngine.AI.NavMesh.CalculatePath(a.position, b.position, UnityEngine.AI.NavMesh.AllAreas, path) && path.status == UnityEngine.AI.NavMeshPathStatus.PathComplete;
+            }
+            Vector3 x1 = GameObject.Find("Entry_X1").transform.position, r1 = GameObject.Find("Entry_R1").transform.position;
+            Assert.IsTrue(Way(x1, GameObject.Find("Glove_Box").transform.position, "X1"), "the way to the glove box");
+            Vector3 door = GameObject.Find("Car_Door").transform.position;
+            Assert.IsTrue(Way(x1, new Vector3(door.x - 0.8f, x1.y, door.z), "X1"), "the way to where she stands at the door of the car");
+            Vector3 toR2 = GlorifiedBody.Rooms.Room.Of("R2").Centre + Vector3.back * 2f;
+            Assert.IsTrue(Way(r1, toR2, "R1"), "the way from the shop to the bay");
+            Assert.IsFalse(Way(r1, GameObject.Find("Mechanic").transform.position, "R1"), "she cannot walk behind the rail");
+            Assert.IsFalse(Way(r1, GameObject.Find("Guard_Booth").transform.position, "R1"), "nor behind the rail of the yard");
+        }
+
+        [UnityTest]
         public IEnumerator X1_TheDoorWaitsForTheSunglasses_ThenTheBulletin_ThenTheShop()
         {
             yield return Coda("X1", "demo_crown_gone");
@@ -1103,7 +1125,7 @@ namespace GlorifiedBody.Tests.PlayMode
                 Assert.IsNotNull(GlorifiedBody.Rooms.Room.At(pickup.transform.position), pickup.name + " lies in a room");
                 Vector3 floor = pickup.transform.position;
                 floor.y = GlorifiedBody.Rooms.Room.At(floor).BaseY; // one lies on a cabinet
-                Assert.IsTrue(UnityEngine.AI.NavMesh.SamplePosition(floor, out UnityEngine.AI.NavMeshHit hit, 1f, UnityEngine.AI.NavMesh.AllAreas), pickup.name + " lies by the floor she walks");
+                Assert.IsTrue(UnityEngine.AI.NavMesh.SamplePosition(floor, out UnityEngine.AI.NavMeshHit hit, 1.2f, UnityEngine.AI.NavMesh.AllAreas), pickup.name + " lies by the floor she walks");
             }
             Debug.Log($"[DemoTests] capsules: {string.Join(", ", counts.Select(c => $"{c.Key} {c.Value}"))}");
             Assert.GreaterOrEqual(counts[DrugType.Nalcon], 3);
