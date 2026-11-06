@@ -73,7 +73,7 @@ namespace GlorifiedBody.Editor
             // The floorplan v2 (2026-11-05).
             { "W13", "SECURITY POST" }, { "W14", "DAY ROOM" }, { "W15", "BREAK ROOM" }, { "W16", "COLD ROOM" }, { "W17", "STORAGE" },
             { "G9b", "COMMS" }, { "G10", "CAFETERIA" }, { "G11", "BREAK ROOM" }, { "G12", "CONFERENCE" }, { "G13", "ADMISSIONS" },
-            { "G14", "BUILDERS' STORE" }, { "G15", "STAFF TOILETS" },
+            { "G14", "BUILDERS' STORE" }, { "G15", "STAFF TOILETS" }, { "G16", "RISER ROOM" },
         };
 
         [MenuItem("GlorifiedBody/Build Map Atlas")]

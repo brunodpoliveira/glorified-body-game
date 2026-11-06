@@ -71,6 +71,31 @@ Test room: EDGAR TEST (local, like the other rooms: its figures are markers, so 
 5. Inventory: columns with up and down inside a column. If you meant up and down to change the category, it is a small change.
 6. Kills by a dominated figure give her no exp, but the SHORT bar still rises with each kill, as with every death.
 
+## The second wind and the short (Bruno, changed the same day)
+
+```text
+actually the short goes on as normal, but it doesn't detract health while using up the second wind. reason: a player may strategically short themselves on purpose to save up on mk
+```
+
+The shock that would kill her takes the second wind and leaves her at 1 HP. The short then runs to its end, and it takes no more HP. The next short with no second wind can kill her.
+
+## Tutorial and the riser room
+
+```text
+when done redo the tutorial room to be fully greyboxed and include the new skills/habilities/interactions
+4: a new room (that'll be added by the game agent) that will have a gap that needs to be filled in by a box;
+```
+
+| Piece | What it does |
+|---|---|
+| Tutorial room | Plain grey boxes, flat light, no textures, no bake. The gym plus an annex through a fire door. 34 steps |
+| New steps | cancel, bars, fire_door, carry, outfit, edgar, edgar_send, edgar_guard. New words in blast, inventory and short |
+| No soft lock | If she breaks the box or kills a figure, its step ends and the way opens |
+| mk_edgar | The room raises the flag only for its own steps, and drops it when she leaves |
+| G16, the riser room | Off the concourse. A shaft across the floor, two crates of 1.1 m, a capsule of two powers behind the shaft, the writer's sign. A step into the shaft puts her back on her side, with no harm (`PitReturn`) |
+| W11 whiteboard | The writer's new text, with FOURTH FACULTY: NOT FOR SHOWCASE |
+| The unknown capsule | Before the flag it shows UNKNOWN CAPSULE, and she cannot use it |
+
 ## Limits
 
 - **A dominated figure's grenade or rocket can still hurt her.** Only its bullets are safe. The test room has pistols and rifles only.
@@ -78,11 +103,19 @@ Test room: EDGAR TEST (local, like the other rooms: its figures are markers, so 
 - The mouse moves on the floor plane and the wheel moves the height. Psi-Ops, in your picture, may use the mouse for height. Say if you want that.
 - The lines of a dominated figure are placeholders until I take the writer's.
 - A box drop hurts nobody. A thrown prop still breaks, as before.
-- The tutorial has no step for the carry, the cancel or mk_edgar yet. They come when the power enters the game.
 - Nobody played any of it by hand.
 
 ## Proof
 
-Filled in at the end of the run.
+| Check | Result |
+|---|---|
+| Whole PlayMode suite, run `20261106-171149-test-playmode-491773` | 409 of 411 |
+| Failure 1: `ASoldier_TakesCover...` | A real leak: her power passed just over a low planter while he hid. The line now goes to his hips |
+| Failure 2: `TheWorld_LoadsOnce...` | The test's room list needed G16 |
+| Rerun of those and the tutorial, run `20261106-180514-test-playmode-504365` | 23 of 23 |
+| EditMode | 61 of 61, after the bake check became a no-bake check |
+| Bots | structural, tutorial, edgar, physics, demo, team pass |
+
+The whole suite did not run again after those corrections. It runs again after the coda.
 
 Shots: `~/MEGA/glorified-body-renders/game/physics_2026-11-06/`, `~/MEGA/glorified-body-renders/game/edgar_2026-11-06/`, `~/MEGA/glorified-body-renders/game/demo/team_ai_2026-11-06/team_00_inventory.png`.

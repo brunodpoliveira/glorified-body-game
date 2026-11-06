@@ -21,15 +21,15 @@ using GlorifiedBody.UI;
 namespace GlorifiedBody.Tests.PlayMode
 {
     /// <summary>
-    /// The tutorial mode (Bruno, 2026-10-22): the gym loads with the director, the prompt, the targets and the
-    /// baked light; the main menu's TUTORIAL button opens it; the prompt shows the bound keys; a player who
+    /// The tutorial mode (Bruno, 2026-10-22): the gym loads with the director, the prompt, the targets, in grey
+    /// boxes; the main menu's TUTORIAL button opens it; the prompt shows the bound keys; a player who
     /// does each thing completes every step in order and the level completes; every floor point is in the
     /// frame of its camera. Batch: tools/unity.sh test playmode.
     /// </summary>
     public class TutorialTests
     {
         private const string MainMenu = "Main_Menu";
-        private static readonly string[] ExpectedSteps = { "walk", "run", "dodge", "switch", "blast", "fire", "lift_throw", "slam", "prop", "catch", "floor_shield", "grenade", "shield", "cover", "capsule", "feed", "log", "scan_image", "key", "door", "inventory", "map", "tape", "scan_video", "short", "complete" };
+        private static readonly string[] ExpectedSteps = { "walk", "run", "dodge", "switch", "blast", "cancel", "fire", "lift_throw", "slam", "prop", "catch", "floor_shield", "grenade", "shield", "cover", "bars", "capsule", "feed", "log", "scan_image", "key", "door", "inventory", "map", "tape", "scan_video", "fire_door", "carry", "outfit", "edgar", "edgar_send", "edgar_guard", "short", "complete" };
 
         private TutorialDirector director;
 
@@ -165,7 +165,7 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator TheGym_Loads_WithTheDirectorThePromptTheTargetsAndTheBakedLight()
+        public IEnumerator TheGym_Loads_WithTheDirectorThePromptTheTargets_InGreyBoxes()
         {
             yield return null;
             CollectionAssert.AreEqual(ExpectedSteps, director.Steps.Select(s => s.Id).ToArray(), "the steps of the demonstration, in order");
@@ -194,10 +194,15 @@ namespace GlorifiedBody.Tests.PlayMode
             GameObject crate = GameObject.Find("Prop_Crate");
             Assert.IsNotNull(crate, "the crate for the prop step");
             Assert.IsTrue(crate.GetComponent<LockOnTargetable>() != null && crate.GetComponent<LockOnTargetable>().IsProp, "the crate is a prop target");
-            Assert.AreEqual(4, UnityEngine.Object.FindObjectsByType<FixedCamera>(FindObjectsSortMode.None).Length, "three cameras in the gym, one in the closet");
+            Assert.AreEqual(6, UnityEngine.Object.FindObjectsByType<FixedCamera>(FindObjectsSortMode.None).Length, "three cameras in the gym, one in the closet");
             Assert.IsNotNull(UnityEngine.Object.FindFirstObjectByType<LockedDoor>(), "the locked door");
             Assert.IsNotNull(TutorialDrive.FindPickup("test_key"), "the test key");
-            Assert.Greater(LightmapSettings.lightmaps.Length, 0, "the baked bounce (TutorialSetup.BakeTutorial)");
+            Assert.AreEqual(0, LightmapSettings.lightmaps.Length, "a greybox: no bake (Bruno, 2026-11-06)");
+            foreach (string part in new[] { "Box_Tutorial", "Plate", "Gate_Leaf", "Switch_Far", "Locker_Uniform", "FireDoor_Tutorial", TutorialDirector.WorkerName, TutorialDirector.GuardName })
+                Assert.IsNotNull(GameObject.Find(part), part + ", the annex");
+            foreach (Renderer r in UnityEngine.Object.FindObjectsByType<Renderer>(FindObjectsSortMode.None))
+                if (r.gameObject.scene.name == TutorialDirector.SceneName && r.sharedMaterial != null && r.sharedMaterial.HasProperty("_BaseMap") && r.GetComponentInParent<Animator>() == null && r.GetComponentInParent<GlorifiedBody.Enemy.EnemyGun>() == null && r.GetComponentInParent<GlorifiedBody.Destruction.Breakable>() == null)
+                    Assert.IsNull(r.sharedMaterial.GetTexture("_BaseMap"), r.name + " carries a texture: a greybox has none");
             Assert.IsNotNull(UnityEngine.Object.FindFirstObjectByType<LookQualityApplier>(), "the graphics options apply here");
             Assert.IsNull(LookDirector.Instance, "no look director: a game room");
         }
@@ -216,7 +221,7 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.AreEqual(TutorialDirector.SceneName, SceneManager.GetActiveScene().name, "the button opens the gym");
         }
 
-        [UnityTest]
+        [UnityTest, Timeout(420000)] // 34 steps played by hand
         public IEnumerator APlayer_WhoDoesEachThing_CompletesEveryStepInOrder()
         {
             var pad = new VirtualPad();
@@ -241,7 +246,7 @@ namespace GlorifiedBody.Tests.PlayMode
                         float waitUntil = Time.realtimeSinceStartup + 1.5f;
                         while (director.StepIndex == i && !director.IsComplete && Time.realtimeSinceStartup < waitUntil) yield return null;
                     }
-                    Assert.IsTrue(director.StepIndex != i || director.IsComplete, $"{id}: done by doing it ({attempts} attempts, {Time.realtimeSinceStartup - stepStart:0.0} s, timeScale {Time.timeScale}, playing {GameManager.Instance.IsPlaying})");
+                    Assert.IsTrue(director.StepIndex != i || director.IsComplete, $"{id}: done by doing it, last result '{context.Powers?.LastResult}', lock '{context.Lucy.GetComponent<GlorifiedBody.Player.LockOnController>()?.TargetName}', she at {context.Lucy.position} ({attempts} attempts, {Time.realtimeSinceStartup - stepStart:0.0} s, timeScale {Time.timeScale}, playing {GameManager.Instance.IsPlaying})");
                     Debug.Log($"[TutorialTests] {id} done: {attempts} attempts, {Time.realtimeSinceStartup - stepStart:0.0} s");
                 }
                 Assert.IsTrue(director.IsComplete, "the demonstration is complete");

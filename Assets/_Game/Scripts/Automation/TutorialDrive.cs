@@ -76,6 +76,132 @@ namespace GlorifiedBody.Automation
                     yield return null;
                     yield return HoldChargeFull(c);
                     break;
+                case "cancel":
+                    c.Pad.Tap(InputManager.GameAction.PowerBlast);
+                    yield return null;
+                    c.Pad.SetHeld(InputManager.GameAction.Charge, true);
+                    yield return BotClock.Wait(0.4f);
+                    c.Pad.Tap(InputManager.GameAction.Defend);
+                    yield return BotClock.Wait(0.2f);
+                    c.Pad.SetHeld(InputManager.GameAction.Charge, false);
+                    yield return BotClock.Wait(0.2f);
+                    break;
+                case "bars":
+                    foreach (InputManager.GameAction key in new[] { InputManager.GameAction.PowerBlast, InputManager.GameAction.PowerFire, InputManager.GameAction.PowerTelekinesis })
+                    {
+                        c.Pad.Tap(key);
+                        yield return BotClock.Wait(0.2f);
+                    }
+                    break;
+                case "fire_door":
+                {
+                    GlorifiedBody.Interaction.DoorLever lever = NearestLever(c);
+                    if (lever == null) break;
+                    yield return WalkTo(c, new Vector3(lever.Point.x, 0f, lever.Point.z - 0.9f), run: false, radius: 0.25f);
+                    yield return TurnTo(c, lever.Point, 5f);
+                    c.Pad.Tap(InputManager.GameAction.Interact);
+                    yield return BotClock.Wait(1f);
+                    c.Pad.Tap(InputManager.GameAction.Interact);
+                    yield return BotClock.Wait(1f);
+                    break;
+                }
+                case "carry":
+                {
+                    GameObject box = c.Director.Box;
+                    if (box == null) break;
+                    c.Pad.Tap(InputManager.GameAction.PowerTelekinesis);
+                    yield return WalkThroughTheFireDoor(c);
+                    yield return WalkTo(c, box.transform.position + Vector3.back * 2.2f + Vector3.right * 0.2f, run: false, radius: 0.5f);
+                    yield return TurnTo(c, box.transform.position, 6f);
+                    c.Pad.SetHeld(InputManager.GameAction.Defend, true);
+                    float t0 = BotClock.Now;
+                    while ((c.Powers == null || !c.Powers.Carrying) && BotClock.Now - t0 < 2f) yield return null;
+                    yield return BotClock.Wait(0.5f);
+                    c.Pad.Scroll = 0.05f;
+                    yield return BotClock.Wait(0.5f);
+                    c.Pad.Scroll = 0f;
+                    Vector3 plate = c.Director.Plate != null ? c.Director.Plate.transform.position : box.transform.position;
+                    Camera cam = Camera.main;
+                    t0 = BotClock.Now;
+                    while (BotClock.Now - t0 < 8f)
+                    {
+                        Vector3 left = plate - box.transform.position;
+                        left.y = 0f;
+                        if (left.magnitude < 0.08f) break;
+                        Vector3 right = Vector3.ProjectOnPlane(cam.transform.right, Vector3.up).normalized, away = Vector3.ProjectOnPlane(cam.transform.forward, Vector3.up).normalized;
+                        c.Pad.Look = new Vector2(Mathf.Clamp(Vector3.Dot(left, right) * 3f, -1f, 1f), Mathf.Clamp(Vector3.Dot(left, away) * 3f, -1f, 1f));
+                        yield return null;
+                    }
+                    c.Pad.Look = Vector2.zero;
+                    c.Pad.SetHeld(InputManager.GameAction.Defend, false);
+                    yield return BotClock.Wait(1.5f);
+                    break;
+                }
+                case "outfit":
+                {
+                    if (c.Director.Locker == null) break;
+                    yield return WalkTo(c, new Vector3(4.6f, 0f, GlorifiedBody.Tutorial.TutorialDirector.GateZ), run: false, radius: 0.4f);
+                    yield return WalkTo(c, new Vector3(7.6f, 0f, GlorifiedBody.Tutorial.TutorialDirector.GateZ), run: false, radius: 0.4f);
+                    yield return WalkTo(c, c.Director.Locker.transform.position + Vector3.forward * 1.1f, run: false, radius: 0.3f);
+                    yield return TurnTo(c, c.Director.Locker.Point, 5f);
+                    c.Pad.Tap(InputManager.GameAction.Interact);
+                    yield return BotClock.Wait(0.3f);
+                    c.Pad.Tap(InputManager.GameAction.Interact);
+                    yield return BotClock.Wait(0.6f);
+                    break;
+                }
+                case "edgar":
+                {
+                    GlorifiedBody.Enemy.CivilianBrain worker = c.Director.Worker;
+                    if (worker == null) break;
+                    // Back through the gate to the rail.
+                    if (c.Lucy.position.x > GlorifiedBody.Tutorial.TutorialDirector.GateX)
+                    {
+                        yield return WalkTo(c, new Vector3(7.6f, 0f, GlorifiedBody.Tutorial.TutorialDirector.GateZ), run: false, radius: 0.4f);
+                        yield return WalkTo(c, new Vector3(4.6f, 0f, GlorifiedBody.Tutorial.TutorialDirector.GateZ), run: false, radius: 0.4f);
+                    }
+                    yield return WalkTo(c, new Vector3(worker.transform.position.x, 0f, 23.2f), run: false, radius: 0.4f);
+                    c.Pad.Tap(InputManager.GameAction.PowerDomination);
+                    yield return BotClock.Wait(0.2f);
+                    LockOnController lockOn = c.Lucy.GetComponent<LockOnController>();
+                    for (int i = 0; i < 8 && lockOn.CurrentTarget != worker.GetComponent<LockOnTargetable>(); i++)
+                    {
+                        c.Pad.Tap(InputManager.GameAction.SwitchTarget);
+                        yield return BotClock.Wait(0.2f);
+                    }
+                    yield return HoldChargeFull(c);
+                    yield return BotClock.Wait(0.3f);
+                    break;
+                }
+                case "edgar_send":
+                    c.Pad.Tap(InputManager.GameAction.Defend);
+                    yield return BotClock.Wait(3f);
+                    break;
+                case "edgar_guard":
+                {
+                    GlorifiedBody.Enemy.SoldierBrain guard = c.Director.Guard;
+                    if (guard == null) break;
+                    if (c.Lucy.position.x < GlorifiedBody.Tutorial.TutorialDirector.GateX)
+                    {
+                        yield return WalkTo(c, new Vector3(4.6f, 0f, GlorifiedBody.Tutorial.TutorialDirector.GateZ), run: false, radius: 0.4f);
+                        yield return WalkTo(c, new Vector3(7.2f, 0f, GlorifiedBody.Tutorial.TutorialDirector.GateZ), run: false, radius: 0.4f);
+                    }
+                    LockOnController lockOn = c.Lucy.GetComponent<LockOnController>();
+                    lockOn.SetTarget(guard.GetComponent<LockOnTargetable>());
+                    if (guard.GetComponent<GlorifiedBody.Core.Health>().CurrentHealth >= guard.GetComponent<GlorifiedBody.Core.Health>().MaxHealth)
+                    {
+                        c.Pad.Tap(InputManager.GameAction.PowerBlast);
+                        yield return BotClock.Wait(0.2f);
+                        yield return HoldCharge(c, 0.4f);
+                        yield return BotClock.Wait(0.2f);
+                    }
+                    c.Pad.Tap(InputManager.GameAction.PowerDomination);
+                    yield return BotClock.Wait(0.2f);
+                    lockOn.SetTarget(guard.GetComponent<LockOnTargetable>());
+                    yield return HoldChargeFull(c);
+                    yield return BotClock.Wait(0.3f);
+                    break;
+                }
                 case "fire":
                     c.Pad.Tap(InputManager.GameAction.PowerFire);
                     yield return null;
@@ -404,6 +530,23 @@ namespace GlorifiedBody.Automation
                 }
                 pad.ReleaseAll();
             }
+        }
+
+        /// <summary>The lever on her side of the fire door.</summary>
+        private static GlorifiedBody.Interaction.DoorLever NearestLever(Context c)
+        {
+            GlorifiedBody.Interaction.DoorLever best = null;
+            foreach (GlorifiedBody.Interaction.DoorLever lever in Object.FindObjectsByType<GlorifiedBody.Interaction.DoorLever>(FindObjectsSortMode.None))
+                if (best == null || Flat(c.Lucy.position, lever.transform.position) < Flat(c.Lucy.position, best.transform.position)) best = lever;
+            return best;
+        }
+
+        /// <summary>From the gym into the annex, by the door's middle.</summary>
+        private static IEnumerator WalkThroughTheFireDoor(Context c)
+        {
+            if (c.Lucy.position.z > 17.6f) yield break;
+            yield return WalkTo(c, new Vector3(2.5f, 0f, 16.5f), run: false, radius: 0.3f);
+            yield return WalkTo(c, new Vector3(2.5f, 0f, 18.6f), run: false, radius: 0.4f);
         }
 
         /// <summary>

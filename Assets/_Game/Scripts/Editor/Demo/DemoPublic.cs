@@ -28,7 +28,7 @@ namespace GlorifiedBody.Editor.Demo
             {
                 Room("G1", "STAIR LANDING", 0, 0, 5, 5, 3f, G1, new Door('N', 2.5f, "S1"), new Door('E', 2.5f, "G2")),
                 Room("G2", "THE CONCOURSE", 5, 0, 35, 6, 6f, G2, new Door('W', 2.5f, "G1"), new Door('N', 12, "G3"), new Door('N', 28, "G4"), new Door('S', 20, "G5", fire: true),
-                    new Door('S', 8, "G13"), new Door('S', 30, "G10")),
+                    new Door('S', 8, "G13"), new Door('S', 30, "G10"), new Door('N', 18, "G16")),
                 Room("G3", "THE DONOR WALL", 8, 6, 16, 12, 3.5f, G3, new Door('S', 12, "G2")),
                 Room("G4", "THE CHAPEL", 24, 6, 32, 14, 4f, G4, new Door('S', 28, "G2")),
                 // The floorplan v2 (2026-11-05) moved two side rooms off G5's walls: G13 takes G6's old place (it needs G2 and G7), G10

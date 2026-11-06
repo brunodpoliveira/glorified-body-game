@@ -5,6 +5,7 @@ using UnityEditor;
 using UnityEngine;
 using GlorifiedBody.Enemy;
 using GlorifiedBody.Interaction;
+using GlorifiedBody.Player;
 using GlorifiedBody.Story;
 
 namespace GlorifiedBody.Editor.Demo
@@ -56,6 +57,8 @@ namespace GlorifiedBody.Editor.Demo
             Spec("G13", "ADMISSIONS OFFICE", DemoItems.Floor1, DemoPublic.Music, 4, -9, 12, 0, 3.5f, G13, new Door('N', 8, "G2"), new Door('S', 8, "G7")),
             Spec("G14", "BUILDERS' STORAGE", DemoItems.Floor1, DemoPublic.Music, 26, -28, 32, -22, 4f, G14, new Door('W', -23, "U1")),
             Spec("G15", "STAFF TOILETS", DemoItems.Floor1, DemoPublic.Music, -2, -27, 6, -22, 3f, G15, new Door('N', 2, "G11")),
+            // The gap (Bruno, 2026-11-06), a side puzzle off the concourse, PROPOSED.
+            Spec("G16", "RISER ROOM", DemoItems.Floor1, DemoPublic.Music, 16, 6, 24, 12, 3.5f, G16, new Door('S', 18, "G2")),
         };
 
         private static RoomSpec Spec(string id, string title, string floor, string music, float x0, float z0, float x1, float z1, float height, System.Action<DemoRoom> dress, params Door[] doors)
@@ -63,6 +66,44 @@ namespace GlorifiedBody.Editor.Demo
             var spec = new RoomSpec { Id = id, Title = title, Floor = floor, Music = music, X0 = x0, Z0 = z0, X1 = x1, Z1 = z1, Height = height, Dress = dress };
             spec.Doors.AddRange(doors);
             return spec;
+        }
+
+        public const float GapX0 = 19.4f, GapX1 = 20.6f, CrateEdge = 1.1f;
+
+        /// <summary>
+        /// G16: a riser shaft cut across the floor (Bruno, 2026-11-06: "a gap that needs to be filled in by a box"). She cannot cross it.
+        /// A crate carried by mk_orzabal and dropped in it lies level with the floor. Two crates, because a thrown one breaks. Behind the
+        /// gap: two capsules. The sign is the writer's (PUZZLES.md, row 13).
+        /// </summary>
+        private static void G16(DemoRoom r)
+        {
+            RoomSpec s = r.Spec;
+            UnityEngine.Object.DestroyImmediate(r.Room.transform.Find("Floor").gameObject);
+            const float thick = CrateEdge + 0.3f;
+            float cz = (s.Z0 + s.Z1) * 0.5f, depth = s.Z1 - s.Z0;
+            r.Box(r.Room, "West_Floor", new Vector3((s.X0 + GapX0) * 0.5f, -thick * 0.5f, cz), new Vector3(GapX0 - s.X0, thick, depth), DemoRoom.Grey(0.42f));
+            r.Box(r.Room, "East_Floor", new Vector3((GapX1 + s.X1) * 0.5f, -thick * 0.5f, cz), new Vector3(s.X1 - GapX1, thick, depth), DemoRoom.Grey(0.42f));
+            float gapX = (GapX0 + GapX1) * 0.5f, gapW = GapX1 - GapX0;
+            GameObject pit = r.Box(r.Room, "Pit_Base", new Vector3(gapX, -CrateEdge - 0.05f, cz), new Vector3(gapW, 0.1f, depth), DemoRoom.Grey(0.08f));
+            foreach (float end in new[] { s.Z0 - 0.05f, s.Z1 + 0.05f })
+                r.Box(r.Room, $"Pit_End_{end:0}", new Vector3(gapX, -CrateEdge * 0.5f, end), new Vector3(gapW, CrateEdge, 0.1f), DemoRoom.Grey(0.08f));
+            GameObject back = MenuLoopSetup.EnsureChild(r.Room, "Pit_Back");
+            back.transform.position = new Vector3(GapX0 - 1f, 0.05f, cz);
+            GlorifiedBody.Interaction.PitReturn gap = MenuLoopSetup.EnsureComponent<GlorifiedBody.Interaction.PitReturn>(pit);
+            gap.size = new Vector2(gapW, depth);
+            gap.back = back.transform;
+            gap.floorAbove = CrateEdge + 0.05f;
+            EditorUtility.SetDirty(gap);
+
+            foreach ((string name, Vector3 at) in new[] { ("Riser_Crate_A", new Vector3(17.6f, 0f, 7.5f)), ("Riser_Crate_B", new Vector3(17.6f, 0f, 10.5f)) })
+            {
+                GameObject crate = PropAssets.Box(name, at, CrateEdge, 30f);
+                crate.GetComponent<Renderer>().sharedMaterial = DemoRoom.Grey(0.62f);
+                crate.transform.SetParent(r.Props.transform, true);
+            }
+            r.Capsule("Capsule_G16_A", DrugType.Nalcon, new Vector3(23f, 0.15f, 7.2f));
+            r.Capsule("Capsule_G16_B", DrugType.NalconFire, new Vector3(23f, 0.15f, 10.8f));
+            r.Sign("Sign_Riser", "RISER WORKS. FLOOR OPEN. USE THE BRIDGE BOARD.\nWho took the board? Stop walking on the crates.", new Vector3(16.17f, 1.9f, cz), Vector3.right, new Vector2(3.4f, 0.8f), 36);
         }
 
         // ── The ward ──────────────────────────────────────────────────

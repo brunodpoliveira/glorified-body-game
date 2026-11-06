@@ -62,21 +62,22 @@ MonoBehaviour:
     offset: {x: 30, y: 0}
     areas:
     - serializedVersion: 2
-      x: -4
-      y: 10.299999
-      width: 8
-      height: 7
+      x: -4.3
+      y: 10
+      width: 8.6
+      height: 7.5999985
     - serializedVersion: 2
       x: -0.9
       y: 8.4
       width: 1.8
       height: 1.6000004
+    - serializedVersion: 2
+      x: -6.3
+      y: 17.3
+      width: 16.6
+      height: 12.600002
     exits: []
     marks:
-    - kind: 1
-      path: Capsule
-      position: {x: -2.6, y: 13.5}
-      label: WARSPITE CAPSULE
     - kind: 1
       path: Closet_Pill
       position: {x: 0, y: 8.9}
@@ -85,6 +86,10 @@ MonoBehaviour:
       path: Door_Gym
       position: {x: 0, y: 10.35}
       label: the test key
+    - kind: 1
+      path: Capsule
+      position: {x: -2.6, y: 13.5}
+      label: WARSPITE CAPSULE
     - kind: 2
       path: Log_Clipboard
       position: {x: -3.72, y: 14.6}
@@ -743,6 +748,9 @@ MonoBehaviour:
     - path: G2/G10
       position: {x: 42.5, y: -31}
       targetScene: G10
+    - path: G2/G16
+      position: {x: 30.5, y: -25}
+      targetScene: G16
     marks: []
   - scene: G3
     world: Demo
@@ -1058,6 +1066,35 @@ MonoBehaviour:
       position: {x: 14.5, y: -53}
       targetScene: G11
     marks: []
+  - scene: G16
+    world: Demo
+    floor: demo_1
+    title: RISER ROOM
+    offset: {x: 0, y: 0}
+    areas:
+    - serializedVersion: 2
+      x: 28.5
+      y: -25
+      width: 3.4000015
+      height: 6
+    - serializedVersion: 2
+      x: 33.1
+      y: -25
+      width: 3.4000015
+      height: 6
+    exits:
+    - path: G16/G2
+      position: {x: 30.5, y: -25}
+      targetScene: G2
+    marks:
+    - kind: 1
+      path: '[World]/[G16]/[Props]/Capsule_G16_A'
+      position: {x: 35.5, y: -23.8}
+      label: WARSPITE CAPSULE
+    - kind: 1
+      path: '[World]/[G16]/[Props]/Capsule_G16_B'
+      position: {x: 35.5, y: -20.2}
+      label: EREBUS CAPSULE
   - scene: S1
     world: Demo
     floor: demo_2

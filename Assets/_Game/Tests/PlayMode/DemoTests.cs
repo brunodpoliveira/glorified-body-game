@@ -33,7 +33,7 @@ namespace GlorifiedBody.Tests.PlayMode
     {
         private const string World = "Demo";
         private static readonly string[] Rooms = { "W1", "W1B", "W2", "W3", "W4", "W5", "W6", "W7", "W8", "W9", "W10", "W11", "W12", "W13", "W14", "W15", "W16", "W17", "S1",
-            "G1", "G2", "G3", "G4", "G5", "G6", "G7", "G8", "G9", "G9b", "G10", "G11", "G12", "G13", "G14", "G15", "U1" }; // the floorplan v2 (2026-11-05)
+            "G1", "G2", "G3", "G4", "G5", "G6", "G7", "G8", "G9", "G9b", "G10", "G11", "G12", "G13", "G14", "G15", "G16", "U1" }; // the floorplan v2 (2026-11-05)
         private static readonly string[] MainWay = { "W1", "W1B", "W2", "W5", "W7", "W8", "W9", "W11", "W9", "W12", "S1", "G1", "G2", "G5", "G9", "G5", "U1" };
 
         [UnitySetUp]
@@ -889,6 +889,96 @@ namespace GlorifiedBody.Tests.PlayMode
             float near = second.Min(b => Vector3.Distance(b.transform.position, her));
             Debug.Log($"[DemoTests] the second team: from {far:0.0} m to {near:0.0} m in {Time.time - t0:0} s after the kill");
             Assert.Less(near, far - 5f, "they come for her");
+        }
+
+        [UnityTest]
+        public IEnumerator TheGap_SheCannotCross_ACrateFillsIt_ThenSheWalksOver()
+        {
+            // Bruno, 2026-11-06: "a new room ... that will have a gap that needs to be filled in by a box".
+            yield return LoadWorld();
+            yield return WaitUntil(() => CutscenePlayer.IsPlaying && CutscenePlayer.ShotIndex >= 0, 10f);
+            CutscenePlayer.Skip();
+            yield return WaitUntil(() => StoryFlags.Has("demo_w1_wake"), 10f);
+            var pad = new VirtualPad();
+            GameInput.SetBotSource(pad);
+            GameObject drive = new GameObject("[Pad]");
+            drive.AddComponent<PadCommit>().Pad = pad;
+            try
+            {
+                GameObject lucy = GameObject.FindGameObjectWithTag("Player");
+                lucy.GetComponentInChildren<Health>().SetInvulnerable(true);
+                TankController tank = lucy.GetComponent<TankController>();
+                PsychicPowers powers = lucy.GetComponent<PsychicPowers>();
+                GlorifiedBody.Rooms.Room room = GlorifiedBody.Rooms.Room.Of("G16");
+                Assert.IsNotNull(room, "the riser room");
+                Vector3 Plan(float x, float z) => room.transform.position + new Vector3(x, 0f, z);
+                GlorifiedBody.Interaction.PitReturn pit = room.GetComponentInChildren<GlorifiedBody.Interaction.PitReturn>();
+                GameObject crate = GameObject.Find("Riser_Crate_A");
+                Assert.IsNotNull(pit);
+                Assert.IsNotNull(crate);
+
+                // No crate: she walks in and comes back out on her side.
+                tank.Teleport(Plan(18.4f, 7.5f), 90f);
+                yield return new WaitForSeconds(0.3f);
+                pad.SetHeld(InputManager.GameAction.Forward, true);
+                yield return WaitUntil(() => pit.Returns > 0 || lucy.transform.position.x > Plan(20.8f, 0f).x, 6f);
+                pad.SetHeld(InputManager.GameAction.Forward, false);
+                Assert.Greater(pit.Returns, 0, "the gap stops her, and she comes back");
+                Assert.Less(lucy.transform.position.x, Plan(19.4f, 0f).x, "on her side");
+                yield return new WaitForSeconds(0.5f);
+
+                // The crate goes in: she stands facing it, lifts it, the mouse takes it over the gap, the release drops it.
+                powers.Select(PowerKind.Telekinesis);
+                tank.Teleport(Plan(16.6f, 7.5f), 90f);
+                yield return null;
+                pad.SetHeld(InputManager.GameAction.Defend, true);
+                yield return WaitUntil(() => powers.Carrying, 2f);
+                Assert.IsTrue(powers.Carrying, "she lifts the crate");
+                Assert.AreSame(crate, powers.HeldLift.gameObject);
+                yield return new WaitForSeconds(0.4f);
+                Camera cam = Camera.main;
+                Vector3 over = Plan(20f, 7.5f);
+                float t0 = Time.time;
+                while (Time.time - t0 < 6f)
+                {
+                    Vector3 left = over - crate.transform.position;
+                    left.y = 0f;
+                    if (left.magnitude < 0.05f) break;
+                    Vector3 right = Vector3.ProjectOnPlane(cam.transform.right, Vector3.up).normalized, away = Vector3.ProjectOnPlane(cam.transform.forward, Vector3.up).normalized;
+                    pad.Look = new Vector2(Mathf.Clamp(Vector3.Dot(left, right) * 3f, -1f, 1f), Mathf.Clamp(Vector3.Dot(left, away) * 3f, -1f, 1f));
+                    yield return null;
+                }
+                pad.Look = Vector2.zero;
+                pad.SetHeld(InputManager.GameAction.Defend, false);
+                yield return new WaitForSeconds(2f);
+                float floorY = room.transform.position.y;
+                float top = crate.GetComponent<Collider>().bounds.max.y;
+                Debug.Log($"[DemoTests] the crate lies at {crate.transform.position}, its top {top - floorY:0.00} m over the floor");
+                Assert.AreEqual(floorY, top, 0.1f, "it lies level with the floor");
+
+                // She walks over it.
+                int returns = pit.Returns;
+                tank.Teleport(Plan(18.4f, 7.5f), 90f);
+                yield return new WaitForSeconds(0.3f);
+                pad.SetHeld(InputManager.GameAction.Forward, true);
+                yield return WaitUntil(() => lucy.transform.position.x > Plan(21f, 0f).x || pit.Returns > returns, 6f);
+                pad.SetHeld(InputManager.GameAction.Forward, false);
+                Assert.AreEqual(returns, pit.Returns, "no fall");
+                Assert.Greater(lucy.transform.position.x, Plan(21f, 0f).x, "she stands on the far side");
+                Assert.IsNotNull(GameObject.Find("Capsule_G16_A"), "the capsules wait there");
+            }
+            finally
+            {
+                pad.ReleaseAll();
+                GameInput.ClearBotSource(pad);
+                UnityEngine.Object.Destroy(drive);
+            }
+        }
+
+        private sealed class PadCommit : MonoBehaviour
+        {
+            public VirtualPad Pad;
+            private void Update() => Pad?.Commit();
         }
 
         [UnityTest]

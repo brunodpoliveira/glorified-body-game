@@ -3,6 +3,7 @@ using System.IO;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.Rendering;
 using UnityEngine.SceneManagement;
 using UnityEngine.Video;
 using GlorifiedBody.Cameras;
@@ -12,6 +13,7 @@ using GlorifiedBody.Core;
 using GlorifiedBody.Enemy;
 using GlorifiedBody.Interaction;
 using GlorifiedBody.Player;
+using GlorifiedBody.Story;
 using GlorifiedBody.Tutorial;
 using GlorifiedBody.UI;
 
@@ -19,11 +21,10 @@ namespace GlorifiedBody.Editor
 {
     /// <summary>
     /// The tutorial scene (Bruno, 2026-10-22: "tutorial mode, since it'll allow us to add the other features
-    /// and test them"): the therapy gym of LookTest2 with its door shut, Lucy at the door, four padded targets
-    /// on the floor (one with a gun), a capsule by the bars, three fixed cameras, the systems, the prompt and
-    /// the TutorialDirector with its steps. Dressed and lit like the look rooms (the baked bounce: BakeTutorial).
+    /// and test them"; 2026-11-06: "redo the tutorial room to be fully greyboxed and include the new skills/habilities/interactions").
+    /// A gym in grey boxes with its door shut, Lucy at the door, four padded targets (one with a gun), a capsule by the bars, and north
+    /// of it, through a fire door, an annex with a box, a plate, a locker, a lab worker, a guard and a switch. No textures and no bake.
     /// Menu: GlorifiedBody > Build Tutorial. Batch: tools/unity.sh exec GlorifiedBody.Editor.TutorialSetup.BuildTutorial
-    /// then tools/unity.sh exec GlorifiedBody.Editor.TutorialSetup.BakeTutorial
     /// </summary>
     public static class TutorialSetup
     {
@@ -53,34 +54,64 @@ namespace GlorifiedBody.Editor
         public const float TargetHealth = 400f; // padded: it takes the whole demonstration, the MK boost doubles every hit
         public static readonly string[] TargetNames = { "Target_1", "Target_2", "Target_3", "Target_Gun" };
 
+        // ── The annex (2026-11-06) ────────────────────────────────
+        // North of the gym, through a fire door: the box over the rail, the locker behind the gate, the far side with a lab worker
+        // and a switch, and in the east room a guard.
+        public static readonly Vector3 FireDoorMouth = new Vector3(2.5f, 0f, 17.45f);
+        public const float AnnexMinX = -6f, AnnexMaxX = 10f, AnnexMinZ = 17.6f, AnnexMaxZ = 29.6f, AnnexHeight = 3.5f;
+        public const float RailZ = 24f, RailHeight = 1.2f, GateX = 6f, GateZ = 20.8f;
+        public const string PlateFlag = "tutorial_plate", SwitchFlag = "tutorial_switch";
+        public static readonly Vector3 BoxPoint = new Vector3(-3f, 0f, 21.5f);
+        public static readonly Vector3 PlatePoint = new Vector3(-3f, 0f, 26f);
+        public static readonly Vector3 WorkerPoint = new Vector3(3f, 0f, 26.2f);
+        public static readonly Vector3 SwitchPoint = new Vector3(8f, 0f, 28.6f);
+        public static readonly Vector3 GuardPoint = new Vector3(8.4f, 0f, 22.6f);
+        public static readonly Vector3 LockerPoint = new Vector3(8.4f, 0f, 18.2f);
+
+        /// <summary>The grey of the room: no texture, no bake (Bruno, 2026-11-06: "fully greyboxed").</summary>
+        private static LookTestSetup.Palette GreyPalette()
+        {
+            Material wall = Demo.DemoRoom.Grey(0.42f), floor = Demo.DemoRoom.Grey(0.3f), dark = Demo.DemoRoom.Grey(0.2f), light = Demo.DemoRoom.Grey(0.62f);
+            return new LookTestSetup.Palette
+            {
+                TileWall = wall, TileFloor = floor, Ceiling = dark, Steel = light, DarkSteel = dark, Emblem = dark, Canvas = light, Vest = Demo.DemoRoom.Grey(0.36f),
+            };
+        }
+
+        private static GameObject Grey(GameObject parent, string name, Vector3 centre, Vector3 size, float shade)
+        {
+            GameObject box = RoomKit.Box(parent, name, centre, size);
+            box.GetComponent<Renderer>().sharedMaterial = Demo.DemoRoom.Grey(shade);
+            return box;
+        }
+
         [MenuItem("GlorifiedBody/Build Tutorial")]
         public static void BuildTutorial()
         {
             Directory.CreateDirectory(MenuLoopSetup.ScenesFolder);
             AssetDatabase.Refresh();
-            LookTestSetup.EnsureLightingSettings();
-            Scene scene = LookTestSetup.BeginScene(ScenePath);
+            if (Directory.Exists(MenuLoopSetup.ScenesFolder + "/" + SceneName)) AssetDatabase.DeleteAsset(MenuLoopSetup.ScenesFolder + "/" + SceneName); // the old bake
+            Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+            EditorSceneManager.SaveScene(scene, ScenePath);
+            CharacterCatalog catalog = MenuLoopSetup.LoadCatalog(); // after the scene opens
             Camera camera = MenuLoopSetup.EnsureCamera(new Vector3(3.3f, 1.7f, 10.7f), new Vector3(-1.6f, 1f, 15.5f), 62f);
             camera.clearFlags = CameraClearFlags.SolidColor;
             camera.backgroundColor = Color.black;
-            LookTestSetup.Palette p = LookTestSetup.EnsurePalette();
+            RenderSettings.ambientMode = AmbientMode.Flat;
+            RenderSettings.ambientLight = new Color(0.32f, 0.32f, 0.35f);
+            RenderSettings.fog = false;
+            MenuLoopSetup.EnsureLight();
+            LookTestSetup.Palette p = GreyPalette();
+            ItemAssets.CreateAll();
 
-            // A fresh room: the builder reopens the scene, and the first layout's closed wall must not stay.
-            MenuLoopSetup.RemoveObject("[Room]");
-            MenuLoopSetup.RemoveObject("[Lights]");
             GameObject room = MenuLoopSetup.EnsureRoot("[Room]");
             GameObject lights = MenuLoopSetup.EnsureRoot("[Lights]");
-            // The gym with its south doorway open: a locked steel door slides in it, a closet lies behind (Bruno,
-            // 2026-10-22: "a test key to open a locked door").
-            LookTestSetup.BuildTherapyGym(room, lights, p, corridorOpening: true);
+            BuildGreyGym(room);
             BuildLockedDoorAndCloset(room, lights, p);
-            LookTestSetup.ProbeGrid(LookTestSetup.GymMin, LookTestSetup.GymMax, 1.5f, 0.6f, 2.4f);
+            BuildAnnex(room);
 
-            // Lucy at the door, the lock marker on (she must see what the lock holds).
-            CharacterCatalog catalog = MenuLoopSetup.LoadCatalog();
             MenuLoopSetup.EnsureLucy(catalog, LucyStart, 0f);
 
-            // The padded targets on the floor east of the lane, the one with the gun by the door.
             // A row across the middle of the gym, 3 m or more from every lens and off the lines from the cameras
             // to the step points (the first places hid Lucy from the north-east camera).
             PaddedTarget("Target_1", new Vector3(0.8f, 0f, 13.6f), 180f, p, gun: false);
@@ -88,9 +119,8 @@ namespace GlorifiedBody.Editor
             ShieldFor(shieldDummy, p);
             PaddedTarget("Target_3", new Vector3(2.8f, 0f, 13.6f), 180f, p, gun: false);
             // The cover step (2026-10-24): a chest-high barricade south of Target_3, off until its step (it would
-            // stop the earlier faculties), and a breakable lamp over it (Realtime: the bake leaves it out).
+            // stop the earlier faculties), and a breakable lamp over it.
             GameObject breakables = MenuLoopSetup.EnsureRoot("[Breakables]");
-            for (int i = breakables.transform.childCount - 1; i >= 0; i--) Object.DestroyImmediate(breakables.transform.GetChild(i).gameObject);
             Destruction.BreakableAssets.Barricade(breakables, CoverName, CoverPoint, 0f).gameObject.SetActive(false);
             Destruction.BreakableAssets.Lamp(breakables, "Lamp_Gym", new Vector3(2.6f, LookTestSetup.GymMax.y, 12.4f), new Color(1f, 0.95f, 0.85f), 5f, 80f, 5f);
             // The gun against the west wall by the door: a clear line to the monitors side, no padded target in
@@ -99,36 +129,29 @@ namespace GlorifiedBody.Editor
             MenuLoopSetup.EnsurePickup("Capsule", DrugType.Nalcon, CapsulePoint + Vector3.up * 0.4f);
             // The crate for the prop step: between the bars and the first target, off every walk (the walks keep
             // west of the bars), clear of the camera lines to the step points.
-            PropAssets.Crate("Prop_Crate", CratePoint, 15f);
+            PropAssets.Crate("Prop_Crate", CratePoint, 15f).GetComponent<Renderer>().sharedMaterial = Demo.DemoRoom.Grey(0.62f);
 
-            // The test log and the test key on two steel stands against the west wall, unlit so they stand out
+            // The test log and the test key on two stands against the west wall, unlit so they stand out
             // (Bruno, 2026-10-22, after Resident Evil 4), and the two scan targets: the door (a picture, seen from
             // close by its west half) and the wall of monitors (a clip). Placeholders.
-            ItemAssets.CreateAll();
-            LookTestSetup.Block(room, "Log_Stand", PrimitiveType.Cube, LogStand + new Vector3(0f, 0.45f, 0f), new Vector3(0.4f, 0.9f, 0.5f), p.DarkSteel);
-            ItemAssets.Pickup(null, "Log_Clipboard", ItemAssets.TestLog(), PrimitiveType.Cube, LogStand + new Vector3(0f, 0.93f, 0f), new Vector3(0.24f, 0.03f, 0.32f), Quaternion.Euler(0f, 8f, 0f));
-            LookTestSetup.Block(room, "Key_Stand", PrimitiveType.Cube, KeyStand + new Vector3(0f, 0.45f, 0f), new Vector3(0.4f, 0.9f, 0.4f), p.DarkSteel);
-            ItemAssets.Pickup(null, "Test_Key", ItemAssets.TestKey(), PrimitiveType.Cube, KeyStand + new Vector3(0f, 0.93f, 0f), new Vector3(0.2f, 0.03f, 0.13f), Quaternion.Euler(0f, -12f, 0f));
+            Grey(room, "Log_Stand", LogStand + new Vector3(0f, 0.45f, 0f), new Vector3(0.4f, 0.9f, 0.5f), 0.2f);
+            ItemAssets.Pickup(null, "Log_Clipboard", ItemAssets.TestLog(), PrimitiveType.Cube, LogStand + new Vector3(0f, 0.93f, 0f), new Vector3(0.24f, 0.03f, 0.32f), Quaternion.identity);
+            Grey(room, "Key_Stand", KeyStand + new Vector3(0f, 0.45f, 0f), new Vector3(0.4f, 0.9f, 0.4f), 0.2f);
+            ItemAssets.Pickup(null, "Test_Key", ItemAssets.TestKey(), PrimitiveType.Cube, KeyStand + new Vector3(0f, 0.93f, 0f), new Vector3(0.1f, 0.03f, 0.2f), Quaternion.identity);
             Texture2D scanImage = EnsureScanImage();
+            AssetDatabase.ImportAsset(ScanVideoPath);
             VideoClip scanClip = AssetDatabase.LoadAssetAtPath<VideoClip>(ScanVideoPath);
             if (scanClip == null) Debug.LogError($"[TutorialSetup] no clip at {ScanVideoPath}.");
             ScanTarget("Scan_Door", DoorFocus, "gym_door", "PLACEHOLDER: what opens this door.", scanImage, null);
             ScanTarget("Scan_Monitors", new Vector3(-2.2f, 1.3f, LookTestSetup.GymMax.z - 0.55f), "gym_monitors", "PLACEHOLDER: what the monitors saw.", null, scanClip);
 
-            // Cameras (ART_LESSONS 1.6), from the coverage check with the near skip at 1.2 m (the first layout
-            // put a camera 1.2 m from the monitors point: Lucy out of frame where the run step ends): the door
-            // corner (the default), the corner over the rack looking back across the room (the north band:
-            // the monitors, the mirror, the bars' far end), the west wall looking east (the strip by the door).
+            // Cameras (ART_LESSONS 1.6), from the coverage check with the near skip at 1.2 m: the door corner (the default),
+            // the corner over the rack looking back across the room (the north band), the west wall looking east (the strip by
+            // the door), the closet, and one high over the annex.
             GameObject camerasRoot = MenuLoopSetup.EnsureRoot("[Cameras]");
-            foreach (string old in new[] { "Cam_Gym_Bars", "Cam_Gym_Rack", "Zone_Gym_Bars", "Zone_Gym_Rack", "ShotPoint_Cam_Gym_Bars", "ShotPoint_Cam_Gym_Rack" })
-            {
-                Transform child = camerasRoot.transform.Find(old);
-                if (child != null) Object.DestroyImmediate(child.gameObject);
-                MenuLoopSetup.RemoveObject(old);
-            }
             FixedCameraDirector director = MenuLoopSetup.EnsureComponent<FixedCameraDirector>(camerasRoot);
             FixedCamera gym = MenuLoopSetup.EnsureFixedCamera(camerasRoot, "Cam_Gym", new Vector3(3.3f, 1.7f, 10.7f), new Vector3(-1.6f, 1f, 15.5f), 62f);
-            FixedCamera north = MenuLoopSetup.EnsureFixedCamera(camerasRoot, "Cam_Gym_NE", new Vector3(3.6f, 1.7f, 16.9f), new Vector3(-2f, 1f, 12.5f), 62f);
+            FixedCamera north = MenuLoopSetup.EnsureFixedCamera(camerasRoot, "Cam_Gym_NE", new Vector3(3.6f, 1.7f, 16.9f), new Vector3(-0.5f, 1f, 12.5f), 62f);
             FixedCamera west = MenuLoopSetup.EnsureFixedCamera(camerasRoot, "Cam_Gym_W", new Vector3(-3.7f, 1.7f, 13.2f), new Vector3(3f, 1f, 11.5f), 62f);
             director.SetDefaultCamera(gym);
             MenuLoopSetup.EnsureCameraZone(camerasRoot, "Zone_Gym_North", new Vector3(0f, 1.5f, 15.4f), new Vector3(8f, 3f, 3.8f), north, 1);
@@ -136,16 +159,16 @@ namespace GlorifiedBody.Editor
             // The closet behind the locked door: its own camera in the far corner, looking back at the doorway.
             FixedCamera closet = MenuLoopSetup.EnsureFixedCamera(camerasRoot, "Cam_Closet", new Vector3(0.7f, 1.9f, 8.6f), new Vector3(-0.4f, 0.7f, 10.2f), 70f);
             MenuLoopSetup.EnsureCameraZone(camerasRoot, "Zone_Closet", new Vector3(0f, 1.5f, 9.3f), new Vector3(1.8f, 3f, 1.9f), closet, 5);
-            MenuLoopSetup.EnsureShotPoints(new[] { gym, north, west, closet });
+            FixedCamera annex = MenuLoopSetup.EnsureFixedCamera(camerasRoot, "Cam_Annex", new Vector3(0f, 9.5f, 18.5f), new Vector3(0f, 0f, 24f), 72f);
+            FixedCamera east = MenuLoopSetup.EnsureFixedCamera(camerasRoot, "Cam_Annex_East", new Vector3(8f, 9.5f, 18.5f), new Vector3(8f, 0f, 24f), 72f);
+            MenuLoopSetup.EnsureCameraZone(camerasRoot, "Zone_Annex_East", new Vector3(8f, 1.5f, 23.6f), new Vector3(4f, 3f, AnnexMaxZ - AnnexMinZ), east, 3);
+            MenuLoopSetup.EnsureCameraZone(camerasRoot, "Zone_Annex", new Vector3(2f, 1.5f, 23.6f), new Vector3(AnnexMaxX - AnnexMinX, 3f, AnnexMaxZ - AnnexMinZ), annex, 2);
+            MenuLoopSetup.EnsureShotPoints(new[] { gym, north, west, closet, annex, east });
 
+            RoomKit.BakeNavMesh(room, MenuLoopSetup.ScenesFolder + "/Tutorial_NavMesh.asset");
             MenuLoopSetup.EnsureGameplaySystems();
             MenuLoopSetup.EnsureRuntimeUi();
             MenuLoopSetup.EnsureComponent<TutorialPromptUI>(MenuLoopSetup.EnsureRoot("[RuntimeUI]"));
-
-            GameObject probesRoot = MenuLoopSetup.EnsureRoot("[Probes]");
-            LightProbeGroup probes = MenuLoopSetup.EnsureComponent<LightProbeGroup>(probesRoot);
-            probes.probePositions = LookTestSetup.probePositions.ToArray();
-            probes.dering = true;
 
             GameObject tutorialRoot = MenuLoopSetup.EnsureRoot("[Tutorial]");
             TutorialDirector tutorial = MenuLoopSetup.EnsureComponent<TutorialDirector>(tutorialRoot);
@@ -164,12 +187,132 @@ namespace GlorifiedBody.Editor
             so.FindProperty("shooterTargetName").stringValue = "Target_Gun";
             so.ApplyModifiedPropertiesWithoutUndo();
 
-            MenuLoopSetup.CleanBuildSettings();
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
+            MenuLoopSetup.CleanBuildSettings();
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
-            Debug.Log($"[TutorialSetup] {ScenePath}: the therapy gym, four targets, three cameras, the director. Next: BakeTutorial.");
+            Debug.Log($"[TutorialSetup] {ScenePath}: the greybox gym and annex, four targets, six cameras, the director.");
+        }
+
+        /// <summary>
+        /// The gym in plain boxes: floor, roof, walls, the parallel bars, the block of monitors. The door south (BuildLockedDoorAndCloset),
+        /// a fire door north. The walks of the steps keep their old places.
+        /// </summary>
+        private static void BuildGreyGym(GameObject room)
+        {
+            Vector3 min = LookTestSetup.GymMin, max = LookTestSetup.GymMax;
+            float h = max.y, cx = (min.x + max.x) * 0.5f, cz = (min.z + max.z) * 0.5f, w = max.x - min.x, d = max.z - min.z, t = 0.3f;
+            Grey(room, "Gym_Floor", new Vector3(cx, -0.05f, cz), new Vector3(w + 2f * t, 0.1f, d + 2f * t), 0.3f);
+            Object.DestroyImmediate(Grey(room, "Gym_Roof", new Vector3(cx, h + 0.05f, cz), new Vector3(w + 2f * t, 0.1f, d + 2f * t), 0.2f).GetComponent<Collider>());
+            Grey(room, "Gym_Wall_East", new Vector3(max.x + t * 0.5f, h * 0.5f, cz), new Vector3(t, h, d), 0.42f);
+            Grey(room, "Gym_Wall_West", new Vector3(min.x - t * 0.5f, h * 0.5f, cz), new Vector3(t, h, d), 0.42f);
+            // South: a doorway of 1.2 x 2.2 m at x 0.
+            float zs = min.z - t * 0.5f;
+            Grey(room, "Gym_Wall_South_W", new Vector3((min.x - t - 0.6f) * 0.5f, h * 0.5f, zs), new Vector3(-0.6f - min.x + t, h, t), 0.42f);
+            Grey(room, "Gym_Wall_South_E", new Vector3((max.x + t + 0.6f) * 0.5f, h * 0.5f, zs), new Vector3(max.x + t - 0.6f, h, t), 0.42f);
+            Grey(room, "Gym_Wall_South_Top", new Vector3(0f, (2.2f + h) * 0.5f, zs), new Vector3(1.2f, h - 2.2f, t), 0.42f);
+            // North: a doorway of 1.6 x 2.4 m for the fire door.
+            float zn = FireDoorMouth.z, fx = FireDoorMouth.x;
+            Grey(room, "Gym_Wall_North_W", new Vector3((min.x - t + fx - 0.8f) * 0.5f, h * 0.5f, zn), new Vector3(fx - 0.8f - min.x + t, h, t), 0.42f);
+            Grey(room, "Gym_Wall_North_E", new Vector3((max.x + t + fx + 0.8f) * 0.5f, h * 0.5f, zn), new Vector3(max.x + t - fx - 0.8f, h, t), 0.42f);
+            Grey(room, "Gym_Wall_North_Top", new Vector3(fx, (2.4f + h) * 0.5f, zn), new Vector3(1.6f, h - 2.4f, t), 0.42f);
+            // The block of monitors in the north-west corner, and the parallel bars.
+            Grey(room, "Monitors", new Vector3(min.x + 1.75f, 1.1f, max.z - 0.3f), new Vector3(3.5f, 2.2f, 0.6f), 0.2f);
+            foreach (float bx in new[] { -1.05f, -0.15f })
+            {
+                Grey(room, $"Bar_{bx}", new Vector3(bx, 0.9f, 13.5f), new Vector3(0.1f, 0.1f, 4.4f), 0.62f);
+                foreach (float bz in new[] { 11.5f, 13.5f, 15.5f }) Grey(room, $"BarPost_{bx}_{bz}", new Vector3(bx, 0.45f, bz), new Vector3(0.1f, 0.9f, 0.1f), 0.62f);
+            }
+        }
+
+        /// <summary>The annex: the fire door, the rail, the box and the plate, the gate to the east room, the locker, the guard, the lab worker, the switch.</summary>
+        private static void BuildAnnex(GameObject room)
+        {
+            float cx = (AnnexMinX + AnnexMaxX) * 0.5f, cz = (AnnexMinZ + AnnexMaxZ) * 0.5f, w = AnnexMaxX - AnnexMinX, d = AnnexMaxZ - AnnexMinZ, h = AnnexHeight, t = 0.3f;
+            Grey(room, "Annex_Floor", new Vector3(cx, -0.05f, cz), new Vector3(w + 2f * t, 0.1f, d + 2f * t), 0.3f);
+            Grey(room, "Annex_Wall_West", new Vector3(AnnexMinX - t * 0.5f, h * 0.5f, cz), new Vector3(t, h, d), 0.42f);
+            Grey(room, "Annex_Wall_East", new Vector3(AnnexMaxX + t * 0.5f, h * 0.5f, cz), new Vector3(t, h, d), 0.42f);
+            Grey(room, "Annex_Wall_North", new Vector3(cx, h * 0.5f, AnnexMaxZ + t * 0.5f), new Vector3(w + 2f * t, h, t), 0.42f);
+            // South: the gym's north wall stands between x -4 and 4. The rest of the annex's south side:
+            Grey(room, "Annex_Wall_South_W", new Vector3(-5f, h * 0.5f, AnnexMinZ - t * 0.5f), new Vector3(2f, h, t), 0.42f);
+            Grey(room, "Annex_Wall_South_E", new Vector3(7f, h * 0.5f, AnnexMinZ - t * 0.5f), new Vector3(6f, h, t), 0.42f);
+            Grey(room, "Rail", new Vector3(cx, RailHeight * 0.5f, RailZ), new Vector3(w, RailHeight, t), 0.36f);
+            // The partition east of her half, with the gate that the plate opens.
+            float southLength = GateZ - 0.8f - AnnexMinZ, northLength = RailZ - (GateZ + 0.8f);
+            Grey(room, "Partition_South", new Vector3(GateX, h * 0.5f, AnnexMinZ + southLength * 0.5f), new Vector3(t, h, southLength), 0.42f);
+            Grey(room, "Partition_North", new Vector3(GateX, h * 0.5f, RailZ - northLength * 0.5f), new Vector3(t, h, northLength), 0.42f);
+            GameObject gate = MenuLoopSetup.EnsureChild(room, "Gate");
+            FlagGate flagGate = MenuLoopSetup.EnsureComponent<FlagGate>(gate);
+            flagGate.flag = PlateFlag;
+            flagGate.showWhenRaised = false;
+            RoomKit.Box(gate, "Gate_Leaf", new Vector3(GateX, h * 0.5f, GateZ), new Vector3(0.2f, h, 1.6f)).GetComponent<Renderer>().sharedMaterial = ItemAssets.UnlitMaterial("physics_gate", new Color(0.55f, 0.12f, 0.1f));
+
+            Destruction.BreakableAssets.Door(room, "FireDoor_Tutorial", FireDoorMouth, Vector3.forward, 1.6f, 2.4f, t, -1,
+                Demo.DemoRoom.Grey(0.34f), Demo.DemoRoom.Grey(0.5f), Demo.DemoRoom.Colour("fire_band", new Color(0.55f, 0.12f, 0.1f)), Demo.DemoRoom.Grey(0.12f), Demo.DemoRoom.Colour("fire_lever", new Color(0.85f, 0.15f, 0.1f)),
+                Demo.DemoRoom.Colour("jam_bar", new Color(0.8f, 0.66f, 0.18f)), false, "");
+
+            GameObject puzzle = MenuLoopSetup.EnsureRoot("[Puzzle]");
+            GameObject plate = MenuLoopSetup.EnsureChild(puzzle, "Plate");
+            plate.transform.position = PlatePoint;
+            GameObject top = MenuLoopSetup.EnsureChildPrimitive(plate, "Top", PrimitiveType.Cube, new Vector3(0f, 0.025f, 0f), new Vector3(1.2f, 0.05f, 1.2f));
+            Object.DestroyImmediate(top.GetComponent<Collider>());
+            top.GetComponent<Renderer>().sharedMaterial = ItemAssets.UnlitMaterial("physics_plate", new Color(0.8f, 0.65f, 0.15f));
+            PressurePlate pressure = MenuLoopSetup.EnsureComponent<PressurePlate>(plate);
+            pressure.flag = PlateFlag;
+            pressure.top = top.transform;
+            EditorUtility.SetDirty(pressure);
+            GameObject box = PropAssets.Box("Box_Tutorial", BoxPoint);
+            box.GetComponent<Renderer>().sharedMaterial = Demo.DemoRoom.Grey(0.62f);
+            box.transform.SetParent(puzzle.transform, true);
+
+            // The switch on the far side, where she cannot walk: a dominated figure uses it.
+            GameObject lever = MenuLoopSetup.EnsureChild(puzzle, "Switch_Far");
+            lever.transform.position = SwitchPoint;
+            GameObject post = MenuLoopSetup.EnsureChildPrimitive(lever, "Post", PrimitiveType.Cube, new Vector3(0f, 0.6f, 0f), new Vector3(0.3f, 1.2f, 0.2f));
+            post.GetComponent<Renderer>().sharedMaterial = ItemAssets.UnlitMaterial("edgar_switch", new Color(0.8f, 0.2f, 0.15f));
+            GameObject stand = MenuLoopSetup.EnsureChild(lever, "Stand");
+            stand.transform.position = SwitchPoint + Vector3.back * 0.9f;
+            SentSwitch sent = MenuLoopSetup.EnsureComponent<SentSwitch>(lever);
+            sent.flag = SwitchFlag;
+            sent.point = stand.transform;
+            sent.lamp = post.GetComponent<Renderer>();
+            EditorUtility.SetDirty(sent);
+
+            // The locker in the east room: the guard uniform.
+            GameObject locker = MenuLoopSetup.EnsureChild(puzzle, "Locker_Uniform");
+            locker.transform.position = LockerPoint;
+            Material black = Demo.DemoRoom.Grey(0.07f);
+            Grey(locker, "Back", LockerPoint + new Vector3(0f, 0.95f, -0.3f), new Vector3(0.9f, 1.9f, 0.05f), 0.07f);
+            Grey(locker, "Side_W", LockerPoint + new Vector3(-0.43f, 0.95f, -0.05f), new Vector3(0.04f, 1.9f, 0.55f), 0.07f);
+            Grey(locker, "Side_E", LockerPoint + new Vector3(0.43f, 0.95f, -0.05f), new Vector3(0.04f, 1.9f, 0.55f), 0.07f);
+            GameObject uniform = MenuLoopSetup.EnsureChild(locker, "Uniform_Hanger");
+            GameObject torso = MenuLoopSetup.EnsureChildPrimitive(uniform, "Torso", PrimitiveType.Cube, LockerPoint + new Vector3(0f, 1.3f, -0.15f), new Vector3(0.48f, 0.62f, 0.14f));
+            GameObject legs = MenuLoopSetup.EnsureChildPrimitive(uniform, "Legs", PrimitiveType.Cube, LockerPoint + new Vector3(0f, 0.68f, -0.15f), new Vector3(0.38f, 0.6f, 0.12f));
+            foreach (GameObject part in new[] { torso, legs })
+            {
+                Object.DestroyImmediate(part.GetComponent<Collider>());
+                part.GetComponent<Renderer>().sharedMaterial = Demo.DemoRoom.Colour("uniform_torso", new Color(0.34f, 0.4f, 0.42f));
+            }
+            OutfitLocker component = MenuLoopSetup.EnsureComponent<OutfitLocker>(locker);
+            component.outfitId = OutfitChange.GuardId;
+            component.thing = "the guard uniform";
+            component.shown = uniform;
+            component.range = 1.6f;
+            GameObject point = MenuLoopSetup.EnsureChild(locker, "Point");
+            point.transform.position = LockerPoint + new Vector3(0f, 1f, 0.45f);
+            component.point = point.transform;
+            EditorUtility.SetDirty(component);
+
+            // The figures of mk_edgar: a lab worker at full HP behind the rail, a guard who waits in the east room.
+            GameObject figures = MenuLoopSetup.EnsureRoot("[Figures]");
+            EnemySpawn worker = RoomKit.Spawn(figures, TutorialDirector.WorkerName, "labworker", WorkerPoint, 180f, 0);
+            worker.hides = true;
+            worker.foundAt = 0f;
+            EditorUtility.SetDirty(worker);
+            EnemySpawn guard = RoomKit.Spawn(figures, TutorialDirector.GuardName, "guard_pistol", GuardPoint, 270f);
+            guard.heldUntilFlag = TutorialDirector.GuardWakeFlag;
+            EditorUtility.SetDirty(guard);
         }
 
         /// <summary>
@@ -254,9 +397,6 @@ namespace GlorifiedBody.Editor
             target.range = Scannable.DefaultRange; // close to the object (Bruno, 2026-10-22)
             target.focus = null;
         }
-
-        [MenuItem("GlorifiedBody/Bake Tutorial (the bounce light)")]
-        public static void BakeTutorial() => LookTestSetup.Bake(ScenePath);
 
         /// <summary>
         /// A padded training dummy on a stand: the root carries the capsule, Health, the lock point and the

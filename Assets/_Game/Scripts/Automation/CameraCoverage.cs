@@ -51,7 +51,7 @@ namespace GlorifiedBody.Automation
             var floors = new List<(Vector3 centre, float width, float depth, BoxCollider box)>();
             foreach (RoomFace face in Object.FindObjectsByType<RoomFace>(FindObjectsSortMode.None).Where(f => f.name.EndsWith("Floor")))
                 floors.Add((face.transform.position, face.width, face.height, null)); // a floor face: local x along world x, local y along world z
-            if (floors.Count == 0)
+            // Both kinds: the greybox tutorial has box floors and the plain closet of the old builder (2026-11-06).
                 foreach (BoxCollider box in Object.FindObjectsByType<BoxCollider>(FindObjectsSortMode.None).Where(b => b.name.EndsWith("Floor") && !b.isTrigger))
                     floors.Add((new Vector3(box.bounds.center.x, box.bounds.max.y, box.bounds.center.z), box.bounds.size.x, box.bounds.size.z, box));
             foreach ((Vector3 c, float width, float depth, BoxCollider floorBox) in floors)

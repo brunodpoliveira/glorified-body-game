@@ -56,6 +56,10 @@ namespace GlorifiedBody.Tutorial
         [SerializeField] private string coverName = "Barricade_Gym";
         [SerializeField] private string[] dummyNames = { "Target_1", "Target_2", "Target_3", "Target_Gun" };
 
+        public const string WorkerName = "Worker_Far", GuardName = "Guard_East", GuardWakeFlag = "tutorial_guard_wakes";
+        public const string SwitchFlag = "tutorial_switch", PlateFlag = "tutorial_plate", BoxName = "Box_Tutorial";
+        public const float GateX = 6f, GateZ = 20.8f; // TutorialSetup: the gate to the east room
+
         public static TutorialDirector Instance { get; private set; }
 
         public IReadOnlyList<TutorialStep> Steps => steps;
@@ -81,6 +85,13 @@ namespace GlorifiedBody.Tutorial
         public DummyShooter Shooter { get; private set; }
         /// <summary>The cover step's barricade (off until its step).</summary>
         public Breakable Cover { get; private set; }
+
+        public FireDoor FireDoorOfRoom { get; private set; }
+        public PressurePlate Plate { get; private set; }
+        public OutfitLocker Locker { get; private set; }
+        public GameObject Box { get; private set; }
+        public SoldierBrain Guard { get; private set; }
+        public CivilianBrain Worker { get; private set; }
 
         public event Action<TutorialStep> OnStepChanged;
         public event Action OnCompleted;
@@ -117,8 +128,12 @@ namespace GlorifiedBody.Tutorial
         private static readonly Dictionary<string, string> OnlyDummy = new Dictionary<string, string>
         {
             { "grenade", "Target_Gun" }, { "shield", "Target_2" }, { "cover", "Target_3" },
+            // The annex: no dummy holds the lock over a door (none has this name).
+            { "fire_door", "-" }, { "carry", "-" }, { "outfit", "-" }, { "edgar", "-" }, { "edgar_send", "-" }, { "edgar_guard", "-" }, { "short", "-" },
         };
         private int targetChanges;
+        private bool cancelled, doorSeenJammed;
+        private readonly HashSet<PowerKind> barsSeen = new HashSet<PowerKind>();
         private PowerKind? firedKind;
         private float firedCharge;
 
@@ -131,6 +146,7 @@ namespace GlorifiedBody.Tutorial
         {
             Unsubscribe();
             if (Instance == this) Instance = null;
+            GlorifiedBody.Saving.StoryFlags.Drop(PsychicPowers.EdgarFlag); // only this room gives mk_edgar: the story gives it later
         }
 
         private void Start()
@@ -192,6 +208,18 @@ namespace GlorifiedBody.Tutorial
             InventoryUI.OnLogRead += OnInventoryLogRead;
             MapScreen.OnOpened += OnMapOpened;
             MapScreen.OnClosed += OnMapClosed;
+            powers.OnResult += OnPowerResult;
+            FireDoorOfRoom = FindFirstObjectByType<FireDoor>();
+            Plate = FindFirstObjectByType<PressurePlate>();
+            Locker = FindFirstObjectByType<OutfitLocker>();
+            Box = GameObject.Find(BoxName);
+            GameObject guardObject = GameObject.Find(GuardName), workerObject = GameObject.Find(WorkerName);
+            Guard = guardObject != null ? guardObject.GetComponent<SoldierBrain>() : null;
+            Worker = workerObject != null ? workerObject.GetComponent<CivilianBrain>() : null;
+            // Out of the lock until their steps: this room has no sight rule, and the switch must not reach them through a wall.
+            SetFigureSelectable(guardObject, false);
+            SetFigureSelectable(workerObject, false);
+            SetFigureSelectable(Box, false); // the switch of the prop step must not throw this one
             capsule = FindObjectsByType<ItemPickup>(FindObjectsSortMode.None).Where(p => p.item != null && p.item.kind == ItemKind.Drug)
                 .OrderBy(p => Vector3.Distance(p.transform.position, capsulePoint)).FirstOrDefault();
 
@@ -207,6 +235,7 @@ namespace GlorifiedBody.Tutorial
             {
                 powers.OnPowerFired -= OnPowerFired;
                 powers.OnChanged -= OnPowersChanged;
+                powers.OnResult -= OnPowerResult;
             }
             if (shortController != null)
             {
@@ -240,6 +269,16 @@ namespace GlorifiedBody.Tutorial
         private void SetShieldActive(bool active)
         {
             if (shield != null) shield.enabled = active;
+        }
+
+        private static void SetFigureSelectable(GameObject figure, bool on)
+        {
+            if (figure != null && figure.TryGetComponent(out LockOnTargetable target)) target.SetSelectable(on);
+        }
+
+        private void OnPowerResult(string result)
+        {
+            if (result == "cancel") cancelled = true;
         }
 
         private void OnInventoryOpened() => inventoryOpened = true;
@@ -283,20 +322,24 @@ namespace GlorifiedBody.Tutorial
                 "{SwitchTarget} picks the next target.",
                 () => targetChanges >= 1 && lockOn != null && lockOn.CurrentTarget != null));
             steps.Add(new TutorialStep("blast",
-                "Faculty one. Fill the circle on a dummy and release.",
-                "{PowerBlast} selects mk_warspite, the blast. Hold {Charge}, release when the circle is full.",
+                "Faculty one. Fill the circle on a dummy.",
+                "{PowerBlast} selects mk_warspite, the blast. Hold {Charge}: at a full circle it fires by itself. A release before that is a weaker hit.",
                 () => firedKind == PowerKind.Blast && firedCharge >= 0.99f));
+            steps.Add(new TutorialStep("cancel",
+                "You started, and you changed your mind. Stop.",
+                "Hold {Charge}, then press {Defend} before the circle fills: it cancels, and it costs nothing.",
+                () => cancelled));
             steps.Add(new TutorialStep("fire",
                 "Faculty two. Only a full circle burns.",
-                "{PowerFire} selects mk_erebus, the fire. Hold {Charge} to the full circle, then release.",
+                "{PowerFire} selects mk_erebus, the fire. Hold {Charge} until the full circle fires it.",
                 () => firedKind == PowerKind.Fire && firedCharge >= 0.999f));
             steps.Add(new TutorialStep("lift_throw",
                 "Faculty three. Lift one, turn, and throw it into another.",
-                "{PowerTelekinesis} selects mk_orzabal, the telekinesis. Hold {Charge}, release: it rises. Turn with {TurnLeft} or {TurnRight}, press {Charge} to throw.",
+                "{PowerTelekinesis} selects mk_orzabal, the telekinesis. Hold {Charge}, release: it rises. The mouse moves it. Turn with {TurnLeft} or {TurnRight}, press {Charge} to throw.",
                 () => launched));
             steps.Add(new TutorialStep("slam",
                 "Lift one again. Keep it up, fill the circle on it: it slams.",
-                "With mk_orzabal: hold {Charge} and release to lift. While it hangs, hold {Charge} to a full circle and release: a slam. A short press throws instead.",
+                "With mk_orzabal: hold {Charge} and release to lift. While it hangs, hold {Charge} to a full circle: a slam. A short press throws instead.",
                 () => slammed));
             steps.Add(new TutorialStep("prop",
                 "Faculty three moves objects too. Lift the crate and throw it into a dummy.",
@@ -339,6 +382,11 @@ namespace GlorifiedBody.Tutorial
                 () => Cover == null || Cover.IsBroken,
                 onEnter: () => { if (Cover != null) Cover.gameObject.SetActive(true); }));
             // Each drug does one thing (Bruno, 2026-10-30): a capsule fills the bar of its power, so the step lowers the bars first.
+            steps.Add(new TutorialStep("bars",
+                "Each faculty has its own bar, and only the one you hold shows. Look at each.",
+                "{PowerBlast}, {PowerFire} and {PowerTelekinesis} select them. Watch the bar under your HP change. Every faculty you use fills SHORT a little.",
+                () => barsSeen.Count >= 3,
+                onEnter: () => barsSeen.Clear()));
             steps.Add(new TutorialStep("capsule",
                 "Your MK runs low. Each faculty has its own bar, and nothing refills it but its own capsule. One lies by the parallel bars. Take it. Use it.",
                 "Face the capsule. {Interact} asks, {Interact} again takes it. {UseDrug} opens your drugs: {Interact} asks, {Interact} again uses it, and the mk_warspite bar fills.",
@@ -369,7 +417,7 @@ namespace GlorifiedBody.Tutorial
                 () => Door != null && Door.IsOpen));
             steps.Add(new TutorialStep("inventory",
                 "Show us what you carry.",
-                "{Inventory} opens the inventory: the room stops. {TurnLeft} {TurnRight} select, {Interact} reads or uses. {Inventory} closes it.",
+                "{Inventory} opens the inventory: the room stops. Three lists: consumables, keys, logs. {TurnLeft} {TurnRight} change the list, {Forward} {Back} scroll it, {Interact} reads or uses. {Inventory} closes it.",
                 () => inventoryClosed));
             // The map (Bruno, 2026-10-31: hidden at the start, a room shows when she enters it). PLACEHOLDER lines.
             steps.Add(new TutorialStep("map",
@@ -386,8 +434,50 @@ namespace GlorifiedBody.Tutorial
                 "Now the monitors. They remember more.",
                 "Face the monitors. {Scan} scans them: a short clip. It closes at its end, or with {Scan}.",
                 () => monitorsScanned));
+            // The annex (2026-11-06, Bruno: "include the new skills/habilities/interactions"). PLACEHOLDER lines.
+            steps.Add(new TutorialStep("fire_door",
+                "A fire door. Shut it behind you, and it holds them for a while. Try the lever.",
+                "Face the lever by the door. {Interact} jams the door. {Interact} again opens it. Soldiers break a jammed door, guards only bang on it.",
+                () => doorSeenJammed && (FireDoorOfRoom == null || FireDoorOfRoom.Current == FireDoor.State.Open)));
+            steps.Add(new TutorialStep("carry",
+                "Beyond the door: a box, a rail, a plate. You cannot cross. The box can.",
+                "With mk_orzabal, face the box and hold {Defend}: it rises. The mouse moves it, the wheel raises it. Release to drop it. It costs nothing. Put it on the plate.",
+                () => Plate == null || Plate.Pressed || Box == null,
+                onEnter: () =>
+                {
+                    powers.Select(PowerKind.Telekinesis);
+                    SetFigureSelectable(Box, true);
+                },
+                onExit: () =>
+                {
+                    // A thrown box breaks. No soft lock: the gate opens anyway (Bruno, 2026-10-24).
+                    if (Box == null) GlorifiedBody.Saving.StoryFlags.Raise(PlateFlag);
+                }));
+            steps.Add(new TutorialStep("outfit",
+                "The gate is open. A uniform hangs in the locker. Wear it.",
+                "Face the locker. {Interact} asks, {Interact} again changes your clothes. A uniform has more HP and more slots.",
+                () => Locker == null || (stats != null && stats.Outfit != null && stats.Outfit.outfitId == OutfitChange.GuardId)));
+            steps.Add(new TutorialStep("edgar",
+                "The fourth faculty. Take a mind. The worker behind the rail will not fight you.",
+                "{PowerDomination} selects mk_edgar. {SwitchTarget} picks the worker, within 6 m. Hold {Charge}: it kneels, and only a full circle takes it. It costs most of the bar.",
+                () => Worker == null || Worker.IsDominated || Worker.Current == CivilianBrain.Phase.Dead,
+                onEnter: () =>
+                {
+                    GlorifiedBody.Saving.StoryFlags.Raise(PsychicPowers.EdgarFlag);
+                    powers.Select(PowerKind.Domination);
+                    SetFigureSelectable(Worker != null ? Worker.gameObject : null, true);
+                }));
+            steps.Add(new TutorialStep("edgar_send",
+                "It goes where you cannot. Send it to the switch.",
+                "With mk_edgar and a mind taken, press {Defend}: it walks to the nearest switch and uses it.",
+                () => GlorifiedBody.Saving.StoryFlags.Has(SwitchFlag) || Worker == null || !Worker.IsDominated));
+            steps.Add(new TutorialStep("edgar_guard",
+                "A guard will not kneel for you unhurt. Hurt him first. A boss never kneels.",
+                "Lock the guard in the east room. {PowerBlast}: a short blast. Then {PowerDomination}: a full circle. A hit on you breaks it. He follows you and fights for you. One mind at a time.",
+                () => Guard == null || Guard.IsDominated || Guard.Current == SoldierBrain.Phase.Dead,
+                onEnter: () => SetFigureSelectable(Guard != null ? Guard.gameObject : null, true)));
             steps.Add(new TutorialStep("short",
-                "The overflow. Your SHORT bar is full: the next faculty shorts. Every faculty you use brings it closer. Below half your body, a short kills you. The SHORT capsule ends it.",
+                "The overflow. Your SHORT bar is full: the next faculty shorts. Every faculty you use brings it closer. Below half your body, a short kills you. A second wind saves you once. The SHORT capsule ends it.",
                 "{Charge} starts the short. {UseDrug} opens your drugs on the SHORT capsule: {Interact} twice ends it.",
                 () => shortBegan && shortEnded,
                 onEnter: () =>
@@ -462,6 +552,8 @@ namespace GlorifiedBody.Tutorial
             // Every power fills SHORT now (Bruno, 2026-11-06): only the short step may start a short.
             if (Current.Id != "short" && stats != null && stats.Short > 0f && (shortController == null || !shortController.IsActive)) stats.DebugSetShort(0f);
             if (Current.Id == "short") RearmShort();
+            if (powers != null && powers.Selected != null) barsSeen.Add(powers.Selected.kind);
+            if (FireDoorOfRoom != null && Current.Id == "fire_door" && FireDoorOfRoom.Current == FireDoor.State.Jammed) doorSeenJammed = true;
             if (Current.Id == "capsule") RearmCapsule();
             if (Current.IsDone != null && Current.IsDone()) Advance();
         }
@@ -552,6 +644,7 @@ namespace GlorifiedBody.Tutorial
             slammed = propThrown = false;
             ranInStep = dodgedSide = launched = caught = shieldTook = drugUsed = shortBegan = shortEnded = doorScanned = monitorsScanned = inventoryOpened = inventoryClosed = mapOpened = mapClosed = false;
             targetChanges = 0;
+            cancelled = false;
             firedKind = null;
             firedCharge = 0f;
             ResetDummies(OnlyDummy.TryGetValue(Current.Id, out string only) ? only : null);

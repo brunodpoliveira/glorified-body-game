@@ -122,6 +122,12 @@ namespace GlorifiedBody.Automation
                 inventory.Close();
                 yield return BotClock.Wait(0.2f);
             }
+            // The riser room: the gap and its crates.
+            tank.Teleport(Room.Of("G16").transform.position + new Vector3(18.4f, 0f, 9f), 90f);
+            yield return Until(() => RoomTracker.CurrentId == "G16", 3f);
+            yield return BotClock.Wait(0.5f);
+            if (Camera.main != null) ShotRenderer.Render(Camera.main, Path.Combine(shots, "team_00b_riser_room.png"), ShotWidth, ShotHeight, useTargetTexture: true);
+            Record("riser_room", RoomTracker.CurrentId == "G16");
             tank.Teleport(Room.Of("G2").transform.position + new Vector3(16f, 0f, 1f), 90f);
             yield return Until(() => RoomTracker.CurrentId == "G2", 3f);
             SoldierBrain[] four = FindObjectsByType<SoldierBrain>(FindObjectsSortMode.None).Where(b => b.name.StartsWith("Soldier_Pair")).ToArray();
@@ -180,6 +186,7 @@ namespace GlorifiedBody.Automation
             // The short kills her: the death screen has its own row.
             foreach (SoldierBrain b in second) b.GetComponent<Health>().TakeDamage(9999f);
             foreach (SoldierBrain b in FindObjectsByType<SoldierBrain>(FindObjectsSortMode.None)) b.gameObject.SetActive(false); // no bullet takes the credit
+            yield return BotClock.Wait(3.5f); // a bullet in the air lands first (a bullet lives 3 s)
             health.SetInvulnerable(false);
             health.SetRuntimeInvulnerable(false);
             health.SetSecondWindEnabled(false);

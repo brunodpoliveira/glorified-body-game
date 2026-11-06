@@ -572,10 +572,12 @@ namespace GlorifiedBody.Player
             if (power.kind != PowerKind.Telekinesis)
             {
                 Vector3 eye = transform.position + Vector3.up * Body.ChestHeight;
-                Breakable cover = Breakables.CoverOnLine(eye, point, out Vector3 coverPoint);
+                // Hidden, he crouches: the line goes to his hips. To the lock point it passed just over a low planter (2026-11-06).
+                Vector3 aim = target.InCover ? target.transform.position + Vector3.up * CoverLineHeight : point;
+                Breakable cover = Breakables.CoverOnLine(eye, aim, out Vector3 coverPoint);
                 if (cover != null)
                 {
-                    Vector3 along = (point - eye).normalized;
+                    Vector3 along = (aim - eye).normalized;
                     float onCover = power.kind == PowerKind.Blast ? damage : charge >= 0.999f ? damage * 0.5f : 0f;
                     if (onCover > 0f)
                     {
@@ -587,7 +589,7 @@ namespace GlorifiedBody.Player
                     return;
                 }
                 // A thing that does not break stops it too, while he hides behind it. He stands to fire: then it reaches him.
-                if (target.InCover && Physics.Linecast(eye, point, LayerMask.GetMask("Default"), QueryTriggerInteraction.Ignore))
+                if (target.InCover && Physics.Linecast(eye, aim, LayerMask.GetMask("Default"), QueryTriggerInteraction.Ignore))
                 {
                     RunTelemetry.Event("cover_took", $"{power.kind}:{charge:0.00}:solid");
                     Result("cover", charge);
@@ -652,6 +654,7 @@ namespace GlorifiedBody.Player
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetDrugMenu() => OpenDrugMenu = null;
 
+        private const float CoverLineHeight = 0.5f;      // m over his feet, while he hides
         public const float BlastKnockdownSeconds = 2.5f; // Bruno, 2026-10-24
         public const float BlastKnockdownPush = 4f;      // m/s away from her, PROPOSED
         // The collateral damage of a power (the breakable cover, 2026-10-24), PROPOSED.

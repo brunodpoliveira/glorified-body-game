@@ -99,7 +99,7 @@ namespace GlorifiedBody.Tests.PlayMode
                 ("G5", new Vector4(12, -16, 28, 0)), ("G9", new Vector4(28, -16, 34, -9)), ("U1", new Vector4(14, -28, 26, -16)),
             })
                 Assert.AreEqual(rect, Room.Of(id).rect, id + " stands where it stood");
-            Assert.AreEqual(36, Room.All.Count, "35 rooms and the stair");
+            Assert.AreEqual(37, Room.All.Count, "36 rooms and the stair");
         }
 
         [UnityTest]

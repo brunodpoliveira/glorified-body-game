@@ -1010,7 +1010,7 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator TheShort_TakesTheSecondWind_InsteadOfHerLife_AndThenItEnds()
+        public IEnumerator TheShort_TakesTheSecondWind_GoesOn_AndTakesNoMoreHp()
         {
             health.SetSecondWindEnabled(true);
             health.RearmSecondWind();
@@ -1024,10 +1024,17 @@ namespace GlorifiedBody.Tests.PlayMode
             yield return null;
             Assert.IsFalse(health.IsDead, "she lives");
             Assert.AreEqual(1f, health.CurrentHealth, 0.001f, "at 1 HP");
-            Assert.IsFalse(shortController.IsActive, "the second wind ends the short: the next shock would kill her");
-            Assert.AreEqual(0f, stats.Short, 0.01f);
+            // Bruno, 2026-11-06: "the short goes on as normal, but it doesn't detract health while using up the second wind".
+            Assert.IsTrue(shortController.IsActive, "the short goes on");
+            int shocks = shortController.ShocksFired;
             yield return new WaitForSeconds(3.5f);
             Assert.IsFalse(health.IsDead, "she still lives after the invulnerable frames");
+            Assert.Greater(shortController.ShocksFired, shocks, "the shocks go on");
+            Assert.AreEqual(1f, health.CurrentHealth, 0.001f, "they take no more HP");
+            yield return WaitUntil(() => !shortController.IsActive, shortController.Duration + 1f);
+            Assert.IsFalse(shortController.IsActive, "it ends by itself");
+            Assert.AreEqual(1f, health.CurrentHealth, 0.001f);
+            Assert.AreEqual(0f, stats.Short, 0.01f);
 
             // The second wind is gone: the next short kills her.
             stats.DebugSet(45f, PsychicStats.MaxShort);

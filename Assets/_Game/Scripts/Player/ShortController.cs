@@ -17,7 +17,9 @@ namespace GlorifiedBody.Player
     /// half of her HP before she stabilises. The SHORT capsule ends the short at once. Numbers are PROPOSED.
     /// It can kill her (Bruno, 2026-11-06: "the short should kill the player if their health goes to 0; if they have second
     /// wind, it'll use it and not kill them. otherwise it'll straight up kill them"): a shock at her last HP kills her
-    /// (KillerId, the death screen), or takes the second wind, and then the short ends.
+    /// (KillerId, the death screen), or takes the second wind. Then the short goes on, and it takes no more HP (Bruno: "the short
+    /// goes on as normal, but it doesn't detract health while using up the second wind. reason: a player may strategically short
+    /// themselves on purpose to save up on mk").
     /// Bruno, 2026-10-20: it lasts 16 s. She can walk, slowly: no run, no dodge, no powers (TankController.SlowWalk).
     /// The HP drain spreads over the 16 s, and each shock does the same damage to the others as before.
     /// One enemy at a time (Bruno, 2026-10-22, design §11.4: "i want the enemies to see their colleagues dying in
@@ -62,6 +64,10 @@ namespace GlorifiedBody.Player
         private Health health;
         private TankController tank; // optional: the slow walk during the short
         private float pendingSelf; // Self damage that a dodge frame blocked. Lands at the next shock.
+        private bool windTaken;    // this short took the second wind: it takes no more HP
+
+        /// <summary>This short took the second wind, and it hurts her no more.</summary>
+        public bool WindTaken => windTaken;
 
         public bool IsActive { get; private set; }
         public float Remaining { get; private set; }
@@ -101,6 +107,7 @@ namespace GlorifiedBody.Player
             ShocksFired = 0;
             Victim = null;
             pendingSelf = 0f;
+            windTaken = false;
             stats.RegenPaused = true;
             if (tank != null) tank.SetSlowWalk(true);
             // Her powers leave her control: a held floater drops at once, unhurt (Bruno, 2026-10-26).
@@ -125,6 +132,7 @@ namespace GlorifiedBody.Player
             Remaining = Mathf.Min(duration, secondsLeft);
             Victim = null;
             pendingSelf = 0f;
+            windTaken = false;
             painUntil = 0f;
             stats.RegenPaused = true;
             if (tank != null) tank.SetSlowWalk(true);
@@ -225,7 +233,11 @@ namespace GlorifiedBody.Player
 
             // The migraine. Invulnerable frames (the second wind, the tutorial) block a shock, so a shock that lands in them
             // waits for the next one. The total stays about half her HP.
-            if (health.IsInvulnerable)
+            if (windTaken)
+            {
+                // Nothing more from her: the second wind paid for this short.
+            }
+            else if (health.IsInvulnerable)
             {
                 pendingSelf += selfDamage;
             }
@@ -238,10 +250,13 @@ namespace GlorifiedBody.Player
                 if (self > 0f) health.TakeDamage(self);
                 if (lethal)
                 {
-                    // Dead: no shocks from a body. Or the second wind took it: a short that went on would kill her 2.5 s later,
-                    // and the wind must save her.
-                    End(byDrug: false, health.IsDead ? "death" : "second_wind");
-                    return;
+                    if (health.IsDead)
+                    {
+                        End(byDrug: false, "death"); // no shocks from a body
+                        return;
+                    }
+                    windTaken = true;
+                    RunTelemetry.Event("short_took_second_wind", $"hp={health.CurrentHealth:0}");
                 }
             }
 
