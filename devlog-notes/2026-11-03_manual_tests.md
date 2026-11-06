@@ -75,3 +75,63 @@ If the console shows a red line, copy it too.
 | 31 | Watch them move. | They walk around you at a distance, stop, aim, fire. Never at arm's reach on the way. | A soldier walks right past you and strikes. |
 | 32 | Turn to face one flanker. | The others move again to spots out of your view. | They stay in front of you. |
 | 33 | In LAB TEST, let the knife scientist see you. | It runs to your side, then strikes. | It runs straight at your face. |
+
+## F. MK as ammunition, the short (2026-11-06, any test room)
+
+| # | Do | Expected | If faulty |
+|---|---|---|---|
+| 34 | Press 1, 2, 3 and look at the HUD. | One MK row. It takes the name and the colour of the selected power. | Three rows, or the row does not change. |
+| 35 | Fire mk_warspite, then press 2. | The mk_erebus bar is still full. The SHORT bar rose a little. | One bar for all, or SHORT stays. |
+| 36 | Wait 30 s after a power. | No bar comes back by itself. | A bar rises. |
+| 37 | In the training room, take hits until your HP is low, press F5, then attack. | Under half your HP the short kills you. The death screen shows the PA line and the short's hint. | She stays at 1 HP, or the screen names an enemy. |
+| 38 | Do it again with the second wind ready. | You stay at 1 HP, and the short ends at once. | You die, or the shocks go on. |
+
+## G. Auto-fire and cancel
+
+| # | Do | Expected | If faulty |
+|---|---|---|---|
+| 39 | Hold the attack key on an enemy. | The power fires by itself when the circle fills. Your feet go free. | It waits for the release. |
+| 40 | Keep the key down after that. | No new circle until you press again. | A new charge starts. |
+| 41 | Hold the attack key, then press the defend key. | "CANCELLED". No MK spent, nothing fires. | It fires, or MK falls. |
+
+## H. The inventory
+
+| # | Do | Expected | If faulty |
+|---|---|---|---|
+| 42 | Open it with I after you take a capsule, a key and a log. | Three lists: CONSUMABLES, KEYS, LOGS, in that order. | One row. |
+| 43 | Press W and S. | The selection moves in the list and wraps. The inventory stays open. | S closes it. |
+| 44 | Press A and D. | The selection changes list and skips an empty one. | Nothing moves. |
+| 45 | Press I or Esc. | It closes. | It stays. |
+
+## I. The mouse carry (TEST ROOMS > PHYSICS TEST)
+
+| # | Do | Expected | If faulty |
+|---|---|---|---|
+| 46 | Press 3, face a box, hold the defend key. | It rises. She faces it and stands still. | Nothing, or a floor slab rises. |
+| 47 | Move the mouse. | The box follows: left and right, up is away. A wall stops it. | It moves the wrong way, or goes through a wall. |
+| 48 | Roll the wheel up. | The box rises. | Nothing. Tell me if you want the mouse for the height. |
+| 49 | Take a box over the rail and release it on the yellow plate. | It falls straight down. The red gate in the east wall opens. | It flies on, or the gate stays. |
+| 50 | Lift it off the plate again. | The gate shuts. | It stays open. |
+| 51 | Drop one box on the other. | It stays on top. | It falls through or jumps. |
+
+## J. mk_edgar (TEST ROOMS > EDGAR TEST)
+
+| # | Do | Expected | If faulty |
+|---|---|---|---|
+| 52 | Press 4, lock the soldier or the guard (Tab), hold the attack key. | "NOT WEAK ENOUGH", no MK spent. | The circle goes on. |
+| 53 | Hurt him with another power, then charge mk_edgar within 6 m. | He goes down on both knees and holds still. At the full circle he stands with a violet light over his head. 75 MK gone. | He keeps fighting. |
+| 54 | Release early, or press the defend key. | He gets up. No MK spent. | MK falls. |
+| 55 | Tab to the lab worker at full HP. | It works with no damage. | "NOT WEAK ENOUGH". |
+| 56 | Tab to the armour marked as boss, hurt it. | "IT RESISTS". | It kneels. |
+| 57 | With a dominated guard, walk away. | He follows. With an enemy near, he fights it, and it fires at him. | He stands, or he fires at you. |
+| 58 | Stand at the rail, take the guard behind it, press the defend key. | He runs to the switch. The red gate opens. | "NOTHING TO SEND IT TO". |
+| 59 | Open the demo. | Key 4 does nothing, and no EDGAR text shows. | mk_edgar is in the demo. |
+
+## K. The team (the demo, G2)
+
+| # | Do | Expected | If faulty |
+|---|---|---|---|
+| 60 | Fight in G2, then run out of their sight. | Within 2 s, lasers and shots at the place where you were, not at you. | They walk straight to you. |
+| 61 | Stay away for 8 s. | "Lost her." They walk in pairs, one at a time. | All run at once. |
+| 62 | Step into a soldier's sight. | "Contact!" The fight starts again. | They walk past you. |
+| 63 | Kill all four of G2, then take the release in G9, and wait 20 s. | Four new soldiers come for you. | Nobody comes. |

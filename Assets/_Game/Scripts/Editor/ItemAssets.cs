@@ -60,7 +60,7 @@ namespace GlorifiedBody.Editor
             string effect = type == DrugType.Nalcon ? "A white capsule of tincture, ward stock. It fills the mk_warspite bar, and only that bar."
                 : type == DrugType.NalconFire ? "An amber capsule of tincture, ward stock. It fills the mk_erebus bar, and only that bar."
                 : type == DrugType.NalconLift ? "A cyan capsule of tincture, ward stock. It fills the mk_orzabal bar, and only that bar."
-                : type == DrugType.NalconMind ? "A violet capsule of tincture, ward stock. It fills the mk_edgar bar, and only that bar."
+                : type == DrugType.NalconMind ? "A violet capsule of tincture, restricted stock. It fills the mk_edgar bar, and only that bar."
                 : type == DrugType.Red ? "It takes half the SHORT bar away, and it ends a short."
                 : "It gives the second wind back: the next lethal hit or shock leaves her at 1 HP.";
             return Item(type.ToString().ToLowerInvariant(), name, ItemKind.Drug, colour, $"A drug. {effect} No drug gives HP. One slot.", "", type);

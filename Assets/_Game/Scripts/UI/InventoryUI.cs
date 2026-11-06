@@ -364,9 +364,9 @@ namespace GlorifiedBody.UI
             string tag = item.kind == ItemKind.AudioLog ? "AUDIO LOG" : item.kind == ItemKind.Log ? "LOG" : item.IsCritical ? "KEY ITEM" : item.kind == ItemKind.Drug ? "CONSUMABLE" : "CARRIED";
             return new Entry
             {
-                Label = item.displayName,
-                Name = item.displayName,
-                Words = $"{tag}. {item.description}",
+                Label = item.ShownName,
+                Name = item.ShownName,
+                Words = $"{tag}. {item.ShownDescription}",
                 Colour = item.colour,
                 Item = item,
                 Count = count,
@@ -422,7 +422,7 @@ namespace GlorifiedBody.UI
                 if (used || powers == null) return used ? "used:" + e.Drug.Value : "none";
                 // A drug with nothing to do stays in the inventory: say why (Bruno, 2026-10-30: each drug does one thing).
                 string why = powers.LastResult;
-                wordsText.text = why == "mk_full" ? "That MK bar is full." : why == "short_empty" ? "The SHORT bar is empty."
+                wordsText.text = why == "unknown" ? "She does not know what it does." : why == "mk_full" ? "That MK bar is full." : why == "short_empty" ? "The SHORT bar is empty."
                     : why == "second_wind_ready" ? "The second wind is ready." : "It does nothing now.";
                 return "refused:" + why;
             }

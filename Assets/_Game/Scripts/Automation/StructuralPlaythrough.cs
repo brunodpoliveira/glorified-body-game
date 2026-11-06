@@ -488,13 +488,12 @@ namespace GlorifiedBody.Automation
             yield return WaitGame(powers.Selected.fullChargeTime * 0.7f);
             CaptureShot("charge");
             yield return WaitGame(powers.Selected.fullChargeTime * 0.5f);
-            float charge = powers.Charge;
-            pad.ReleaseAll();
+            pad.ReleaseAll(); // the full circle fired by itself (2026-11-06)
             yield return null;
             yield return null;
             float dealt = dummyHp0 - dummyHealth.CurrentHealth;
-            Record("blast_full_charge", charge >= 0.99f && powers.LastResult == "fired" && dealt >= powers.Selected.baseDamage - 0.5f,
-                $"charge={charge:0.00} result={powers.LastResult} dealt={dealt:0} nalcon={stats.Nalcon:0}");
+            Record("blast_full_charge", powers.Charge <= 0f && stats.Nalcon <= PsychicStats.MaxNalcon - powers.Selected.nalconCost + 0.01f && powers.LastResult == "fired" && dealt >= powers.Selected.baseDamage - 0.5f,
+                $"result={powers.LastResult} dealt={dealt:0} nalcon={stats.Nalcon:0}");
 
             // Finish it (when the blast left it alive): the kill fills the SHORT bar by 25.
             int guard = 0;

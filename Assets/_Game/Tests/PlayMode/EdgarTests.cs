@@ -126,6 +126,28 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator BeforeTheBeat_TheCapsuleIsUnknown_AndCannotBeUsed()
+        {
+            // Bruno, 2026-11-06: "marked as \"unknow capsule\" and cannot be used until this story beat".
+            ItemDefinition capsule = Resources.Load<ItemDefinition>("Items/item_nalconmind");
+            Assert.IsNotNull(capsule);
+            powers.Select(PowerKind.Blast);
+            DrugInventory drugs = lucy.GetComponent<DrugInventory>();
+            drugs.DebugSet(DrugType.NalconMind, 1);
+            stats.DebugSetMk(PowerKind.Domination, 10f);
+            StoryFlags.Drop(PsychicPowers.EdgarFlag);
+            Assert.AreEqual("UNKNOWN CAPSULE", capsule.ShownName);
+            Assert.IsFalse(powers.UseDrug(DrugType.NalconMind), "it cannot be used");
+            Assert.AreEqual("unknown", powers.LastResult);
+            Assert.AreEqual(1, drugs.Count(DrugType.NalconMind), "she keeps it");
+            StoryFlags.Raise(PsychicPowers.EdgarFlag);
+            Assert.AreEqual("EDGAR CAPSULE", capsule.ShownName, "the name after the beat");
+            Assert.IsTrue(powers.UseDrug(DrugType.NalconMind));
+            Assert.AreEqual(100f, stats.Mk(PowerKind.Domination), 0.01f);
+            yield return null;
+        }
+
+        [UnityTest]
         public IEnumerator ACivilian_FullHp_IsTakenByAFullCircle_ForAHugeCost()
         {
             yield return Only("Worker_C");

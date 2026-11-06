@@ -755,6 +755,7 @@ namespace GlorifiedBody.Player
                 case DrugType.NalconFire:
                 case DrugType.NalconLift:
                 case DrugType.NalconMind:
+                    if (type == DrugType.NalconMind && !EdgarUnlocked) return "unknown";
                     return stats.Mk(Capsules.PowerOf(type).Value) >= PsychicStats.MaxNalcon - 0.001f ? "mk_full" : null;
                 case DrugType.Red: return stats.Short <= 0.001f && (shortController == null || !shortController.IsActive) ? "short_empty" : null;
                 case DrugType.DFelon:

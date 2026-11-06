@@ -411,6 +411,7 @@ namespace GlorifiedBody.Enemy
             body.Stop();
             body.Crouch(true);
             KneelPose.Set(gameObject, true);
+            Dominated.SayKneel(gameObject, fighter: true);
         }
 
         public void EndKneel()
@@ -439,6 +440,7 @@ namespace GlorifiedBody.Enemy
             Current = Phase.Idle;
             gun.FromCover = false;
             gun.RequireLineOfSight = true;
+            if (tremble != null) tremble.Amount = 0f; // the writer: the shaking stops
         }
 
         public void ReleaseMind()
@@ -485,6 +487,7 @@ namespace GlorifiedBody.Enemy
             }
             if (wanted == quarry) return;
             quarry = wanted;
+            if (wanted != null) Dominated.SaySeen(gameObject);
             GameObject lucy = wanted == null ? GameObject.FindWithTag("Player") : null;
             player = wanted != null ? wanted : lucy != null ? lucy.transform : null;
             gun.SetTarget(wanted);

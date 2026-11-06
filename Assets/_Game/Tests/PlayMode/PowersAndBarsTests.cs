@@ -68,7 +68,7 @@ namespace GlorifiedBody.Tests.PlayMode
             shortController = player.GetComponent<ShortController>();
             Assert.IsNotNull(stats, "PsychicStats");
             Assert.IsNotNull(powers, "PsychicPowers");
-            Assert.AreEqual(3, powers.Powers.Count, "three powers loaded from Resources/Powers");
+            Assert.AreEqual(4, powers.Powers.Count, "four powers loaded from Resources/Powers");
             dummyA = GameObject.Find("Dummy_A").GetComponent<LockOnTargetable>();
             dummyB = GameObject.Find("Dummy_B").GetComponent<LockOnTargetable>();
 

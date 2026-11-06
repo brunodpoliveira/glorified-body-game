@@ -17,8 +17,8 @@ MonoBehaviour:
   kind: 3
   drugType: 5
   colour: {r: 0.72, g: 0.42, b: 1, a: 1}
-  description: A drug. A violet capsule of tincture, ward stock. It fills the mk_edgar
-    bar, and only that bar. No drug gives HP. One slot.
+  description: A drug. A violet capsule of tincture, restricted stock. It fills the
+    mk_edgar bar, and only that bar. No drug gives HP. One slot.
   logText: 
   readFlag: 
   mapFloor: 

@@ -283,6 +283,7 @@ namespace GlorifiedBody.Enemy
             body.Stop();
             body.Crouch(true);
             KneelPose.Set(gameObject, true);
+            Dominated.SayKneel(gameObject, fighter: false);
         }
 
         public void EndKneel()

@@ -498,7 +498,7 @@ namespace GlorifiedBody.UI
                 mkFill.fillAmount = stats.Nalcon / PsychicStats.MaxNalcon;
                 mkFill.color = MkColours[(int)stats.Selected];
                 mkLabel.text = MkNames[(int)stats.Selected];
-                if (boostText != null) boostText.enabled = powers != null && powers.IsBoosted;
+                if (boostText != null) boostText.enabled = powers != null && powers.IsBoosted && stats.Selected != PowerKind.Domination; // the boost does not help mk_edgar
                 shortFill.fillAmount = stats.Short / PsychicStats.MaxShort;
                 shortFill.color = stats.IsShortFull ? new Color(1f, 0.3f, 0.2f) : new Color(1f, 0.85f, 0.2f);
             }

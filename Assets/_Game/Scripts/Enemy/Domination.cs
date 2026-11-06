@@ -90,7 +90,33 @@ namespace GlorifiedBody.Enemy
         private const float FightReach = 12f;    // m: it goes for an enemy this near
         private const float SprintOver = 8f;     // m
         private const float SwitchReach = 1.2f;  // m
-        private static readonly string[] TakenLines = { "...Yes.", "I hear you.", "Tell me where." };
+        // The writer's lines (barks.csv, edgar_*), PROPOSED.
+        public static readonly string[] KneelFighterLines = { "My legs. What'd you do to my legs?", "Control, I'm down. I don't know why.", "I can't lift it. Somebody take the shot!", "That's not me. That's not me thinking that.", "It stopped hurting. Why'd it stop hurting?" };
+        public static readonly string[] KneelCivilianLines = { "I think it's a stroke. Somebody, it's a stroke.", "I'll do it. Whatever it is, you don't have to...", "I have two kids. I have... What are their names?", "It's going quiet. No. No, no, no.", "I was sheltering. I did what the card said." };
+        private static readonly string[] TakenLines = { "...Yes.", "I hear you.", "Tell me where.", "It doesn't hurt.", "There was something. ...It's gone." };
+        private static readonly string[] SentLines = { "Going.", "I know the way.", "You stay there. I'll get it.", "Back in five.", "Whatever you need." };
+        private static readonly string[] SeenLines = { "Hey! It's me! It's me, what are you doing?", "Check fire! Check your fire! You're hitting us!", "Control, one of ours is firing on us. One of ours.", "He's not answering. There's nobody in there.", "I can't. I can't shoot. We came in together." };
+        private static readonly string[] LetGoLines = { "It's back. Oh God, it's all back.", "What did I do? What did you make me do?", "I remember it. I remember all of it.", "How long was I gone? How long?", "Not again. Stay back. Not again!" };
+        private const float KneelLineSeconds = 2.5f; // the writer: the kneel lines have the whole circle
+        private const float SeenGap = 8f; // s between the lines of the colleagues
+
+        /// <summary>A figure goes down on its knees: its line (the armed say the fighter lines).</summary>
+        public static void SayKneel(GameObject figure, bool fighter)
+        {
+            string[] lines = fighter ? KneelFighterLines : KneelCivilianLines;
+            Bark.Say(figure, lines[Random.Range(0, lines.Length)], KneelLineSeconds);
+        }
+
+        private static float nextSeen;
+
+        /// <summary>A colleague turns his gun on this one: the line, not too often.</summary>
+        public static void SaySeen(GameObject colleague)
+        {
+            if (Time.time < nextSeen) return;
+            nextSeen = Time.time + SeenGap;
+            Bark.Say(colleague, SeenLines[Random.Range(0, SeenLines.Length)], 2.5f);
+        }
+
 
         private IDominable mind;
         private IEnemyBody body;
@@ -151,6 +177,7 @@ namespace GlorifiedBody.Enemy
             if (health != null) health.OnDeath?.RemoveListener(OnDied);
             if (mark != null) Destroy(mark);
             mind.ReleaseMind();
+            Bark.Say(gameObject, LetGoLines[Random.Range(0, LetGoLines.Length)], 2.5f);
             RunTelemetry.Event("dom_let_go", name);
             Destroy(this);
         }
@@ -171,6 +198,7 @@ namespace GlorifiedBody.Enemy
             if (best == null) return false;
             sentTo = best;
             body.MoveTo(best.Point, MoveSpeed.Run);
+            Bark.Say(gameObject, SentLines[Random.Range(0, SentLines.Length)], 2f);
             nextFollow = Time.time + 0.5f;
             RunTelemetry.Event("dom_sent", best.name);
             return true;

@@ -41,6 +41,12 @@ namespace GlorifiedBody.Interaction
         public string itemId = "item";
         public string displayName = "ITEM";
 
+        // The writer, 2026-11-06: before the story beat the mk_edgar capsule is only an unknown capsule (Bruno: "marked as
+        // \"unknow capsule\" and cannot be used until this story beat").
+        private bool IsUnknown => kind == ItemKind.Drug && drugType == DrugType.NalconMind && !PsychicPowers.EdgarUnlocked;
+        public string ShownName => IsUnknown ? "UNKNOWN CAPSULE" : displayName;
+        public string ShownDescription => IsUnknown ? "A drug. A violet capsule in an unmarked tin. No stock label and no dose. Nothing tells her what it does. One slot." : description;
+
         /// <summary>A name inside a question ("Take the MK capsule?"): lower case, but MK stays MK.</summary>
         public static string Spoken(string name)
         {
