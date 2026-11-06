@@ -511,7 +511,7 @@ namespace GlorifiedBody.Editor.Demo
             return asset;
         }
 
-        private static Texture2D Still(string name)
+        internal static Texture2D Still(string name)
         {
             string path = DemoScripts.FmvFolder + "/" + name + ".png";
             var tex = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
@@ -524,7 +524,7 @@ namespace GlorifiedBody.Editor.Demo
             return tex;
         }
 
-        private static AudioClip Sound(string name)
+        internal static AudioClip Sound(string name)
         {
             string path = DemoScripts.FmvFolder + "/sfx/" + name + ".ogg";
             var clip = AssetDatabase.LoadAssetAtPath<AudioClip>(path);

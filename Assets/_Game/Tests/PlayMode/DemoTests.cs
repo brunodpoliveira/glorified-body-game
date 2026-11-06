@@ -33,7 +33,7 @@ namespace GlorifiedBody.Tests.PlayMode
     {
         private const string World = "Demo";
         private static readonly string[] Rooms = { "W1", "W1B", "W2", "W3", "W4", "W5", "W6", "W7", "W8", "W9", "W10", "W11", "W12", "W13", "W14", "W15", "W16", "W17", "S1",
-            "G1", "G2", "G3", "G4", "G5", "G6", "G7", "G8", "G9", "G9b", "G10", "G11", "G12", "G13", "G14", "G15", "G16", "U1" }; // the floorplan v2 (2026-11-05)
+            "G1", "G2", "G3", "G4", "G5", "G6", "G7", "G8", "G9", "G9b", "G10", "G11", "G12", "G13", "G14", "G15", "G16", "X1", "R1", "R2", "R3", "U1" }; // the floorplan v2 (2026-11-05)
         private static readonly string[] MainWay = { "W1", "W1B", "W2", "W5", "W7", "W8", "W9", "W11", "W9", "W12", "S1", "G1", "G2", "G5", "G9", "G5", "U1" };
 
         [UnitySetUp]
@@ -296,29 +296,139 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator U1_TheEnd_TheGrabTearsTheUniformOff_TheBulletin_ThenTheTitle()
+        public IEnumerator U1_TheGrabTearsTheUniformOff_TheHudGoes_AndSheStandsInTheCarPark()
         {
             yield return LoadWorld();
             GameObject lucy = GameObject.FindGameObjectWithTag("Player");
             GlorifiedBody.Interaction.OutfitChange.Change(lucy, GlorifiedBody.Interaction.OutfitChange.Load(GlorifiedBody.Interaction.OutfitChange.GuardId));
-            lucy.GetComponent<TankController>().Teleport(GlorifiedBody.Rooms.Room.Of("U1").transform.position + new Vector3(20f, 0f, -25.5f), 180f); // U1's plan point, on floor 1
-            yield return WaitUntil(() => Bulletin.IsShowing, 60f);
-            Assert.IsTrue(Bulletin.IsShowing, "the bulletin after the exit lines");
+            lucy.GetComponent<TankController>().Teleport(GlorifiedBody.Rooms.Room.Of("U1").transform.position + new Vector3(20f, 0f, -25.5f), 180f);
+            yield return WaitUntil(() => GlorifiedBody.Rooms.RoomTracker.CurrentId == "X1", 60f);
+            Assert.AreEqual("X1", GlorifiedBody.Rooms.RoomTracker.CurrentId, "after the exit lines: the car park");
             Assert.AreEqual(GlorifiedBody.Interaction.OutfitChange.NudeId, lucy.GetComponent<PsychicStats>().Outfit.outfitId, "round 20: the grab tears the uniform off");
-            var pad = new VirtualPad();
-            GameInput.SetBotSource(pad);
-            var driver = new GameObject("[Pad]").AddComponent<PadDriver>();
-            UnityEngine.Object.DontDestroyOnLoad(driver.gameObject);
-            driver.pad = pad;
-            float t0 = Time.realtimeSinceStartup;
-            while (SceneManager.GetActiveScene().name != "Main_Menu" && Time.realtimeSinceStartup - t0 < 20f)
-            {
-                pad.Tap(InputManager.GameAction.Interact);
-                yield return new WaitForSecondsRealtime(0.4f);
-            }
-            GameInput.ClearBotSource(pad);
-            UnityEngine.Object.Destroy(driver.gameObject);
-            Assert.AreEqual("Main_Menu", SceneManager.GetActiveScene().name, "the title: back to the menu");
+            yield return new WaitForSeconds(1f);
+            Assert.IsFalse(GameObject.Find("PlayerHudCanvas").GetComponent<Canvas>().enabled, "no HUD: the Crown is gone");
+            Assert.IsFalse(lucy.GetComponent<TankController>().MovementLocked, "she walks");
+        }
+
+        private static IEnumerator Coda(string roomId, params string[] flags)
+        {
+            yield return LoadWorld();
+            yield return WaitUntil(() => CutscenePlayer.IsPlaying && CutscenePlayer.ShotIndex >= 0, 10f);
+            CutscenePlayer.Skip();
+            yield return WaitUntil(() => StoryFlags.Has("demo_w1_wake"), 10f);
+            foreach (string flag in flags) StoryFlags.Raise(flag);
+            GameObject lucy = GameObject.FindGameObjectWithTag("Player");
+            lucy.GetComponentInChildren<Health>().SetInvulnerable(true);
+            GlorifiedBody.Rooms.Room room = GlorifiedBody.Rooms.Room.Of(roomId);
+            Assert.IsNotNull(room, roomId);
+            yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator X1_TheDoorWaitsForTheSunglasses_ThenTheBulletin_ThenTheShop()
+        {
+            yield return Coda("X1", "demo_crown_gone");
+            GameObject lucy = GameObject.FindGameObjectWithTag("Player");
+            lucy.GetComponent<TankController>().Teleport(GameObject.Find("Entry_X1").transform.position, 45f);
+            yield return WaitUntil(() => GlorifiedBody.Rooms.RoomTracker.CurrentId == "X1", 3f);
+            FlagSwitch door = UnityEngine.Object.FindObjectsByType<FlagSwitch>(FindObjectsSortMode.None).First(f => f.name == "Car_Door");
+            Assert.IsFalse(door.Available, "no sunglasses: the door waits");
+            ItemPickup tin = UnityEngine.Object.FindObjectsByType<ItemPickup>(FindObjectsSortMode.None).First(p => p.name == "Tin_Unknown");
+            Assert.AreEqual("UNKNOWN CAPSULE", tin.item.ShownName);
+            ItemInventory items = lucy.GetComponent<ItemInventory>();
+            items.TryAdd(UnityEngine.Object.FindObjectsByType<ItemPickup>(FindObjectsSortMode.None).First(p => p.name == "Sunglasses").item);
+            yield return WaitUntil(() => StoryFlags.Has("demo_readout_on"), 3f);
+            yield return null;
+            Assert.IsTrue(GameObject.Find("PlayerHudCanvas").GetComponent<Canvas>().enabled, "the HUD comes back with the sunglasses");
+            Assert.IsTrue(door.Available, "the door opens now");
+            StoryFlags.Raise("demo_car_door");
+            yield return WaitUntil(() => Bulletin.IsShowing, 15f);
+            Assert.IsTrue(Bulletin.IsShowing, "the bulletin");
+            yield return WaitUntil(() => GlorifiedBody.Rooms.RoomTracker.CurrentId == "R1", 25f);
+            Assert.AreEqual("R1", GlorifiedBody.Rooms.RoomTracker.CurrentId, "the service station");
+        }
+
+        [UnityTest]
+        public IEnumerator R1_ThePosterBeat_TheFlashback_UnlocksMkEdgar_AndTheAttendantFollows()
+        {
+            yield return Coda("R1", "demo_crown_gone", "demo_readout_on");
+            GameObject lucy = GameObject.FindGameObjectWithTag("Player");
+            PsychicPowers powers = lucy.GetComponent<PsychicPowers>();
+            Assert.IsFalse(PsychicPowers.EdgarUnlocked, "before the beat");
+            lucy.GetComponent<TankController>().Teleport(GameObject.Find("Entry_R1").transform.position + Vector3.forward * 1.6f, 0f);
+            yield return WaitUntil(() => CutscenePlayer.IsPlaying, 40f);
+            Assert.IsTrue(CutscenePlayer.IsPlaying, "the flashback");
+            yield return WaitUntil(() => !CutscenePlayer.IsPlaying, 25f);
+            yield return WaitUntil(() => PsychicPowers.EdgarUnlocked, 8f);
+            Assert.IsTrue(PsychicPowers.EdgarUnlocked, "the flag goes up");
+            yield return null;
+            GameObject attendant = GameObject.Find("Attendant");
+            Assert.IsTrue(attendant.GetComponent<IDominable>().IsDominated, "he is hers, and she did not want it");
+            Assert.AreEqual(100f, lucy.GetComponent<PsychicStats>().Mk(PowerKind.Domination), 0.01f, "the first take costs no MK");
+            yield return WaitUntil(() => StoryFlags.Has("demo_r1_poster"), 20f);
+            Assert.IsFalse(lucy.GetComponent<TankController>().MovementLocked, "she walks");
+            Assert.AreEqual("EDGAR CAPSULE", Resources.Load<ItemDefinition>("Items/item_nalconmind").ShownName);
+            StoryFlags.Drop(PsychicPowers.EdgarFlag);
+        }
+
+        [UnityTest]
+        public IEnumerator R2_TheMechanicAtFullHp_SentToTheSwitch_OpensTheShutter_AndAKillOnlyBringsASpare()
+        {
+            yield return Coda("R2", "demo_crown_gone", "demo_readout_on", PsychicPowers.EdgarFlag);
+            GameObject lucy = GameObject.FindGameObjectWithTag("Player");
+            TankController tank = lucy.GetComponent<TankController>();
+            PsychicPowers powers = lucy.GetComponent<PsychicPowers>();
+            GameObject mechanic = GameObject.Find("Mechanic"), shutter = GameObject.Find("Shutter");
+            Assert.IsNotNull(mechanic);
+            Assert.IsTrue(shutter.activeInHierarchy, "the shutter is shut");
+            tank.Teleport(mechanic.transform.position + Vector3.back * 3.4f, 0f);
+            yield return WaitUntil(() => GlorifiedBody.Rooms.RoomTracker.CurrentId == "R2", 3f);
+
+            // A kill does not open it: a spare comes out.
+            mechanic.GetComponent<Health>().TakeDamage(9999f);
+            yield return WaitUntil(() => GameObject.Find("Spare_Mechanic") != null, GlorifiedBody.Story.SpareFigure.WaitSeconds + 3f);
+            GameObject spare = GameObject.Find("Spare_Mechanic");
+            Assert.IsNotNull(spare, "the spare comes");
+            yield return new WaitForSeconds(0.3f);
+            Assert.IsTrue(shutter.activeInHierarchy, "the kill opened nothing");
+
+            powers.Select(PowerKind.Domination);
+            tank.Teleport(spare.transform.position + (Vector3.back * 3f), 0f);
+            yield return null;
+            Assert.IsNull(Domination.Refusal(spare.GetComponent<GlorifiedBody.Combat.LockOnTargetable>(), lucy.transform.position, powers.Selected.range, true), "she can take him");
+            Domination.Take(spare.GetComponent<IDominable>(), lucy);
+            Assert.IsTrue(Domination.Current.SendToSwitch(lucy.transform.position, powers.Selected.range), "the switch is in reach");
+            yield return WaitUntil(() => StoryFlags.Has("demo_r2_shutter"), 15f);
+            Assert.IsTrue(StoryFlags.Has("demo_r2_shutter"), $"he reached the switch; he stands at {spare.transform.position}");
+            yield return null;
+            Assert.IsFalse(shutter.activeInHierarchy, "the shutter opens");
+            StoryFlags.Drop(PsychicPowers.EdgarFlag);
+        }
+
+        [UnityTest]
+        public IEnumerator R3_TheGuardMustBeHurt_SentToTheSwitch_TheBarrierRises_AndTheDemoEnds()
+        {
+            yield return Coda("R3", "demo_crown_gone", "demo_readout_on", PsychicPowers.EdgarFlag);
+            GameObject lucy = GameObject.FindGameObjectWithTag("Player");
+            TankController tank = lucy.GetComponent<TankController>();
+            PsychicPowers powers = lucy.GetComponent<PsychicPowers>();
+            GameObject guard = GameObject.Find("Guard_Booth");
+            Assert.IsNotNull(guard);
+            tank.Teleport(guard.transform.position + Vector3.back * 3.4f, 0f);
+            yield return WaitUntil(() => GlorifiedBody.Rooms.RoomTracker.CurrentId == "R3", 3f);
+            var lockable = guard.GetComponent<GlorifiedBody.Combat.LockOnTargetable>();
+            powers.Select(PowerKind.Domination);
+            Assert.AreEqual("dom_not_hurt", Domination.Refusal(lockable, lucy.transform.position, powers.Selected.range, true), "unhurt: not weak enough");
+            guard.GetComponent<Health>().TakeDamage(5f);
+            yield return null;
+            Assert.IsNull(Domination.Refusal(lockable, lucy.transform.position, powers.Selected.range, true));
+            Domination.Take(guard.GetComponent<IDominable>(), lucy);
+            Assert.IsTrue(Domination.Current.SendToSwitch(lucy.transform.position, powers.Selected.range));
+            yield return WaitUntil(() => StoryFlags.Has("demo_r3_barrier"), 15f);
+            Assert.IsTrue(StoryFlags.Has("demo_r3_barrier"), $"he reached the switch; he stands at {guard.transform.position}");
+            yield return WaitUntil(() => SceneManager.GetActiveScene().name == "Main_Menu", 20f);
+            Assert.AreEqual("Main_Menu", SceneManager.GetActiveScene().name, "the title: the demo ends");
+            StoryFlags.Drop(PsychicPowers.EdgarFlag);
         }
 
         [UnityTest]
@@ -1028,19 +1138,19 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator TheBulletin_ClosesByItself_ToTheTitle_WithNoKey()
+        public IEnumerator TheBulletin_ClosesByItself_WithNoKey()
         {
             // Bruno, 2026-11-05: "it needs to exit after the demo is complete". The card waited for E, and no hint said so.
-            yield return LoadWorld();
-            GameObject lucy = GameObject.FindGameObjectWithTag("Player");
-            GlorifiedBody.Interaction.OutfitChange.Change(lucy, GlorifiedBody.Interaction.OutfitChange.Load(GlorifiedBody.Interaction.OutfitChange.GuardId));
-            lucy.GetComponent<TankController>().Teleport(GlorifiedBody.Rooms.Room.Of("U1").transform.position + new Vector3(20f, 0f, -25.5f), 180f);
-            yield return WaitUntil(() => Bulletin.IsShowing, 60f);
+            yield return Coda("X1", "demo_crown_gone", "demo_readout_on");
+            GameObject.FindGameObjectWithTag("Player").GetComponent<TankController>().Teleport(GameObject.Find("Entry_X1").transform.position, 45f);
+            yield return WaitUntil(() => GlorifiedBody.Rooms.RoomTracker.CurrentId == "X1", 3f);
+            StoryFlags.Raise("demo_car_door");
+            yield return WaitUntil(() => Bulletin.IsShowing, 15f);
             Assert.IsTrue(Bulletin.IsShowing);
             float t0 = Time.realtimeSinceStartup;
-            yield return WaitUntil(() => SceneManager.GetActiveScene().name == "Main_Menu", 45f);
-            Debug.Log($"[DemoTests] the title {Time.realtimeSinceStartup - t0:0.0} s after the card");
-            Assert.AreEqual("Main_Menu", SceneManager.GetActiveScene().name, "the demo ends by itself");
+            yield return WaitUntil(() => !Bulletin.IsShowing, 30f);
+            Debug.Log($"[DemoTests] the card closes {Time.realtimeSinceStartup - t0:0.0} s after it shows");
+            Assert.IsFalse(Bulletin.IsShowing, "it closes by itself");
         }
 
         private static void KillThree()

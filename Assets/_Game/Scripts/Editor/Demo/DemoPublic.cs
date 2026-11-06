@@ -42,6 +42,7 @@ namespace GlorifiedBody.Editor.Demo
                 Room("U1", "UNFINISHED WING", 14, -28, 26, -16, 4f, U1, new Door('N', 20, "G5"), new Door('E', -23, "G14")),
             };
             rooms.AddRange(DemoV2.PublicRooms()); // the floorplan v2 (2026-11-05): G9b to G15
+            rooms.AddRange(DemoCoda.Rooms());     // the coda (2026-11-06): X1, R1, R2, R3
             return rooms;
         }
 
@@ -235,8 +236,10 @@ namespace GlorifiedBody.Editor.Demo
                 ScriptStep.Radio("", "u1_b1_later", "[PLACEHOLDER: the brain sector (B1) is built later.]"),
             };
             crown.AddRange(DemoScripts.Steps("cutscenes/10_the_exit.md", "cs10"));
-            crown.Add(ScriptStep.ShowBulletin());
-            crown.Add(ScriptStep.EndDemo());
+            // The way on is the coda now: the bulletin, the title and the end lie at its end (DemoCoda).
+            crown.Add(ScriptStep.Raise(DemoCoda.CrownGone));
+            crown.Add(ScriptStep.MoveHer(DemoCoda.EntryX1));
+            crown.Add(ScriptStep.FreeHer());
             r.Beat("U1_Crown", "demo_u1_crown", new Vector3(20f, 1f, -25.5f), new Vector3(10f, 2f, 3f), crown.ToArray());
             DemoV2.EncoreInU1(r, new Vector3(20f, 1f, -25.5f), new Vector3(10f, 2f, 3f)); // cutscene 09, layer 4: "Encore." if she read the card
         }

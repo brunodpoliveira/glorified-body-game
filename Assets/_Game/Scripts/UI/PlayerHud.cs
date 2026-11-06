@@ -14,6 +14,11 @@ namespace GlorifiedBody.UI
     /// charge circle over the target, and the SHORT warning. Built in code like the menus. The final art
     /// comes with the look test.
     /// </summary>
+    public static class PlayerHudFlags
+    {
+        public const string CrownGone = "demo_crown_gone", ReadoutOn = "demo_readout_on";
+    }
+
     public sealed class PlayerHud : MonoBehaviour
     {
         private Canvas canvas;
@@ -491,6 +496,9 @@ namespace GlorifiedBody.UI
         private void Update()
         {
             if (canvas == null || !Bind()) return;
+            // The Crown is gone and no sunglasses yet (the coda): no readout at all.
+            bool hidden = GlorifiedBody.Saving.StoryFlags.Has(PlayerHudFlags.CrownGone) && !GlorifiedBody.Saving.StoryFlags.Has(PlayerHudFlags.ReadoutOn);
+            if (canvas.enabled == hidden) canvas.enabled = !hidden;
 
             if (health != null) hpFill.fillAmount = health.MaxHealth > 0f ? health.CurrentHealth / health.MaxHealth : 0f;
             if (stats != null)

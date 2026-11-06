@@ -16,8 +16,21 @@ namespace GlorifiedBody.Story
         public string question = "Use the switch?";
         public string hint = "use the switch";
         public string doneText = "";
+        [Tooltip("It works only when she carries this item (the door of the car waits for the sunglasses). Empty: always.")]
+        public string requiredItem = "";
 
-        public override bool Available => base.Available && !string.IsNullOrEmpty(flag) && !GlorifiedBody.Saving.StoryFlags.Has(flag);
+        private bool HasItem
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(requiredItem)) return true;
+                GameObject her = GameObject.FindWithTag("Player");
+                ItemInventory items = her != null ? her.GetComponent<ItemInventory>() : null;
+                return items != null && items.Has(requiredItem);
+            }
+        }
+
+        public override bool Available => base.Available && !string.IsNullOrEmpty(flag) && !GlorifiedBody.Saving.StoryFlags.Has(flag) && HasItem;
         public override string Hint => hint;
         public override InteractKind KindFor(Interactor who) => InteractKind.Ask;
         public override string TextFor(Interactor who) => question;

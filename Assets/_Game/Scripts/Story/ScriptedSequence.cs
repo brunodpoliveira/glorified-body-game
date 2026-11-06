@@ -36,6 +36,10 @@ namespace GlorifiedBody.Story
         Approach,    // every soldier under target talks first: no attack on sight, it walks to the point and turns to her (Alert ends it)
         Give,        // an item (id) into her inventory (a key after a cutscene); no slot free: it lies at her feet
         StopIfFlag,  // the sequence ends here when the flag (id) is up (another beat played this one's content)
+        MoveHer,     // a cut: black, she stands at the object named id, the picture comes back
+        WaitItem,    // until she carries the item (id)
+        Kneel,       // the figure named id goes down on its knees (mk_edgar)
+        TakeMind,    // mk_edgar takes the figure named id, for no MK (a story beat)
     }
 
     /// <summary>One step of a sequence: what it does and its data (the room builder fills them in code).</summary>
@@ -77,6 +81,10 @@ namespace GlorifiedBody.Story
         public static ScriptStep Approach(GameObject group, Vector3 point) => new ScriptStep { kind = StepKind.Approach, target = group, point = point };
         public static ScriptStep Give(string itemId) => new ScriptStep { kind = StepKind.Give, id = itemId };
         public static ScriptStep StopIfFlag(string flag) => new ScriptStep { kind = StepKind.StopIfFlag, id = flag };
+        public static ScriptStep MoveHer(string objectName) => new ScriptStep { kind = StepKind.MoveHer, id = objectName };
+        public static ScriptStep WaitItem(string itemId) => new ScriptStep { kind = StepKind.WaitItem, id = itemId };
+        public static ScriptStep Kneel(string figure) => new ScriptStep { kind = StepKind.Kneel, id = figure };
+        public static ScriptStep TakeMind(string figure) => new ScriptStep { kind = StepKind.TakeMind, id = figure };
     }
 
     /// <summary>
@@ -225,6 +233,38 @@ namespace GlorifiedBody.Story
                     if (step.cutscene != null && CutscenePlayer.Play(step.cutscene))
                         while (CutscenePlayer.IsPlaying) yield return null;
                     break;
+                case StepKind.MoveHer:
+                {
+                    GameObject place = GameObject.Find(step.id);
+                    GameObject her = Lucy();
+                    TankController tank = her != null ? her.GetComponent<TankController>() : null;
+                    if (place == null || tank == null) break;
+                    GlorifiedBody.UI.ScreenFade.Cover();
+                    tank.Teleport(place.transform.position, place.transform.eulerAngles.y);
+                    yield return new WaitForSeconds(0.4f);
+                    GlorifiedBody.UI.ScreenFade.In(0.6f);
+                    break;
+                }
+                case StepKind.WaitItem:
+                {
+                    GameObject her = Lucy();
+                    GlorifiedBody.Interaction.ItemInventory items = her != null ? her.GetComponent<GlorifiedBody.Interaction.ItemInventory>() : null;
+                    while (items != null && !items.Has(step.id)) yield return null;
+                    break;
+                }
+                case StepKind.Kneel:
+                {
+                    GameObject figure = GameObject.Find(step.id);
+                    if (figure != null) figure.GetComponent<IDominable>()?.BeginKneel();
+                    break;
+                }
+                case StepKind.TakeMind:
+                {
+                    GameObject figure = GameObject.Find(step.id);
+                    IDominable mind = figure != null ? figure.GetComponent<IDominable>() : null;
+                    if (mind != null && !mind.IsDeadFigure && Lucy() != null) Domination.Take(mind, Lucy());
+                    break;
+                }
                 case StepKind.LockHer: SetLock(true); break;
                 case StepKind.FreeHer: SetLock(false); break;
                 case StepKind.EndDemo:

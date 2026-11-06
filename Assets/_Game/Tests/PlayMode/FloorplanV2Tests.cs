@@ -99,7 +99,7 @@ namespace GlorifiedBody.Tests.PlayMode
                 ("G5", new Vector4(12, -16, 28, 0)), ("G9", new Vector4(28, -16, 34, -9)), ("U1", new Vector4(14, -28, 26, -16)),
             })
                 Assert.AreEqual(rect, Room.Of(id).rect, id + " stands where it stood");
-            Assert.AreEqual(37, Room.All.Count, "36 rooms and the stair");
+            Assert.AreEqual(41, Room.All.Count, "40 rooms and the stair");
         }
 
         [UnityTest]
@@ -245,7 +245,7 @@ namespace GlorifiedBody.Tests.PlayMode
             lucy.GetComponent<TankController>().Teleport(Room.Of("U1").transform.position + new Vector3(20f, 0f, -25.5f), 180f);
             yield return WaitUntil(() => SubtitleService.Lines.Any(l => l.Text == "Encore."), 15f);
             Assert.IsTrue(SubtitleService.Lines.Any(l => l.Text == "Encore."), "\"Encore.\" among the voices of the night");
-            yield return WaitUntil(() => Bulletin.IsShowing, 60f);
+            yield return WaitUntil(() => GlorifiedBody.Rooms.RoomTracker.CurrentId == "X1", 60f);
         }
 
         // ── Helpers ───────────────────────────────────────────────────
