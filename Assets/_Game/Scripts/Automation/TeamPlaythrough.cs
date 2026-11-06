@@ -142,6 +142,7 @@ namespace GlorifiedBody.Automation
             yield return BotClock.Wait(3f);
             SoldierBrain walker = team.FirstOrDefault(b => b.Current == SoldierBrain.Phase.Search && b.Body.IsMoving && fire.PartnerOf(b) != null);
             Record("search", walker != null, $"route {fire.Route.Count} points, {team.Count(b => b.Current == SoldierBrain.Phase.Search)} of {team.Length} search");
+            Record("guns_down_in_the_search", team.All(b => !b.Gun.HoldsSlot || b.Current != SoldierBrain.Phase.Search), string.Join("; ", team.Select(b => $"{b.name} {b.Current} gun {b.Gun.Current} hold {b.Gun.HoldFire} suppress {b.Gun.SuppressPoint.HasValue} lines {b.GetComponentsInChildren<LineRenderer>().Count(l => l.enabled)}")));
             if (walker != null)
             {
                 SoldierBrain partner = fire.PartnerOf(walker);
@@ -190,7 +191,8 @@ namespace GlorifiedBody.Automation
         {
             Room room = Room.Of(roomId);
             if (room == null) return;
-            foreach (Renderer r in room.GetComponentsInChildren<Renderer>()) r.enabled = true;
+            foreach (Renderer r in room.GetComponentsInChildren<Renderer>())
+                if (!(r is LineRenderer)) r.enabled = true; // a laser that is off stays off
         }
 
         /// <summary>A close shot from a temporary camera: it stands back from the point and looks at it.</summary>

@@ -107,10 +107,9 @@ namespace GlorifiedBody.Tests.PlayMode
             float hp0 = target.CurrentHealth;
             stats.DebugSet(45f, 0f); // under the MK boost line
 
-            pad.SetHeld(InputManager.GameAction.Charge, true);
-            yield return new WaitForSeconds(blast.fullChargeTime + 0.3f);
-            Assert.AreEqual(1f, powers.Charge, 0.01f, "the circle is full");
             float nalconBefore = stats.Nalcon;
+            pad.SetHeld(InputManager.GameAction.Charge, true);
+            yield return new WaitForSeconds(blast.fullChargeTime + 0.3f); // the full circle fires by itself
             pad.ReleaseAll();
             yield return null;
             yield return null;
@@ -210,8 +209,7 @@ namespace GlorifiedBody.Tests.PlayMode
 
             float nalconBefore = stats.Nalcon;
             pad.SetHeld(InputManager.GameAction.Charge, true);
-            yield return new WaitForSeconds(tk.fullChargeTime + 0.2f);
-            Assert.AreEqual(1f, powers.Charge, 0.01f, "a full circle");
+            yield return new WaitForSeconds(tk.fullChargeTime + 0.2f); // the full circle fires by itself
             pad.ReleaseAll();
             yield return null;
             yield return null;
@@ -488,7 +486,7 @@ namespace GlorifiedBody.Tests.PlayMode
             float hp0 = target.CurrentHealth;
             pad.SetHeld(InputManager.GameAction.Charge, true);
             yield return new WaitForSeconds(blast.fullChargeTime * 0.5f + 0.15f);
-            Assert.AreEqual(1f, powers.Charge, 0.01f, "the circle fills in half the time");
+            Assert.AreEqual(100f - blast.nalconCost, stats.Nalcon, 0.01f, "the circle fills in half the time: it fired already");
             pad.ReleaseAll();
             yield return null;
             yield return null;
@@ -814,6 +812,62 @@ namespace GlorifiedBody.Tests.PlayMode
             powers.Select(PowerKind.Blast);
             Assert.IsTrue(powers.Release(1f), "mk_warspite still has its bar");
             yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator AFullCircle_FiresByItself_AndANewChargeNeedsANewPress()
+        {
+            // Bruno, 2026-11-06: "when the circle for the power is full the power is unleashed automatically".
+            stats.DebugSet(100f, 0f);
+            dummyA.GetComponent<Health>().SetMaxHealth(1000f);
+            pad.SetHeld(InputManager.GameAction.Charge, true);
+            yield return WaitUntil(() => stats.Mk(PowerKind.Blast) < 100f, powers.Selected.fullChargeTime + 1f);
+            Assert.AreEqual(80f, stats.Mk(PowerKind.Blast), 0.01f, "it fired with the key still down, at the full cost");
+            Assert.AreEqual(0f, powers.Charge, 0.001f, "the circle is empty");
+            Assert.IsFalse(tank.MovementLocked, "her feet are free");
+            yield return new WaitForSeconds(powers.Selected.fullChargeTime * 0.7f);
+            Assert.AreEqual(0f, powers.Charge, 0.001f, "the same press starts no new charge");
+            Assert.AreEqual(80f, stats.Mk(PowerKind.Blast), 0.01f);
+            pad.SetHeld(InputManager.GameAction.Charge, false);
+            yield return null;
+            yield return null;
+            Assert.AreEqual(80f, stats.Mk(PowerKind.Blast), 0.01f, "the release fires nothing");
+            pad.SetHeld(InputManager.GameAction.Charge, true);
+            yield return WaitUntil(() => powers.Charge > 0f, 1f);
+            Assert.Greater(powers.Charge, 0f, "a new press starts a new charge");
+            pad.SetHeld(InputManager.GameAction.Charge, false);
+        }
+
+        [UnityTest]
+        public IEnumerator TheDefendKey_CancelsACharge_AndSpendsNoMk()
+        {
+            // Bruno, 2026-11-06: "i started charging but changed my mind"; "a press of the defend key during a charge cancels it. agreed".
+            stats.DebugSet(100f, 0f);
+            float hp = dummyA.GetComponent<Health>().CurrentHealth;
+            pad.SetHeld(InputManager.GameAction.Charge, true);
+            yield return WaitUntil(() => powers.Charge > 0.3f, 2f);
+            Assert.Greater(powers.Charge, 0.3f);
+            pad.Tap(InputManager.GameAction.Defend);
+            yield return null;
+            yield return null;
+            Assert.AreEqual(0f, powers.Charge, 0.001f, "the circle is gone");
+            Assert.AreEqual("cancel", powers.LastResult);
+            Assert.IsFalse(tank.MovementLocked, "her feet are free");
+            pad.SetHeld(InputManager.GameAction.Charge, false);
+            yield return null;
+            yield return null;
+            Assert.AreEqual(100f, stats.Mk(PowerKind.Blast), 0.01f, "no MK spent");
+            Assert.AreEqual(hp, dummyA.GetComponent<Health>().CurrentHealth, 0.001f, "nothing fired");
+            Assert.AreEqual(0f, stats.Short, 0.01f, "no SHORT");
+
+            // With mk_orzabal the held key of a cancel starts no floor shield.
+            powers.Select(PowerKind.Telekinesis);
+            pad.SetHeld(InputManager.GameAction.Charge, true);
+            yield return WaitUntil(() => powers.Charge > 0.2f, 2f);
+            pad.SetHeld(InputManager.GameAction.Defend, true);
+            yield return new WaitForSeconds(PsychicPowers.ShieldHoldDelay + 0.3f);
+            Assert.AreEqual(0f, powers.ShieldCharge, 0.001f, "no shield from that key");
+            pad.ReleaseAll();
         }
 
         [UnityTest]

@@ -16,7 +16,9 @@ namespace GlorifiedBody.Player
     /// (the fire), mk_orzabal (the telekinesis; Bruno's names of 2026-10-22, the code keeps Blast, Fire, Telekinesis).
     /// Hold Charge: she stands still, turns to the locked target (LockOnController) and the circle fills over
     /// fullChargeTime. Release: the power fires at the target with that charge. Cost and damage scale with the
-    /// charge. A full SHORT bar: the attack press or the defend press starts the short at once (Bruno,
+    /// charge. The power fires by itself when the circle fills (Bruno, 2026-11-06: "when the circle for the power is full
+    /// the power is unleashed automatically"). A press of the defend key during a charge cancels it, with no MK spent.
+    /// A full SHORT bar: the attack press or the defend press starts the short at once (Bruno,
     /// 2026-10-20), and a release with a full bar starts it too. Q uses the drug of the selected power.
     /// </summary>
     [RequireComponent(typeof(PsychicStats), typeof(DrugInventory), typeof(LockOnController))]
@@ -136,6 +138,16 @@ namespace GlorifiedBody.Player
                 defendDown = false;
             }
 
+            // The cancel (Bruno, 2026-11-06): the defend press during a charge does only this.
+            if (defendDown && Charge > 0f && IsCharging)
+            {
+                Result("cancel", Charge);
+                EndAttackCharge();
+                defendDown = false;
+                defendAfterCancel = true;
+            }
+            if (!GameInput.GetAction(InputManager.GameAction.Defend, KeyCode.Mouse1)) defendAfterCancel = false;
+
             // LMB attacks, RMB defends (Bruno, 2026-10-20). Telekinesis with an enemy in the air (Bruno,
             // 2026-10-22): the attack key charges as usual; a short press throws it, a full charge slams it
             // (Release). The defend press catches a bullet near her and sends it back.
@@ -167,6 +179,14 @@ namespace GlorifiedBody.Player
                 float rate = IsBoosted ? BoostMultiplier : 1f; // the MK boost charges 2x as fast
                 Charge = Mathf.Min(1f, Charge + dt * rate / Selected.fullChargeTime);
                 if (!Mathf.Approximately(before, Charge)) OnChanged?.Invoke();
+                if (Charge >= 1f)
+                {
+                    float full = Charge;
+                    EndAttackCharge();
+                    Release(full);
+                    OnChanged?.Invoke();
+                    return;
+                }
             }
             else if (wasCharging)
             {
@@ -176,6 +196,17 @@ namespace GlorifiedBody.Player
             }
             wasCharging = charging;
         }
+
+        /// <summary>The circle empties and her feet go free. The attack key must rise before a new charge.</summary>
+        private void EndAttackCharge()
+        {
+            Charge = 0f;
+            wasCharging = false;
+            lockOn.EndCharge();
+            OnChanged?.Invoke();
+        }
+
+        private bool defendAfterCancel; // the key of a cancel is still down: it starts no floor shield
 
         public const float ShieldHoldDelay = 0.2f; // s: a shorter press is only the catch, PROPOSED
 
@@ -189,7 +220,7 @@ namespace GlorifiedBody.Player
         private void UpdateShield(float dt)
         {
             bool held = GameInput.GetAction(InputManager.GameAction.Defend, KeyCode.Mouse1);
-            bool can = held && Selected.kind == PowerKind.Telekinesis && activeLift == null && FloorShield.Current == null
+            bool can = held && !defendAfterCancel && Selected.kind == PowerKind.Telekinesis && activeLift == null && FloorShield.Current == null
                        && !IsCharging && !(shortController != null && shortController.IsActive) && !stats.Health.IsDead;
             if (!can)
             {

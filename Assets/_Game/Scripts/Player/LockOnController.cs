@@ -40,6 +40,18 @@ namespace GlorifiedBody.Player
 
         public event Action<LockOnTargetable> OnTargetChanged;
 
+        private bool waitForRelease;
+
+        /// <summary>The charge ended (the circle filled and fired, or a cancel): her feet go free now, and the key must rise before a new charge.</summary>
+        public void EndCharge()
+        {
+            waitForRelease = true;
+            if (!IsCharging) return;
+            IsCharging = false;
+            tank.LockMovement(false);
+            RunTelemetry.Event("charge_end", TargetName);
+        }
+
         private void Awake()
         {
             tank = GetComponent<TankController>();
@@ -108,7 +120,9 @@ namespace GlorifiedBody.Player
                 SwitchTarget();
             }
 
-            bool charge = GameInput.GetAction(InputManager.GameAction.Charge, KeyCode.Mouse0) && !tank.IsDodging;
+            bool held = GameInput.GetAction(InputManager.GameAction.Charge, KeyCode.Mouse0);
+            if (!held) waitForRelease = false;
+            bool charge = held && !waitForRelease && !tank.IsDodging;
             if (charge != IsCharging)
             {
                 IsCharging = charge;

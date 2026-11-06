@@ -365,6 +365,7 @@ namespace GlorifiedBody.UI
             {
                 case "too_heavy": return "TOO HEAVY";
                 case "no_nalcon": return "NOT ENOUGH MK";
+                case "cancel": return "CANCELLED";
                 case "blocked": return "BLOCKED";
                 default: return "";
             }
