@@ -35,7 +35,6 @@ namespace GlorifiedBody.Systems
 
         private GameState currentState = GameState.MainMenu;
         private float storedTimeScale = 1f;
-        private float storedFixedDeltaTime;
 
         public GameState CurrentState => currentState;
         public bool IsPaused => currentState == GameState.Paused;
@@ -73,9 +72,7 @@ namespace GlorifiedBody.Systems
         {
             if (currentState != GameState.Playing) return false;
             storedTimeScale = Time.timeScale;
-            storedFixedDeltaTime = Time.fixedDeltaTime;
             Time.timeScale = 0f;
-            Time.fixedDeltaTime = 0f;
             SetState(GameState.Reading);
             return true;
         }
@@ -84,7 +81,6 @@ namespace GlorifiedBody.Systems
         {
             if (currentState != GameState.Reading) return;
             Time.timeScale = storedTimeScale;
-            Time.fixedDeltaTime = storedFixedDeltaTime;
             SetState(GameState.Playing);
         }
 
@@ -93,9 +89,7 @@ namespace GlorifiedBody.Systems
         {
             if (currentState != GameState.Playing) return;
             storedTimeScale = Time.timeScale;
-            storedFixedDeltaTime = Time.fixedDeltaTime;
             Time.timeScale = 0f;
-            Time.fixedDeltaTime = 0f;
             SetState(GameState.Inventory);
         }
 
@@ -103,7 +97,6 @@ namespace GlorifiedBody.Systems
         {
             if (currentState != GameState.Inventory) return;
             Time.timeScale = storedTimeScale;
-            Time.fixedDeltaTime = storedFixedDeltaTime;
             SetState(GameState.Playing);
         }
 
@@ -114,9 +107,7 @@ namespace GlorifiedBody.Systems
         {
             if (currentState != GameState.Playing) return false;
             storedTimeScale = Time.timeScale;
-            storedFixedDeltaTime = Time.fixedDeltaTime;
             Time.timeScale = 0f;
-            Time.fixedDeltaTime = 0f;
             SetState(GameState.Cutscene);
             return true;
         }
@@ -125,7 +116,6 @@ namespace GlorifiedBody.Systems
         {
             if (currentState != GameState.Cutscene) return;
             Time.timeScale = storedTimeScale;
-            Time.fixedDeltaTime = storedFixedDeltaTime;
             SetState(GameState.Playing);
         }
         public bool IsGameOver => currentState == GameState.GameOver;
@@ -143,7 +133,6 @@ namespace GlorifiedBody.Systems
 
             Instance = this;
             DontDestroyOnLoad(gameObject);
-            storedFixedDeltaTime = Time.fixedDeltaTime;
         }
 
         void Update()
@@ -195,10 +184,8 @@ namespace GlorifiedBody.Systems
             if (currentState != GameState.Playing) return;
 
             storedTimeScale = Time.timeScale;
-            storedFixedDeltaTime = Time.fixedDeltaTime;
 
             Time.timeScale = 0f;
-            Time.fixedDeltaTime = 0f;
 
             SetState(GameState.Paused);
         }
@@ -208,7 +195,6 @@ namespace GlorifiedBody.Systems
             if (currentState != GameState.Paused) return;
 
             Time.timeScale = storedTimeScale;
-            Time.fixedDeltaTime = storedFixedDeltaTime;
 
             SetState(GameState.Playing);
         }
@@ -222,10 +208,8 @@ namespace GlorifiedBody.Systems
                 return;
 
             storedTimeScale = Time.timeScale;
-            storedFixedDeltaTime = Time.fixedDeltaTime;
 
             Time.timeScale = 0f;
-            Time.fixedDeltaTime = 0f;
 
             SetState(GameState.GameOver);
         }
@@ -237,10 +221,8 @@ namespace GlorifiedBody.Systems
                 return;
 
             storedTimeScale = Time.timeScale;
-            storedFixedDeltaTime = Time.fixedDeltaTime;
 
             Time.timeScale = 0f;
-            Time.fixedDeltaTime = 0f;
 
             SetState(GameState.LevelComplete);
         }
@@ -250,7 +232,6 @@ namespace GlorifiedBody.Systems
         public void LoadMainMenu()
         {
             Time.timeScale = 1f;
-            Time.fixedDeltaTime = storedFixedDeltaTime;
 
             SetState(GameState.Loading);
             SceneManager.LoadScene(mainMenuSceneName);
@@ -259,7 +240,6 @@ namespace GlorifiedBody.Systems
         public void LoadGameplay()
         {
             Time.timeScale = 1f;
-            Time.fixedDeltaTime = storedFixedDeltaTime;
 
             SetState(GameState.Loading);
             SceneManager.LoadScene(gameplaySceneName);
@@ -269,7 +249,6 @@ namespace GlorifiedBody.Systems
         public void LoadLevel(string sceneName)
         {
             Time.timeScale = 1f;
-            Time.fixedDeltaTime = storedFixedDeltaTime;
 
             SetState(GameState.Loading);
             RunTelemetry.Event("level_load", sceneName);
@@ -280,7 +259,6 @@ namespace GlorifiedBody.Systems
         {
             Resume();
             Time.timeScale = 1f;
-            Time.fixedDeltaTime = storedFixedDeltaTime;
 
             SetState(GameState.Loading);
             SceneManager.LoadScene(SceneManager.GetActiveScene().name);
@@ -293,7 +271,6 @@ namespace GlorifiedBody.Systems
         public bool RestartFromLatestCheckpoint()
         {
             Time.timeScale = 1f;
-            Time.fixedDeltaTime = storedFixedDeltaTime;
             return GlorifiedBody.Saving.SaveSystem.RestartFromCheckpoint();
         }
 

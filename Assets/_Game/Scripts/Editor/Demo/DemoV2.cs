@@ -87,6 +87,9 @@ namespace GlorifiedBody.Editor.Demo
             GameObject pit = r.Box(r.Room, "Pit_Base", new Vector3(gapX, -CrateEdge - 0.05f, cz), new Vector3(gapW, 0.1f, depth), DemoRoom.Grey(0.08f));
             foreach (float end in new[] { s.Z0 - 0.05f, s.Z1 + 0.05f })
                 r.Box(r.Room, $"Pit_End_{end:0}", new Vector3(gapX, -CrateEdge * 0.5f, end), new Vector3(gapW, CrateEdge, 0.1f), DemoRoom.Grey(0.08f));
+            // The sides of the floor boxes have the floor's colour: from above the far side read as more floor, and the shaft as a thin line.
+            foreach ((string side, float x) in new[] { ("Pit_Side_W", GapX0 + 0.005f), ("Pit_Side_E", GapX1 - 0.005f) })
+                UnityEngine.Object.DestroyImmediate(r.Box(r.Room, side, new Vector3(x, -CrateEdge * 0.5f - 0.01f, cz), new Vector3(0.01f, CrateEdge, depth), DemoRoom.Grey(0.08f)).GetComponent<Collider>());
             GameObject back = MenuLoopSetup.EnsureChild(r.Room, "Pit_Back");
             back.transform.position = new Vector3(GapX0 - 1f, 0.05f, cz);
             GlorifiedBody.Interaction.PitReturn gap = MenuLoopSetup.EnsureComponent<GlorifiedBody.Interaction.PitReturn>(pit);

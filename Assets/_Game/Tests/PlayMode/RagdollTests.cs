@@ -468,6 +468,35 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.AreEqual(EnemyRagdoll.State.Corpse, b.Current, "the burnt body lies still");
         }
 
+        /// <summary>
+        /// The tutorial bot's last shot, 2026-11-06: the short killed the guard, Q opened the drug list as his body touched the floor, and the
+        /// body rose 149 m at 70 m/s. The stop wrote Time.fixedDeltaTime = 0: Unity clamps that to 0.0001 s and catches up the rest of the step at
+        /// that size, and a contact pushes out at its depth over that step. An open at any moment must leave the fall alone.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator AStopOfTheWorld_WhileABodyLandsOnTheFloor_DoesNotThrowIt()
+        {
+            SoldierBrain figure = Find("Soldier_A");
+            EnemyRagdoll ragdoll = figure.GetComponent<EnemyRagdoll>();
+            yield return null;
+            float step = Time.fixedDeltaTime;
+            KillWith(figure, DamageType.ShortShock);
+            float floor = figure.transform.position.y;
+            yield return WaitUntil(() => ragdoll.Hips.position.y - floor < 0.35f, 3f);
+            GameManager.Instance.OpenInventory();
+            Assert.AreEqual(step, Time.fixedDeltaTime, 1e-5f, "a stop leaves the physics step alone: the time scale alone stops the world");
+            yield return new WaitForSecondsRealtime(0.3f);
+            GameManager.Instance.CloseInventory();
+            float top = 0f;
+            for (float t = 0f; t < 2f; t += Time.deltaTime)
+            {
+                top = Mathf.Max(top, ragdoll.Hips.position.y - floor);
+                yield return null;
+            }
+            Debug.Log($"[RagdollTests] after the stop the hips rose to {top:0.00} m");
+            Assert.Less(top, 1f, "the body stays on the floor");
+        }
+
         [UnityTest]
         public IEnumerator ThePowerArmour_DiesAsARagdoll()
         {
