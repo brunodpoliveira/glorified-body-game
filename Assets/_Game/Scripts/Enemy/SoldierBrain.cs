@@ -810,7 +810,17 @@ namespace GlorifiedBody.Enemy
                         if (HeldCover.Low) StartShoot();
                         else StepOutToFire();
                     }
-                    else if (HeldCover.Low || Flat(transform.position, HeldCover.Position) <= CoverArriveRadius) body.Stop();
+                    else
+                    {
+                        float off = Flat(transform.position, HeldCover.Position);
+                        if (off <= CoverArriveRadius || (!body.IsMoving && off <= CoverStallRadius))
+                        {
+                            // There: only now he hides.
+                            body.Stop();
+                            if (HeldCover.Low) body.Crouch(true);
+                            if (TryGetComponent(out LockOnTargetable hidden)) hidden.InCover = true;
+                        }
+                    }
                     break;
             }
         }
@@ -1178,17 +1188,9 @@ namespace GlorifiedBody.Enemy
             Ducks++;
             ducked = true;
             timer = Random.Range(DuckSeconds.x, DuckSeconds.y);
-            if (TryGetComponent(out LockOnTargetable lockable)) lockable.InCover = true;
-            if (HeldCover.Low)
-            {
-                body.Stop();
-                body.Crouch(true);
-            }
-            else
-            {
-                Spot = HeldCover.Position;
-                body.MoveTo(HeldCover.Position, MoveSpeed.Run);
-            }
+            // He goes to the spot first. A walk that ran out of time left him 2 m from the planter, and he crouched in the open (2026-11-06).
+            Spot = HeldCover.Position;
+            body.MoveTo(HeldCover.Position, MoveSpeed.Run);
             RunTelemetry.Event("soldier_duck", name);
         }
 

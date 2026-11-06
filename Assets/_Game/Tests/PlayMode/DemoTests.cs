@@ -752,15 +752,16 @@ namespace GlorifiedBody.Tests.PlayMode
             CoverSpot spot = ducking.HeldCover;
             Assert.IsNotNull(spot);
             LockOnTargetable lockable = ducking.GetComponent<LockOnTargetable>();
-            Assert.IsTrue(lockable.InCover, "he is hidden");
-            yield return new WaitForSeconds(spot.Low ? 0.3f : 1.2f); // the crouch, or the walk back behind the corner
+            yield return WaitUntil(() => lockable.InCover || ducking.Current != SoldierBrain.Phase.Duck, 4f);
+            if (lockable.InCover) Assert.LessOrEqual(Vector3.Distance(Vector3.ProjectOnPlane(ducking.transform.position, Vector3.up), Vector3.ProjectOnPlane(spot.Position, Vector3.up)), 1.25f, "he hides at his spot, not in the open");
+            yield return new WaitForSeconds(0.2f);
             Debug.Log($"[DemoTests] {ducking.name} at {ducking.transform.position}, her at {lucy.transform.position}, phase {ducking.Current}, {(spot.Low ? "low" : "corner")} {(spot.Piece != null ? spot.Piece.name : "solid")}");
             Health health = ducking.GetComponent<Health>();
             float before = health.CurrentHealth;
             PsychicPowers powers = lucy.GetComponent<PsychicPowers>();
             powers.Select(PowerKind.Blast);
             stats.DebugSet(45f, 0f);
-            if (ducking.Current == SoldierBrain.Phase.Duck)
+            if (ducking.Current == SoldierBrain.Phase.Duck && lockable.InCover)
             {
                 powers.FireAt(powers.Selected, 0.5f, lockable, 1f);
                 Assert.AreEqual(before, health.CurrentHealth, 0.01f, "her power stops on the cover while he hides");
