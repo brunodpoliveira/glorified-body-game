@@ -2,22 +2,22 @@ using UnityEngine;
 
 namespace GlorifiedBody.Player
 {
-    public enum PowerKind { Blast, Fire, Telekinesis }
+    public enum PowerKind { Blast, Fire, Telekinesis, Domination }
 
     /// <summary>
     /// The drugs. Each does one thing (PsychicPowers.UseDrug). Nalcon, NalconFire and NalconLift fill the bar of one power
     /// (Bruno, 2026-11-06: "each power has its own separate mk bar (and a respective pill to restore said power bar)").
     /// New members go at the end: a save holds the counts by this order.
     /// </summary>
-    public enum DrugType { Nalcon, Red, DFelon, NalconFire, NalconLift }
+    public enum DrugType { Nalcon, Red, DFelon, NalconFire, NalconLift, NalconMind }
 
     public static class Capsules
     {
         /// <summary>The capsule that fills the bar of a power.</summary>
-        public static DrugType Of(PowerKind kind) => kind == PowerKind.Fire ? DrugType.NalconFire : kind == PowerKind.Telekinesis ? DrugType.NalconLift : DrugType.Nalcon;
+        public static DrugType Of(PowerKind kind) => kind == PowerKind.Fire ? DrugType.NalconFire : kind == PowerKind.Telekinesis ? DrugType.NalconLift : kind == PowerKind.Domination ? DrugType.NalconMind : DrugType.Nalcon;
 
         /// <summary>The power whose bar the drug fills, or null (the SHORT capsule, the second wind pill).</summary>
-        public static PowerKind? PowerOf(DrugType type) => type == DrugType.Nalcon ? PowerKind.Blast : type == DrugType.NalconFire ? PowerKind.Fire : type == DrugType.NalconLift ? PowerKind.Telekinesis : (PowerKind?)null;
+        public static PowerKind? PowerOf(DrugType type) => type == DrugType.Nalcon ? PowerKind.Blast : type == DrugType.NalconFire ? PowerKind.Fire : type == DrugType.NalconLift ? PowerKind.Telekinesis : type == DrugType.NalconMind ? PowerKind.Domination : (PowerKind?)null;
     }
 
     /// <summary>

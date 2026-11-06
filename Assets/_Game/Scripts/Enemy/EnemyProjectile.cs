@@ -23,6 +23,7 @@ namespace GlorifiedBody.Enemy
         private float life = 3f;
         private CharacterController playerController;
         private bool returned;
+        private bool friendly; // from a dominated figure: it never hits her
         private const float Radius = 0.075f;
 
         public bool Catchable => !returned;
@@ -78,6 +79,7 @@ namespace GlorifiedBody.Enemy
             projectile.speed = speed;
             projectile.damage = damage;
             projectile.attacker = attacker;
+            projectile.friendly = attacker != null && attacker.GetComponent<Dominated>() != null;
             projectile.killerId = killerId;
             return projectile;
         }
@@ -101,7 +103,7 @@ namespace GlorifiedBody.Enemy
             // Lucy first, by geometry: a ray does not register her CharacterController in every frame rate.
             // A returned bullet is hers: it leaves her and never hits her.
             Vector3 playerPoint = next;
-            bool crosses = !returned && CrossesPlayer(origin, next, out playerPoint);
+            bool crosses = !returned && !friendly && CrossesPlayer(origin, next, out playerPoint);
             if (Physics.Raycast(origin, transform.forward, out RaycastHit hit, step + 0.1f, ~0, QueryTriggerInteraction.Ignore))
             {
                 bool self = attacker != null && (hit.transform == attacker.transform || hit.transform.IsChildOf(attacker.transform));
@@ -229,10 +231,31 @@ namespace GlorifiedBody.Enemy
             TelekinesisLift floater = !returned && !isPlayer ? hit.transform.GetComponentInParent<TelekinesisLift>() : null;
             if (floater != null && floater.CanLaunch) floater.Release(attacker);
             // A shield from the front stops a returned bullet (Bruno, 2026-10-24).
-            IFrontGuard guard = returned && !isPlayer ? hit.transform.GetComponentInParent<IFrontGuard>() : null;
+            IFrontGuard guard = (returned || friendly) && !isPlayer ? hit.transform.GetComponentInParent<IFrontGuard>() : null;
             if (guard != null && guard.Blocks(hit.point - transform.forward * 2f))
             {
                 guard.Blocked(hit.point, "returned_bullet");
+                Destroy(gameObject);
+                return;
+            }
+            // mk_edgar: the bullets of a dominated figure hurt its colleagues, and theirs hurt it. No other enemy bullet hurts a figure.
+            Health figure = !returned && !isPlayer ? hit.transform.GetComponentInParent<Health>() : null;
+            if (figure != null && !figure.IsDead && friendly != (figure.GetComponent<Dominated>() != null))
+            {
+                figure.TakeDamage(damage);
+                HitEventBus.Raise(new HitInfo
+                {
+                    Attacker = attacker,
+                    Victim = figure.gameObject,
+                    HitCollider = hit.collider,
+                    HitTransform = hit.transform,
+                    HitPoint = hit.point,
+                    HitNormal = hit.normal,
+                    DamageAmount = damage,
+                    DamageType = DamageType.EnemyProjectile,
+                    WasFatal = figure.IsDead
+                });
+                RunTelemetry.Event("figure_hit", $"{figure.name}:{damage:0}");
                 Destroy(gameObject);
                 return;
             }

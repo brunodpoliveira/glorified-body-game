@@ -39,7 +39,7 @@ namespace GlorifiedBody.UI
         public const int Consumables = 0, Keys = 1, Logs = 2;
         public static readonly string[] CategoryNames = { "CONSUMABLES", "KEYS", "LOGS" };
         public const int VisibleRows = 6;
-        private static readonly DrugType[] DrugOrder = { DrugType.Nalcon, DrugType.NalconFire, DrugType.NalconLift, DrugType.Red, DrugType.DFelon };
+        private static readonly DrugType[] DrugOrder = { DrugType.Nalcon, DrugType.NalconFire, DrugType.NalconLift, DrugType.NalconMind, DrugType.Red, DrugType.DFelon };
 
         private Canvas canvas;
         private GameObject root;

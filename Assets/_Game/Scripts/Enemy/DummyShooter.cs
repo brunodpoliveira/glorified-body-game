@@ -69,6 +69,29 @@ namespace GlorifiedBody.Enemy
 
         private Health health;
         private Transform player;
+        private Transform herTransform;
+
+        /// <summary>
+        /// What the gun hunts. Null: her. mk_edgar turns guns (2026-11-06): a dominated figure aims at its colleagues, and they aim
+        /// at it. It changes only between aims.
+        /// </summary>
+        public void SetTarget(Transform target)
+        {
+            player = target != null ? target : HerTransform();
+        }
+
+        private Transform HerTransform()
+        {
+            if (herTransform == null)
+            {
+                GameObject her = GameObject.FindWithTag(playerTag);
+                herTransform = her != null ? her.transform : null;
+            }
+            return herTransform;
+        }
+
+        /// <summary>The gun aims at her now: not at a place (suppression), not at a dominated figure, not a gun in her service. The HUD warns only of these.</summary>
+        public bool AimsAtHer => !Suppressing && (player == null || player == HerTransform());
         private LineRenderer laser;
         private float timer;
         private float telegraphLength = 1f;

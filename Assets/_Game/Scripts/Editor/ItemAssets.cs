@@ -21,6 +21,7 @@ namespace GlorifiedBody.Editor
         public static readonly Color NalconColour = new Color(0.92f, 0.92f, 0.95f);
         public static readonly Color ErebusColour = new Color(1f, 0.6f, 0.15f);
         public static readonly Color OrzabalColour = new Color(0.3f, 0.85f, 1f);
+        public static readonly Color EdgarColour = new Color(0.72f, 0.42f, 1f);
         public static readonly Color RedColour = new Color(0.95f, 0.25f, 0.22f);
         public static readonly Color DFelonColour = new Color(0.35f, 0.6f, 1f);
         public static readonly Color LogColour = new Color(0.96f, 0.95f, 0.88f);
@@ -36,6 +37,7 @@ namespace GlorifiedBody.Editor
             Drug(DrugType.Nalcon, "WARSPITE CAPSULE", NalconColour);
             Drug(DrugType.NalconFire, "EREBUS CAPSULE", ErebusColour);
             Drug(DrugType.NalconLift, "ORZABAL CAPSULE", OrzabalColour);
+            Drug(DrugType.NalconMind, "EDGAR CAPSULE", EdgarColour);
             // Each drug does one thing (Bruno, 2026-10-30). PLACEHOLDER names until Bruno picks them (design §10.5).
             Drug(DrugType.Red, "SHORT CAPSULE", RedColour);
             Drug(DrugType.DFelon, "SECOND WIND PILL", DFelonColour);
@@ -58,6 +60,7 @@ namespace GlorifiedBody.Editor
             string effect = type == DrugType.Nalcon ? "A white capsule of tincture, ward stock. It fills the mk_warspite bar, and only that bar."
                 : type == DrugType.NalconFire ? "An amber capsule of tincture, ward stock. It fills the mk_erebus bar, and only that bar."
                 : type == DrugType.NalconLift ? "A cyan capsule of tincture, ward stock. It fills the mk_orzabal bar, and only that bar."
+                : type == DrugType.NalconMind ? "A violet capsule of tincture, ward stock. It fills the mk_edgar bar, and only that bar."
                 : type == DrugType.Red ? "It takes half the SHORT bar away, and it ends a short."
                 : "It gives the second wind back: the next lethal hit or shock leaves her at 1 HP.";
             return Item(type.ToString().ToLowerInvariant(), name, ItemKind.Drug, colour, $"A drug. {effect} No drug gives HP. One slot.", "", type);

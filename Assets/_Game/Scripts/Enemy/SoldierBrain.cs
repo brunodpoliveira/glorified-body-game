@@ -44,7 +44,7 @@ namespace GlorifiedBody.Enemy
     /// where they last saw her (suppression), and when she stays lost, he goes through the rooms with a partner (Phase.Search).
     /// </summary>
     [RequireComponent(typeof(DummyShooter), typeof(Health))]
-    public sealed class SoldierBrain : MonoBehaviour, IFearful, ICarer, IDoorWaiter
+    public sealed class SoldierBrain : MonoBehaviour, IFearful, ICarer, IDoorWaiter, IDominable
     {
         public enum Phase { Idle, Move, Shoot, Hold, Dead, Care, Retreat, Cower, Duck, Search }
 
@@ -141,7 +141,7 @@ namespace GlorifiedBody.Enemy
         public int ShockCount { get; private set; }
         public string RetreatReason { get; private set; } = "";
         /// <summary>Free to tend a body: alive, not retreating or cowering, not held, no aim.</summary>
-        public bool CanCare => Current != Phase.Dead && Current != Phase.Retreat && Current != Phase.Cower
+        public bool CanCare => !IsDominated && !kneeling && Current != Phase.Dead && Current != Phase.Retreat && Current != Phase.Cower
             && Current != Phase.Hold && Current != Phase.Care && Current != Phase.Duck && !suspendedByLift && !gun.HoldsSlot;
         public bool Retreating => Current == Phase.Retreat || Current == Phase.Cower;
         /// <summary>A soldier tends a body only while he does not see her (CorpseCare).</summary>
@@ -193,7 +193,7 @@ namespace GlorifiedBody.Enemy
         private EnemyMorale.Rank RankOf => GetComponent<EnemyMorale>() is EnemyMorale m ? m.RankOf : EnemyMorale.Rank.Soldier;
         public string AlertReason { get; private set; } = "";
         /// <summary>Where she is: her real position once alerted (a team: what the team saw), else the last seen position.</summary>
-        public Vector3 TargetPosition => Alerted && player != null ? (Team != null && Team.HerHidden ? Team.LastSeen : player.position) : body.TargetPosition;
+        public Vector3 TargetPosition => Alerted && player != null ? (Team != null && Team.HerHidden && quarry == null ? Team.LastSeen : player.position) : body.TargetPosition;
 
         /// <summary>
         /// He sees her now, for his team. In the fight a clear line is enough: he watches her. When she is lost he must look
@@ -201,7 +201,7 @@ namespace GlorifiedBody.Enemy
         /// </summary>
         public bool SpotsHer(bool lost)
         {
-            if (player == null || Current == Phase.Dead || suspendedByLift || !ClearLineToHer()) return false;
+            if (player == null || quarry != null || Current == Phase.Dead || suspendedByLift || !ClearLineToHer()) return false;
             if (!lost) return true;
             float distance = Flat(transform.position, player.position);
             if (distance <= SearchNearSight) return true;
@@ -390,12 +390,123 @@ namespace GlorifiedBody.Enemy
             body?.Stop();
         }
 
+        // ── mk_edgar ──────────────────────────────────────────────────
+
+        private bool kneeling;
+        private float nextQuarryPick;
+        private Transform quarry; // the dominated figure he hunts now, or null: her
+
+        public Dominated Mind { get; private set; }
+        public bool IsDominated => Mind != null;
+        public bool IsDeadFigure => Current == Phase.Dead;
+
+        public void BeginKneel()
+        {
+            if (Current == Phase.Dead) return;
+            kneeling = true;
+            if (ducked) StandUp();
+            if (Current == Phase.Care) GetComponent<CorpseCare>()?.Stop("kneel");
+            if (gun.HoldsSlot) gun.Stagger(0.1f);
+            gun.HoldFire = true;
+            body.Stop();
+            body.Crouch(true);
+            KneelPose.Set(gameObject, true);
+        }
+
+        public void EndKneel()
+        {
+            if (!kneeling) return;
+            kneeling = false;
+            if (Current == Phase.Dead) return;
+            body.Crouch(Current == Phase.Cower);
+            KneelPose.Set(gameObject, false);
+            if (Current == Phase.Hold) timer = recoverSeconds;
+        }
+
+        public void TakeMind(Dominated mind)
+        {
+            EndKneel();
+            Mind = mind;
+            if (Current == Phase.Care) GetComponent<CorpseCare>()?.Stop("dominated");
+            FlankBoard.Release(this);
+            ReleaseCover();
+            ClearSuppression();
+            Team = null;
+            ScriptHeld = false;
+            Alerted = true;
+            AlertReason = "dominated";
+            body.Crouch(false);
+            Current = Phase.Idle;
+            gun.FromCover = false;
+            gun.RequireLineOfSight = true;
+        }
+
+        public void ReleaseMind()
+        {
+            Mind = null;
+            gun.SetTarget(null);
+            player = null;
+            GameObject her = GameObject.FindWithTag("Player");
+            player = her != null ? her.transform : null;
+            if (player != null) body.Track(player);
+            if (RankOf == EnemyMorale.Rank.Soldier && player != null) Team = FireTeam.Join(this, player.position);
+            if (Current != Phase.Dead) Current = Phase.Idle;
+        }
+
+        /// <summary>The fight of a dominated figure: it hunts this one like a soldier hunts her.</summary>
+        public void Hunt(Transform target)
+        {
+            if (gun.HoldsSlot || target == player) return;
+            player = target;
+            gun.SetTarget(target);
+            body.Track(target);
+        }
+
+        /// <summary>No one to fight: the gun down, and the fight's phases end.</summary>
+        public void StandDown()
+        {
+            gun.HoldFire = true;
+            if (Current == Phase.Move || Current == Phase.Shoot || Current == Phase.Duck) Current = Phase.Idle;
+        }
+
+        /// <summary>The nearer of her and the dominated figure, or the figure when he has no line to her. It changes only between aims.</summary>
+        private void PickQuarry()
+        {
+            if (Time.time < nextQuarryPick || gun.HoldsSlot) return;
+            nextQuarryPick = Time.time + QuarryGap;
+            Dominated mind = Domination.Current;
+            Transform wanted = null;
+            if (mind != null && mind.gameObject != gameObject && GlorifiedBody.Rooms.Room.Hear(transform.position, mind.transform.position))
+            {
+                GameObject her = GameObject.FindWithTag("Player");
+                bool herNearer = her != null && Flat(transform.position, her.transform.position) <= Flat(transform.position, mind.transform.position)
+                    && gun.Sees(her.transform.position + Vector3.up * GlorifiedBody.Characters.Body.ChestHeight);
+                if (!herNearer) wanted = mind.transform;
+            }
+            if (wanted == quarry) return;
+            quarry = wanted;
+            GameObject lucy = wanted == null ? GameObject.FindWithTag("Player") : null;
+            player = wanted != null ? wanted : lucy != null ? lucy.transform : null;
+            gun.SetTarget(wanted);
+            if (player != null) body.Track(player);
+        }
+
+        private const float QuarryGap = 0.3f; // s
+
         private void Update()
         {
             if (ducked && Current != Phase.Duck) StandUp(); // a hit, a lift or a fear took him out of the duck
             if (body == null || Current == Phase.Dead) return;
             float dt = Time.deltaTime;
             if (dt <= 0f) return;
+            if (kneeling)
+            {
+                Current = Phase.Hold;
+                timer = recoverSeconds;
+                gun.HoldFire = true;
+                body.Stop();
+                return;
+            }
 
             TelekinesisLift lift = GetComponent<TelekinesisLift>();
             // Lifted, or limp on the floor and standing up (EnemyRagdoll): the body does nothing.
@@ -551,7 +662,7 @@ namespace GlorifiedBody.Enemy
         /// <summary>A colleague died in sight: it stops, loses its aim, flinches and barks.</summary>
         public void Shock(float seconds, bool gruesome)
         {
-            if (Current == Phase.Dead || Retreating) return;
+            if (Current == Phase.Dead || Retreating || IsDominated) return;
             ShockCount++;
             if (Current == Phase.Care) GetComponent<CorpseCare>()?.Stop("shock");
             gun.Stagger(seconds); // the aim breaks; OnStaggered holds the body for the seconds
@@ -568,7 +679,7 @@ namespace GlorifiedBody.Enemy
         /// <summary>Its fear reached its rank's limit: it runs from her and cowers, for the rest of the room.</summary>
         public void Retreat(string reason)
         {
-            if (Current == Phase.Dead || Retreating) return;
+            if (Current == Phase.Dead || Retreating || IsDominated) return;
             if (Current == Phase.Care) GetComponent<CorpseCare>()?.Stop("retreat");
             RetreatReason = reason;
             FlankBoard.Release(this);
@@ -612,6 +723,11 @@ namespace GlorifiedBody.Enemy
             lastEngageFrame = Time.frameCount;
             Team?.Tick();
             if (body == null || Current == Phase.Dead || Current == Phase.Hold || suspendedByLift || AtDoor) return;
+            if (Mind != null)
+            {
+                if (!Mind.TickFight(this)) return;
+            }
+            else PickQuarry();
             if (Current == Phase.Care || Retreating) { gun.HoldFire = true; return; }
             float dt = Time.deltaTime;
 

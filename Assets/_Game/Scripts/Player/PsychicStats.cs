@@ -32,7 +32,7 @@ namespace GlorifiedBody.Player
 
         public Health Health => health;
         public OutfitProfile Outfit => outfit;
-        private readonly float[] bars = { MaxNalcon, MaxNalcon, MaxNalcon };
+        private readonly float[] bars = { MaxNalcon, MaxNalcon, MaxNalcon, MaxNalcon };
 
         /// <summary>The power she has selected (PsychicPowers sets it): Nalcon reads its bar.</summary>
         public PowerKind Selected { get; set; } = PowerKind.Blast;

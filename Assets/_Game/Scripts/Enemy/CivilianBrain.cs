@@ -34,7 +34,7 @@ namespace GlorifiedBody.Enemy
     /// kneel and the cower (RFab gap 13). All numbers are PROPOSED.
     /// </summary>
     [RequireComponent(typeof(Health))]
-    public sealed class CivilianBrain : MonoBehaviour, IFearful, ICarer, IStaggerable
+    public sealed class CivilianBrain : MonoBehaviour, IFearful, ICarer, IStaggerable, IDominable
     {
         public enum Phase { Idle, Wary, Flee, Cower, Beg, Care, Dead }
 
@@ -256,9 +256,9 @@ namespace GlorifiedBody.Enemy
         private string panicLine = LineRun;
 
         /// <summary>A death it saw (EnemyMorale): an unarmed civilian's fear limit is 0, so it always panics.</summary>
-        public void Retreat(string reason) => Panic(reason);
+        public void Retreat(string reason) { if (Mind == null) Panic(reason); }
 
-        public void Shock(float seconds, bool gruesome) => Panic(gruesome ? "gruesome death" : "death");
+        public void Shock(float seconds, bool gruesome) { if (Mind == null) Panic(gruesome ? "gruesome death" : "death"); }
 
         private void OnAlertHeard(Vector3 origin, float radius, string reason)
         {
@@ -266,9 +266,55 @@ namespace GlorifiedBody.Enemy
             if (EnemyNav.Flat(transform.position, origin) <= radius && GlorifiedBody.Rooms.Room.Hear(transform.position, origin)) Alert("heard " + reason, callOthers: false); // walls stop it two rooms away (2026-11-02)
         }
 
+        // ── mk_edgar ──────────────────────────────────────────────────
+
+        private bool kneeling;
+        public Dominated Mind { get; private set; }
+        public bool IsDominated => Mind != null;
+        public bool IsDeadFigure => Current == Phase.Dead;
+
+        public void BeginKneel()
+        {
+            if (Current == Phase.Dead) return;
+            kneeling = true;
+            if (Current == Phase.Care) GetComponent<CorpseCare>()?.Stop("kneel");
+            SetPose(Pose.Controller);
+            if (tremble != null) tremble.Amount = 0f;
+            body.Stop();
+            body.Crouch(true);
+            KneelPose.Set(gameObject, true);
+        }
+
+        public void EndKneel()
+        {
+            if (!kneeling) return;
+            kneeling = false;
+            if (Current == Phase.Dead) return;
+            body.Crouch(false);
+            KneelPose.Set(gameObject, false);
+        }
+
+        public void TakeMind(Dominated mind)
+        {
+            EndKneel();
+            Mind = mind;
+            hides = false;
+            Panicked = false;
+            Current = Phase.Idle;
+            SetPose(Pose.Controller);
+            if (tremble != null) tremble.Amount = 0f;
+        }
+
+        public void ReleaseMind()
+        {
+            Mind = null;
+            if (Current != Phase.Dead) Panic("released");
+        }
+
         private void OnHurt(float amount)
         {
             if (health.IsDead) return;
+            if (Mind != null) return;
             Alert("hurt", callOthers: true); // a hurt alerts it; only a kill makes it run (Bruno, 2026-10-25)
         }
 
@@ -300,7 +346,7 @@ namespace GlorifiedBody.Enemy
         // ── The care (CorpseCare) ─────────────────────────────────────
 
         /// <summary>Free to tend a body: alive, on its feet, not begging. A panicked one leaves its corner for it.</summary>
-        public bool CanCare => Current != Phase.Dead && Current != Phase.Beg && Current != Phase.Care && !suspended && body != null;
+        public bool CanCare => Mind == null && !kneeling && Current != Phase.Dead && Current != Phase.Beg && Current != Phase.Care && !suspended && body != null;
         public bool CareIgnoresHer => nurse;
         // The care barks (barks.csv, the writer, 2026-10-25). The lab worker has no drag line, and no collar (Bruno).
         public string CareStartLine => nurse ? "Don't move. Don't try to move, I'm coming." : "Is she gone? Okay. Hey. Hey. Can you hear me?";
@@ -417,6 +463,16 @@ namespace GlorifiedBody.Enemy
                 body.Suspend(false);
                 if (Panicked) Flee();
                 else if (Alerted) Wary();
+            }
+            if (kneeling)
+            {
+                body.Stop();
+                return;
+            }
+            if (Mind != null)
+            {
+                Mind.TickWithoutAGun(body);
+                return;
             }
 
             if (Stunned) { body.Stop(); return; }

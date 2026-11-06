@@ -43,6 +43,14 @@ namespace GlorifiedBody.Editor
                 p.nalconCost = 30f; p.baseDamage = 40f; p.liftHeight = 1.5f; p.liftSeconds = 0.4f; p.holdSeconds = 1.5f;
             });
 
+            // Bruno, 2026-11-06: "mk edgar needs to spend huge amounts of its mk bar", and only a full circle dominates.
+            Power("power_domination", p =>
+            {
+                p.kind = PowerKind.Domination; p.displayName = "mk_edgar"; p.drug = DrugType.NalconMind;
+                p.fullChargeTime = 2.5f; p.minCharge = 1f; p.range = 6f;
+                p.nalconCost = 75f; p.baseDamage = 0f;
+            });
+
             Outfit("outfit_nude", o =>
             {
                 o.outfitId = "nude"; o.displayName = "NUDE"; o.maxHp = 100f;
@@ -59,7 +67,7 @@ namespace GlorifiedBody.Editor
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
-            Debug.Log("[CreatePowerAssets] 3 powers and 2 outfits created or updated.");
+            Debug.Log("[CreatePowerAssets] 4 powers and 2 outfits created or updated.");
         }
 
         private static void EnsureFolder(string parent, string name)

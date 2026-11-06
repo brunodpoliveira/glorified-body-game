@@ -37,6 +37,11 @@ namespace GlorifiedBody.Enemy
         [Tooltip("It waits, unaware, until this story flag goes up, or the script or a hit wakes it (a figure at its work before a talk).")]
         public string heldUntilFlag = "";
 
+        [Tooltip("mk_edgar takes it at full HP (a puzzle figure; Bruno, 2026-11-06: \"in puzzles (so it controls enemies at full health)\").")]
+        public bool dominableUnhurt;
+        [Tooltip("A boss: mk_edgar never takes it, and the shocks of the short pass it.")]
+        public bool boss;
+
         public static int Spawned { get; private set; }
         public static int Missing { get; private set; }
 
@@ -68,6 +73,8 @@ namespace GlorifiedBody.Enemy
             if (!string.IsNullOrEmpty(heldUntilFlag) && figure.TryGetComponent(out SoldierBrain held)) held.ScriptHoldUntil(heldUntilFlag);
             if (!string.IsNullOrEmpty(fate)) figure.AddComponent<GlorifiedBody.Story.FateFlag>().fate = fate;
             if (scanImage != null || scanClip != null) AddScan(figure);
+            if (dominableUnhurt) figure.AddComponent<DominableUnhurt>();
+            if (boss && figure.TryGetComponent(out GlorifiedBody.Combat.LockOnTargetable lockable)) lockable.SetShockImmune(true);
             Spawned++;
             GlorifiedBody.Audio.AudioHost.Equip(figure.GetComponent<GlorifiedBody.Core.Health>()); // a figure shown by a script later has steps too
             Destroy(gameObject);

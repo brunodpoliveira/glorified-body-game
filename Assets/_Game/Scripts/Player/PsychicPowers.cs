@@ -97,11 +97,16 @@ namespace GlorifiedBody.Player
             if (lockOn != null) lockOn.IncludeProps = Selected != null && Selected.kind == PowerKind.Telekinesis;
         }
 
+        /// <summary>mk_edgar comes with the story: until this flag, key 4 does nothing and its bar and capsule stay hidden.</summary>
+        public const string EdgarFlag = "mk_edgar_unlocked";
+        public static bool EdgarUnlocked => GlorifiedBody.Saving.StoryFlags.Has(EdgarFlag);
+
         public void Select(int index)
         {
             if (powers == null || powers.Length == 0) return;
             index = Mathf.Clamp(index, 0, powers.Length - 1);
             if (index == SelectedIndex) return;
+            if (powers[index].kind == PowerKind.Domination && !EdgarUnlocked) return;
             SelectedIndex = index;
             stats.Selected = Selected.kind;
             SyncProps();
@@ -125,6 +130,7 @@ namespace GlorifiedBody.Player
             if (GameInput.GetActionDown(InputManager.GameAction.PowerBlast, KeyCode.Alpha1)) Select(PowerKind.Blast);
             if (GameInput.GetActionDown(InputManager.GameAction.PowerFire, KeyCode.Alpha2)) Select(PowerKind.Fire);
             if (GameInput.GetActionDown(InputManager.GameAction.PowerTelekinesis, KeyCode.Alpha3)) Select(PowerKind.Telekinesis);
+            if (GameInput.GetActionDown(InputManager.GameAction.PowerDomination, KeyCode.Alpha4)) Select(PowerKind.Domination);
             // The drug key opens the drug choice where the room has one (InventoryUI); else it takes a drug.
             if (GameInput.GetActionDown(InputManager.GameAction.UseDrug, KeyCode.Q) && (OpenDrugMenu == null || !OpenDrugMenu())) UseDrug();
 
@@ -152,6 +158,9 @@ namespace GlorifiedBody.Player
             // 2026-10-22): the attack key charges as usual; a short press throws it, a full charge slams it
             // (Release). The defend press catches a bullet near her and sends it back.
             if (holdAfterLaunch && !GameInput.GetAction(InputManager.GameAction.Charge, KeyCode.Mouse0)) holdAfterLaunch = false;
+            // mk_edgar: the defend press sends the one she holds to a switch she cannot reach.
+            if (defendDown && Selected.kind == PowerKind.Domination && Domination.Current != null)
+                Result(Domination.Current.SendToSwitch(transform.position, Selected.range) ? "dom_sent" : "dom_no_switch", 0f);
             if (defendDown && Selected.kind == PowerKind.Telekinesis)
             {
                 catchPressUntil = Time.time + CatchBuffer;
@@ -174,10 +183,11 @@ namespace GlorifiedBody.Player
             }
 
             bool charging = IsCharging;
+            UpdateDomination(ref charging);
             if (charging)
             {
                 float before = Charge;
-                float rate = IsBoosted ? BoostMultiplier : 1f; // the MK boost charges 2x as fast
+                float rate = IsBoosted && Selected.kind != PowerKind.Domination ? BoostMultiplier : 1f; // the MK boost charges 2x as fast
                 Charge = Mathf.Min(1f, Charge + dt * rate / Selected.fullChargeTime);
                 if (!Mathf.Approximately(before, Charge)) OnChanged?.Invoke();
                 if (Charge >= 1f)
@@ -197,6 +207,92 @@ namespace GlorifiedBody.Player
             }
             wasCharging = charging;
         }
+
+        // ── mk_edgar ──────────────────────────────────────────────────
+
+        private IDominable kneeling;
+        private LockOnTargetable kneelingTarget;
+        private bool dominationBroken;
+
+        /// <summary>
+        /// The charge of mk_edgar (Bruno, 2026-11-06): the target goes down on its knees and holds still while the circle fills. A
+        /// target that it cannot take ends the charge at once, at no cost. A hit on her, or the target out of her reach, breaks it.
+        /// </summary>
+        private void UpdateDomination(ref bool charging)
+        {
+            if (!charging || Selected.kind != PowerKind.Domination)
+            {
+                EndKneel();
+                dominationBroken = false;
+                return;
+            }
+            LockOnTargetable target = lockOn.CurrentTarget;
+            string why = dominationBroken ? "dom_broken" : Domination.Refusal(target, transform.position, Selected.range, stats.CanSpendMk(PowerKind.Domination, Selected.nalconCost));
+            if (why == null && kneeling != null && target != kneelingTarget) why = "dom_broken";
+            if (why != null)
+            {
+                dominationBroken = false;
+                Result(why, Charge);
+                EndKneel();
+                EndAttackCharge();
+                charging = false;
+                return;
+            }
+            if (kneeling != null) return;
+            kneeling = target.GetComponentInParent<IDominable>();
+            kneelingTarget = target;
+            kneeling.BeginKneel();
+            RunTelemetry.Event("dom_kneel", target.name);
+        }
+
+        private void EndKneel()
+        {
+            if (kneeling is MonoBehaviour figure && figure != null) kneeling.EndKneel();
+            kneeling = null;
+            kneelingTarget = null;
+        }
+
+        /// <summary>Only the full circle dominates. Anything less does nothing and costs nothing.</summary>
+        private bool ReleaseDomination(float charge)
+        {
+            if (charge < 0.999f || kneeling == null)
+            {
+                EndKneel();
+                return Result("fizzle", charge);
+            }
+            PowerDefinition power = Selected;
+            if (!stats.TrySpendMk(power.kind, power.nalconCost))
+            {
+                EndKneel();
+                return Result("no_nalcon", charge);
+            }
+            IDominable mind = kneeling;
+            LockOnTargetable target = kneelingTarget;
+            kneeling = null;
+            kneelingTarget = null;
+            Domination.Take(mind, gameObject);
+            lockOn.SetTarget(null);
+            LastResult = "dominated";
+            LastResultTime = Time.time;
+            RunTelemetry.Event("dominated", target.name);
+            OnPowerFired?.Invoke(power, charge, target);
+            OnChanged?.Invoke();
+            return true;
+        }
+
+        private void OnHitDuringDomination(float amount)
+        {
+            if (kneeling != null) dominationBroken = true;
+        }
+
+        private void OnEnable()
+        {
+            Health health = GetComponent<Health>(); // PsychicStats may wake after this
+            health.OnDamaged ??= new UnityEngine.Events.UnityEvent<float>();
+            health.OnDamaged.AddListener(OnHitDuringDomination);
+        }
+
+        private void OnDisable() => GetComponent<Health>()?.OnDamaged?.RemoveListener(OnHitDuringDomination);
 
         /// <summary>The circle empties and her feet go free. The attack key must rise before a new charge.</summary>
         private void EndAttackCharge()
@@ -398,6 +494,7 @@ namespace GlorifiedBody.Player
             if (power == null) return false;
             // The bar filled during the charge (damage taken): the release starts the short, whatever the charge.
             if (TryStartShort(charge)) return false;
+            if (power.kind == PowerKind.Domination) return ReleaseDomination(charge);
             // Telekinesis with an enemy in the air: a full charge slams it, anything less throws it.
             if (power.kind == PowerKind.Telekinesis && HeldLift != null) return charge >= 0.999f ? TrySlam() : TryLaunch();
             if (charge < power.minCharge)
@@ -598,7 +695,7 @@ namespace GlorifiedBody.Player
             if (shortNeed) order.Add(DrugType.Red);
             PowerKind selected = Selected != null ? Selected.kind : PowerKind.Blast;
             order.Add(Capsules.Of(selected));
-            var others = new List<PowerKind> { PowerKind.Blast, PowerKind.Fire, PowerKind.Telekinesis };
+            var others = new List<PowerKind> { PowerKind.Blast, PowerKind.Fire, PowerKind.Telekinesis, PowerKind.Domination };
             others.Remove(selected);
             others.Sort((a, b) => stats.Mk(a).CompareTo(stats.Mk(b)));
             foreach (PowerKind kind in others) order.Add(Capsules.Of(kind));
@@ -633,6 +730,7 @@ namespace GlorifiedBody.Player
                 case DrugType.Nalcon:
                 case DrugType.NalconFire:
                 case DrugType.NalconLift:
+                case DrugType.NalconMind:
                     stats.FillMk(Capsules.PowerOf(used).Value);
                     break;
                 case DrugType.Red:
@@ -656,6 +754,7 @@ namespace GlorifiedBody.Player
                 case DrugType.Nalcon:
                 case DrugType.NalconFire:
                 case DrugType.NalconLift:
+                case DrugType.NalconMind:
                     return stats.Mk(Capsules.PowerOf(type).Value) >= PsychicStats.MaxNalcon - 0.001f ? "mk_full" : null;
                 case DrugType.Red: return stats.Short <= 0.001f && (shortController == null || !shortController.IsActive) ? "short_empty" : null;
                 case DrugType.DFelon:

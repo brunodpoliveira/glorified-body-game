@@ -307,6 +307,7 @@ namespace GlorifiedBody.Editor
             if (File.Exists(ScreenTestSetup.ScenePath)) EnsureBuildScene(scenes, ScreenTestSetup.ScenePath);
             if (File.Exists(OutfitTestSetup.ScenePath)) EnsureBuildScene(scenes, OutfitTestSetup.ScenePath);
             if (File.Exists(PhysicsTestSetup.ScenePath)) EnsureBuildScene(scenes, PhysicsTestSetup.ScenePath);
+            if (File.Exists(EdgarTestSetup.ScenePath)) EnsureBuildScene(scenes, EdgarTestSetup.ScenePath);
             if (File.Exists(Demo.DoorTestSetup.ScenePath)) EnsureBuildScene(scenes, Demo.DoorTestSetup.ScenePath);
             // The demo (2026-11-02): one world scene in Scenes/Demo (a scene per room before).
             if (Directory.Exists(Demo.DemoRoom.Folder))

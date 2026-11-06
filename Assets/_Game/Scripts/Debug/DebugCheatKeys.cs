@@ -87,6 +87,7 @@ namespace GlorifiedBody.DebugTools
                 drugs.DebugSet(DrugType.DFelon, 2);
                 drugs.DebugSet(DrugType.NalconFire, 2);
                 drugs.DebugSet(DrugType.NalconLift, 2);
+                drugs.DebugSet(DrugType.NalconMind, 2);
             }
             Debug.Log("[DebugCheatKeys] HP and MK refilled, two drugs of each.");
             return true;

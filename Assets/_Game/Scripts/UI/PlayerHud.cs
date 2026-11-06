@@ -70,9 +70,9 @@ namespace GlorifiedBody.UI
         public const float LowNalconFraction = 0.25f;
         private const float RowHeight = 36f;
         private const int ShortRow = 2;
-        private static readonly string[] MkNames = { "WARSPITE", "EREBUS", "ORZABAL" }; // by PowerKind
+        private static readonly string[] MkNames = { "WARSPITE", "EREBUS", "ORZABAL", "EDGAR" }; // by PowerKind
         // The colours of the capsules (ItemAssets).
-        private static readonly Color[] MkColours = { new Color(0.92f, 0.92f, 0.95f), new Color(1f, 0.6f, 0.15f), new Color(0.3f, 0.85f, 1f) };
+        private static readonly Color[] MkColours = { new Color(0.92f, 0.92f, 0.95f), new Color(1f, 0.6f, 0.15f), new Color(0.3f, 0.85f, 1f), new Color(0.72f, 0.42f, 1f) };
         public const float HighShortFraction = 0.75f;
         private GameObject hpWarning;
         private GameObject nalconWarning;
@@ -366,6 +366,12 @@ namespace GlorifiedBody.UI
                 case "too_heavy": return "TOO HEAVY";
                 case "no_nalcon": return "NOT ENOUGH MK";
                 case "cancel": return "CANCELLED";
+                case "dom_boss": return "IT RESISTS";
+                case "dom_not_hurt": return "NOT WEAK ENOUGH";
+                case "dom_far": return "TOO FAR";
+                case "dom_none": return "NO MIND TO TAKE";
+                case "dom_broken": return "BROKEN";
+                case "dom_no_switch": return "NOTHING TO SEND IT TO";
                 case "blocked": return "BLOCKED";
                 default: return "";
             }
@@ -503,6 +509,7 @@ namespace GlorifiedBody.UI
                 for (int i = 0; i < powers.Powers.Count; i++)
                 {
                     PowerDefinition p = powers.Powers[i];
+                    if (p.kind == PowerKind.Domination && !PsychicPowers.EdgarUnlocked) continue;
                     bool selected = i == powers.SelectedIndex;
                     line += (selected ? "<color=#ffd24d>" : "<color=#9a9a94>") + (i + 1) + " " + p.displayName + "</color>   ";
                 }
@@ -512,7 +519,7 @@ namespace GlorifiedBody.UI
 
             if (drugs != null)
             {
-                drugText.text = $"CAPSULES  mk_warspite {drugs.Count(DrugType.Nalcon)}  mk_erebus {drugs.Count(DrugType.NalconFire)}  mk_orzabal {drugs.Count(DrugType.NalconLift)}   SHORT {drugs.Count(DrugType.Red)}   SECOND WIND {drugs.Count(DrugType.DFelon)}";
+                drugText.text = $"CAPSULES  mk_warspite {drugs.Count(DrugType.Nalcon)}  mk_erebus {drugs.Count(DrugType.NalconFire)}  mk_orzabal {drugs.Count(DrugType.NalconLift)}{(PsychicPowers.EdgarUnlocked ? $"  mk_edgar {drugs.Count(DrugType.NalconMind)}" : "")}   SHORT {drugs.Count(DrugType.Red)}   SECOND WIND {drugs.Count(DrugType.DFelon)}";
             }
 
             bool shortActive = shortController != null && shortController.IsActive;
@@ -758,7 +765,7 @@ namespace GlorifiedBody.UI
 
                 foreach (DummyShooter shooter in shooters)
                 {
-                    if (shooter == null || !shooter.isActiveAndEnabled || shooter.Suppressing) continue; // suppression aims at a place, not at her: its laser is the warning
+                    if (shooter == null || !shooter.isActiveAndEnabled || !shooter.AimsAtHer) continue; // suppression aims at a place, not at her: its laser is the warning
                     bool telegraph = shooter.Current == DummyShooter.State.Telegraph;
                     bool aiming = shooter.Current == DummyShooter.State.Aiming;
                     if (!telegraph && !aiming) continue;

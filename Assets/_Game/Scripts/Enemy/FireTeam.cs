@@ -122,7 +122,7 @@ namespace GlorifiedBody.Enemy
             return this;
         }
 
-        private static bool Live(SoldierBrain b) => b != null && b.Current != SoldierBrain.Phase.Dead && !b.Retreating;
+        private static bool Live(SoldierBrain b) => b != null && b.Current != SoldierBrain.Phase.Dead && !b.Retreating && !b.IsDominated;
 
         /// <summary>His element's turn to move, or a team too small for turns.</summary>
         public bool MayMove(SoldierBrain who)

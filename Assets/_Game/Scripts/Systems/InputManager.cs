@@ -39,7 +39,8 @@ namespace GlorifiedBody.Systems
             Tape, // plays or pauses the audio log without the inventory (Bruno, 2026-10-31)
             Drop, // the inventory: puts the selected thing on the floor (Bruno, 2026-10-31: "a chance to drop items")
             MapPreviousFloor, // the corner map: the floor before (Bruno, 2026-11-02: A and D turn her while it shows)
-            MapNextFloor
+            MapNextFloor,
+            PowerDomination, // key 4: mk_edgar (Bruno, 2026-11-06), once the story unlocks it
         }
 
         [Serializable]
@@ -62,6 +63,7 @@ namespace GlorifiedBody.Systems
                 GameAction.PowerBlast => "Power: mk_warspite (blast)",
                 GameAction.PowerFire => "Power: mk_erebus (fire)",
                 GameAction.PowerTelekinesis => "Power: mk_orzabal (telekinesis)",
+                GameAction.PowerDomination => "Power: mk_edgar (domination)",
                 GameAction.UseDrug => "Use Drug",
                 GameAction.Interact => "Interact (take, read)",
                 GameAction.Scan => "Psychic Scan",
@@ -94,6 +96,7 @@ namespace GlorifiedBody.Systems
             new KeyBinding { action = GameAction.PowerBlast, defaultKey = KeyCode.Alpha1 },
             new KeyBinding { action = GameAction.PowerFire, defaultKey = KeyCode.Alpha2 },
             new KeyBinding { action = GameAction.PowerTelekinesis, defaultKey = KeyCode.Alpha3 },
+            new KeyBinding { action = GameAction.PowerDomination, defaultKey = KeyCode.Alpha4 },
             new KeyBinding { action = GameAction.UseDrug, defaultKey = KeyCode.Q },
             new KeyBinding { action = GameAction.Interact, defaultKey = KeyCode.E },
             new KeyBinding { action = GameAction.Defend, defaultKey = KeyCode.Mouse1 },
