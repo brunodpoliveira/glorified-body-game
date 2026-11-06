@@ -77,6 +77,17 @@ namespace GlorifiedBody.Enemy
         public bool Engaged => Time.frameCount - lastEngageFrame <= 2;
         public Vector3 Spot { get; private set; }
         /// <summary>The barricade he stands behind, or null.</summary>
+        /// <summary>His team (the soldiers of a fight), or null: guards, scientists and the armour fight alone.</summary>
+        public FireTeam Team { get; private set; }
+        private bool boundCalled;
+        private const float TeamRange = 8f;          // m: a soldier of a team keeps this far from her, PROPOSED
+        private const float TeamMinRange = 5f;       // m: no spot of a team nearer than this
+        private const float TeamFallBackRange = 7f;  // m: the last two take cover at least this far
+        private const float BoundLeaves = 1.5f;      // m: a bound goes at least this far from where he stands
+
+        /// <summary>His element's turn: he goes when his shot is out.</summary>
+        public void BoundNow() => boundCalled = true;
+
         /// <summary>The spot he holds (CoverMap), or null.</summary>
         public CoverSpot HeldCover { get; private set; }
         /// <summary>The breakable he holds as cover, or null (a spot behind a thing that does not break).</summary>
@@ -228,6 +239,7 @@ namespace GlorifiedBody.Enemy
             ScriptHeld = false;
             Alerted = true;
             AlertReason = reason;
+            if (RankOf == EnemyMorale.Rank.Soldier) Team = FireTeam.Join(this);
             body.Track(player);
             RunTelemetry.Event("soldier_alerted", $"{name}:{reason}");
             if (callOthers) EnemyAlert.Raise(transform.position, alertRadius, reason);
@@ -562,6 +574,7 @@ namespace GlorifiedBody.Enemy
         public void TickEngage()
         {
             lastEngageFrame = Time.frameCount;
+            Team?.Tick();
             if (body == null || Current == Phase.Dead || Current == Phase.Hold || suspendedByLift || AtDoor) return;
             if (Current == Phase.Care || Retreating) { gun.HoldFire = true; return; }
             float dt = Time.deltaTime;
@@ -597,7 +610,8 @@ namespace GlorifiedBody.Enemy
                     timer -= dt;
                     bool fired = gun.ShotsFired > shotsAtShootStart && !gun.HoldsSlot;
                     bool gotAway = Rusher && !gun.HoldsSlot && !gun.HerInReach; // a knife does not wait for her
-                    if (fired || gotAway || (timer <= 0f && !gun.HoldsSlot))
+                    if (boundCalled && !gun.HoldsSlot) GoOnTheBound();
+                    else if (fired || gotAway || (timer <= 0f && !gun.HoldsSlot))
                     {
                         if (!gotAway && CoverStillHolds()) BeginDuck();
                         else StartMove();
@@ -611,6 +625,11 @@ namespace GlorifiedBody.Enemy
                     {
                         StandUp();
                         StartShoot(); // she came close: stand and strike
+                    }
+                    else if (boundCalled)
+                    {
+                        StandUp();
+                        GoOnTheBound();
                     }
                     else if (!CoverStillHolds())
                     {
@@ -650,6 +669,12 @@ namespace GlorifiedBody.Enemy
         private void StartMove()
         {
             if (gun.HoldsSlot) return; // the shot first, then the legs
+            // A team: not his element's turn, and he can fire from where he stands: he holds and covers the others.
+            if (Team != null && !Team.MayMove(this) && (HeldCover != null ? CoverStillHolds() : ClearLine() && Distance() <= gun.Range))
+            {
+                StartShoot();
+                return;
+            }
             gun.HoldFire = true;
             gun.FromCover = false;
             Vector3 spot = PickSpot();
@@ -710,7 +735,7 @@ namespace GlorifiedBody.Enemy
                 for (int i = 0; i < 8; i++) around[i] = i * 45f;
                 if (BestSpot(target, chest, away, around, style, out best)) return Note(best, target);
             }
-            Vector3 fallback = target + away * preferredRange;
+            Vector3 fallback = target + away * WantedRange;
             if (NavMesh.SamplePosition(fallback, out NavMeshHit near, 2.5f, NavMesh.AllAreas)) fallback = near.position;
             return Note(fallback, target);
         }
@@ -726,7 +751,7 @@ namespace GlorifiedBody.Enemy
             float nearest = gun.MinAttackDistance > 0f ? gun.MinAttackDistance + 0.6f : 0f;
             for (int i = 0; i < turns.Length; i++)
             {
-                foreach (float range in new[] { preferredRange, preferredRange * 0.65f })
+                foreach (float range in new[] { WantedRange, WantedRange * 0.65f })
                 {
                     Vector3 candidate = target + Quaternion.Euler(0f, turns[i], 0f) * from * Mathf.Max(range, nearest);
                     if (!NavMesh.SamplePosition(candidate, out NavMeshHit hit, 1.5f, NavMesh.AllAreas)) continue;
@@ -744,6 +769,8 @@ namespace GlorifiedBody.Enemy
             }
             return bestCost < float.MaxValue;
         }
+
+        private float WantedRange => Team == null ? preferredRange : Team.FallingBack ? gun.Range : Mathf.Min(TeamRange, gun.Range);
 
         /// <summary>Her facing, flat.</summary>
         private Vector3 HerForward()
@@ -804,7 +831,7 @@ namespace GlorifiedBody.Enemy
         {
             spot = Vector3.zero;
             if (RankOf == EnemyMorale.Rank.Heavy) return false; // the power armour stands 2.6 m tall
-            float nearest = Mathf.Max(CoverMinRange, gun.MinAttackDistance + 0.6f);
+            float nearest = Mathf.Max(Team == null ? CoverMinRange : Team.FallingBack ? TeamFallBackRange : TeamMinRange, gun.MinAttackDistance + 0.6f);
             float farthest = Mathf.Min(gun.Range, preferredRange + CoverExtraRange);
             var options = new List<(float cost, CoverSpot spot)>();
             foreach (CoverSpot option in CoverMap.Spots)
@@ -812,6 +839,7 @@ namespace GlorifiedBody.Enemy
                 if (!option.Usable || (option.Owner != null && option.Owner != this)) continue;
                 Vector3 fire = option.FirePoint;
                 if (Mathf.Abs(fire.y - transform.position.y) > 1.5f) continue;
+                if (Team != null && Flat(fire, transform.position) < BoundLeaves) continue; // a bound goes somewhere
                 Vector3 away = fire - target;
                 away.y = 0f;
                 float range = away.magnitude;
@@ -928,6 +956,14 @@ namespace GlorifiedBody.Enemy
         }
 
         private bool ducked;
+
+        /// <summary>The bound: he leaves where he stands for another spot.</summary>
+        private void GoOnTheBound()
+        {
+            boundCalled = false;
+            ReleaseCover();
+            StartMove();
+        }
 
         private void StartShoot()
         {

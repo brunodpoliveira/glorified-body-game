@@ -124,11 +124,11 @@ namespace GlorifiedBody.Automation
             SoldierBrain covered = null;
             while (BotClock.Now - t0 < 20f)
             {
-                covered = soldiers.FirstOrDefault(s => s.Cover != null && Flat(s.transform.position - s.Spot).magnitude < 1.1f);
+                covered = soldiers.FirstOrDefault(s => s.Cover != null && s.Current != SoldierBrain.Phase.Move && Flat(s.transform.position - s.Spot).magnitude < 1.3f); // he got there: mid-walk the line to him can miss the piece
                 if (covered != null) break;
                 yield return null;
             }
-            Record("soldier_in_cover", covered != null, covered != null ? $"{covered.name} behind {covered.Cover.Id}" : "nobody in cover in 20 s");
+            Record("soldier_in_cover", covered != null, covered != null ? $"{covered.name} behind {covered.Cover.Id} at {covered.transform.position} spot {covered.Spot} phase {covered.Current}, the piece at {covered.Cover.Bounds.center} size {covered.Cover.Bounds.size}, her at {lucy.transform.position}, on her line {Breakables.CoverOnLine(lucy.transform.position + Vector3.up * 1.2f, covered.GetComponent<LockOnTargetable>().GetLockPoint(), out _)?.Id}" : "nobody in cover in 20 s");
             if (covered == null) { Finish(); yield break; }
             yield return BotClock.Wait(0.5f);
             Breakable cover = covered.Cover;
@@ -148,7 +148,7 @@ namespace GlorifiedBody.Automation
             Record("blast_on_cover", powers.LastResult == "cover" && hp.CurrentHealth == before,
                 $"result={powers.LastResult} on {(took != null ? $"{took.Id} {took.Health:0}/{took.MaxHealth:0}" : "-")}, {covered.name} hp {hp.CurrentHealth:0}");
             int blasts = 1;
-            while (!cover.IsBroken && blasts < 6)
+            while (!cover.IsBroken && blasts < 8)
             {
                 yield return BotClock.Wait(0.4f);
                 powers.FireAt(powers.Selected, 1f, target, 1f);

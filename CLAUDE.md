@@ -520,6 +520,10 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   he hides). `DemoRoom.Prop` makes fifteen types breakable by name (`BreakableAssets.PropBox`). The whole PlayMode suite takes 31 minutes: run it with
   `GB_BATCH_TIMEOUT=5400`. The writer's folder is now `/home/pc/MEGA/code/the-glorified-body`.
 
+- 2026-11-06, night, THE FIRE TEAM (`devlog-notes/2026-11-06_fire_team.md`, DEMO_PLAN §13.6): `Enemy/FireTeam.cs`: the soldiers of a fight take turns in two elements,
+  one moves, one holds and fires (`SoldierBrain.BoundNow`), a wanted range of 8 m and no spot under 5 m, the writer's calls (`barks.csv`, `team_*`), the last two fall back.
+  Not built: suppression, search in pairs. Numbers PROPOSED.
+
 ## Rules
 
 1. Unity 6000.3.15f1 (installed at `/home/pc/Unity/Hub/Editor/6000.3.15f1`). Start it only through `tools/unity.sh`

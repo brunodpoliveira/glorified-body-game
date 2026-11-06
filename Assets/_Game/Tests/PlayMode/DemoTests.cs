@@ -657,6 +657,96 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.AreNotEqual(spot, ducking.HeldCover, "she stands on his side: he leaves that spot");
         }
 
+        private IEnumerator InG2(System.Action<SoldierBrain[], PsychicStats> ready)
+        {
+            yield return WaitUntil(() => CutscenePlayer.IsPlaying && CutscenePlayer.ShotIndex >= 0, 10f);
+            CutscenePlayer.Skip();
+            yield return WaitUntil(() => StoryFlags.Has("demo_w1_wake"), 10f);
+            GameObject lucy = GameObject.FindGameObjectWithTag("Player");
+            lucy.GetComponentInChildren<Health>().SetInvulnerable(true);
+            PsychicStats stats = lucy.GetComponent<PsychicStats>();
+            stats.AddShort(-PsychicStats.MaxShort);
+            lucy.GetComponent<TankController>().Teleport(GlorifiedBody.Rooms.Room.Of("G2").transform.position + new Vector3(16f, 0f, 1f), 90f);
+            yield return WaitUntil(() => GlorifiedBody.Rooms.RoomTracker.CurrentId == "G2", 3f);
+            ready(UnityEngine.Object.FindObjectsByType<SoldierBrain>(FindObjectsSortMode.None).Where(b => b.name.StartsWith("Soldier_Pair")).ToArray(), stats);
+        }
+
+        [UnityTest]
+        public IEnumerator TheFireteam_Bounds_OneElementMoves_WhileTheOtherFires()
+        {
+            // Bruno, 2026-11-05: "they need to be (and look and feel like) an organized team".
+            yield return LoadWorld();
+            SoldierBrain[] team = null;
+            PsychicStats stats = null;
+            yield return InG2((t, s) => { team = t; stats = s; });
+            Assert.AreEqual(4, team.Length);
+            yield return WaitUntil(() => team.All(b => b.Team != null), 8f);
+            FireTeam fire = team[0].Team;
+            Assert.IsNotNull(fire, "they join a team");
+            Assert.IsTrue(team.All(b => b.Team == fire), "one team");
+            yield return new WaitForSeconds(3f); // others near hear the fight and join (the fireteam of G5)
+            team = fire.Members.ToArray();
+            Assert.GreaterOrEqual(team.Length, 4);
+            Assert.LessOrEqual(Mathf.Abs(team.Count(b => fire.ElementOf(b) == 0) - team.Count(b => fire.ElementOf(b) == 1)), 1, "two even elements");
+            GameObject lucy = GameObject.FindGameObjectWithTag("Player");
+            int frames = 0, bothMoving = 0, shots0 = 0, shots1 = 0, moves0 = 0, moves1 = 0;
+            float nearestSum = 0f;
+            int[] startShots = team.Select(b => b.Gun.ShotsFired).ToArray();
+            int[] startMoves = team.Select(b => b.Moves).ToArray();
+            float t0 = Time.time;
+            int swapsAtStart = fire.Swaps;
+            while (Time.time - t0 < 30f)
+            {
+                stats.AddShort(-PsychicStats.MaxShort);
+                frames++;
+                bool e0 = team.Any(b => fire.ElementOf(b) == 0 && b.Current == SoldierBrain.Phase.Move);
+                bool e1 = team.Any(b => fire.ElementOf(b) == 1 && b.Current == SoldierBrain.Phase.Move);
+                if (e0 && e1) bothMoving++;
+                nearestSum += team.Min(b => Vector3.Distance(b.transform.position, lucy.transform.position));
+                yield return null;
+            }
+            for (int i = 0; i < team.Length; i++)
+            {
+                int el = fire.ElementOf(team[i]);
+                if (el == 0) { shots0 += team[i].Gun.ShotsFired - startShots[i]; moves0 += team[i].Moves - startMoves[i]; }
+                else { shots1 += team[i].Gun.ShotsFired - startShots[i]; moves1 += team[i].Moves - startMoves[i]; }
+            }
+            float both = (float)bothMoving / frames, nearest = nearestSum / frames;
+            Debug.Log($"[DemoTests] the team in 30 s: {fire.Swaps - swapsAtStart} bounds, both elements moving {both:P0} of the frames, shots {shots0} and {shots1}, moves {moves0} and {moves1}, nearest soldier {nearest:0.0} m on average; {string.Join("; ", team.Select(b => $"{b.name} {(b.HeldCover != null ? (b.HeldCover.Low ? "low" : "corner") : "open")}"))}");
+            Assert.GreaterOrEqual(fire.Swaps - swapsAtStart, 3, "the elements take turns");
+            Assert.Less(both, 0.35f, "they rarely move at the same time");
+            Assert.Greater(moves0, 0, "the first element moves");
+            Assert.Greater(moves1, 0, "the second element moves");
+            Assert.Greater(shots0 + shots1, 2, "they fire");
+            Assert.Greater(nearest, 4.5f, "no charge: they stay off her");
+        }
+
+        [UnityTest]
+        public IEnumerator TheFireteam_Calls_ItsLosses_AndTheLastOneFightsAlone()
+        {
+            yield return LoadWorld();
+            SoldierBrain[] team = null;
+            yield return InG2((t, s) => team = t);
+            yield return WaitUntil(() => team.All(b => b.Team != null), 8f);
+            FireTeam fire = team[0].Team;
+            Assert.IsNotNull(fire);
+            yield return new WaitForSeconds(3f);
+            team = fire.Members.ToArray();
+            int Lines() => team.Sum(b => Bark.CountOf(b.gameObject));
+            for (int alive = team.Length - 1; alive >= 1; alive--)
+            {
+                SoldierBrain victim = team.First(b => b.Current != SoldierBrain.Phase.Dead && !b.Retreating);
+                int before = Lines();
+                victim.GetComponent<Health>().TakeDamage(9999f);
+                yield return new WaitForSeconds(0.5f);
+                fire.Tick();
+                Assert.AreEqual(alive, fire.Alive, "the team counts its dead");
+                Assert.Greater(Lines(), before, $"{alive} left: a call");
+            }
+            SoldierBrain last = team.First(b => b.Current != SoldierBrain.Phase.Dead);
+            Assert.IsTrue(fire.MayMove(last), "the last one moves as he must: no turns");
+        }
+
         [UnityTest]
         public IEnumerator TheBulletin_ClosesByItself_ToTheTitle_WithNoKey()
         {

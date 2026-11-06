@@ -36,6 +36,8 @@ If the console shows a red line, copy it too.
 | 11l | Fire at one while he crouches. Then fire as he stands. | While he crouches, the planter takes it and breaks after some hits. As he stands, he takes it. | The power goes through the cover. |
 | 11m | Walk past a soldier's cover to his side. | He leaves that spot and takes another. | He stays crouched with you beside him. |
 | 11n | Break a desk that holds a log (W10, Desk_A). | The log lies on the floor, and you can take it. Soldiers can walk there. | The log floats. |
+| 11o | In G2, stand still at the west end and watch the four soldiers for 30 s. | Half move while half fire, then they swap. "Moving up." then "Covering. Go." at the bottom. Nobody comes to arm's reach. | All run at you at once. |
+| 11p | Kill all but two, then all but one. | "Two left. Fall back to cover.": they go back. The last one calls Control, and nobody answers. | They charge. |
 | 12 | Walk from W1 into W1B, then through the other doorways. | No fade and no load screen at a doorway. The camera changes at the wall. | A black fade or a pause at a door. |
 | 14 | During a cutscene, press E. | A menu: PAUSED, RESUME, SKIP. The picture holds. Up and down choose, E confirms, Escape resumes. | The cutscene ends at once, or keeps playing under the menu. |
 | 15 | At the W2 to W5 doorway, and at W5 to W7, use a lever. | A fire door with a lever on each side, as in DOOR TEST. | No door, or a leaf sticks out of a wall. |
