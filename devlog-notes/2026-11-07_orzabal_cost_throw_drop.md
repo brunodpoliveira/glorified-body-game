@@ -58,7 +58,7 @@ After the fix: hips at 0.18 m (blast), 0.17 m (fire), 0.14 m (a throw).
 3. The stun of mk_edgar is 2 s times the charge. A circle of 50 % costs about 37 MK for 1 s. mk_erebus gives 0.5 s for 12.5 MK at 50 %.
 4. A part circle stuns a guard at full HP and a boss too.
 5. No drop for an enemy or the slab: the slab costs 30 MK, and your misclick point applies to it too.
-6. With no enemy locked, the held right button still takes the prop in front of her. This is your ruling of 2026-11-06 ("hold to select"). If rule 3 means that she must always lock a box first, tell me.
+6. With no enemy locked, the held right button still takes the prop in front of her. You kept this.
 
 ## Limits and risks
 
@@ -67,6 +67,22 @@ After the fix: hips at 0.18 m (blast), 0.17 m (fire), 0.14 m (a throw).
 - **A fast mouse:** the hold point leads the box by up to 0.6 m (`TelekinesisLift.MaxLead`). The box goes on for up to 0.6 m after the mouse stops, in under 0.1 s. The bot measured it: -1.07, then -0.47 after 0.4 s. It may make stacking feel slippery. The margin stops the box from getting stuck behind a wall.
 - **The triage line does not read a bot result.** It said CLEAN on two bots with a failed step, and I reported them as passed. Read `playthrough.json` for each bot.
 - **While she charges a throw she stands still.** She aims with the tank turn before she holds the button.
+
+## EDGAR TEST starts with its AI off
+
+Bruno:
+
+```text
+holy shit there are so many fucking enemies in the edgar test room i get my shit rocked in before i can do anything. please disable the ai or something. i can't test the power as-is
+```
+
+Every figure of the room is now passive (`EnemySpawn.passiveUntilFlag`, `SoldierBrain.PassiveUntil`, `CivilianBrain.PassiveUntil`). A sight of her, a hit, a power or a scream does not wake it. mk_edgar works on it, and a taken mind acts. A yellow post beside her start wakes the rest (Interact, flag `edgar_test_awake`).
+
+With the room asleep, a taken guard shoots at figures that do not answer. To see them fight back, use the switch.
+
+He also kept the rule: with no enemy locked, the held right button takes the box in front of her.
+
+Proof: `EdgarTests` 15 of 15 (run `20261107-022747-test-playmode-630386`), bot `edgar` 6 of 6 (run `20261107-023107-play-631762`). The test presses no real key on the switch: it reads the flag of the switch and raises that flag.
 
 ## Annotated only, not built
 

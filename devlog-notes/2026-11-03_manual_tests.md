@@ -166,3 +166,5 @@ If the console shows a red line, copy it too.
 | 87 | EDGAR TEST. Lift a target with mk_orzabal, press 4, and fill the circle on it. | 75 MK goes, and nothing happens. | It kneels or its mind goes. |
 | 88 | With two or more targets near, turn the mouse wheel up, then down. | The lock moves to the next target, then back. | Nothing. |
 | 89 | Stack boxes by hand with fast and slow mouse moves. | Tell me if the box feels slippery when it goes on after the mouse stops. | |
+| 90 | EDGAR TEST. Stand in the open for 10 s, and blast the guard. | Nobody moves or shoots. | You take a shot. |
+| 91 | In EDGAR TEST, press E at the yellow post beside the start. | It asks, and a yes wakes the figures. They attack. | Nothing wakes. |

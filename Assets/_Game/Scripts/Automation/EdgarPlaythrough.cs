@@ -118,6 +118,13 @@ namespace GlorifiedBody.Automation
             lockOn.SetTarget(guard.GetComponent<LockOnTargetable>());
             yield return BotClock.Wait(0.2f);
 
+            // The room starts with its AI off.
+            yield return BotClock.Wait(1.5f);
+            Record("passive", !guard.GetComponent<SoldierBrain>().Hunting, "");
+            Shot(Path.Combine(shots, "edgar_00_figures_off.png"));
+            GlorifiedBody.Saving.StoryFlags.Raise("edgar_test_awake");
+            yield return null;
+
             // A guard at full HP: the HUD says why, at the press. This hold is too short to stun him, so it costs nothing.
             pad.SetHeld(InputManager.GameAction.Charge, true);
             yield return BotClock.Wait(0.3f);

@@ -67,7 +67,12 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.IsTrue(PsychicPowers.EdgarUnlocked, "the room unlocks it");
             powers.Select(PowerKind.Domination);
             stats.DebugSet(100f, 0f);
+            // The room starts with its AI off. These tests want the fight, except the one that tests the switch.
+            if (TestContext.CurrentContext.Test.Name != nameof(TheFigures_StayPassive_WhateverSheDoes_UntilTheSwitch)) StoryFlags.Raise(AwakeFlag);
+            yield return null;
         }
+
+        private const string AwakeFlag = "edgar_test_awake";
 
         [UnityTearDown]
         public IEnumerator TearDown()
@@ -253,6 +258,47 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.IsFalse(kneel.On);
             Assert.AreEqual(mk, stats.Mk(PowerKind.Domination), 0.01f);
             pad.SetHeld(InputManager.GameAction.Charge, false);
+        }
+
+        [UnityTest]
+        public IEnumerator TheFigures_StayPassive_WhateverSheDoes_UntilTheSwitch()
+        {
+            // Bruno, 2026-11-07: "i get my shit rocked in before i can do anything. please disable the ai or something".
+            GameObject guardB = GameObject.Find("Guard_B"), soldierA = GameObject.Find("Soldier_A");
+            SoldierBrain guard = guardB.GetComponent<SoldierBrain>(), soldier = soldierA.GetComponent<SoldierBrain>();
+            Stand(guardB, 3f);
+            yield return null;
+            lockOn.SetTarget(guardB.GetComponent<LockOnTargetable>());
+            yield return new WaitForSeconds(3f);
+            Assert.IsFalse(guard.Hunting || soldier.Hunting, "they see her and do nothing");
+            Assert.AreEqual(0, UnityEngine.Object.FindObjectsByType<EnemyProjectile>(FindObjectsSortMode.None).Length, "no shot");
+
+            // A hit wakes nobody, and it makes the guard a target for the power.
+            powers.Select(PowerKind.Blast);
+            stats.DebugSet(100f, 0f);
+            Health hp = guardB.GetComponent<Health>();
+            float before = hp.CurrentHealth;
+            Assert.IsTrue(powers.Release(0.3f), powers.LastResult);
+            yield return new WaitForSeconds(2f);
+            Assert.Less(hp.CurrentHealth, before, "the blast hurts him");
+            Assert.IsFalse(guard.Hunting || soldier.Hunting, "and it wakes nobody");
+            Assert.AreEqual(0, UnityEngine.Object.FindObjectsByType<EnemyProjectile>(FindObjectsSortMode.None).Length, "no shot");
+
+            // The power works on a passive figure, and a taken mind acts.
+            powers.Select(PowerKind.Domination);
+            stats.DebugSet(100f, 0f);
+            yield return FullCircle();
+            Assert.IsTrue(guard.IsDominated, $"she takes him: {powers.LastResult}");
+            Assert.IsFalse(guard.ScriptHeld, "he is free of the hold");
+            Assert.IsFalse(soldier.Hunting, "the others stay passive");
+
+            // The switch wakes the rest.
+            GlorifiedBody.Story.FlagSwitch wake = GameObject.Find("Switch_Wake").GetComponent<GlorifiedBody.Story.FlagSwitch>();
+            Assert.IsNotNull(wake, "the switch stands in the room");
+            Assert.AreEqual(AwakeFlag, wake.flag);
+            StoryFlags.Raise(AwakeFlag);
+            yield return WaitUntil(() => soldier.Hunting, 6f);
+            Assert.IsTrue(soldier.Hunting, "the soldier wakes");
         }
 
         [UnityTest]

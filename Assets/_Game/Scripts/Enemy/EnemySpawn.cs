@@ -37,6 +37,9 @@ namespace GlorifiedBody.Enemy
         [Tooltip("It waits, unaware, until this story flag goes up, or the script or a hit wakes it (a figure at its work before a talk).")]
         public string heldUntilFlag = "";
 
+        [Tooltip("A test room with its AI off: it stands still whatever she does to it, until this story flag goes up or mk_edgar takes it.")]
+        public string passiveUntilFlag = "";
+
         [Tooltip("mk_edgar takes it at full HP (a puzzle figure; Bruno, 2026-11-06: \"in puzzles (so it controls enemies at full health)\").")]
         public bool dominableUnhurt;
         [Tooltip("A boss: mk_edgar never takes it, and the shocks of the short pass it.")]
@@ -71,6 +74,11 @@ namespace GlorifiedBody.Enemy
             if (!string.IsNullOrEmpty(line) && figure.TryGetComponent(out PatientBrain patient)) patient.Line = line;
             if (hides && figure.TryGetComponent(out CivilianBrain hider)) hider.SetHider(hideLine, foundLine, foundAt);
             if (!string.IsNullOrEmpty(heldUntilFlag) && figure.TryGetComponent(out SoldierBrain held)) held.ScriptHoldUntil(heldUntilFlag);
+            if (!string.IsNullOrEmpty(passiveUntilFlag))
+            {
+                if (figure.TryGetComponent(out SoldierBrain passive)) passive.PassiveUntil(passiveUntilFlag);
+                if (figure.TryGetComponent(out CivilianBrain still)) still.PassiveUntil(passiveUntilFlag);
+            }
             if (!string.IsNullOrEmpty(fate)) figure.AddComponent<GlorifiedBody.Story.FateFlag>().fate = fate;
             if (scanImage != null || scanClip != null) AddScan(figure);
             if (dominableUnhurt) figure.AddComponent<DominableUnhurt>();

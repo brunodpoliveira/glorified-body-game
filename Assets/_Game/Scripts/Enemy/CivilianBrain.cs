@@ -218,9 +218,15 @@ namespace GlorifiedBody.Enemy
         // ── Awareness ─────────────────────────────────────────────────
 
         /// <summary>It knows she is here: it backs away. The first to know screams, and the scream alerts the armed ones.</summary>
+        /// <summary>A test room with its AI off (SoldierBrain.PassiveUntil): it stands still until the flag, or until mk_edgar takes its mind.</summary>
+        public void PassiveUntil(string flag) => passiveFlag = flag;
+
+        private string passiveFlag = "";
+        private bool Passive => !string.IsNullOrEmpty(passiveFlag) && Mind == null && !GlorifiedBody.Saving.StoryFlags.Has(passiveFlag);
+
         public void Alert(string reason, bool callOthers)
         {
-            if (Alerted || Current == Phase.Dead || body == null) return;
+            if (Alerted || Current == Phase.Dead || body == null || Passive) return;
             if (hides && !Found) return; // it stays hidden: only she finds it
             if (player == null)
             {
@@ -243,7 +249,7 @@ namespace GlorifiedBody.Enemy
         /// <summary>A death it saw, or a hurt: it runs and cowers from now on. A care goes on until it ends.</summary>
         public void Panic(string reason)
         {
-            if (Panicked || Current == Phase.Dead || body == null) return;
+            if (Panicked || Current == Phase.Dead || body == null || Passive) return;
             Panicked = true; // before the alert: an idle one runs at once, it does not back away first
             PanicReason = reason;
             panicLine = LineKillSeen;
@@ -458,6 +464,7 @@ namespace GlorifiedBody.Enemy
                 }
                 return;
             }
+            if (Passive) return;
             if (suspended)
             {
                 suspended = false;

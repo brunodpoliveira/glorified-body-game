@@ -261,7 +261,7 @@ namespace GlorifiedBody.Enemy
         /// <summary>The soldier knows where Lucy is from now on, and calls the others when it is the first to know.</summary>
         public void Alert(string reason, bool callOthers)
         {
-            if (Alerted || Current == Phase.Dead) return;
+            if (Alerted || Current == Phase.Dead || (ScriptHeld && passive)) return;
             if (player == null)
             {
                 GameObject p = GameObject.FindWithTag("Player");
@@ -305,6 +305,17 @@ namespace GlorifiedBody.Enemy
             holdFlag = flag;
         }
 
+        /// <summary>
+        /// A test room with its AI off (Bruno, 2026-11-07: "please disable the ai or something"): as ScriptHoldUntil, but a hurt, a power, a
+        /// scream or a sight of her does not wake it. Only the flag does, or mk_edgar taking its mind.
+        /// </summary>
+        public void PassiveUntil(string flag)
+        {
+            ScriptHoldUntil(flag);
+            passive = true;
+        }
+
+        private bool passive;
         private Vector3? scriptWalk;
         private bool scriptFacesHer;
         private string holdFlag = "";

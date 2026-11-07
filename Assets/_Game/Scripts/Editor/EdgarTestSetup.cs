@@ -16,6 +16,7 @@ namespace GlorifiedBody.Editor
     /// The EDGAR TEST room (2026-11-06, Bruno: "this is the last core gameplay element that needs an isolated test before being implemented
     /// in the final game"). A hall with a soldier, a guard, a lab worker and a boss. Behind a low rail she cannot cross: a guard marked for
     /// the puzzle (it can be taken at full HP) and a switch that opens the gate. Capsules on the floor. The room unlocks mk_edgar.
+    /// The figures stay passive until a switch beside her start wakes them (Interact).
     /// EdgarTests drive it. Local until the enemy prefabs are built: tools/unity.sh exec GlorifiedBody.Editor.EdgarTestSetup.BuildEdgarTest
     /// </summary>
     public static class EdgarTestSetup
@@ -23,6 +24,7 @@ namespace GlorifiedBody.Editor
         public const string SceneName = "EdgarTest";
         public const string ScenePath = MenuLoopSetup.ScenesFolder + "/" + SceneName + ".unity";
         public const string SwitchFlag = "edgar_test_switch";
+        public const string AwakeFlag = "edgar_test_awake"; // the figures stay passive until the switch (Bruno, 2026-11-07)
         public const float Width = 24f, Depth = 16f, Height = 3.5f;
         public const float RailZ = 3f, GateX = 8f, GateZ = 6f;
 
@@ -81,8 +83,23 @@ namespace GlorifiedBody.Editor
             boss.boss = true;
             EnemySpawn farGuard = RoomKit.Spawn(figures, "Guard_Far", "guard_pistol", new Vector3(-2f, 0f, 6f), 180f);
             farGuard.dominableUnhurt = true;
-            EditorUtility.SetDirty(boss);
-            EditorUtility.SetDirty(farGuard);
+            foreach (EnemySpawn spawn in figures.GetComponentsInChildren<EnemySpawn>())
+            {
+                spawn.passiveUntilFlag = AwakeFlag;
+                EditorUtility.SetDirty(spawn);
+            }
+
+            // Bruno, 2026-11-07: "i get my shit rocked in before i can do anything. please disable the ai or something".
+            GameObject wake = RoomKit.Box(room, "Switch_Wake", new Vector3(-6.5f, 0.6f, -4f), new Vector3(0.3f, 1.2f, 0.3f));
+            wake.GetComponent<Renderer>().sharedMaterial = ItemAssets.UnlitMaterial("edgar_wake", new Color(0.85f, 0.7f, 0.2f));
+            FlagSwitch wakeSwitch = MenuLoopSetup.EnsureComponent<FlagSwitch>(wake);
+            wakeSwitch.flag = AwakeFlag;
+            wakeSwitch.question = "Wake the figures?";
+            wakeSwitch.hint = "wake the figures";
+            wakeSwitch.doneText = "THE FIGURES ARE AWAKE";
+            wakeSwitch.range = 1.6f;
+            EditorUtility.SetDirty(wakeSwitch);
+            RoomKit.Sign(room, "Sign_Wake", "AI OFF. SWITCH WAKES THEM", new Vector3(-6.5f, 1.55f, -4.2f), Vector3.back, new Vector2(2.6f, 0.4f));
 
             // The room unlocks the power, as the story will.
             ScriptedSequence unlock = RoomKit.Sequence("Seq_Unlock", "edgar_test_unlock", ScriptStep.Raise(PsychicPowers.EdgarFlag));
