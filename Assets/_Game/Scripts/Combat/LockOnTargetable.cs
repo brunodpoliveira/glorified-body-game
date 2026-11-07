@@ -42,6 +42,9 @@ namespace GlorifiedBody.Combat
         public Transform DisplayPoint => displayPoint != null ? displayPoint : LockPoint;
         public bool Selectable => selectable && isActiveAndEnabled;
         public bool IsProp => isProp;
+        /// <summary>A mind she holds (mk_edgar): the switch reaches it and her powers hurt it, but the auto-lock and the aim of a throw skip it.</summary>
+        public bool IsAlly { get; private set; }
+        public void SetAlly(bool value) => IsAlly = value;
         public bool IsHeavy => heavy;
         public bool IsShockImmune => shockImmune;
         public bool IsCivilian => civilian;

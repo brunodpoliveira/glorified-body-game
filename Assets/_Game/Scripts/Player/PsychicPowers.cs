@@ -943,7 +943,7 @@ namespace GlorifiedBody.Player
             Vector3 forward = Vector3.ProjectOnPlane(transform.forward, Vector3.up).normalized;
             foreach (LockOnTargetable candidate in TargetRegistry.All)
             {
-                if (candidate == null || !candidate.IsAlive || !candidate.Selectable || candidate.IsProp) continue;
+                if (candidate == null || !candidate.IsAlive || !candidate.Selectable || candidate.IsAlly || candidate.IsProp) continue;
                 if (candidate.transform == flyer || candidate.transform.IsChildOf(flyer)) continue;
                 Vector3 to = Vector3.ProjectOnPlane(candidate.GetLockPoint() - transform.position, Vector3.up);
                 float distance = to.magnitude;
@@ -1029,7 +1029,7 @@ namespace GlorifiedBody.Player
             float bestDistance = range;
             foreach (LockOnTargetable candidate in TargetRegistry.All)
             {
-                if (candidate == null || !candidate.IsAlive || !candidate.Selectable || candidate.IsProp) continue;
+                if (candidate == null || !candidate.IsAlive || !candidate.Selectable || candidate.IsAlly || candidate.IsProp) continue;
                 if (candidate.transform == flyer || candidate.transform.IsChildOf(flyer)) continue;
                 float distance = Vector3.Distance(flyer.position, candidate.GetLockPoint());
                 if (distance >= bestDistance) continue;

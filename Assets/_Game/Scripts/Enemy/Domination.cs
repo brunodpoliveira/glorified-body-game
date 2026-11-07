@@ -25,6 +25,9 @@ namespace GlorifiedBody.Enemy
     /// <summary>A puzzle figure: mk_edgar takes it at full HP (EnemySpawn.dominableUnhurt).</summary>
     public sealed class DominableUnhurt : MonoBehaviour { }
 
+    /// <summary>A figure that came out of mk_edgar by itself: it cannot be taken again, or each capsule buys more time from the same soldier.</summary>
+    public sealed class MindSnapped : MonoBehaviour { }
+
     /// <summary>
     /// mk_edgar (Bruno, 2026-11-06: it works "either in puzzles (so it controls enemies at full health) or when the enemy has at least
     /// damage"; "civvies can be controlled on full health, guards and above need damage to be dominated. bosses cannot be dominated";
@@ -34,6 +37,7 @@ namespace GlorifiedBody.Enemy
     public static class Domination
     {
         public static Dominated Current { get; private set; }
+        public const float TakeHpShare = 0.5f; // a soldier or the armour at this share of HP or less, PROPOSED
 
         /// <summary>Why she cannot take this target now (a result word for the HUD), or null.</summary>
         public static string Refusal(LockOnTargetable target, Vector3 her, float range, bool hasMk)
@@ -41,7 +45,7 @@ namespace GlorifiedBody.Enemy
             if (target == null || !target.IsAlive || target.IsProp) return "dom_none";
             IDominable mind = target.GetComponentInParent<IDominable>();
             if (mind == null || mind.IsDominated) return "dom_none";
-            if (target.IsShockImmune) return "dom_boss";
+            if (target.IsShockImmune || target.GetComponentInParent<MindSnapped>() != null) return "dom_boss";
             Vector3 to = target.transform.position - her;
             to.y = 0f;
             if (to.magnitude > range) return "dom_far";
@@ -55,7 +59,10 @@ namespace GlorifiedBody.Enemy
             EnemyMorale morale = target.GetComponentInParent<EnemyMorale>();
             if (morale != null && (morale.RankOf == EnemyMorale.Rank.UnarmedCivilian || morale.RankOf == EnemyMorale.Rank.ArmedCivilian)) return false;
             Health health = target.GetComponentInParent<Health>();
-            return health == null || health.CurrentHealth >= health.MaxHealth - 0.01f;
+            if (health == null) return true;
+            // A guard needs any damage. A soldier or the armour must be half dead (Bruno, 2026-11-07), so he is a weaker ally too.
+            bool tough = morale != null && (morale.RankOf == EnemyMorale.Rank.Soldier || morale.RankOf == EnemyMorale.Rank.Heavy);
+            return tough ? health.CurrentHealth > health.MaxHealth * TakeHpShare : health.CurrentHealth >= health.MaxHealth - 0.01f;
         }
 
         public static void Take(IDominable mind, GameObject her)
@@ -139,7 +146,9 @@ namespace GlorifiedBody.Enemy
             body = GetComponent<IEnemyBody>();
             health = GetComponent<Health>();
             lockable = GetComponent<LockOnTargetable>();
-            if (lockable != null) lockable.SetSelectable(false);
+            if (lockable != null) lockable.SetAlly(true);
+            EnemyMorale morale = GetComponent<EnemyMorale>();
+            TimeLeft = morale != null ? LimitFor(morale.RankOf, GetComponent<DominableUnhurt>() != null) : float.PositiveInfinity;
             if (health != null)
             {
                 health.OnDeath ??= new UnityEngine.Events.UnityEvent();
@@ -169,11 +178,89 @@ namespace GlorifiedBody.Enemy
             if (mark != null) Destroy(mark);
         }
 
+        // How long a fighter stays taken (Bruno, 2026-11-07: "for guards and soldiers there needs to be a limit where they snap out of it after a
+        // while, but civvies are different: they can't fight, and i'm planning on doing puzzles"). Seconds, PROPOSED.
+        public const float WarnSeconds = 5f;      // the mark flickers and he shakes
+        public const float SnapKneelSeconds = 2f; // on his knees, then he is an enemy
+
+        /// <summary>The time a rank stays taken. An unarmed civilian and a puzzle figure have no limit.</summary>
+        public static float LimitFor(EnemyMorale.Rank rank, bool puzzle)
+        {
+            if (puzzle) return float.PositiveInfinity;
+            switch (rank)
+            {
+                case EnemyMorale.Rank.UnarmedCivilian: return float.PositiveInfinity;
+                case EnemyMorale.Rank.Guard: return 30f;
+                case EnemyMorale.Rank.Heavy: return 12f;
+                default: return 20f; // a soldier, an armed lab worker
+            }
+        }
+
+        /// <summary>The seconds until he snaps out of it. It stops while he walks to a switch.</summary>
+        public float TimeLeft { get; private set; } = float.PositiveInfinity;
+        public bool Snapping => snapEnds > 0f;
+        private float snapEnds;
+        private Tremble trembling;
+        private float trembleBefore;
+
+        /// <summary>Tests and the bot: the time left now.</summary>
+        public void SetTimeLeft(float seconds)
+        {
+            if (!float.IsInfinity(TimeLeft)) TimeLeft = seconds;
+        }
+
+        private void Update()
+        {
+            if (Time.deltaTime <= 0f || (health != null && health.IsDead)) return;
+            if (Snapping)
+            {
+                if (Time.time >= snapEnds) FinishSnap();
+                return;
+            }
+            if (float.IsInfinity(TimeLeft) || sentTo != null) return;
+            TimeLeft -= Time.deltaTime;
+            if (TimeLeft <= 0f) BeginSnap();
+            else if (TimeLeft <= WarnSeconds) Warn();
+        }
+
+        private void Warn()
+        {
+            if (mark != null) mark.SetActive(Mathf.Repeat(Time.time * 6f, 1f) > 0.4f);
+            if (trembling != null) return;
+            trembling = GetComponent<Tremble>();
+            if (trembling == null) trembling = gameObject.AddComponent<Tremble>();
+            trembleBefore = trembling.Amount;
+            trembling.Amount = 1f;
+        }
+
+        /// <summary>The time ran out: he drops to his knees and says what she did. He cannot be taken again.</summary>
+        private void BeginSnap()
+        {
+            snapEnds = Time.time + SnapKneelSeconds;
+            Domination.Forget(this);
+            if (lockable != null) lockable.SetAlly(false);
+            if (mark != null) Destroy(mark);
+            if (trembling != null) trembling.Amount = trembleBefore;
+            gameObject.AddComponent<MindSnapped>();
+            mind.BeginKneel();
+            Bark.Say(gameObject, LetGoLines[Random.Range(0, LetGoLines.Length)], SnapKneelSeconds);
+            RunTelemetry.Event("dom_snap", name);
+        }
+
+        private void FinishSnap()
+        {
+            if (health != null) health.OnDeath?.RemoveListener(OnDied);
+            mind.EndKneel();
+            mind.ReleaseMind(); // he knows where she is
+            Destroy(this);
+        }
+
         /// <summary>She takes another one: this one is an enemy again.</summary>
         public void LetGo()
         {
             Domination.Forget(this);
-            if (lockable != null) lockable.SetSelectable(true);
+            if (lockable != null) lockable.SetAlly(false);
+            if (trembling != null) trembling.Amount = trembleBefore;
             if (health != null) health.OnDeath?.RemoveListener(OnDied);
             if (mark != null) Destroy(mark);
             mind.ReleaseMind();

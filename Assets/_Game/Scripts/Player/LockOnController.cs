@@ -166,7 +166,7 @@ namespace GlorifiedBody.Player
             for (int i = 0; i < all.Count; i++)
             {
                 LockOnTargetable t = all[i];
-                if (t == null || !t.Selectable || t.IsProp || t.IsCivilian || !t.IsAlive || t.transform == transform || t.transform.IsChildOf(transform)) continue;
+                if (t == null || !t.Selectable || t.IsProp || t.IsCivilian || t.IsAlly || !t.IsAlive || t.transform == transform || t.transform.IsChildOf(transform)) continue;
                 float d = (t.GetLockPoint() - transform.position).sqrMagnitude;
                 if (d < bestDistance && InSight(t))
                 {

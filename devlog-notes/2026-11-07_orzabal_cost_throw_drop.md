@@ -84,7 +84,37 @@ He also kept the rule: with no enemy locked, the held right button takes the box
 
 Proof: `EdgarTests` 15 of 15 (run `20261107-022747-test-playmode-630386`), bot `edgar` 6 of 6 (run `20261107-023107-play-631762`). The test presses no real key on the switch: it reads the flag of the switch and raises that flag.
 
+## mk_edgar: a limit, a snap, and a target she can switch to
+
+Bruno:
+
+```text
+what do you suggest to make the edgar less op? the soldier keeps mind controlled until it is killed. in this scenario the soldier keeps following her; for guards and soldiers there needs to be a limit where they snap out of it after a while, but civvies are different: they can't fight, and i'm planning on doing puzzles where mind controlling a civvie is required
+
+i couldn't switch targets to the mind controlled soldier in the test room
+```
+
+He agreed with my two proposals: an armed lab worker has the fighters' timer, and a soldier or the armour must be at 50 % HP or less.
+
+| Piece | What it does now |
+|---|---|
+| The limit | `Dominated.LimitFor`: guard 30 s, soldier 20 s, armed lab worker 20 s, armour 12 s. An unarmed civilian and a puzzle figure have no limit |
+| The warning | In the last 5 s the violet mark flickers and he shakes (`Tremble`) |
+| The snap | He kneels for 2 s and says a line (`LetGoLines`), then he is an enemy who knows where she is |
+| No second take | A figure that snapped wears `MindSnapped`. The HUD says IT RESISTS, as for a boss. A part circle still stuns him |
+| A figure she sends | The timer stops while he walks to a switch, and it goes on after he uses it |
+| The damage rule | A guard needs any damage. A soldier or the armour must be at 50 % HP or less (`Domination.TakeHpShare`) |
+| Her target | The verdict on his report: confirmed, and it was deliberate. `Bind` made him unselectable. Now he is an ally (`LockOnTargetable.IsAlly`): the switch and the wheel reach him, and her powers hurt him. The auto-lock and the aim of a throw skip him |
+
+A figure that she lets go by taking another mind can still be taken again. Only a snap closes him. All numbers are PROPOSED.
+
+In the room with its AI off, a figure that snaps is hostile at once: `TakeMind` already took him out of the passive hold.
+
+Proof: `EdgarTests` 21 of 21 (run `20261107-024221-test-playmode-634180`), bot `edgar` 7 of 7 with the snap (run `20261107-024617-play-635357`), bot `tutorial` 36 of 36 (run `20261107-024716-play-635774`). The whole suite did not run on this code. Nobody played it by hand.
+
 ## Annotated only, not built
+
+**Lucy speaks after she takes a mind** (for later, a task for the writer): "you will obey!", "suffer me now!", "my command is your wish!", and the writer adds more. It must fit P7 (Lucy speaks once in act 1) and the coda, where she does not want the power. The task is in `DEMO_PLAN.md`, before §15.
 
 Men in black, an enemy type: "man in black types that can use one of her power sets; 4 types for each power lucy has; they'll not appear in act ." I read "act ." as act 1. The writer's files do not have this yet.
 

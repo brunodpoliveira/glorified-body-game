@@ -157,6 +157,20 @@ namespace GlorifiedBody.Automation
             Shot(Path.Combine(shots, "edgar_05_the_fight.png"));
             yield return Until(() => soldierHealth.CurrentHealth < s0, 25f);
             Record("fight", soldierHealth.CurrentHealth < s0, $"soldier {soldierHealth.CurrentHealth:0}/{s0:0}");
+
+            // The time runs out: he kneels, then he hunts her (Bruno, 2026-11-07).
+            soldier.SetActive(false);
+            SoldierBrain guardBrain = guard.GetComponent<SoldierBrain>();
+            Dominated mind = Domination.Current;
+            mind.SetTimeLeft(Dominated.WarnSeconds);
+            yield return BotClock.Wait(2f);
+            CloseShot(guard.transform.position + Vector3.up, guard.transform.forward + guard.transform.right * 0.6f, Path.Combine(shots, "edgar_06_warning.png"), 3f, 0.3f);
+            yield return Until(() => mind == null || mind.Snapping, 5f);
+            yield return BotClock.Wait(0.8f);
+            CloseShot(guard.transform.position + Vector3.up * 0.8f, guard.transform.forward + guard.transform.right * 0.6f, Path.Combine(shots, "edgar_07_snap_knees.png"), 3f, 0.4f);
+            Shot(Path.Combine(shots, "edgar_08_snap_room.png"));
+            yield return Until(() => !guardBrain.IsDominated, Dominated.SnapKneelSeconds + 2f);
+            Record("snap", !guardBrain.IsDominated && guardBrain.Hunting && Domination.Current == null, $"hunting {guardBrain.Hunting}");
             pad.ReleaseAll();
             GameInput.ClearBotSource(pad);
             pad = null;

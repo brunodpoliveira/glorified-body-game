@@ -168,3 +168,9 @@ If the console shows a red line, copy it too.
 | 89 | Stack boxes by hand with fast and slow mouse moves. | Tell me if the box feels slippery when it goes on after the mouse stops. | |
 | 90 | EDGAR TEST. Stand in the open for 10 s, and blast the guard. | Nobody moves or shoots. | You take a shot. |
 | 91 | In EDGAR TEST, press E at the yellow post beside the start. | It asks, and a yes wakes the figures. They attack. | Nothing wakes. |
+| 92 | EDGAR TEST. Press E at the post to wake them, or stay with the AI off. Blast the soldier to half HP or less, and take him. | NOT WEAK ENOUGH until 50 % HP. Then he follows her. | Any damage is enough. |
+| 93 | Wait 15 s with the soldier taken. | The violet mark flickers and he shakes. | No warning. |
+| 94 | Wait 5 s more. | He kneels 2 s, says a line, and hunts her. | He follows her for ever. |
+| 95 | Fill a full circle on that soldier. | IT RESISTS, and no MK goes. | He is taken again. |
+| 96 | Take the lab worker, and wait 60 s. | He still follows her. | He snaps out of it. |
+| 97 | Take a guard, and press Tab or turn the wheel. | The lock reaches him. A blast hurts him. | The lock skips him. |

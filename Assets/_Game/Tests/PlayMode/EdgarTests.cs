@@ -188,12 +188,13 @@ namespace GlorifiedBody.Tests.PlayMode
             SoldierBrain brain = soldier.GetComponent<SoldierBrain>();
             yield return FullCircle();
             Assert.IsFalse(brain.IsDominated);
-            soldier.GetComponent<Health>().TakeDamage(5f);
+            Health hp = soldier.GetComponent<Health>();
+            hp.TakeDamage(hp.MaxHealth * 0.6f);
             yield return null;
             yield return FullCircle();
             Assert.IsTrue(brain.IsDominated, $"{powers.LastResult}");
             Assert.IsNull(brain.Team, "he leaves the fireteam");
-            Assert.IsFalse(soldier.GetComponent<LockOnTargetable>().Selectable, "she cannot lock him now");
+            Assert.IsTrue(soldier.GetComponent<LockOnTargetable>().IsAlly, "the auto-lock skips him now");
         }
 
         [UnityTest]
@@ -258,6 +259,136 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.IsFalse(kneel.On);
             Assert.AreEqual(mk, stats.Mk(PowerKind.Domination), 0.01f);
             pad.SetHeld(InputManager.GameAction.Charge, false);
+        }
+
+        [UnityTest]
+        public IEnumerator TheLimit_GoesByRank_AndACivilianOrAPuzzleFigureHasNone()
+        {
+            yield return null;
+            Assert.AreEqual(30f, Dominated.LimitFor(EnemyMorale.Rank.Guard, false));
+            Assert.AreEqual(20f, Dominated.LimitFor(EnemyMorale.Rank.Soldier, false));
+            Assert.AreEqual(12f, Dominated.LimitFor(EnemyMorale.Rank.Heavy, false));
+            Assert.AreEqual(20f, Dominated.LimitFor(EnemyMorale.Rank.ArmedCivilian, false));
+            Assert.IsTrue(float.IsInfinity(Dominated.LimitFor(EnemyMorale.Rank.UnarmedCivilian, false)));
+            Assert.IsTrue(float.IsInfinity(Dominated.LimitFor(EnemyMorale.Rank.Guard, true)));
+        }
+
+        [UnityTest]
+        public IEnumerator ASoldier_SnapsOutOfIt_OnHisKnees_Hostile_AndCannotBeTakenAgain()
+        {
+            // Bruno, 2026-11-07: "for guards and soldiers there needs to be a limit where they snap out of it after a while".
+            yield return Only("Soldier_A");
+            GameObject figure = GameObject.Find("Soldier_A");
+            SoldierBrain soldier = figure.GetComponent<SoldierBrain>();
+            Health hp = figure.GetComponent<Health>();
+            hp.TakeDamage(hp.MaxHealth * 0.6f);
+            yield return null;
+            yield return FullCircle();
+            Assert.IsTrue(soldier.IsDominated, powers.LastResult);
+            Dominated mind = Domination.Current;
+            Assert.AreEqual(20f, mind.TimeLeft, 1f);
+
+            mind.SetTimeLeft(1f);
+            yield return WaitUntil(() => mind.Snapping, 3f);
+            Assert.IsTrue(mind.Snapping, "the time runs out");
+            Assert.IsNull(Domination.Current, "she holds nothing now");
+            KneelPose kneel = figure.GetComponentInChildren<Animator>().GetComponent<KneelPose>();
+            Assert.IsNotNull(kneel);
+            Assert.IsTrue(kneel.On, "on his knees");
+            yield return WaitUntil(() => !soldier.IsDominated, Dominated.SnapKneelSeconds + 1f);
+            Assert.IsFalse(soldier.IsDominated, "free");
+            Assert.IsTrue(soldier.Hunting, "and he hunts her");
+            Assert.IsFalse(figure.GetComponent<LockOnTargetable>().IsAlly);
+
+            lockOn.SetTarget(figure.GetComponent<LockOnTargetable>());
+            stats.DebugSetMk(PowerKind.Domination, 100f);
+            yield return FullCircle();
+            Assert.IsFalse(soldier.IsDominated, "no second take");
+            Assert.AreEqual("dom_boss", powers.LastResult, "IT RESISTS");
+            Assert.AreEqual(100f, stats.Mk(PowerKind.Domination), 0.01f, "and a full circle on him costs nothing");
+        }
+
+        [UnityTest]
+        public IEnumerator ACivilian_AndAPuzzleFigure_HaveNoLimit()
+        {
+            yield return Only("Worker_C");
+            GameObject worker = GameObject.Find("Worker_C");
+            yield return FullCircle();
+            Assert.IsTrue(Mind(worker).IsDominated, powers.LastResult);
+            Assert.IsTrue(float.IsInfinity(Domination.Current.TimeLeft), "a civilian");
+            Domination.Current.SetTimeLeft(0.1f);
+            yield return new WaitForSeconds(0.5f);
+            Assert.IsTrue(Mind(worker).IsDominated, "he stays");
+        }
+
+        [UnityTest]
+        public IEnumerator TheTimer_StopsWhileHeWalksToASwitch()
+        {
+            yield return Only("Guard_B");
+            GameObject guard = GameObject.Find("Guard_B");
+            guard.GetComponent<Health>().TakeDamage(5f);
+            yield return null;
+            yield return FullCircle();
+            Dominated mind = Domination.Current;
+            Assert.IsNotNull(mind, powers.LastResult);
+            Assert.AreEqual(30f, mind.TimeLeft, 1f, "a guard");
+            pad.Tap(InputManager.GameAction.Defend);
+            yield return WaitUntil(() => mind.SentTo != null, 1f);
+            Assert.IsNotNull(mind.SentTo, powers.LastResult);
+            float left = mind.TimeLeft;
+            yield return new WaitForSeconds(1f);
+            Assert.AreEqual(left, mind.TimeLeft, 0.01f, "the guard must arrive");
+        }
+
+        [UnityTest]
+        public IEnumerator ASoldier_NeedsHalfHisHp_AGuard_AnyDamage()
+        {
+            yield return Only("Soldier_A");
+            GameObject figure = GameObject.Find("Soldier_A");
+            Health hp = figure.GetComponent<Health>();
+            hp.TakeDamage(hp.MaxHealth * 0.3f);
+            yield return null;
+            yield return FullCircle();
+            Assert.IsFalse(Mind(figure).IsDominated, "at 70 % HP");
+            Assert.AreEqual("dom_not_hurt", powers.LastResult);
+            Assert.AreEqual(100f, stats.Mk(PowerKind.Domination), 0.01f, "no cost");
+            hp.TakeDamage(hp.MaxHealth * 0.25f);
+            yield return null;
+            yield return FullCircle();
+            Assert.IsTrue(Mind(figure).IsDominated, $"at 45 % HP: {powers.LastResult}");
+        }
+
+        [UnityTest]
+        public IEnumerator TheSwitch_ReachesTheOneSheHolds_TheAutoLockDoesNot_AndHerPowersHurtHim()
+        {
+            // Bruno, 2026-11-07: "i couldn't switch targets to the mind controlled soldier in the test room".
+            yield return Only("Guard_B");
+            GameObject guard = GameObject.Find("Guard_B");
+            guard.GetComponent<Health>().TakeDamage(5f);
+            yield return null;
+            yield return FullCircle();
+            Assert.IsTrue(Mind(guard).IsDominated, powers.LastResult);
+            LockOnTargetable lockable = guard.GetComponent<LockOnTargetable>();
+            yield return new WaitForSeconds(0.3f);
+            Assert.IsNull(lockOn.CurrentTarget, "the auto-lock skips him");
+            pad.Tap(InputManager.GameAction.SwitchTarget);
+            yield return null;
+            yield return null;
+            yield return null;
+            Assert.AreEqual(lockable, lockOn.CurrentTarget, "the switch reaches him");
+            yield return new WaitForSeconds(0.3f);
+            Assert.AreEqual(lockable, lockOn.CurrentTarget, "and the lock stays");
+
+            powers.Select(PowerKind.Blast);
+            stats.DebugSet(100f, 0f);
+            Health hp = guard.GetComponent<Health>();
+            float before = hp.CurrentHealth;
+            Assert.IsTrue(powers.Release(0.5f), powers.LastResult);
+            yield return null;
+            Assert.Less(hp.CurrentHealth, before, "her power hurts him");
+            hp.TakeDamage(hp.CurrentHealth);
+            yield return new WaitForSeconds(0.3f);
+            Assert.IsNull(Domination.Current, "she holds nothing when he dies");
         }
 
         [UnityTest]
