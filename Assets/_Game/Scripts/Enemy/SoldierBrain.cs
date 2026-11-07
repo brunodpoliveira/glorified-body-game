@@ -1188,7 +1188,7 @@ namespace GlorifiedBody.Enemy
             Ducks++;
             ducked = true;
             timer = Random.Range(DuckSeconds.x, DuckSeconds.y);
-            // He goes to the spot first. A walk that ran out of time left him 2 m from the planter, and he crouched in the open (2026-11-06).
+            // He goes to the spot first: a walk that ran out of time left him short of it, and he crouched and hid in the open (2026-11-06).
             Spot = HeldCover.Position;
             body.MoveTo(HeldCover.Position, MoveSpeed.Run);
             RunTelemetry.Event("soldier_duck", name);

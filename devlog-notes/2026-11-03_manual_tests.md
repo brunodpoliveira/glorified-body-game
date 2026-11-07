@@ -152,3 +152,6 @@ If the console shows a red line, copy it too.
 | 73 | Kill the mechanic instead. | After 15 s a spare comes out, and the shutter stays shut. | The shutter opens, or nobody comes. |
 | 74 | In the toll yard, try the guard unhurt, then hurt him, take him, send him. | NOT WEAK ENOUGH, then the barrier rises, then the title. | |
 | 75 | A gas grenade in AI TEST. | The smoke is white. The ring on the floor is still green. | Green smoke. |
+| 76 | In AI TEST, take hits until your HP is low, then take one more. | She stops at 1 HP. For 0.5 s nothing hurts her. The next hit takes the second wind or kills her. | She dies from above 1 HP. |
+| 77 | Kill a soldier, and press Esc or I while his body falls. Close it. | The body lands as usual. | The body flies up. |
+| 78 | Look at the shaft of G16. | A wide dark shaft across the floor. | A thin line. |

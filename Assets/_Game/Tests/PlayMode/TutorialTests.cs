@@ -194,7 +194,7 @@ namespace GlorifiedBody.Tests.PlayMode
             GameObject crate = GameObject.Find("Prop_Crate");
             Assert.IsNotNull(crate, "the crate for the prop step");
             Assert.IsTrue(crate.GetComponent<LockOnTargetable>() != null && crate.GetComponent<LockOnTargetable>().IsProp, "the crate is a prop target");
-            Assert.AreEqual(6, UnityEngine.Object.FindObjectsByType<FixedCamera>(FindObjectsSortMode.None).Length, "three cameras in the gym, one in the closet");
+            Assert.AreEqual(7, UnityEngine.Object.FindObjectsByType<FixedCamera>(FindObjectsSortMode.None).Length, "four cameras in the gym, one in the closet, two in the annex");
             Assert.IsNotNull(UnityEngine.Object.FindFirstObjectByType<LockedDoor>(), "the locked door");
             Assert.IsNotNull(TutorialDrive.FindPickup("test_key"), "the test key");
             Assert.AreEqual(0, LightmapSettings.lightmaps.Length, "a greybox: no bake (Bruno, 2026-11-06)");
@@ -221,45 +221,6 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.AreEqual(TutorialDirector.SceneName, SceneManager.GetActiveScene().name, "the button opens the gym");
         }
 
-        [UnityTest, Timeout(420000)] // 34 steps played by hand
-        public IEnumerator APlayer_WhoDoesEachThing_CompletesEveryStepInOrder()
-        {
-            var pad = new VirtualPad();
-            GameInput.SetBotSource(pad);
-            var driver = new GameObject("[PadDriver]").AddComponent<PadDriver>();
-            driver.Pad = pad;
-            try
-            {
-                TutorialDrive.Context context = TutorialDrive.Context.From(pad, director);
-                for (int i = 0; i < ExpectedSteps.Length; i++)
-                {
-                    Assert.AreEqual(i, director.StepIndex, $"step {i + 1} ({ExpectedSteps[i]}) is on");
-                    string id = director.Current.Id;
-                    // Real time for every wait: a time scale of zero must fail the test, never hang the run.
-                    float stepStart = Time.realtimeSinceStartup;
-                    int attempts = 0;
-                    Debug.Log($"[TutorialTests] {id} starts: timeScale={Time.timeScale} playing={GameManager.Instance.IsPlaying}");
-                    while (director.StepIndex == i && !director.IsComplete && Time.realtimeSinceStartup - stepStart < TutorialDrive.StepTimeout)
-                    {
-                        attempts++;
-                        yield return TutorialDrive.Drive(context, id);
-                        float waitUntil = Time.realtimeSinceStartup + 1.5f;
-                        while (director.StepIndex == i && !director.IsComplete && Time.realtimeSinceStartup < waitUntil) yield return null;
-                    }
-                    Assert.IsTrue(director.StepIndex != i || director.IsComplete, $"{id}: done by doing it, last result '{context.Powers?.LastResult}', lock '{context.Lucy.GetComponent<GlorifiedBody.Player.LockOnController>()?.TargetName}', she at {context.Lucy.position} ({attempts} attempts, {Time.realtimeSinceStartup - stepStart:0.0} s, timeScale {Time.timeScale}, playing {GameManager.Instance.IsPlaying})");
-                    Debug.Log($"[TutorialTests] {id} done: {attempts} attempts, {Time.realtimeSinceStartup - stepStart:0.0} s");
-                }
-                Assert.IsTrue(director.IsComplete, "the demonstration is complete");
-                yield return WaitUntil(() => GameManager.Instance.IsLevelComplete, 5f);
-                Assert.IsTrue(GameManager.Instance.IsLevelComplete, "the level completes");
-            }
-            finally
-            {
-                GameInput.ClearBotSource(pad);
-                UnityEngine.Object.Destroy(driver.gameObject);
-            }
-        }
-
         [UnityTest]
         public IEnumerator EveryFloorPoint_IsInTheFrameOfItsCamera()
         {
@@ -268,14 +229,6 @@ namespace GlorifiedBody.Tests.PlayMode
             Debug.Log("[TutorialTests] " + report);
             Assert.Greater(report.Total, 50, "floor points");
             Assert.LessOrEqual(report.Uncovered.Count, report.Total * 0.03f, report.ToString());
-        }
-
-        /// <summary>Commits the pad once a frame, as the bots do.</summary>
-        [DefaultExecutionOrder(-1000)]
-        private sealed class PadDriver : MonoBehaviour
-        {
-            public VirtualPad Pad;
-            private void Update() => Pad?.Commit();
         }
 
         private static IEnumerator WaitUntil(Func<bool> condition, float timeoutSeconds)

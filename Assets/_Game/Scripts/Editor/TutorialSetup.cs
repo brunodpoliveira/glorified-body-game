@@ -156,6 +156,9 @@ namespace GlorifiedBody.Editor
             director.SetDefaultCamera(gym);
             MenuLoopSetup.EnsureCameraZone(camerasRoot, "Zone_Gym_North", new Vector3(0f, 1.5f, 15.4f), new Vector3(8f, 3f, 3.8f), north, 1);
             MenuLoopSetup.EnsureCameraZone(camerasRoot, "Zone_Gym_DoorStrip", new Vector3(3f, 1.5f, 11.9f), new Vector3(2f, 3f, 3.2f), west, 1);
+            // The floor in front of the fire door shows the door (the exit rule): Cam_Gym_NE has it behind the lens, and her head filled the frame at the lever.
+            FixedCamera fireDoor = MenuLoopSetup.EnsureFixedCamera(camerasRoot, "Cam_Gym_FireDoor", new Vector3(2f, 2.3f, 12.6f), new Vector3(2.5f, 0.9f, FireDoorMouth.z), 62f);
+            MenuLoopSetup.EnsureCameraZone(camerasRoot, "Zone_Gym_FireDoor", new Vector3(2.25f, 1.5f, 16.2f), new Vector3(3.5f, 3f, 2.2f), fireDoor, 2);
             // The closet behind the locked door: its own camera in the far corner, looking back at the doorway.
             FixedCamera closet = MenuLoopSetup.EnsureFixedCamera(camerasRoot, "Cam_Closet", new Vector3(0.7f, 1.9f, 8.6f), new Vector3(-0.4f, 0.7f, 10.2f), 70f);
             MenuLoopSetup.EnsureCameraZone(camerasRoot, "Zone_Closet", new Vector3(0f, 1.5f, 9.3f), new Vector3(1.8f, 3f, 1.9f), closet, 5);
@@ -292,7 +295,7 @@ namespace GlorifiedBody.Editor
             foreach (GameObject part in new[] { torso, legs })
             {
                 Object.DestroyImmediate(part.GetComponent<Collider>());
-                part.GetComponent<Renderer>().sharedMaterial = Demo.DemoRoom.Colour("uniform_torso", new Color(0.34f, 0.4f, 0.42f));
+                part.GetComponent<Renderer>().sharedMaterial = Demo.DemoRoom.Colour("tutorial_uniform_torso", new Color(0.34f, 0.4f, 0.42f));
             }
             OutfitLocker component = MenuLoopSetup.EnsureComponent<OutfitLocker>(locker);
             component.outfitId = OutfitChange.GuardId;

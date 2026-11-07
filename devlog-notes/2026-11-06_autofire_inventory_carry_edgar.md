@@ -131,6 +131,6 @@ when done redo the tutorial room to be fully greyboxed and include the new skill
 | EditMode | 61 of 61, after the bake check became a no-bake check |
 | Bots | structural, tutorial, edgar, physics, demo, team pass |
 
-The whole suite did not run again after those corrections. It runs again after the coda.
+The whole suite ran again after the coda, on `1c7d030`: 416 of 417 (run `20261106-205438-test-playmode-551026`). See `2026-11-06_last_hit_and_the_physics_step.md`.
 
 Shots: `~/MEGA/glorified-body-renders/game/physics_2026-11-06/`, `~/MEGA/glorified-body-renders/game/edgar_2026-11-06/`, `~/MEGA/glorified-body-renders/game/demo/team_ai_2026-11-06/team_00_inventory.png`.
