@@ -96,6 +96,17 @@ namespace GlorifiedBody.Automation
             yield return BotClock.Wait(1f);
             GameObject lucy = GameObject.FindGameObjectWithTag("Player");
             lucy.GetComponentInChildren<Health>().SetInvulnerable(true);
+            if (room == "LabTest")
+            {
+                // The armed lab worker at rest, then the room reduced to him, with her in his sight.
+                GameObject gunman = GameObject.Find("Lab_Gun2");
+                Vector3 restChest = gunman.transform.position + Vector3.up * 1.2f;
+                yield return Shot("Lab_Gun2_rest_side", restChest + gunman.transform.right * 2.1f, restChest);
+                yield return Shot("Lab_Gun2_rest_front", restChest + gunman.transform.forward * 2.2f + gunman.transform.right * 0.9f, restChest);
+                foreach (string other in new[] { "Lab_Knife", "Lab_Gun1" }) GameObject.Find(other)?.SetActive(false);
+                lucy.GetComponent<TankController>().Teleport(gunman.transform.position + gunman.transform.forward * 6f, 0f);
+                gunman.GetComponent<Enemy.SoldierBrain>().Alert("bot", callOthers: false);
+            }
             int seen = 0;
             var done = new HashSet<Enemy.EnemyGun>();
             t0 = BotClock.Now;
@@ -111,6 +122,7 @@ namespace GlorifiedBody.Automation
                     Transform hand = body != null ? body.GetBoneTransform(HumanBodyBones.RightHand) : null;
                     if (hand == null) continue;
                     done.Add(gun);
+                    yield return BotClock.Wait(0.4f); // the raise
                     Vector3 side = gun.transform.right;
                     yield return Shot($"{gun.name}_hands", hand.position + side * 0.7f + gun.transform.forward * 0.15f + Vector3.up * 0.1f, hand.position);
                     Vector3 chest = gun.transform.position + Vector3.up * 1.3f;
@@ -124,7 +136,7 @@ namespace GlorifiedBody.Automation
                     foreach (Renderer r in hidden) if (r != null) r.enabled = true;
                     seen++;
                     if (gun.Model != null && gun.name.Contains("Guard"))
-                        Record($"{gun.name}_pistol_grip_in_the_palm", Vector3.Distance(gun.Model.position, gun.Palm) < 0.03f, $"grip to palm {Vector3.Distance(gun.Model.position, gun.Palm):0.000} m");
+                        Record($"{gun.name}_pistol_grip_in_the_palm", gun.RightGap < 0.03f, $"gap {gun.RightGap:0.000}");
                 }
                 yield return null;
             }

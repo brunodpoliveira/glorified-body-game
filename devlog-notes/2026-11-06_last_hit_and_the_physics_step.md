@@ -90,3 +90,22 @@ Shots, checked at full size: `~/MEGA/glorified-body-renders/game/tutorial_greybo
 
 Nobody played any of it by hand. Manual steps 76 to 78 in `2026-11-03_manual_tests.md`.
 
+## Later the same night: the pistol hold
+
+Bruno:
+
+```text
+i also noticed that the scientist with the gun is holding the weapon wrong in some pics, take a look at it
+Will these fixes hold when we replace the models? the plan is to replace them with higher poly-count models soon
+```
+
+Verdict: confirmed, and wider than the report. Every pistol had the fault, also the guards. A rifle has a real pose since 2026-10-31. A pistol only sat at the wrist in the vendor's arm pose, so the hand stood upright and the forearm stood 56 degrees off the barrel.
+
+`EnemyGun.PistolHold`: at the aim the grip is ahead of the chest, and the forearm lies along the barrel. At rest he holds a low ready. The right hand lies on the grip. A lab worker's left hand cups it from under. A shield guard keeps one hand. The test `ThePistol_LiesInBothHands_TheForearmAlongTheAim` failed first at 56 degrees, and it gives 24 to 29 degrees now.
+
+Proof: `ArmedCivilianTests` 10 of 10 in two runs. `EnemyAiTests`, `EnemyMoraleTests`, `EdgarTests`, `HitReactionTests`, `DummyShooterTests`, `FlankingTests`: 54 of 54, run `20261106-221338-test-playmode-572529`. Bot `holds` in LAB TEST and AI TEST: pass. Shots: `~/MEGA/glorified-body-renders/game/holds_pistol_2026-11-06/`. `TheCarrier_DropsTheCard` failed once in the first build of the pose by 1.4 cm, and passed in the two runs after. The whole suite did not run on this commit.
+
+Not checked: the knife hold. The T19 rigs have no finger bones, so the fingers stay straight on the grip.
+
+With new models: the numbers follow the arm's length and the bind pose, but this is not tested on another model. New models with finger bones need a finger curl, which does not exist. Run the `holds` bot after the first import.
+

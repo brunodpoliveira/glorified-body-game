@@ -134,9 +134,9 @@ namespace GlorifiedBody.Enemy
                             main.loop = false;
                         }
             // A long gun is held with both hands: the left hand goes to the vendor's grip point on the gun.
-            if (animator != null && animator.isHuman && (upperBodyId != 1 || twoHanded) && gun != null)
+            if (animator != null && animator.isHuman && gun != null)
             {
-                leftGrip = FindDeep(gun, "leftHandIK");
+                if (upperBodyId != 1 || twoHanded) leftGrip = FindDeep(gun, "leftHandIK");
                 leftUpper = animator.GetBoneTransform(HumanBodyBones.LeftUpperArm);
                 leftLower = animator.GetBoneTransform(HumanBodyBones.LeftLowerArm);
                 leftHand = animator.GetBoneTransform(HumanBodyBones.LeftHand);
@@ -146,6 +146,7 @@ namespace GlorifiedBody.Enemy
                 rightKnuckle = animator.GetBoneTransform(HumanBodyBones.RightMiddleProximal);
                 shouldered = upperBodyId != 1 && rightUpper != null && rightLower != null && hand != null && muzzle != null && FindStock(out stockLocal);
                 handFrames = FindHandFrame(hand, rightLower, true, out rightHandFrame) & FindHandFrame(leftHand, leftLower, false, out leftHandFrame);
+                pistolHeld = upperBodyId == 1 && shooter.WeaponKind == DummyShooter.Weapon.Pistol && rightUpper != null && rightLower != null && hand != null;
             }
             ragdoll = GetComponent<IRagdollBody>();
             brain = GetComponent<SoldierBrain>();
@@ -302,6 +303,11 @@ namespace GlorifiedBody.Enemy
                 Shoulder(flatForward);
                 return;
             }
+            else if (pistolHeld && !HandsFree)
+            {
+                PistolHold(flatForward);
+                return;
+            }
             else if (shooter.HoldsSlot && shooter.CurrentAttack != DummyShooter.Attack.Melee && !(health != null && health.IsDead))
             {
                 aim = shooter.AimPoint - hand.position;
@@ -423,6 +429,56 @@ namespace GlorifiedBody.Enemy
                 LeftGap = Vector3.Distance(leftHand.position, leftTarget);
             }
         }
+
+        /// <summary>
+        /// A pistol in the hands (Bruno, 2026-11-06: "the scientist with the gun is holding the weapon wrong"; the vendor's arm pose stood the hand
+        /// upright, 56 degrees off the level gun). At the aim: the grip ahead of the chest at shoulder height, the forearm along the barrel. At
+        /// rest: a low ready at the hip. The right hand lies on the grip as on a rifle; a second hand cups it from under and from the left. PROPOSED numbers.
+        /// </summary>
+        private void PistolHold(Vector3 flatForward)
+        {
+            bool aiming = shooter.HoldsSlot && shooter.CurrentAttack != DummyShooter.Attack.Melee;
+            pistolRaise = Mathf.MoveTowards(pistolRaise, aiming ? 1f : 0f, Time.deltaTime * PistolRaiseRate);
+            Vector3 right = Vector3.Cross(Vector3.up, flatForward);
+            float arm = Vector3.Distance(rightUpper.position, rightLower.position) + Vector3.Distance(rightLower.position, hand.position);
+            bool bothHands = twoHanded && leftUpper != null && leftLower != null && leftHand != null;
+            Vector3 shoulders = bothHands ? Vector3.Lerp(leftUpper.position, rightUpper.position, 0.5f) : rightUpper.position;
+            Vector3 raised = shoulders + flatForward * (arm * (bothHands ? PistolReachBoth : PistolReachOne)) - Vector3.up * PistolUnderShoulder;
+            Vector3 low = rightUpper.position + flatForward * (arm * PistolLowForward) - Vector3.up * (arm * PistolLowDown) - right * (bothHands ? PistolLowIn : 0f);
+            Vector3 grip = Vector3.Lerp(low, raised, Mathf.SmoothStep(0f, 1f, pistolRaise));
+            Vector3 wanted = aiming ? shooter.AimPoint - grip
+                : Quaternion.AngleAxis(-LowReadyIn, Vector3.up) * Quaternion.AngleAxis(LowReadyDown, right) * flatForward;
+            if (wanted.sqrMagnitude < 0.0001f) wanted = flatForward;
+            heldAim = heldAim.sqrMagnitude < 0.5f ? wanted.normalized : Vector3.Slerp(heldAim, wanted.normalized, 1f - Mathf.Exp(-RaiseRate * Time.deltaTime));
+            Vector3 aim = Shake(heldAim);
+            Point(aim);
+            LastAim = aim.normalized;
+            gun.position = grip;
+            Vector3 gunRight = Vector3.Cross(Vector3.up, aim).normalized;
+            Vector3 gunUp = Vector3.Cross(aim, gunRight);
+            Vector3 rightFingers = (aim - gunUp * 0.35f).normalized;
+            Vector3 rightTarget = handFrames ? grip + gunRight * PalmSide - rightFingers * PalmLength : grip - aim * WristBehind - gunUp * WristUnder;
+            Reach(rightUpper, rightLower, hand, handFrames ? null : rightKnuckle, rightTarget, -Vector3.up + right * 0.35f - flatForward * 0.1f, aim * 0.8f - gunUp * 0.5f);
+            if (handFrames) Turn(hand, rightHandFrame, rightFingers, -gunRight);
+            RightGap = Vector3.Distance(hand.position, rightTarget);
+            RightElbowLift = rightLower.position.y - rightUpper.position.y;
+            if (!bothHands) return;
+            Vector3 leftFingers = (aim * 0.75f + gunRight * 0.65f - gunUp * 0.1f).normalized;
+            Vector3 leftPoint = grip - gunUp * PistolCupUnder - gunRight * PalmSide;
+            Vector3 leftTarget = handFrames ? leftPoint - leftFingers * PalmLength : leftPoint - aim * WristBehind - gunUp * WristUnder;
+            Reach(leftUpper, leftLower, leftHand, handFrames ? null : leftKnuckle, leftTarget, -Vector3.up - right * 0.35f, aim * 0.7f + gunRight * 0.5f + gunUp * 0.2f);
+            if (handFrames) Turn(leftHand, leftHandFrame, leftFingers, (gunRight * 0.7f + gunUp * 0.7f).normalized);
+            LeftGap = Vector3.Distance(leftHand.position, leftTarget);
+        }
+
+        private bool pistolHeld;
+        private float pistolRaise;
+        private const float PistolRaiseRate = 5f; // per second: 0.2 s from the low ready to the aim
+        private const float PistolReachBoth = 0.95f, PistolReachOne = 0.98f; // of the arm's length, ahead of the shoulders
+        private const float PistolUnderShoulder = 0.12f; // metres
+        private const float PistolLowForward = 0.5f, PistolLowDown = 0.55f; // of the arm's length, from the right shoulder
+        private const float PistolLowIn = 0.1f; // metres toward the middle, with both hands
+        private const float PistolCupUnder = 0.05f; // metres: the left palm under the grip's top
 
         private const float PalmLength = 0.06f; // metres from the wrist to the palm's middle, along the fingers, PROPOSED
         private const float PalmSide = 0.035f;  // metres from the bone's line to the palm's skin, PROPOSED

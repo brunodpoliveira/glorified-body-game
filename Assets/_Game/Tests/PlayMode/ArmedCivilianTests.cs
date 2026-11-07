@@ -48,6 +48,36 @@ namespace GlorifiedBody.Tests.PlayMode
             yield return null;
         }
 
+        /// <summary>
+        /// Bruno, 2026-11-06: "the scientist with the gun is holding the weapon wrong". The hands stood upright and the gun lay level in front of
+        /// them: the vendor's arm pose with the gun at the palm. Now: the forearm along the aim, the right hand on the grip, the left hand under it.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator ThePistol_LiesInBothHands_TheForearmAlongTheAim()
+        {
+            yield return null;
+            Remove(Knife);
+            Remove(Carrier);
+            GameObject figure = GameObject.Find(Gunman);
+            EnemyGun hold = figure.GetComponent<EnemyGun>();
+            DummyShooter shooter = figure.GetComponent<DummyShooter>();
+            Animator body = figure.GetComponent<Animator>();
+            lucy.GetComponent<TankController>().Teleport(figure.transform.position + figure.transform.forward * 6f, 0f);
+            figure.GetComponent<SoldierBrain>().Alert("test", callOthers: false);
+            float t0 = Time.time;
+            while (!(shooter.HoldsSlot && shooter.CurrentAttack == DummyShooter.Attack.Shot) && Time.time - t0 < 15f) yield return null;
+            Assert.IsTrue(shooter.HoldsSlot, "he aims");
+            yield return new WaitForSeconds(0.35f); // the raise
+            Transform wrist = body.GetBoneTransform(HumanBodyBones.RightHand), elbow = body.GetBoneTransform(HumanBodyBones.RightLowerArm);
+            Transform otherWrist = body.GetBoneTransform(HumanBodyBones.LeftHand);
+            float forearm = Vector3.Angle(wrist.position - elbow.position, hold.Muzzle.forward);
+            float right = Vector3.Distance(wrist.position, hold.Model.position), left = Vector3.Distance(otherWrist.position, hold.Model.position);
+            Debug.Log($"[ArmedCivilianTests] forearm to the aim {forearm:0} degrees, right wrist to the grip {right:0.00} m, left {left:0.00} m, gaps {hold.RightGap:0.000} and {hold.LeftGap:0.000}");
+            Assert.Less(forearm, 35f, "the forearm lies along the aim");
+            Assert.Less(right, 0.13f, "the right hand holds the grip");
+            Assert.Less(left, 0.16f, "the left hand holds it too");
+        }
+
         [UnityTest]
         public IEnumerator TheMarkers_BecomeArmedLabWorkers()
         {
