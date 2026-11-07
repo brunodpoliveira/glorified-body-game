@@ -35,6 +35,26 @@ namespace GlorifiedBody.Editor
             Debug.Log("[T27] import done");
         }
 
+        /// <summary>
+        /// A rehearsal of the model swap (Bruno, 2026-11-06: "check if our fixes hold"): the guard, the soldier and the lab worker wear the baked
+        /// guard in the catalog, so the next BuildEnemyPrefabs and the enemy tests run on it. It changes the catalog asset: do not commit that.
+        /// Back: git checkout the catalog, then BuildEnemyPrefabs.
+        /// Batch: tools/unity.sh exec GlorifiedBody.Editor.T27BakedCharacters.RehearseSwap
+        /// </summary>
+        public static void RehearseSwap()
+        {
+            var catalog = AssetDatabase.LoadAssetAtPath<GlorifiedBody.Characters.CharacterCatalog>(GlorifiedBody.Editor.Characters.CreateCharacterAssets.CatalogPath);
+            var baked = AssetDatabase.LoadAssetAtPath<GameObject>(PrefabFolder + "/t27_guard.prefab");
+            foreach (string id in new[] { "guard", "soldier", "labworker" })
+            {
+                var entry = catalog.Find(id);
+                entry.prefab = baked;
+                Debug.Log($"[T27] {id} wears {baked.name}, height {entry.height:0.00}");
+            }
+            EditorUtility.SetDirty(catalog);
+            AssetDatabase.SaveAssets();
+        }
+
         private static void Textures(string id)
         {
             foreach (string kind in new[] { "base", "n", "ms", "ao" })

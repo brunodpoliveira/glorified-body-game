@@ -542,6 +542,7 @@ namespace GlorifiedBody.Tests.PlayMode
             }
             foreach (Knee k in knees)
                 Debug.Log($"[RagdollTests] knee {k.Name}: off the hinge {k.MaxOff:0.0} deg, out of the plane {k.MaxPlane:0.0} deg, bent back {k.MaxBack:0.0} deg, bent {k.MaxTwist:0.0} deg, knee angle at death {k.FlexAtDeath:0.0} min {k.MinFlex:0.0} straight {k.FlexBind:0.0}, past straight {k.PastStraight:0.0} deg; off/plane/bend each 0.25 s:{k.Trace}");
+            Debug.Log($"[RagdollTests] the worst knee: {knees.OrderByDescending(k => k.PastStraight).First().Name} {knees.Max(k => k.PastStraight):0.0} degrees past the straight leg");
             foreach (Knee k in knees)
             {
                 // Before the fix (the joint's twist sign): knees 66 to 137 degrees bent the wrong way, 16 to 135 off.

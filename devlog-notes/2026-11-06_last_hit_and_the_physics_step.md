@@ -109,3 +109,37 @@ Not checked: the knife hold. The T19 rigs have no finger bones, so the fingers s
 
 With new models: the numbers follow the arm's length and the bind pose, but this is not tested on another model. New models with finger bones need a finger curl, which does not exist. Run the `holds` bot after the first import.
 
+## Later again: the baked guard (T27) as a rehearsal of the model swap
+
+Bruno:
+
+```text
+/home/pc/MEGA/glorified-body-renders/T27_baked_characters/guard
+has the files of a baked character; check if our fixes hold
+```
+
+The rehearsal: `T27BakedCharacters.RehearseSwap` makes the guard, the soldier and the lab worker wear `t27_guard` (8,999 triangles, the same 23 bones, no finger bones) in the catalog. Then `BuildEnemyPrefabs` and the real tests run on it. Back: `git checkout` the catalog, then `BuildEnemyPrefabs`.
+
+Verdict: **one fix did not hold.** The knee fix of 2026-10-31 failed: knees went up to 78 degrees past the straight leg. The pistol hand was also turned the wrong way. The old models gave 0 degrees.
+
+Cause: in Unity the bind pose of `t27_guard` faces away from the root's forward. A Humanoid clip hides this in play, but the ragdoll hinges and the hand frames were built on the root's forward. The T27 export script does turn the figure, as our T19 export does, so a later step reverses it. The T27 import sets `bakeAxisConversion` and the T19 import does not. I did not prove that this is the step.
+
+Fix: `HumanoidRagdoll.BodyFront` reads the facing from the thighs and `EnemyGun.FindHandFrame` reads it from the mesh. A model that faces back now works. A model whose bind pose faces sideways does not (not seen so far).
+
+| Check | Baked guard | Old models |
+|---|---|---|
+| Worst knee past the straight leg, before | 78.6 degrees | 0 |
+| Worst knee, after | 0.8 degrees | 0.0 degrees |
+| Figures logged as facing away | 9 of 12 kinds | 0 |
+| Forearm to the aim | 22 degrees | 25 degrees |
+| `RagdollTests`, `ArmedCivilianTests`, `GoreTests`, `EnemyAiTests`, after | 52 of 52 | 52 of 52 |
+| Bots `holds` (2 rooms), `reactions`, after | pass | pass |
+| The wider set before the fix: those plus `EdgarTests`, `HitReactionTests`, `EnemyMoraleTests`, `FlankingTests`, `CivilianTests`, `SaveGoreTests`, `WardTests` | 113 of 114, the knee test | |
+| `CharacterImportTests`, bot `cpr` (camera behind a box in its side shot), before the fix | pass | |
+
+`TheKnees` stopped at its first bad knee, 10.04 degrees, and hid the 78. It now logs the worst knee.
+
+Not tested on the baked mesh: the whole suite, the demo bot, Lucy (`t27_lucy`), the cost of the limb cut in milliseconds, and the wider test set after the fix. The T27 gloves are modelled half closed, so this file needs no finger curl.
+
+Shots: `~/MEGA/glorified-body-renders/game/t27_guard_rehearsal_2026-11-06/`.
+

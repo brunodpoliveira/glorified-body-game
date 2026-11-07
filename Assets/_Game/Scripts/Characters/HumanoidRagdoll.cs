@@ -49,7 +49,7 @@ namespace GlorifiedBody.Characters
             }
             Clean(hips);
 
-            Vector3 up = root.up, forward = root.forward;
+            Vector3 up = root.up, forward = BodyFront(animator);
             var parts = new List<Part>();
             Part Add(Transform bone, Transform end, Part parent, float share)
             {
@@ -123,6 +123,21 @@ namespace GlorifiedBody.Characters
                 if (c is CapsuleCollider || c is BoxCollider || c is SphereCollider)
                     if (c.GetComponent<Renderer>() == null && c.GetComponentInChildren<Renderer>() == null) Object.DestroyImmediate(c);
             }
+        }
+
+        /// <summary>
+        /// The way the skeleton faces right now: the root's forward, or its reverse when the thighs say that the body stands the other way. A Humanoid
+        /// clip turns such a figure to the root's forward in play, but its bind pose faces back, and every hinge built on the root's forward bends the
+        /// wrong way (the baked guard of T27, 2026-11-06: knees 78 degrees past the straight leg). Our T19 export turns its figures, so they keep the root's forward.
+        /// </summary>
+        public static Vector3 BodyFront(Animator animator)
+        {
+            Transform root = animator.transform;
+            Transform left = animator.GetBoneTransform(HumanBodyBones.LeftUpperLeg), right = animator.GetBoneTransform(HumanBodyBones.RightUpperLeg);
+            if (left == null || right == null) return root.forward;
+            bool reversed = Vector3.Dot(Vector3.Cross(right.position - left.position, root.up), root.forward) < 0f;
+            if (reversed) Debug.Log($"[HumanoidRagdoll] {root.name}: the bind pose faces away from the root's forward.");
+            return reversed ? -root.forward : root.forward;
         }
 
         /// <summary>The axis across the segment, square to the facing (the axis a knee or an elbow turns about).</summary>

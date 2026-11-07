@@ -510,6 +510,16 @@ namespace GlorifiedBody.Enemy
                 Matrix4x4 handMesh = bind[h].inverse, foreMesh = bind[f].inverse;
                 Vector3 fingers = ((Vector3)handMesh.GetColumn(3) - (Vector3)foreMesh.GetColumn(3)).normalized;
                 Vector3 front = skin.transform.InverseTransformDirection(transform.forward);
+                // A bind pose that faces away from the root (HumanoidRagdoll.BodyFront): the palm's side comes from the mesh's own front.
+                int lt = System.Array.IndexOf(skin.bones, animator.GetBoneTransform(HumanBodyBones.LeftUpperLeg)), rt = System.Array.IndexOf(skin.bones, animator.GetBoneTransform(HumanBodyBones.RightUpperLeg));
+                int hp = System.Array.IndexOf(skin.bones, animator.GetBoneTransform(HumanBodyBones.Hips)), hd = System.Array.IndexOf(skin.bones, animator.GetBoneTransform(HumanBodyBones.Head));
+                if (lt >= 0 && rt >= 0 && hp >= 0 && hd >= 0)
+                {
+                    Vector3 across = (Vector3)bind[rt].inverse.GetColumn(3) - (Vector3)bind[lt].inverse.GetColumn(3);
+                    Vector3 upward = (Vector3)bind[hd].inverse.GetColumn(3) - (Vector3)bind[hp].inverse.GetColumn(3);
+                    Vector3 meshFront = Vector3.Cross(across, upward).normalized;
+                    front = meshFront;
+                }
                 Vector3 palm = rightSide ? Vector3.Cross(fingers, front) : Vector3.Cross(front, fingers);
                 Quaternion handRotation = Quaternion.LookRotation(handMesh.GetColumn(2), handMesh.GetColumn(1));
                 Quaternion toLocal = Quaternion.Inverse(handRotation);
