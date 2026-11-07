@@ -77,10 +77,15 @@ namespace GlorifiedBody.Player
             OnTargetChanged?.Invoke(target);
         }
 
-        /// <summary>Switches to the next target to the right (yaw order). Returns false when no other target exists.</summary>
-        public bool SwitchTarget()
+        /// <summary>What she holds in the air (PsychicPowers sets it). A charge does not turn her to it: it turns with her, so she would spin after it.</summary>
+        public Transform HeldThing { get; set; }
+        /// <summary>With mk_orzabal and a thing in the air the wheel raises that thing (PsychicPowers sets it). Else it switches the lock.</summary>
+        public bool WheelRaises { get; set; }
+
+        /// <summary>Switches to the next target to the right (yaw order), or to the left. Returns false when no other target exists.</summary>
+        public bool SwitchTarget(int direction = +1)
         {
-            LockOnTargetable next = TargetRegistry.Cycle(CurrentTarget, +1, null, transform.position, transform,
+            LockOnTargetable next = TargetRegistry.Cycle(CurrentTarget, direction, null, transform.position, transform,
                 lockRange, 360f, SightMask, NeedsSight, IncludeProps);
             if (next == null || next == CurrentTarget) return false;
             SetTarget(next);
@@ -120,6 +125,10 @@ namespace GlorifiedBody.Player
                 SwitchTarget();
             }
 
+            // The wheel is a quicker switch (Bruno, 2026-11-07), both ways.
+            float wheel = WheelRaises ? 0f : GameInput.GetAxis(GameInput.AxisScroll);
+            if (!Mathf.Approximately(wheel, 0f)) SwitchTarget(wheel > 0f ? +1 : -1);
+
             bool held = GameInput.GetAction(InputManager.GameAction.Charge, KeyCode.Mouse0);
             if (!held) waitForRelease = false;
             bool charge = held && !waitForRelease && !tank.IsDodging;
@@ -130,7 +139,7 @@ namespace GlorifiedBody.Player
                 RunTelemetry.Event(charge ? "charge_start" : "charge_end", TargetName);
             }
 
-            if (IsCharging && CurrentTarget != null)
+            if (IsCharging && CurrentTarget != null && !(HeldThing != null && CurrentTarget.transform.IsChildOf(HeldThing)))
             {
                 tank.FaceTowards(CurrentTarget.GetLockPoint(), faceTurnSpeed);
             }

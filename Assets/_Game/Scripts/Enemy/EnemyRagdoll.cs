@@ -370,7 +370,7 @@ namespace GlorifiedBody.Enemy
                     if (dead)
                     {
                         // A body in its throes does not freeze yet.
-                        if (Time.time >= throesUntil && (settled > 0.6f || Time.time - downStart > 6f + (throesUntil - downStart))) Freeze();
+                        if (Time.time >= throesUntil && (settled > 0.6f || Time.time - downStart > 6f + Mathf.Max(0f, throesUntil - downStart))) Freeze();
                     }
                     else if (Time.time >= downUntil && (settled > 0.15f || Time.time > downUntil + GraceSeconds))
                     {

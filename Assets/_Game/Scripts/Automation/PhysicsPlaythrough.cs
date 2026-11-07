@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using GlorifiedBody.Combat;
 using GlorifiedBody.DebugTools;
 using GlorifiedBody.Interaction;
 using GlorifiedBody.Player;
@@ -105,6 +106,22 @@ namespace GlorifiedBody.Automation
             yield return null;
             Shot(Path.Combine(shots, "physics_01_room.png"));
 
+            // The drop (Bruno, 2026-11-07): the lift by a press, the mouse over the other box, the defend press.
+            GameObject under = GameObject.Find("Box_B");
+            lucy.GetComponent<LockOnController>().SetTarget(box.GetComponent<LockOnTargetable>());
+            pad.Tap(InputManager.GameAction.Charge);
+            yield return BotClock.Wait(powers.Selected.liftSeconds + 0.2f);
+            Record("press_lift", powers.HeldLift != null, powers.LastResult);
+            yield return SteerOver(box, under.transform.position, 8f);
+            yield return BotClock.Wait(0.4f);
+            Shot(Path.Combine(shots, "physics_01b_held_over_the_box.png"));
+            Vector3 atPress = box.transform.position;
+            pad.Tap(InputManager.GameAction.Defend);
+            yield return BotClock.Wait(1.5f);
+            float edge = under.GetComponent<Collider>().bounds.size.y;
+            Record("drop_stacks", box != null && powers.LastResult == "drop" && Mathf.Abs(box.transform.position.y - under.transform.position.y - edge) < 0.1f, $"press at {atPress}: A at {box.transform.position}, B at {under.transform.position}");
+            Shot(Path.Combine(shots, "physics_01c_stacked.png"));
+
             pad.SetHeld(InputManager.GameAction.Defend, true);
             yield return Until(() => powers.Carrying, 2f);
             Record("lift", powers.Carrying);
@@ -141,6 +158,26 @@ namespace GlorifiedBody.Automation
             GameInput.ClearBotSource(pad);
             pad = null;
             Finish();
+        }
+
+        /// <summary>
+        /// The mouse, until the box rests over the point. A pad value moves the hold point once a frame, so at the frame rate of a batch run a large
+        /// value outruns the box (TelekinesisLift.MaxLead) and it goes on after the pad stops. So the value stays small.
+        /// </summary>
+        private IEnumerator SteerOver(GameObject box, Vector3 point, float seconds)
+        {
+            Camera cam = Camera.main;
+            Rigidbody body = box.GetComponent<Rigidbody>();
+            float t0 = BotClock.Now;
+            while (BotClock.Now - t0 < seconds)
+            {
+                Vector3 left = Vector3.ProjectOnPlane(point - box.transform.position, Vector3.up);
+                if (left.magnitude < 0.06f && body.linearVelocity.magnitude < 0.05f) break;
+                Vector3 right = Vector3.ProjectOnPlane(cam.transform.right, Vector3.up).normalized, away = Vector3.ProjectOnPlane(cam.transform.forward, Vector3.up).normalized;
+                pad.Look = new Vector2(Mathf.Clamp(Vector3.Dot(left, right) * 0.5f, -0.1f, 0.1f), Mathf.Clamp(Vector3.Dot(left, away) * 0.5f, -0.1f, 0.1f));
+                yield return null;
+            }
+            pad.Look = Vector2.zero;
         }
 
         private void Update() => pad?.Commit();

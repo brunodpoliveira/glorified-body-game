@@ -155,3 +155,14 @@ If the console shows a red line, copy it too.
 | 76 | In AI TEST, take hits until your HP is low, then take one more. | She stops at 1 HP. For 0.5 s nothing hurts her. The next hit takes the second wind or kills her. | She dies from above 1 HP. |
 | 77 | Kill a soldier, and press Esc or I while his body falls. Close it. | The body lands as usual. | The body flies up. |
 | 78 | Look at the shaft of G16. | A wide dark shaft across the floor. | A thin line. |
+| 79 | PHYSICS TEST. Press 3, Tab to a box, press the left button once. | The box rises at once, and she turns to it. 10 MK goes. No circle. | A circle fills first. |
+| 80 | With the box in the air, move it over the other box. Press the right button. | It falls straight down and rests on the other box, whole. No MK. | It flies or breaks. |
+| 81 | Lift a box, hold the left button a short time, release. Do it again with a long hold. | The long hold flies faster and costs more MK. A full circle slams. | Both throws are the same. |
+| 82 | AI TEST. Lift a soldier, and press the right button. | He stays in the air. | He drops. |
+| 83 | Lift a soldier, press 2, and hold the left button to a full circle. Do it until he dies. | He burns in the air, stays up, and the body falls to the floor when he dies. | The body hangs in the air. |
+| 84 | Lift a soldier, press 1, and blast him until he dies. | He stays up. The body falls to the floor when he dies. | The body hangs in the air. |
+| 85 | Throw a soldier with low HP so that the throw kills him. | The body lands on the floor. | The body hangs where the flight ended. |
+| 86 | EDGAR TEST. Hold the left button on the guard at full HP, and release at about half the circle. | NOT WEAK ENOUGH on the HUD. He staggers, and MK goes. He does not kneel. | The circle stops at the press. |
+| 87 | EDGAR TEST. Lift a target with mk_orzabal, press 4, and fill the circle on it. | 75 MK goes, and nothing happens. | It kneels or its mind goes. |
+| 88 | With two or more targets near, turn the mouse wheel up, then down. | The lock moves to the next target, then back. | Nothing. |
+| 89 | Stack boxes by hand with fast and slow mouse moves. | Tell me if the box feels slippery when it goes on after the mouse stops. | |

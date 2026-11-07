@@ -118,13 +118,13 @@ namespace GlorifiedBody.Automation
             lockOn.SetTarget(guard.GetComponent<LockOnTargetable>());
             yield return BotClock.Wait(0.2f);
 
-            // A guard at full HP: a refusal, at no cost.
+            // A guard at full HP: the HUD says why, at the press. This hold is too short to stun him, so it costs nothing.
             pad.SetHeld(InputManager.GameAction.Charge, true);
             yield return BotClock.Wait(0.3f);
-            pad.SetHeld(InputManager.GameAction.Charge, false);
-            yield return BotClock.Wait(0.1f);
             Record("refusal", powers.LastResult == "dom_not_hurt", powers.LastResult);
             if (hud != null) yield return OverlayShot.Capture(hud, "edgar_01_refused_hud.png", 0.05f);
+            pad.SetHeld(InputManager.GameAction.Charge, false);
+            yield return BotClock.Wait(0.1f);
 
             // With damage: he goes down on his knees while the circle fills.
             guard.GetComponent<Health>().TakeDamage(5f);

@@ -322,7 +322,7 @@ namespace GlorifiedBody.Tests.PlayMode
             lockOn.SetTarget(crate);
             float nalconBefore = stats.Nalcon;
             Assert.IsTrue(powers.Release(1f), "the lift on the crate");
-            Assert.AreEqual(nalconBefore - tk.nalconCost, stats.Nalcon, 0.5f, "the lift costs as on an enemy");
+            Assert.AreEqual(nalconBefore - PsychicPowers.LiftCost, stats.Nalcon, 0.5f, "the lift costs as on an enemy");
             yield return new WaitForSeconds(tk.liftSeconds + 0.3f);
             Assert.IsNotNull(powers.HeldLift, "she holds the crate");
             Assert.Greater(crate.transform.position.y, y0 + tk.liftHeight * 0.8f, "the crate is up");
@@ -334,7 +334,7 @@ namespace GlorifiedBody.Tests.PlayMode
             StringAssert.StartsWith("launch_prop:Dummy_A", powers.LastResult, "the crate flies at the dummy");
             yield return WaitUntil(() => crate == null, 3f);
             Assert.IsTrue(crate == null, "a thrown crate breaks: single use (Bruno, 2026-10-23)");
-            Assert.AreEqual(hp0 - tk.baseDamage, target.CurrentHealth, 0.5f, "the crate hurts the dummy");
+            Assert.AreEqual(hp0 - tk.baseDamage * tk.minCharge, target.CurrentHealth, 0.5f, "the crate hurts the dummy, by the least charge of a short press");
             Assert.IsNotNull(UnityEngine.Object.FindFirstObjectByType<PropPiece>(), "the pieces of the crate");
             Assert.IsTrue(lockOn.HasTarget && !lockOn.CurrentTarget.IsProp, "the auto-lock takes an enemy again: " + lockOn.TargetName);
         }
@@ -554,8 +554,8 @@ namespace GlorifiedBody.Tests.PlayMode
 
             yield return WaitUntil(() => dummyA.GetComponent<TelekinesisLift>() == null, 3f);
             Assert.IsTrue(dummyA.GetComponent<TelekinesisLift>() == null, "the throw ended");
-            Assert.AreEqual(hpB - tk.baseDamage, b.CurrentHealth, 0.5f, "the hit dummy takes the damage");
-            Assert.AreEqual(hpA - tk.baseDamage, a.CurrentHealth, 0.5f, "the thrown dummy takes the damage");
+            Assert.AreEqual(hpB - tk.baseDamage * tk.minCharge, b.CurrentHealth, 0.5f, "the hit dummy takes the damage, by the least charge of a short press");
+            Assert.AreEqual(hpA - tk.baseDamage * tk.minCharge, a.CurrentHealth, 0.5f, "the thrown dummy takes the damage");
             Assert.Less(Vector3.Distance(dummyA.transform.position, dummyB.transform.position), 2f, "it landed at the other dummy");
             Assert.AreEqual(floorA.y, dummyA.transform.position.y, 0.05f, "back on the floor");
             Assert.Greater(Vector3.Distance(dummyA.transform.position, floorA), 1f, "it flew");
@@ -873,15 +873,207 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.AreEqual(100f, stats.Mk(PowerKind.Blast), 0.01f, "no MK spent");
             Assert.AreEqual(hp, dummyA.GetComponent<Health>().CurrentHealth, 0.001f, "nothing fired");
             Assert.AreEqual(0f, stats.Short, 0.01f, "no SHORT");
+        }
 
-            // With mk_orzabal the held key of a cancel starts no floor shield.
+        [UnityTest]
+        public IEnumerator Orzabal_APress_LiftsAtOnce_ForOneCost_OnAnEnemyOrACrate()
+        {
+            // Bruno, 2026-11-07: "lift should cost the same no matter what is being lifted"; "orzabal needs no charge to lift".
             powers.Select(PowerKind.Telekinesis);
+            stats.DebugSet(100f, 0f);
+            lockOn.SetTarget(dummyB);
+            yield return null;
             pad.SetHeld(InputManager.GameAction.Charge, true);
-            yield return WaitUntil(() => powers.Charge > 0.2f, 2f);
-            pad.SetHeld(InputManager.GameAction.Defend, true);
-            yield return new WaitForSeconds(PsychicPowers.ShieldHoldDelay + 0.3f);
-            Assert.AreEqual(0f, powers.ShieldCharge, 0.001f, "no shield from that key");
-            pad.ReleaseAll();
+            yield return null;
+            yield return null;
+            Assert.AreEqual(dummyB.gameObject, powers.HeldLift != null ? powers.HeldLift.gameObject : null, "the press lifts it now");
+            Assert.AreEqual(100f - PsychicPowers.LiftCost, stats.Mk(PowerKind.Telekinesis), 0.01f);
+            yield return new WaitForSeconds(0.4f);
+            Assert.AreEqual(0f, powers.Charge, 0.001f, "the same key held fills no circle: it must rise first");
+            pad.SetHeld(InputManager.GameAction.Charge, false);
+            yield return null;
+            powers.HeldLift.Release(tank.gameObject);
+            yield return WaitUntil(() => dummyB.GetComponent<TelekinesisLift>() == null, 2f);
+
+            LockOnTargetable crate = GameObject.Find("Prop_Crate_1").GetComponent<LockOnTargetable>();
+            lockOn.SetTarget(crate);
+            yield return null;
+            pad.Tap(InputManager.GameAction.Charge);
+            yield return null;
+            yield return null;
+            Assert.AreEqual(crate.gameObject, powers.HeldLift != null ? powers.HeldLift.gameObject : null, "the crate too");
+            Assert.AreEqual(100f - 2f * PsychicPowers.LiftCost, stats.Mk(PowerKind.Telekinesis), 0.01f, "the same cost");
+            powers.HeldLift.Release(tank.gameObject);
+
+            // With nothing to lift the key fills no circle.
+            yield return new WaitForSeconds(1.5f);
+            lockOn.SetTarget(null);
+            foreach (LockOnTargetable t in new[] { dummyA, dummyB }) t.gameObject.SetActive(false);
+            yield return null;
+            pad.SetHeld(InputManager.GameAction.Charge, true);
+            yield return new WaitForSeconds(0.3f);
+            Assert.AreEqual(0f, powers.Charge, 0.001f);
+            pad.SetHeld(InputManager.GameAction.Charge, false);
+        }
+
+        [UnityTest]
+        public IEnumerator Orzabal_SheTurnsToWhatSheLifts_AndAChargeOnItDoesNotSpinHer()
+        {
+            powers.Select(PowerKind.Telekinesis);
+            stats.DebugSet(100f, 0f);
+            Vector3 to = Vector3.ProjectOnPlane(dummyB.transform.position - tank.transform.position, Vector3.up);
+            tank.Teleport(tank.transform.position, Quaternion.LookRotation(to).eulerAngles.y + 90f);
+            lockOn.SetTarget(dummyB);
+            yield return null;
+            Vector3 flat = Vector3.ProjectOnPlane(dummyB.transform.position, Vector3.up);
+            pad.Tap(InputManager.GameAction.Charge);
+            yield return new WaitForSeconds(powers.Selected.liftSeconds + 0.2f);
+            Assert.Less(Vector3.Distance(flat, Vector3.ProjectOnPlane(dummyB.transform.position, Vector3.up)), 0.2f, "it rises where it stood: it does not swing as she turns");
+            to = Vector3.ProjectOnPlane(dummyB.transform.position - tank.transform.position, Vector3.up);
+            Assert.Less(Vector3.Angle(tank.transform.forward, to), 5f, "she faces it");
+
+            // The mouse takes it to one side, and the charge must not chase it: it turns with her.
+            pad.Look = new Vector2(1f, 0f);
+            yield return new WaitForSeconds(0.3f);
+            pad.Look = Vector2.zero;
+            float yaw = tank.transform.eulerAngles.y;
+            pad.SetHeld(InputManager.GameAction.Charge, true);
+            yield return new WaitForSeconds(0.4f);
+            Assert.Greater(powers.Charge, 0f, "the circle fills with a thing in the air");
+            Assert.AreEqual(0f, Mathf.DeltaAngle(yaw, tank.transform.eulerAngles.y), 0.5f, "she does not turn");
+            pad.Tap(InputManager.GameAction.Defend);
+            yield return null;
+            pad.SetHeld(InputManager.GameAction.Charge, false);
+            yield return null;
+            powers.HeldLift.Release(tank.gameObject);
+        }
+
+        [UnityTest]
+        public IEnumerator AThrow_CostsHurtsAndFlies_ByItsCharge()
+        {
+            // Bruno, 2026-11-07: "a throw should cost relative to the power the player put into it", the thrown enemy takes more, and it flies faster.
+            powers.Select(PowerKind.Telekinesis);
+            PowerDefinition tk = powers.Selected;
+            Health a = dummyA.GetComponent<Health>(), b = dummyB.GetComponent<Health>();
+            float weakSpeed = 0f, strongSpeed = 0f;
+            foreach (float charge in new[] { 0.25f, 0.75f })
+            {
+                stats.DebugSet(45f, 0f); // no boost, for the base numbers
+                float hpA = a.CurrentHealth, hpB = b.CurrentHealth;
+                Vector3 toB = Vector3.ProjectOnPlane(dummyB.transform.position - dummyA.transform.position, Vector3.up);
+                lockOn.SetTarget(dummyA);
+                yield return null;
+                powers.FireAt(tk, 1f, dummyA);
+                yield return new WaitForSeconds(tk.liftSeconds + 0.1f);
+                tank.Teleport(tank.transform.position, Quaternion.LookRotation(Vector3.ProjectOnPlane(dummyB.transform.position - tank.transform.position, Vector3.up)).eulerAngles.y);
+                yield return null;
+                float mk = stats.Mk(PowerKind.Telekinesis);
+                Assert.IsTrue(powers.Release(charge), powers.LastResult);
+                Assert.AreEqual(mk - tk.nalconCost * charge, stats.Mk(PowerKind.Telekinesis), 0.01f, $"the cost at {charge}");
+                Vector3 from = dummyA.transform.position;
+                float t0 = Time.time;
+                yield return null;
+                yield return null;
+                yield return null;
+                float speed = Vector3.ProjectOnPlane(dummyA.transform.position - from, Vector3.up).magnitude / Mathf.Max(0.001f, Time.time - t0);
+                if (charge < 0.5f) weakSpeed = speed; else strongSpeed = speed;
+                yield return WaitUntil(() => dummyA.GetComponent<TelekinesisLift>() == null, 3f);
+                Assert.AreEqual(hpB - tk.baseDamage * charge, b.CurrentHealth, 0.5f, $"the one it hits, at {charge}");
+                Assert.AreEqual(hpA - tk.baseDamage * charge, a.CurrentHealth, 0.5f, $"the thrown one, at {charge}");
+                Debug.Log($"[PowersAndBars] a throw at {charge}: {speed:0.0} m/s");
+                dummyA.transform.position = dummyA.transform.position - toB.normalized * 3f;
+                yield return null;
+            }
+            Assert.Greater(strongSpeed, weakSpeed * 1.2f, "more power, more speed");
+        }
+
+        [UnityTest]
+        public IEnumerator TheWheel_SwitchesTheLock_BothWays_AndRaisesAThingInTheAir()
+        {
+            // Bruno, 2026-11-07: "an alternative input to scroll through locked targets more quickly".
+            powers.Select(PowerKind.Blast);
+            lockOn.SetTarget(dummyA);
+            yield return null;
+            pad.Scroll = 0.1f;
+            yield return null;
+            pad.Scroll = 0f;
+            yield return null;
+            LockOnTargetable next = lockOn.CurrentTarget;
+            Assert.AreNotEqual(dummyA, next, "the wheel up switches");
+            pad.Scroll = -0.1f;
+            yield return null;
+            pad.Scroll = 0f;
+            yield return null;
+            Assert.AreEqual(dummyA, lockOn.CurrentTarget, "the wheel down goes back");
+
+            powers.Select(PowerKind.Telekinesis);
+            stats.DebugSet(100f, 0f);
+            pad.Tap(InputManager.GameAction.Charge);
+            yield return new WaitForSeconds(powers.Selected.liftSeconds + 0.1f);
+            Assert.IsNotNull(powers.HeldLift);
+            float y = dummyA.transform.position.y;
+            pad.Scroll = 0.1f;
+            yield return null;
+            pad.Scroll = 0f;
+            yield return new WaitForSeconds(0.2f);
+            Assert.AreEqual(dummyA, lockOn.CurrentTarget, "with a thing in the air the wheel does not switch");
+            Assert.Greater(dummyA.transform.position.y, y + 0.1f, "it raises the thing");
+
+            // With another power selected the wheel is the switch again, and the thing stays where it is.
+            powers.Select(PowerKind.Blast);
+            yield return null;
+            y = dummyA.transform.position.y;
+            pad.Scroll = 0.1f;
+            yield return null;
+            pad.Scroll = 0f;
+            yield return new WaitForSeconds(0.2f);
+            Assert.AreNotEqual(dummyA, lockOn.CurrentTarget, "another power: the wheel switches");
+            Assert.AreEqual(y, dummyA.transform.position.y, 0.05f, "and raises nothing");
+            powers.HeldLift.Release(tank.gameObject);
+        }
+
+        [UnityTest]
+        public IEnumerator TheDefendPress_KeepsAHeldEnemy_InTheAir()
+        {
+            // Bruno, 2026-11-07: "the player might gently drop an enemy by accident on a misclick".
+            powers.Select(PowerKind.Telekinesis);
+            stats.DebugSet(100f, 0f);
+            lockOn.SetTarget(dummyB);
+            Assert.IsTrue(powers.Release(1f), powers.LastResult);
+            yield return new WaitForSeconds(powers.Selected.liftSeconds + 0.1f);
+            TelekinesisLift held = powers.HeldLift;
+            Assert.IsNotNull(held, "she holds it");
+            pad.Tap(InputManager.GameAction.Defend);
+            yield return new WaitForSeconds(0.5f);
+            Assert.AreSame(held, powers.HeldLift, "the press does not drop an enemy");
+            Assert.AreNotEqual("drop", powers.LastResult);
+            held.Release(tank.gameObject);
+        }
+
+        [UnityTest]
+        public IEnumerator TheDefendPress_DropsACrateOfTheRoom_Whole_OntoAnotherCrate()
+        {
+            // A crate of the rooms has no Rigidbody until she lifts it. Without one it fell through what lay under it.
+            powers.Select(PowerKind.Telekinesis);
+            stats.DebugSet(100f, 0f);
+            GameObject crate = GameObject.Find("Prop_Crate_1"), under = GameObject.Find("Prop_Crate_2");
+            tank.Teleport((crate.transform.position + under.transform.position) * 0.5f + Vector3.back * 1.5f, 0f);
+            yield return null;
+            lockOn.SetTarget(crate.GetComponent<LockOnTargetable>());
+            Assert.IsTrue(powers.Release(1f), powers.LastResult);
+            yield return new WaitForSeconds(powers.Selected.liftSeconds + 0.1f);
+            float t0 = Time.time;
+            while (Time.time - t0 < 3f && Vector3.ProjectOnPlane(crate.transform.position - under.transform.position, Vector3.up).magnitude > 0.08f)
+            {
+                powers.HeldLift.SteerBy(Vector3.ClampMagnitude(Vector3.ProjectOnPlane(under.transform.position - crate.transform.position, Vector3.up), 0.05f), 0f, powers.Selected.range);
+                yield return null;
+            }
+            pad.Tap(InputManager.GameAction.Defend);
+            yield return new WaitForSeconds(1.5f);
+            Assert.IsTrue(crate != null, "a drop does not break it");
+            float edge = under.GetComponent<Collider>().bounds.size.y;
+            Debug.Log($"[PowersAndBars] the crate lies at {crate.transform.position}, the one under it at {under.transform.position}");
+            Assert.Greater(crate.transform.position.y, under.transform.position.y + edge * 0.7f, "it rests on the other crate");
         }
 
         [UnityTest]

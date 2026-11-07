@@ -149,8 +149,11 @@ namespace GlorifiedBody.UI
             CreateControl(p, "Esc", "Pause / menus");
             CreateControl(p, "Space + W/A/S/D", "Dodge that way (no direction key: a step back)");
             CreateControl(p, "W/A/S/D twice", "A double tap: the same dodge, no Space");
-            CreateControl(p, "LMB again (TK)", "Enemy in the air: turn to aim, throw it into another one");
+            CreateControl(p, "Mouse wheel", "Switch the target. With a thing in the air (TK): raise it");
+            CreateControl(p, "LMB (TK)", "Lift the locked target at once");
+            CreateControl(p, "LMB hold (TK), a thing in the air", "Turn to aim first. A longer hold throws it harder, for more MK. A full circle slams it");
             CreateControl(p, "RMB (TK), bullet near", "Defend: catch the bullet, send it back at the shooter");
+            CreateControl(p, "RMB (TK), a box in the air", "Let it down gently. It costs nothing, and it does not break");
             // The debug keys only where they work (GameBuild.Dev): a release does not list them (2026-10-31).
             if (GlorifiedBody.Systems.GameBuild.Dev)
             {

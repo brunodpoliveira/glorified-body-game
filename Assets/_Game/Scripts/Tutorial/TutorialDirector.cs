@@ -335,15 +335,15 @@ namespace GlorifiedBody.Tutorial
                 () => firedKind == PowerKind.Fire && firedCharge >= 0.999f));
             steps.Add(new TutorialStep("lift_throw",
                 "Faculty three. Lift one, turn, and throw it into another.",
-                "{PowerTelekinesis} selects mk_orzabal, the telekinesis. Hold {Charge}, release: it rises. The mouse moves it. Turn with {TurnLeft} or {TurnRight}, press {Charge} to throw.",
+                "{PowerTelekinesis} selects mk_orzabal, the telekinesis. Press {Charge}: it rises at once. The mouse moves it. Turn with {TurnLeft} or {TurnRight}, then hold and release {Charge}: a longer hold throws it harder and costs more MK.",
                 () => launched));
             steps.Add(new TutorialStep("slam",
                 "Lift one again. Keep it up, fill the circle on it: it slams.",
-                "With mk_orzabal: hold {Charge} and release to lift. While it hangs, hold {Charge} to a full circle: a slam. A short press throws instead.",
+                "With mk_orzabal: press {Charge} to lift. While it hangs, hold {Charge} to a full circle: a slam. A release before that throws it.",
                 () => slammed));
             steps.Add(new TutorialStep("prop",
                 "Faculty three moves objects too. Lift the crate and throw it into a dummy.",
-                "With mk_orzabal selected, {SwitchTarget} also picks the crate. Hold {Charge}, release: it rises. Turn, press {Charge}: it flies.",
+                "With mk_orzabal selected, {SwitchTarget} or the mouse wheel also picks the crate. Press {Charge}: it rises. Turn, press {Charge} again: it flies. {Defend} lets it down gently.",
                 () => propThrown));
             steps.Add(new TutorialStep("catch",
                 "The dummy by the door has a gun. When the circle closes, catch the bullet and send it back.",

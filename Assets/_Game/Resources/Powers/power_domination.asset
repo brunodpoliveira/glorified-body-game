@@ -16,11 +16,11 @@ MonoBehaviour:
   displayName: mk_edgar
   drug: 5
   fullChargeTime: 2.5
-  minCharge: 1
+  minCharge: 0.2
   range: 6
   nalconCost: 75
   baseDamage: 0
-  staggerSeconds: 0.8
+  staggerSeconds: 2
   burnSeconds: 4
   burnPerSecond: 6
   liftHeight: 1.5

@@ -1,0 +1,89 @@
+# 2026-11-07: mk_orzabal lifts at once, throws by the charge, drops a box. A dead floater falls
+
+Bruno:
+
+```text
+mk orzabal: there's no way to drop something safely so attempting to stack boxes always launches them and breaks them; right clicking should cancel the lift and drop the object gently on the ground; left click still does the usual (the slam/launch)
+
+the player might gently drop an enemy by accident on a misclick
+
+1: lift should cost the same no matter what is being lifted
+2: a throw should cost relative to the power the player put into it with the thrown object causing more damage to the thing/enemy being hit. iof the thrown object is an enemy it too gets more damage the more power on the throw, and it is launched at greater velocities; all powers should work the same (more power = more cost). the behavior changes on a full charge (i.e the fire power sets the person on fire, the blast knocks an enemy flat on his ass). edgar/mind control on non-full charge also stuns the enemy like the fire power. orzabal needs no charge to lift; the moment the player selects and triggers it it lifts the selected target; it is only when the object is in mid-air that the charge is meaningul
+3: that seems correct; if the player wantsw to interact with the box it must lock on to it first
+is middle-mouse scroll used for anything? it can be an alternative input to scroll through locked targets more quickly if it's free
+
+ignite or blast with the guy float; mind control does nothing, but it can be used; the player will need to be smart with resource allocation and not squander their powers like this
+
+also, another aspect of the test: once the enemy dies they should drop to the ground, not keep floating mid-air
+```
+
+## The fact-check of the first report
+
+Verdict: confirmed, but different. The carry (the right button held) already dropped a box whole. The lift by the left button had no drop. A failing test showed it: `But was: <Box_A TelekinesisLift>` after a right press.
+
+## What changed
+
+| Piece | What it does now |
+|---|---|
+| Lift | A left press lifts the locked target at once. The cost is `PsychicPowers.LiftCost`, 10 MK, on an enemy or a prop, with either button. With nothing in the air the circle does not fill |
+| Her turn | She turns to what she lifts in 0.35 s. It rises where it stood, and it does not swing with her in that time |
+| Throw | A release on a held thing throws it. The cost, the damage and the speed go with the charge. Both bodies take the damage. A short press counts as the least charge, 20 % |
+| Speed | 0.6 to 1.4 times 14 m/s. Measured: 11.2 m/s at a charge of 0.25, 16.8 m/s at 0.75. A throw at nobody flies 0.6 to 1.4 times 8 m |
+| Slam | A full circle on a held thing, 30 MK, as before |
+| Drop | A right press on a box or a crate in the air lets it down whole, for no MK. Not on an enemy or on the slab: on those it is still only the catch |
+| Crates | A crate of the rooms gets its Rigidbody at any first lift. Without one it fell through what lay under it |
+| mk_edgar | A part circle stuns, 2 s times the charge, and costs 75 MK times the charge. Under 20 %: a fizzle. A full circle takes the mind, as before |
+| mk_edgar, a target she cannot take | The circle goes on with no kneel, and the HUD says why at the press. A part circle stuns. A full circle stays free and takes nothing |
+| mk_edgar on a floater | It does nothing and it costs by the charge. No kneel, no stun, no mind, no HUD word |
+| Wheel | It switches the lock, up and down. With mk_orzabal and a thing in the air it raises that thing |
+| Charge with a thing in the air | She turns to a locked target, but not to the thing she holds: it turns with her, and she would spin after it |
+| Her rule 3 | No change: with an enemy locked, the held right button makes the shield |
+
+All numbers are PROPOSED.
+
+## The fault his last check found
+
+A floater killed in the air stayed in the air. The test measured the hips at 2.40 m, in the state `Corpse`. The log showed `ragdoll_dropped` at 256.70 and `ragdoll_corpse` at 256.71.
+
+The cause is one line in `EnemyRagdoll`, from 2026-10-27. The limit on a fall was `6 + (throesUntil - downStart)`. A body with no throes has `throesUntil` at 0, so the limit was negative after about 6 s of play, and the body froze one frame after the drop.
+
+The same line froze a body killed by a throw where the flight ended. I expect that it also froze a dead body at the end of a drag, and a body that a load puts back in its fall. I did not measure those two.
+
+After the fix: hips at 0.18 m (blast), 0.17 m (fire), 0.14 m (a throw).
+
+## What I chose for you (say no if wrong)
+
+1. The lift costs 10 MK.
+2. A short press on a held thing throws it at 20 %, for 6 MK and 8 damage. Without this, a tap would do nothing.
+3. The stun of mk_edgar is 2 s times the charge. A circle of 50 % costs about 37 MK for 1 s. mk_erebus gives 0.5 s for 12.5 MK at 50 %.
+4. A part circle stuns a guard at full HP and a boss too.
+5. No drop for an enemy or the slab: the slab costs 30 MK, and your misclick point applies to it too.
+6. With no enemy locked, the held right button still takes the prop in front of her. This is your ruling of 2026-11-06 ("hold to select"). If rule 3 means that she must always lock a box first, tell me.
+
+## Limits and risks
+
+- **Puzzles now cost MK.** The carry was free, and now each lift costs 10. G16 has one door and its capsules are the reward, so a player with no MK loses only that room. A puzzle on the required path needs a capsule beside it.
+- **No MK with an enemy in the air:** she cannot throw or slam it, and the right button does not drop it. It stays up until she kills it with another power or takes a capsule.
+- **A fast mouse:** the hold point leads the box by up to 0.6 m (`TelekinesisLift.MaxLead`). The box goes on for up to 0.6 m after the mouse stops, in under 0.1 s. The bot measured it: -1.07, then -0.47 after 0.4 s. It may make stacking feel slippery. The margin stops the box from getting stuck behind a wall.
+- **The triage line does not read a bot result.** It said CLEAN on two bots with a failed step, and I reported them as passed. Read `playthrough.json` for each bot.
+- **While she charges a throw she stands still.** She aims with the tank turn before she holds the button.
+
+## Annotated only, not built
+
+Men in black, an enemy type: "man in black types that can use one of her power sets; 4 types for each power lucy has; they'll not appear in act ." I read "act ." as act 1. The writer's files do not have this yet.
+
+## Proof
+
+| Check | Result |
+|---|---|
+| `PowersAndBarsTests`, `EdgarTests`, `RagdollTests`, `PhysicsTests`, run `20261107-015000-test-playmode-621718` | 89 of 91. The 2 failures were the dead floater, fixed after that run |
+| `RagdollTests`, `GoreTests`, `HitReactionTests`, `SaveGoreTests`, `EnemyMoraleTests`, `CivilianTests`, `EnemyAiTests`, `SystemSeamTests`, `PhysicsTests`, run `20261107-020204-test-playmode-624406` | 106 of 106 |
+| `FloorShieldTests`, run `20261107-021556-test-playmode-627586` | 6 of 6 |
+| Bot `physics`, run `20261107-021454-play-627196` | pass, 6 of 6 |
+| Bot `edgar`, run `20261107-015950-play-623576` | pass, 5 of 5 |
+| Bot `cpr`, run `20261107-021345-play-626875` | pass, 1 of 1 |
+| Bots `shield` and `tutorial`, runs `20261107-014310-play-620079` and `20261107-014357-play-620410` | pass, 4 of 4 and 36 of 36. These ran before the wheel fix, the rule for mk_edgar on a floater and the fall fix |
+
+Not run on this code: the whole PlayMode suite, EditMode, the demo bot and the other bots. Rule 10 asks for them before a push. Nobody played this by hand.
+
+Shots: `~/MEGA/glorified-body-renders/game/orzabal_2026-11-07/`.

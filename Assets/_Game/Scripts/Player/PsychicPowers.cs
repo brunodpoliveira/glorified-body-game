@@ -154,8 +154,29 @@ namespace GlorifiedBody.Player
             }
             if (!GameInput.GetAction(InputManager.GameAction.Defend, KeyCode.Mouse1)) defendAfterCancel = false;
 
+            // The drop (Bruno, 2026-11-07: "right clicking should cancel the lift and drop the object gently on the ground"): the
+            // defend press on a box or a crate in the air does only this, for no MK. Not on an enemy or on the slab: a misclick
+            // in a fight must not lose them ("the player might gently drop an enemy by accident"), so that press still catches.
+            TelekinesisLift dropped = defendDown && Selected.kind == PowerKind.Telekinesis ? HeldLift : null;
+            if (dropped != null && dropped.IsBox && dropped.Release(gameObject))
+            {
+                Result("drop", 0f);
+                defendDown = false;
+                defendAfterCancel = true; // the key of this drop starts no shield and no carry: it must rise first
+            }
+
+            // mk_orzabal needs no charge to lift (Bruno, 2026-11-07: "the moment the player selects and triggers it it lifts the
+            // selected target; it is only when the object is in mid-air that the charge is meaningul").
+            if (Selected.kind == PowerKind.Telekinesis && HeldLift == null)
+            {
+                if (attackDown) TryLift();
+                if (attackDown || IsCharging) EndAttackCharge();
+            }
+            lockOn.HeldThing = HeldLift != null ? HeldLift.transform : null;
+            lockOn.WheelRaises = HeldLift != null && Selected.kind == PowerKind.Telekinesis;
+
             // LMB attacks, RMB defends (Bruno, 2026-10-20). Telekinesis with an enemy in the air (Bruno,
-            // 2026-10-22): the attack key charges as usual; a short press throws it, a full charge slams it
+            // 2026-10-22): the attack key charges as usual; a release throws it by the charge, a full charge slams it
             // (Release). The defend press catches a bullet near her and sends it back.
             if (holdAfterLaunch && !GameInput.GetAction(InputManager.GameAction.Charge, KeyCode.Mouse0)) holdAfterLaunch = false;
             // mk_edgar: the defend press sends the one she holds to a switch she cannot reach.
@@ -213,6 +234,7 @@ namespace GlorifiedBody.Player
         private IDominable kneeling;
         private LockOnTargetable kneelingTarget;
         private bool dominationBroken;
+        private LockOnTargetable refusedTarget;
 
         /// <summary>
         /// The charge of mk_edgar (Bruno, 2026-11-06): the target goes down on its knees and holds still while the circle fills. A
@@ -224,11 +246,21 @@ namespace GlorifiedBody.Player
             {
                 EndKneel();
                 dominationBroken = false;
+                refusedTarget = null;
                 return;
             }
             LockOnTargetable target = lockOn.CurrentTarget;
             string why = dominationBroken ? "dom_broken" : Domination.Refusal(target, transform.position, Selected.range, stats.CanSpendMk(PowerKind.Domination, Selected.nalconCost));
             if (why == null && kneeling != null && target != kneelingTarget) why = "dom_broken";
+            // A floater: the circle goes on, and it will do nothing (below). She may waste her MK (Bruno, 2026-11-07), and the HUD does not warn her.
+            if (kneeling == null && IsFloating(target) && why != "dom_far" && why != "dom_none" && why != "dom_broken") return;
+            // She cannot take this one now, but a part circle still stuns it: the circle goes on with no kneel. The HUD says why.
+            if (kneeling == null && (why == "dom_not_hurt" || why == "dom_boss" || why == "no_nalcon"))
+            {
+                if (refusedTarget != target) Result(why, Charge);
+                refusedTarget = target;
+                return;
+            }
             if (why != null)
             {
                 dominationBroken = false;
@@ -252,15 +284,41 @@ namespace GlorifiedBody.Player
             kneelingTarget = null;
         }
 
-        /// <summary>Only the full circle dominates. Anything less does nothing and costs nothing.</summary>
+        /// <summary>
+        /// Only the full circle dominates. A part circle stuns the target, and it costs by the charge, as mk_erebus does (Bruno,
+        /// 2026-11-07: "edgar/mind control on non-full charge also stuns the enemy like the fire power"). Under the least charge: a fizzle.
+        /// </summary>
         private bool ReleaseDomination(float charge)
         {
-            if (charge < 0.999f || kneeling == null)
+            PowerDefinition power = Selected;
+            // On a floater it does nothing, but it can be used (Bruno, 2026-11-07: "the player will need to be smart with resource
+            // allocation and not squander their powers like this"): the MK goes, with no stun and no mind.
+            if (IsFloating(lockOn.CurrentTarget) && charge >= power.minCharge)
             {
                 EndKneel();
-                return Result("fizzle", charge);
+                if (!stats.TrySpendMk(power.kind, power.nalconCost * charge)) return Result("no_nalcon", charge);
+                LastResult = "dom_nothing";
+                LastResultTime = Time.time;
+                RunTelemetry.Event("dom_nothing", $"{lockOn.TargetName}:{charge:0.00}");
+                OnPowerFired?.Invoke(power, charge, lockOn.CurrentTarget);
+                OnChanged?.Invoke();
+                return true;
             }
-            PowerDefinition power = Selected;
+            if (charge < 0.999f)
+            {
+                LockOnTargetable stunned = lockOn.CurrentTarget;
+                EndKneel();
+                if (charge < power.minCharge || stunned == null) return Result("fizzle", charge);
+                if (!stats.TrySpendMk(power.kind, power.nalconCost * charge)) return Result("no_nalcon", charge);
+                stunned.GetComponentInParent<IStaggerable>()?.Stagger(power.staggerSeconds * charge);
+                LastResult = "dom_stun";
+                LastResultTime = Time.time;
+                RunTelemetry.Event("dom_stun", $"{stunned.name}:{power.staggerSeconds * charge:0.0}s");
+                OnPowerFired?.Invoke(power, charge, stunned);
+                OnChanged?.Invoke();
+                return true;
+            }
+            if (kneeling == null) return Result(Domination.Refusal(lockOn.CurrentTarget, transform.position, power.range, stats.CanSpendMk(power.kind, power.nalconCost)) ?? "fizzle", charge);
             if (!stats.TrySpendMk(power.kind, power.nalconCost))
             {
                 EndKneel();
@@ -278,6 +336,12 @@ namespace GlorifiedBody.Player
             OnPowerFired?.Invoke(power, charge, target);
             OnChanged?.Invoke();
             return true;
+        }
+
+        private static bool IsFloating(LockOnTargetable target)
+        {
+            TelekinesisLift lift = target != null ? target.GetComponentInParent<TelekinesisLift>() : null;
+            return lift != null && lift.IsLifted;
         }
 
         private void OnHitDuringDomination(float amount)
@@ -375,9 +439,9 @@ namespace GlorifiedBody.Player
         public bool Carrying => carrying && HeldLift != null;
 
         /// <summary>
-        /// The defend key held with mk_orzabal lifts a prop, for no MK: a puzzle must not eat the ammunition, and MK does not come
-        /// back. The prop is the target she has switched to, or with no enemy locked, the nearest one in front of her. With an
-        /// enemy locked the key still makes the floor shield. A throw from the carry costs a full charge.
+        /// The defend key held with mk_orzabal lifts a prop, for the cost of any lift (Bruno, 2026-11-07: "lift should cost the same
+        /// no matter what is being lifted"). The prop is the target she has switched to, or with no enemy locked, the nearest one in
+        /// front of her. With an enemy locked the key still makes the floor shield. A throw from the carry costs by its charge.
         /// </summary>
         private bool TryCarry(PowerDefinition power)
         {
@@ -390,11 +454,13 @@ namespace GlorifiedBody.Player
                 return false;
             }
             EndShieldCharge();
-            if (!prop.TryGetComponent(out Rigidbody body))
+            if (!stats.TrySpendMk(power.kind, LiftCost))
             {
-                body = prop.gameObject.AddComponent<Rigidbody>(); // a crate of the rooms: it falls and rests like a box
-                body.mass = 30f;
+                Result("no_nalcon", 0f);
+                defendAfterCancel = true; // no shield from this key either: she asked for the box
+                return true;
             }
+            EnsurePropBody(prop.gameObject);
             activeLift = TelekinesisLift.Apply(prop.gameObject, gameObject, CarryHeight, CarryRise, 0f, power.baseDamage * DamageScale);
             if (activeLift == null) return false;
             activeLift.StaysWhenSheTurns = true;
@@ -405,6 +471,13 @@ namespace GlorifiedBody.Player
             RunTelemetry.Event("tk_carry", prop.name);
             OnChanged?.Invoke();
             return true;
+        }
+
+        /// <summary>A crate of the rooms has no Rigidbody until its first lift: from then on it falls and rests like a box.</summary>
+        private static void EnsurePropBody(GameObject prop)
+        {
+            if (prop.TryGetComponent(out Rigidbody _)) return;
+            prop.AddComponent<Rigidbody>().mass = 30f;
         }
 
         private LockOnTargetable PropInFront(float range)
@@ -435,6 +508,16 @@ namespace GlorifiedBody.Player
         private void UpdateHeld()
         {
             TelekinesisLift lift = HeldLift;
+            if (liftTurnUntil >= 0f)
+            {
+                if (lift == null || carrying) liftTurnUntil = -1f;
+                else if (Time.time < liftTurnUntil) { if (tank != null) tank.FaceTowards(lift.transform.position, LiftTurnSpeed); }
+                else
+                {
+                    liftTurnUntil = -1f;
+                    lift.StaysWhenSheTurns = false; // from now on it turns with her, so she aims the throw with the tank turn
+                }
+            }
             bool mine = lift != null && Selected.kind == PowerKind.Telekinesis;
             if (tank != null) tank.MouseTurnPaused = mine;
             if (carrying)
@@ -495,8 +578,8 @@ namespace GlorifiedBody.Player
             // The bar filled during the charge (damage taken): the release starts the short, whatever the charge.
             if (TryStartShort(charge)) return false;
             if (power.kind == PowerKind.Domination) return ReleaseDomination(charge);
-            // Telekinesis with an enemy in the air: a full charge slams it, anything less throws it.
-            if (power.kind == PowerKind.Telekinesis && HeldLift != null) return charge >= 0.999f ? TrySlam() : TryLaunch();
+            // Telekinesis: with nothing in the air it lifts, at no charge. With a thing in the air a full charge slams it, anything less throws it.
+            if (power.kind == PowerKind.Telekinesis) return HeldLift == null ? TryLift() : charge >= 0.999f ? TrySlam() : TryLaunch(charge);
             if (charge < power.minCharge)
             {
                 return Result("fizzle", charge);
@@ -508,12 +591,6 @@ namespace GlorifiedBody.Player
             {
                 return Result("no_target", charge);
             }
-            // Too heavy to lift (the power armour, later): no lift and no cost.
-            if (power.kind == PowerKind.Telekinesis && target.IsHeavy)
-            {
-                return Result("too_heavy", charge);
-            }
-
             float cost = power.nalconCost * charge;
             float scale = DamageScale; // the boost is read before the cost lowers the bar
             if (!stats.TrySpendMk(power.kind, cost))
@@ -522,6 +599,33 @@ namespace GlorifiedBody.Player
             }
 
             FireAt(power, charge, target, scale);
+            return true;
+        }
+
+        public const float LiftCost = 10f;        // MK for any lift of mk_orzabal, PROPOSED
+        private const float LiftTurnSeconds = 0.35f; // she turns to what she lifts, and it does not swing with her in this time
+        private const float LiftTurnSpeed = 720f;  // degrees a second
+        private float liftTurnUntil = -1f;
+
+        /// <summary>The lift of mk_orzabal: the locked target rises now, for LiftCost. She turns to it as it rises.</summary>
+        private bool TryLift()
+        {
+            PowerDefinition power = Selected;
+            if ((shortController != null && shortController.IsActive) || stats.Health.IsDead) return false;
+            LockOnTargetable target = lockOn.CurrentTarget;
+            if (target == null || !target.IsAlive || Vector3.Distance(transform.position, target.GetLockPoint()) > power.range) return Result("no_target", 0f);
+            // Too heavy to lift (the power armour): no lift and no cost.
+            if (target.IsHeavy) return Result("too_heavy", 0f);
+            TelekinesisLift flying = target.GetComponentInParent<TelekinesisLift>();
+            if (flying != null && flying.IsLifted) return false; // a throw of it is on its way
+            float scale = DamageScale; // the boost is read before the cost lowers the bar
+            if (!stats.TrySpendMk(power.kind, LiftCost)) return Result("no_nalcon", 0f);
+            FireAt(power, 1f, target, scale);
+            if (HeldLift != null)
+            {
+                HeldLift.StaysWhenSheTurns = true;
+                liftTurnUntil = Time.time + LiftTurnSeconds;
+            }
             return true;
         }
 
@@ -638,6 +742,7 @@ namespace GlorifiedBody.Player
                         Result("too_heavy", charge);
                         return;
                     }
+                    if (target.IsProp) EnsurePropBody(victim);
                     activeLift = TelekinesisLift.Apply(health != null ? health.gameObject : victim, gameObject, power.liftHeight, power.liftSeconds, power.holdSeconds, damage);
                     break;
             }
@@ -791,6 +896,7 @@ namespace GlorifiedBody.Player
         }
 
         public const float LaunchAimCone = 25f;   // degrees each side of her facing, PROPOSED
+        public const float ThrowSlowest = 0.6f, ThrowFastest = 1.4f; // the speed and the free flight of a throw, by its charge, PROPOSED
         public const float CatchRadius = 2.5f;     // metres from her chest, PROPOSED
         public const float CatchNalconCost = 10f;  // PROPOSED
         public const float GrenadeCatchNalconCost = 15f; // PROPOSED
@@ -800,23 +906,26 @@ namespace GlorifiedBody.Player
         /// <summary>
         /// Throws the enemy or the prop she holds in the air. She aims with her facing: the living enemy inside
         /// LaunchAimCone of her forward, nearest first, else the nearest other enemy in range, else straight ahead.
-        /// Both take the damage (a prop has no HP). Free: the lift was paid. After a prop throw the lock goes back
-        /// to the nearest enemy.
+        /// Both take the damage (a prop has no HP). The charge sets the cost, the damage and the speed (Bruno, 2026-11-07: "a throw
+        /// should cost relative to the power the player put into it"). A short press counts as the least charge. After a prop throw
+        /// the lock goes back to the nearest enemy.
         /// </summary>
-        public bool TryLaunch()
+        public bool TryLaunch(float charge)
         {
             TelekinesisLift lift = HeldLift;
-            if (lift == null) return false;
             PowerDefinition power = Selected;
-            // A carry lifted for free: the throw pays.
-            if (carrying && power != null && !stats.TrySpendMk(power.kind, power.nalconCost)) return Result("no_nalcon", 0f);
-            float range = power != null ? power.range : 12f;
+            if (lift == null || power == null) return false;
+            charge = Mathf.Clamp(charge, power.minCharge, 1f);
+            float scale = DamageScale; // the boost is read before the cost lowers the bar
+            if (!stats.TrySpendMk(power.kind, power.nalconCost * charge)) return Result("no_nalcon", charge);
+            float range = power.range;
             LockOnTargetable victim = FindAimedTarget(lift.transform, range) ?? FindLaunchTarget(lift.transform, range);
             Vector3 destination = victim != null
                 ? victim.GetLockPoint()
                 : lift.transform.position + Vector3.ProjectOnPlane(transform.forward, Vector3.up).normalized * 8f;
             Health victimHealth = victim != null ? victim.GetComponent<Health>() ?? victim.GetComponentInParent<Health>() : null;
-            if (!lift.Launch(destination, victimHealth)) return false;
+            LastScale = scale;
+            if (!lift.Launch(destination, victimHealth, power.baseDamage * charge * scale, Mathf.Lerp(ThrowSlowest, ThrowFastest, charge))) return false;
             LockOnTargetable thrown = lift.GetComponent<LockOnTargetable>();
             bool prop = thrown != null && thrown.IsProp;
             if (prop && lockOn.CurrentTarget == thrown) lockOn.SetTarget(null);

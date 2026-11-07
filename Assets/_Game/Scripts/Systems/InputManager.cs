@@ -73,7 +73,7 @@ namespace GlorifiedBody.Systems
                 GameAction.MapNextFloor => "Map: Next Floor",
                 GameAction.Tape => "Play / Pause Tape",
                 GameAction.Drop => "Drop Item (inventory)",
-                GameAction.Defend => "Defend (tap: catch, hold: floor shield)",
+                GameAction.Defend => "Defend (tap: catch or drop, hold: shield)",
                 _ => action.ToString()
             };
         }

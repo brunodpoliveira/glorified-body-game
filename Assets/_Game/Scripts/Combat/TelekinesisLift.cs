@@ -9,7 +9,7 @@ namespace GlorifiedBody.Combat
     /// <summary>
     /// TELEKINESIS: the victim rises and hangs, and it stays up (Bruno, 2026-10-22: "once target grabbed and
     /// floating, telekinesis lasts until tgt thrown, slammed (full charge on target when it is floating) or damaged
-    /// by another enemy (in this case, the floater is released with no damage)"). A short press of the attack key
+    /// by another enemy (in this case, the floater is released with no damage)"). A release of the attack key
     /// throws it (Launch): it flies into another enemy and both take the damage, or flies straight and drops. A full
     /// charge slams it into the floor (Slam). A hit from someone other than her drops it, unhurt (Release). While it
     /// hangs it turns with her, so she aims the throw with the tank turn. An enemy with this component does nothing
@@ -20,7 +20,8 @@ namespace GlorifiedBody.Combat
     /// after the down time; the enemy a thrown body hits falls limp too.
     /// The mouse moves what she holds (Bruno, 2026-11-06: "the tk'd object should be able to be moved with a mouse. this will
     /// allow us to do physics puzzles with boxes"): SteerBy. A prop with a Rigidbody goes by velocity, so a wall or another box
-    /// stops it and it pushes a loose box, and a release leaves it to gravity.
+    /// stops it and it pushes a loose box, and a release leaves it to gravity. The defend press releases a box too (Bruno, 2026-11-07:
+    /// "right clicking should cancel the lift and drop the object gently on the ground; left click still does the usual").
     /// </summary>
     public sealed class TelekinesisLift : MonoBehaviour
     {
@@ -52,6 +53,11 @@ namespace GlorifiedBody.Combat
         /// <summary>How it ended: "throw", "slam", "released", or "" while it hangs.</summary>
         public string Ending { get; private set; } = "";
         public bool Launched => launched;
+        /// <summary>A box or a crate: a prop that goes by physics. Not an enemy, and not the slab of the floor shield.</summary>
+        public bool IsBox => box != null;
+        /// <summary>The speed of the throw, m/s.</summary>
+        public float ThrowSpeed { get; private set; } = LaunchSpeed;
+        private float FlightScale = 1f;
         public Health LaunchVictim { get; private set; }
 
         private GameObject attacker;
@@ -114,11 +120,15 @@ namespace GlorifiedBody.Combat
 
         /// <summary>
         /// Throws the hanging victim at a destination. With a target, the flight ends on contact and both take
-        /// the damage. Without one, it flies FreeFlightMetres and drops with the slam damage.
+        /// the damage. Without one, it flies FreeFlightMetres and drops with the slam damage. The damage and the speed
+        /// come from the charge of the throw (PsychicPowers.TryLaunch).
         /// </summary>
-        public bool Launch(Vector3 destination, Health target)
+        public bool Launch(Vector3 destination, Health target, float damage = -1f, float speedScale = 1f)
         {
             if (!CanLaunch) return false;
+            if (damage >= 0f) slamDamage = damage;
+            ThrowSpeed = LaunchSpeed * speedScale;
+            FlightScale = speedScale;
             launched = true;
             launchTarget = target;
             launchDestination = destination;
@@ -338,7 +348,16 @@ namespace GlorifiedBody.Combat
         /// A floater turns with her, so she aims the throw with the tank turn. A carried box stays where the mouse puts it: she
         /// turns to face it, and if it turned with her, each turn would move it again.
         /// </summary>
-        public bool StaysWhenSheTurns { get; set; }
+        public bool StaysWhenSheTurns
+        {
+            get => stays;
+            set
+            {
+                if (stays && !value && attacker != null) holdYaw = attacker.transform.eulerAngles.y; // no jump when it starts to turn with her
+                stays = value;
+            }
+        }
+        private bool stays;
 
         private float HoldYawNow(Transform holder) => StaysWhenSheTurns ? 0f : holder.eulerAngles.y - holdYaw;
 
@@ -363,14 +382,14 @@ namespace GlorifiedBody.Combat
             Vector3 flat = launchDestination - start;
             flat.y = 0f;
             Vector3 direction = flat.sqrMagnitude > 0.001f ? flat.normalized : transform.forward;
-            float maxMetres = launchTarget != null ? flat.magnitude + 1f : FreeFlightMetres;
+            float maxMetres = launchTarget != null ? flat.magnitude + 1f : FreeFlightMetres * FlightScale;
             float flown = 0f;
             Health hit = null;
             Vector3 hitPoint = start;
 
             while (flown < maxMetres && hit == null)
             {
-                float step = LaunchSpeed * Time.deltaTime;
+                float step = ThrowSpeed * Time.deltaTime;
                 // It steers to the target as it flies (a running soldier does not step out of the throw), PROPOSED.
                 if (launchTarget != null && !launchTarget.IsDead)
                 {
@@ -429,7 +448,7 @@ namespace GlorifiedBody.Combat
                 hit.GetComponentInParent<IStaggerable>()?.Stagger(0.8f);
                 // The one it hits falls limp too, pushed along the flight (not a heavy: it only staggers).
                 LockOnTargetable struck = hit.GetComponent<LockOnTargetable>();
-                if (struck == null || !struck.IsHeavy) hit.GetComponentInParent<IRagdollBody>()?.KnockDown(ThrownDownSeconds, direction * 4f + Vector3.up * 1.5f);
+                if (struck == null || !struck.IsHeavy) hit.GetComponentInParent<IRagdollBody>()?.KnockDown(ThrownDownSeconds, direction * 4f * FlightScale + Vector3.up * 1.5f);
                 LaunchVictim = hit;
                 RunTelemetry.Event("tk_launch_hit", $"{name}>{hit.name}");
             }
@@ -438,7 +457,7 @@ namespace GlorifiedBody.Combat
             // A limp body tumbles on with the flight (the ragdoll lands it). Its own damage at once.
             if (ragdoll != null)
             {
-                ragdoll.EndHold(direction * LaunchSpeed * 0.4f + Vector3.up, ThrownDownSeconds);
+                ragdoll.EndHold(direction * ThrowSpeed * 0.4f + Vector3.up, ThrownDownSeconds);
                 Hit(self, slamDamage, transform.position, Vector3.up);
                 yield break;
             }

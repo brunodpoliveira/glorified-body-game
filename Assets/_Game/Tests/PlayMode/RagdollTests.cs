@@ -127,6 +127,58 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.IsNotNull(soldier.GetComponent<TelekinesisLift>(), "he hangs");
         }
 
+        /// <summary>Her other powers work on a floater (Bruno, 2026-11-07: "ignite or blast with the guy float"): it stays up, and the body falls when it dies ("they should drop to the ground, not keep floating mid-air").</summary>
+        private IEnumerator HurtAFloater_ThenKillIt(PowerKind kind)
+        {
+            SoldierBrain soldier = Find("Soldier_A");
+            EnemyRagdoll ragdoll = soldier.GetComponent<EnemyRagdoll>();
+            Health health = soldier.GetComponent<Health>();
+            LockOnTargetable target = soldier.GetComponent<LockOnTargetable>();
+            yield return LiftAlone(soldier);
+            powers.Select(kind);
+            float hp0 = health.CurrentHealth;
+
+            powers.FireAt(powers.Selected, 1f, target, 1f);
+            yield return new WaitForSeconds(0.6f);
+            Assert.Less(health.CurrentHealth, hp0, "her other power hurts it");
+            Assert.IsNotNull(powers.HeldLift, "she still holds it");
+            Assert.AreEqual(EnemyRagdoll.State.Held, ragdoll.Current, "a full mk_warspite does not knock a floater down");
+            Assert.Greater(soldier.transform.position.y, 1f, "it stays up");
+
+            health.TakeDamage(health.CurrentHealth - 2f);
+            if (kind == PowerKind.Blast) powers.FireAt(powers.Selected, 1f, target, 1f); // a burn goes on by itself
+            yield return WaitUntil(() => health.IsDead, 6f);
+            Assert.IsTrue(health.IsDead, "it dies in the air");
+            yield return WaitUntil(() => soldier.GetComponent<TelekinesisLift>() == null, 3f);
+            Assert.IsNull(powers.HeldLift, "she holds nothing");
+            yield return new WaitForSeconds(2.5f);
+            Debug.Log($"[RagdollTests] dead by {kind}: state={ragdoll.Current} root y={soldier.transform.position.y:0.00} hips y={ragdoll.Hips.position.y:0.00}");
+            Assert.Less(ragdoll.Hips.position.y, 0.5f, "the body lies on the floor");
+        }
+
+        [UnityTest]
+        public IEnumerator AFloater_KilledByAThrow_LandsOnTheFloor()
+        {
+            // The same line froze any dead body with no throes in the pose it had: a thrown body froze where the flight ended.
+            SoldierBrain soldier = Find("Soldier_A");
+            EnemyRagdoll ragdoll = soldier.GetComponent<EnemyRagdoll>();
+            Health health = soldier.GetComponent<Health>();
+            yield return LiftAlone(soldier);
+            health.TakeDamage(health.CurrentHealth - 1f);
+            Assert.IsTrue(powers.TryLaunch(0.5f), powers.LastResult);
+            yield return WaitUntil(() => health.IsDead, 3f);
+            Assert.IsTrue(health.IsDead, "the throw kills it");
+            yield return new WaitForSeconds(3f);
+            Debug.Log($"[RagdollTests] dead by a throw: state={ragdoll.Current} hips y={ragdoll.Hips.position.y:0.00}");
+            Assert.Less(ragdoll.Hips.position.y, 0.5f, "the body lies on the floor");
+        }
+
+        [UnityTest]
+        public IEnumerator AFloater_Ignited_StaysUp_AndDropsWhenItDies() => HurtAFloater_ThenKillIt(PowerKind.Fire);
+
+        [UnityTest]
+        public IEnumerator AFloater_Blasted_StaysUp_AndDropsWhenItDies() => HurtAFloater_ThenKillIt(PowerKind.Blast);
+
         private static float Past(Transform body, GameObject wall, Vector3 normal) => Vector3.Dot(body.position - wall.transform.position, normal);
 
         [UnityTest]

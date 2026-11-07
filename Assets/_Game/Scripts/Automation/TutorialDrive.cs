@@ -210,8 +210,8 @@ namespace GlorifiedBody.Automation
                 case "lift_throw":
                     c.Pad.Tap(InputManager.GameAction.PowerTelekinesis);
                     yield return null;
-                    yield return HoldChargeFull(c);
-                    yield return BotClock.Wait(0.25f);
+                    c.Pad.Tap(InputManager.GameAction.Charge); // it rises at once
+                    yield return BotClock.Wait(0.6f);
                     LockOnTargetable other = NearestLivingTarget(c.Lucy.position, c.Powers != null && c.Powers.HeldLift != null ? c.Powers.HeldLift.transform : null);
                     if (other != null) yield return TurnTo(c, other.transform.position, 8f, 1.2f);
                     c.Pad.Tap(InputManager.GameAction.Charge);
@@ -222,8 +222,8 @@ namespace GlorifiedBody.Automation
                     yield return null;
                     if (c.Powers == null || c.Powers.HeldLift == null)
                     {
-                        yield return HoldChargeFull(c); // lift the lock target
-                        yield return BotClock.Wait(0.5f);
+                        c.Pad.Tap(InputManager.GameAction.Charge); // lift the lock target
+                        yield return BotClock.Wait(0.6f);
                     }
                     yield return HoldChargeFull(c); // a full circle on the floater: the slam
                     yield return BotClock.Wait(0.6f);
@@ -246,10 +246,9 @@ namespace GlorifiedBody.Automation
                             Debug.LogWarning($"[TutorialDrive] prop: the switch did not reach the crate (lock {lockOn?.TargetName}).");
                             break;
                         }
-                        // A part charge lifts it for less MK: the slam before may have emptied the bar.
                         yield return WaitForNalcon(c, 12f, 12f);
-                        yield return HoldCharge(c, 0.35f);
-                        yield return BotClock.Wait(0.5f);
+                        c.Pad.Tap(InputManager.GameAction.Charge);
+                        yield return BotClock.Wait(0.6f);
                     }
                     if (c.Powers == null || c.Powers.HeldLift == null) break;
                     LockOnTargetable dummy = NearestLivingTarget(c.Lucy.position, c.Powers.HeldLift.transform);

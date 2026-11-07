@@ -47,8 +47,9 @@ namespace GlorifiedBody.Editor
             Power("power_domination", p =>
             {
                 p.kind = PowerKind.Domination; p.displayName = "mk_edgar"; p.drug = DrugType.NalconMind;
-                p.fullChargeTime = 2.5f; p.minCharge = 1f; p.range = 6f;
-                p.nalconCost = 75f; p.baseDamage = 0f;
+                // A part circle stuns, as mk_erebus does (Bruno, 2026-11-07). staggerSeconds is the stun of a full charge's worth, PROPOSED.
+                p.fullChargeTime = 2.5f; p.minCharge = 0.2f; p.range = 6f;
+                p.nalconCost = 75f; p.baseDamage = 0f; p.staggerSeconds = 2f;
             });
 
             Outfit("outfit_nude", o =>

@@ -218,7 +218,7 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator HeKneels_DuringTheCircle_AndAPartCircleOrACancelCostsNothing()
+        public IEnumerator HeKneels_DuringTheCircle_APartCircleStuns_AndCostsByTheCharge_ACancelCostsNothing()
         {
             yield return Only("Guard_B");
             GameObject guard = GameObject.Find("Guard_B");
@@ -234,11 +234,14 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.IsNotNull(kneel, "the pose");
             Assert.IsTrue(kneel.On, "on his knees");
             Assert.Less(Vector3.Distance(at, guard.transform.position), 0.6f, "he stays");
+            float charge = powers.Charge;
             pad.SetHeld(InputManager.GameAction.Charge, false);
             yield return WaitUntil(() => !kneel.On, 0.5f);
-            Assert.IsFalse(brain.IsDominated, "a part circle does nothing");
-            Assert.AreEqual(100f, stats.Mk(PowerKind.Domination), 0.01f, "and costs nothing");
+            Assert.IsFalse(brain.IsDominated, "a part circle takes nothing");
+            Assert.AreEqual("dom_stun", powers.LastResult, "it stuns him (Bruno, 2026-11-07)");
+            Assert.AreEqual(100f - powers.Selected.nalconCost * charge, stats.Mk(PowerKind.Domination), 4f, "and costs by the charge");
             Assert.IsFalse(kneel.On, "he gets up");
+            float mk = stats.Mk(PowerKind.Domination);
 
             pad.SetHeld(InputManager.GameAction.Charge, true);
             yield return new WaitForSeconds(powers.Selected.fullChargeTime * 0.4f);
@@ -248,8 +251,49 @@ namespace GlorifiedBody.Tests.PlayMode
             yield return null;
             Assert.AreEqual(0f, powers.Charge, 0.001f, "the defend key cancels");
             Assert.IsFalse(kneel.On);
-            Assert.AreEqual(100f, stats.Mk(PowerKind.Domination), 0.01f);
+            Assert.AreEqual(mk, stats.Mk(PowerKind.Domination), 0.01f);
             pad.SetHeld(InputManager.GameAction.Charge, false);
+        }
+
+        [UnityTest]
+        public IEnumerator OnAFloater_ItDoesNothing_ButItCosts()
+        {
+            // Bruno, 2026-11-07: "mind control does nothing, but it can be used".
+            yield return Only("Worker_C");
+            GameObject worker = GameObject.Find("Worker_C");
+            powers.Select(PowerKind.Telekinesis);
+            stats.DebugSet(100f, 0f);
+            pad.Tap(InputManager.GameAction.Charge);
+            yield return new WaitForSeconds(powers.Selected.liftSeconds + 0.5f);
+            Assert.AreEqual(worker, powers.HeldLift != null ? powers.HeldLift.gameObject : null, "she holds him");
+
+            powers.Select(PowerKind.Domination);
+            yield return FullCircle();
+            yield return WaitUntil(() => powers.LastResult == "dom_nothing", 0.5f);
+            Assert.AreEqual("dom_nothing", powers.LastResult);
+            Assert.IsFalse(Mind(worker).IsDominated, "no mind");
+            Assert.AreEqual(100f - powers.Selected.nalconCost, stats.Mk(PowerKind.Domination), 0.01f, "a full circle's cost");
+            Assert.IsNotNull(powers.HeldLift, "he stays in the air");
+            KneelPose kneel = worker.GetComponentInChildren<Animator>().GetComponent<KneelPose>();
+            Assert.IsTrue(kneel == null || !kneel.On, "no kneel");
+            powers.HeldLift.Release(lucy);
+        }
+
+        [UnityTest]
+        public IEnumerator APartCircle_StunsAGuardAtFullHp_ThoughSheCannotTakeHim()
+        {
+            yield return Only("Guard_B");
+            GameObject guard = GameObject.Find("Guard_B");
+            pad.SetHeld(InputManager.GameAction.Charge, true);
+            yield return new WaitForSeconds(powers.Selected.fullChargeTime * 0.5f);
+            Assert.Greater(powers.Charge, 0.2f, "the circle goes on");
+            Assert.AreEqual("dom_not_hurt", powers.LastResult, "the HUD says why she cannot take him");
+            pad.SetHeld(InputManager.GameAction.Charge, false);
+            yield return WaitUntil(() => powers.LastResult == "dom_stun", 0.5f);
+            Assert.AreEqual("dom_stun", powers.LastResult);
+            Assert.AreEqual(DummyShooter.State.Staggered, guard.GetComponent<DummyShooter>().Current, "it breaks his aim, as mk_erebus does");
+            Assert.Less(stats.Mk(PowerKind.Domination), 100f, "it costs");
+            Assert.IsFalse(Mind(guard).IsDominated);
         }
 
         [UnityTest]
