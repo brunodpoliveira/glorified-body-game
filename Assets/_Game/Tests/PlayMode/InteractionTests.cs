@@ -291,12 +291,14 @@ namespace GlorifiedBody.Tests.PlayMode
             yield return Press(InputManager.GameAction.Interact); // close the page
             tank.GetComponent<DrugInventory>().DebugSet(GlorifiedBody.Player.DrugType.Red, 2);
             PsychicStats barStats = tank.GetComponent<PsychicStats>();
-            barStats.DebugSet(barStats.Nalcon, 60f); // the SHORT capsule needs a bar to lower (Bruno, 2026-10-30: each drug does one thing)
 
             yield return Press(InputManager.GameAction.Inventory);
             Assert.IsTrue(screen.IsOpen, "the inventory opens");
             Assert.IsTrue(GameManager.Instance.IsInventory, "the game is in the inventory state");
             Assert.AreEqual(0f, Time.timeScale, "the room stops");
+            // The SHORT capsule needs a bar to lower (Bruno, 2026-10-30: each drug does one thing). The tutorial empties the bar
+            // while the game plays, in an order that changes from run to run, so the test fills it after the room stops.
+            barStats.DebugSet(barStats.Nalcon, 60f);
             Assert.AreEqual(2, screen.Entries.Count, "the log and the red drugs");
             Assert.IsTrue(screen.SlotsShown.Contains("2 / 4"), "the log takes no slot, two drugs take two: " + screen.SlotsShown);
             Vector3 lucyBefore = tank.transform.position;

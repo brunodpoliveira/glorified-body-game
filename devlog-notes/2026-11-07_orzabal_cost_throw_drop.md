@@ -152,6 +152,33 @@ Men in black, an enemy type: "man in black types that can use one of her power s
 | Bot `cpr`, run `20261107-021345-play-626875` | pass, 1 of 1 |
 | Bots `shield` and `tutorial`, runs `20261107-014310-play-620079` and `20261107-014357-play-620410` | pass, 4 of 4 and 36 of 36. These ran before the wheel fix, the rule for mk_edgar on a floater and the fall fix |
 
-Not run on this code: the whole PlayMode suite, EditMode, the demo bot and the other bots. Rule 10 asks for them before a push. Nobody played this by hand.
+Nobody played this by hand.
 
 Shots: `~/MEGA/glorified-body-renders/game/orzabal_2026-11-07/`.
+
+## The whole run, overnight, on commit `10acf04`
+
+| Check | Result |
+|---|---|
+| PlayMode, all classes, run `20261107-033505-test-playmode-648702` | 418 of 419. The one failure is a fault in the test (see below) |
+| EditMode, run `20261107-041437-test-editmode-655536` | 61 of 61 |
+| 23 bot runs, from `20261107-041500-play-655813` to `20261107-043518-play-662877` | All pass, with 0 failed steps. The triage of each run is clean, with 0 exceptions. The `tutorial` bot passes 36 of 36 and the `demo` bot passes 172 of 172 |
+| `InteractionTests` after the test fix, run `20261107-043851-test-playmode-663947` | 11 of 11 |
+
+`TheFireteam_Bounds` passed in this run, so it now has 1 failure in 10 runs. Its cause is still not proved.
+
+### The one failure
+
+`TheInventory_StopsTheRoom_AndListsTheItems` failed with "a drug used from the inventory, expected 1, was 2". Verdict: a fault in the test, not in the game.
+
+- The tutorial empties the SHORT bar in each frame of play, except in the short step (`TutorialDirector.Update`, since 2026-11-06).
+- The test filled the bar one frame before the inventory stopped the room.
+- `TutorialDirector` and `InventoryUI` have no fixed order. When the director ran first, the bar went to 0 and the capsule refused ("short_empty").
+- Proof: one added frame forced that order and gave the same message (run `20261107-043801-test-playmode-663497`).
+- Fix: the test now fills the bar after the room stops. Only the test file changed, so I did not run the whole suite again.
+
+### The shots
+
+I read contact sheets of 13 bots, plus a sheet of 5 smaller bots and 3 of the 6 `demo` sheets. I found no hanging body and no broken room.
+
+One flaw in the bots, not in the game: `CloseShot` puts its camera at a fixed offset, and a wall can hide the subject. In this run `team_02`, `team_03`, `team_04`, `ai_22` and `ai_23` show almost nothing. Earlier runs have the same flaw, in some shots and not others (`ai_23` on 2026-11-06, `team_04` on 2026-11-06). The `cpr` bot shows the drag and the CPR correctly. Five files hold a copy of `CloseShot`. I did not change them.
