@@ -3,8 +3,11 @@
 A tank-control horror game in Unity 6, a refinement of Galerians (PS1, 1999). Lucy, a young adult woman with no
 memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the pivot from the video series).
 
-- **Design (CANON):** `/home/pc/MEGA/code/the-glorified-body/03_GAME_DESIGN.md`.
-- **World and story:** `/home/pc/MEGA/code/the-glorified-body/01_SERIES_BIBLE.md`.
+- **Design (CANON):** `/home/pc/MEGA/code/the-glorified-body/DEMO_PLAN.md` (the rules, the map, the beats, the
+  puzzles, what waits on Bruno). If the code and this file disagree, the file wins, or you ask Bruno.
+- **World and story:** `/home/pc/MEGA/code/the-glorified-body/LORE.md`, and the lines in `DEMO_SCRIPT.md` there.
+  Bruno's words by round: `RULINGS.md`. The old `03_GAME_DESIGN.md` and the bible are in its `archive/`
+  (consolidated 2026-11-06).
 - **Art rules, read before any art work:** `ART_LESSONS.md` (this folder).
 - **Asset lessons, full detail:** `/home/pc/MEGA/code/the-glorified-body/tests/T15_3d_set/LESSONS_LEARNED.md`.
 - **Agents:** `glorified-body-game` builds the game, `glorified-body-writer` writes the story, the cutscenes, the
@@ -560,3 +563,5 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
 
 - 2026-11-06, night (`devlog-notes/2026-11-06_last_hit_and_the_physics_step.md`, Bruno: "any hit that would kill the player will first degrade them to 1 hp"): a lethal hit from above 1 HP leaves her at 1 HP with 0.5 s of invulnerability (`Health.LastHpInvulnerableSeconds`), the next one takes the second wind or kills her; `Health.Kill()` goes past the rule. The gas smoke is white. A STOP WRITES ONLY THE TIME SCALE: `Time.fixedDeltaTime = 0` threw a landing body 149 m up; never write it. OPEN: `TheFireteam_Bounds` failed in 1 run of 9 (37 % against 35 %, cause not proved). FOR LATER (his annotations, in the design): firemen with CO2 grenades, the computer room with halon (G17).
 - 2026-11-06, night, the pistol hold (same note, Bruno: "the scientist with the gun is holding the weapon wrong"): `EnemyGun.PistolHold` (the forearm along the barrel, a low ready at rest, a lab worker's left hand under the grip; every pistol). AFTER A MODEL SWAP: run the `holds` bot in AI TEST and LAB TEST, and `ArmedCivilianTests`; a rig with finger bones needs a finger curl (none exists). FOR LATER (Bruno): power armour loadouts, "some power armor troopers carry a minigun, others a laser gun, others a rocket; all of them can lob rockets".
+- 2026-11-06, night, the baked guard (same note): `T27BakedCharacters.RehearseSwap` runs the enemy tests on `t27_guard`. Its bind pose faces away from the root, so `HumanoidRagdoll.BodyFront` and `EnemyGun.FindHandFrame` read the facing from the skeleton. AFTER A MODEL SWAP: read `[RagdollTests] the worst knee` in the log; `TheKnees` stops at the first bad knee.
+
