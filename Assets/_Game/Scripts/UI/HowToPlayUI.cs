@@ -153,6 +153,7 @@ namespace GlorifiedBody.UI
             CreateControl(p, "LMB (TK)", "Lift the locked target at once");
             CreateControl(p, "LMB hold (TK), a thing in the air", "Turn to aim first. A longer hold throws it harder, for more MK. A full circle slams it");
             CreateControl(p, "RMB (TK), bullet near", "Defend: catch the bullet, send it back at the shooter");
+            CreateControl(p, "RMB (mk_edgar), a mind taken", "Send it to a switch in reach. The switch glows violet");
             CreateControl(p, "RMB (TK), a box in the air", "Let it down gently. It costs nothing, and it does not break");
             // The debug keys only where they work (GameBuild.Dev): a release does not list them (2026-10-31).
             if (GlorifiedBody.Systems.GameBuild.Dev)

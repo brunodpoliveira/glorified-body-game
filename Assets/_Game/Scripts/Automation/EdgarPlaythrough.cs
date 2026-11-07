@@ -103,12 +103,14 @@ namespace GlorifiedBody.Automation
             TankController tank = lucy.GetComponent<TankController>();
             PsychicStats stats = lucy.GetComponent<PsychicStats>();
             Canvas hud = GameObject.Find("PlayerHudCanvas")?.GetComponent<Canvas>();
-            GameObject guard = GameObject.Find("Guard_B"), soldier = GameObject.Find("Soldier_A");
+            GameObject guard = GameObject.Find("Guard_B"), soldier = GameObject.Find("Soldier_A"), puzzleGuard = null;
             Record("room", guard != null && soldier != null);
             foreach (string name in new[] { "Worker_C", "Boss_D", "Guard_Far" })
             {
                 GameObject other = GameObject.Find(name);
-                if (other != null) other.SetActive(false);
+                if (other == null) continue;
+                if (name == "Guard_Far") puzzleGuard = other;
+                other.SetActive(false);
             }
             soldier.SetActive(false);
             powers.Select(PowerKind.Domination);
@@ -171,6 +173,30 @@ namespace GlorifiedBody.Automation
             Shot(Path.Combine(shots, "edgar_08_snap_room.png"));
             yield return Until(() => !guardBrain.IsDominated, Dominated.SnapKneelSeconds + 2f);
             Record("snap", !guardBrain.IsDominated && guardBrain.Hunting && Domination.Current == null, $"hunting {guardBrain.Hunting}");
+
+            // The order (Bruno, 2026-11-07): the HUD names the key, the lamp glows, the figure walks and the gate opens.
+            guard.SetActive(false);
+            GameObject far = puzzleGuard;
+            far.SetActive(true);
+            GameObject gate = GameObject.Find("Gate_Leaf");
+            yield return null;
+            tank.Teleport(new Vector3(far.transform.position.x, 0f, 1.5f), 0f);
+            yield return null;
+            lockOn.SetTarget(far.GetComponent<LockOnTargetable>());
+            stats.DebugSet(100f, 0f);
+            pad.SetHeld(InputManager.GameAction.Charge, true);
+            yield return Until(() => far.GetComponent<SoldierBrain>().IsDominated, powers.Selected.fullChargeTime + 1f);
+            pad.SetHeld(InputManager.GameAction.Charge, false);
+            yield return BotClock.Wait(0.6f);
+            GlorifiedBody.UI.PlayerHud playerHud = FindFirstObjectByType<GlorifiedBody.UI.PlayerHud>();
+            Record("order_shown", powers.OfferedSwitch != null && playerHud.OrderShown.Contains("SEND TO THE SWITCH"), playerHud.OrderShown);
+            if (hud != null) yield return OverlayShot.Capture(hud, "edgar_09_the_order_hud.png", 0.05f);
+            Shot(Path.Combine(shots, "edgar_10_the_lamp.png"));
+            pad.Tap(InputManager.GameAction.Defend);
+            yield return Until(() => gate == null || !gate.activeInHierarchy, 15f);
+            Record("sent_gate_opens", gate != null && !gate.activeInHierarchy, powers.LastResult);
+            yield return BotClock.Wait(0.5f);
+            Shot(Path.Combine(shots, "edgar_11_gate_open.png"));
             pad.ReleaseAll();
             GameInput.ClearBotSource(pad);
             pad = null;

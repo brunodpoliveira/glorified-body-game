@@ -15,6 +15,7 @@ using GlorifiedBody.Interaction;
 using GlorifiedBody.Player;
 using GlorifiedBody.Saving;
 using GlorifiedBody.Systems;
+using GlorifiedBody.UI;
 
 namespace GlorifiedBody.Tests.PlayMode
 {
@@ -324,8 +325,14 @@ namespace GlorifiedBody.Tests.PlayMode
         [UnityTest]
         public IEnumerator TheTimer_StopsWhileHeWalksToASwitch()
         {
-            yield return Only("Guard_B");
+            // He stands on the far side of the rail, with a route to the switch.
             GameObject guard = GameObject.Find("Guard_B");
+            UnityEngine.AI.NavMeshAgent agent = guard.GetComponent<UnityEngine.AI.NavMeshAgent>();
+            Assert.IsTrue(agent.Warp(new Vector3(-8f, 0f, 6f)));
+            yield return Only("Guard_B");
+            Stand(guard, 4f);
+            yield return null;
+            lockOn.SetTarget(guard.GetComponent<LockOnTargetable>());
             guard.GetComponent<Health>().TakeDamage(5f);
             yield return null;
             yield return FullCircle();
@@ -338,6 +345,69 @@ namespace GlorifiedBody.Tests.PlayMode
             float left = mind.TimeLeft;
             yield return new WaitForSeconds(1f);
             Assert.AreEqual(left, mind.TimeLeft, 0.01f, "the guard must arrive");
+        }
+
+        [UnityTest]
+        public IEnumerator AnOrder_WithNoRoute_IsRefused_AndHisTimerRuns()
+        {
+            // A guard on her side of the rail: the switch stands in reach, but he can never walk there.
+            yield return Only("Guard_B");
+            GameObject guard = GameObject.Find("Guard_B");
+            guard.GetComponent<Health>().TakeDamage(5f);
+            yield return null;
+            yield return FullCircle();
+            Dominated mind = Domination.Current;
+            Assert.IsNotNull(mind, powers.LastResult);
+            yield return new WaitForSeconds(0.4f);
+            Assert.IsNull(powers.OfferedSwitch, "no offer");
+            Assert.AreEqual("", UnityEngine.Object.FindFirstObjectByType<PlayerHud>().OrderShown);
+            pad.Tap(InputManager.GameAction.Defend);
+            yield return WaitUntil(() => powers.LastResult == "dom_no_switch", 1f);
+            Assert.AreEqual("dom_no_switch", powers.LastResult);
+            Assert.IsNull(mind.SentTo);
+            float left = mind.TimeLeft;
+            yield return new WaitForSeconds(0.5f);
+            Assert.Less(mind.TimeLeft, left, "his timer runs");
+        }
+
+        [UnityTest]
+        public IEnumerator AMindWithARouteToASwitch_ShowsTheOrder_AndTheLampGlows()
+        {
+            // Bruno, 2026-11-07: "the player can't control the mind-controlled person directly so it never goes to the switch".
+            yield return Only("Guard_Far");
+            GameObject guard = GameObject.Find("Guard_Far");
+            PlayerHud hud = UnityEngine.Object.FindFirstObjectByType<PlayerHud>();
+            Renderer lamp = GameObject.Find("Switch_Far").GetComponent<GlorifiedBody.Interaction.SentSwitch>().lamp;
+            Color before = lamp.material.color;
+            Assert.AreEqual("", hud.OrderShown, "nothing before the take");
+            tank.Teleport(new Vector3(guard.transform.position.x, 0f, 1.5f), 0f);
+            yield return null;
+            lockOn.SetTarget(guard.GetComponent<LockOnTargetable>());
+            yield return FullCircle();
+            Assert.IsTrue(Mind(guard).IsDominated, powers.LastResult);
+            yield return new WaitForSeconds(0.5f);
+            Assert.IsNotNull(powers.OfferedSwitch, "the offer");
+            StringAssert.Contains("SEND TO THE SWITCH", hud.OrderShown);
+            Debug.Log($"[EdgarTests] the order: {hud.OrderShown}");
+            Assert.AreNotEqual(before, lamp.material.color, "the lamp glows");
+
+            powers.Select(PowerKind.Blast);
+            yield return new WaitForSeconds(0.5f);
+            Assert.AreEqual("", hud.OrderShown, "another power: the key does not send him");
+            Assert.AreEqual(before.b, lamp.material.color.b, 0.01f, "the lamp goes back");
+        }
+
+        [UnityTest]
+        public IEnumerator TheMark_SitsJustOverHisHead()
+        {
+            yield return Only("Worker_C");
+            GameObject worker = GameObject.Find("Worker_C");
+            yield return FullCircle();
+            Assert.IsTrue(Mind(worker).IsDominated, powers.LastResult);
+            Transform mark = worker.transform.Find("DominatedMark");
+            Assert.IsNotNull(mark);
+            Assert.AreEqual(Dominated.MarkOverHead, mark.position.y - worker.transform.position.y, 0.05f, "in metres, whatever the scale of the root");
+            Assert.AreEqual(0.14f, mark.lossyScale.y, 0.01f);
         }
 
         [UnityTest]

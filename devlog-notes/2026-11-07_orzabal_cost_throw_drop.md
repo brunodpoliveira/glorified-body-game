@@ -112,6 +112,28 @@ In the room with its AI off, a figure that snaps is hostile at once: `TakeMind` 
 
 Proof: `EdgarTests` 21 of 21 (run `20261107-024221-test-playmode-634180`), bot `edgar` 7 of 7 with the snap (run `20261107-024617-play-635357`), bot `tutorial` 36 of 36 (run `20261107-024716-play-635774`). The whole suite did not run on this code. Nobody played it by hand.
 
+## The order to a switch, and the mark
+
+Bruno:
+
+```text
+the player can't control the mind-controlled person directly so it never goes to the switch. thoughts on how to fix this?
+1+2; the guard is under my control atm when i took the screnncap
+```
+
+The verdict on the report: the order worked (the right button, with a test), but nothing on screen said so outside the tutorial.
+
+| Piece | What it does now |
+|---|---|
+| The prompt | With mk_edgar selected, a mind taken and a switch in reach, the HUD shows "RMB: SEND TO THE SWITCH", with the bound key (`PlayerHud.OrderShown`). How to Play has a line |
+| The lamp | That switch glows violet (`SentSwitch.Offer`, `PsychicPowers.OfferedSwitch`, a check each 0.25 s) |
+| No route | `Dominated.SwitchInReach` asks the NavMesh for a whole path. Without one: no prompt, and the press says NOTHING TO SEND IT TO. Before this, he took the order, could never arrive, and his timer stood still for ever |
+| The mark | It sat far over his head: the root carries the model scale, and the offset was local. Now it is 2.25 m over his feet (3 m for the armour) in metres, and 0.14 m wide |
+
+Not built, his choice for now: orders by lock (Tab to a switch, a plate or a spot) and direct control.
+
+Proof: `EdgarTests` 24 of 24 (run `20261107-033057-test-playmode-645145`), bot `edgar` 9 of 9, with the prompt and the gate (run `20261107-033344-play-646070`).
+
 ## Annotated only, not built
 
 **Lucy speaks after she takes a mind** (for later, a task for the writer): "you will obey!", "suffer me now!", "my command is your wish!", and the writer adds more. It must fit P7 (Lucy speaks once in act 1) and the coda, where she does not want the power. The task is in `DEMO_PLAN.md`, before §15.

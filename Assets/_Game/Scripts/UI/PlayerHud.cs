@@ -32,6 +32,7 @@ namespace GlorifiedBody.UI
         private Text powerText;
         private Text drugText;
         private Text noticeText;
+        private Text orderText;
         private Text shortText;
         private Image chargeRing;
         private RectTransform ringRect;
@@ -250,6 +251,9 @@ namespace GlorifiedBody.UI
             // A refusal for a moment over the power line: "TOO HEAVY" (a lift on a heavy target), "NOT ENOUGH MK".
             noticeText = Label(canvasObj.transform, "Notice", 24, TextAnchor.LowerRight, new Vector2(1f, 0f), new Vector2(-32f, 104f), new Vector2(700f, 36f));
             noticeText.color = new Color(1f, 0.55f, 0.35f);
+            // An order she can give now: the mind she holds and a switch it can reach.
+            orderText = Label(canvasObj.transform, "Order", 24, TextAnchor.LowerRight, new Vector2(1f, 0f), new Vector2(-32f, 140f), new Vector2(700f, 36f));
+            orderText.color = new Color(0.78f, 0.55f, 1f);
 
             // The SHORT warning, top-centre.
             shortText = Label(canvasObj.transform, "Short", 48, TextAnchor.UpperCenter, new Vector2(0.5f, 1f), new Vector2(0f, -70f), new Vector2(800f, 60f));
@@ -381,6 +385,18 @@ namespace GlorifiedBody.UI
                 default: return "";
             }
         }
+
+        private static string DefendKeyName
+        {
+            get
+            {
+                KeyCode key = InputManager.Instance != null ? InputManager.Instance.GetKey(InputManager.GameAction.Defend) : KeyCode.None;
+                return key == KeyCode.None ? "DEFEND" : InputManager.GetKeyDisplayName(key).ToUpperInvariant();
+            }
+        }
+
+        /// <summary>The order on screen now (tests read it).</summary>
+        public string OrderShown => orderText != null ? orderText.text : "";
 
         /// <summary>The notice on screen now (tests read it).</summary>
         public string NoticeShown => noticeText != null ? noticeText.text : "";
@@ -523,6 +539,7 @@ namespace GlorifiedBody.UI
                 }
                 powerText.text = line.TrimEnd();
                 noticeText.text = Notice(powers.LastResult, Time.time - powers.LastResultTime);
+                orderText.text = powers.OfferedSwitch != null ? $"{DefendKeyName}: SEND TO THE SWITCH" : "";
             }
 
             if (drugs != null)

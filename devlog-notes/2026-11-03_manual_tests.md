@@ -174,3 +174,6 @@ If the console shows a red line, copy it too.
 | 95 | Fill a full circle on that soldier. | IT RESISTS, and no MK goes. | He is taken again. |
 | 96 | Take the lab worker, and wait 60 s. | He still follows her. | He snaps out of it. |
 | 97 | Take a guard, and press Tab or turn the wheel. | The lock reaches him. A blast hurts him. | The lock skips him. |
+| 98 | EDGAR TEST. Stand at the rail and take the guard behind it. | The HUD shows the right button and SEND TO THE SWITCH. The switch glows violet. The violet mark sits just over his head. | No prompt. The mark floats high over him. |
+| 99 | Press the right button. | He walks to the switch, the lamp goes green, and the gate opens. | He does not move. |
+| 100 | Take a guard on her side of the rail, and press the right button. | No prompt, and NOTHING TO SEND IT TO. He still snaps after 30 s. | He walks at the rail for ever. |

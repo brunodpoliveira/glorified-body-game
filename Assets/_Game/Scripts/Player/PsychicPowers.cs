@@ -191,6 +191,7 @@ namespace GlorifiedBody.Player
                 catchPressUntil = -1f;
             }
 
+            UpdateSendOffer();
             UpdateShield(dt);
             UpdateHeld();
 
@@ -342,6 +343,24 @@ namespace GlorifiedBody.Player
         {
             TelekinesisLift lift = target != null ? target.GetComponentInParent<TelekinesisLift>() : null;
             return lift != null && lift.IsLifted;
+        }
+
+        /// <summary>The switch that the defend press would send her mind to now (Bruno, 2026-11-07: the order had no sign on screen). The HUD shows it.</summary>
+        public GlorifiedBody.Interaction.SentSwitch OfferedSwitch { get; private set; }
+        private const float OfferCheckSeconds = 0.25f; // a path query is not for every frame
+        private float nextOfferCheck;
+
+        private void UpdateSendOffer()
+        {
+            Dominated mind = Domination.Current;
+            bool can = mind != null && Selected.kind == PowerKind.Domination && mind.SentTo == null && !mind.Snapping;
+            if (can && Time.time < nextOfferCheck) return;
+            nextOfferCheck = Time.time + OfferCheckSeconds;
+            GlorifiedBody.Interaction.SentSwitch offer = can ? mind.SwitchInReach(transform.position, Selected.range) : null;
+            if (offer == OfferedSwitch) return;
+            if (OfferedSwitch != null) OfferedSwitch.Offer(false);
+            OfferedSwitch = offer;
+            if (OfferedSwitch != null) OfferedSwitch.Offer(true);
         }
 
         private void OnHitDuringDomination(float amount)

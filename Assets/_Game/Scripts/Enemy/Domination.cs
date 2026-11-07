@@ -97,6 +97,7 @@ namespace GlorifiedBody.Enemy
         private const float FightReach = 12f;    // m: it goes for an enemy this near
         private const float SprintOver = 8f;     // m
         private const float SwitchReach = 1.2f;  // m
+        public const float MarkOverHead = 2.25f, MarkOverArmour = 3f; // m over his feet
         // The writer's lines (barks.csv, edgar_*), PROPOSED.
         public static readonly string[] KneelFighterLines = { "My legs. What'd you do to my legs?", "Control, I'm down. I don't know why.", "I can't lift it. Somebody take the shot!", "That's not me. That's not me thinking that.", "It stopped hurting. Why'd it stop hurting?" };
         public static readonly string[] KneelCivilianLines = { "I think it's a stroke. Somebody, it's a stroke.", "I'll do it. Whatever it is, you don't have to...", "I have two kids. I have... What are their names?", "It's going quiet. No. No, no, no.", "I was sheltering. I did what the card said." };
@@ -166,8 +167,11 @@ namespace GlorifiedBody.Enemy
             mark.name = "DominatedMark";
             Object.Destroy(mark.GetComponent<Collider>());
             mark.transform.SetParent(transform, false);
-            mark.transform.localPosition = Vector3.up * (Body.ChestHeight + 1f);
-            mark.transform.localScale = Vector3.one * 0.14f;
+            // In metres over his feet: the root carries the model's scale, and a local offset put the mark far over his head (2026-11-07).
+            float scale = Mathf.Max(0.01f, transform.lossyScale.y);
+            bool tall = TryGetComponent(out EnemyMorale morale) && morale.RankOf == EnemyMorale.Rank.Heavy;
+            mark.transform.localPosition = Vector3.up * ((tall ? MarkOverArmour : MarkOverHead) / scale);
+            mark.transform.localScale = Vector3.one * (0.14f / scale);
             Shader shader = Shader.Find("Universal Render Pipeline/Unlit") ?? Shader.Find("Unlit/Color");
             if (shader != null) mark.GetComponent<Renderer>().material = new Material(shader) { color = new Color(0.72f, 0.42f, 1f) };
         }
@@ -269,8 +273,8 @@ namespace GlorifiedBody.Enemy
             Destroy(this);
         }
 
-        /// <summary>The defend press: the nearest switch within her reach. False when there is none.</summary>
-        public bool SendToSwitch(Vector3 from, float reach)
+        /// <summary>The nearest unused switch within her reach that he can walk to. Null when there is none.</summary>
+        public SentSwitch SwitchInReach(Vector3 from, float reach)
         {
             SentSwitch best = null;
             float bestDistance = reach * SwitchSearchShare;
@@ -278,10 +282,28 @@ namespace GlorifiedBody.Enemy
             {
                 if (candidate == null || candidate.Used) continue;
                 float distance = Vector3.Distance(from, candidate.transform.position);
-                if (distance >= bestDistance) continue;
+                if (distance >= bestDistance || !HasRouteTo(candidate.Point)) continue;
                 best = candidate;
                 bestDistance = distance;
             }
+            return best;
+        }
+
+        // Without this he took the order, could never arrive, and his timer stood still for ever (it stops while he walks to a switch).
+        private bool HasRouteTo(Vector3 point)
+        {
+            if (!NavMesh.SamplePosition(transform.position, out NavMeshHit start, 1.5f, NavMesh.AllAreas)) return false;
+            if (!NavMesh.SamplePosition(point, out NavMeshHit end, SwitchReach, NavMesh.AllAreas)) return false;
+            route ??= new NavMeshPath();
+            return NavMesh.CalculatePath(start.position, end.position, NavMesh.AllAreas, route) && route.status == NavMeshPathStatus.PathComplete;
+        }
+
+        private NavMeshPath route;
+
+        /// <summary>The defend press: the nearest switch he can reach, within her reach. False when there is none.</summary>
+        public bool SendToSwitch(Vector3 from, float reach)
+        {
+            SentSwitch best = SwitchInReach(from, reach);
             if (best == null) return false;
             sentTo = best;
             body.MoveTo(best.Point, MoveSpeed.Run);

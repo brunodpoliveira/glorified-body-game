@@ -25,6 +25,18 @@ namespace GlorifiedBody.Interaction
         private void OnEnable() => all.Add(this);
         private void OnDisable() => all.Remove(this);
 
+        /// <summary>She holds a mind that this switch can take: the lamp glows violet, the colour of the mind's mark.</summary>
+        public void Offer(bool on)
+        {
+            if (lamp == null || Used || offered == on) return;
+            if (on) lampColour = lamp.material.color;
+            offered = on;
+            lamp.material.color = on ? new Color(0.72f, 0.42f, 1f) : lampColour;
+        }
+
+        private bool offered;
+        private Color lampColour;
+
         public void Use(string by)
         {
             RunTelemetry.Event("switch_used", $"{name} by {by}");
