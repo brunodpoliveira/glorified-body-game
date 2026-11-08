@@ -115,7 +115,7 @@ namespace GlorifiedBody.Interaction
             {
                 messageUntil = Time.time + MessageSeconds;
                 SetState(State.Message);
-                Result((target is LockedDoor ? "locked:" : "message:") + target.name);
+                Result(target.Shown(this) ?? (target is LockedDoor ? "locked:" : "message:") + target.name);
                 return;
             }
             if (target.KindFor(this) == InteractKind.Act)

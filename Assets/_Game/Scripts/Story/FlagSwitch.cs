@@ -16,6 +16,8 @@ namespace GlorifiedBody.Story
         public string question = "Use the switch?";
         public string hint = "use the switch";
         public string doneText = "";
+        [Tooltip("The speaker of the done line (\"PA\" for a call on the speakers). Empty: the subtitle's own label for no speaker.")]
+        public string doneSpeaker = "";
         [Tooltip("It works only when she carries this item (the door of the car waits for the sunglasses). Empty: always.")]
         public string requiredItem = "";
 
@@ -39,7 +41,7 @@ namespace GlorifiedBody.Story
         {
             GlorifiedBody.Saving.StoryFlags.Raise(flag);
             Sfx.Play(Sfx.DoorOpen, transform.position, 0.8f);
-            if (!string.IsNullOrEmpty(doneText)) GlorifiedBody.Subtitles.SubtitleService.Say("switch", "", doneText, 4f);
+            if (!string.IsNullOrEmpty(doneText)) GlorifiedBody.Subtitles.SubtitleService.Say("switch", doneSpeaker, doneText, 4f);
             RunTelemetry.Event("switch", flag);
             return "switch:" + flag;
         }

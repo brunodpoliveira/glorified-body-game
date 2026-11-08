@@ -37,7 +37,8 @@ namespace GlorifiedBody.UI
         [SerializeField] private string physicsTestScene = "PhysicsTest"; // the carry and the boxes (2026-11-06)
         [SerializeField] private string edgarTestScene = "EdgarTest"; // mk_edgar (2026-11-06)
         public const string DoorTestScene = "DoorTest"; // the doors she locks and the soldiers breach (2026-11-03)
-        private const float TestButtonHeight = 36f; // 13 test rooms fit under the title
+        public const string CodeTestScene = "CodeTest"; // the card, the rotated code, the terminal (2026-11-08)
+        private const float TestButtonHeight = 34f; // 16 test rooms fit under the title
         /// <summary>START: the demo, one world scene with every room (2026-11-02; a scene per room since 2026-10-31).</summary>
         public const string DemoScene = "Demo";
         [SerializeField] private string subtitleLabel = "WORK IN PROGRESS";
@@ -193,6 +194,7 @@ namespace GlorifiedBody.UI
         private void OnPhysicsTestClicked() => GameManager.Instance?.LoadLevel(physicsTestScene);
         private void OnEdgarTestClicked() => GameManager.Instance?.LoadLevel(edgarTestScene);
         private void OnDoorTestClicked() => GameManager.Instance?.LoadLevel(DoorTestScene);
+        private void OnCodeTestClicked() => GameManager.Instance?.LoadLevel(CodeTestScene);
         private void OnTrainingClicked() => GameManager.Instance?.LoadGameplay();
 
         private void OnStartClicked()
@@ -384,8 +386,8 @@ namespace GlorifiedBody.UI
             var tests = CreateUIElement("TestColumn", menuPanel.transform);
             tests.SetActive(GameBuild.Dev); // a release build shows no test rooms (rank 16)
             var testsRect = tests.GetComponent<RectTransform>();
-            testsRect.anchorMin = new Vector2(0.84f, 0.62f);
-            testsRect.anchorMax = new Vector2(0.84f, 0.62f);
+            testsRect.anchorMin = new Vector2(0.84f, 0.66f); // 16 rooms (2026-11-08)
+            testsRect.anchorMax = new Vector2(0.84f, 0.66f);
             testsRect.pivot = new Vector2(0.5f, 1f);
             testsRect.sizeDelta = new Vector2(320f, 0f);
             var testsLayout = tests.AddComponent<VerticalLayoutGroup>();
@@ -416,6 +418,7 @@ namespace GlorifiedBody.UI
             nav.Add(CreateButton(tests.transform, "DOOR TEST", 300, OnDoorTestClicked, TestButtonHeight));
             nav.Add(CreateButton(tests.transform, "PHYSICS TEST", 300, OnPhysicsTestClicked, TestButtonHeight));
             nav.Add(CreateButton(tests.transform, "EDGAR TEST", 300, OnEdgarTestClicked, TestButtonHeight));
+            nav.Add(CreateButton(tests.transform, "CODE TEST", 300, OnCodeTestClicked, TestButtonHeight));
 
             if (!GameBuild.Dev) nav.RemoveAll(b => b != null && b.transform.parent == tests.transform); // hidden: not in the keys' path
 

@@ -657,6 +657,42 @@ namespace GlorifiedBody.Editor.Demo
             return door;
         }
 
+        /// <summary>
+        /// The site code on a card door (DEMO_PLAN §10.2): after the rotation flag the card works only once a terminal
+        /// enrols it. The reader on the wall beside the door turns from red to green.
+        /// </summary>
+        public LockedDoor CodeLock(GameObject door, Vector3 readerAt, Vector3 facing, string rotatedFlag, string enrolledFlag)
+        {
+            LockedDoor locked = door.GetComponent<LockedDoor>();
+            GameObject reader = Box(Props, "Card_Reader_" + door.name, readerAt, Abs(new Vector3(facing.z, 0f, facing.x) * 0.12f + Vector3.up * 0.18f + facing * 0.04f),
+                Colour("reader", Color.white));
+            reader.isStatic = false; // its colour changes in play
+            locked.rotatedFlag = rotatedFlag;
+            locked.enrolledFlag = enrolledFlag;
+            locked.reader = reader.GetComponent<Renderer>();
+            EditorUtility.SetDirty(locked);
+            return locked;
+        }
+
+        /// <summary>A security terminal on a desk: the screen faces the room, the keypad enrols the card (CodeTerminal).</summary>
+        public CodeTerminal Terminal(string name, Vector3 floorPoint, Vector3 facing, string cardId, string code, string rotatedFlag, string enrolledFlag)
+        {
+            Quaternion turn = Quaternion.LookRotation(facing);
+            GameObject desk = Box(Props, name + "_Desk", floorPoint + Vector3.up * 0.375f, Abs(turn * new Vector3(1.2f, 0.75f, 0.7f)), Grey(0.25f));
+            GameObject screen = Box(Props, name, floorPoint + Vector3.up * 1.0f - facing * 0.15f, Abs(turn * new Vector3(0.5f, 0.38f, 0.08f)), Colour("terminal_screen", new Color(0.1f, 0.45f, 0.2f)));
+            CodeTerminal terminal = MenuLoopSetup.EnsureComponent<CodeTerminal>(screen);
+            terminal.cardItemId = cardId;
+            terminal.code = code;
+            terminal.rotatedFlag = rotatedFlag;
+            terminal.enrolledFlag = enrolledFlag;
+            GameObject point = MenuLoopSetup.EnsureChild(screen, "Point");
+            point.transform.position = floorPoint + facing * 0.55f + Vector3.up;
+            terminal.point = point.transform;
+            terminal.range = 1.4f;
+            EditorUtility.SetDirty(terminal);
+            return terminal;
+        }
+
         /// <summary>A switch on a wall: Interact asks, a yes raises the story flag (FlagSwitch).</summary>
         public FlagSwitch Switch(string name, Vector3 at, string flag, string question, string hint, string done)
         {

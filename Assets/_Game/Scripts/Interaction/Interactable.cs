@@ -57,5 +57,8 @@ namespace GlorifiedBody.Interaction
 
         /// <summary>The yes. Returns the result word for the telemetry and the tests ("taken:test_log", "full:test_log", "opened:door").</summary>
         public abstract string Confirm(Interactor who);
+
+        /// <summary>The message is on screen now (InteractKind.Message): a sound, a light. The result word, or null for the usual one.</summary>
+        public virtual string Shown(Interactor who) => null;
     }
 }

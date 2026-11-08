@@ -63,7 +63,10 @@ namespace GlorifiedBody.Systems
         /// <summary>The keys that close a log or a scan.</summary>
         public static bool IsReadingAction(InputManager.GameAction action) =>
             action == InputManager.GameAction.Interact || action == InputManager.GameAction.Back
-            || action == InputManager.GameAction.Scan;
+            || action == InputManager.GameAction.Scan
+            // The keypad of a terminal (KeypadUI): the digit and cursor keys, and the Inventory key to close it.
+            || (GlorifiedBody.UI.KeypadUI.IsOpen && (action == InputManager.GameAction.Forward || action == InputManager.GameAction.TurnLeft
+                || action == InputManager.GameAction.TurnRight || action == InputManager.GameAction.Inventory));
 
         public bool IsReading => currentState == GameState.Reading;
 

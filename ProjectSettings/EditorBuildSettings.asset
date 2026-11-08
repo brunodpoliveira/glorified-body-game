@@ -74,5 +74,8 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/_Game/Scenes/EdgarTest.unity
     guid: 5855cef7427c99292b8eeacfe8525172
+  - enabled: 1
+    path: Assets/_Game/Scenes/CodeTest.unity
+    guid: 28a04ab5e94ffb96f9a151a0c9e8d86d
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0
