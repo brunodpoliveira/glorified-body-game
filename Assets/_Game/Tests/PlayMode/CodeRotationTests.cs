@@ -10,27 +10,31 @@ using GlorifiedBody.Automation;
 using GlorifiedBody.Interaction;
 using GlorifiedBody.Player;
 using GlorifiedBody.Saving;
+using GlorifiedBody.Story;
 using GlorifiedBody.Systems;
 using GlorifiedBody.UI;
 
 namespace GlorifiedBody.Tests.PlayMode
 {
     /// <summary>
-    /// The code rotation (DEMO_PLAN §10.2, Bruno's puzzle, CANON round 52) in the CODE TEST room: the card opens the door
-    /// until the PA rotates the codes, then the reader refuses it until the terminal enrols it with the code from the wall.
-    /// A wrong code costs nothing. The keypad stops the world as a log does, and the power keys do nothing in it.
+    /// The code rotation (DEMO_PLAN §10.2, Bruno's puzzle, CANON round 52; 2026-11-08: a backtracker, the code 8675309) in
+    /// the CODE TEST room: the card opens two doors, then the PA rotates the codes, and the third door refuses the card
+    /// until the terminal enrols it with the code from the wall. A wrong code costs nothing. The keypad stops the world as
+    /// a log does, and the power keys do nothing in it.
     /// Batch: tools/unity.sh test playmode "CodeRotationTests"
     /// </summary>
     public class CodeRotationTests
     {
         private const string Scene = "CodeTest";
         private const string Rotated = "code_test_rotated", Enrolled = "code_test_enrolled";
+        private const string Code = "8675309";
 
         private VirtualPad pad;
         private PadDriver driver;
         private TankController tank;
         private Interactor interactor;
-        private LockedDoor door;
+        private LockedDoor door, storeA, storeB;
+        private CodeRotation rotation;
         private CodeTerminal terminal;
         private ItemPickup card;
 
@@ -47,10 +51,16 @@ namespace GlorifiedBody.Tests.PlayMode
             GameObject lucy = GameObject.FindGameObjectWithTag("Player");
             tank = lucy.GetComponent<TankController>();
             interactor = lucy.GetComponent<Interactor>();
-            door = UnityEngine.Object.FindFirstObjectByType<LockedDoor>();
+            door = Door("K6");
+            storeA = Door("K2");
+            storeB = Door("K5");
+            rotation = UnityEngine.Object.FindFirstObjectByType<CodeRotation>();
             terminal = UnityEngine.Object.FindFirstObjectByType<CodeTerminal>();
             card = UnityEngine.Object.FindObjectsByType<ItemPickup>(FindObjectsSortMode.None).First(p => p.item != null && p.item.itemId == "code_test_card");
-            Assert.IsNotNull(door, "the card door");
+            Assert.IsNotNull(door, "the card door of the way on");
+            Assert.IsNotNull(storeA, "the card door of store A");
+            Assert.IsNotNull(storeB, "the card door of store B");
+            Assert.IsNotNull(rotation, "the code rotation");
             Assert.IsNotNull(terminal, "the terminal");
             pad = new VirtualPad();
             GameInput.SetBotSource(pad);
@@ -79,6 +89,32 @@ namespace GlorifiedBody.Tests.PlayMode
             StringAssert.StartsWith("ask:", interactor.LastResult, "it asks to use the card");
             yield return Press(InputManager.GameAction.Interact);
             Assert.IsTrue(door.IsOpen, "the card opens it");
+        }
+
+        [UnityTest]
+        public IEnumerator TheCard_OpensTwoDoors_ThenThePaRotatesTheCodes_AndTheThirdRefusesIt()
+        {
+            interactor.Inventory.TryAdd(card.item);
+            yield return Open(storeA);
+            Assert.IsTrue(storeA.IsOpen, "the card opens the first door");
+            yield return new WaitForSeconds(rotation.delaySeconds + 0.5f);
+            Assert.IsFalse(StoryFlags.Has(Rotated), "one door: the codes do not rotate yet");
+
+            int said = Subtitles.SubtitleService.Said;
+            yield return Open(storeB);
+            Assert.IsTrue(storeB.IsOpen, "the card opens the second door");
+            Assert.IsFalse(StoryFlags.Has(Rotated), "not at once: she goes through the door first");
+            yield return WaitUntil(() => StoryFlags.Has(Rotated), rotation.delaySeconds + 2f);
+            Assert.IsTrue(StoryFlags.Has(Rotated), "two doors: the codes rotate");
+            yield return WaitUntil(() => Subtitles.SubtitleService.Said > said, 3f);
+            Assert.Greater(Subtitles.SubtitleService.Said, said, "the PA says it");
+            Assert.IsTrue(Subtitles.SubtitleService.Lines.Any(l => l.Text.Contains("Re-enrol your card")), "the words of call 1B on screen");
+
+            yield return FaceDoor();
+            yield return Press(InputManager.GameAction.Interact);
+            StringAssert.StartsWith("rotated:", interactor.LastResult, "the third door refuses the card");
+            Assert.IsFalse(door.IsOpen);
+            Assert.IsTrue(storeA.IsOpen && storeB.IsOpen, "the doors she opened stay open");
         }
 
         [UnityTest]
@@ -124,14 +160,15 @@ namespace GlorifiedBody.Tests.PlayMode
             yield return Press(InputManager.GameAction.PowerFire);
             Assert.AreEqual(selected, powers.Selected.kind, "a power key does nothing in the keypad");
 
-            yield return Dial("1234");
-            Assert.AreEqual("1234", KeypadUI.Instance.Digits);
+            Assert.AreEqual(Code.Length, KeypadUI.Instance.Length, "one digit for each digit of the code");
+            yield return Dial("1234567");
+            Assert.AreEqual("1234567", KeypadUI.Instance.Digits);
             yield return Press(InputManager.GameAction.Interact);
             Assert.AreEqual(CodeTerminal.WrongText, KeypadUI.Instance.Message);
             Assert.IsTrue(KeypadUI.IsOpen, "a wrong code: it stays open, try again at once");
             Assert.IsFalse(StoryFlags.Has(Enrolled));
 
-            yield return Dial("5281");
+            yield return Dial(Code);
             yield return Press(InputManager.GameAction.Interact);
             Assert.AreEqual(CodeTerminal.EnrolledText, KeypadUI.Instance.Message);
             Assert.IsTrue(StoryFlags.Has(Enrolled), "the right code enrols the card");
@@ -177,6 +214,18 @@ namespace GlorifiedBody.Tests.PlayMode
 
         // ── Helpers ───────────────────────────────────────────────────
 
+        private static LockedDoor Door(string to) =>
+            UnityEngine.Object.FindObjectsByType<LockedDoor>(FindObjectsSortMode.None).FirstOrDefault(d => d.name == "Door_" + to);
+
+        private IEnumerator Open(LockedDoor which)
+        {
+            yield return StandFacing(which.Point + (which.reader.transform.position.z > which.Point.z ? Vector3.forward : Vector3.back) * 1.1f, which.Point);
+            Assert.AreSame(which, interactor.Focus, which.name);
+            yield return Press(InputManager.GameAction.Interact);
+            yield return Press(InputManager.GameAction.Interact);
+            yield return new WaitForSeconds(0.2f);
+        }
+
         private IEnumerator Dial(string code)
         {
             // From the first digit: each digit by the forward key from its present value, then the turn key to the next.
@@ -205,7 +254,7 @@ namespace GlorifiedBody.Tests.PlayMode
             return block.GetColor("_BaseColor");
         }
 
-        private IEnumerator FaceDoor() => StandFacing(door.Point + Vector3.back * 1.1f, door.Point);
+        private IEnumerator FaceDoor() => StandFacing(door.Point + Vector3.forward * 1.1f, door.Point);
 
         private IEnumerator FaceTerminal() => StandFacing(terminal.Point, terminal.transform.position);
 

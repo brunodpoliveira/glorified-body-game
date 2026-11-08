@@ -7,14 +7,14 @@ namespace GlorifiedBody.Interaction
     /// <summary>
     /// A security terminal that enrols a card after the site codes rotate (DEMO_PLAN §10.2, the code rotation, Bruno's
     /// puzzle; CANON round 52: "the details stand as written"). Without the card it says PRESENT CARD. With the card, after
-    /// the rotation, the Interact key opens the keypad (KeypadUI): four digits. The right code raises enrolledFlag and the
+    /// the rotation, the Interact key opens the keypad (KeypadUI): one digit for each digit of the code (Bruno, 2026-11-08: 8675309). The right code raises enrolledFlag and the
     /// card door's reader turns green (LockedDoor). A wrong code costs nothing: CODE NOT RECOGNISED, try again at once
     /// (CANON round 40: no guard, no alarm, no lock). The words of the screens are PROPOSED.
     /// </summary>
     public sealed class CodeTerminal : Interactable
     {
         public string cardItemId = "";
-        public string code = "5281";
+        public string code = "8675309";
         public string rotatedFlag = "";
         public string enrolledFlag = "";
 

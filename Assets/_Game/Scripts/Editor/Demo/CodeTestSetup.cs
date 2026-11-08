@@ -17,12 +17,15 @@ namespace GlorifiedBody.Editor.Demo
 {
     /// <summary>
     /// The CODE TEST room (2026-11-08): the code rotation of DEMO_PLAN §10.2 in isolation, before W12, W13 and W14 get it.
-    /// Four rooms built like the demo:
-    ///   the hall, where she starts: the card on a table, a switch that plays the PA call 1B (the codes rotate), the card
-    ///   door to the closet with its reader;
-    ///   east, the security post: the terminal and its keypad;
-    ///   west, the day room: the code on the wall, 5 2 8 1;
-    ///   north, the closet behind the card door.
+    /// Bruno, 2026-11-08: "the code rotation puzzle is another backtracker; so the player needs to make progress by grabbing
+    /// the card, using it to unlock some previously unlocked doors, then the code is rotated so the player needs to go to a
+    /// security office and reset the card's password to the code on the wall". Six rooms built like the demo:
+    ///   the hall, where she starts: the card on a table, three card doors (store A, store B, the way on), each with a
+    ///   reader; the card opens two of them, then the PA call 1B rotates the codes (CodeRotation), and the third refuses;
+    ///   north, store A and store B behind their card doors;
+    ///   south, the way on behind its card door;
+    ///   east, the security post: the terminal and its keypad (seven digits);
+    ///   west, the day room: the code on the wall, 8 6 7 5 3 0 9.
     /// Batch: tools/unity.sh exec GlorifiedBody.Editor.Demo.CodeTestSetup.BuildCodeTest
     /// </summary>
     public static class CodeTestSetup
@@ -31,16 +34,20 @@ namespace GlorifiedBody.Editor.Demo
         public const string ScenePath = MenuLoopSetup.ScenesFolder + "/" + SceneName + ".unity";
         public const string NavPath = MenuLoopSetup.ScenesFolder + "/" + SceneName + "_NavMesh.asset";
         public const string Floor = "code_test";
-        public const string Hall = "K1", Closet = "K2", Post = "K3", DayRoom = "K4";
+        public const string Hall = "K1", StoreA = "K2", Post = "K3", DayRoom = "K4", StoreB = "K5", WayOn = "K6";
         public const string CardId = "code_test_card";
-        public const string Code = "5281";
+        public const string Code = "8675309"; // Bruno, 2026-11-08
+        public const int OpensBeforeRotation = 2;
         public const string Rotated = "code_test_rotated", Enrolled = "code_test_enrolled";
-        public static readonly Vector3 LucyStart = new Vector3(5f, 0f, 2f);
+        public static readonly Vector3 LucyStart = new Vector3(5f, 0f, 4f);
 
         public static List<RoomSpec> Rooms() => new List<RoomSpec>
         {
-            Spec(Hall, "THE HALL", 0, 0, 10, 8, DressHall, new Door('N', 5, Closet), new Door('E', 4, Post), new Door('W', 4, DayRoom)),
-            Spec(Closet, "THE CLOSET", 3, 8, 7, 12, DressCloset, new Door('S', 5, Hall)),
+            Spec(Hall, "THE HALL", 0, 0, 10, 8, DressHall, new Door('N', 2.5f, StoreA), new Door('N', 7.5f, StoreB), new Door('S', 5, WayOn),
+                new Door('E', 4, Post), new Door('W', 4, DayRoom)),
+            Spec(StoreA, "STORE A", 0, 8, 5, 12, r => DressStore(r, 2.5f), new Door('S', 2.5f, Hall)),
+            Spec(StoreB, "STORE B", 5, 8, 10, 12, r => DressStore(r, 7.5f), new Door('S', 7.5f, Hall)),
+            Spec(WayOn, "THE WAY ON", 3, -4, 7, 0, DressWayOn, new Door('N', 5, Hall)),
             Spec(Post, "THE SECURITY POST", 10, 1, 15, 7, DressPost, new Door('W', 4, Hall)),
             Spec(DayRoom, "THE DAY ROOM", -5, 1, 0, 7, DressDayRoom, new Door('E', 4, Hall)),
         };
@@ -99,22 +106,39 @@ namespace GlorifiedBody.Editor.Demo
         private static void DressHall(DemoRoom r)
         {
             r.PlaceLucy(LucyStart, 0f);
-            r.Prop("Table", new Vector3(2f, 0f, 6.3f), new Vector3(1.0f, 0.75f, 0.6f), 0.3f);
-            r.Item("Card", Card(), new Vector3(2f, 0.8f, 6.3f), new Vector3(0.12f, 0.01f, 0.08f));
-            GameObject door = r.LockedLeaf(r.DoorTo(Closet), CardId, "the test card");
-            r.CodeLock(door, new Vector3(6.3f, 1.2f, 7.82f), Vector3.back, Rotated, Enrolled);
-            FlagSwitch pa = r.Switch("PA_Call_1B", new Vector3(8.5f, 1.3f, 0.2f), Rotated, "Play the PA call 1B? The site codes rotate.", "play the PA call",
-                "Site codes rotate at this time. Re-enrol your card at a security station."); // the writer's call 1B (T5_pa.md)
-            pa.doneSpeaker = "PA";
-            EditorUtility.SetDirty(pa);
-            r.Sign("Sign_Rules", "CARD, THEN THE PA, THEN THE DOOR", new Vector3(5f, 2.55f, 0.16f), Vector3.forward, new Vector2(3f, 0.35f), 40);
+            r.Prop("Table", new Vector3(1.6f, 0f, 1.0f), new Vector3(1.0f, 0.75f, 0.6f), 0.3f);
+            r.Item("Card", Card(), new Vector3(1.6f, 0.8f, 1.0f), new Vector3(0.12f, 0.01f, 0.08f));
+            // Three card doors, each with its reader on the hall side.
+            CardDoor(r, StoreA, new Vector3(3.8f, 1.2f, 7.82f), Vector3.back);
+            CardDoor(r, StoreB, new Vector3(8.8f, 1.2f, 7.82f), Vector3.back);
+            CardDoor(r, WayOn, new Vector3(6.3f, 1.2f, 0.18f), Vector3.forward);
+            var rotation = new GameObject("Code_Rotation").AddComponent<CodeRotation>();
+            rotation.transform.SetParent(r.Props.transform, false);
+            rotation.cardItemId = CardId;
+            rotation.rotatedFlag = Rotated;
+            rotation.opensBeforeRotation = OpensBeforeRotation;
+            rotation.paLine = "Site codes rotate at this time. Re-enrol your card at a security station."; // the writer's call 1B (T5_pa.md)
+            EditorUtility.SetDirty(rotation);
+            r.Sign("Sign_Rules", "THE CARD OPENS TWO DOORS. THEN THE CODES ROTATE", new Vector3(5f, 2.6f, 7.84f), Vector3.back, new Vector2(4.4f, 0.32f), 40);
+            r.Sign("Sign_WayOn", "THE WAY ON", new Vector3(8f, 2.3f, 0.16f), Vector3.forward, new Vector2(1.6f, 0.35f), 40);
             r.Sign("Sign_East", "SECURITY POST", new Vector3(9.84f, 2.55f, 5.6f), Vector3.left, new Vector2(1.8f, 0.35f), 40);
             r.Sign("Sign_West", "DAY ROOM", new Vector3(0.16f, 2.55f, 5.6f), Vector3.right, new Vector2(1.4f, 0.35f), 40);
         }
 
-        private static void DressCloset(DemoRoom r)
+        private static void CardDoor(DemoRoom r, string to, Vector3 readerAt, Vector3 facing)
         {
-            r.Prop("Shelf", new Vector3(5f, 0f, 11.5f), new Vector3(2f, 1.6f, 0.4f), 0.26f);
+            GameObject door = r.LockedLeaf(r.DoorTo(to), CardId, "the test card");
+            r.CodeLock(door, readerAt, facing, Rotated, Enrolled);
+        }
+
+        private static void DressStore(DemoRoom r, float x)
+        {
+            r.Prop("Shelf", new Vector3(x, 0f, 11.5f), new Vector3(2f, 1.6f, 0.4f), 0.26f);
+        }
+
+        private static void DressWayOn(DemoRoom r)
+        {
+            r.Prop("Crate", new Vector3(5f, 0f, -3.3f), new Vector3(1.2f, 0.9f, 0.8f), 0.2f);
         }
 
         private static void DressPost(DemoRoom r)
@@ -125,7 +149,7 @@ namespace GlorifiedBody.Editor.Demo
 
         private static void DressDayRoom(DemoRoom r)
         {
-            r.Sign("Sign_Code", "5 2 8 1", new Vector3(-2.5f, 1.4f, 6.83f), Vector3.back, new Vector2(0.8f, 0.25f), 44);
+            r.Sign("Sign_Code", "8 6 7 5 3 0 9", new Vector3(-2.5f, 1.4f, 6.83f), Vector3.back, new Vector2(1.5f, 0.25f), 44);
         }
     }
 }

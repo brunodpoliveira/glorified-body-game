@@ -127,7 +127,7 @@ namespace GlorifiedBody.Editor.Demo
 
         /// <summary>
         /// W14: toys, a TV with the sound down, crayon drawings on the wall at a child's height. Among them a door with a red
-        /// dot and the digits 5 2 8 1, the crayon on the floor under it, and a long black car (PUZZLES.md §2B, not a puzzle yet).
+        /// dot and the digits 8 6 7 5 3 0 9 (Bruno, 2026-11-08), the crayon on the floor under it, and a long black car (PUZZLES.md §2B, not a puzzle yet).
         /// The room is empty, a cup is still warm (the writer: no child on screen in act 1).
         /// </summary>
         private static void W14(DemoRoom r)
@@ -152,7 +152,7 @@ namespace GlorifiedBody.Editor.Demo
             Flat(r, "Drawing_Car_Wheel_B", new Vector3(-5.75f, 0.82f, 13.84f), new Vector2(0.14f, 0.14f), black, Vector3.back);
             Flat(r, "Drawing_Door", new Vector3(-3f, 1f, 13.84f), new Vector2(0.32f, 0.5f), DemoRoom.Colour("crayon_brown", new Color(0.3f, 0.2f, 0.12f)), Vector3.back);
             Flat(r, "Drawing_Door_Dot", new Vector3(-2.92f, 1f, 13.825f), new Vector2(0.06f, 0.06f), DemoRoom.Colour("crayon_red", new Color(0.9f, 0.1f, 0.1f)), Vector3.back);
-            r.Sign("Sign_Code", "5 2 8 1", new Vector3(-3f, 1.4f, 13.83f), Vector3.back, new Vector2(0.6f, 0.2f), 44);
+            r.Sign("Sign_Code", "8 6 7 5 3 0 9", new Vector3(-3f, 1.4f, 13.83f), Vector3.back, new Vector2(1.1f, 0.2f), 44);
             Flat(r, "Drawing_Green", new Vector3(-1.6f, 1f, 13.84f), new Vector2(0.3f, 0.3f), DemoRoom.Colour("crayon_green", new Color(0.25f, 0.55f, 0.25f)), Vector3.back);
             Piece(r.Props, "Crayon", new Vector3(-3f, 0.015f, 13.6f), new Vector3(0.12f, 0.03f, 0.03f), DemoRoom.Colour("crayon_red", new Color(0.9f, 0.1f, 0.1f)), false);
             Label(r, "DAY ROOM", new Vector3(-0.17f, 2f, 11f), Vector3.left, 1f);

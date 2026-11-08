@@ -6,14 +6,16 @@ using GlorifiedBody.Systems;
 namespace GlorifiedBody.UI
 {
     /// <summary>
-    /// The four-digit keypad of a security terminal (CodeTerminal, DEMO_PLAN §10.2). It stops the world as a log does
+    /// The keypad of a security terminal (CodeTerminal, DEMO_PLAN §10.2): one digit for each digit of the terminal's code
+    /// (Bruno, 2026-11-08: "the correct code to rotate is 8675309", seven). It stops the world as a log does
     /// (GameState.Reading). The forward and back keys change the digit under the cursor, the turn keys move the cursor,
     /// and the number keys type a digit. The Interact key enters the code: the right one enrols the card and the keypad
     /// closes, a wrong one says so and stays open. The Inventory key or Escape closes it. It builds itself at the first use.
     /// </summary>
     public sealed class KeypadUI : MonoBehaviour
     {
-        public const int Length = 4;
+        /// <summary>The digits of the open terminal's code.</summary>
+        public int Length => digits.Length;
         public const float CloseAfterSeconds = 1.2f;
 
         public static KeypadUI Instance { get; private set; }
@@ -24,7 +26,7 @@ namespace GlorifiedBody.UI
         public string Message { get; private set; } = "";
         public string Digits => new string(System.Array.ConvertAll(digits, d => (char)('0' + d)));
 
-        private readonly int[] digits = new int[Length];
+        private int[] digits = new int[0];
         private bool open;
         private int openFrame;
         private float closeAt = -1f;
@@ -46,7 +48,7 @@ namespace GlorifiedBody.UI
         {
             if (panel == null) Build();
             Terminal = terminal;
-            System.Array.Clear(digits, 0, Length);
+            digits = new int[Mathf.Max(1, terminal.code.Length)];
             Cursor = 0;
             Message = "ENTER SITE CODE.";
             closeAt = -1f;
@@ -141,7 +143,7 @@ namespace GlorifiedBody.UI
             var line = new System.Text.StringBuilder();
             for (int i = 0; i < Length; i++)
             {
-                if (i > 0) line.Append("   ");
+                if (i > 0) line.Append(' ');
                 line.Append(i == Cursor ? $"[{digits[i]}]" : $" {digits[i]} ");
             }
             digitsText.text = line.ToString();
@@ -178,14 +180,14 @@ namespace GlorifiedBody.UI
             panel.transform.SetParent(root.transform, false);
             var rect = panel.GetComponent<RectTransform>();
             rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0.5f, 0.5f);
-            rect.sizeDelta = new Vector2(900f, 420f);
+            rect.sizeDelta = new Vector2(1100f, 420f);
             panel.AddComponent<Image>().color = new Color(0.03f, 0.05f, 0.04f, 0.95f);
 
-            Text title = MakeText(panel.transform, "Title", 26, new Color(0.55f, 0.9f, 0.6f), new Vector2(0f, 150f), new Vector2(860f, 40f));
+            Text title = MakeText(panel.transform, "Title", 26, new Color(0.55f, 0.9f, 0.6f), new Vector2(0f, 150f), new Vector2(1060f, 40f));
             title.text = "WARD SECURITY. SITE CODE";
-            digitsText = MakeText(panel.transform, "Digits", 64, new Color(0.7f, 1f, 0.75f), new Vector2(0f, 40f), new Vector2(860f, 90f));
-            messageText = MakeText(panel.transform, "Message", 26, new Color(0.9f, 0.95f, 0.85f), new Vector2(0f, -60f), new Vector2(860f, 40f));
-            keysText = MakeText(panel.transform, "Keys", 18, new Color(0.6f, 0.7f, 0.65f), new Vector2(0f, -160f), new Vector2(860f, 30f));
+            digitsText = MakeText(panel.transform, "Digits", 64, new Color(0.7f, 1f, 0.75f), new Vector2(0f, 40f), new Vector2(1060f, 90f));
+            messageText = MakeText(panel.transform, "Message", 26, new Color(0.9f, 0.95f, 0.85f), new Vector2(0f, -60f), new Vector2(1060f, 40f));
+            keysText = MakeText(panel.transform, "Keys", 18, new Color(0.6f, 0.7f, 0.65f), new Vector2(0f, -160f), new Vector2(1060f, 30f));
             panel.SetActive(false);
         }
 

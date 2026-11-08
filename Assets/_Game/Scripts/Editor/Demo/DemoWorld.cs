@@ -76,8 +76,10 @@ namespace GlorifiedBody.Editor.Demo
             RoomKit.BakeNavMesh(world, NavPath);
             MenuLoopSetup.EnsureGameplaySystems();
             MenuLoopSetup.EnsureRuntimeUi();
-            Sight(world); // last: the steps before it may still move a camera or a wall
             EditorSceneManager.SaveScene(scene, ScenePath);
+            // The sight lists from the saved scene, the one the game plays (2026-11-08: a scan of the scene before the save
+            // saw W14 and W6 from W1B, and the saved scene does not; the cull test failed after every full build).
+            Resight();
             RemoveOldRoomScenes();
             MenuLoopSetup.CleanBuildSettings();
             AssetDatabase.SaveAssets();

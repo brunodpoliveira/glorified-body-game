@@ -17,8 +17,9 @@ using GlorifiedBody.Systems;
 namespace GlorifiedBody.Automation
 {
     /// <summary>
-    /// The code bot (2026-11-08): in CODE TEST she takes the card, the PA rotates the codes, the reader refuses the card,
-    /// she reads the code on the day room wall, enrols the card at the terminal with the keypad, and the door opens.
+    /// The code bot (2026-11-08): in CODE TEST she takes the card, opens store A and store B with it, the PA rotates the
+    /// codes, the reader of the way on refuses the card, she reads the code on the day room wall, enrols the card at the
+    /// terminal with the keypad (seven digits), and the way on opens.
     /// Shots: shots/code_&lt;n&gt;_&lt;moment&gt;.png (the HUD, the messages and the keypad over the room). Active only when
     /// BotArgs.Bot == "code": tools/unity.sh play CodeTest Main_Menu code 300
     /// </summary>
@@ -101,11 +102,18 @@ namespace GlorifiedBody.Automation
             padDriver.Pad = pad;
             tank = lucy.GetComponent<TankController>();
             interactor = lucy.GetComponent<Interactor>();
-            LockedDoor door = FindFirstObjectByType<LockedDoor>();
+            LockedDoor[] doors = FindObjectsByType<LockedDoor>(FindObjectsSortMode.None);
+            LockedDoor door = doors.FirstOrDefault(d => d.name == "Door_K6");
+            LockedDoor storeA = doors.FirstOrDefault(d => d.name == "Door_K2"), storeB = doors.FirstOrDefault(d => d.name == "Door_K5");
             CodeTerminal terminal = FindFirstObjectByType<CodeTerminal>();
-            FlagSwitch pa = GameObject.Find("PA_Call_1B")?.GetComponent<FlagSwitch>();
+            CodeRotation rotation = FindFirstObjectByType<CodeRotation>();
             ItemPickup card = FindObjectsByType<ItemPickup>(FindObjectsSortMode.None).FirstOrDefault(p => p.item != null && p.item.itemId == "code_test_card");
-            if (door == null || terminal == null || pa == null || card == null) { Record("pieces_in_room", false, "no door, terminal, switch or card (CodeTestSetup.BuildCodeTest)"); Finish(); yield break; }
+            if (door == null || storeA == null || storeB == null || terminal == null || rotation == null || card == null)
+            {
+                Record("pieces_in_room", false, "no doors, terminal, rotation or card (CodeTestSetup.BuildCodeTest)");
+                Finish();
+                yield break;
+            }
 
             // 1. The card from the table.
             yield return Face(card.Point + Vector3.back * 0.9f, card.Point);
@@ -113,18 +121,29 @@ namespace GlorifiedBody.Automation
             yield return Press(InputManager.GameAction.Interact);
             Record("she_takes_the_card", interactor.Inventory.Has("code_test_card"), interactor.LastResult);
 
-            // 2. The PA call 1B: the codes rotate.
-            yield return Face(pa.Point + Vector3.forward * 1f, pa.Point);
+            // 2. The card opens store A and store B, then the PA call 1B rotates the codes.
+            yield return Face(storeA.Point + Vector3.back * 1.1f, storeA.Point);
+            yield return Press(InputManager.GameAction.Interact);
+            yield return Press(InputManager.GameAction.Interact);
+            yield return BotClock.Wait(1f);
+            Record("the_card_opens_store_a", storeA.IsOpen && !StoryFlags.Has(rotation.rotatedFlag), interactor.LastResult);
+            yield return Face(storeB.Point + Vector3.back * 1.1f, storeB.Point);
             yield return Press(InputManager.GameAction.Interact);
             yield return Press(InputManager.GameAction.Interact);
             yield return BotClock.Wait(0.5f);
-            Record("the_codes_rotate", StoryFlags.Has(pa.flag), interactor.LastResult);
+            Record("the_card_opens_store_b", storeB.IsOpen, interactor.LastResult);
+            t0 = BotClock.Now;
+            while (!StoryFlags.Has(rotation.rotatedFlag) && BotClock.Now - t0 < rotation.delaySeconds + 3f) yield return null;
+            yield return BotClock.Wait(1.2f);
+            // Through the room's own camera: the cull draws only the rooms that camera sees, so a free camera shows a black store.
+            yield return Shot("pa_rotates_the_codes");
+            Record("the_codes_rotate", StoryFlags.Has(rotation.rotatedFlag), $"opened={rotation.Opened}");
             yield return BotClock.Wait(2.2f);
 
-            // 3. The reader refuses the card: red, the words, two bleats.
-            yield return Face(door.Point + Vector3.back * 1.1f, door.Point);
+            // 3. The reader of the way on refuses the card: red, the words, two bleats.
+            yield return Face(door.Point + Vector3.forward * 1.1f, door.Point);
             yield return Press(InputManager.GameAction.Interact);
-            yield return Shot("reader_refuses", door.Point + new Vector3(-1.6f, 0.6f, -2.6f), door.Point + Vector3.right * 0.6f);
+            yield return Shot("reader_refuses", door.Point + new Vector3(-1.6f, 0.6f, 2.6f), door.Point + Vector3.right * 0.6f);
             Record("the_reader_refuses_the_card", interactor.LastResult.StartsWith("rotated:") && !door.IsOpen && interactor.Text == LockedDoor.RotatedText, interactor.LastResult);
             yield return BotClock.Wait(2.2f);
 
@@ -146,7 +165,7 @@ namespace GlorifiedBody.Automation
                 {
                     int want = c - '0';
                     for (int k = 0; k < want; k++) yield return Press(InputManager.GameAction.Forward);
-                    if (GlorifiedBody.UI.KeypadUI.Instance.Cursor < GlorifiedBody.UI.KeypadUI.Length - 1) yield return Press(InputManager.GameAction.TurnRight);
+                    if (GlorifiedBody.UI.KeypadUI.Instance.Cursor < GlorifiedBody.UI.KeypadUI.Instance.Length - 1) yield return Press(InputManager.GameAction.TurnRight);
                 }
                 yield return Shot("keypad", terminal.Point + new Vector3(1.2f, 0.7f, -1.8f), terminal.transform.position);
                 yield return Press(InputManager.GameAction.Interact);
@@ -157,19 +176,20 @@ namespace GlorifiedBody.Automation
             Record("the_keypad_enrols_the_card", opened && StoryFlags.Has(terminal.enrolledFlag) && !GlorifiedBody.UI.KeypadUI.IsOpen && gm.IsPlaying,
                 $"digits={(GlorifiedBody.UI.KeypadUI.Instance != null ? GlorifiedBody.UI.KeypadUI.Instance.Digits : "-")} tries={terminal.Tries}");
 
-            // 6. The reader is green, and the card opens the door.
-            yield return Face(door.Point + Vector3.back * 1.1f, door.Point);
+            // 6. The reader is green, and the card opens the way on.
+            yield return Face(door.Point + Vector3.forward * 1.1f, door.Point);
             yield return BotClock.Wait(0.3f);
-            yield return Shot("reader_green", door.Point + new Vector3(-1.6f, 0.6f, -2.6f), door.Point + Vector3.right * 0.6f);
+            yield return Shot("reader_green", door.Point + new Vector3(-1.6f, 0.6f, 2.6f), door.Point + Vector3.right * 0.6f);
+            Vector3 doorway = door.Point; // the point is the leaf, and the leaf slides away
             yield return Press(InputManager.GameAction.Interact);
             yield return Press(InputManager.GameAction.Interact);
             yield return BotClock.Wait(1.2f);
-            yield return Shot("door_open", door.Point + new Vector3(-1.6f, 0.6f, -2.6f), door.Point + Vector3.forward * 1.5f);
+            yield return Shot("door_open", doorway + new Vector3(-1.6f, 0.6f, 2.6f), doorway + Vector3.back * 1.5f);
             Record("the_door_opens", door.IsOpen, interactor.LastResult);
             Finish();
         }
 
-        private const string CodeTestDigits = "5281";
+        private const string CodeTestDigits = "8675309";
         private TankController tank;
         private Interactor interactor;
 
