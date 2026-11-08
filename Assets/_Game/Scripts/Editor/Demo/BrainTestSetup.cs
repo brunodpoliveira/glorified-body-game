@@ -20,7 +20,8 @@ namespace GlorifiedBody.Editor.Demo
     /// The BRAIN TEST room (2026-11-08): the brain fight of DEMO_PLAN §14.1 in isolation, before B1 enters the demo. Three
     /// rooms built like the demo:
     ///   B0, the unfinished wing, where she starts;
-    ///   B1, the brain sector, 18 x 12 m and 6 m high, pink-grey (the greybox stand-in of §12): four nodes on the walls,
+    ///   B1, the brain sector, 18 x 12 m and 6 m high, pink-grey (the greybox stand-in of §12): the brain itself, one mass high on the north wall
+    ///   (Bruno, 2026-11-08: "it also needs hp for the boss", "it should by default lock on onto the brain"),
     ///   six work lights, six grabber mouths, and the brain's eye, a camera high on the south wall that follows her;
     ///   B2, the builders' door, behind a leaf that goes when the brain dies.
     /// Batch: tools/unity.sh exec GlorifiedBody.Editor.Demo.BrainTestSetup.BuildBrainTest
@@ -33,7 +34,7 @@ namespace GlorifiedBody.Editor.Demo
         public const string Floor = "brain_test";
         public const string Wing = "B0", Sector = "B1", Exit = "B2";
         public const string DeadFlag = "brain_test_dead";
-        public const float NodeHealth = 150f; // PROPOSED: four nodes, 600 in all
+        public const float BrainHealth = 600f; // PROPOSED
         public static readonly Vector3 LucyStart = new Vector3(9f, 0f, 1.5f);
 
         public static List<RoomSpec> Rooms() => new List<RoomSpec>
@@ -129,17 +130,16 @@ namespace GlorifiedBody.Editor.Demo
         private static void DressSector(DemoRoom r)
         {
             r.ExtraCamera("eye", new Vector3(9f, 5.4f, 6.8f), new Vector3(9f, 0.5f, 13f), 70f, new Vector3(9f, 1.5f, 12f), new Vector3(17.6f, 3f, 11.6f));
-            // The nodes: swellings of the folds, two on each long wall.
-            var nodes = new[] { (new Vector3(0.45f, 1.4f, 10f), Vector3.right), (new Vector3(0.45f, 1.4f, 14.5f), Vector3.right), (new Vector3(17.55f, 1.4f, 9.5f), Vector3.left), (new Vector3(17.55f, 1.4f, 15f), Vector3.left) };
-            for (int i = 0; i < nodes.Length; i++)
+            // The brain: one mass high on the north wall, over the builders' door, in the eye's view. All its life is here,
+            // and the auto-lock picks it first (LockOnTargetable.IsPreferred).
             {
-                GameObject node = r.Box(r.Props, "Brain_Node_" + i, nodes[i].Item1, new Vector3(0.6f, 1.0f, 1.0f), DemoRoom.Colour("brain_node", Color.white));
+                GameObject node = r.Box(r.Props, "The_Brain", new Vector3(9f, 4.5f, 17.2f), new Vector3(7f, 2.4f, 1.3f), DemoRoom.Colour("brain_node", Color.white));
                 node.isStatic = false;
                 node.tag = "Enemy";
                 node.layer = LayerMask.NameToLayer("Enemy");
                 Health health = MenuLoopSetup.EnsureComponent<Health>(node);
                 var so = new SerializedObject(health);
-                so.FindProperty("maxHealth").floatValue = NodeHealth;
+                so.FindProperty("maxHealth").floatValue = BrainHealth;
                 so.FindProperty("destroyOnDeath").boolValue = false;
                 so.ApplyModifiedPropertiesWithoutUndo();
                 LockOnTargetable target = MenuLoopSetup.EnsureComponent<LockOnTargetable>(node);
@@ -148,6 +148,7 @@ namespace GlorifiedBody.Editor.Demo
                 tso.ApplyModifiedPropertiesWithoutUndo();
                 target.SetHeavy(true);       // the brain is not lifted
                 target.SetShockImmune(true); // a boss: no short, no mk_edgar
+                target.SetPreferred(true);   // she aims at it unless she switches
                 MenuLoopSetup.EnsureComponent<BrainNode>(node);
                 EditorUtility.SetDirty(target);
             }

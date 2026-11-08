@@ -46,3 +46,34 @@ Shots: `~/MEGA/glorified-body-renders/game/brain_fight_2026-11-08/`.
 2. The real look: the room, the eye, the grabbers and the nodes are greybox.
 3. The feel: the timings and the damage need Bruno's hands on the keys.
 4. B1 in the demo, between U1 and X1, with cutscenes 09 and 10 around it. About 0.5 day after Bruno's feedback.
+
+## Later that day: the aim, the stagger, its life, the default lock
+
+```text
+the brain boss is impossible to attack; it locks and tracks so effectively i don't have any opening to attack. what it
+is supposed to ahappen is that the brain starts unlocked, then it tracks the player at some speed ()that they can
+oputrun dogde. then once fully locked it charges up and then fires/damages the player; making enough damage staggers
+the brain to cancel the attack. iot also needs hp for the boss
+to be clear, the player can make enough damage to the brain so the brain will stagger
+and also, lucy should aim at the brain as default; it should by default lock on onto the brain
+```
+
+The old strike was a ring that always closed on her, so she had no time to attack. The new one (numbers PROPOSED):
+
+1. The aim, a ring on the floor, starts in the corner of the sector farthest from her. It follows her at 1.4 m/s.
+   Her walk is 1.6 m/s and her run 3.6 m/s, so she can outrun it. Her slow walk on the brain floor (about 1 m/s) is
+   slower than the aim.
+2. While she is inside the ring (0.9 m), the lock fills in 1 s. Outside, it drains twice as fast.
+3. A full lock starts the charge (2 s). The aim still follows her at its speed. At the end, the strike lands on the
+   aim: 25 damage within 1.1 m. She escapes it if she runs out of the ring in time.
+4. 30 damage to the brain during the charge staggers it (a full blast does 35, 70 with the MK boost). The strike does
+   not come, the brain reels for 2.5 s, and the aim starts again in the far corner.
+5. The brain is one body now: a mass high on the north wall, over the builders' door, with 600 HP. The four wall
+   nodes are gone. Its life is on a bar at the top of the screen ("THE BRAIN").
+6. The auto-lock picks the brain first, out to the drop range (`LockOnTargetable.IsPreferred`). Tab reaches a grabber,
+   and when the grabber is gone the lock goes back to the brain.
+7. A throw at a target high on a wall now rises to its lock point (`TelekinesisLift.HighTarget`). Before, a throw
+   arced down to the chest of a target on the floor and passed under the brain.
+
+`BrainFightTests` (12: the aim, the lock and the charge, the stagger, the life bar, the default lock) and
+`PowersAndBarsTests`: 64 of 64. The brain bot: 7 of 7. Shots: `brain_fight_2026-11-08/v2_*.png`.

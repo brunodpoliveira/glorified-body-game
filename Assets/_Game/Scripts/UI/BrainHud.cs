@@ -9,18 +9,22 @@ namespace GlorifiedBody.UI
     /// What the screen shows in the brain fight (DEMO_SCRIPT, cutscene 09 note 3: "The brain fight has no HUD bars in the
     /// Crown style. The game agent decides what the player sees instead"). PROPOSED, 2026-11-08: the brain's own view. A lock
     /// frame on her that closes with its ring and turns red, and her vitals as it reads them (SUBJECT, a percentage). The
-    /// Crown HUD is gone (PlayerHudFlags.CrownGone). BrainFight adds it.
+    /// Crown HUD is gone (PlayerHudFlags.CrownGone). BrainFight adds it. Its own life on a bar at the top (Bruno, 2026-11-08:
+    /// "it also needs hp for the boss"), the sum of its nodes, PROPOSED.
     /// </summary>
     public sealed class BrainHud : MonoBehaviour
     {
         private RectTransform frame;
         private Image[] sides;
         private Text vitals;
+        private RectTransform lifeFill;
         private Canvas canvas;
 
         /// <summary>The words of the vitals line now (the tests).</summary>
         public string VitalsShown => vitals != null && vitals.gameObject.activeInHierarchy ? vitals.text : "";
         public bool FrameShown => frame != null && frame.gameObject.activeSelf;
+        /// <summary>The share of its life the bar shows (the tests).</summary>
+        public float LifeShown => lifeFill != null ? lifeFill.anchorMax.x : -1f;
 
         private void Start() => Build();
 
@@ -35,6 +39,7 @@ namespace GlorifiedBody.UI
             if (lucy == null || cam == null) return;
             Health h = lucy.GetComponentInChildren<Health>();
             vitals.text = h != null ? $"SUBJECT  {Mathf.CeilToInt(h.HealthPercent * 100f)}%" : "SUBJECT";
+            lifeFill.anchorMax = new Vector2(Mathf.Clamp01(fight.LifeShare), 1f);
             // Viewport units: right for any size of the screen or of a shot's camera.
             Vector3 view = cam.WorldToViewportPoint(lucy.transform.position + Vector3.up * 1.0f);
             frame.gameObject.SetActive(view.z > 0f);
@@ -90,6 +95,37 @@ namespace GlorifiedBody.UI
             vitals.fontStyle = FontStyle.Bold;
             vitals.color = new Color(1f, 0.3f, 0.25f);
             vitals.alignment = TextAnchor.UpperLeft;
+            // Its life: a dark red bar at the top middle, the name over it.
+            var barObj = new GameObject("BrainLife", typeof(RectTransform));
+            barObj.transform.SetParent(root.transform, false);
+            var bar = barObj.GetComponent<RectTransform>();
+            bar.anchorMin = bar.anchorMax = new Vector2(0.5f, 1f);
+            bar.pivot = new Vector2(0.5f, 1f);
+            bar.anchoredPosition = new Vector2(0f, -70f);
+            bar.sizeDelta = new Vector2(760f, 18f);
+            barObj.AddComponent<Image>().color = new Color(0.08f, 0.02f, 0.02f, 0.85f);
+            var fillObj = new GameObject("Fill", typeof(RectTransform));
+            fillObj.transform.SetParent(barObj.transform, false);
+            lifeFill = fillObj.GetComponent<RectTransform>();
+            lifeFill.anchorMin = Vector2.zero;
+            lifeFill.anchorMax = Vector2.one;
+            lifeFill.offsetMin = new Vector2(2f, 2f);
+            lifeFill.offsetMax = new Vector2(-2f, -2f);
+            fillObj.AddComponent<Image>().color = new Color(0.75f, 0.12f, 0.16f);
+            var nameObj = new GameObject("BrainName", typeof(RectTransform));
+            nameObj.transform.SetParent(barObj.transform, false);
+            var nr = nameObj.GetComponent<RectTransform>();
+            nr.anchorMin = nr.anchorMax = new Vector2(0.5f, 1f);
+            nr.pivot = new Vector2(0.5f, 0f);
+            nr.anchoredPosition = new Vector2(0f, 4f);
+            nr.sizeDelta = new Vector2(760f, 30f);
+            var name = nameObj.AddComponent<Text>();
+            name.font = vitals.font;
+            name.fontSize = 22;
+            name.fontStyle = FontStyle.Bold;
+            name.color = new Color(0.9f, 0.75f, 0.75f);
+            name.alignment = TextAnchor.LowerCenter;
+            name.text = "THE BRAIN";
             canvas.enabled = false;
         }
     }

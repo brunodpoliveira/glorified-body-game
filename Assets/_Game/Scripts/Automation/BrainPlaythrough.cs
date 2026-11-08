@@ -22,7 +22,7 @@ namespace GlorifiedBody.Automation
 {
     /// <summary>
     /// The brain bot (2026-11-08): in BRAIN TEST she walks into the sector and the fight begins under the brain's eye. The
-    /// ring closes and she steps out of the strike, a grabber pins her and a blast frees her, a second one she rips out with
+    /// aim follows her and she outruns its strike, a blast staggers it, a grabber pins her and a blast frees her, a second one she rips out with
     /// mk_orzabal and throws at a node, the work lights go out as the nodes die, and its death opens the exit. Shots:
     /// shots/brain_&lt;n&gt;_&lt;moment&gt;.png through the game camera (the eye). Active only when BotArgs.Bot == "brain":
     /// tools/unity.sh play BrainTest Main_Menu brain 300
@@ -116,29 +116,42 @@ namespace GlorifiedBody.Automation
             fight.firstGrab = 999f;
             foreach (PowerKind k in new[] { PowerKind.Blast, PowerKind.Telekinesis }) stats.FillMk(k);
 
-            // 1. She steps in: the eye, the ring.
+            // 1. She steps in: the eye; the aim starts far and follows her.
             tank.Teleport(sector.Centre + new Vector3(0f, 0f, -2f), 0f);
             t0 = BotClock.Now;
             while (fight.Current != BrainFight.Phase.Fighting && BotClock.Now - t0 < 3f) yield return null;
-            t0 = BotClock.Now;
-            while (fight.RingProgress < 0.5f && BotClock.Now - t0 < 5f) yield return null;
-            yield return Shot("the_ring_closes");
-            Record("the_fight_begins", fight.Current == BrainFight.Phase.Fighting && FixedCameraDirector.Instance.Current == fight.eye, $"camera={FixedCameraDirector.Instance.CurrentName}");
+            yield return BotClock.Wait(1.2f);
+            yield return Shot("the_aim_follows");
+            Record("the_fight_begins", fight.Current == BrainFight.Phase.Fighting && FixedCameraDirector.Instance.Current == fight.eye && fight.Aiming == BrainFight.AimState.Tracking,
+                $"camera={FixedCameraDirector.Instance.CurrentName} aim={fight.Aiming}");
 
-            // 2. The ring closes: she steps out of the strike.
+            // 2. She stands in the aim: the lock, the charge. She runs out before it fires.
+            tank.Teleport(fight.Aim, 0f);
             t0 = BotClock.Now;
-            while (!fight.StrikePoint.HasValue && BotClock.Now - t0 < 5f) yield return null;
-            int hits = fight.StrikeHits;
-            tank.Teleport(fight.StrikePoint.Value + Vector3.right * 2.5f, 0f);
-            yield return null;
-            yield return Shot("she_steps_out");
+            while (fight.Aiming != BrainFight.AimState.Charging && BotClock.Now - t0 < 4f) yield return null;
+            yield return BotClock.Wait(fight.chargeSeconds * 0.4f);
+            yield return Shot("the_charge");
+            int hits = fight.StrikeHits, strikes = fight.Strikes;
+            tank.Teleport(fight.Aim + Vector3.right * 3.5f, 0f);
             t0 = BotClock.Now;
-            int strikes = fight.Strikes;
-            while (fight.Strikes == strikes && BotClock.Now - t0 < 3f) yield return null;
-            Record("she_dodges_the_strike", fight.StrikeHits == hits, $"strikes={fight.Strikes} hits={fight.StrikeHits}");
+            while (fight.Strikes == strikes && BotClock.Now - t0 < 4f) yield return null;
+            Record("she_outruns_the_strike", fight.Strikes > strikes && fight.StrikeHits == hits, $"strikes={fight.Strikes} hits={fight.StrikeHits}");
+
+            // 2b. The next charge: a full blast on a node staggers it.
+            t0 = BotClock.Now;
+            while (fight.Aiming != BrainFight.AimState.Tracking && BotClock.Now - t0 < 4f) yield return null;
+            tank.Teleport(fight.Aim, 0f);
+            t0 = BotClock.Now;
+            while (fight.Aiming != BrainFight.AimState.Charging && BotClock.Now - t0 < 4f) yield return null;
+            powers.Select(PowerKind.Blast);
+            powers.FireAt(powers.Selected, 1f, fight.nodes[0].GetComponent<LockOnTargetable>());
+            yield return BotClock.Wait(0.2f);
+            yield return Shot("staggered");
+            Record("a_blast_staggers_it", fight.Aiming == BrainFight.AimState.Staggered && fight.Staggers == 1, $"aim={fight.Aiming} damage={fight.ChargeDamage:0}");
 
             // 3. A grabber pins her; a blast frees her.
-            fight.restSeconds = 99f;
+            fight.trackSpeed = 0f; // the grabbers alone from here
+            fight.ResetAim();
             Grabber g = fight.Grab();
             t0 = BotClock.Now;
             while (g != null && !g.Holding && BotClock.Now - t0 < 3f) yield return null;

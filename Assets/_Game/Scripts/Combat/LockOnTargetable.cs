@@ -34,6 +34,9 @@ namespace GlorifiedBody.Combat
         [SerializeField] private bool shockImmune;
         [Tooltip("An unarmed civilian: the auto-lock never picks it, the target switch does (a kill is her choice). PROPOSED.")]
         [SerializeField] private bool civilian;
+        [Tooltip("The default target (a boss: Bruno, 2026-11-08, \"it should by default lock on onto the brain\"): the auto-lock " +
+                 "picks it first, out to the drop range.")]
+        [SerializeField] private bool preferred;
 
         private Health cachedHealth;
         private bool registered;
@@ -48,6 +51,8 @@ namespace GlorifiedBody.Combat
         public bool IsHeavy => heavy;
         public bool IsShockImmune => shockImmune;
         public bool IsCivilian => civilian;
+        public bool IsPreferred => preferred;
+        public void SetPreferred(bool value) => preferred = value;
 
         private void Awake()
         {

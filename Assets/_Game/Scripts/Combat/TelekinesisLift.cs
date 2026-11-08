@@ -38,6 +38,8 @@ namespace GlorifiedBody.Combat
         private const float LandingSplashRadius = 1f;
         private const float SlamSplashRadius = 1.3f;
         private const float ThrowLowRoot = 0.3f;      // m: the root's height at the target (the hips near his chest)
+        /// <summary>A lock point this far over the floor is a target high on a wall: the throw rises to it.</summary>
+        public const float HighTarget = 2.5f;
         private const float BodySweepLow = 0.25f, BodySweepHigh = 1.4f, BodySweepRadius = 0.25f;
         private const float BodyCoreRadius = 0.02f;   // its middle line: a wall inside the body's width at the start still stops it
         private const float HangSkin = 0.03f;         // m: the gap a hanging body keeps from a wall
@@ -391,6 +393,11 @@ namespace GlorifiedBody.Combat
             float flown = 0f;
             Health hit = null;
             Vector3 hitPoint = start;
+            // The end of the arc: a target's chest on the floor; a target high on a wall (the brain, 2026-11-08) gets a
+            // throw that rises to its lock point.
+            float endY = floor.y + ThrowLowRoot;
+            LockOnTargetable aimed = launchTarget != null ? launchTarget.GetComponent<LockOnTargetable>() : null;
+            if (aimed != null && aimed.GetLockPoint().y > floor.y + HighTarget) endY = aimed.GetLockPoint().y - 0.3f;
 
             while (flown < maxMetres && hit == null)
             {
@@ -409,7 +416,7 @@ namespace GlorifiedBody.Combat
                 Vector3 next = transform.position + direction * step;
                 // A thrown body arcs down to the target's chest as it flies, so its legs meet the cover in front of
                 // him (the breakable cover, 2026-10-24), PROPOSED. A throw at nobody flies level.
-                if (launchTarget != null) next.y = Mathf.Lerp(startY, floor.y + ThrowLowRoot, Mathf.Clamp01((flown + step) / Mathf.Max(0.1f, maxMetres)));
+                if (launchTarget != null) next.y = Mathf.Lerp(startY, endY, Mathf.Clamp01((flown + step) / Mathf.Max(0.1f, maxMetres)));
                 // A wall stops it, at any height of the body. A breakable in the way takes the hit; when it breaks,
                 // the body flies on through it.
                 if (Obstacle(transform.position, next - transform.position, HitRadius, out RaycastHit wall))

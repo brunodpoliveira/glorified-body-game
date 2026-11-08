@@ -5,9 +5,10 @@ using GlorifiedBody.Core;
 namespace GlorifiedBody.Boss
 {
     /// <summary>
-    /// A weak point of the brain: a swelling of the folds on a wall (PROPOSED, 2026-11-08: the design says the brain dies,
-    /// not how she hurts it). Her powers hurt it like any target, and a thrown grabber too. It is a boss part: too heavy to
-    /// lift, immune to the short, no mk_edgar (LockOnTargetable heavy and shock immune). A dead node goes grey and stays.
+    /// The body of the brain that she hurts (2026-11-08; Bruno: "it also needs hp for the boss", "it should by default lock on
+    /// onto the brain"). BRAIN TEST has one, the mass over the builders' door, with all its life. Her powers hurt it like any
+    /// target, and a thrown grabber too. It is a boss part: too heavy to lift, immune to the short, no mk_edgar, and the
+    /// auto-lock picks it first (LockOnTargetable heavy, shock immune, preferred). A dead one goes grey and stays.
     /// </summary>
     [RequireComponent(typeof(Health))]
     public sealed class BrainNode : MonoBehaviour

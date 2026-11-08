@@ -113,7 +113,8 @@ namespace GlorifiedBody.Player
                 else if (Time.time - unseenSince > LostSightSeconds) SetTarget(null);
             }
 
-            // Auto-lock: the nearest live target in range, never a civilian. Distance only, no angle (she turns to it).
+            // Auto-lock: a default target (a boss), else the nearest live target in range, never a civilian. Distance only,
+            // no angle (she turns to it).
             if (CurrentTarget == null)
             {
                 LockOnTargetable nearest = Nearest();
@@ -163,6 +164,13 @@ namespace GlorifiedBody.Player
             LockOnTargetable best = null;
             float bestDistance = lockRange * lockRange;
             var all = TargetRegistry.All;
+            // A default target (a boss) first, out to the drop range: she aims at the brain unless she switches.
+            for (int i = 0; i < all.Count; i++)
+            {
+                LockOnTargetable t = all[i];
+                if (t == null || !t.IsPreferred || !t.Selectable || !t.IsAlive) continue;
+                if ((t.GetLockPoint() - transform.position).sqrMagnitude <= dropRange * dropRange && InSight(t)) return t;
+            }
             for (int i = 0; i < all.Count; i++)
             {
                 LockOnTargetable t = all[i];

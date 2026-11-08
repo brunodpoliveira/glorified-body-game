@@ -21,7 +21,8 @@ namespace GlorifiedBody.Tests.PlayMode
 {
     /// <summary>
     /// The brain fight (DEMO_PLAN §14.1, CANON round 10) in the BRAIN TEST room: the eye watches her and the Crown HUD goes,
-    /// the ring closes and the strike lands where she stood, standing still slows her, a grabber pins her and a hit frees
+    /// its aim starts far and follows her slower than her walk, a full lock charges a strike that she escapes by running or
+    /// cancels by damage (a stagger), its life on a bar of its own, standing still slows her, a grabber pins her and a hit frees
     /// her, mk_orzabal rips a grabber out and throws it at a node, the work lights go out as the nodes die, its death opens
     /// the exit, and it is a boss (no lift, no short, no mk_edgar).
     /// Batch: tools/unity.sh test playmode "BrainFightTests"
@@ -104,30 +105,126 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator TheStrike_LandsWhereSheStood_AndSheDodgesItByMoving()
+        public IEnumerator TheAim_StartsFar_FollowsHerSlowerThanHerWalk_AndSheOutrunsIt()
         {
+            // Bruno, 2026-11-08: "the brain starts unlocked, then it tracks the player at some speed that they can
+            // outrun/dodge".
+            yield return Enter(Middle);
+            Assert.AreEqual(BrainFight.AimState.Tracking, fight.Aiming);
+            Assert.AreEqual(0f, fight.LockProgress, "it starts unlocked");
+            float d0 = Flat(fight.Aim - tank.transform.position);
+            Assert.Greater(d0, 3f, "far from her");
+            Assert.Less(fight.trackSpeed, tank.WalkSpeed, "slower than her walk");
+            yield return new WaitForSeconds(1f);
+            float d1 = Flat(fight.Aim - tank.transform.position);
+            Assert.AreEqual(d0 - fight.trackSpeed, d1, 0.4f, "it follows her at its speed");
+
+            // Caught: the lock fills. She runs 3 m on: it drains, and nothing fires.
+            tank.Teleport(fight.Aim, 0f);
+            yield return WaitUntil(() => fight.LockProgress > 0.4f, 2f);
+            Assert.Greater(fight.LockProgress, 0.4f, "in the ring the lock fills");
+            tank.Teleport(fight.Aim + Vector3.right * 3f, 0f);
+            yield return WaitUntil(() => fight.LockProgress <= 0f, 2f);
+            Assert.AreEqual(0f, fight.LockProgress, "out of it, it drains");
+            Assert.AreEqual(0, fight.Strikes, "no strike");
+        }
+
+        [UnityTest]
+        public IEnumerator AFullLock_ChargesAStrike_ThatHitsHer_OrMissesWhenSheRunsOut()
+        {
+            fight.lockSeconds = 0.3f;
+            fight.chargeSeconds = 0.8f;
             fight.restSeconds = 0.2f;
-            fight.ringSeconds = 0.6f;
-            fight.strikeDelay = 0.6f;
             yield return Enter(Middle);
             float hp0 = health.CurrentHealth;
-            yield return WaitUntil(() => fight.Strikes >= 1, 4f);
-            Assert.AreEqual(1, fight.StrikeHits, "she stood still: the strike lands on her");
+            tank.Teleport(fight.Aim, 0f);
+            yield return WaitUntil(() => fight.Aiming == BrainFight.AimState.Charging, 2f);
+            Assert.AreEqual(BrainFight.AimState.Charging, fight.Aiming, "full lock: the charge");
+            Assert.GreaterOrEqual(fight.RingProgress, 0f, "the HUD frame closes with the charge");
+            yield return WaitUntil(() => fight.Strikes >= 1, 3f);
+            Assert.AreEqual(1, fight.StrikeHits, "she stood in it: the strike hits her");
             Assert.Less(health.CurrentHealth, hp0);
             Assert.AreEqual(BrainFight.KillerId, DeathMenuUI.LastKillerId, "its death screen if it kills her");
 
             float hp1 = health.CurrentHealth;
-            yield return WaitUntil(() => fight.StrikePoint.HasValue, 4f);
-            tank.Teleport(fight.StrikePoint.Value + Vector3.right * 3f, 0f); // the ring closed: she steps away before it lands
+            yield return WaitUntil(() => fight.Aiming == BrainFight.AimState.Charging, 3f);
+            tank.Teleport(fight.Aim + Vector3.right * 3.5f, 0f); // she runs: the aim cannot follow in time
             yield return WaitUntil(() => fight.Strikes >= 2, 3f);
-            Assert.AreEqual(1, fight.StrikeHits, "the strike lands where she stood, not on her");
+            Assert.AreEqual(1, fight.StrikeHits, "it fires at its aim, and she is not there");
             Assert.AreEqual(hp1, health.CurrentHealth, 0.01f);
         }
 
         [UnityTest]
+        public IEnumerator DamageInTheCharge_StaggersIt_AndCancelsTheStrike_ThenTheAimStartsFarAgain()
+        {
+            // "making enough damage staggers the brain to cancel the attack".
+            fight.lockSeconds = 0.2f;
+            fight.chargeSeconds = 5f;
+            fight.staggerSeconds = 0.6f;
+            yield return Enter(Middle);
+            tank.Teleport(fight.Aim, 0f);
+            yield return WaitUntil(() => fight.Aiming == BrainFight.AimState.Charging, 2f);
+            BrainNode node = fight.nodes[0];
+            float hp0 = node.Health.CurrentHealth;
+            powers.Select(PowerKind.Blast);
+            powers.FireAt(powers.Selected, 1f, node.GetComponent<LockOnTargetable>());
+            yield return null;
+            Assert.Less(node.Health.CurrentHealth, hp0, "the blast hurts it");
+            Assert.GreaterOrEqual(fight.ChargeDamage, fight.staggerDamage, "a full blast is enough");
+            Assert.AreEqual(BrainFight.AimState.Staggered, fight.Aiming, "it reels");
+            Assert.AreEqual(1, fight.Staggers);
+            Assert.Less(fight.RingProgress, 0f, "no charge now");
+            yield return new WaitForSeconds(fight.staggerSeconds + 0.2f);
+            Assert.AreEqual(0, fight.Strikes, "the strike never came");
+            Assert.AreEqual(BrainFight.AimState.Tracking, fight.Aiming);
+            Assert.Greater(Flat(fight.Aim - tank.transform.position), 3f, "the aim starts far again, unlocked");
+        }
+
+        [UnityTest]
+        public IEnumerator ItsLife_IsOnABarOfItsOwn()
+        {
+            // "it also needs hp for the boss".
+            fight.trackSpeed = 0f;
+            yield return Enter(Middle);
+            yield return null;
+            BrainHud hud = fight.GetComponent<BrainHud>();
+            Assert.AreEqual(1f, hud.LifeShown, 0.01f, "full at the start");
+            foreach (BrainNode n in fight.nodes) n.Health.TakeDamage(n.Health.MaxHealth * 0.25f);
+            yield return null;
+            Assert.AreEqual(fight.LifeShare, hud.LifeShown, 0.01f, "the bar follows its nodes");
+            Assert.AreEqual(0.75f, hud.LifeShown, 0.02f);
+        }
+
+        [UnityTest]
+        public IEnumerator TheLock_GoesToTheBrain_ByDefault_AndBackToItAfterAGrabber()
+        {
+            // Bruno, 2026-11-08: "lucy should aim at the brain as default; it should by default lock on onto the brain".
+            fight.trackSpeed = 0f;
+            yield return Enter(Middle + new Vector3(-7f, 0f, -4f)); // the far corner from the brain
+            LockOnTargetable brain = fight.nodes.Single().GetComponent<LockOnTargetable>();
+            Assert.IsTrue(brain.IsPreferred);
+            yield return WaitUntil(() => lockOn.CurrentTarget != null, 2f);
+            Assert.AreSame(brain, lockOn.CurrentTarget, "from the far corner, the lock is on the brain");
+
+            Grabber g = fight.Grab();
+            yield return WaitUntil(() => g == null || g.Holding, 3f);
+            yield return null;
+            Assert.AreSame(brain, lockOn.CurrentTarget, "a grabber does not take the lock");
+            Assert.IsTrue(lockOn.SwitchTarget(), "the switch reaches the grabber");
+            Assert.AreSame(g.GetComponent<LockOnTargetable>(), lockOn.CurrentTarget);
+            g.Retract("test");
+            yield return WaitUntil(() => g == null, 3f);
+            yield return null;
+            yield return null;
+            Assert.AreSame(brain, lockOn.CurrentTarget, "the grabber gone: back on the brain");
+        }
+
+        private static float Flat(Vector3 v) => new Vector2(v.x, v.z).magnitude;
+
+        [UnityTest]
         public IEnumerator StandingStill_SlowsHer_AndMovingFreesHer()
         {
-            fight.restSeconds = 99f; // no strike in this test
+            fight.trackSpeed = 0f; // no strike in this test: the aim stays in its corner
             fight.slowSeconds = 0.8f;
             yield return Enter(Middle);
             yield return new WaitForSeconds(fight.stillSeconds + 0.3f);
@@ -147,7 +244,7 @@ namespace GlorifiedBody.Tests.PlayMode
         [UnityTest]
         public IEnumerator AGrabber_PinsHer_AndABlastFreesHer()
         {
-            fight.restSeconds = 99f;
+            fight.trackSpeed = 0f; // the aim stays in its corner
             yield return Enter(Middle);
             Grabber g = fight.Grab();
             yield return WaitUntil(() => g != null && g.Holding, 3f);
@@ -163,7 +260,7 @@ namespace GlorifiedBody.Tests.PlayMode
         [UnityTest]
         public IEnumerator AGrabber_LetsGo_AfterItsTime()
         {
-            fight.restSeconds = 99f;
+            fight.trackSpeed = 0f; // the aim stays in its corner
             fight.pinSeconds = 0.6f;
             yield return Enter(Middle);
             Grabber g = fight.Grab();
@@ -176,7 +273,7 @@ namespace GlorifiedBody.Tests.PlayMode
         [UnityTest]
         public IEnumerator Orzabal_RipsAGrabberOut_AndThrowsItAtANode()
         {
-            fight.restSeconds = 99f;
+            fight.trackSpeed = 0f; // the aim stays in its corner
             yield return Enter(Middle);
             Grabber g = fight.Grab();
             yield return WaitUntil(() => g != null && g.Holding, 3f);
@@ -200,7 +297,7 @@ namespace GlorifiedBody.Tests.PlayMode
         [UnityTest]
         public IEnumerator HerPowers_HurtTheNodes_TheLightsGoOut_AndItsDeathOpensTheExit()
         {
-            fight.restSeconds = 99f;
+            fight.trackSpeed = 0f; // the aim stays in its corner
             yield return Enter(Middle);
             BrainNode first = fight.nodes[0];
             float hp0 = first.Health.CurrentHealth;
@@ -229,7 +326,7 @@ namespace GlorifiedBody.Tests.PlayMode
         [UnityTest]
         public IEnumerator ItIsABoss_TooHeavyToLift_NoShort_NoMkEdgar()
         {
-            fight.restSeconds = 99f;
+            fight.trackSpeed = 0f; // the aim stays in its corner
             yield return Enter(Middle);
             foreach (BrainNode n in fight.nodes)
             {
