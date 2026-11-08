@@ -1029,6 +1029,24 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator ACrateOnTheRim_SlidesIntoTheGap()
+        {
+            // 2026-11-08: the gap leaves the crate 5 cm on each side, and a drop near it rested on the rim.
+            yield return LoadWorld();
+            GlorifiedBody.Rooms.Room room = GlorifiedBody.Rooms.Room.Of("G16");
+            GlorifiedBody.Interaction.PitReturn pit = room.GetComponentInChildren<GlorifiedBody.Interaction.PitReturn>();
+            Rigidbody crate = GameObject.Find("Riser_Crate_A").GetComponent<Rigidbody>();
+            float floorY = room.transform.position.y;
+            // On the east rim, 0.35 m off the centre of the gap, at rest.
+            crate.position = new Vector3(pit.transform.position.x + 0.35f, floorY + 0.56f, pit.transform.position.z);
+            crate.linearVelocity = Vector3.zero;
+            yield return new WaitForSeconds(2.5f);
+            float top = crate.GetComponent<Collider>().bounds.max.y;
+            Assert.Greater(pit.Guided, 0, "the pit guides it");
+            Assert.AreEqual(floorY, top, 0.1f, "it lies in the gap, level with the floor");
+        }
+
+        [UnityTest]
         public IEnumerator TheGap_SheCannotCross_ACrateFillsIt_ThenSheWalksOver()
         {
             // Bruno, 2026-11-06: "a new room ... that will have a gap that needs to be filled in by a box".
