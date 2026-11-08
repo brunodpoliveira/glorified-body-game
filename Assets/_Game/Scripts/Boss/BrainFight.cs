@@ -21,7 +21,7 @@ namespace GlorifiedBody.Boss
     /// ring the lock fills; out of it, it drains. Full: the charge, the aim still follows her, and at its end the strike lands
     /// on the aim. staggerDamage to the brain during the charge cancels it and stuns it. The floor is brain: standing still
     /// for StillSeconds slows her (her slow walk is slower than the aim). Grabbers come from the walls on a cooldown and pin
-    /// her (Grabber). Its life is its body (BrainNode, one mass, the default lock), on a bar of its own (BrainHud, "it also needs hp for the
+    /// her (Grabber). Its life is its body (BrainNode, one mass at the eye, the default lock), on a bar of its own (BrainHud, "it also needs hp for the
     /// boss"), and the work lights go out as its nodes die. At its death every
     /// light flares, then they go out one by one (round 58), its last line, and the exit opens. The short does not touch it
     /// and mk_edgar refuses it (its parts are shock immune). All numbers PROPOSED.

@@ -90,7 +90,7 @@ namespace GlorifiedBody.Tests.PlayMode
         private Vector3 Middle => sector.Centre;
 
         [UnityTest]
-        public IEnumerator TheFight_Begins_WhenSheEnters_TheEyeWatches_AndTheCrownHudGoes()
+        public IEnumerator TheFight_Begins_WhenSheEnters_TheEyeWatches_TheMkBarsAndTheChargeStay()
         {
             Assert.AreEqual(BrainFight.Phase.Waiting, fight.Current);
             yield return Enter(Middle);
@@ -101,6 +101,23 @@ namespace GlorifiedBody.Tests.PlayMode
             BrainHud hud = fight.GetComponent<BrainHud>();
             yield return null;
             StringAssert.StartsWith("SUBJECT", hud.VitalsShown, "the brain reads her vitals");
+            // Bruno, 2026-11-08: "have the mk bars present and the circle charge ui".
+            PlayerHud crown = UnityEngine.Object.FindFirstObjectByType<PlayerHud>();
+            Assert.IsTrue(crown.Shown, "the MK bars and the charge circle stay in the fight");
+            Assert.IsFalse(crown.HpShown, "her HP is the brain's reading (SUBJECT)");
+            // "the target should be where the camera is at".
+            Vector3 body = fight.nodes.Single().transform.position;
+            Assert.Less(Vector3.Distance(body, fight.eye.transform.position), 1.5f, "the brain's body is at its eye");
+
+            // The charge on the brain: the brain is behind the camera, so the circle shows over her.
+            yield return WaitUntil(() => lockOn.CurrentTarget != null, 2f);
+            powers.Select(PowerKind.Blast);
+            pad.SetHeld(InputManager.GameAction.Charge, true);
+            yield return new WaitForSeconds(0.5f);
+            Assert.IsTrue(crown.ChargeShown, "the charge circle shows");
+            Assert.IsTrue(crown.CanvasPoint(tank.transform.position + Vector3.up * 1.2f, out Vector2 her), "she is on screen");
+            Assert.Less(Vector2.Distance(crown.ChargeAt, her), 5f, "over her, as the brain is off the screen");
+            pad.SetHeld(InputManager.GameAction.Charge, false);
             Assert.AreEqual(6, fight.LightsOn, "every work light on");
         }
 

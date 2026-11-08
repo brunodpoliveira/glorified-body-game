@@ -144,7 +144,12 @@ namespace GlorifiedBody.Automation
             t0 = BotClock.Now;
             while (fight.Aiming != BrainFight.AimState.Charging && BotClock.Now - t0 < 4f) yield return null;
             powers.Select(PowerKind.Blast);
-            powers.FireAt(powers.Selected, 1f, fight.nodes[0].GetComponent<LockOnTargetable>());
+            pad.SetHeld(InputManager.GameAction.Charge, true); // her charge on the brain: the circle over her, the MK bar
+            yield return BotClock.Wait(0.7f);
+            yield return Shot("her_charge");
+            pad.SetHeld(InputManager.GameAction.Charge, false);
+            yield return BotClock.Wait(0.1f);
+            if (fight.Aiming == BrainFight.AimState.Charging) powers.FireAt(powers.Selected, 1f, fight.nodes[0].GetComponent<LockOnTargetable>());
             yield return BotClock.Wait(0.2f);
             yield return Shot("staggered");
             Record("a_blast_staggers_it", fight.Aiming == BrainFight.AimState.Staggered && fight.Staggers == 1, $"aim={fight.Aiming} damage={fight.ChargeDamage:0}");

@@ -28,6 +28,22 @@ namespace GlorifiedBody.UI
         private Text mkLabel;
         private Text boostText;
         public bool BoostShown => boostText != null && boostText.enabled;
+        /// <summary>The HUD is on screen, and its HP row (the tests).</summary>
+        public bool Shown => canvas != null && canvas.enabled;
+        public bool HpShown => hpFill != null && hpFill.transform.parent.gameObject.activeSelf;
+        /// <summary>The charge circle on screen, and its place in the canvas (the tests).</summary>
+        public bool ChargeShown => ringRect != null && ringRect.gameObject.activeSelf;
+        public Vector2 ChargeAt => ringRect != null ? ringRect.anchoredPosition : Vector2.zero;
+        /// <summary>A world point in the HUD canvas, as the charge circle places it (the tests).</summary>
+        public bool CanvasPoint(Vector3 world, out Vector2 local)
+        {
+            local = Vector2.zero;
+            Camera cam = Camera.main;
+            if (cam == null) return false;
+            Vector3 screen = cam.WorldToScreenPoint(world);
+            return screen.z > 0f && RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, screen, null, out local);
+        }
+        private Text hpLabel;
         private Image shortFill;
         private Text powerText;
         private Text drugText;
@@ -165,6 +181,7 @@ namespace GlorifiedBody.UI
             barsRect.anchoredPosition = new Vector2(32f, 32f);
             barsRect.sizeDelta = new Vector2(420f, 110f);
             hpFill = Bar(bars.transform, "HP", 0, new Color(0.85f, 0.15f, 0.15f));
+            foreach (Text t in bars.GetComponentsInChildren<Text>(true)) if (t.text == "HP") hpLabel = t;
             // Each power has its own MK bar (Bruno, 2026-11-06), and "only the bar of the power that it activated is visible": one
             // row, in the colour of the capsule of the selected power, with its name.
             mkFill = Bar(bars.transform, MkNames[0], 1, MkColours[0]);
@@ -512,9 +529,19 @@ namespace GlorifiedBody.UI
         private void Update()
         {
             if (canvas == null || !Bind()) return;
-            // The Crown is gone and no sunglasses yet (the coda): no readout at all.
-            bool hidden = GlorifiedBody.Saving.StoryFlags.Has(PlayerHudFlags.CrownGone) && !GlorifiedBody.Saving.StoryFlags.Has(PlayerHudFlags.ReadoutOn);
+            // The Crown is gone and no sunglasses yet (the coda): no readout at all. In the brain fight the MK bars, SHORT and
+            // the charge circle stay (Bruno, 2026-11-08: "have the mk bars present and the circle charge ui"); her HP is the
+            // brain's reading of her ("SUBJECT n%", BrainHud), so the HP row goes.
+            GlorifiedBody.Boss.BrainFight brain = GlorifiedBody.Boss.BrainFight.Instance;
+            bool inBrain = brain != null && brain.Current == GlorifiedBody.Boss.BrainFight.Phase.Fighting;
+            bool hidden = GlorifiedBody.Saving.StoryFlags.Has(PlayerHudFlags.CrownGone) && !GlorifiedBody.Saving.StoryFlags.Has(PlayerHudFlags.ReadoutOn) && !inBrain;
             if (canvas.enabled == hidden) canvas.enabled = !hidden;
+            GameObject hpRow = hpFill.transform.parent.gameObject;
+            if (hpRow.activeSelf == inBrain)
+            {
+                hpRow.SetActive(!inBrain);
+                if (hpLabel != null) hpLabel.gameObject.SetActive(!inBrain);
+            }
 
             if (health != null) hpFill.fillAmount = health.MaxHealth > 0f ? health.CurrentHealth / health.MaxHealth : 0f;
             if (stats != null)
@@ -566,6 +593,10 @@ namespace GlorifiedBody.UI
                 if (cam != null)
                 {
                     Vector3 screen = cam.WorldToScreenPoint(world);
+                    // A target off the screen (the brain at its own eye, behind the camera, 2026-11-08): the circle goes
+                    // over her, so the charge always shows.
+                    if (screen.z <= 0f || screen.x < 0f || screen.x > Screen.width || screen.y < 0f || screen.y > Screen.height)
+                        screen = cam.WorldToScreenPoint(player.position + Vector3.up * 1.2f);
                     if (screen.z > 0f && RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, screen, null, out Vector2 local))
                     {
                         ringRect.anchoredPosition = local;

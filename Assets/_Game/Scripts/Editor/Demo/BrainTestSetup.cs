@@ -20,7 +20,7 @@ namespace GlorifiedBody.Editor.Demo
     /// The BRAIN TEST room (2026-11-08): the brain fight of DEMO_PLAN §14.1 in isolation, before B1 enters the demo. Three
     /// rooms built like the demo:
     ///   B0, the unfinished wing, where she starts;
-    ///   B1, the brain sector, 18 x 12 m and 6 m high, pink-grey (the greybox stand-in of §12): the brain itself, one mass high on the north wall
+    ///   B1, the brain sector, 18 x 12 m and 6 m high, pink-grey (the greybox stand-in of §12): the brain itself, one mass at its eye on the south wall
     ///   (Bruno, 2026-11-08: "it also needs hp for the boss", "it should by default lock on onto the brain"),
     ///   six work lights, six grabber mouths, and the brain's eye, a camera high on the south wall that follows her;
     ///   B2, the builders' door, behind a leaf that goes when the brain dies.
@@ -130,10 +130,11 @@ namespace GlorifiedBody.Editor.Demo
         private static void DressSector(DemoRoom r)
         {
             r.ExtraCamera("eye", new Vector3(9f, 5.4f, 6.8f), new Vector3(9f, 0.5f, 13f), 70f, new Vector3(9f, 1.5f, 12f), new Vector3(17.6f, 3f, 11.6f));
-            // The brain: one mass high on the north wall, over the builders' door, in the eye's view. All its life is here,
-            // and the auto-lock picks it first (LockOnTargetable.IsPreferred).
+            // The brain: one mass at its eye, high on the south wall, just behind the camera (Bruno, 2026-11-08: "the target
+            // should be where the camera is at; the idea is that we're seeing it from the brain's pov"). She turns to the
+            // screen to hurt it. All its life is here, and the auto-lock picks it first (LockOnTargetable.IsPreferred).
             {
-                GameObject node = r.Box(r.Props, "The_Brain", new Vector3(9f, 4.5f, 17.2f), new Vector3(7f, 2.4f, 1.3f), DemoRoom.Colour("brain_node", Color.white));
+                GameObject node = r.Box(r.Props, "The_Brain", new Vector3(9f, 5.2f, 6.35f), new Vector3(2f, 1.4f, 0.6f), DemoRoom.Colour("brain_node", Color.white));
                 node.isStatic = false;
                 node.tag = "Enemy";
                 node.layer = LayerMask.NameToLayer("Enemy");

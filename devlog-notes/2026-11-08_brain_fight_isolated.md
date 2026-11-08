@@ -77,3 +77,20 @@ The old strike was a ring that always closed on her, so she had no time to attac
 
 `BrainFightTests` (12: the aim, the lock and the charge, the stagger, the life bar, the default lock) and
 `PowersAndBarsTests`: 64 of 64. The brain bot: 7 of 7. Shots: `brain_fight_2026-11-08/v2_*.png`.
+
+## Later that day: the brain at its eye, the MK bars and the charge circle
+
+```text
+the target should be where the camera is at; the idea is that we're seeing it from the brain's pov; and also have the
+mk bars present and the circle charge yi, it makes it hard to gauge how much it has left when disabled as it is rn
+```
+
+1. The brain's body is at its eye now: a mass high on the south wall, just behind the camera. The camera does not
+   show it. To hurt the brain, Lucy turns to the screen.
+2. The brain fight keeps the HUD: the MK bars, SHORT and the charge circle. The "Crown gone" flag no longer hides it
+   during the fight. The HP row goes, because "SUBJECT n%" is her HP as the brain reads it.
+3. The charge circle goes to the target's place on the screen. A target off the screen (the brain behind the
+   camera) puts the circle over Lucy. Before, the circle stayed where it was last.
+
+`BrainFightTests` and `PowersAndBarsTests`: 64 of 64 (new checks: the body at the eye, the HUD shown with no HP row,
+the circle over her). The brain bot passes, with a new shot of her charge (`v3_brain_03_her_charge.png`).

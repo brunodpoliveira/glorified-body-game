@@ -6,7 +6,7 @@ namespace GlorifiedBody.Boss
 {
     /// <summary>
     /// The body of the brain that she hurts (2026-11-08; Bruno: "it also needs hp for the boss", "it should by default lock on
-    /// onto the brain"). BRAIN TEST has one, the mass over the builders' door, with all its life. Her powers hurt it like any
+    /// onto the brain"). BRAIN TEST has one, the mass at its eye (the camera), with all its life. Her powers hurt it like any
     /// target, and a thrown grabber too. It is a boss part: too heavy to lift, immune to the short, no mk_edgar, and the
     /// auto-lock picks it first (LockOnTargetable heavy, shock immune, preferred). A dead one goes grey and stays.
     /// </summary>
