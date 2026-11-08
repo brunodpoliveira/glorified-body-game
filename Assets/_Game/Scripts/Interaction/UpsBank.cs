@@ -13,8 +13,8 @@ namespace GlorifiedBody.Interaction
     /// order trips the alarm: the three PCs drop, a continuous tone, each unit's display counts down to its automatic
     /// restart (UpsUnit), two short beeps, and the beeps start again after resetSeconds (CANON
     /// round 40: no enemy comes; the alarm is PROPOSED; 5 s since Bruno, 2026-11-08: "20 seconds is too long"). When REC comes up the recorder plays; on the last
-    /// unit the monitors come back one by one and their lights are the only light (DarkLayer). The room lights never come
-    /// back. doneFlag opens the release (FlagSwitch.requiredFlag). The lines are placeholders for the writer's words.
+    /// unit the monitors come back one by one, and lightsBackSeconds after the last one the room lights come back
+    /// for good (DarkRoom.SetLit; Bruno, 2026-11-08: "the lights will need to turn on again after the puzzle is complete"). doneFlag opens the release (FlagSwitch.requiredFlag). The lines are placeholders for the writer's words.
     /// </summary>
     public sealed class UpsBank : MonoBehaviour
     {
@@ -28,6 +28,8 @@ namespace GlorifiedBody.Interaction
         public Renderer[] monitors = new Renderer[0];
         public Light[] monitorLights = new Light[0];
         [Min(0f)] public float monitorGap = 0.5f;
+        [Tooltip("From the last monitor to the room lights.")]
+        [Min(0f)] public float lightsBackSeconds = 1.5f;
         public Color screenColour = new Color(0.35f, 0.75f, 0.55f);
         public string recLine = "PLACEHOLDER: the recorder plays the intake tape of cutscene 08.";
         public string accessLine = "POWER LOST. BREAKER G9. OPENED BY HAND.";
@@ -139,6 +141,8 @@ namespace GlorifiedBody.Interaction
                 yield return new WaitForSeconds(monitorGap);
                 SetMonitor(i, true);
             }
+            yield return new WaitForSeconds(lightsBackSeconds);
+            if (darkRoom != null) darkRoom.SetLit();
         }
 
         private void Update()

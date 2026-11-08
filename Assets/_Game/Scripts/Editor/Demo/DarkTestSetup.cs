@@ -98,6 +98,7 @@ namespace GlorifiedBody.Editor.Demo
         {
             DarkRoom dark = MenuLoopSetup.EnsureComponent<DarkRoom>(office.Root);
             dark.darkFlag = DarkFlag;
+            dark.litFlag = DoneFlag; // the units up: the lights come back for good
             dark.alsoDark = new[] { closet.Root.GetComponent<Room>() };
             EditorUtility.SetDirty(dark);
             GameObject holder = MenuLoopSetup.EnsureChild(office.Story, "UPS_Bank");

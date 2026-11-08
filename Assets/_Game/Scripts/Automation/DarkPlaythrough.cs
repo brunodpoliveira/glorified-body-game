@@ -153,6 +153,13 @@ namespace GlorifiedBody.Automation
             yield return Shot("monitors_light_the_dark", officeCam);
             Record("the_units_in_order", bank.Done && bank.MonitorsOn == 6 && dark.IsDark, $"monitors={bank.MonitorsOn}");
 
+            // 5b. The room lights come back after the monitors (Bruno, 2026-11-08).
+            t0 = BotClock.Now;
+            while (dark.IsDark && BotClock.Now - t0 < bank.lightsBackSeconds + 3f) yield return null;
+            yield return BotClock.Wait(0.3f);
+            yield return Shot("the_lights_come_back", officeCam);
+            Record("the_lights_come_back", !dark.IsDark, $"dark={dark.IsDark}");
+
             // 6. The release works now.
             yield return Face(release.Point + Vector3.left * 1.0f, release.Point);
             yield return Press(InputManager.GameAction.Interact);

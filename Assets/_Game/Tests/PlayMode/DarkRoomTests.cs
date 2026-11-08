@@ -96,7 +96,7 @@ namespace GlorifiedBody.Tests.PlayMode
             tank.Teleport(hall.Centre, 0f);
             yield return WaitUntil(() => !dark.HasInside(tank.gameObject), 2f);
             Assert.IsFalse(Darkness.IsDark(lucyBody), "lit again in the hall");
-            Assert.IsTrue(dark.IsDark, "the room lights never come back");
+            Assert.IsTrue(dark.IsDark, "the room lights stay out until the puzzle is done");
         }
 
         [UnityTest]
@@ -116,6 +116,21 @@ namespace GlorifiedBody.Tests.PlayMode
             Debug.Log($"[DarkRoom] brightness with the monitors {monitors:0.000}");
             Assert.Greater(monitors, black * 1.5f, "the monitors light the dark");
             Assert.Less(monitors, lit, "and the room lights stay out");
+
+            // Bruno, 2026-11-08: "the lights will need to turn on again after the puzzle is complete".
+            yield return WaitUntil(() => !dark.IsDark, bank.lightsBackSeconds + 2f);
+            Assert.IsFalse(dark.IsDark, "the lights come back after the monitors");
+            yield return null;
+            float back = Brightness(pose);
+            Debug.Log($"[DarkRoom] brightness with the lights back {back:0.000}");
+            Assert.Greater(back, monitors, "the office is lit again");
+            Assert.IsFalse(Darkness.IsDark(office.transform.Find("[Room]").GetComponentInChildren<Renderer>()), "its floor and walls take the sun again");
+            tank.Teleport(hall.Centre, 0f);
+            yield return WaitUntil(() => GlorifiedBody.Rooms.RoomTracker.Current == hall, 2f);
+            tank.Teleport(office.Centre, 0f);
+            yield return WaitUntil(() => GlorifiedBody.Rooms.RoomTracker.Current == office, 2f);
+            yield return null;
+            Assert.IsFalse(dark.IsDark, "it never goes dark again");
         }
 
         [UnityTest]

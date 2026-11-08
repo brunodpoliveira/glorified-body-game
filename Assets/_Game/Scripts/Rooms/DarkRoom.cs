@@ -11,7 +11,9 @@ namespace GlorifiedBody.Rooms
     /// A room whose lights go out (DEMO_PLAN §10.1, the dark room: "She enters G9. The lights go out in G9 and the
     /// closet."). On her first entry, or when its flag is up at the start (a load), the room goes dark for good: its
     /// floor, walls, props and the wall pieces on its lines leave the sun (Darkness). A figure inside it, Lucy too, is
-    /// dark while it stays in the room. The monitors and their lights belong to the puzzle (UpsBank).
+    /// dark while it stays in the room. The monitors and their lights belong to the puzzle (UpsBank). When the puzzle is done
+    /// the lights come back for good (SetLit, litFlag; Bruno, 2026-11-08: "the lights will need to turn on again after the
+    /// puzzle is complete").
     /// </summary>
     [RequireComponent(typeof(Room))]
     public sealed class DarkRoom : MonoBehaviour
@@ -22,11 +24,15 @@ namespace GlorifiedBody.Rooms
         public string darkFlag = "";
         [Tooltip("Other rooms that go dark with this one (the closet behind the office).")]
         public Room[] alsoDark = new Room[0];
+        [Tooltip("Up: the lights are back for good (the puzzle is done). No dark on entry, none at a load.")]
+        public string litFlag = "";
 
         public const float FigureCheckSeconds = 0.2f;
 
         public bool IsDark { get; private set; }
         public event Action OnDark;
+
+        public bool LightsBack => !string.IsNullOrEmpty(litFlag) && StoryFlags.Has(litFlag);
 
         private Room room;
         private readonly List<Renderer> shell = new List<Renderer>();
@@ -41,12 +47,13 @@ namespace GlorifiedBody.Rooms
 
         private void Start()
         {
+            if (LightsBack) return; // a load after the puzzle: lit
             if (!string.IsNullOrEmpty(darkFlag) && StoryFlags.Has(darkFlag)) SetDark();
         }
 
         private void OnRoomChanged(Room from, Room to)
         {
-            if (darkOnEnter && !IsDark && (to == room || Array.IndexOf(alsoDark, to) >= 0)) SetDark();
+            if (darkOnEnter && !IsDark && !LightsBack && (to == room || Array.IndexOf(alsoDark, to) >= 0)) SetDark();
         }
 
         /// <summary>The lights go out (the tests call it too).</summary>
@@ -78,6 +85,18 @@ namespace GlorifiedBody.Rooms
             RunTelemetry.Event("room_dark", room.id);
             OnDark?.Invoke();
             nextCheck = 0f;
+        }
+
+        /// <summary>The lights come back (the puzzle is done): the room, its walls and the figures in it take the sun again.</summary>
+        public void SetLit()
+        {
+            if (!IsDark) return;
+            IsDark = false;
+            foreach (Renderer r in shell) Darkness.Set(r, false);
+            shell.Clear();
+            foreach (GameObject f in figuresInside) if (f != null) Darkness.Set(f, false);
+            figuresInside.Clear();
+            RunTelemetry.Event("room_lit", room.id);
         }
 
         private bool Inside(Vector3 p)

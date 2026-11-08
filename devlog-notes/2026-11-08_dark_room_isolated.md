@@ -74,3 +74,16 @@ A UPS unit after a fault restarts by itself, and its front display says so. PROP
 `DarkRoomTests` 5 of 5 (the countdown, the read-out, the ready beeps). The dark bot passes. Shot:
 `dark_room_2026-11-08/dark_04_alarm_countdown.png`. The black shapes over the HUD in that shot come from the bot's
 shot camera, not from the game.
+
+## Later that day: the lights come back
+
+```text
+on the actual dark room, the lights will need to turn on again after the puzzle is complete; as it is rn it stays dark
+```
+
+The room stayed dark by my design ("the room lights never come back", PROPOSED). Now the monitors come back one by one,
+and 1.5 s after the last one the room lights come back for good (`DarkRoom.SetLit`, `UpsBank.lightsBackSeconds`). The
+room never goes dark again (`DarkRoom.litFlag`, the puzzle's done flag), and a load after the puzzle starts lit.
+`DarkRoomTests` measure the office: lit 0.289, dark 0.052, the monitors 0.127, the lights back 0.285. A walk out and
+back in leaves it lit. The dark bot has the step `the_lights_come_back` (shot `dark_08_the_lights_come_back.png`).
+Lucy looks green beside the monitor wall: the monitors' point lights reach her model, as they do before the dark.
