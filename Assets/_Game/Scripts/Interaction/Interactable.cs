@@ -47,6 +47,9 @@ namespace GlorifiedBody.Interaction
         /// desk, Examinable, is 0, so a log on that desk still gets the key).</summary>
         public virtual int Priority => 1;
 
+        /// <summary>False: the key works, but the HUD shows no hint for it (a comment on a prop).</summary>
+        public virtual bool ShowsHint => true;
+
         /// <summary>Called when the Interact key reaches it, before the question or the message (a card door that rotates the
         /// codes at the first try).</summary>
         public virtual void BeforeKey(Interactor who) { }

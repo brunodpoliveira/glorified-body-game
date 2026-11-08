@@ -74,10 +74,16 @@ There is no soft lock: W13 is open from W12 at all times.
 1. `ADoorway_ChangesTheRoom_...` walked Lucy through the W3 doorway, which is a card door now. It uses the W4 doorway.
 2. The new rotation test did not wait for the end of the W1 wake. The wake stops time, and the PA waits on game time.
 
-## OPEN for Bruno
+## His answers
 
-1. The rotation at the first try of the stairwell door (item 3 above).
-2. The hint over a prop says "E look at the desk". It shows near every prop. Keep it, or show no hint for a comment?
+```text
+1: keep it
+2: no hint
+```
+
+1. The stairwell door of W12 rotates the codes at the first try: kept.
+2. A comment shows no hint on the HUD (`Interactable.ShowsHint`). A container shows none too, because the hint
+   would tell the player what is inside. `ExamineTests` checks that the hint is empty.
 
 Shots: `~/MEGA/glorified-body-renders/game/examine_and_ward_rotation_2026-11-08/` (`code_01_table_comment.png`: the
 comment in the message box).

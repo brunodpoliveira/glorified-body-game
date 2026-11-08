@@ -32,6 +32,9 @@ namespace GlorifiedBody.Interaction
 
         public override int Priority => 0;
 
+        // No hint over a prop (Bruno, 2026-11-08: "no hint"), a container too: the hint would tell what is inside.
+        public override bool ShowsHint => false;
+
         // A broken prop (cover, a desk) has nothing left to look at. A broken container keeps its items: they are not lost.
         public override bool Available => base.Available && (breakable == null || !breakable.IsBroken || Next != null);
 

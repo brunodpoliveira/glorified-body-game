@@ -68,7 +68,8 @@ namespace GlorifiedBody.Tests.PlayMode
 
             yield return null;
             Assert.AreSame(table, interactor.Focus, "then the table");
-            StringAssert.Contains("look at the table", table.Hint);
+            yield return null;
+            Assert.AreEqual("", UnityEngine.Object.FindFirstObjectByType<GlorifiedBody.UI.InteractionUI>().HintShown, "no hint over a prop (Bruno, 2026-11-08)");
             yield return Press(InputManager.GameAction.Interact);
             Assert.AreEqual(Interactor.State.Message, interactor.Current, "a comment, no question");
             Assert.AreEqual("A table. Nothing of note here.", interactor.Text);
@@ -85,7 +86,8 @@ namespace GlorifiedBody.Tests.PlayMode
             ItemDefinition capsule = shelf.Next.item;
             yield return StandFacing(shelf.Point + Vector3.back * 1.3f, shelf.Point);
             Assert.AreSame(shelf, interactor.Focus);
-            StringAssert.StartsWith("search ", shelf.Hint);
+            yield return null;
+            Assert.AreEqual("", UnityEngine.Object.FindFirstObjectByType<GlorifiedBody.UI.InteractionUI>().HintShown, "no hint over a container either");
             int had = interactor.Inventory.DrugsCarried + interactor.Inventory.Carried.Count;
             yield return Press(InputManager.GameAction.Interact);
             Assert.AreEqual(Interactor.State.Confirming, interactor.Current, "it asks");

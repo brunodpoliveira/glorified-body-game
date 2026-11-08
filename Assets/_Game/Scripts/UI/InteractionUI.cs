@@ -82,7 +82,8 @@ namespace GlorifiedBody.UI
             string hint = "";
             if (interactor != null && interactor.Current == Interactor.State.Free && (scanner == null || !scanner.IsViewing))
             {
-                if (interactor.Focus != null) hint = $"{Key(InputManager.GameAction.Interact)}  {interactor.Focus.Hint}";
+                // A comment shows no hint (Bruno, 2026-11-08: "no hint"): the key works, the screen stays clean.
+                if (interactor.Focus != null && interactor.Focus.ShowsHint) hint = $"{Key(InputManager.GameAction.Interact)}  {interactor.Focus.Hint}";
                 if (scanner != null && scanner.Focus != null) hint += (hint.Length > 0 ? "      " : "") + $"{Key(InputManager.GameAction.Scan)}  scan";
             }
             hintText.text = hint;
