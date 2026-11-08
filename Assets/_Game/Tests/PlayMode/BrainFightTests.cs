@@ -1,0 +1,268 @@
+#if UNITY_INCLUDE_TESTS
+using System;
+using System.Collections;
+using System.Linq;
+using NUnit.Framework;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEngine.TestTools;
+using GlorifiedBody.Automation;
+using GlorifiedBody.Boss;
+using GlorifiedBody.Cameras;
+using GlorifiedBody.Combat;
+using GlorifiedBody.Core;
+using GlorifiedBody.Player;
+using GlorifiedBody.Rooms;
+using GlorifiedBody.Saving;
+using GlorifiedBody.Systems;
+using GlorifiedBody.UI;
+
+namespace GlorifiedBody.Tests.PlayMode
+{
+    /// <summary>
+    /// The brain fight (DEMO_PLAN §14.1, CANON round 10) in the BRAIN TEST room: the eye watches her and the Crown HUD goes,
+    /// the ring closes and the strike lands where she stood, standing still slows her, a grabber pins her and a hit frees
+    /// her, mk_orzabal rips a grabber out and throws it at a node, the work lights go out as the nodes die, its death opens
+    /// the exit, and it is a boss (no lift, no short, no mk_edgar).
+    /// Batch: tools/unity.sh test playmode "BrainFightTests"
+    /// </summary>
+    public class BrainFightTests
+    {
+        private const string Scene = "BrainTest";
+        private const string DeadFlag = "brain_test_dead";
+
+        private VirtualPad pad;
+        private PadDriver driver;
+        private TankController tank;
+        private PsychicPowers powers;
+        private PsychicStats stats;
+        private LockOnController lockOn;
+        private Health health;
+        private BrainFight fight;
+        private Room sector;
+
+        [UnitySetUp]
+        public IEnumerator SetUp()
+        {
+            Time.timeScale = 1f;
+            StoryFlags.Drop(DeadFlag);
+            StoryFlags.Drop(PlayerHudFlags.CrownGone);
+            SceneManager.LoadScene("Main_Menu");
+            yield return WaitUntil(() => SceneManager.GetActiveScene().name == "Main_Menu" && GameManager.Instance != null && GameManager.Instance.IsInMenu, 10f);
+            GameManager.Instance.LoadLevel(Scene);
+            yield return WaitUntil(() => SceneManager.GetActiveScene().name == Scene && GameManager.Instance.IsPlaying, 10f);
+            Assert.AreEqual(Scene, SceneManager.GetActiveScene().name, "the room is in the build (BrainTestSetup.BuildBrainTest)");
+            yield return null;
+            GameObject lucy = GameObject.FindGameObjectWithTag("Player");
+            tank = lucy.GetComponent<TankController>();
+            powers = lucy.GetComponent<PsychicPowers>();
+            stats = lucy.GetComponent<PsychicStats>();
+            lockOn = lucy.GetComponent<LockOnController>();
+            health = lucy.GetComponentInChildren<Health>();
+            fight = BrainFight.Instance;
+            sector = Room.Of("B1");
+            Assert.IsNotNull(fight, "the brain");
+            fight.firstGrab = 999f; // the tests call the grabbers
+            pad = new VirtualPad();
+            GameInput.SetBotSource(pad);
+            driver = new GameObject("[PadDriver]").AddComponent<PadDriver>();
+            driver.Pad = pad;
+            foreach (PowerKind k in new[] { PowerKind.Blast, PowerKind.Fire, PowerKind.Telekinesis }) stats.FillMk(k);
+        }
+
+        [UnityTearDown]
+        public IEnumerator TearDown()
+        {
+            GameInput.ClearBotSource(pad);
+            if (driver != null) UnityEngine.Object.Destroy(driver.gameObject);
+            StoryFlags.Drop(DeadFlag);
+            StoryFlags.Drop(PlayerHudFlags.CrownGone);
+            yield return null;
+        }
+
+        private IEnumerator Enter(Vector3 at)
+        {
+            tank.Teleport(at, 0f);
+            yield return WaitUntil(() => fight.Current == BrainFight.Phase.Fighting, 3f);
+        }
+
+        private Vector3 Middle => sector.Centre;
+
+        [UnityTest]
+        public IEnumerator TheFight_Begins_WhenSheEnters_TheEyeWatches_AndTheCrownHudGoes()
+        {
+            Assert.AreEqual(BrainFight.Phase.Waiting, fight.Current);
+            yield return Enter(Middle);
+            Assert.AreEqual(BrainFight.Phase.Fighting, fight.Current, "her first step into the sector");
+            yield return null;
+            Assert.AreSame(fight.eye, FixedCameraDirector.Instance.Current, "the camera is the brain's eye");
+            Assert.IsTrue(StoryFlags.Has(PlayerHudFlags.CrownGone), "the Crown HUD goes");
+            BrainHud hud = fight.GetComponent<BrainHud>();
+            yield return null;
+            StringAssert.StartsWith("SUBJECT", hud.VitalsShown, "the brain reads her vitals");
+            Assert.AreEqual(6, fight.LightsOn, "every work light on");
+        }
+
+        [UnityTest]
+        public IEnumerator TheStrike_LandsWhereSheStood_AndSheDodgesItByMoving()
+        {
+            fight.restSeconds = 0.2f;
+            fight.ringSeconds = 0.6f;
+            fight.strikeDelay = 0.6f;
+            yield return Enter(Middle);
+            float hp0 = health.CurrentHealth;
+            yield return WaitUntil(() => fight.Strikes >= 1, 4f);
+            Assert.AreEqual(1, fight.StrikeHits, "she stood still: the strike lands on her");
+            Assert.Less(health.CurrentHealth, hp0);
+            Assert.AreEqual(BrainFight.KillerId, DeathMenuUI.LastKillerId, "its death screen if it kills her");
+
+            float hp1 = health.CurrentHealth;
+            yield return WaitUntil(() => fight.StrikePoint.HasValue, 4f);
+            tank.Teleport(fight.StrikePoint.Value + Vector3.right * 3f, 0f); // the ring closed: she steps away before it lands
+            yield return WaitUntil(() => fight.Strikes >= 2, 3f);
+            Assert.AreEqual(1, fight.StrikeHits, "the strike lands where she stood, not on her");
+            Assert.AreEqual(hp1, health.CurrentHealth, 0.01f);
+        }
+
+        [UnityTest]
+        public IEnumerator StandingStill_SlowsHer_AndMovingFreesHer()
+        {
+            fight.restSeconds = 99f; // no strike in this test
+            fight.slowSeconds = 0.8f;
+            yield return Enter(Middle);
+            yield return new WaitForSeconds(fight.stillSeconds + 0.3f);
+            Assert.IsTrue(fight.Slowing && tank.SlowWalk, "the floor is brain: still, she slows");
+            Vector3 p = Middle;
+            float t0 = Time.time;
+            while (Time.time - t0 < fight.slowSeconds + 0.4f)
+            {
+                p += Vector3.right * 0.05f;
+                tank.Teleport(p, 90f);
+                yield return null;
+            }
+            Assert.IsFalse(fight.Slowing, "on the move she is free again");
+            Assert.IsFalse(tank.SlowWalk);
+        }
+
+        [UnityTest]
+        public IEnumerator AGrabber_PinsHer_AndABlastFreesHer()
+        {
+            fight.restSeconds = 99f;
+            yield return Enter(Middle);
+            Grabber g = fight.Grab();
+            yield return WaitUntil(() => g != null && g.Holding, 3f);
+            Assert.IsTrue(g.Holding, "the grabber reaches her and holds");
+            Assert.IsTrue(tank.MovementLocked, "she cannot move");
+            powers.Select(PowerKind.Blast);
+            powers.FireAt(powers.Selected, 0.5f, g.GetComponent<LockOnTargetable>());
+            yield return null;
+            Assert.IsTrue(g == null || g.Current == Grabber.State.Retracting, "a blast frees her");
+            Assert.IsFalse(tank.MovementLocked, "she moves again");
+        }
+
+        [UnityTest]
+        public IEnumerator AGrabber_LetsGo_AfterItsTime()
+        {
+            fight.restSeconds = 99f;
+            fight.pinSeconds = 0.6f;
+            yield return Enter(Middle);
+            Grabber g = fight.Grab();
+            yield return WaitUntil(() => g != null && g.Holding, 3f);
+            yield return new WaitForSeconds(0.8f);
+            Assert.IsTrue(g == null || g.Current == Grabber.State.Retracting);
+            Assert.IsFalse(tank.MovementLocked);
+        }
+
+        [UnityTest]
+        public IEnumerator Orzabal_RipsAGrabberOut_AndThrowsItAtANode()
+        {
+            fight.restSeconds = 99f;
+            yield return Enter(Middle);
+            Grabber g = fight.Grab();
+            yield return WaitUntil(() => g != null && g.Holding, 3f);
+            powers.Select(PowerKind.Telekinesis);
+            lockOn.SetTarget(g.GetComponent<LockOnTargetable>());
+            yield return null;
+            pad.Tap(InputManager.GameAction.Charge); // a press lifts at once
+            yield return WaitUntil(() => g == null || g.Current == Grabber.State.Ripped, 2f);
+            Assert.AreEqual(Grabber.State.Ripped, g.Current, "mk_orzabal tears it out of the wall");
+            Assert.IsFalse(tank.MovementLocked, "she is free");
+            yield return new WaitForSeconds(0.6f); // it rises
+            BrainNode node = fight.nodes.OrderBy(n => Vector3.Distance(n.transform.position, tank.transform.position)).First();
+            float hp0 = node.Health.CurrentHealth;
+            lockOn.SetTarget(node.GetComponent<LockOnTargetable>());
+            yield return null;
+            Assert.IsTrue(powers.TryLaunch(1f), "she throws it at the node: " + powers.LastResult);
+            yield return WaitUntil(() => node.Health.CurrentHealth < hp0, 3f);
+            Assert.Less(node.Health.CurrentHealth, hp0, "the thrown grabber hurts the brain");
+        }
+
+        [UnityTest]
+        public IEnumerator HerPowers_HurtTheNodes_TheLightsGoOut_AndItsDeathOpensTheExit()
+        {
+            fight.restSeconds = 99f;
+            yield return Enter(Middle);
+            BrainNode first = fight.nodes[0];
+            float hp0 = first.Health.CurrentHealth;
+            powers.Select(PowerKind.Blast);
+            powers.FireAt(powers.Selected, 1f, first.GetComponent<LockOnTargetable>());
+            yield return null;
+            Assert.Less(first.Health.CurrentHealth, hp0, "a blast hurts a node");
+
+            foreach (BrainNode n in fight.nodes) n.Health.TakeDamage(n.Health.MaxHealth * 0.5f);
+            yield return null;
+            yield return null;
+            Assert.AreEqual(3, fight.LightsOn, "half its life: half the work lights");
+            GameObject leaf = fight.exitLeaf;
+            Assert.IsTrue(leaf.activeSelf, "the exit is shut while it lives");
+            foreach (BrainNode n in fight.nodes) n.Health.TakeDamage(n.Health.MaxHealth);
+            yield return null;
+            yield return null;
+            Assert.AreEqual(BrainFight.Phase.Dying, fight.Current, "the last node: it dies");
+            Assert.AreEqual(6, fight.LightsOn, "every light flares at once");
+            Assert.IsTrue(StoryFlags.Has(DeadFlag));
+            yield return WaitUntil(() => fight.Current == BrainFight.Phase.Dead, 6f);
+            Assert.AreEqual(0, fight.LightsOn, "then they go out one by one");
+            Assert.IsFalse(leaf.activeSelf, "the exit opens");
+        }
+
+        [UnityTest]
+        public IEnumerator ItIsABoss_TooHeavyToLift_NoShort_NoMkEdgar()
+        {
+            fight.restSeconds = 99f;
+            yield return Enter(Middle);
+            foreach (BrainNode n in fight.nodes)
+            {
+                LockOnTargetable t = n.GetComponent<LockOnTargetable>();
+                Assert.IsTrue(t.IsHeavy && t.IsShockImmune, n.name + ": a boss part (the short skips it, mk_edgar refuses it)");
+            }
+            BrainNode node = fight.nodes.OrderBy(n => Vector3.Distance(n.transform.position, tank.transform.position)).First();
+            tank.Teleport(node.transform.position + (Middle - node.transform.position).normalized * 3f, 0f);
+            yield return null;
+            powers.Select(PowerKind.Telekinesis);
+            lockOn.SetTarget(node.GetComponent<LockOnTargetable>());
+            yield return null;
+            float mk = stats.Mk(PowerKind.Telekinesis);
+            pad.Tap(InputManager.GameAction.Charge);
+            yield return new WaitForSeconds(0.2f);
+            Assert.AreEqual("too_heavy", powers.LastResult, "the brain is not lifted");
+            Assert.AreEqual(mk, stats.Mk(PowerKind.Telekinesis), 0.01f, "and it costs nothing");
+        }
+
+        // ── Helpers ───────────────────────────────────────────────────
+
+        private static IEnumerator WaitUntil(Func<bool> condition, float timeoutSeconds)
+        {
+            float t0 = Time.realtimeSinceStartup;
+            while (!condition() && Time.realtimeSinceStartup - t0 < timeoutSeconds) yield return null;
+        }
+
+        [DefaultExecutionOrder(-1000)]
+        private sealed class PadDriver : MonoBehaviour
+        {
+            public VirtualPad Pad;
+            private void Update() => Pad?.Commit();
+        }
+    }
+}
+#endif
