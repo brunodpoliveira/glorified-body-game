@@ -130,7 +130,7 @@ namespace GlorifiedBody.Automation
             Record("the_release_waits", interactor.Text == "WAITING FOR NET.", interactor.Text);
             yield return BotClock.Wait(2.2f);
 
-            // 4. ACCESS first: the alarm trips (the bot shortens the 20 s).
+            // 4. ACCESS first: the alarm trips (the bot shortens the 5 s).
             bank.resetSeconds = 2f;
             yield return Unit(bank, "ACCESS");
             yield return Shot("alarm", closetCam);

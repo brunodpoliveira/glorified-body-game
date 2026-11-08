@@ -11,7 +11,7 @@ namespace GlorifiedBody.Interaction
     /// The dark room puzzle (DEMO_PLAN §10.1, Bruno's puzzle; CANON round 52: "the details stand as written"). When the room
     /// goes dark (DarkRoom) the monitors go black and the three units beep. The order is NET, REC, ACCESS. A unit out of
     /// order trips the alarm: the three PCs drop, a continuous tone, and the beeps start again after resetSeconds (CANON
-    /// round 40: no enemy comes; the alarm and the 20 s are PROPOSED). When REC comes up the recorder plays; on the last
+    /// round 40: no enemy comes; the alarm is PROPOSED; 5 s since Bruno, 2026-11-08: "20 seconds is too long"). When REC comes up the recorder plays; on the last
     /// unit the monitors come back one by one and their lights are the only light (DarkLayer). The room lights never come
     /// back. doneFlag opens the release (FlagSwitch.requiredFlag). The lines are placeholders for the writer's words.
     /// </summary>
@@ -23,7 +23,7 @@ namespace GlorifiedBody.Interaction
         public string[] order = { "NET", "REC", "ACCESS" };
         public DarkRoom darkRoom;
         public string doneFlag = "";
-        [Min(0f)] public float resetSeconds = 20f;
+        [Min(0f)] public float resetSeconds = 5f;
         public Renderer[] monitors = new Renderer[0];
         public Light[] monitorLights = new Light[0];
         [Min(0f)] public float monitorGap = 0.5f;

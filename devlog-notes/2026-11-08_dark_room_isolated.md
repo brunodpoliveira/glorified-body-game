@@ -44,3 +44,15 @@ G9 and G9b exist with their props. The demo needs four things, about 0.5 day:
 2. The three units and the bank in G9b, and the monitor wall of G9 as the bank's monitors.
 3. The release in G9 waits for the bank.
 4. The hub units of W9 with their uptimes, and the IT note in G8 (the two sources of the order).
+
+## Later that day: the alarm time
+
+```text
+dark test: when i press the wrong one the thing keeps on alarm and never lets me try it again, softlocking me
+20 seconds is too long
+```
+
+The alarm was not a soft lock. With the room's own time it ended after 20.0 s, and then the right order worked. The
+tests and the bot shortened the time to 1.5 s, so no test used the real 20 s. Now the alarm lasts 5 s (PROPOSED).
+`DarkRoomTests.TheAlarm_WithTheRoomsOwnTime_Ends_AndTheUnitsTakeTheKeyAgain` uses the room's own time and fails above
+5 s. `DarkRoomTests` 5 of 5, the dark bot passes. The rebuild also gives the props of DARK TEST their comments.

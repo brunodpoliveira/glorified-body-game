@@ -149,7 +149,7 @@ namespace GlorifiedBody.Tests.PlayMode
         [UnityTest]
         public IEnumerator AUnitOutOfOrder_TripsTheAlarm_ThePCsDrop_AndTheBeepsComeBack()
         {
-            bank.resetSeconds = 1.5f; // 20 s in the game
+            bank.resetSeconds = 1.5f; // 5 s in the game
             dark.SetDark();
             yield return StartUnits("NET");
             UpsUnit net = bank.units.First(u => u.label == "NET");
@@ -164,6 +164,26 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.AreEqual(0, bank.Next, "from the start");
             yield return StartUnits("NET", "REC", "ACCESS");
             Assert.IsTrue(bank.Done, "the right order works after a mistake");
+        }
+
+        [UnityTest]
+        public IEnumerator TheAlarm_WithTheRoomsOwnTime_Ends_AndTheUnitsTakeTheKeyAgain()
+        {
+            // Bruno, 2026-11-08: "when i press the wrong one the thing keeps on alarm and never lets me try it again". The
+            // test above shortens the reset: this one keeps the room's own time.
+            float reset = bank.resetSeconds;
+            Debug.Log($"[DarkRoomTests] the room's reset: {reset:0.0} s");
+            Assert.LessOrEqual(reset, 5f, "Bruno, 2026-11-08: \"20 seconds is too long\"");
+            dark.SetDark();
+            yield return StartUnits("REC");
+            Assert.AreEqual(UpsBank.State.Alarm, bank.Current, "out of order: the alarm");
+            float t0 = Time.realtimeSinceStartup;
+            while (bank.Current == UpsBank.State.Alarm && Time.realtimeSinceStartup - t0 < reset + 10f) yield return null;
+            Debug.Log($"[DarkRoomTests] the alarm ended after {Time.realtimeSinceStartup - t0:0.0} s (state {bank.Current}, sound {bank.AlarmOn})");
+            Assert.AreEqual(UpsBank.State.Beeping, bank.Current, "the alarm ends");
+            Assert.IsFalse(bank.AlarmOn, "its sound stops");
+            yield return StartUnits("NET", "REC", "ACCESS");
+            Assert.IsTrue(bank.Done, "she can try again");
         }
 
         // ── Helpers ───────────────────────────────────────────────────
