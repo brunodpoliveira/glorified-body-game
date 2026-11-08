@@ -191,6 +191,10 @@ MonoBehaviour:
       path: Save_Kit
       position: {x: -9, y: -3}
       label: SAVE
+    - kind: 2
+      path: Tape_Kit
+      position: {x: -6, y: -5.6}
+      label: TEST TAPE
   - scene: WardTest
     world: 
     floor: test_2

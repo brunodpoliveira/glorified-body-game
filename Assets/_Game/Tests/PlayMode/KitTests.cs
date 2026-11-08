@@ -14,6 +14,7 @@ using GlorifiedBody.Cameras;
 using GlorifiedBody.Combat;
 using GlorifiedBody.Core;
 using GlorifiedBody.Enemy;
+using GlorifiedBody.Interaction;
 using GlorifiedBody.Player;
 using GlorifiedBody.Saving;
 using GlorifiedBody.Systems;
@@ -102,6 +103,41 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator TheTapeOnTheFloor_PlaysWhenTaken_AndTheSoldiersFightPausesIt()
+        {
+            ItemPickup tape = GameObject.Find("Tape_Kit")?.GetComponent<ItemPickup>();
+            Assert.IsNotNull(tape, "the test tape beside her start (KitTestSetup)");
+            Assert.AreEqual(ItemKind.AudioLog, tape.item.kind);
+            // The Interact key twice in front of it, as a player does: the Interactor plays a taken tape.
+            var pad = new VirtualPad();
+            GameInput.SetBotSource(pad);
+            var driver = new GameObject("[PadDriver]").AddComponent<PadDriver>();
+            driver.Pad = pad;
+            Vector3 stand = tape.transform.position + Vector3.back * 0.9f;
+            stand.y = 0f;
+            lucy.GetComponent<TankController>().Teleport(stand, 0f);
+            yield return null;
+            yield return null;
+            Interactor interactor = lucy.GetComponent<Interactor>();
+            Assert.AreSame(tape, interactor.Focus, "she faces the tape");
+            for (int i = 0; i < 2; i++)
+            {
+                pad.Tap(InputManager.GameAction.Interact);
+                for (int f = 0; f < 3; f++) yield return null;
+            }
+            GameInput.ClearBotSource(pad);
+            UnityEngine.Object.Destroy(driver.gameObject);
+            StringAssert.StartsWith("taken:", interactor.LastResult, "she takes it");
+            yield return WaitUntil(() => TapePlayer.Instance != null && TapePlayer.Instance.IsPlaying, 3f);
+            Assert.IsTrue(TapePlayer.Instance.IsPlaying, "it plays");
+            foreach (SoldierBrain s in UnityEngine.Object.FindObjectsByType<SoldierBrain>(FindObjectsSortMode.None)) s.Alert("test", callOthers: false);
+            yield return WaitUntil(() => !TapePlayer.Instance.IsPlaying, 20f);
+            Assert.IsFalse(TapePlayer.Instance.IsPlaying, "the fight pauses it");
+            Assert.AreEqual(TapePlayer.PausedByCombat, TapePlayer.Instance.StoppedBy);
+            TapePlayer.Instance.Stop();
+        }
+
+        [UnityTest]
         public IEnumerator ASaveAndALoad_KeepTheDead_AndSpawnNoSecondFigure()
         {
             Kill("Soldier_K1");
@@ -175,6 +211,13 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.AreEqual(Room, SceneManager.GetActiveScene().name, "the kit test room (KitTestSetup.BuildKitTest)");
             lucy = GameObject.FindGameObjectWithTag("Player");
             lucy.GetComponentInChildren<Health>().SetInvulnerable(true);
+        }
+
+        [DefaultExecutionOrder(-1000)]
+        private sealed class PadDriver : MonoBehaviour
+        {
+            public VirtualPad Pad;
+            private void Update() => Pad?.Commit();
         }
 
         private static IEnumerator WaitUntil(Func<bool> condition, float timeoutSeconds)

@@ -75,6 +75,9 @@ namespace GlorifiedBody.Editor
 
             // Items, a save machine, a checkpoint, the door west, the music key.
             MenuLoopSetup.EnsurePickup("Drug_Nalcon", DrugType.Nalcon, new Vector3(-8.5f, 0.4f, -5.8f));
+            // The test tape beside her start (Bruno, 2026-11-08: "so you can hear a fight pause"): take it, walk east, and
+            // the soldiers' fight pauses it until the T key or the inventory plays it again.
+            ItemAssets.Pickup(null, "Tape_Kit", ItemAssets.TestTape(), PrimitiveType.Cube, new Vector3(-6f, 0.06f, -5.6f), new Vector3(0.24f, 0.08f, 0.16f), Quaternion.Euler(0f, 20f, 0f));
             SaveAssets.SavePoint("Save_Kit", new Vector3(-9f, 0f, -3f), 90f);
             SaveAssets.Checkpoint("Checkpoint_Kit", new Vector3(-6f, 0f, 0f), 90f, new Vector3(2f, 2f, 2f));
             RoomKit.Exit("Exit_KitWest", new Vector3(-hw - 1.7f, 1.2f, 0f), new Vector3(0.6f, 2.4f, 2f), TravelTestSetup.SceneB, TravelTestSetup.EntryFromA);
