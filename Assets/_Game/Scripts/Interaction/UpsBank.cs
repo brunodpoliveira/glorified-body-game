@@ -10,7 +10,8 @@ namespace GlorifiedBody.Interaction
     /// <summary>
     /// The dark room puzzle (DEMO_PLAN §10.1, Bruno's puzzle; CANON round 52: "the details stand as written"). When the room
     /// goes dark (DarkRoom) the monitors go black and the three units beep. The order is NET, REC, ACCESS. A unit out of
-    /// order trips the alarm: the three PCs drop, a continuous tone, and the beeps start again after resetSeconds (CANON
+    /// order trips the alarm: the three PCs drop, a continuous tone, each unit's display counts down to its automatic
+    /// restart (UpsUnit), two short beeps, and the beeps start again after resetSeconds (CANON
     /// round 40: no enemy comes; the alarm is PROPOSED; 5 s since Bruno, 2026-11-08: "20 seconds is too long"). When REC comes up the recorder plays; on the last
     /// unit the monitors come back one by one and their lights are the only light (DarkLayer). The room lights never come
     /// back. doneFlag opens the release (FlagSwitch.requiredFlag). The lines are placeholders for the writer's words.
@@ -39,8 +40,14 @@ namespace GlorifiedBody.Interaction
         public bool Active => Current == State.Beeping || Current == State.Alarm;
         public bool Done => Current == State.Done;
 
+        /// <summary>The time to the automatic restart after a fault.</summary>
+        public float SecondsLeft => Current == State.Alarm ? Mathf.Max(0f, alarmUntil - Time.time) : 0f;
+
+        /// <summary>The ready beeps after a fault (the tests).</summary>
+        public int ReadyBeeps { get; private set; }
+
         private float alarmUntil;
-        private AudioSource alarm;
+        private AudioSource alarm, ready;
         private MaterialPropertyBlock block;
 
         private void Awake()
@@ -50,6 +57,9 @@ namespace GlorifiedBody.Interaction
             alarm.clip = AlarmClip();
             alarm.loop = true;
             alarm.playOnAwake = false;
+            ready = gameObject.AddComponent<AudioSource>(); // its own source: the alarm's sound has stopped when it plays
+            GlorifiedBody.Audio.GameAudio.Bind(ready, GlorifiedBody.Audio.SoundChannel.Sfx, 0.45f, spatial: true);
+            ready.playOnAwake = false;
             foreach (UpsUnit u in units) if (u != null) u.bank = this;
         }
 
@@ -133,8 +143,11 @@ namespace GlorifiedBody.Interaction
 
         private void Update()
         {
-            if (Current != State.Alarm || Time.time < alarmUntil) return;
+            if (Current != State.Alarm) return;
+            if (Time.time < alarmUntil) { RefreshUnits(); return; } // the countdown on the displays, the red blink
             alarm.Stop();
+            ready.PlayOneShot(ReadyClip()); // the units restart by themselves: two short beeps, then their own beeps
+            ReadyBeeps++;
             Current = State.Beeping;
             RunTelemetry.Event("ups_beeping", "after the alarm");
             RefreshUnits();
@@ -162,6 +175,24 @@ namespace GlorifiedBody.Interaction
             int count = 0;
             for (int k = 0; k < monitorLights.Length; k++) if (monitorLights[k] != null && monitorLights[k].enabled) count++;
             MonitorsOn = count;
+        }
+
+        // Two short high beeps: the units ready again. A placeholder sound (no file).
+        private static AudioClip readyClip;
+        private static AudioClip ReadyClip()
+        {
+            if (readyClip != null) return readyClip;
+            const int rate = 22050;
+            var data = new float[(int)(rate * 0.4f)];
+            for (int i = 0; i < data.Length; i++)
+            {
+                float t = (float)i / rate;
+                bool on = t < 0.1f || (t >= 0.2f && t < 0.3f);
+                data[i] = on ? Mathf.Sin(2f * Mathf.PI * 1600f * t) * 0.5f : 0f;
+            }
+            readyClip = AudioClip.Create("ups_ready", data.Length, 1, rate, false);
+            readyClip.SetData(data, 0);
+            return readyClip;
         }
 
         // A continuous two-tone alarm: a placeholder sound (no file).

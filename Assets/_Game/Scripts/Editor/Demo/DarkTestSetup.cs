@@ -169,9 +169,11 @@ namespace GlorifiedBody.Editor.Demo
                 GameObject led = r.Box(r.Props, "UPS_LED_" + label, new Vector3(12.44f, 0.4f, z), new Vector3(0.02f, 0.05f, 0.05f), DemoRoom.Colour("ups_led", Color.white));
                 led.isStatic = false;
                 led.AddComponent<Emissive>();
-                r.Sign("UPS_Label_" + label, label, new Vector3(12.44f, 0.62f, z), Vector3.left, new Vector2(0.4f, 0.12f), 30);
+                GameObject display = r.Sign("UPS_Label_" + label, label, new Vector3(12.44f, 0.62f, z), Vector3.left, new Vector2(0.5f, 0.12f), 30);
+                display.isStatic = false;
                 UpsUnit unit = MenuLoopSetup.EnsureComponent<UpsUnit>(body);
                 unit.label = label;
+                unit.display = display.GetComponentInChildren<UnityEngine.UI.Text>(true); // the front display: the label, or a fault's countdown
                 unit.led = led.GetComponent<Renderer>();
                 unit.pitch = Pitches[System.Array.IndexOf(Labels, label)];
                 GameObject point = MenuLoopSetup.EnsureChild(body, "Point");

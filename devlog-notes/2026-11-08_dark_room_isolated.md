@@ -56,3 +56,21 @@ The alarm was not a soft lock. With the room's own time it ended after 20.0 s, a
 tests and the bot shortened the time to 1.5 s, so no test used the real 20 s. Now the alarm lasts 5 s (PROPOSED).
 `DarkRoomTests.TheAlarm_WithTheRoomsOwnTime_Ends_AndTheUnitsTakeTheKeyAgain` uses the room's own time and fails above
 5 s. `DarkRoomTests` 5 of 5, the dark bot passes. The rebuild also gives the props of DARK TEST their comments.
+
+## Later that day: the restart countdown
+
+```text
+needs to have something that will let the player know that they can try again in 5s, something that also makes sense
+in-universe
+```
+
+A UPS unit after a fault restarts by itself, and its front display says so. PROPOSED:
+
+1. During the alarm, each unit's display counts down: "FAULT 5" to "FAULT 1". Its LED blinks red.
+2. The Interact key on a unit during the alarm reads the display out: "NET: FAULT. AUTOMATIC RESTART IN 3 S." The hint
+   says "read the NET unit". A press during the fault is no new mistake.
+3. At the end, two short high beeps play. The displays show the labels again, and the units beep as before.
+
+`DarkRoomTests` 5 of 5 (the countdown, the read-out, the ready beeps). The dark bot passes. Shot:
+`dark_room_2026-11-08/dark_04_alarm_countdown.png`. The black shapes over the HUD in that shot come from the bot's
+shot camera, not from the game.

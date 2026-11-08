@@ -158,9 +158,17 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.AreEqual(UpsBank.State.Alarm, bank.Current, "out of order: the alarm");
             Assert.AreEqual(1, bank.Alarms);
             Assert.IsFalse(net.Up, "the PCs drop");
-            Assert.IsFalse(bank.units.Any(u => u.Available), "no unit starts during the alarm");
+            Assert.AreEqual("FAULT 2", net.DisplayShown, "the display counts down to the automatic restart (1.5 s here)");
+            int alarmsBefore = bank.Alarms;
+            yield return StartUnits("NET");
+            Assert.IsFalse(net.Up, "no unit starts during the alarm");
+            Assert.AreEqual(alarmsBefore, bank.Alarms, "a press during the fault is no new mistake");
+            StringAssert.StartsWith("NET: FAULT. AUTOMATIC RESTART IN", interactor.Text, "the key reads the display out");
             yield return new WaitForSeconds(bank.resetSeconds + 0.3f);
             Assert.AreEqual(UpsBank.State.Beeping, bank.Current, "the beeps come back");
+            Assert.AreEqual(1, bank.ReadyBeeps, "two short beeps say so");
+            Assert.AreEqual("NET", net.DisplayShown, "the display shows its label again");
+            yield return new WaitForSeconds(Interactor.MessageSeconds); // the message of the press during the fault goes
             Assert.AreEqual(0, bank.Next, "from the start");
             yield return StartUnits("NET", "REC", "ACCESS");
             Assert.IsTrue(bank.Done, "the right order works after a mistake");
@@ -177,6 +185,7 @@ namespace GlorifiedBody.Tests.PlayMode
             dark.SetDark();
             yield return StartUnits("REC");
             Assert.AreEqual(UpsBank.State.Alarm, bank.Current, "out of order: the alarm");
+            Assert.AreEqual("FAULT 5", bank.units.First(u => u.label == "NET").DisplayShown, "the countdown starts at the room's time");
             float t0 = Time.realtimeSinceStartup;
             while (bank.Current == UpsBank.State.Alarm && Time.realtimeSinceStartup - t0 < reset + 10f) yield return null;
             Debug.Log($"[DarkRoomTests] the alarm ended after {Time.realtimeSinceStartup - t0:0.0} s (state {bank.Current}, sound {bank.AlarmOn})");
