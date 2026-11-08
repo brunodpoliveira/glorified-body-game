@@ -20,6 +20,11 @@ namespace GlorifiedBody.Story
         public string doneSpeaker = "";
         [Tooltip("It works only when she carries this item (the door of the car waits for the sunglasses). Empty: always.")]
         public string requiredItem = "";
+        [Tooltip("It works only when this flag is up; before that it only shows waitingText (the release in G9: WAITING FOR NET). Empty: always.")]
+        public string requiredFlag = "";
+        public string waitingText = "";
+
+        private bool Waiting => !string.IsNullOrEmpty(requiredFlag) && !GlorifiedBody.Saving.StoryFlags.Has(requiredFlag);
 
         private bool HasItem
         {
@@ -34,11 +39,12 @@ namespace GlorifiedBody.Story
 
         public override bool Available => base.Available && !string.IsNullOrEmpty(flag) && !GlorifiedBody.Saving.StoryFlags.Has(flag) && HasItem;
         public override string Hint => hint;
-        public override InteractKind KindFor(Interactor who) => InteractKind.Ask;
-        public override string TextFor(Interactor who) => question;
+        public override InteractKind KindFor(Interactor who) => Waiting ? InteractKind.Message : InteractKind.Ask;
+        public override string TextFor(Interactor who) => Waiting ? waitingText : question;
 
         public override string Confirm(Interactor who)
         {
+            if (Waiting) return "waiting:" + flag;
             GlorifiedBody.Saving.StoryFlags.Raise(flag);
             Sfx.Play(Sfx.DoorOpen, transform.position, 0.8f);
             if (!string.IsNullOrEmpty(doneText)) GlorifiedBody.Subtitles.SubtitleService.Say("switch", doneSpeaker, doneText, 4f);
