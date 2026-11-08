@@ -59,14 +59,5 @@ MonoBehaviour:
     speaker: CHART
     lineId: cs02b_04
     text: NEVER ENTER ALONE.
-  - still: {fileID: 2800000, guid: ac9c33c1e928167c79fe8e580e38f6ef, type: 3}
-    video: {fileID: 0}
-    sound: {fileID: 0}
-    seconds: 5.325
-    panFrom: {x: 0, y: 0, z: 1}
-    panTo: {x: 0, y: 0, z: 1}
-    speaker: CROWN
-    lineId: cs02b_05
-    text: 'SOURCE: ANY DEAD BODY. FEED ON ONE TO HEAL. NOTHING ELSE HEALS THE SUBJECT.'
   music: {fileID: 0}
   doneFlag: 

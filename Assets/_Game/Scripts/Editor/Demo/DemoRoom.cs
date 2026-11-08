@@ -165,11 +165,28 @@ namespace GlorifiedBody.Editor.Demo
         {
             RoomSpec s = Spec;
             Box(Room, "Floor", new Vector3(s.Centre.x, -0.05f, s.Centre.z), new Vector3(s.Width, 0.1f, s.Depth), Grey(0.42f));
+            Ceiling(Room, new Vector3(s.Centre.x, s.Height, s.Centre.z), new Vector3(s.Width + Wall, s.Depth + Wall));
             WallSide('N', s.X0, s.X1, s.Z1);
             WallSide('S', s.X0, s.X1, s.Z0);
             WallSide('E', s.Z0, s.Z1, s.X1);
             WallSide('W', s.Z0, s.Z1, s.X0);
             foreach (Door d in s.Doors) Doorway(d);
+        }
+
+        /// <summary>
+        /// The ceiling of a room, its underside at the room's height (Bruno, 2026-11-07: "in some areas the walls are not fully
+        /// built, so i can see through"): with no ceiling, the top of a frame looked over the far walls into the other rooms,
+        /// and from floor 1 up into floor 2. It has the tone of the dark clear colour, no collider and no shadow: the sun still
+        /// lights the floor, and nothing in the game hits it. RoomSight stops its rays at this height.
+        /// </summary>
+        public static GameObject Ceiling(GameObject shell, Vector3 underside, Vector2 plan)
+        {
+            GameObject ceiling = RoomKit.Box(shell, "Ceiling", underside + Vector3.up * 0.05f, new Vector3(plan.x, 0.1f, plan.y));
+            ceiling.GetComponent<Renderer>().sharedMaterial = Grey(0.12f);
+            ceiling.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            Collider c = ceiling.GetComponent<Collider>();
+            if (c != null) UnityEngine.Object.DestroyImmediate(c);
+            return ceiling;
         }
 
         /// <summary>One wall with a gap at each doorway on it. along0..along1 run along the wall; at is the wall's line.</summary>
@@ -625,6 +642,9 @@ namespace GlorifiedBody.Editor.Demo
             door.transform.position = Mouth(d);
             // Box takes a local position: the door stands at the doorway already (2026-11-03: the leaf stood at twice its place).
             GameObject leaf = Box(door, "Leaf", Vector3.up * d.Height * 0.5f, Abs(across * d.Width + Vector3.up * d.Height + outward * 0.1f), Grey(0.25f));
+            // The leaf slides: not static (2026-11-07, Bruno: "door won't appear open but you can go pass throught it": static
+            // batching drew the leaf at its first place, and only its collider went).
+            leaf.isStatic = false;
             Carve(leaf);
             LockedDoor locked = MenuLoopSetup.EnsureComponent<LockedDoor>(door);
             locked.keyItemId = keyId;

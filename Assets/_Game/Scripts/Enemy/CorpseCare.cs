@@ -98,6 +98,16 @@ namespace GlorifiedBody.Enemy
         private float stepTimer;
         private Transform spine, chest, leftArm, rightArm, leftFore, rightFore;
         private static readonly System.Collections.Generic.HashSet<Transform> tended = new System.Collections.Generic.HashSet<Transform>();
+        private static readonly System.Collections.Generic.List<CorpseCare> carers = new System.Collections.Generic.List<CorpseCare>();
+
+        /// <summary>
+        /// An idle carer looks for a body this often, not each frame (2026-11-07: 33 carers that searched the scene each frame
+        /// took 7 ms of a demo frame).
+        /// </summary>
+        public const float SearchSeconds = 0.25f;
+        private float nextSearch;
+        /// <summary>The searches for a body since the scene loaded (the tests).</summary>
+        public static int Searches { get; private set; }
 
         public Step Current { get; private set; } = Step.None;
         public Transform Patient => patient;
@@ -133,9 +143,15 @@ namespace GlorifiedBody.Enemy
                 chestBend = System.Array.IndexOf(cprIndices, System.Array.IndexOf(HumanTrait.MuscleName, "Chest Front-Back"));
             }
             lastSeen = Time.time;
+            nextSearch = Time.time + Random.value * SearchSeconds; // the carers search in different frames
+            carers.Add(this);
         }
 
-        private void OnDestroy() => poseHandler?.Dispose();
+        private void OnDestroy()
+        {
+            carers.Remove(this);
+            poseHandler?.Dispose();
+        }
 
         private void OnEnable()
         {
@@ -202,7 +218,11 @@ namespace GlorifiedBody.Enemy
 
             if (!Active)
             {
-                if (MayStart && brain.CanCare) TryFindPatient();
+                if (Time.time >= nextSearch && MayStart && brain.CanCare)
+                {
+                    nextSearch = Time.time + SearchSeconds;
+                    TryFindPatient();
+                }
                 return;
             }
             if (sees && !brain.CareIgnoresHer) { Stop("saw her"); return; }
@@ -268,12 +288,13 @@ namespace GlorifiedBody.Enemy
 
         private void TryFindPatient()
         {
+            Searches++;
             Transform best = null;
             float bestDistance = careRange;
-            foreach (EnemyMorale other in FindObjectsByType<EnemyMorale>(FindObjectsSortMode.None))
+            foreach (EnemyMorale other in EnemyMorale.All)
             {
-                if (other == null || other.gameObject == gameObject) continue;
-                Health h = other.GetComponent<Health>();
+                if (other == null || other.gameObject == gameObject || !other.gameObject.activeInHierarchy) continue;
+                Health h = other.Health;
                 if (h == null || !h.IsDead || tended.Contains(other.transform)) continue;
                 float d = Flat(transform.position, other.transform.position);
                 if (d >= bestDistance || !GlorifiedBody.Rooms.Room.Same(transform.position, other.transform.position)) continue; // a body in its own room (2026-11-02)
@@ -287,9 +308,9 @@ namespace GlorifiedBody.Enemy
 
         private bool NearerCarer(Transform body, float myDistance)
         {
-            foreach (CorpseCare other in FindObjectsByType<CorpseCare>(FindObjectsSortMode.None))
+            foreach (CorpseCare other in carers)
             {
-                if (other == this || other.health.IsDead || other.Active || !other.brain.CanCare || !other.MayStart) continue;
+                if (other == this || other == null || !other.gameObject.activeInHierarchy || other.health.IsDead || other.Active || !other.brain.CanCare || !other.MayStart) continue;
                 if (Flat(other.transform.position, body.position) < myDistance - 0.01f) return true;
             }
             return false;

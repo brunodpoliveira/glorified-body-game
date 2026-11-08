@@ -17,6 +17,8 @@ namespace GlorifiedBody.Cameras
         [Min(0f)] public float followSpeed = 60f;
         [Tooltip("The sun's shadow distance while this camera is on, in metres (0 = the pipeline's own). An exterior camera sets what it sees, so the shadow map is sharp there.")]
         [Min(0f)] public float shadowDistance;
+        [Tooltip("The rooms this camera can see (Rooms.RoomSight, the builder fills it). Empty: the room cull draws her room and the rooms next door.")]
+        public string[] sees = new string[0];
 
         private void OnDrawGizmos()
         {

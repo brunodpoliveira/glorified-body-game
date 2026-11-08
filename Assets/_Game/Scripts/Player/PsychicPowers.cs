@@ -393,14 +393,15 @@ namespace GlorifiedBody.Player
         /// <summary>
         /// The floor shield (2026-10-31, design §2.3; Bruno, 2026-10-20: "RMB hold = the floor shield, the defensive
         /// full charge"). With mk_orzabal selected and nothing in the air, the defend key held past ShieldHoldDelay fills
-        /// the circle (she stands still and faces her target, as for an attack). At a full circle a slab tears out of the
-        /// floor in front of her and hangs there (FloorShield), for the power's full cost. One at a time. A release
-        /// before the full circle costs nothing.
+        /// the circle (she stands still and faces her target, as for an attack). At a full circle a slab of the floor in
+        /// front of her bends up into a standing wall (FloorShield), for the power's full cost. It stays where it rose until
+        /// it breaks (Bruno, 2026-11-08), so another may rise while it stands: each needs a new press of the defend key.
+        /// A release before the full circle costs nothing.
         /// </summary>
         private void UpdateShield(float dt)
         {
             bool held = GameInput.GetAction(InputManager.GameAction.Defend, KeyCode.Mouse1);
-            bool can = held && !defendAfterCancel && Selected.kind == PowerKind.Telekinesis && activeLift == null && FloorShield.Current == null
+            bool can = held && !defendAfterCancel && Selected.kind == PowerKind.Telekinesis && activeLift == null
                        && !IsCharging && !(shortController != null && shortController.IsActive) && !stats.Health.IsDead;
             if (!can)
             {
@@ -427,6 +428,7 @@ namespace GlorifiedBody.Player
             {
                 TryRaiseShield();
                 EndShieldCharge();
+                defendAfterCancel = true; // the next slab needs a new press
             }
         }
 
@@ -574,15 +576,11 @@ namespace GlorifiedBody.Player
         public bool TryRaiseShield()
         {
             PowerDefinition power = Selected;
-            if (power == null || power.kind != PowerKind.Telekinesis || FloorShield.Current != null || activeLift != null) return false;
+            if (power == null || power.kind != PowerKind.Telekinesis || activeLift != null) return false;
             if (!stats.CanSpendMk(power.kind, power.nalconCost)) return Result("no_nalcon", 1f);
-            float scale = DamageScale;
             FloorShield shield = FloorShield.Tear(gameObject);
             if (shield == null) return Result("no_floor", 1f);
             stats.TrySpendMk(power.kind, power.nalconCost);
-            // A held prop: it turns with her, the attack key throws it (the power's full damage), a full circle slams it.
-            activeLift = TelekinesisLift.Apply(shield.gameObject, gameObject, FloorShield.HangHeight, FloorShield.RiseSeconds, 0f, power.baseDamage * scale);
-            shield.HeldBy(activeLift);
             LastResult = "shield";
             LastResultTime = Time.time;
             OnChanged?.Invoke();

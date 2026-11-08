@@ -19,7 +19,8 @@ namespace GlorifiedBody.Automation
 {
     /// <summary>
     /// The floor shield bot (2026-10-31): in AI TEST she holds the defend key with mk_orzabal, a slab tears out of the
-    /// floor, the soldier's bullets stop on it, and the attack key throws it at the power armour. Shots:
+    /// floor and bends up, it stays where it rose when she moves (2026-11-08), bullets stop on it, and the attack key leaves
+    /// it in place. Shots:
     /// shots/shield_&lt;n&gt;_&lt;moment&gt;.png. Active only when BotArgs.Bot == "shield": tools/unity.sh play AiTest Main_Menu shield 300
     /// </summary>
     [DefaultExecutionOrder(-1000)]
@@ -129,23 +130,25 @@ namespace GlorifiedBody.Automation
             yield return Shot("shield_up", her.position - her.forward * 2.4f + her.right * 0.9f + Vector3.up * 1.9f, her.position + her.forward * 2f + Vector3.up * 1f);
             Record("a_slab_tears_out", shield != null && powers.LastResult == "shield", $"mk={stats.Nalcon:0}");
 
-            // 2. While she turns the slab to him (the turn keys), the soldier finds no clear line and holds his fire.
+            // 2. It stays where it rose (Bruno, 2026-11-08: "it should be fixed in place"): she turns and steps aside, it does not move.
             TankController tank = lucy.GetComponent<TankController>();
-            int hitsBefore = rifleHits;
-            t0 = BotClock.Now;
-            while (shield != null && BotClock.Now - t0 < 12f)
-            {
-                Vector3 toSoldier = Vector3.ProjectOnPlane(soldier.transform.position - her.position, Vector3.up);
-                if (toSoldier.sqrMagnitude > 0.01f) tank.Teleport(her.position, Quaternion.LookRotation(toSoldier).eulerAngles.y);
-                yield return null;
-            }
-            Record("no_rifle_bullet_reaches_her", shield != null && rifleHits == hitsBefore, $"hits={rifleHits - hitsBefore} absorbed={(shield != null ? shield.Absorbed : -1)}");
+            Vector3 front = her.forward, stand = her.position;
+            Vector3 slabAt = shield != null ? shield.Slab.position : Vector3.zero;
+            Quaternion slabTurn = shield != null ? shield.Slab.rotation : Quaternion.identity;
+            tank.Teleport(stand + her.right * 2f, her.eulerAngles.y + 90f);
+            yield return BotClock.Wait(0.5f);
+            yield return Shot("shield_stays", stand - front * 2.4f + Vector3.Cross(Vector3.up, front) * 2.5f + Vector3.up * 2.2f, slabAt);
+            Record("it_stays_when_she_moves", shield != null && Vector3.Distance(slabAt, shield.Slab.position) < 0.01f && Quaternion.Angle(slabTurn, shield.Slab.rotation) < 0.5f,
+                shield != null ? $"moved {Vector3.Distance(slabAt, shield.Slab.position):0.000} m" : "broken");
+            tank.Teleport(stand, Quaternion.LookRotation(front).eulerAngles.y);
+            yield return BotClock.Wait(0.3f);
 
-            // 3. Three rounds from his muzzle at her chest: they stop on the slab.
+            // 3. Three rounds at her chest from in front of the slab: they stop on it.
+            int hitsBefore = rifleHits;
             if (shield != null)
             {
                 Vector3 chest = her.position + Vector3.up * Body.ChestHeight;
-                Vector3 muzzle = soldier.transform.position + Vector3.up * Body.MuzzleHeight;
+                Vector3 muzzle = stand + front * 8f + Vector3.up * Body.MuzzleHeight;
                 for (int i = 0; i < 3; i++)
                 {
                     Enemy.EnemyProjectile.Launch(muzzle, (chest - muzzle).normalized, 40f, 15f, soldier.gameObject, "soldier_rifle");
@@ -156,24 +159,13 @@ namespace GlorifiedBody.Automation
             }
             Record("the_slab_takes_the_bullets", shield != null && shield.Absorbed == 3 && rifleHits == hitsBefore, shield != null ? $"absorbed={shield.Absorbed} hp={shield.Hp:0}" : "broken");
 
-            // 4. The attack key throws it at the power armour (too heavy to lift, not too heavy to hit).
-            if (FloorShield.Current == null)
-            {
-                stats.DebugSet(PsychicStats.MaxNalcon, 0f);
-                powers.TryRaiseShield();
-                yield return BotClock.Wait(0.6f);
-            }
-            Health armourHealth = armour.GetComponent<Health>() ?? armour.GetComponentInParent<Health>();
-            float hp0 = armourHealth.CurrentHealth;
-            Vector3 to = Vector3.ProjectOnPlane(armour.transform.position - her.position, Vector3.up);
-            lucy.GetComponent<TankController>().Teleport(her.position, Quaternion.LookRotation(to).eulerAngles.y);
+            // 4. The attack key does not throw it: it is no held thing.
             lockOn.SetTarget(armour);
             yield return BotClock.Wait(0.2f);
             pad.Tap(InputManager.GameAction.Charge);
-            t0 = BotClock.Now;
-            while ((armourHealth.CurrentHealth >= hp0 || FloorShield.Current != null) && BotClock.Now - t0 < 4f) yield return null;
-            Record("thrown_at_the_armour", armourHealth.CurrentHealth < hp0 && FloorShield.Current == null, $"armour {hp0:0}>{armourHealth.CurrentHealth:0} result={powers.LastResult}");
-            yield return Shot("thrown");
+            yield return BotClock.Wait(1f);
+            Record("the_attack_leaves_it", shield != null && FloorShield.Current == shield && Vector3.Distance(slabAt, shield.Slab.position) < 0.01f, $"result={powers.LastResult}");
+            yield return Shot("after_the_attack");
             Finish();
         }
 

@@ -351,16 +351,16 @@ namespace GlorifiedBody.Tutorial
                 () => caught,
                 onEnter: () => SetGunActive(true),
                 onExit: () => SetGunActive(false)));
-            // The floor shield (2026-10-31, design §2.3): the defend key held to a full circle tears up a slab of floor.
+            // The floor shield (2026-10-31, design §2.3): the defend key held to a full circle bends up a slab of floor (fixed, 2026-11-08).
             steps.Add(new TutorialStep("floor_shield",
                 "Faculty three guards you too. Tear the floor up between you and the gun.",
-                "With mk_orzabal selected, lock the gun ({SwitchTarget}) and hold {Defend} to the full circle. A slab rises in front of you and takes the bullets.",
-                () => shieldTook |= GlorifiedBody.Combat.FloorShield.Current != null && GlorifiedBody.Combat.FloorShield.Current.Absorbed > 0,
+                "With mk_orzabal selected, lock the gun ({SwitchTarget}) and hold {Defend} to the full circle. A slab bends up in front of you and stays there. It takes the bullets until it breaks.",
+                () => shieldTook |= System.Linq.Enumerable.Any(GlorifiedBody.Combat.FloorShield.All, s => s.Absorbed > 0),
                 onEnter: () => SetGunActive(true),
                 onExit: () =>
                 {
                     SetGunActive(false);
-                    if (GlorifiedBody.Combat.FloorShield.Current != null) GlorifiedBody.Combat.FloorShield.Current.Shatter(); // the next steps start clear
+                    foreach (var slab in new System.Collections.Generic.List<GlorifiedBody.Combat.FloorShield>(GlorifiedBody.Combat.FloorShield.All)) slab.Shatter(); // the next steps start clear
                 }));
             // The attacks (Bruno, 2026-10-24): the icon names the attack; a red ring is a grenade.
             steps.Add(new TutorialStep("grenade",

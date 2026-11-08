@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using GlorifiedBody.Combat;
 using GlorifiedBody.Core;
@@ -78,11 +79,19 @@ namespace GlorifiedBody.Enemy
             }
         }
 
+        private static readonly List<EnemyMorale> all = new List<EnemyMorale>();
+        /// <summary>Every figure with a morale in the loaded scenes, active or not (no search of the scene each frame).</summary>
+        public static IReadOnlyList<EnemyMorale> All => all;
+        public Health Health => health;
+
         private void Awake()
         {
             health = GetComponent<Health>();
             brain = GetComponent<IFearful>();
+            all.Add(this);
         }
+
+        private void OnDestroy() => all.Remove(this);
 
         private void OnEnable()
         {

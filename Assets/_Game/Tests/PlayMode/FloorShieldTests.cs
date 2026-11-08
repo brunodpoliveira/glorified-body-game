@@ -75,7 +75,7 @@ namespace GlorifiedBody.Tests.PlayMode
             pad.ReleaseAll();
             GameInput.ClearBotSource(pad);
             if (driver != null) UnityEngine.Object.Destroy(driver.gameObject);
-            if (FloorShield.Current != null) UnityEngine.Object.Destroy(FloorShield.Current.gameObject);
+            foreach (FloorShield slab in FloorShield.All) if (slab != null) UnityEngine.Object.Destroy(slab.gameObject);
             yield return null;
         }
 
@@ -104,27 +104,33 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.AreEqual("shield", powers.LastResult);
             Assert.AreEqual(100f - powers.Selected.nalconCost, stats.Nalcon, 0.5f, "the cost of a full circle");
             Assert.IsNotNull(shield.Scar, "a dark scar where it tore out");
-            yield return new WaitForSeconds(0.6f);
+            yield return new WaitForSeconds(FloorShield.RiseSeconds + 0.3f);
+            // It bent up on its near edge into a wall from the floor (Bruno, 2026-11-08: "pulling chunks of the floor and bending them up").
+            Bounds wall = shield.Slab.GetComponent<Renderer>().bounds;
             Vector3 toTarget = Vector3.ProjectOnPlane(dummyA.transform.position - player.transform.position, Vector3.up).normalized;
-            Vector3 toShield = Vector3.ProjectOnPlane(shield.transform.position - player.transform.position, Vector3.up);
-            Assert.AreEqual(FloorShield.Ahead, toShield.magnitude, 0.15f, "it hangs in front of her");
+            Vector3 toShield = Vector3.ProjectOnPlane(shield.Slab.position - player.transform.position, Vector3.up);
+            Assert.AreEqual(FloorShield.Near + FloorShield.Thick * 0.5f, toShield.magnitude, 0.15f, "it stands in front of her");
             Assert.Less(Vector3.Angle(toTarget, toShield), 15f, "between her and her target");
-            Assert.AreEqual(FloorShield.HangHeight, shield.transform.position.y, 0.1f);
-            Assert.Less(Vector3.Angle(shield.transform.up, Vector3.up), 5f, "it stands upright");
+            Assert.Less(Vector3.Angle(shield.Slab.forward, Vector3.up), 5f, "it stands upright");
+            Assert.AreEqual(player.transform.position.y, wall.min.y, 0.08f, "on the floor");
+            Assert.AreEqual(player.transform.position.y + FloorShield.Tall, wall.max.y, 0.08f, "as tall as the slab is long");
 
-            // It turns with her.
-            tank.Teleport(player.transform.position, player.transform.eulerAngles.y + 90f);
-            yield return new WaitForSeconds(0.2f);
-            Vector3 after = Vector3.ProjectOnPlane(shield.transform.position - player.transform.position, Vector3.up);
-            Assert.Less(Vector3.Angle(player.transform.forward, after), 15f, "it swings around with her");
-            Assert.Less(Vector3.Angle(player.transform.forward, shield.transform.forward), 15f, "and faces the way she faces");
+            // It stays where it rose: she turns and walks away, it does not move.
+            Vector3 at = shield.Slab.position;
+            Quaternion turn = shield.Slab.rotation;
+            tank.Teleport(player.transform.position - player.transform.right * 1.5f, player.transform.eulerAngles.y + 90f);
+            yield return new WaitForSeconds(0.3f);
+            Assert.AreEqual(0f, Vector3.Distance(at, shield.Slab.position), 0.01f, "fixed in place");
+            Assert.Less(Quaternion.Angle(turn, shield.Slab.rotation), 0.5f, "it does not turn with her");
 
-            // One at a time.
+            // Another may rise while it stands, one for each press.
             pad.SetHeld(InputManager.GameAction.Defend, true);
+            yield return WaitUntil(() => FloorShield.All.Count == 2, 4f);
+            Assert.AreEqual(2, FloorShield.All.Count, "a new press, a new slab");
             yield return new WaitForSeconds(2.5f);
             pad.SetHeld(InputManager.GameAction.Defend, false);
-            Assert.AreSame(shield, FloorShield.Current);
-            Assert.AreEqual(1, UnityEngine.Object.FindObjectsByType<FloorShield>(FindObjectsSortMode.None).Length, "one shield");
+            Assert.AreEqual(2, FloorShield.All.Count, "a key held on raises no more");
+            Assert.IsNotNull(shield, "the first one stands");
         }
 
         [UnityTest]
@@ -159,21 +165,27 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator TheAttackKey_ThrowsTheSlab_AtTheTarget_AndItBreaks()
+        public IEnumerator TheSlab_Stays_WhenABulletHitsHer_OrSheAttacks()
         {
+            // Bruno, 2026-11-07: "floor shield does not depend on her hold; it stays there until it is destroyed".
             powers.Select(PowerKind.Telekinesis);
-            Assert.IsTrue(powers.TryRaiseShield());
-            yield return new WaitForSeconds(0.6f);
-            Health target = dummyA.GetComponent<Health>();
-            float hp0 = target.CurrentHealth;
             FaceDummy();
             yield return null;
+            Assert.IsTrue(powers.TryRaiseShield());
+            FloorShield shield = FloorShield.Current;
+            yield return new WaitForSeconds(FloorShield.RiseSeconds + 0.3f);
+            Vector3 at = shield.Slab.position;
+            Assert.IsNull(powers.HeldLift, "nothing holds it");
+
+            Vector3 chest = player.transform.position + Vector3.up * Body.ChestHeight;
+            Vector3 side = chest + player.transform.right * 4f;
+            EnemyProjectile.Launch(side, (chest - side).normalized, 30f, 5f, dummyA.gameObject, "test_pistol");
+            yield return new WaitForSeconds(0.5f);
+            Assert.IsTrue(shield != null && FloorShield.Current == shield, "a bullet on her leaves it standing");
             pad.Tap(InputManager.GameAction.Charge);
-            yield return WaitUntil(() => FloorShield.Current == null, 3f);
-            Assert.IsNull(FloorShield.Current, "a thrown slab breaks");
-            StringAssert.StartsWith("launch_prop:", powers.LastResult, "the attack key throws it as a prop");
-            yield return WaitUntil(() => target.CurrentHealth < hp0, 2f);
-            Assert.Less(target.CurrentHealth, hp0, "it hurts the one it hits");
+            yield return new WaitForSeconds(1f);
+            Assert.IsTrue(shield != null, "the attack key does not throw it");
+            Assert.AreEqual(0f, Vector3.Distance(at, shield.Slab.position), 0.01f, "it has not moved");
         }
 
         [UnityTest]

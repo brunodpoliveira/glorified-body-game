@@ -76,6 +76,7 @@ namespace GlorifiedBody.Editor.Demo
             RoomKit.BakeNavMesh(world, NavPath);
             MenuLoopSetup.EnsureGameplaySystems();
             MenuLoopSetup.EnsureRuntimeUi();
+            Sight(world); // last: the steps before it may still move a camera or a wall
             EditorSceneManager.SaveScene(scene, ScenePath);
             RemoveOldRoomScenes();
             MenuLoopSetup.CleanBuildSettings();
@@ -114,6 +115,37 @@ namespace GlorifiedBody.Editor.Demo
             foreach (GameObject obj in scene.GetRootGameObjects())
                 if (!before.Contains(obj)) obj.transform.SetParent(root.transform, true);
             return room;
+        }
+
+        /// <summary>
+        /// The rooms each fixed camera can see (RoomSight): the room cull draws only those, and her room (Bruno, 2026-11-07:
+        /// "cull rendering to what the player can see; this is easy due to the fixed camera angles").
+        /// </summary>
+        public static void Sight(GameObject world)
+        {
+            Physics.SyncTransforms();
+            Room[] all = world.GetComponentsInChildren<Room>(true);
+            int total = 0, cameras = 0;
+            foreach (FixedCamera cam in world.GetComponentsInChildren<FixedCamera>(true))
+            {
+                Room own = cam.GetComponentInParent<Room>(true);
+                if (own == null) continue;
+                RoomSight.Result sight = RoomSight.Scan(cam, own, all);
+                cam.sees = sight.Seen.Select(r => r.id).OrderBy(id => id, System.StringComparer.Ordinal).ToArray();
+                EditorUtility.SetDirty(cam);
+                total += cam.sees.Length;
+                cameras++;
+            }
+            Debug.Log($"[DemoWorld] sight: {cameras} cameras see {(cameras > 0 ? (float)total / cameras : 0f):0.0} of {all.Length} rooms on average");
+        }
+
+        /// <summary>The sight lists again, on the saved world (after a change of walls or cameras, with no full build).</summary>
+        public static void Resight()
+        {
+            Scene scene = EditorSceneManager.OpenScene(ScenePath);
+            GameObject world = scene.GetRootGameObjects().First(g => g.GetComponentInChildren<Room>(true) != null);
+            Sight(world);
+            EditorSceneManager.SaveScene(scene);
         }
 
         /// <summary>
@@ -160,6 +192,7 @@ namespace GlorifiedBody.Editor.Demo
             Box(shell, "Wall_E", new Vector3(StairX1, wallY, (StairTop + StairBottom) * 0.5f), new Vector3(DemoRoom.Wall, wallH, len), wall);
             // Over G1's north wall (3 m high on floor 1) the shaft goes on up to floor 2's height.
             Box(shell, "Wall_S_Upper", new Vector3(mid, (3f - drop + 3f) * 0.5f, StairBottom), new Vector3(width + DemoRoom.Wall, 3f - (3f - drop), DemoRoom.Wall), wall);
+            DemoRoom.Ceiling(shell, new Vector3(mid, room.height, (StairTop + StairBottom) * 0.5f), new Vector2(width + DemoRoom.Wall, len + DemoRoom.Wall));
             Box(props, "Handrail", new Vector3(StairX1 - 0.2f, -drop * 0.5f + 0.9f, (StairRampTop + StairRampBottom) * 0.5f), new Vector3(0.05f, 0.05f, length), DemoRoom.Grey(0.7f)).transform.rotation = ramp.transform.rotation;
             GameObject music = MenuLoopSetup.EnsureChild(root, "[Music]");
             MenuLoopSetup.EnsureComponent<Audio.RoomMusic>(music).Key = DemoWard.Music;

@@ -103,11 +103,15 @@ namespace GlorifiedBody.Tests.PlayMode
                     yield return WaitUntil(() => GlorifiedBody.Rooms.RoomTracker.CurrentId == id, 3f);
                     Assert.AreEqual(id, GlorifiedBody.Rooms.RoomTracker.CurrentId, "her room");
                     Assert.IsTrue(GlorifiedBody.Rooms.RoomTracker.WasIn(id));
+                    yield return null; // the camera cut of the new room
+                    yield return null;
+                    // Drawn: her room, and the rooms the camera sees (2026-11-07, RoomSight).
+                    FixedCamera cam = FixedCameraDirector.Instance.Current;
                     foreach (GlorifiedBody.Rooms.Room other in GlorifiedBody.Rooms.Room.All)
                     {
                         Renderer floor = other.transform.Find("[Room]")?.GetComponentsInChildren<Renderer>(true).FirstOrDefault(r => r.name.EndsWith("Floor"));
                         if (floor == null) continue;
-                        bool drawn = other == room || room.IsNeighbour(other.id);
+                        bool drawn = other == room || (cam != null && cam.sees.Length > 0 ? cam.sees.Contains(other.id) : room.IsNeighbour(other.id));
                         Assert.AreEqual(drawn, floor.enabled, $"in {id}: the floor of {other.id} is {(drawn ? "drawn" : "culled")}");
                     }
                 }
@@ -1410,6 +1414,201 @@ namespace GlorifiedBody.Tests.PlayMode
 
         private const string SectorCReleased = "sector_c_released"; // DemoPublic.Released (editor code)
         private const string Reinforced = "demo_g5_reinforced";     // DemoPublic.Reinforced
+
+        [UnityTest]
+        public IEnumerator EveryCardDoor_SlidesItsDrawnLeaf_WhenItOpens()
+        {
+            // Bruno, 2026-11-07: "ward's sister card; door won't appear open but you can go pass throught it".
+            yield return LoadWorld();
+            var doors = UnityEngine.Object.FindObjectsByType<LockedDoor>(FindObjectsSortMode.None);
+            Assert.IsNotEmpty(doors, "the card doors of the demo");
+            foreach (LockedDoor door in doors)
+            {
+                Renderer leaf = door.leaf.GetComponent<Renderer>();
+                Assert.IsFalse(leaf.isPartOfStaticBatch, $"{door.name}: a static batch draws the leaf at its first place");
+                Vector3 before = leaf.bounds.center;
+                door.Open(instant: true);
+                Assert.AreEqual(0f, Vector3.Distance(before + door.openOffset, leaf.bounds.center), 0.01f, $"{door.name}: the drawn leaf slides with the door");
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator TheCull_DrawsOnlyTheRoomsTheCameraSees_AndHers()
+        {
+            // Bruno, 2026-11-07: "cull rendering to what the player can see; this is easy due to the fixed camera angles".
+            yield return LoadWorld();
+            var rooms = GlorifiedBody.Rooms.Room.All.ToList();
+            var stale = new List<string>();
+            foreach (FixedCamera cam in UnityEngine.Object.FindObjectsByType<FixedCamera>(FindObjectsSortMode.None))
+            {
+                GlorifiedBody.Rooms.Room own = cam.GetComponentInParent<GlorifiedBody.Rooms.Room>();
+                if (own == null) continue;
+                var now = GlorifiedBody.Rooms.RoomSight.Scan(cam, own, rooms).Seen.Select(r => r.id).OrderBy(id => id, StringComparer.Ordinal);
+                if (cam.sees == null || !now.SequenceEqual(cam.sees)) stale.Add($"{cam.name}: stored [{string.Join(",", cam.sees ?? new string[0])}], now [{string.Join(",", now)}]");
+            }
+            Assert.IsEmpty(stale, "each camera holds its sight list (DemoWorld.Sight): " + string.Join("\n", stale.Take(5)));
+
+            // Each camera of three rooms on both floors: only its rooms and hers draw.
+            TankController tank = GameObject.FindGameObjectWithTag("Player").GetComponent<TankController>();
+            foreach (string id in new[] { "W2", "G2", "G5" })
+            {
+                GlorifiedBody.Rooms.Room room = GlorifiedBody.Rooms.Room.Of(id);
+                tank.Teleport(FloorPoint(room), 0f);
+                yield return WaitUntil(() => GlorifiedBody.Rooms.RoomTracker.Current == room, 2f);
+                foreach (FixedCamera cam in room.GetComponentsInChildren<FixedCamera>())
+                {
+                    FixedCameraDirector.Instance.Override(cam);
+                    yield return null;
+                    yield return null;
+                    var want = new HashSet<string>(cam.sees) { id };
+                    CollectionAssert.AreEquivalent(want, GlorifiedBody.Rooms.RoomTracker.Shown, $"{cam.name}: the rooms drawn");
+                    foreach (GlorifiedBody.Rooms.Room other in rooms)
+                    {
+                        Transform floor = other.transform.Find("[Room]/Floor");
+                        if (floor == null) continue;
+                        Assert.AreEqual(want.Contains(other.id), floor.GetComponent<Renderer>().enabled, $"{cam.name}: the floor of {other.id}");
+                    }
+                }
+            }
+            FixedCameraDirector.Instance.Override(null);
+            Debug.Log($"[RoomSight] {GlorifiedBody.Rooms.RoomTracker.Instance.CulledCount} renderers off with the last camera");
+        }
+
+        [UnityTest]
+        public IEnumerator NoCamera_SeesAnotherRoom_ExceptThroughADoorway()
+        {
+            // Bruno, 2026-11-07: "in some areas the walls are not fully built, so i can see through scenarion; ... auto build
+            // logic needs to be verified to avoid such gaps".
+            yield return LoadWorld();
+            var rooms = GlorifiedBody.Rooms.Room.All.ToList();
+            var failures = new List<string>();
+            // The scan stops a ray at the ceiling: each room must have one over its whole plan, at its height.
+            foreach (GlorifiedBody.Rooms.Room room in rooms)
+            {
+                Transform ceiling = room.transform.Find("[Room]/Ceiling");
+                Renderer r = ceiling != null ? ceiling.GetComponent<Renderer>() : null;
+                if (r == null) { failures.Add($"{room.id}: no ceiling"); continue; }
+                Bounds b = r.bounds;
+                Vector3 p = room.transform.position;
+                bool covers = b.min.x <= p.x + room.rect.x + 0.01f && b.max.x >= p.x + room.rect.z - 0.01f && b.min.z <= p.z + room.rect.y + 0.01f && b.max.z >= p.z + room.rect.w - 0.01f;
+                if (!covers || Mathf.Abs(b.min.y - GlorifiedBody.Rooms.RoomSight.CeilingY(room)) > 0.05f)
+                    failures.Add($"{room.id}: the ceiling {b.min} to {b.max} does not cover the plan at {GlorifiedBody.Rooms.RoomSight.CeilingY(room):0.00}");
+            }
+            int cameras = 0, rays = 0;
+            foreach (FixedCamera cam in UnityEngine.Object.FindObjectsByType<FixedCamera>(FindObjectsSortMode.None).OrderBy(c => c.name))
+            {
+                GlorifiedBody.Rooms.Room own = cam.GetComponentInParent<GlorifiedBody.Rooms.Room>();
+                if (own == null) continue;
+                cameras++;
+                if (cam.transform.position.y > GlorifiedBody.Rooms.RoomSight.CeilingY(own) - 0.05f)
+                    failures.Add($"{cam.name} ({own.id}): the camera at {cam.transform.position.y:0.00} is over the ceiling at {GlorifiedBody.Rooms.RoomSight.CeilingY(own):0.00}");
+                GlorifiedBody.Rooms.RoomSight.Result sight = GlorifiedBody.Rooms.RoomSight.Scan(cam, own, rooms);
+                rays += sight.Rays;
+                if (sight.Gaps.Count == 0) continue;
+                var where = sight.Gaps.GroupBy(g => g.what).OrderByDescending(g => g.Count()).Take(3)
+                    .Select(g => $"{g.Count()} rays to {g.Key}, out at {g.First().exit.x:0.0},{g.First().exit.y:0.0},{g.First().exit.z:0.0}");
+                failures.Add($"{cam.name} ({own.id}): {sight.Gaps.Count} of {sight.Rays} rays: {string.Join("; ", where)}");
+            }
+            foreach (string f in failures) Debug.Log("[RoomSight] gap " + f);
+            Debug.Log($"[RoomSight] {cameras} cameras, {rays} rays, {failures.Count} cameras with a gap");
+            Assert.Greater(cameras, 40, "the demo cameras");
+            Assert.IsEmpty(failures, string.Join("\n", failures));
+        }
+
+        [UnityTest]
+        public IEnumerator TheCarers_LookForABody_AFewTimesASecond_NotEachFrame()
+        {
+            // 2026-11-07: 33 carers that searched the scene each frame took 7 ms of a demo frame (TheFrame_Profile).
+            yield return LoadWorld();
+            if (CutscenePlayer.IsPlaying) CutscenePlayer.Skip();
+            yield return WaitUntil(() => !CutscenePlayer.IsPlaying && GameManager.Instance.IsPlaying, 10f);
+            int carers = UnityEngine.Object.FindObjectsByType<CorpseCare>(FindObjectsSortMode.None).Length;
+            Assert.Greater(carers, 10, "the demo has its carers");
+            int before = CorpseCare.Searches, frames = 0;
+            float t0 = Time.time;
+            while (Time.time - t0 < 2f) { frames++; yield return null; }
+            int searches = CorpseCare.Searches - before;
+            float most = carers * (2f * 4f + 2f); // about four searches a second for each carer
+            Debug.Log($"[CareSearch] {searches} searches by {carers} carers in {frames} frames");
+            Assert.LessOrEqual(searches, most, $"{carers} carers in {frames} frames: at most {most:0} searches");
+        }
+
+        /// <summary>
+        /// A measurement, not a check (Bruno, 2026-11-07: "it seems to be locked at 30 fps or lower"): the costliest profiler
+        /// markers of a demo frame, then the frame with the figures off. It runs only when the filter names it.
+        /// </summary>
+        [UnityTest, Explicit]
+        public IEnumerator TheFrame_Profile()
+        {
+            yield return LoadWorld();
+            if (CutscenePlayer.IsPlaying) CutscenePlayer.Skip();
+            yield return WaitUntil(() => !CutscenePlayer.IsPlaying && GameManager.Instance.IsPlaying, 10f);
+            yield return new WaitForSecondsRealtime(3f);
+
+            var handles = new List<Unity.Profiling.LowLevel.Unsafe.ProfilerRecorderHandle>();
+            Unity.Profiling.LowLevel.Unsafe.ProfilerRecorderHandle.GetAvailable(handles);
+            var recorders = new List<(string name, Unity.Profiling.ProfilerRecorder rec)>();
+            foreach (var h in handles)
+            {
+                var d = Unity.Profiling.LowLevel.Unsafe.ProfilerRecorderHandle.GetDescription(h);
+                if (d.UnitType != Unity.Profiling.ProfilerMarkerDataUnit.TimeNanoseconds) continue;
+                recorders.Add((d.Category.Name + "/" + d.Name, Unity.Profiling.ProfilerRecorder.StartNew(d.Category, d.Name, 160)));
+            }
+            float t0 = Time.realtimeSinceStartup;
+            for (int i = 0; i < 150; i++) yield return null;
+            float withAll = (Time.realtimeSinceStartup - t0) * 1000f / 150f;
+            var rows = new List<(string name, double ms)>();
+            foreach (var (name, rec) in recorders)
+            {
+                long sum = 0;
+                int n = rec.Count;
+                for (int i = 0; i < n; i++) sum += rec.GetSample(i).Value;
+                if (n > 0) rows.Add((name, sum / 1e6 / 150.0));
+                rec.Dispose();
+            }
+            foreach (var (name, ms) in rows.OrderByDescending(r => r.ms).Take(60))
+                Debug.Log($"[FrameProfile] {ms,8:0.000} ms  {name}");
+
+            // The cost of each script type on the figures: all of one type off for 90 frames, against the frame with all on.
+            var bodies = UnityEngine.Object.FindObjectsByType<Health>(FindObjectsSortMode.None)
+                .Where(h => !h.CompareTag("Player") && h.GetComponentInParent<LockOnTargetable>() != null).Select(h => h.gameObject).ToList();
+            var byType = bodies.SelectMany(b => b.GetComponentsInChildren<MonoBehaviour>()).Where(m => m != null && m.enabled)
+                .GroupBy(m => m.GetType().Name).ToList();
+            IEnumerator Measure(Action<float> result)
+            {
+                for (int i = 0; i < 20; i++) yield return null;
+                float s = Time.realtimeSinceStartup;
+                for (int i = 0; i < 90; i++) yield return null;
+                result((Time.realtimeSinceStartup - s) * 1000f / 90f);
+            }
+            float baseMs = 0f;
+            yield return Measure(v => baseMs = v);
+            var costs = new List<(string type, int count, float saved)>();
+            foreach (var group in byType)
+            {
+                foreach (MonoBehaviour m in group) if (m != null) m.enabled = false;
+                float off = 0f;
+                yield return Measure(v => off = v);
+                foreach (MonoBehaviour m in group) if (m != null) m.enabled = true;
+                costs.Add((group.Key, group.Count(), baseMs - off));
+            }
+            foreach (var (type, count, saved) in costs.OrderByDescending(c => c.saved))
+                Debug.Log($"[FrameProfile] type {saved,6:0.00} ms saved  x{count}  {type}");
+
+            int figures = 0;
+            foreach (Health h in UnityEngine.Object.FindObjectsByType<Health>(FindObjectsSortMode.None))
+            {
+                if (h.CompareTag("Player")) continue;
+                if (h.GetComponentInParent<LockOnTargetable>() == null) continue;
+                h.gameObject.SetActive(false);
+                figures++;
+            }
+            yield return new WaitForSecondsRealtime(1f);
+            t0 = Time.realtimeSinceStartup;
+            for (int i = 0; i < 150; i++) yield return null;
+            float without = (Time.realtimeSinceStartup - t0) * 1000f / 150f;
+            Debug.Log($"[FrameProfile] frame {withAll:0.0} ms with everything, {without:0.0} ms with {figures} figures off, {GlorifiedBody.Rooms.Room.All.Count} rooms");
+        }
 
         private static IEnumerator LoadWorld()
         {

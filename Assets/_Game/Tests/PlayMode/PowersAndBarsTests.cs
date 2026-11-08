@@ -245,6 +245,30 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator Telekinesis_ABulletOnHer_DropsTheFloater_Unhurt()
+        {
+            // Bruno, 2026-11-07: "she won't drop the guy even after being hit multiple times".
+            powers.Select(PowerKind.Telekinesis);
+            PowerDefinition tk = powers.Selected;
+            Health target = dummyB.GetComponent<Health>();
+            float hp0 = target.CurrentHealth;
+            powers.FireAt(tk, 1f, dummyB);
+            yield return new WaitForSeconds(tk.liftSeconds + 0.3f);
+            TelekinesisLift lift = dummyB.GetComponent<TelekinesisLift>();
+            Assert.IsNotNull(lift, "it floats");
+
+            Transform her = powers.transform;
+            Vector3 chest = her.position + Vector3.up * 1.2f;
+            Vector3 origin = chest + her.right * 4f;
+            EnemyProjectile.Launch(origin, chest - origin, 20f, 5f, dummyA.gameObject, "test_bullet");
+            yield return WaitUntil(() => lift == null || lift.Ending == "released", 2f);
+            Assert.IsTrue(lift == null || lift.Ending == "released", "a bullet on her breaks the hold");
+            yield return WaitUntil(() => dummyB.GetComponent<TelekinesisLift>() == null, 2f);
+            Assert.AreEqual(hp0, target.CurrentHealth, 0.01f, "it drops with no damage");
+            Assert.IsNull(powers.HeldLift, "she holds nothing");
+        }
+
+        [UnityTest]
         public IEnumerator Telekinesis_TheShortsStart_DropsTheFloater_AtOnce()
         {
             // Bruno, 2026-10-26: a short that starts while she holds an enemy in the air drops it at once.

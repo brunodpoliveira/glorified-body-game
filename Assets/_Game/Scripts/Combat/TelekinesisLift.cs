@@ -193,11 +193,16 @@ namespace GlorifiedBody.Combat
 
         private void OnDisable() => HitEventBus.OnHit -= OnHit;
 
-        /// <summary>A hit on the floater from someone other than the holder releases it.</summary>
+        /// <summary>
+        /// A hit on the floater from someone other than the holder releases it. So does a hit on the holder (Bruno,
+        /// 2026-11-07: "she won't drop the guy even after being hit multiple times"): the hold breaks, and the thing drops.
+        /// </summary>
         private void OnHit(HitInfo hit)
         {
             if (!CanLaunch || hit.Victim == null || hit.Attacker == attacker) return;
-            if (hit.Victim != gameObject && (self == null || hit.Victim != self.gameObject)) return;
+            bool onIt = hit.Victim == gameObject || (self != null && hit.Victim == self.gameObject);
+            bool onHer = attacker != null && (hit.Victim == attacker || hit.Victim.transform.IsChildOf(attacker.transform) || attacker.transform.IsChildOf(hit.Victim.transform));
+            if (!onIt && !onHer) return;
             Release(hit.Attacker);
         }
 
