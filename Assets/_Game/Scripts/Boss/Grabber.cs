@@ -10,16 +10,21 @@ namespace GlorifiedBody.Boss
     /// <summary>
     /// A grabber of the brain (DEMO_PLAN §14.1, CANON round 10: "Grabbers come from the walls on a cooldown and pin her for
     /// two seconds: a blast frees her, telekinesis rips a grabber out and throws it"). Greybox: a chain of grey-pink
-    /// capsules from a mouth in the wall. Its head reaches for her chest; if it gets there it holds her still. Any hit of
+    /// capsules from a mouth in the wall. It winds up at the mouth (the head swells and pulses), then locks her place and
+    /// lunges at it in a straight line; it holds her only if its head touches her on the way (Bruno, 2026-11-08: "the
+    /// grabbers are still impossible to dodge": the reach followed her chest to its end). A step aside, a run or a dodge in
+    /// the lunge makes it miss. Any hit of
     /// hers on the head frees her (the blast of the design, and the others too: PROPOSED). mk_orzabal lifts the head: it
     /// is ripped out, she is free, and she can throw it at a node of the brain (LockOnTargetable, not a prop, so the
     /// auto-lock finds it while it holds her).
     /// </summary>
     public sealed class Grabber : MonoBehaviour
     {
-        public enum State { Reaching, Holding, Retracting, Ripped }
+        public enum State { Winding, Reaching, Holding, Retracting, Ripped }
 
         public const int Segments = 7;
+        /// <summary>The head touches her chest closer than this in the lunge: it holds her.</summary>
+        public const float TouchRadius = 0.6f;
         public static readonly Color Flesh = new Color(0.62f, 0.45f, 0.48f);
 
         public State Current { get; private set; }
@@ -30,13 +35,17 @@ namespace GlorifiedBody.Boss
         private Vector3 mouth;
         private Transform her;
         private TankController tank;
-        private float reachSeconds, pinSeconds, t;
+        private float windupSeconds, reachSeconds, pinSeconds, t;
         private bool locked;
-        private Vector3 reachFrom;
+        private Vector3 reachFrom, reachTo;
+        private Vector3 baseScale;
+
+        /// <summary>The point the lunge goes to: her chest when the wind-up ended (the tests).</summary>
+        public Vector3 LungeTarget => reachTo;
         private readonly List<Transform> chain = new List<Transform>();
 
         /// <summary>A new grabber from the mouth toward her.</summary>
-        public static Grabber Create(BrainFight fight, Vector3 mouth, Transform her, float reachSeconds, float pinSeconds, Material flesh)
+        public static Grabber Create(BrainFight fight, Vector3 mouth, Transform her, float windupSeconds, float reachSeconds, float pinSeconds, Material flesh)
         {
             var head = GameObject.CreatePrimitive(PrimitiveType.Sphere);
             head.name = "Grabber";
@@ -56,7 +65,9 @@ namespace GlorifiedBody.Boss
             g.mouth = mouth;
             g.her = her;
             g.tank = her.GetComponent<TankController>();
+            g.windupSeconds = windupSeconds;
             g.reachSeconds = reachSeconds;
+            g.baseScale = head.transform.localScale;
             g.pinSeconds = pinSeconds;
             g.reachFrom = mouth;
             for (int i = 0; i < Segments; i++)
@@ -85,15 +96,31 @@ namespace GlorifiedBody.Boss
             t += Time.deltaTime;
             switch (Current)
             {
+                case State.Winding:
+                {
+                    // The tell: the head swells and pulses at the mouth, a little out toward her.
+                    float k = Mathf.Clamp01(t / windupSeconds);
+                    Vector3 toward = (HerChest - mouth).normalized;
+                    transform.position = mouth + toward * 0.35f * k;
+                    transform.localScale = baseScale * (1f + 0.35f * k + 0.12f * Mathf.Sin(t * 30f));
+                    if (k >= 1f)
+                    {
+                        Current = State.Reaching;
+                        t = 0f;
+                        reachFrom = transform.position;
+                        reachTo = HerChest; // her place now: the lunge does not follow her
+                        transform.localScale = baseScale;
+                        GlorifiedBody.Audio.Sfx.Play(GlorifiedBody.Audio.Sfx.Dodge, transform.position, 0.9f);
+                        RunTelemetry.Event("grabber_lunges", "");
+                    }
+                    break;
+                }
                 case State.Reaching:
                 {
                     float k = Mathf.Clamp01(t / reachSeconds);
-                    transform.position = Vector3.Lerp(reachFrom, HerChest, Mathf.SmoothStep(0f, 1f, k));
-                    if (k >= 1f)
-                    {
-                        if (Vector3.Distance(transform.position, HerChest) < 0.7f) Hold();
-                        else Retract("missed");
-                    }
+                    transform.position = Vector3.Lerp(reachFrom, reachTo, k * k); // it speeds up toward the end
+                    if (Vector3.Distance(transform.position, HerChest) < TouchRadius) Hold();
+                    else if (k >= 1f) Retract("missed");
                     break;
                 }
                 case State.Holding:

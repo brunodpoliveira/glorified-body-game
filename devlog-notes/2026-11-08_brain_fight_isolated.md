@@ -94,3 +94,21 @@ mk bars present and the circle charge yi, it makes it hard to gauge how much it 
 
 `BrainFightTests` and `PowersAndBarsTests`: 64 of 64 (new checks: the body at the eye, the HUD shown with no HP row,
 the circle over her). The brain bot passes, with a new shot of her charge (`v3_brain_03_her_charge.png`).
+
+## Later that day: a grabber she can dodge
+
+```text
+the grabbers are still impossible to dogde
+```
+
+Verdict from the code: CONFIRMED. The reach moved the head to her chest of that frame, on every frame. At the end
+of the reach the head was on her, and it held her each time. Now (numbers PROPOSED):
+
+1. The wind-up (0.6 s): the head swells and pulses at the mouth, a little out toward her.
+2. The lunge (0.5 s): it locks her place at the end of the wind-up and thrusts there in a straight line, faster at
+   the end. A sound plays at the start of the lunge.
+3. It holds her only if its head comes within 0.6 m of her chest in the lunge. Else it misses and goes back.
+
+A walk, a run or a dodge to the side in the lunge escapes it. A hit on it in the wind-up also sends it back.
+`BrainFightTests` 13 of 13 (new: `AGrabber_SheStepsAside_ItMisses`). The new test needs the new wind-up state, so it
+did not run on the old code; the verdict rests on the code. The brain bot passes.

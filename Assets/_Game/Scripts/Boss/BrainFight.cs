@@ -63,7 +63,9 @@ namespace GlorifiedBody.Boss
         [Header("The grabbers")]
         public float firstGrab = 4f;
         public float grabEvery = 7f;
-        public float reachSeconds = 0.7f;
+        [Tooltip("The tell at the mouth before the lunge.")]
+        public float grabWindup = 0.6f;
+        public float reachSeconds = 0.5f;
         public float pinSeconds = 2f;
 
         public string deathLine = "I was meant to be beautiful.";
@@ -339,7 +341,7 @@ namespace GlorifiedBody.Boss
             Transform best = grabberMouths[0];
             foreach (Transform m in grabberMouths)
                 if (Vector3.Distance(m.position, her.position) < Vector3.Distance(best.position, her.position)) best = m;
-            ActiveGrabber = Grabber.Create(this, best.position, her, reachSeconds, pinSeconds, flesh);
+            ActiveGrabber = Grabber.Create(this, best.position, her, grabWindup, reachSeconds, pinSeconds, flesh);
             Grabs++;
             nextGrab = Time.time + grabEvery;
             return ActiveGrabber;

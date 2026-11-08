@@ -275,6 +275,23 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator AGrabber_SheStepsAside_ItMisses()
+        {
+            // Bruno, 2026-11-08: "the grabbers are still impossible to dogde".
+            fight.trackSpeed = 0f;
+            yield return Enter(Middle);
+            Grabber g = fight.Grab();
+            Assert.AreEqual(Grabber.State.Winding, g.Current, "first the tell at the mouth");
+            yield return WaitUntil(() => g.Current == Grabber.State.Reaching, 2f);
+            Assert.AreEqual(Grabber.State.Reaching, g.Current, "then the lunge");
+            tank.Teleport(tank.transform.position + tank.transform.right * 2.5f, tank.transform.eulerAngles.y); // a side step in the lunge
+            yield return WaitUntil(() => g == null || g.Current == Grabber.State.Retracting || g.Holding, 4f);
+            Assert.IsFalse(g != null && g.Holding, "she stepped aside: it does not pin her");
+            Assert.AreEqual("missed", g != null ? g.Ending : "missed");
+            Assert.IsFalse(tank.MovementLocked, "she is free");
+        }
+
+        [UnityTest]
         public IEnumerator AGrabber_LetsGo_AfterItsTime()
         {
             fight.trackSpeed = 0f; // the aim stays in its corner
