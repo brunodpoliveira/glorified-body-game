@@ -145,6 +145,7 @@ namespace GlorifiedBody.Editor.Demo
         /// <summary>W2: three armed scientists outside (beat 4), then her care chart: a cutscene opens the feed (5, cutscene 02b).</summary>
         private static void W2(DemoRoom r)
         {
+            CardDoor(r, "W3", new Vector3(14.3f, 1.2f, 13.82f), Vector3.back); // the code rotation: W3 opens with the card
             // One pistol and two knives (Bruno, 2026-11-05: "helps to escalate better"), behind the shut door of W1B.
             GameObject three = MenuLoopSetup.EnsureChild(r.Figures, "Group_Three");
             r.Figure("Scientist_A", "labworker_pistol", new Vector3(6.5f, 0f, 12.2f), 300f, parent: three);
@@ -277,6 +278,7 @@ namespace GlorifiedBody.Editor.Demo
         /// <summary>W9: Marta (beat 13, her scan C2, her fate), the window (14), the shut fire door.</summary>
         private static void W9(DemoRoom r)
         {
+            CardDoor(r, "W10", new Vector3(16.82f, 1.2f, -5.7f), Vector3.left); // the code rotation: W10 opens with the card
             r.Prop("Counter", new Vector3(11f, 0f, -6f), new Vector3(3f, 1.05f, 1.6f), 0.1f);
             r.Prop("Counter_Monitors", new Vector3(11f, 1.05f, -6f), new Vector3(1.2f, 0.4f, 0.2f), 0.35f);
             r.Box(r.Props, "Window", new Vector3(6f, 1.6f, -2.17f), new Vector3(3f, 1.4f, 0.04f), DemoRoom.Colour("window", new Color(0.35f, 0.45f, 0.55f)));
@@ -322,11 +324,31 @@ namespace GlorifiedBody.Editor.Demo
             r.Beat("W11_Lab", "demo_w11_lab", new Vector3(8f, 1f, -11f), new Vector3(4f, 2f, 1.6f), lab.ToArray());
         }
 
-        /// <summary>W12: the stairwell door, locked by the card (beat 15); the scan C3 shows the card.</summary>
+        public const string CodesRotated = "demo_codes_rotated", CardEnrolled = "demo_card_enrolled";
+
+        /// <summary>A door that the ward sister's card opens, with its reader on this side (the code rotation).</summary>
+        public static LockedDoor CardDoor(DemoRoom r, string to, Vector3 readerAt, Vector3 facing)
+        {
+            GameObject door = r.LockedLeaf(r.DoorTo(to), DemoItems.StairCard().itemId, "the ward sister's card");
+            return r.CodeLock(door, readerAt, facing, CodesRotated, CardEnrolled);
+        }
+
+        /// <summary>
+        /// W12: the stairwell door, locked by the card (beat 15); the scan C3 shows the card. The code rotation (DEMO_PLAN
+        /// §10.2; Bruno, 2026-11-08: a backtracker, the code 8675309, the doors W3 and W10): the card opens W3 and W10, and
+        /// after two doors the PA call 1B rotates the codes. A try here before that rotates them at once. Then the reader
+        /// refuses the card until the terminal of W13 enrols it with the code on the wall of W14.
+        /// </summary>
         private static void W12(DemoRoom r)
         {
-            r.LockedLeaf(r.DoorTo("S1"), DemoItems.StairCard().itemId, "the ward sister's card");
-            r.Box(r.Props, "Card_Reader", new Vector3(16f, 1.2f, -13.83f), new Vector3(0.12f, 0.18f, 0.04f), DemoRoom.Colour("reader_red", new Color(0.9f, 0.1f, 0.1f)));
+            GameObject door = r.LockedLeaf(r.DoorTo("S1"), DemoItems.StairCard().itemId, "the ward sister's card");
+            r.CodeLock(door, new Vector3(16.3f, 1.2f, -13.82f), Vector3.forward, CodesRotated, CardEnrolled).rotatesOnTry = true;
+            var rotation = MenuLoopSetup.EnsureChild(r.Story, "Code_Rotation").AddComponent<CodeRotation>();
+            rotation.cardItemId = DemoItems.StairCard().itemId;
+            rotation.rotatedFlag = CodesRotated;
+            rotation.opensBeforeRotation = 2;
+            rotation.paLine = "Site codes rotate at this time. Re-enrol your card at a security station."; // the writer's call 1B (T5_pa.md)
+            EditorUtility.SetDirty(rotation);
             r.Scan("Scan_Stair_Door", new Vector3(15f, 1.2f, -13.7f), "demo_c3_door", "PLACEHOLDER (C3): a white card on a lanyard, against red scrubs.");
             r.Prop("Stairs_Down", new Vector3(13.8f, 0f, -11f), new Vector3(1.2f, 0.4f, 1.8f), 0.3f);
             r.Prop("Handrail", new Vector3(13.1f, 0.9f, -12f), new Vector3(0.05f, 0.05f, 3f), 0.7f); // the west wall: the east wall opens to W13 (v2)

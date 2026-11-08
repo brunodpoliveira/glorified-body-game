@@ -14,7 +14,8 @@ namespace GlorifiedBody.Story
     /// doors, then the code is rotated"). It counts the card doors that the card opened. At opensBeforeRotation it waits
     /// delaySeconds, plays the PA call and raises rotatedFlag: every card door not yet open refuses the card until a
     /// terminal enrols it (LockedDoor, CodeTerminal). An open door stays open. The count reads the doors, not a counter,
-    /// so a load of a save gives the same answer. One for each card.
+    /// so a load of a save gives the same answer. One for each card. A try at the door of the way on rotates them at once
+    /// (LockedDoor.rotatesOnTry), so the player cannot pass the puzzle by going there first.
     /// </summary>
     public sealed class CodeRotation : MonoBehaviour
     {
@@ -49,6 +50,17 @@ namespace GlorifiedBody.Story
             if (Time.time < dueAt) return;
             dueAt = -1f;
             Rotate();
+        }
+
+        /// <summary>
+        /// The codes rotate now (the door of the way on, LockedDoor.rotatesOnTry): the rotation of that card plays its PA
+        /// call, or with none the flag goes up alone.
+        /// </summary>
+        public static void RotateNow(string cardItemId, string rotatedFlag)
+        {
+            foreach (CodeRotation r in FindObjectsByType<CodeRotation>(FindObjectsSortMode.None))
+                if (r.cardItemId == cardItemId) { r.Rotate(); return; }
+            StoryFlags.Raise(rotatedFlag);
         }
 
         /// <summary>The PA call and the flag (the tests, and the count).</summary>

@@ -121,6 +121,12 @@ namespace GlorifiedBody.Automation
             yield return Press(InputManager.GameAction.Interact);
             Record("she_takes_the_card", interactor.Inventory.Has("code_test_card"), interactor.LastResult);
 
+            // 1b. The common interaction: the table under the card shows her comment.
+            yield return Press(InputManager.GameAction.Interact);
+            yield return Shot("table_comment");
+            Record("the_table_comments", interactor.LastResult.StartsWith("examined:") && interactor.Text.Length > 0, interactor.Text);
+            yield return BotClock.Wait(Interactor.MessageSeconds + 0.3f);
+
             // 2. The card opens store A and store B, then the PA call 1B rotates the codes.
             yield return Face(storeA.Point + Vector3.back * 1.1f, storeA.Point);
             yield return Press(InputManager.GameAction.Interact);

@@ -94,22 +94,27 @@ namespace GlorifiedBody.Interaction
         {
             Interactable best = null;
             float bestDistance = float.MaxValue;
+            int bestPriority = int.MinValue;
             Vector3 forward = Vector3.ProjectOnPlane(transform.forward, Vector3.up).normalized;
             foreach (Interactable target in Interactable.All)
             {
                 if (target == null || !target.Available) continue;
                 Vector3 to = Vector3.ProjectOnPlane(target.Point - transform.position, Vector3.up);
                 float distance = to.magnitude;
-                if (distance > target.range || distance >= bestDistance) continue;
+                if (distance > target.range) continue;
+                int priority = target.Priority;
+                if (priority < bestPriority || (priority == bestPriority && distance >= bestDistance)) continue;
                 if (distance > 0.3f && Vector3.Angle(forward, to) > FacingCone) continue;
                 best = target;
                 bestDistance = distance;
+                bestPriority = priority;
             }
             return best;
         }
 
         private void Approach(Interactable target)
         {
+            target.BeforeKey(this);
             Text = target.TextFor(this);
             if (target.KindFor(this) == InteractKind.Message)
             {
@@ -139,7 +144,7 @@ namespace GlorifiedBody.Interaction
                 Result("left:" + (target != null ? target.name : "none"));
                 return;
             }
-            ItemDefinition item = target is ItemPickup pickup ? pickup.item : null;
+            ItemDefinition item = target.Gives; // before the yes: a container's next item
             string result = target.Confirm(this);
             Result(result);
             if (item != null && item.kind == ItemKind.Log && result.StartsWith("taken:")) OpenReader(item);

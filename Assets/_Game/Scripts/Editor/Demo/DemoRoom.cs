@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using GlorifiedBody.Automation;
@@ -440,9 +441,118 @@ namespace GlorifiedBody.Editor.Demo
         /// <summary>A prop on the floor: its foot at the point, its size in metres.</summary>
         public GameObject Prop(string name, Vector3 floorPoint, Vector3 size, float shade = 0.3f)
         {
-            if (BreakableType(name, out Breakable.Kind kind, out float health))
-                return GlorifiedBody.Editor.Destruction.BreakableAssets.PropBox(Props, name, Spec.Id + "_" + name, floorPoint, size, kind, health, Grey(shade), Grey(Mathf.Min(1f, shade + 0.25f))).gameObject;
-            return Box(Props, name, floorPoint + Vector3.up * size.y * 0.5f, size, Grey(shade));
+            GameObject obj = BreakableType(name, out Breakable.Kind kind, out float health)
+                ? GlorifiedBody.Editor.Destruction.BreakableAssets.PropBox(Props, name, Spec.Id + "_" + name, floorPoint, size, kind, health, Grey(shade), Grey(Mathf.Min(1f, shade + 0.25f))).gameObject
+                : Box(Props, name, floorPoint + Vector3.up * size.y * 0.5f, size, Grey(shade));
+            Examine(obj, name, size);
+            return obj;
+        }
+
+        /// <summary>
+        /// A container with items inside (Bruno, 2026-11-08: "cupboards already cleaned up of items"): the prop, and the items
+        /// as hidden pickups under it. The Interact key asks to take each one, then says "Nothing else of note here."
+        /// </summary>
+        public Examinable Container(string name, Vector3 floorPoint, Vector3 size, float shade, params ItemDefinition[] items)
+        {
+            Examinable look = Prop(name, floorPoint, size, shade).GetComponent<Examinable>();
+            look.contents.Clear();
+            for (int i = 0; i < items.Length; i++)
+            {
+                GameObject obj = ItemAssets.Pickup(look.gameObject, name + "_Item_" + i, items[i], PrimitiveType.Cube, floorPoint + Vector3.up * size.y * 0.5f, Vector3.one * 0.1f, Quaternion.identity);
+                obj.SetActive(false); // inside: only the container's question reaches it
+                look.contents.Add(obj.GetComponent<ItemPickup>());
+            }
+            EditorUtility.SetDirty(look);
+            return look;
+        }
+
+        /// <summary>
+        /// The common interaction on a prop (Examinable): her comment by the prop's type, from the writer's
+        /// game/examine.csv (type,line) when it has the type, else the placeholder below. The structure gets none.
+        /// </summary>
+        private static void Examine(GameObject obj, string name, Vector3 size)
+        {
+            string type = PropType(name);
+            if (NotExamined.Contains(type)) return;
+            Examinable look = MenuLoopSetup.EnsureComponent<Examinable>(obj);
+            look.thing = "the " + type.Replace('_', ' ').ToLowerInvariant();
+            look.comment = ExamineLine(type);
+            look.range = Mathf.Max(size.x, size.z) * 0.5f + 1.0f;
+            EditorUtility.SetDirty(look);
+        }
+
+        /// <summary>The type of a prop: its name, or the name before its last "_tag" ("Desk_Nurse" is a Desk).</summary>
+        public static string PropType(string name)
+        {
+            WriterLines();
+            for (string type = name; ; type = type.Substring(0, type.LastIndexOf('_')))
+            {
+                if (ExamineLines.ContainsKey(type) || writerLines.ContainsKey(type) || NotExamined.Contains(type)) return type;
+                if (type.LastIndexOf('_') <= 0) return name; // a type with no line: the whole name
+            }
+        }
+
+        private static readonly HashSet<string> NotExamined = new HashSet<string>
+        {
+            "Wall", "Stall_Wall", "Handrail", "Bars_Rail", "Stairs", "Sheeting", "Ramp", "Step", "Lintel", "Strap",
+        };
+
+        // PLACEHOLDER lines (Bruno, 2026-11-08: "nothing else important here or nothing of note here something like that").
+        // The writer's game/examine.csv replaces any of them by type.
+        private static readonly Dictionary<string, string> ExamineLines = new Dictionary<string, string>
+        {
+            { "Desk", "A desk. Nothing of note here." },
+            { "Reception_Desk", "The reception desk. Nothing of note here." },
+            { "Table", "A table. Nothing of note here." },
+            { "Low_Table", "A low table. Nothing of note here." },
+            { "Chair", "A chair. Nothing of note here." },
+            { "Small_Chair", "A small chair. Nothing of note here." },
+            { "Bed", "A bed. Nothing of note here." },
+            { "Bunk", "A bunk. Nothing of note here." },
+            { "Bench", "A bench. Nothing of note here." },
+            { "Counter", "A counter. Nothing of note here." },
+            { "Sink", "A sink. Nothing of note here." },
+            { "Shelf", "A shelf. Nothing of note here." },
+            { "Shelves", "Shelves. Nothing of note here." },
+            { "Rack", "A rack. Nothing of note here." },
+            { "Lockers", "Lockers. Nothing of note in them." },
+            { "Cabinet", "A cabinet. Nothing of note in it." },
+            { "Filing", "A filing cabinet. Nothing of note in it." },
+            { "Fridge", "A fridge. Nothing of note in it." },
+            { "Freezer", "A freezer. Nothing of note in it." },
+            { "Box", "A box. Nothing of note in it." },
+            { "Crate", "A crate. Nothing of note in it." },
+            { "Cart", "A cart. Nothing of note here." },
+            { "Gurney", "A gurney. Nothing of note here." },
+            { "Copier", "A copier. Nothing of note here." },
+            { "Printer", "A printer. Nothing of note here." },
+            { "Monitor", "A monitor. Nothing of note here." },
+            { "Radio", "A radio. Nothing of note here." },
+            { "Kettle", "A kettle. Nothing of note here." },
+            { "Cup", "A cup. Nothing of note here." },
+            { "Planter", "A planter. Nothing of note here." },
+            { "Lectern", "A lectern. Nothing of note here." },
+            { "Machine", "A machine. Nothing of note here." },
+        };
+
+        private static Dictionary<string, string> writerLines;
+
+        private static Dictionary<string, string> WriterLines()
+        {
+            if (writerLines != null) return writerLines;
+            writerLines = new Dictionary<string, string>();
+            string path = System.IO.Path.GetFullPath(DemoScripts.WriterGame + "/examine.csv");
+            if (System.IO.File.Exists(path))
+                foreach (string[] row in DeathScreenSetup.ReadCsv(System.IO.File.ReadAllText(path)).Skip(1))
+                    if (row.Length >= 2 && !string.IsNullOrWhiteSpace(row[0])) writerLines[row[0].Trim()] = row[1].Trim();
+            return writerLines;
+        }
+
+        /// <summary>Her comment on a prop of this type: the writer's row, else the placeholder, else "Nothing of note here."</summary>
+        public static string ExamineLine(string type)
+        {
+            if (WriterLines().TryGetValue(type, out string line)) return line;
+            return ExamineLines.TryGetValue(type, out line) ? line : Examinable.DefaultComment;
         }
 
         // The props that break, by type (Bruno, 2026-11-06: "add some prop types"): the name, or the name before its "_tag".

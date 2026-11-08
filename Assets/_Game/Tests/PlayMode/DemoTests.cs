@@ -247,15 +247,15 @@ namespace GlorifiedBody.Tests.PlayMode
         public IEnumerator ADoorway_ChangesTheRoom_AsSheStepsThrough_InFrame_WithNoLoad()
         {
             // Bruno, 2026-11-02: "a huge gap between all rooms ... at least 3-4 steps blindly down the doorway before it
-            // switches room". W3's door to W2: the south wall (z 14), at x 13.
+            // switches room". W4's door to W2: the south wall (z 14), at x 22 (W3's door is a card door since 2026-11-08).
             yield return LoadWorld();
             yield return WaitUntil(() => StoryFlags.Has("demo_w1_wake"), 120f);
             int loads = 0;
             UnityEngine.Events.UnityAction<Scene, LoadSceneMode> count = (scene, mode) => loads++;
             SceneManager.sceneLoaded += count;
             GameObject lucy = GameObject.FindGameObjectWithTag("Player");
-            lucy.GetComponent<TankController>().Teleport(new Vector3(13f, 0f, 15.2f), 180f);
-            yield return WaitUntil(() => GlorifiedBody.Rooms.RoomTracker.CurrentId == "W3", 3f);
+            lucy.GetComponent<TankController>().Teleport(new Vector3(22f, 0f, 15.2f), 180f);
+            yield return WaitUntil(() => GlorifiedBody.Rooms.RoomTracker.CurrentId == "W4", 3f);
             var pad = new VirtualPad();
             GameInput.SetBotSource(pad);
             var driver = new GameObject("[Pad]").AddComponent<PadDriver>();
@@ -372,6 +372,86 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.IsTrue(Bulletin.IsShowing, "the bulletin");
             yield return WaitUntil(() => GlorifiedBody.Rooms.RoomTracker.CurrentId == "R1", 25f);
             Assert.AreEqual("R1", GlorifiedBody.Rooms.RoomTracker.CurrentId, "the service station");
+        }
+
+        [UnityTest]
+        public IEnumerator TheCodeRotation_InTheWard_W3AndW10_ThenThePa_ThenW13Enrols_AndW12Opens()
+        {
+            yield return LoadWorld();
+            // The W1 wake stops time, and the PA waits on game time: skip each of its cutscenes until the world runs.
+            yield return WaitUntil(() =>
+            {
+                if (CutscenePlayer.IsPlaying) CutscenePlayer.Skip();
+                return StoryFlags.Has("demo_w1_wake") && !CutscenePlayer.IsPlaying && Time.timeScale > 0f;
+            }, 120f);
+            Interactor her = GameObject.FindGameObjectWithTag("Player").GetComponent<Interactor>();
+            ItemDefinition card = Resources.Load<ItemDefinition>("Items/item_stair_card");
+            Assert.IsNotNull(card, "the ward sister's card");
+            LockedDoor w3 = CardDoor("W2", "Door_W3"), w10 = CardDoor("W9", "Door_W10"), w10Back = CardDoor("W13", "Door_W10"), stairs = CardDoor("W12", "Door_S1");
+            CodeTerminal terminal = UnityEngine.Object.FindObjectsByType<CodeTerminal>(FindObjectsSortMode.None).Single();
+            Assert.AreEqual("8675309", terminal.code, "Bruno, 2026-11-08");
+            Assert.IsTrue(stairs.rotatesOnTry, "the way on");
+            try
+            {
+                StringAssert.StartsWith("locked:", w3.Confirm(her), "W3 is locked before she has the card");
+                her.Inventory.TryAdd(card);
+                StringAssert.StartsWith("opened:", w3.Confirm(her), "the card opens W3");
+                StringAssert.StartsWith("opened:", w10.Confirm(her), "and W10");
+                yield return WaitUntil(() => StoryFlags.Has(DemoFlags.CodesRotated), 6f);
+                CodeRotation rotation = UnityEngine.Object.FindObjectsByType<CodeRotation>(FindObjectsInactive.Include, FindObjectsSortMode.None).Single();
+                Assert.IsTrue(StoryFlags.Has(DemoFlags.CodesRotated),
+                    $"two doors: the PA rotates the codes (rotation active={rotation.isActiveAndEnabled} opened={rotation.Opened} doors={rotation.Doors.Count} timeScale={Time.timeScale})");
+                Assert.IsTrue(stairs.CodeBlocked, "the stairwell reader refuses the card");
+                Assert.IsTrue(w10Back.CodeBlocked, "and so does the W13 side of W10");
+                Assert.IsFalse(terminal.TryCode("5281"), "the old code is wrong");
+                Assert.IsTrue(terminal.TryCode("8675309"), "the code on the wall of W14");
+                Assert.IsFalse(stairs.CodeBlocked);
+                StringAssert.StartsWith("opened:", stairs.Confirm(her), "the enrolled card opens the stairwell");
+            }
+            finally
+            {
+                StoryFlags.Drop(DemoFlags.CodesRotated);
+                StoryFlags.Drop(DemoFlags.CardEnrolled);
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator TheWardSistersCard_AtTheStairsFirst_RotatesTheCodesAtOnce()
+        {
+            yield return LoadWorld();
+            Interactor her = GameObject.FindGameObjectWithTag("Player").GetComponent<Interactor>();
+            her.Inventory.TryAdd(Resources.Load<ItemDefinition>("Items/item_stair_card"));
+            LockedDoor stairs = CardDoor("W12", "Door_S1");
+            try
+            {
+                stairs.BeforeKey(her);
+                Assert.IsTrue(StoryFlags.Has(DemoFlags.CodesRotated), "no way past the puzzle: the stairs rotate the codes");
+                StringAssert.StartsWith("rotated:", stairs.Confirm(her));
+                Assert.IsFalse(stairs.IsOpen);
+            }
+            finally
+            {
+                StoryFlags.Drop(DemoFlags.CodesRotated);
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator EveryProp_HasHerComment_AndTheStructureNone()
+        {
+            yield return LoadWorld();
+            Examinable[] all = UnityEngine.Object.FindObjectsByType<Examinable>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            Debug.Log($"[DemoTests] {all.Length} props with a comment");
+            Assert.Greater(all.Length, 100, "the props of the demo (DemoRoom.Prop)");
+            Assert.IsEmpty(all.Where(e => string.IsNullOrWhiteSpace(e.comment)).Select(e => e.name), "no empty comment");
+            Assert.IsEmpty(all.Where(e => e.name.StartsWith("Wall") || e.name == "Handrail" || e.name.StartsWith("Stairs")).Select(e => e.name), "no comment on the structure");
+        }
+
+        private static LockedDoor CardDoor(string room, string name)
+        {
+            LockedDoor door = UnityEngine.Object.FindObjectsByType<LockedDoor>(FindObjectsSortMode.None)
+                .FirstOrDefault(d => d.name == name && d.GetComponentInParent<GlorifiedBody.Rooms.Room>()?.id == room);
+            Assert.IsNotNull(door, $"{name} in {room}");
+            return door;
         }
 
         [UnityTest]
@@ -1428,6 +1508,7 @@ namespace GlorifiedBody.Tests.PlayMode
         private static class DemoFlags
         {
             public const string Released = "sector_c_released";
+            public const string CodesRotated = "demo_codes_rotated", CardEnrolled = "demo_card_enrolled"; // DemoWard
         }
 
         private const string SectorCReleased = "sector_c_released"; // DemoPublic.Released (editor code)

@@ -102,8 +102,8 @@ namespace GlorifiedBody.UI
             confirmPanel.SetActive(asking || message);
             if (asking)
             {
-                string yes = interactor.Pending is ItemPickup ? "take" : "yes";
-                string no = interactor.Pending is ItemPickup ? "leave it" : "no";
+                string yes = interactor.Pending != null && interactor.Pending.Gives != null ? "take" : "yes";
+                string no = interactor.Pending != null && interactor.Pending.Gives != null ? "leave it" : "no";
                 confirmText.text = $"{interactor.Text}\n\n{Key(InputManager.GameAction.Interact)}  {yes}        {Key(InputManager.GameAction.Back)}  {no}";
             }
             else if (message)

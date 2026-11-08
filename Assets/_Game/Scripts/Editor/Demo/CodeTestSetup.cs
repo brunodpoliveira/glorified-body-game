@@ -22,7 +22,8 @@ namespace GlorifiedBody.Editor.Demo
     /// security office and reset the card's password to the code on the wall". Six rooms built like the demo:
     ///   the hall, where she starts: the card on a table, three card doors (store A, store B, the way on), each with a
     ///   reader; the card opens two of them, then the PA call 1B rotates the codes (CodeRotation), and the third refuses;
-    ///   north, store A and store B behind their card doors;
+    ///   north, store A and store B behind their card doors (store A's shelf holds an MK capsule, store B's is empty: the
+    ///   common interaction);
     ///   south, the way on behind its card door;
     ///   east, the security post: the terminal and its keypad (seven digits);
     ///   west, the day room: the code on the wall, 8 6 7 5 3 0 9.
@@ -45,8 +46,8 @@ namespace GlorifiedBody.Editor.Demo
         {
             Spec(Hall, "THE HALL", 0, 0, 10, 8, DressHall, new Door('N', 2.5f, StoreA), new Door('N', 7.5f, StoreB), new Door('S', 5, WayOn),
                 new Door('E', 4, Post), new Door('W', 4, DayRoom)),
-            Spec(StoreA, "STORE A", 0, 8, 5, 12, r => DressStore(r, 2.5f), new Door('S', 2.5f, Hall)),
-            Spec(StoreB, "STORE B", 5, 8, 10, 12, r => DressStore(r, 7.5f), new Door('S', 7.5f, Hall)),
+            Spec(StoreA, "STORE A", 0, 8, 5, 12, r => DressStore(r, 2.5f, true), new Door('S', 2.5f, Hall)),
+            Spec(StoreB, "STORE B", 5, 8, 10, 12, r => DressStore(r, 7.5f, false), new Door('S', 7.5f, Hall)),
             Spec(WayOn, "THE WAY ON", 3, -4, 7, 0, DressWayOn, new Door('N', 5, Hall)),
             Spec(Post, "THE SECURITY POST", 10, 1, 15, 7, DressPost, new Door('W', 4, Hall)),
             Spec(DayRoom, "THE DAY ROOM", -5, 1, 0, 7, DressDayRoom, new Door('E', 4, Hall)),
@@ -111,7 +112,7 @@ namespace GlorifiedBody.Editor.Demo
             // Three card doors, each with its reader on the hall side.
             CardDoor(r, StoreA, new Vector3(3.8f, 1.2f, 7.82f), Vector3.back);
             CardDoor(r, StoreB, new Vector3(8.8f, 1.2f, 7.82f), Vector3.back);
-            CardDoor(r, WayOn, new Vector3(6.3f, 1.2f, 0.18f), Vector3.forward);
+            CardDoor(r, WayOn, new Vector3(6.3f, 1.2f, 0.18f), Vector3.forward).rotatesOnTry = true;
             var rotation = new GameObject("Code_Rotation").AddComponent<CodeRotation>();
             rotation.transform.SetParent(r.Props.transform, false);
             rotation.cardItemId = CardId;
@@ -125,15 +126,17 @@ namespace GlorifiedBody.Editor.Demo
             r.Sign("Sign_West", "DAY ROOM", new Vector3(0.16f, 2.55f, 5.6f), Vector3.right, new Vector2(1.4f, 0.35f), 40);
         }
 
-        private static void CardDoor(DemoRoom r, string to, Vector3 readerAt, Vector3 facing)
+        private static LockedDoor CardDoor(DemoRoom r, string to, Vector3 readerAt, Vector3 facing)
         {
             GameObject door = r.LockedLeaf(r.DoorTo(to), CardId, "the test card");
-            r.CodeLock(door, readerAt, facing, Rotated, Enrolled);
+            return r.CodeLock(door, readerAt, facing, Rotated, Enrolled);
         }
 
-        private static void DressStore(DemoRoom r, float x)
+        // The common interaction (2026-11-08): the shelf of store A holds an MK capsule, the shelf of store B is empty.
+        private static void DressStore(DemoRoom r, float x, bool capsule)
         {
-            r.Prop("Shelf", new Vector3(x, 0f, 11.5f), new Vector3(2f, 1.6f, 0.4f), 0.26f);
+            if (capsule) r.Container("Shelf", new Vector3(x, 0f, 11.5f), new Vector3(2f, 1.6f, 0.4f), 0.26f, ItemAssets.Drug(DrugType.Nalcon));
+            else r.Prop("Shelf", new Vector3(x, 0f, 11.5f), new Vector3(2f, 1.6f, 0.4f), 0.26f);
         }
 
         private static void DressWayOn(DemoRoom r)

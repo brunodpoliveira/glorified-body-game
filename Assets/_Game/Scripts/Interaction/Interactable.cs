@@ -43,6 +43,17 @@ namespace GlorifiedBody.Interaction
 
         public Vector3 Point => point != null ? point.position : transform.position;
 
+        /// <summary>The focus goes to the highest priority in range first, then to the nearest (2026-11-08: a comment on a
+        /// desk, Examinable, is 0, so a log on that desk still gets the key).</summary>
+        public virtual int Priority => 1;
+
+        /// <summary>Called when the Interact key reaches it, before the question or the message (a card door that rotates the
+        /// codes at the first try).</summary>
+        public virtual void BeforeKey(Interactor who) { }
+
+        /// <summary>The item a yes gives her (the interactor opens a log and plays a tape after the take). Null: none.</summary>
+        public virtual ItemDefinition Gives => null;
+
         /// <summary>False hides it from the interactor (an open door, a taken item).</summary>
         public virtual bool Available => isActiveAndEnabled;
 

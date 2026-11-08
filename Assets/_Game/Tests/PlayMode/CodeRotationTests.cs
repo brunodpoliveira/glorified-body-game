@@ -83,12 +83,28 @@ namespace GlorifiedBody.Tests.PlayMode
         public IEnumerator BeforeTheRotation_TheCardOpensTheDoor()
         {
             interactor.Inventory.TryAdd(card.item);
-            yield return FaceDoor();
-            Assert.AreSame(door, interactor.Focus);
+            yield return StandFacing(storeA.Point + Vector3.back * 1.1f, storeA.Point);
+            Assert.AreSame(storeA, interactor.Focus);
             yield return Press(InputManager.GameAction.Interact);
             StringAssert.StartsWith("ask:", interactor.LastResult, "it asks to use the card");
             yield return Press(InputManager.GameAction.Interact);
-            Assert.IsTrue(door.IsOpen, "the card opens it");
+            Assert.IsTrue(storeA.IsOpen, "the card opens it");
+        }
+
+        [UnityTest]
+        public IEnumerator TheWayOn_TriedFirst_RotatesTheCodesAtOnce_AndRefusesTheCard()
+        {
+            interactor.Inventory.TryAdd(card.item);
+            Assert.IsTrue(door.rotatesOnTry, "the way on (CodeTestSetup)");
+            int said = Subtitles.SubtitleService.Said;
+            yield return FaceDoor();
+            yield return Press(InputManager.GameAction.Interact);
+            Assert.IsTrue(StoryFlags.Has(Rotated), "the first try rotates the codes: no way past the puzzle");
+            StringAssert.StartsWith("rotated:", interactor.LastResult, "the reader refuses the card");
+            Assert.AreEqual(LockedDoor.RotatedText, interactor.Text);
+            Assert.IsFalse(door.IsOpen);
+            yield return WaitUntil(() => Subtitles.SubtitleService.Said > said, 3f);
+            Assert.IsTrue(Subtitles.SubtitleService.Lines.Any(l => l.Text.Contains("Re-enrol your card")), "the PA says it");
         }
 
         [UnityTest]

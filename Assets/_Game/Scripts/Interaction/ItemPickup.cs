@@ -25,6 +25,8 @@ namespace GlorifiedBody.Interaction
 
         public override string Hint => "take " + Name;
 
+        public override ItemDefinition Gives => item;
+
         public override InteractKind KindFor(Interactor who) => InteractKind.Ask;
 
         public override string TextFor(Interactor who) => $"Take {Name}?";

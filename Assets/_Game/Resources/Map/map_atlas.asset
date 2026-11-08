@@ -385,7 +385,11 @@ MonoBehaviour:
     - path: W2/W15
       position: {x: 24, y: 12.75}
       targetScene: W15
-    marks: []
+    marks:
+    - kind: 0
+      path: '[World]/[W2]/[Props]/Door_W3'
+      position: {x: 13, y: 14}
+      label: the ward sister's card
   - scene: W3
     world: Demo
     floor: demo_2
@@ -542,7 +546,11 @@ MonoBehaviour:
     - path: W9/W12
       position: {x: 15, y: -10}
       targetScene: W12
-    marks: []
+    marks:
+    - kind: 0
+      path: '[World]/[W9]/[Props]/Door_W10'
+      position: {x: 17, y: -7}
+      label: the ward sister's card
   - scene: W10
     world: Demo
     floor: demo_2
@@ -636,7 +644,11 @@ MonoBehaviour:
     - path: W13/W10
       position: {x: 20, y: -10}
       targetScene: W10
-    marks: []
+    marks:
+    - kind: 0
+      path: '[World]/[W13]/[Props]/Door_W10'
+      position: {x: 20, y: -10}
+      label: the ward sister's card
   - scene: W14
     world: Demo
     floor: demo_2

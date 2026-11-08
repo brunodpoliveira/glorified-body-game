@@ -114,10 +114,10 @@ namespace GlorifiedBody.Editor.Demo
         /// <summary>W13: the post is empty. A terminal on the desk, the chair pushed back, a radio on a shelf. No puzzle yet.</summary>
         private static void W13(DemoRoom r)
         {
-            r.Prop("Desk", new Vector3(21.4f, 0f, -13.2f), new Vector3(2.2f, 0.75f, 0.8f), 0.25f);
-            GameObject terminal = r.CrtWall("Terminal", new Vector3(21.4f, 0.75f, -13.3f), 1, 1, new List<TapeLine>(), 0.24f, Vector3.forward);
-            terminal.GetComponent<InWorldScreen>().thing = "the terminal";
-            r.Prop("Empty_Chair", new Vector3(21.4f, 0f, -12f), new Vector3(0.5f, 0.9f, 0.5f), 0.15f);
+            // The code rotation (DEMO_PLAN §10.2): the terminal enrols the card with the code on the wall of W14, 8675309.
+            r.Terminal("Terminal", new Vector3(21.4f, 0f, -13.4f), Vector3.forward, DemoItems.StairCard().itemId, "8675309", DemoWard.CodesRotated, DemoWard.CardEnrolled);
+            r.Prop("Empty_Chair", new Vector3(22.7f, 0f, -12.2f), new Vector3(0.5f, 0.9f, 0.5f), 0.15f); // pushed back
+            DemoWard.CardDoor(r, "W10", new Vector3(21.3f, 1.2f, -10.18f), Vector3.back);
             r.Prop("Shelf", new Vector3(18.6f, 0f, -13.5f), new Vector3(0.8f, 0.75f, 0.4f), 0.2f);
             r.Prop("Radio", new Vector3(18.6f, 0.75f, -13.5f), new Vector3(0.3f, 0.18f, 0.12f), 0.1f);
             r.Prop("Radio_Antenna", new Vector3(18.72f, 0.93f, -13.5f), new Vector3(0.02f, 0.4f, 0.02f), 0.6f);
