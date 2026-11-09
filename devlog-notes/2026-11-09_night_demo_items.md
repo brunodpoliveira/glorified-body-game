@@ -43,3 +43,17 @@ the room count (43), `BrainFightTests.ItsSceneGoing_InTheFight_GivesTheMusicBack
 5. The demo's sun lights only the lit layer now, so the dark room can leave it.
 
 Test: `DemoTests.TheDarkRoom_G9_...` (new). With `DarkRoomTests` and the coverage test: 7 of 7. The dark bot passes.
+
+## 3. The audio logs L19 and L20
+
+1. L19, the incident review: a dictaphone on the counter of W9 (DEMO_PLAN §8, round 44). L20, the calibration note: a
+   recorder on a new bench in W11 (round 49). Both play when taken, as the test tape does, and stay in the inventory.
+2. The words are the writer's (`game/lines/T14_incident_review.md`, `L20_calibration.md`, PROPOSED), as subtitles
+   under REVIEWER and TECHNICIAN, and as the log text in the inventory.
+3. The clips are placeholders (`tools/audio_log_placeholders.py`: the voice-like sound of the test tape, timed to the
+   lines; no speech tool is on this machine). L19 lasts 51.5 s, L20 15.6 s. The real voices come later.
+4. At its end L19 unlocks the feed (the backup of round 44): an audio log raises its flag at its end now
+   (`TapePlayer`, `ItemDefinition.readFlag`).
+
+Test: `DemoTests.TheAudioLogs_...` (new): both in their rooms with their clips, the end of L19 unlocks the feed. With
+`AudioLogTests`: 7 of 7.

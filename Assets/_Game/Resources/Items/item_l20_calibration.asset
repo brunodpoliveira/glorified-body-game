@@ -1,0 +1,54 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 202cb6532a4a7f80682b508098ca96f0, type: 3}
+  m_Name: item_l20_calibration
+  m_EditorClassIdentifier: Assembly-CSharp::GlorifiedBody.Interaction.ItemDefinition
+  itemId: l20_calibration
+  displayName: A RECORDER
+  kind: 6
+  drugType: 0
+  colour: {r: 0.95, g: 0.55, b: 0.2, a: 1}
+  description: A recording. It plays while she walks. A fight pauses it.
+  logText: 'Mapping. Day eleven. For the file.
+
+
+    Presentation stable. Separation
+    holds under load.
+
+
+    Recommendation. Retain for v4 transfer.
+
+
+    Note. Affect
+    flatter than day one.
+
+
+    Acceptable. End of note.'
+  readFlag: 
+  mapFloor: 
+  audioClip: {fileID: 8300000, guid: d6af89be5b774610489628f6a53f7e51, type: 3}
+  tapeLines:
+  - at: 0.6
+    speaker: TECHNICIAN
+    text: Mapping. Day eleven. For the file.
+  - at: 3.4
+    speaker: TECHNICIAN
+    text: Presentation stable. Separation holds under load.
+  - at: 6.2
+    speaker: TECHNICIAN
+    text: Recommendation. Retain for v4 transfer.
+  - at: 8.6
+    speaker: TECHNICIAN
+    text: Note. Affect flatter than day one.
+  - at: 12.9
+    speaker: TECHNICIAN
+    text: Acceptable. End of note.

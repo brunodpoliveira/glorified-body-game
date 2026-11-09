@@ -281,6 +281,7 @@ namespace GlorifiedBody.Editor.Demo
             CardDoor(r, "W10", new Vector3(16.82f, 1.2f, -5.7f), Vector3.left); // the code rotation: W10 opens with the card
             r.Prop("Counter", new Vector3(11f, 0f, -6f), new Vector3(3f, 1.05f, 1.6f), 0.1f);
             DemoDark.HubUnits(r); // a source of the order of the dark room (§10.1)
+            r.Item("L19_Dictaphone", DemoItems.L19(), new Vector3(10.2f, 1.08f, -5.7f), new Vector3(0.08f, 0.04f, 0.16f)); // the incident review (round 44)
             r.Prop("Counter_Monitors", new Vector3(11f, 1.05f, -6f), new Vector3(1.2f, 0.4f, 0.2f), 0.35f);
             r.Box(r.Props, "Window", new Vector3(6f, 1.6f, -2.17f), new Vector3(3f, 1.4f, 0.04f), DemoRoom.Colour("window", new Color(0.35f, 0.45f, 0.55f)));
             EnemySpawn marta = r.Figure("Marta", "nurse", new Vector3(4f, 0f, -8.6f), 45f, variant: 1);
@@ -311,6 +312,8 @@ namespace GlorifiedBody.Editor.Demo
                 r.Prop($"Small_Chair_{i}", new Vector3(4.5f + i * 1.5f + (i >= 3 ? 0.6f : 0f), 0f, -16.2f), new Vector3(0.6f, 0.7f, 0.9f), 0.5f);
             r.Box(r.Props, "Whiteboard", new Vector3(3.17f, 1.5f, -13.5f), new Vector3(0.04f, 1f, 2.2f), DemoRoom.Grey(0.85f)); // 0.17 off the line: the wall is 0.3 m thick on it (2026-11-05)
             r.Item("L4_Whiteboard", DemoItems.L4(), new Vector3(3.22f, 1.1f, -13.5f), new Vector3(0.05f, 0.2f, 0.3f));
+            r.Prop("Bench", new Vector3(11.4f, 0f, -10.65f), new Vector3(2f, 0.9f, 0.6f), 0.3f); // the mapping bench (L20)
+            r.Item("L20_Recorder", DemoItems.L20(), new Vector3(11.4f, 0.93f, -10.65f), new Vector3(0.14f, 0.05f, 0.1f)); // the calibration note (round 49)
             r.Scan("Scan_Small_Chair", new Vector3(6f, 0.8f, -16.2f), "demo_c4_chair", "PLACEHOLDER (C4): \"Imagine your hand.\"");
             // The ward sister carries the stairwell card (ItemCarrier): a hidden pickup she drops at her death.
             ItemPickup card = r.Item("Stair_Card", DemoItems.StairCard(), new Vector3(11f, 0.05f, -13f), new Vector3(0.1f, 0.02f, 0.15f));

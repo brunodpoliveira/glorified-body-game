@@ -159,6 +159,50 @@ namespace GlorifiedBody.Editor.Demo
         public static ItemDefinition L5() => Log("l5_security_logbook", "THE SECURITY LOGBOOK", "01:52 SECTOR C CAMERAS OFF FOR MAINTENANCE. AUTH: STEVENS.");
         public static ItemDefinition L7() => Log("l7_session_note", "A SESSION NOTE", "SESSION 4,211. V3 HELD THE CUP FOR NINE SECONDS WITHOUT HELP. THE WHOLE TEAM CRIED. SHE SMILED, WE THINK. THIS IS WHY WE DO IT.");
         public static ItemDefinition L8() => Log("l8_prayer_card", "A PRAYER CARD", "Tonight we pray for the candidates in surgery, for the children of the programme, and for all who give the body so that humanity endures.");
+        /// <summary>
+        /// L19, the incident review: an audio log on the counter of W9 (DEMO_PLAN §8, round 44: the backup of the feed;
+        /// the writer's game/lines/T14_incident_review.md, PROPOSED). It plays when taken, and at its end the feed unlocks.
+        /// The clip is a placeholder (tools/audio_log_placeholders.py); the line times are its times.
+        /// </summary>
+        public static ItemDefinition L19() => AudioLog("l19_incident_review", "A DICTAPHONE", "REVIEWER", GlorifiedBody.Player.Feeding.UnlockFlag,
+            new[] { 0.6f, 4.9f, 13.1f, 17.1f, 26.4f, 31.5f, 35.1f, 46.0f },
+            new[]
+            {
+                "Incident review. V4 series, unit two. Recorded for the file.",
+                "Summary. The unit was held at the standard interval for PCDH-Y. The replacement batch did not arrive on the day.",
+                "Logistics reports a hold at the hub. Six days.",
+                "On day six the nursing team entered to administer the replacement. The unit was in deficit. It did not wait for the injection.",
+                "The unit fed on a member of staff.",
+                "The team withdrew. The unit did not pursue.",
+                "Exams on day seven. Levels within the normal range. Accelerated healing of every wound the unit sustained in the incident, confirmed on imaging. The unit is calm.",
+                "Recommendation. Do not hold a batch. Never enter alone. End of review.",
+            });
+
+        /// <summary>L20, the calibration note: an audio log on the bench of W11 (round 49; game/lines/L20_calibration.md, PROPOSED).</summary>
+        public static ItemDefinition L20() => AudioLog("l20_calibration", "A RECORDER", "TECHNICIAN", "",
+            new[] { 0.6f, 3.4f, 6.2f, 8.6f, 12.9f },
+            new[]
+            {
+                "Mapping. Day eleven. For the file.",
+                "Presentation stable. Separation holds under load.",
+                "Recommendation. Retain for v4 transfer.",
+                "Note. Affect flatter than day one.",
+                "Acceptable. End of note.",
+            });
+
+        private static ItemDefinition AudioLog(string id, string name, string speaker, string endFlag, float[] at, string[] lines)
+        {
+            ItemDefinition item = ItemAssets.Item(id, name, ItemKind.AudioLog, ItemAssets.TapeColour, "A recording. It plays while she walks. A fight pauses it.",
+                string.Join("\n\n", lines), DrugType.Nalcon);
+            item.audioClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>($"Assets/_Game/Audio/Logs/{id}.wav");
+            if (item.audioClip == null) Debug.LogWarning($"[DemoItems] no clip for {id}: run tools/audio_log_placeholders.py");
+            item.tapeLines = new List<TapeLine>();
+            for (int i = 0; i < lines.Length; i++) item.tapeLines.Add(new TapeLine { at = at[i], speaker = speaker, text = lines[i] });
+            item.readFlag = endFlag; // an audio log raises it at its end (TapePlayer)
+            UnityEditor.EditorUtility.SetDirty(item);
+            return item;
+        }
+
         public static ItemDefinition L9() => Log("l9_care_chart", "HER CARE CHART", "V3. DAILY CARE. ORAL INTAKE: NONE. PCDH-Y: DONOR TISSUE PER PROTOCOL 7 (ALL DONORS CONSENTED). LAST DOSE: 6 DAYS AGO, HELD FOR THE V4 TRANSFER. EXPECT THE SUBJECT TO SEEK A SOURCE. NEVER ENTER ALONE.");
 
         public static ItemDefinition StairCard()

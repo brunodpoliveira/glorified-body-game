@@ -553,6 +553,10 @@ MonoBehaviour:
       path: '[World]/[W9]/[Props]/Door_W10'
       position: {x: 17, y: -7}
       label: the ward sister's card
+    - kind: 2
+      path: '[World]/[W9]/[Props]/L19_Dictaphone'
+      position: {x: 10.2, y: -5.7}
+      label: A DICTAPHONE
   - scene: W10
     world: Demo
     floor: demo_2
@@ -602,6 +606,10 @@ MonoBehaviour:
       path: '[World]/[W11]/[Props]/L4_Whiteboard'
       position: {x: 3.22, y: -13.5}
       label: THE WHITEBOARD
+    - kind: 2
+      path: '[World]/[W11]/[Props]/L20_Recorder'
+      position: {x: 11.4, y: -10.65}
+      label: A RECORDER
   - scene: W12
     world: Demo
     floor: demo_2

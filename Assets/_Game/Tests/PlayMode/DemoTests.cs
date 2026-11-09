@@ -367,6 +367,43 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator TheAudioLogs_L19InW9_L20InW11_AndTheEndOfL19UnlocksTheFeed()
+        {
+            // DEMO_PLAN §8 (rounds 44 and 49; 2026-11-09): two spoken logs, the writer's words, placeholder clips.
+            yield return Coda("W9");
+            ItemPickup l19 = GameObject.Find("L19_Dictaphone")?.GetComponent<ItemPickup>();
+            ItemPickup l20 = GameObject.Find("L20_Recorder")?.GetComponent<ItemPickup>();
+            Assert.IsNotNull(l19, "the dictaphone in W9");
+            Assert.IsNotNull(l20, "the recorder in W11");
+            Assert.AreEqual("W9", l19.GetComponentInParent<GlorifiedBody.Rooms.Room>().id);
+            Assert.AreEqual("W11", l20.GetComponentInParent<GlorifiedBody.Rooms.Room>().id);
+            foreach (ItemPickup p in new[] { l19, l20 })
+            {
+                Assert.AreEqual(ItemKind.AudioLog, p.item.kind, p.name);
+                Assert.IsNotNull(p.item.audioClip, p.name + ": its clip (tools/audio_log_placeholders.py)");
+                Assert.Greater(p.item.audioClip.length, p.item.tapeLines.Last().at, p.name + ": the last line inside the clip");
+            }
+            StringAssert.Contains("Never enter alone", string.Join(" ", l19.item.tapeLines.Select(l => l.text)));
+
+            yield return WaitUntil(() =>
+            {
+                if (CutscenePlayer.IsPlaying) CutscenePlayer.Skip();
+                return !CutscenePlayer.IsPlaying && Time.timeScale > 0f;
+            }, 60f); // the tape runs on game time
+            StoryFlags.Raise(Feeding.LockFlag);
+            StoryFlags.Drop(Feeding.UnlockFlag);
+            Assert.IsTrue(Feeding.Locked, "the feed is locked");
+            var tapes = GlorifiedBody.Audio.TapePlayer.Instance;
+            GameObject.FindGameObjectWithTag("Player").GetComponent<ItemInventory>().TryAdd(l19.item); // the player stops a tape she does not carry
+            tapes.Play(l19.item);
+            yield return null;
+            tapes.Seek(l19.item.audioClip.length - 0.5f);
+            yield return WaitUntil(() => tapes.StoppedBy == GlorifiedBody.Audio.TapePlayer.Ended, 3f);
+            Assert.AreEqual(GlorifiedBody.Audio.TapePlayer.Ended, tapes.StoppedBy, "it plays to its end");
+            Assert.IsFalse(Feeding.Locked, "at its end the feed unlocks (round 44: the backup)");
+        }
+
+        [UnityTest]
         public IEnumerator TheBrainSector_B1_ItsDeathOpensB2_AndB2CutsToTheCarPark()
         {
             yield return Coda("B1", "demo_crown_gone");

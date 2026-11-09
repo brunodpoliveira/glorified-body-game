@@ -212,6 +212,7 @@ namespace GlorifiedBody.Audio
                 SubtitleService.Hide(SubtitleOwner);
                 UpdateLabel();
                 RunTelemetry.Event("tape_end", tape.itemId);
+                ItemDefinition.MarkRead(tape); // its flag at its end (L19 unlocks the feed, round 44)
                 return;
             }
             ShowLine();

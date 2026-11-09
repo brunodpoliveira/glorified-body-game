@@ -1,0 +1,82 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 202cb6532a4a7f80682b508098ca96f0, type: 3}
+  m_Name: item_l19_incident_review
+  m_EditorClassIdentifier: Assembly-CSharp::GlorifiedBody.Interaction.ItemDefinition
+  itemId: l19_incident_review
+  displayName: A DICTAPHONE
+  kind: 6
+  drugType: 0
+  colour: {r: 0.95, g: 0.55, b: 0.2, a: 1}
+  description: A recording. It plays while she walks. A fight pauses it.
+  logText: 'Incident review. V4 series, unit two. Recorded for the file.
+
+
+    Summary.
+    The unit was held at the standard interval for PCDH-Y. The replacement batch
+    did not arrive on the day.
+
+
+    Logistics reports a hold at the hub. Six days.
+
+
+    On
+    day six the nursing team entered to administer the replacement. The unit was
+    in deficit. It did not wait for the injection.
+
+
+    The unit fed on a member
+    of staff.
+
+
+    The team withdrew. The unit did not pursue.
+
+
+    Exams on day
+    seven. Levels within the normal range. Accelerated healing of every wound the
+    unit sustained in the incident, confirmed on imaging. The unit is calm.
+
+
+    Recommendation.
+    Do not hold a batch. Never enter alone. End of review.'
+  readFlag: feed_unlocked
+  mapFloor: 
+  audioClip: {fileID: 8300000, guid: 139cd5abd2ee765db8ecef896e8b8dfb, type: 3}
+  tapeLines:
+  - at: 0.6
+    speaker: REVIEWER
+    text: Incident review. V4 series, unit two. Recorded for the file.
+  - at: 4.9
+    speaker: REVIEWER
+    text: Summary. The unit was held at the standard interval for PCDH-Y. The replacement
+      batch did not arrive on the day.
+  - at: 13.1
+    speaker: REVIEWER
+    text: Logistics reports a hold at the hub. Six days.
+  - at: 17.1
+    speaker: REVIEWER
+    text: On day six the nursing team entered to administer the replacement. The
+      unit was in deficit. It did not wait for the injection.
+  - at: 26.4
+    speaker: REVIEWER
+    text: The unit fed on a member of staff.
+  - at: 31.5
+    speaker: REVIEWER
+    text: The team withdrew. The unit did not pursue.
+  - at: 35.1
+    speaker: REVIEWER
+    text: Exams on day seven. Levels within the normal range. Accelerated healing
+      of every wound the unit sustained in the incident, confirmed on imaging. The
+      unit is calm.
+  - at: 46
+    speaker: REVIEWER
+    text: Recommendation. Do not hold a batch. Never enter alone. End of review.
