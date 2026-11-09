@@ -257,6 +257,7 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.AreEqual(1f, arm.Weight, 0.01f, "the charge raises the arm");
             Debug.Log($"[PowersAndBarsTests] the arm on the charge: {arm.AimError:0.0} degrees off the target");
             Assert.Less(arm.AimError, 20f, "it points at the locked target");
+            AssertStance(arm, "the charge");
             pad.SetHeld(InputManager.GameAction.Charge, false);
             yield return new WaitForSeconds(0.6f);
             Assert.AreEqual(0f, arm.Weight, 0.01f, "the shot gone: the arm goes down");
@@ -268,8 +269,26 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.IsNotNull(dummyB.GetComponent<TelekinesisLift>(), "it floats");
             Assert.AreEqual(1f, arm.Weight, 0.01f, "she holds it: the arm stays up");
             Assert.Less(Vector3.Distance(arm.AimPoint, lockOn.HeldThing.position), 0.01f, "it aims at the floater");
-            Debug.Log($"[PowersAndBarsTests] the arm on the floater ({(arm.LeftArm ? "left" : "right")}): {arm.AimError:0.0} degrees off, aim yaw/pitch {arm.AimAngles}, muscles {arm.Muscles}, held at {lockOn.HeldThing.position - powers.transform.position}");
+            Debug.Log($"[PowersAndBarsTests] the arm on the floater ({(arm.LeftArm ? "left" : "right")}): {arm.AimError:0.0} degrees off, aim yaw/pitch {arm.AimAngles}, held at {lockOn.HeldThing.position - powers.transform.position}");
             Assert.Less(arm.AimError, 25f, "the arm follows the floater");
+            AssertStance(arm, "the floater");
+        }
+
+        /// <summary>Bruno, 2026-11-09: "her arm is obviously going through her head; she's still doing the rest of the pistol
+        /// shot pose". The aim hand clear of the head and near the shoulder's height, the other hand down at her side.</summary>
+        public static void AssertStance(PowerArm arm, string when)
+        {
+            float headGap = Vector3.Distance(arm.AimHand, arm.Head);
+            float handOverShoulder = arm.AimHand.y - arm.AimShoulder.y;
+            float restUnderShoulder = arm.AimShoulder.y - arm.RestHand.y;
+            Debug.Log($"[PowerArm] {when}: hand to head {headGap:0.00} m, hand over the shoulder {handOverShoulder:0.00} m, the other hand under it {restUnderShoulder:0.00} m, elbow bend {arm.ElbowBend:0} degrees, reach {arm.Reach:0.00}");
+            Assert.Less(arm.ElbowBend, 25f, when + ": the arm out, the elbow almost straight");
+            Debug.Log($"[PowerArm] {when}: the fingers {Vector3.Angle(arm.Fingers, Vector3.up):0} degrees from straight up");
+            Assert.Less(Vector3.Angle(arm.Fingers, Vector3.up), 30f, when + ": the hand bent up, the fingers to the sky, the palm to the target");
+            Assert.Greater(arm.Reach, 0.85f, when + ": the hand far from the shoulder, not at her chin");
+            Assert.Greater(headGap, 0.3f, when + ": the hand is clear of her head");
+            Assert.Less(Mathf.Abs(handOverShoulder), 0.35f, when + ": the hand near the shoulder's height");
+            Assert.Greater(restUnderShoulder, 0.4f, when + ": the other arm hangs at her side");
         }
 
         [UnityTest]

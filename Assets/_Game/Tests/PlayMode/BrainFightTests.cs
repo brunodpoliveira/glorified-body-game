@@ -117,6 +117,10 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.IsTrue(crown.ChargeShown, "the charge circle shows");
             Assert.IsTrue(crown.CanvasPoint(tank.transform.position + Vector3.up * 1.2f, out Vector2 her), "she is on screen");
             Assert.Less(Vector2.Distance(crown.ChargeAt, her), 5f, "over her, as the brain is off the screen");
+            // The brain hangs high at its eye: her arm stays near her shoulder, clear of her head (Bruno, 2026-11-09).
+            PowerArm arm = tank.GetComponent<PowerArm>();
+            Assert.AreEqual(1f, arm.Weight, 0.01f);
+            PowersAndBarsTests.AssertStance(arm, "the brain over her");
             pad.SetHeld(InputManager.GameAction.Charge, false);
             Assert.AreEqual(6, fight.LightsOn, "every work light on");
         }

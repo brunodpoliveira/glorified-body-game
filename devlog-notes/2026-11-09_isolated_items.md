@@ -73,3 +73,31 @@ shows the palm to the target. Shots: `~/MEGA/glorified-body-renders/game/isolate
 | `DeathScreenSetup.Build` | the seven test-room death screens of the writer (2026-11-07) replace the placeholder hints |
 | `EnemyAiTests` (the knock-out test, and the room's other tests with the gas soldier) | 22 of 22, no crash |
 | The brain bot (a new shot: her arm) | passes |
+
+## Later that night: the pose redone
+
+Bruno, with three stills of a man who stops bullets with one raised hand:
+
+```text
+her arm is obviously going through her head; she's still doing the rest of the pistol shot pose. that's not what i
+asked, i asked for this type of pose. check if fixed; if not redo it
+```
+
+Not fixed: the first version aimed one arm straight at the target. The brain hangs high at its eye, so the arm went up
+across her head, and the rest of her body kept the pistol pose of the charge animation. Redone (`PowerArm`):
+
+1. The aim arm stays near the height of the shoulder (the pitch from -25° to +12°) and on its own side of the body.
+   The elbow is straight.
+2. The hand bends up on the bone after the pose: the fingers to the sky, the palm to the target. The wrist muscle
+   barely moved the mitten hands of the models.
+3. The other arm hangs at her side.
+4. The spine, the chest, the neck and the head lose the twist and the lean of the animation.
+
+The stance test (`PowersAndBarsTests.AssertStance`, on the charge, the floater and the brain over her) measures it: the
+hand 0.46 to 0.65 m from her head, within 0.1 m of the shoulder's height, the elbow bent 3 to 4°, the full reach, the
+fingers 0 to 13° from straight up, the other hand about 0.5 m under the shoulder. `PowersAndBarsTests`,
+`BrainFightTests` and `EdgarTests`: 93 of 93.
+
+Shots: `isolated_items_2026-11-09/v2_05_her_arm_side.png` (the side, the clearest), `v2_06_her_arm_back.png` (from
+behind, as in his first still), `v2_04_her_arm.png` (from the front: the arm points at the lens, so it shows end-on).
+The legs keep the stance of the charge animation (the knees a little bent).
