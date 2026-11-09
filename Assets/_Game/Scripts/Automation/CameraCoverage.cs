@@ -75,13 +75,24 @@ namespace GlorifiedBody.Automation
                         Vector3 camPos = cam.transform.position;
                         if (Vector2.Distance(new Vector2(p.x, p.z), new Vector2(camPos.x, camPos.z)) < nearCamera) continue;
                         Vector3 head = p + Vector3.up * 1.6f, hip = p + Vector3.up * 0.9f;
-                        bool inFrame = InFrame(cam, head, 0.05f) && InFrame(cam, hip, 0f);
+                        // A camera that turns to her (the brain's eye) turns to the point, inside its limit.
+                        Quaternion look = cam.followPlayerYaw ? TurnedTo(cam, p) : cam.transform.rotation;
+                        bool inFrame = InFrame(camPos, look, cam.fieldOfView, head, 0.05f) && InFrame(camPos, look, cam.fieldOfView, hip, 0f);
                         bool hidden = Physics.Linecast(camPos, head, solid, QueryTriggerInteraction.Ignore);
                         if (!inFrame || hidden) report.Uncovered.Add($"{p.x:0.0},{p.z:0.0} {cam.cameraName} {(inFrame ? "hidden" : "out of frame")}");
                     }
                 }
             }
             return report;
+        }
+
+        /// <summary>A camera that follows her, turned toward her feet at a point as FixedCameraDirector turns it: the look at
+        /// her, at most followMaxYaw degrees from the camera's own rotation.</summary>
+        public static Quaternion TurnedTo(FixedCamera cam, Vector3 feet)
+        {
+            Vector3 to = feet - cam.transform.position;
+            if (to.sqrMagnitude < 1e-4f) return cam.transform.rotation;
+            return Quaternion.RotateTowards(cam.transform.rotation, Quaternion.LookRotation(to.normalized, Vector3.up), cam.followMaxYaw);
         }
 
         private static FixedCamera CameraFor(Vector3 p, CameraZone[] zones, FixedCameraDirector director)

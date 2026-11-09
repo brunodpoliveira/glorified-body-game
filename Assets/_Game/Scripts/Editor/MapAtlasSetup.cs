@@ -44,6 +44,7 @@ namespace GlorifiedBody.Editor
             (Demo.DemoItems.Floor2, "THE WARD"),
             (Demo.DemoItems.Floor1, "THE PUBLIC FLOOR"),
             (Demo.DemoItems.FloorRoad, "THE ROAD"),
+            (Demo.DemoItems.FloorBrain, "THE BRAIN"),
         };
 
         /// <summary>
@@ -76,6 +77,7 @@ namespace GlorifiedBody.Editor
             { "G9b", "COMMS" }, { "G10", "CAFETERIA" }, { "G11", "BREAK ROOM" }, { "G12", "CONFERENCE" }, { "G13", "ADMISSIONS" },
             { "G14", "BUILDERS' STORE" }, { "G15", "STAFF TOILETS" }, { "G16", "RISER ROOM" },
             { "X1", "CAR PARK" }, { "R1", "THE SHOP" }, { "R2", "SERVICE BAY" }, { "R3", "TOLL YARD" },
+            { "B1", "THE BRAIN" }, { "B2", "BUILDERS' DOOR" }, // 2026-11-09
         };
 
         [MenuItem("GlorifiedBody/Build Map Atlas")]

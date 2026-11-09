@@ -130,7 +130,7 @@ namespace GlorifiedBody.Editor.Demo
     /// </summary>
     public static class DemoItems
     {
-        public const string Floor2 = "demo_2", Floor1 = "demo_1", FloorRoad = "demo_road";
+        public const string Floor2 = "demo_2", Floor1 = "demo_1", FloorRoad = "demo_road", FloorBrain = "demo_brain";
 
         /// <summary>The sunglasses of the coda (the writer's words): the readout after the Crown, and no camera reads her face.</summary>
         public static ItemDefinition Sunglasses() => ItemAssets.Item(DemoCoda.SunglassesId, "SUNGLASSES", ItemKind.Critical, ItemAssets.KeyColour,

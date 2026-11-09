@@ -33,7 +33,7 @@ namespace GlorifiedBody.Tests.PlayMode
     {
         private const string World = "Demo";
         private static readonly string[] Rooms = { "W1", "W1B", "W2", "W3", "W4", "W5", "W6", "W7", "W8", "W9", "W10", "W11", "W12", "W13", "W14", "W15", "W16", "W17", "S1",
-            "G1", "G2", "G3", "G4", "G5", "G6", "G7", "G8", "G9", "G9b", "G10", "G11", "G12", "G13", "G14", "G15", "G16", "X1", "R1", "R2", "R3", "U1" }; // the floorplan v2 (2026-11-05)
+            "G1", "G2", "G3", "G4", "G5", "G6", "G7", "G8", "G9", "G9b", "G10", "G11", "G12", "G13", "G14", "G15", "G16", "X1", "R1", "R2", "R3", "U1", "B1", "B2" }; // the floorplan v2 (2026-11-05), the brain sector (2026-11-09)
         private static readonly string[] MainWay = { "W1", "W1B", "W2", "W5", "W7", "W8", "W9", "W11", "W9", "W12", "S1", "G1", "G2", "G5", "G9", "G5", "U1" };
 
         [UnitySetUp]
@@ -300,17 +300,26 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator U1_TheGrabTearsTheUniformOff_TheHudGoes_AndSheStandsInTheCarPark()
+        public IEnumerator U1_TheGrabTearsTheUniformOff_AndSheStandsInTheBrainSector()
         {
             yield return LoadWorld();
             GameObject lucy = GameObject.FindGameObjectWithTag("Player");
             GlorifiedBody.Interaction.OutfitChange.Change(lucy, GlorifiedBody.Interaction.OutfitChange.Load(GlorifiedBody.Interaction.OutfitChange.GuardId));
             lucy.GetComponent<TankController>().Teleport(GlorifiedBody.Rooms.Room.Of("U1").transform.position + new Vector3(20f, 0f, -25.5f), 180f);
-            yield return WaitUntil(() => GlorifiedBody.Rooms.RoomTracker.CurrentId == "X1", 60f);
-            Assert.AreEqual("X1", GlorifiedBody.Rooms.RoomTracker.CurrentId, "after the exit lines: the car park");
+            // Beat 25 (the demo waits for it, round 52; built 2026-11-09): after the grab, the brain sector B1. The exit lines
+            // and the car park come after its death (TheBrainSector_B1_...).
+            yield return WaitUntil(() =>
+            {
+                if (CutscenePlayer.IsPlaying) CutscenePlayer.Skip();
+                return GlorifiedBody.Rooms.RoomTracker.CurrentId == "B1";
+            }, 60f);
+            Assert.AreEqual("B1", GlorifiedBody.Rooms.RoomTracker.CurrentId, "after the grab: the brain sector");
             Assert.AreEqual(GlorifiedBody.Interaction.OutfitChange.NudeId, lucy.GetComponent<PsychicStats>().Outfit.outfitId, "round 20: the grab tears the uniform off");
-            yield return new WaitForSeconds(1f);
-            Assert.IsFalse(GameObject.Find("PlayerHudCanvas").GetComponent<Canvas>().enabled, "no HUD: the Crown is gone");
+            Assert.IsTrue(StoryFlags.Has("demo_crown_gone"), "the Crown is gone");
+            yield return WaitUntil(() => GlorifiedBody.Boss.BrainFight.Instance != null && GlorifiedBody.Boss.BrainFight.Instance.Current == GlorifiedBody.Boss.BrainFight.Phase.Fighting, 3f);
+            Assert.AreEqual(GlorifiedBody.Boss.BrainFight.Phase.Fighting, GlorifiedBody.Boss.BrainFight.Instance.Current, "the fight begins");
+            yield return new WaitForSeconds(0.5f);
+            Assert.IsFalse(UnityEngine.Object.FindFirstObjectByType<GlorifiedBody.UI.PlayerHud>().HpShown, "the Crown's HP row is gone (the brain reads her: SUBJECT)");
             Assert.IsFalse(lucy.GetComponent<TankController>().MovementLocked, "she walks");
         }
 
@@ -326,6 +335,35 @@ namespace GlorifiedBody.Tests.PlayMode
             GlorifiedBody.Rooms.Room room = GlorifiedBody.Rooms.Room.Of(roomId);
             Assert.IsNotNull(room, roomId);
             yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator TheBrainSector_B1_ItsDeathOpensB2_AndB2CutsToTheCarPark()
+        {
+            yield return Coda("B1", "demo_crown_gone");
+            GameObject lucy = GameObject.FindGameObjectWithTag("Player");
+            TankController tank = lucy.GetComponent<TankController>();
+            tank.Teleport(GameObject.Find("Entry_B1").transform.position, 0f);
+            var fight = GlorifiedBody.Boss.BrainFight.Instance;
+            Assert.IsNotNull(fight, "the brain of B1 (DemoBrain)");
+            yield return WaitUntil(() => fight.Current == GlorifiedBody.Boss.BrainFight.Phase.Fighting, 3f);
+            Assert.AreEqual(GlorifiedBody.Boss.BrainFight.Phase.Fighting, fight.Current, "her first step into the sector");
+            Assert.AreSame(fight.eye, FixedCameraDirector.Instance.Current, "the camera is the brain's eye");
+            Assert.IsTrue(fight.exitLeaf.activeSelf, "the way out is shut while it lives");
+            fight.trackSpeed = 0f;
+            Health body = fight.nodes.Single().Health;
+            body.TakeDamage(body.MaxHealth);
+            yield return WaitUntil(() => fight.Current == GlorifiedBody.Boss.BrainFight.Phase.Dead, 8f);
+            Assert.IsFalse(fight.exitLeaf.activeSelf, "its death opens the builders' door");
+            Assert.IsTrue(StoryFlags.Has("demo_brain_dead"));
+            GlorifiedBody.Rooms.Room b2 = GlorifiedBody.Rooms.Room.Of("B2");
+            tank.Teleport(b2.Centre, 0f);
+            yield return WaitUntil(() =>
+            {
+                if (CutscenePlayer.IsPlaying) CutscenePlayer.Skip();
+                return GlorifiedBody.Rooms.RoomTracker.CurrentId == "X1";
+            }, 90f);
+            Assert.AreEqual("X1", GlorifiedBody.Rooms.RoomTracker.CurrentId, "the exit lines, then the car park");
         }
 
         [UnityTest]

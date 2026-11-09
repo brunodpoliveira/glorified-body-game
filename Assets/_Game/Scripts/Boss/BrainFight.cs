@@ -123,6 +123,9 @@ namespace GlorifiedBody.Boss
         private void OnDestroy()
         {
             if (Instance == this) Instance = null;
+            // Its scene goes in the fight (a death and RETRY, a quit to the menu, the next test): the music system lives on,
+            // so it gets the room's music back (2026-11-09: the boss track held into the next room).
+            if (Current == Phase.Fighting || Current == Phase.Dying) GlorifiedBody.Audio.MusicDirector.Hold(null);
         }
 
         private void Start()

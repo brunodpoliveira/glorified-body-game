@@ -321,6 +321,20 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator ItsSceneGoing_InTheFight_GivesTheMusicBack()
+        {
+            fight.trackSpeed = 0f;
+            yield return Enter(Middle);
+            var music = GlorifiedBody.Audio.MusicDirector.Instance;
+            yield return WaitUntil(() => music.State == GlorifiedBody.Audio.MusicState.Score, 2f);
+            Assert.IsTrue(music.InFight, "the boss track");
+            SceneManager.LoadScene("Main_Menu"); // a quit in the fight
+            yield return WaitUntil(() => SceneManager.GetActiveScene().name == "Main_Menu", 10f);
+            yield return null;
+            Assert.IsFalse(music.InFight, "the boss track does not hold into the next scene");
+        }
+
+        [UnityTest]
         public IEnumerator AGrabber_SheStepsAside_ItMisses()
         {
             // Bruno, 2026-11-08: "the grabbers are still impossible to dogde".

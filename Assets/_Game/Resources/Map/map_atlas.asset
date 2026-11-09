@@ -27,6 +27,8 @@ MonoBehaviour:
     title: THE PUBLIC FLOOR
   - id: demo_road
     title: THE ROAD
+  - id: demo_brain
+    title: THE BRAIN
   rooms:
   - scene: TrainingRoom
     world: 
@@ -1197,6 +1199,38 @@ MonoBehaviour:
       path: '[World]/[R3]/[Props]/Capsule_R3_B'
       position: {x: 90.1, y: -12.4}
       label: EDGAR CAPSULE
+  - scene: B1
+    world: Demo
+    floor: demo_brain
+    title: THE BRAIN
+    offset: {x: 0, y: 0}
+    areas:
+    - serializedVersion: 2
+      x: 104.5
+      y: -31
+      width: 18
+      height: 12
+    exits:
+    - path: B1/B2
+      position: {x: 113.5, y: -19}
+      targetScene: B2
+    marks: []
+  - scene: B2
+    world: Demo
+    floor: demo_brain
+    title: BUILDERS' DOOR
+    offset: {x: 0, y: 0}
+    areas:
+    - serializedVersion: 2
+      x: 111.5
+      y: -19
+      width: 4
+      height: 3
+    exits:
+    - path: B2/B1
+      position: {x: 113.5, y: -19}
+      targetScene: B1
+    marks: []
   - scene: S1
     world: Demo
     floor: demo_2

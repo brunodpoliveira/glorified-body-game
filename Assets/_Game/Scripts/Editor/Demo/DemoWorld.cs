@@ -68,6 +68,7 @@ namespace GlorifiedBody.Editor.Demo
             List<FixedCamera> stairCameras = StairRoom(world);
             Neighbours(rooms);
             Reinforcement(rooms);
+            DemoBrain.Wire(rooms); // the brain fight of B1 (2026-11-09)
 
             GameObject director = MenuLoopSetup.EnsureChild(world, "[CameraDirector]");
             MenuLoopSetup.EnsureComponent<FixedCameraDirector>(director).SetDefaultCamera(rooms["W1"].Cameras[0]);

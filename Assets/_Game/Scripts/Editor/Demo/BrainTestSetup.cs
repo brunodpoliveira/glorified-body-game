@@ -40,7 +40,7 @@ namespace GlorifiedBody.Editor.Demo
         public static List<RoomSpec> Rooms() => new List<RoomSpec>
         {
             Spec(Wing, "THE UNFINISHED WING", 6, 0, 12, 6, 3.2f, DressWing, new Door('N', 9, Sector)),
-            Spec(Sector, "THE BRAIN SECTOR", 0, 6, 18, 18, 6f, DressSector, new Door('S', 9, Wing), new Door('N', 9, Exit)),
+            Spec(Sector, "THE BRAIN SECTOR", 0, 6, 18, 18, 6f, r => DressSector(r, Exit), new Door('S', 9, Wing), new Door('N', 9, Exit)),
             Spec(Exit, "THE BUILDERS' DOOR", 7, 18, 11, 21, 3.2f, null, new Door('S', 9, Sector)),
         };
 
@@ -76,7 +76,7 @@ namespace GlorifiedBody.Editor.Demo
             foreach (DemoRoom r in rooms.Values) r.Root.SetActive(true);
             Physics.SyncTransforms();
             DemoWorld.Neighbours(rooms);
-            Wire(rooms[Sector]);
+            Wire(rooms[Sector], DeadFlag, GlorifiedBody.UI.PlayerHudFlags.CrownGone); // the grabber took the Crown in U1
 
             GameObject director = MenuLoopSetup.EnsureChild(world, "[CameraDirector]");
             MenuLoopSetup.EnsureComponent<FixedCameraDirector>(director).SetDefaultCamera(rooms[Wing].Cameras[0]);
@@ -91,12 +91,13 @@ namespace GlorifiedBody.Editor.Demo
             Debug.Log($"[BrainTestSetup] built {ScenePath}: {rooms.Count} rooms, {rooms.Values.Sum(r => r.Cameras.Count)} cameras");
         }
 
-        private static void Wire(DemoRoom sector)
+        /// <summary>The fight on a sector that DressSector built (BRAIN TEST, and the demo's B1).</summary>
+        public static void Wire(DemoRoom sector, string deadFlag, string beginFlag)
         {
             // The brain's eye follows her: the camera of the whole sector.
             FixedCamera eye = sector.Root.GetComponentsInChildren<FixedCamera>(true).First(c => c.name == "Cam_B1_eye");
             eye.followPlayerYaw = true;
-            eye.followMaxYaw = 55f;
+            eye.followMaxYaw = 100f; // on the south wall: it turns to look along the walls into the corners (the coverage rule)
             eye.followSpeed = 90f;
             EditorUtility.SetDirty(eye);
             // The walls and the floor are brain (the greybox stand-in: pink-grey).
@@ -114,8 +115,8 @@ namespace GlorifiedBody.Editor.Demo
             fight.workGlow = fight.workLights.Select(r => r.GetComponentInChildren<Light>(true)).ToArray();
             fight.grabberMouths = Enumerable.Range(0, 6).Select(i => sector.Props.transform.Find("Grabber_Mouth_" + i)).ToArray();
             fight.exitLeaf = sector.Props.transform.Find("Exit_Leaf").gameObject;
-            fight.deadFlag = DeadFlag;
-            fight.beginFlag = GlorifiedBody.UI.PlayerHudFlags.CrownGone; // the grabber took the Crown in U1
+            fight.deadFlag = deadFlag;
+            fight.beginFlag = beginFlag;
             EditorUtility.SetDirty(fight);
         }
 
@@ -127,14 +128,20 @@ namespace GlorifiedBody.Editor.Demo
             r.Sign("Sign_Rules", "KEEP MOVING. BLAST A GRABBER. LIFT ONE AND THROW IT", new Vector3(9f, 2.55f, 0.16f), Vector3.forward, new Vector2(3.6f, 0.35f), 40);
         }
 
-        private static void DressSector(DemoRoom r)
+        /// <summary>
+        /// The brain sector, 18 x 12 m and 6 m high (BRAIN TEST, and the demo's B1): every place from the room's south-west
+        /// corner, so the same sector stands anywhere. exitId: the room behind the exit leaf of the north doorway.
+        /// </summary>
+        public static void DressSector(DemoRoom r, string exitId)
         {
-            r.ExtraCamera("eye", new Vector3(9f, 5.4f, 6.8f), new Vector3(9f, 0.5f, 13f), 70f, new Vector3(9f, 1.5f, 12f), new Vector3(17.6f, 3f, 11.6f));
+            Vector3 corner = new Vector3(r.Spec.X0, 0f, r.Spec.Z0);
+            Vector3 P(float x, float y, float z) => corner + new Vector3(x, y, z - 6f); // the test room's numbers: its sector starts at z 6
+            r.ExtraCamera("eye", P(9f, 5.4f, 6.8f), P(9f, 0.5f, 13f), 70f, P(9f, 1.5f, 12f), new Vector3(17.6f, 3f, 11.6f));
             // The brain: one mass at its eye, high on the south wall, just behind the camera (Bruno, 2026-11-08: "the target
             // should be where the camera is at; the idea is that we're seeing it from the brain's pov"). She turns to the
             // screen to hurt it. All its life is here, and the auto-lock picks it first (LockOnTargetable.IsPreferred).
             {
-                GameObject node = r.Box(r.Props, "The_Brain", new Vector3(9f, 5.2f, 6.35f), new Vector3(2f, 1.4f, 0.6f), DemoRoom.Colour("brain_node", Color.white));
+                GameObject node = r.Box(r.Props, "The_Brain", P(9f, 5.2f, 6.35f), new Vector3(2f, 1.4f, 0.6f), DemoRoom.Colour("brain_node", Color.white));
                 node.isStatic = false;
                 node.tag = "Enemy";
                 node.layer = LayerMask.NameToLayer("Enemy");
@@ -157,7 +164,7 @@ namespace GlorifiedBody.Editor.Demo
             for (int i = 0; i < 6; i++)
             {
                 bool west = i < 3;
-                Vector3 at = new Vector3(west ? 0.2f : 17.8f, 4.6f, 8f + (i % 3) * 4f);
+                Vector3 at = P(west ? 0.2f : 17.8f, 4.6f, 8f + (i % 3) * 4f);
                 GameObject lamp = r.Box(r.Props, "Work_Light_" + i, at, new Vector3(0.12f, 0.25f, 0.6f), DemoRoom.Colour("work_light", Color.white));
                 lamp.isStatic = false;
                 lamp.AddComponent<Emissive>();
@@ -175,15 +182,15 @@ namespace GlorifiedBody.Editor.Demo
             for (int i = 0; i < 6; i++)
             {
                 bool west = i < 3;
-                Vector3 at = new Vector3(west ? 0.35f : 17.65f, 1.3f, 8f + (i % 3) * 4f);
+                Vector3 at = P(west ? 0.35f : 17.65f, 1.3f, 8f + (i % 3) * 4f);
                 r.Box(r.Props, "Grabber_Mouth_" + i, at, new Vector3(0.1f, 0.45f, 0.45f), DemoRoom.Colour("brain_mouth", new Color(0.12f, 0.06f, 0.07f)));
             }
             // The exit leaf in the north doorway: it goes when the brain dies.
-            Door exit = r.DoorTo(Exit);
+            Door exit = r.DoorTo(exitId);
             GameObject leaf = r.Box(r.Props, "Exit_Leaf", r.Mouth(exit) + Vector3.up * 1.15f, new Vector3(exit.Width, 2.3f, 0.2f), DemoRoom.Colour("brain_floor", new Color(0.34f, 0.24f, 0.26f)));
             leaf.isStatic = false;
             DemoRoom.Carve(leaf);
-            r.Sign("Label_L6", "AZOTH. ROUTE COMPUTE SERIES. ACCELERATED GROWTH, UNIT ONE. CONTAINED. IN SERVICE.", new Vector3(13f, 1.2f, 17.82f), Vector3.back, new Vector2(3.2f, 0.4f), 26);
+            r.Sign("Label_L6", "AZOTH. ROUTE COMPUTE SERIES. ACCELERATED GROWTH, UNIT ONE. CONTAINED. IN SERVICE.", P(13f, 1.2f, 17.82f), Vector3.back, new Vector2(3.2f, 0.4f), 26);
         }
     }
 }

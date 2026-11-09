@@ -43,6 +43,7 @@ namespace GlorifiedBody.Editor.Demo
             };
             rooms.AddRange(DemoV2.PublicRooms()); // the floorplan v2 (2026-11-05): G9b to G15
             rooms.AddRange(DemoCoda.Rooms());     // the coda (2026-11-06): X1, R1, R2, R3
+            rooms.AddRange(DemoBrain.Rooms());    // the brain sector (2026-11-09): B1, B2
             return rooms;
         }
 
@@ -213,7 +214,8 @@ namespace GlorifiedBody.Editor.Demo
 
         /// <summary>
         /// U1: the unfinished wing, a save machine; at its far end the Crown beat (24): the grab tears a uniform off, the items
-        /// over the bare limit fall. Then B1 comes later (a card), the exit lines (cutscene 10), the bulletin, the title.
+        /// over the bare limit fall. Then the cut to B1, the brain fight (DemoBrain, 2026-11-09); the exit lines (cutscene 10)
+        /// play past it, in B2.
         /// </summary>
         private static void U1(DemoRoom r)
         {
@@ -233,12 +235,10 @@ namespace GlorifiedBody.Editor.Demo
                 ScriptStep.Radio("", "u1_grab", "[The sheeting moves with no wind. Something takes the Crown.]"),
                 ScriptStep.Outfit(GlorifiedBody.Interaction.OutfitChange.NudeId), // round 20: the grab tears the uniform off
                 ScriptStep.Wait(1f),
-                ScriptStep.Radio("", "u1_b1_later", "[PLACEHOLDER: the brain sector (B1) is built later.]"),
             };
-            crown.AddRange(DemoScripts.Steps("cutscenes/10_the_exit.md", "cs10"));
-            // The way on is the coda now: the bulletin, the title and the end lie at its end (DemoCoda).
+            // The way on is the brain sector (DemoBrain), then the coda: the bulletin, the title and the end lie at its end.
             crown.Add(ScriptStep.Raise(DemoCoda.CrownGone));
-            crown.Add(ScriptStep.MoveHer(DemoCoda.EntryX1));
+            crown.Add(ScriptStep.MoveHer(DemoBrain.EntryB1));
             crown.Add(ScriptStep.FreeHer());
             r.Beat("U1_Crown", "demo_u1_crown", new Vector3(20f, 1f, -25.5f), new Vector3(10f, 2f, 3f), crown.ToArray());
             DemoV2.EncoreInU1(r, new Vector3(20f, 1f, -25.5f), new Vector3(10f, 2f, 3f)); // cutscene 09, layer 4: "Encore." if she read the card
