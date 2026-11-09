@@ -68,6 +68,9 @@ namespace GlorifiedBody.Player
             public int downUp, frontBack;
             public float aimDu = 0.3f, aimFb = -0.6f, restDu = -0.6f, restFb = 0f;
             public Transform upperArm, lowerArm, hand;
+            public int handDownUp;
+            public bool calibrated;
+            public Vector3 palmLocal; // the palm's normal in the hand bone's frame, measured once on the model
             public float outward; // +1 right, -1 left: the yaw toward this arm's own side
         }
 
@@ -114,6 +117,7 @@ namespace GlorifiedBody.Player
                 Resolve(RestFixed, name, out side.restIndex, out side.restValue);
                 side.downUp = System.Array.IndexOf(HumanTrait.MuscleName, name + "Arm Down-Up");
                 side.frontBack = System.Array.IndexOf(HumanTrait.MuscleName, name + "Arm Front-Back");
+                side.handDownUp = System.Array.IndexOf(HumanTrait.MuscleName, name + "Hand Down-Up");
             }
             var upright = new System.Collections.Generic.List<int>();
             foreach (string m in Upright)
@@ -158,6 +162,7 @@ namespace GlorifiedBody.Player
             right.hand = animator.GetBoneTransform(HumanBodyBones.RightHand);
             right.lowerArm = animator.GetBoneTransform(HumanBodyBones.RightLowerArm);
             left.lowerArm = animator.GetBoneTransform(HumanBodyBones.LeftLowerArm);
+            right.calibrated = left.calibrated = false; // a new model: measure its palms again
             left.upperArm = animator.GetBoneTransform(HumanBodyBones.LeftUpperArm);
             left.hand = animator.GetBoneTransform(HumanBodyBones.LeftHand);
             return right.upperArm != null && right.hand != null && left.upperArm != null && left.hand != null;
@@ -183,6 +188,8 @@ namespace GlorifiedBody.Player
             handler.GetHumanPose(ref pose);
             if (basePose == null || basePose.Length != pose.muscles.Length) basePose = new float[pose.muscles.Length];
             System.Array.Copy(pose.muscles, basePose, pose.muscles.Length);
+            if (!right.calibrated) Calibrate(right);
+            if (!left.calibrated) Calibrate(left);
 
             // The aim inside the arm's range, then one step of the solver for each arm.
             Vector2 raw = Angles(AimPoint - arm.upperArm.position);
@@ -247,6 +254,10 @@ namespace GlorifiedBody.Player
 
         /// <summary>Where the fingers of the aim hand point now (the tests): up, for the stop of a hand.</summary>
         public Vector3 Fingers { get; private set; }
+        /// <summary>The angle between the palm and the line to the target (the tests). Below 0: the rig has no finger bones.</summary>
+        public float PalmError { get; private set; } = -1f;
+        /// <summary>The palm of the aim hand is measured on this model (Calibrate).</summary>
+        public bool KnowsPalm => arm.calibrated;
 
         // The stop of a hand: the fingers from the line of the arm to straight up (the part of world up square to the arm),
         // the palm to the target. On the bone, after the pose, by the weight.
@@ -260,6 +271,40 @@ namespace GlorifiedBody.Player
             Quaternion bend = Quaternion.FromToRotation(along, up.normalized);
             arm.hand.rotation = Quaternion.Slerp(arm.hand.rotation, bend * arm.hand.rotation, Weight);
             Fingers = arm.hand.rotation * fingersLocal;
+
+            // Then the palm to the target: a turn of the hand around its fingers (Bruno, 2026-11-09, the front shot: "she's
+            // meant to have palm facing forward"; the bend alone left it facing her head).
+            if (!KnowsPalm) { PalmError = -1f; return; }
+            Vector3 toward = Vector3.ProjectOnPlane(Direction(AimAngles), Fingers);
+            if (toward.sqrMagnitude < 1e-4f) return;
+            float turn = Vector3.SignedAngle(Palm(), toward.normalized, Fingers.normalized);
+            arm.hand.rotation = Quaternion.AngleAxis(turn * Weight, Fingers.normalized) * arm.hand.rotation;
+            PalmError = Vector3.Angle(Palm(), Direction(AimAngles));
+        }
+
+        private Vector3 Palm() => (arm.hand.rotation * arm.palmLocal).normalized;
+
+        /// <summary>The direction a wrist bend down moves the fingers to: down flexes the hand, so the fingers go to the palm.
+        /// Measured once on each model (the models have mitten hands with no finger bones), in the hand bone's frame.</summary>
+        public const float PalmProbe = -0.6f;
+
+        private void Calibrate(Side s)
+        {
+            if (s.lowerArm == null || s.handDownUp < 0) return;
+            Vector3 at = hips != null ? hips.position : Vector3.zero;
+            Quaternion turn = hips != null ? hips.rotation : Quaternion.identity;
+            for (int i = 0; i < pose.muscles.Length; i++) pose.muscles[i] = basePose[i];
+            pose.muscles[s.handDownUp] = 0f;
+            handler.SetHumanPose(ref pose);
+            Quaternion straight = s.hand.rotation;
+            Vector3 fingersLocal = Quaternion.Inverse(straight) * (s.hand.position - s.lowerArm.position).normalized;
+            pose.muscles[s.handDownUp] = PalmProbe;
+            handler.SetHumanPose(ref pose);
+            Vector3 moved = s.hand.rotation * fingersLocal - straight * fingersLocal;
+            if (hips != null) hips.SetPositionAndRotation(at, turn);
+            if (moved.sqrMagnitude < 1e-6f) return;
+            s.palmLocal = Quaternion.Inverse(straight) * moved.normalized;
+            s.calibrated = true;
         }
 
         private void Set(int[] indices, float[] values, float weight)

@@ -101,3 +101,18 @@ fingers 0 to 13° from straight up, the other hand about 0.5 m under the shoulde
 Shots: `isolated_items_2026-11-09/v2_05_her_arm_side.png` (the side, the clearest), `v2_06_her_arm_back.png` (from
 behind, as in his first still), `v2_04_her_arm.png` (from the front: the arm points at the lens, so it shows end-on).
 The legs keep the stance of the charge animation (the knees a little bent).
+
+## Later that night: the palm
+
+```text
+take a pic from the front; she's meant to have palm facing forward, and i don't think she's doing that yet
+```
+
+He was right. The front shot showed the edge of the hand: the bend set the fingers up, but the palm faced her head.
+The palm now turns to the target around the line of the fingers. The models have mitten hands with no finger bones,
+so `PowerArm.Calibrate` measures the palm once on each model: a wrist bend down (palmar flexion in the humanoid rig)
+moves the fingers toward the palm, and that direction, in the hand bone's frame, is the palm. The stance test checks
+it: the palm 22 to 23° from the target. `PowersAndBarsTests` and `BrainFightTests`: 68 of 68.
+
+Shots: `isolated_items_2026-11-09/v3_05_her_palm.png` (the hand from the front, 0.9 m), `v3_04_her_arm.png` (the front
+at 2.4 m), `v3_06_her_arm_side.png`, `v3_07_her_arm_back.png`.

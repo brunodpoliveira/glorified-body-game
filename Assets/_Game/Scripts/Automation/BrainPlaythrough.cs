@@ -149,7 +149,9 @@ namespace GlorifiedBody.Automation
             yield return Shot("her_charge");
             // A close look at the one pose for every power (PowerArm): the arm up, the palm out.
             Vector3 chest = tank.transform.position + Vector3.up * 1.3f;
-            yield return Shot("her_arm", chest + tank.transform.forward * 1.8f + tank.transform.right * 0.7f + Vector3.up * 0.1f, chest);
+            yield return Shot("her_arm", chest + tank.transform.forward * 2.4f + Vector3.up * 0.2f, chest + Vector3.up * 0.1f);
+            Vector3 palm = tank.GetComponent<PowerArm>().AimHand + Vector3.up * 0.08f;
+            yield return Shot("her_palm", palm + tank.transform.forward * 0.9f, palm);
             yield return Shot("her_arm_side", chest + tank.transform.right * 2.2f + tank.transform.forward * 0.4f, chest + tank.transform.forward * 0.4f);
             yield return Shot("her_arm_back", chest - tank.transform.forward * 1.9f + tank.transform.right * 0.45f + Vector3.up * 0.25f, chest + tank.transform.forward * 2f);
             pad.SetHeld(InputManager.GameAction.Charge, false);

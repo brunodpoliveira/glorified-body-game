@@ -284,7 +284,11 @@ namespace GlorifiedBody.Tests.PlayMode
             Debug.Log($"[PowerArm] {when}: hand to head {headGap:0.00} m, hand over the shoulder {handOverShoulder:0.00} m, the other hand under it {restUnderShoulder:0.00} m, elbow bend {arm.ElbowBend:0} degrees, reach {arm.Reach:0.00}");
             Assert.Less(arm.ElbowBend, 25f, when + ": the arm out, the elbow almost straight");
             Debug.Log($"[PowerArm] {when}: the fingers {Vector3.Angle(arm.Fingers, Vector3.up):0} degrees from straight up");
-            Assert.Less(Vector3.Angle(arm.Fingers, Vector3.up), 30f, when + ": the hand bent up, the fingers to the sky, the palm to the target");
+            Assert.Less(Vector3.Angle(arm.Fingers, Vector3.up), 30f, when + ": the hand bent up, the fingers to the sky");
+            // Bruno, 2026-11-09: "she's meant to have palm facing forward".
+            Assert.IsTrue(arm.KnowsPalm, "the model has the finger bones that tell where the palm faces");
+            Debug.Log($"[PowerArm] {when}: the palm {arm.PalmError:0} degrees from the target");
+            Assert.Less(arm.PalmError, 35f, when + ": the palm faces the target");
             Assert.Greater(arm.Reach, 0.85f, when + ": the hand far from the shoulder, not at her chin");
             Assert.Greater(headGap, 0.3f, when + ": the hand is clear of her head");
             Assert.Less(Mathf.Abs(handOverShoulder), 0.35f, when + ": the hand near the shoulder's height");
