@@ -9,7 +9,9 @@ namespace GlorifiedBody.Enemy
     /// The poison cloud of a gas grenade (Bruno, 2026-10-24: the gas is poison; "the soldiers and guards have
     /// masks"). For its seconds it hurts Lucy while she stands in its radius, damagePerSecond in ticks of 0.25 s.
     /// The enemies wear masks: it never hurts them. A green ring on the floor shows its edge, and the vendor smoke
-    /// (tinted white, Bruno, 2026-11-06: "change the smoke from green to white"; ShotEffects.gasPrefab) fills it. The dodge's invulnerability skips a tick. Numbers PROPOSED.
+    /// (tinted white, Bruno, 2026-11-06: "change the smoke from green to white"; ShotEffects.gasPrefab) fills it. The dodge's invulnerability skips a tick.
+    /// It also knocks her out (Drowsiness, 2026-11-08: the death screen soldier_gas, "She is knocked out"): 4 s in the
+    /// clouds in all and she is out. Numbers PROPOSED.
     /// </summary>
     public sealed class GasCloud : MonoBehaviour
     {
@@ -23,6 +25,7 @@ namespace GlorifiedBody.Enemy
         private float tickTimer;
         private Transform player;
         private Health playerHealth;
+        private GlorifiedBody.Player.Drowsiness drowsy;
         private LineRenderer ring;
 
         public static int Clouds { get; private set; }
@@ -94,16 +97,21 @@ namespace GlorifiedBody.Enemy
                 ring.endWidth = width;
             }
 
-            tickTimer -= dt;
-            if (tickTimer > 0f) return;
-            tickTimer = Tick;
             if (player == null)
             {
                 GameObject p = GameObject.FindWithTag("Player");
                 if (p == null) return;
                 player = p.transform;
                 playerHealth = p.GetComponentInChildren<Health>();
+                drowsy = p.GetComponent<GlorifiedBody.Player.Drowsiness>();
+                if (drowsy == null) drowsy = p.AddComponent<GlorifiedBody.Player.Drowsiness>();
             }
+            // She breathes it every frame she is in it (the knock-out); the poison hurts in ticks.
+            if (drowsy != null && playerHealth != null && !playerHealth.IsDead && Inside(player.position)) drowsy.Breathe(dt, killerId);
+
+            tickTimer -= dt;
+            if (tickTimer > 0f) return;
+            tickTimer = Tick;
             if (playerHealth == null || playerHealth.IsDead || !Inside(player.position)) return;
             float amount = GlorifiedBody.Systems.DifficultyManager.EnemyDamage(damagePerSecond * Tick);
             if (playerHealth.IsInvulnerable) return;

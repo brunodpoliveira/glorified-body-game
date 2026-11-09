@@ -23,10 +23,13 @@ MonoBehaviour:
   entries:
   - killerId: dummy_shooter
     picture: {fileID: 0}
-    pictureNote: 
-    hint: 'PLACEHOLDER HINT: step back when the circle closes, then charge.'
+    pictureNote: the padded target from the floor, the gun on its arm, the gym lights
+      behind it
+    hint: Step out of the red line before the ring closes, then charge. The dummy
+      cannot aim twice in a row.
     voiceLine: {fileID: 0}
-    voiceText: 
+    voiceText: 'PRESENTER: And that is why we step out of the circle. Again, from
+      the top.'
   - killerId: guard
     picture: {fileID: 0}
     pictureNote: the guard lowering the pistol, the goggles and the respirator filling
@@ -87,11 +90,13 @@ MonoBehaviour:
       you.'
   - killerId: soldier_rifle
     picture: {fileID: 0}
-    pictureNote: 'PLACEHOLDER: the soldier with the rifle, the laser on her'
-    hint: 'PLACEHOLDER HINT: three rounds follow the laser, 0.1 s apart. One dodge
-      to the side clears the burst.'
+    pictureNote: the rifle's muzzle from the floor, the laser line across her, the
+      gas mask above it
+    hint: Three rounds follow the laser, a tenth of a second apart. One dodge to
+      the side clears the burst. He cannot fire again until he aims again.
     voiceLine: {fileID: 0}
-    voiceText: 'SOLDIER: Target down. Clear. (then, quieter) Was that a kid?'
+    voiceText: 'SOLDIER: Three rounds, centre mass. She''s down. Control, she''s
+      down.'
   - killerId: soldier_gas
     picture: {fileID: 0}
     pictureNote: 'from the floor: a white cloud, boots in it, a gas mask with round
@@ -102,39 +107,43 @@ MonoBehaviour:
     voiceText: 'SOLDIER: Knock-out''s working. She''s out. Control, she''s out.'
   - killerId: soldier_grenades
     picture: {fileID: 0}
-    pictureNote: 'PLACEHOLDER: the red ring on the floor, her feet in it'
-    hint: 'PLACEHOLDER HINT: a red ring is a grenade. Leave the ring before it closes,
-      or catch the grenade with mk_orzabal.'
+    pictureNote: the red ring on the floor, her feet in it, the grenade rolling to
+      a stop
+    hint: A red ring is a grenade. Leave the ring before it closes, or catch the
+      grenade with mk_orzabal and send it back.
     voiceLine: {fileID: 0}
-    voiceText: 'SOLDIER: Target down. Clear. (then, quieter) Was that a kid?'
+    voiceText: 'SOLDIER: Frag out. (the blast) Clear. Nobody go in there yet.'
   - killerId: power_armour
     picture: {fileID: 0}
-    pictureNote: 'PLACEHOLDER: the power armour from the floor'
-    hint: 'PLACEHOLDER HINT: it is too heavy to lift. Break its aim with mk_warspite,
-      then burn it with mk_erebus.'
+    pictureNote: the power armour from the floor, its lenses looking down, the tubes
+      of the launcher past its shoulder
+    hint: It is too heavy to lift and too armoured to shock. Break its aim with mk_warspite,
+      then burn it with mk_erebus. Up close, its launcher will not fire.
     voiceLine: {fileID: 0}
-    voiceText: 
+    voiceText: 'POWER ARMOUR: Subject neutralised. Requesting the recovery team.'
   - killerId: power_armour_launchers
     picture: {fileID: 0}
-    pictureNote: 'PLACEHOLDER: the rocket''s trail, the armour behind it'
-    hint: 'PLACEHOLDER HINT: a rocket follows the laser. Dodge to the side, or catch
-      it with mk_orzabal and send it back.'
+    pictureNote: the trail of the rocket from the floor, the armour behind it, the
+      ceiling coming down
+    hint: A rocket follows the laser. Dodge to the side, or catch it with mk_orzabal
+      and send it back.
     voiceLine: {fileID: 0}
-    voiceText: 
+    voiceText: 'POWER ARMOUR: Direct hit. Hold fire. Hold fire, she''s down.'
   - killerId: labworker_pistol
     picture: {fileID: 0}
-    pictureNote: 'PLACEHOLDER: the lab worker''s pistol, both hands shaking'
-    hint: 'PLACEHOLDER HINT: the lab worker''s aim shakes and can miss. Do not stand
-      still in the circle.'
+    pictureNote: the lab worker's pistol from the floor, both hands shaking, the
+      hood above them
+    hint: 'His aim shakes and he can miss. Do not stand still in the circle: one
+      step is enough. Close the distance and he drops the aim.'
     voiceLine: {fileID: 0}
-    voiceText: 
+    voiceText: 'LAB WORKER: I hit her. Computer, I hit her. What do I do now?'
   - killerId: labworker_knife
     picture: {fileID: 0}
-    pictureNote: 'PLACEHOLDER: the knife over her, the lab coat behind it'
-    hint: 'PLACEHOLDER HINT: the knife runs at you. Dodge when it raises the knife,
-      then strike.'
+    pictureNote: the knife over her, the lab coat behind it, the scalpel light
+    hint: The knife runs at you and comes in from the side. Dodge when he raises
+      it, then strike. At a distance he is nothing.
     voiceLine: {fileID: 0}
-    voiceText: 
+    voiceText: 'LAB WORKER: Hold still. Hold still, it''s quicker if you hold still.'
   - killerId: labworker
     picture: {fileID: 0}
     pictureNote: the blue hood from below, the scalpel, the collar piece with its
@@ -155,8 +164,7 @@ MonoBehaviour:
     picture: {fileID: 0}
     pictureNote: the corridor from high above, the brain's eye, Lucy small and bare-headed
       in grey folds
-    hint: 'A short does not touch it. Keep moving: it strikes where you stand when
-      the ring closes. Break the grip of a grabber with a blast.'
+    hint: 'Its ring is slower than your walk: keep moving. When it locks'
     voiceLine: {fileID: 0}
     voiceText: 'BRAIN: Your life has been full of suffering. But don''t worry. It''ll
       be over soon.'

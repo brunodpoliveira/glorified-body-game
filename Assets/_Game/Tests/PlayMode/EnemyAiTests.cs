@@ -603,6 +603,42 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator Gas_KnocksHerOut_AfterItsSecondsInside_AndOutsideSheWakes()
+        {
+            // The death screen soldier_gas: "She is knocked out" (2026-11-08). A cloud with no poison: only the knock-out.
+            // The room quiet first: no soldier may shoot her, and an invulnerable Lucy is never knocked out.
+            foreach (SoldierBrain s in soldiers) { s.enabled = false; if (s.Gun != null) s.Gun.enabled = false; }
+            foreach (EnemyGrenade g in UnityEngine.Object.FindObjectsByType<EnemyGrenade>(FindObjectsSortMode.None)) UnityEngine.Object.Destroy(g.gameObject);
+            foreach (GasCloud c in UnityEngine.Object.FindObjectsByType<GasCloud>(FindObjectsSortMode.None)) UnityEngine.Object.Destroy(c.gameObject);
+            Health health = lucy.GetComponentInChildren<Health>();
+            TankController tank = lucy.GetComponent<TankController>();
+            Drowsiness held = lucy.GetComponent<Drowsiness>();
+            if (held != null) UnityEngine.Object.Destroy(held); // a cloud of an earlier moment of this room
+            yield return null;
+            health.SetInvulnerable(false);
+            Vector3 spot = new Vector3(-6.5f, 0f, 3.5f);
+            GasCloud.Spawn(spot, 2.5f, 30f, 0f, "soldier_gas");
+            tank.Teleport(spot, 0f);
+            yield return new WaitForSeconds(2f);
+            Drowsiness drowsy = lucy.GetComponent<Drowsiness>();
+            Assert.IsNotNull(drowsy, "the cloud makes her drowsy");
+            Assert.AreEqual(2f / Drowsiness.KnockoutSeconds, drowsy.Level, 0.1f, "half way after 2 s");
+            Assert.Greater(drowsy.VeilShown, 0.2f, "the screen darkens");
+            Assert.IsTrue(tank.SlowWalk, "she walks slowly");
+            tank.Teleport(spot + Vector3.right * 6f, 0f);
+            yield return new WaitForSeconds(1f);
+            Assert.Less(drowsy.Level, 0.45f, "out of the cloud she wakes");
+            Assert.IsFalse(tank.SlowWalk);
+            Assert.IsFalse(health.IsDead);
+
+            tank.Teleport(spot, 0f);
+            yield return WaitUntil(() => health.IsDead, Drowsiness.KnockoutSeconds + 1f);
+            Assert.IsTrue(drowsy.KnockedOut, "back in: she is knocked out");
+            Assert.IsTrue(health.IsDead, "a game over");
+            Assert.AreEqual("soldier_gas", DeathMenuUI.LastKillerId, "the soldier's gas screen: she is knocked out");
+        }
+
+        [UnityTest]
         public IEnumerator Gas_TheCloudIsVisible_AndGreen()
         {
             GasCloud cloud = GasCloud.Spawn(new Vector3(-6.5f, 0f, 3.5f), 2.5f, 4f, 0f, "test");

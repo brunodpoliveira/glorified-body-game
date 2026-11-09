@@ -50,7 +50,9 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.AreEqual("soldier_rifle", screen.Shown.killerId, "the rifle's own entry");
             Assert.AreEqual(screen.Shown.hint, screen.HintShown, "its hint on the screen");
             StringAssert.Contains("killer: soldier_rifle", screen.PictureNoteShown, "the card names the killer until the picture exists");
-            if (ClassEntry("soldier") != null) Assert.AreEqual(ClassEntry("soldier").voiceText, screen.CaptionShown, "the soldier's voice line as the caption");
+            // Its own voice line when the writer gave it one (soldier_rifle has one since the rows of 2026-11-07), else the class's.
+            string voice = !string.IsNullOrEmpty(screen.Shown.voiceText) ? screen.Shown.voiceText : ClassEntry("soldier")?.voiceText;
+            if (voice != null) Assert.AreEqual(voice, screen.CaptionShown, "its voice line as the caption");
             // The voice line shows as a subtitle with its speaker (Bruno, 2026-10-25).
             if (!string.IsNullOrEmpty(screen.Shown.voiceText))
             {

@@ -106,6 +106,39 @@ namespace GlorifiedBody.Enemy
         private static readonly string[] SeenLines = { "Hey! It's me! It's me, what are you doing?", "Check fire! Check your fire! You're hitting us!", "Control, one of ours is firing on us. One of ours.", "He's not answering. There's nobody in there.", "I can't. I can't shoot. We came in together." };
         private static readonly string[] LetGoLines = { "It's back. Oh God, it's all back.", "What did I do? What did you make me do?", "I remember it. I remember all of it.", "How long was I gone? How long?", "Not again. Stay back. Not again!" };
         private const float KneelLineSeconds = 2.5f; // the writer: the kneel lines have the whole circle
+
+        // The core's voice through her (DEMO_PLAN, annotated by Bruno 2026-11-07, round 49: "Lucy speaks after she takes a
+        // mind"): from her mouth and not her voice, and it does not count against P7. The label is VOICE (round 50). The
+        // writer's lines (barks.csv, kind voice): the first three takes are Bruno's (CANON), the rest PROPOSED. No clip yet:
+        // the subtitle alone (Voice.SayAs logs voice_missing).
+        public const string CoreSpeaker = "VOICE";
+        public static readonly (string id, string text)[] CoreTakeLines =
+        {
+            ("edgar_voice_take_1", "You will obey!"), ("edgar_voice_take_2", "Suffer me now!"), ("edgar_voice_take_3", "My command is your wish!"),
+            ("edgar_voice_take_4", "Kneel. Good."), ("edgar_voice_take_5", "Your will is a small thing. Give it here."),
+            ("edgar_voice_take_6", "Hush. You are thinking again."), ("edgar_voice_take_7", "There. Is that not easier?"),
+            ("edgar_voice_take_8", "One. Two. Three. There."),
+        };
+        public static readonly (string id, string text)[] CoreSentLines =
+        {
+            ("edgar_voice_sent_1", "Walk. I did not say stop."), ("edgar_voice_sent_2", "Stand. You have work."), ("edgar_voice_sent_3", "Go on. You know the way."),
+        };
+        public static readonly (string id, string text)[] CoreSnapLines =
+        {
+            ("edgar_voice_snap_1", "Already? Weak."), ("edgar_voice_snap_2", "Keep it. You will bring it back."), ("edgar_voice_snap_3", "Run. I counted."),
+        };
+        /// <summary>The core's lines said so far (the tests).</summary>
+        public static int CoreLines { get; private set; }
+        public static string LastCoreLine { get; private set; } = "";
+
+        /// <summary>The core speaks through her: one line of the set, as a subtitle under VOICE (and its clip, when it exists).</summary>
+        public static void SayCore((string id, string text)[] set)
+        {
+            (string id, string text) line = set[Random.Range(0, set.Length)];
+            CoreLines++;
+            LastCoreLine = line.text;
+            GlorifiedBody.Audio.Voice.SayAs(CoreSpeaker, line.id, line.text, GlorifiedBody.Audio.VoiceMode.Radio, 2f);
+        }
         private const float SeenGap = 8f; // s between the lines of the colleagues
 
         /// <summary>A figure goes down on its knees: its line (the armed say the fighter lines).</summary>
@@ -157,6 +190,7 @@ namespace GlorifiedBody.Enemy
             }
             mind.TakeMind(this);
             Mark();
+            SayCore(CoreTakeLines); // the core first, through her mouth
             Bark.Say(gameObject, TakenLines[Random.Range(0, TakenLines.Length)], 2f);
         }
 
@@ -247,6 +281,7 @@ namespace GlorifiedBody.Enemy
             if (trembling != null) trembling.Amount = trembleBefore;
             gameObject.AddComponent<MindSnapped>();
             mind.BeginKneel();
+            SayCore(CoreSnapLines);
             Bark.Say(gameObject, LetGoLines[Random.Range(0, LetGoLines.Length)], SnapKneelSeconds);
             RunTelemetry.Event("dom_snap", name);
         }
@@ -307,6 +342,7 @@ namespace GlorifiedBody.Enemy
             if (best == null) return false;
             sentTo = best;
             body.MoveTo(best.Point, MoveSpeed.Run);
+            SayCore(CoreSentLines);
             Bark.Say(gameObject, SentLines[Random.Range(0, SentLines.Length)], 2f);
             nextFollow = Time.time + 0.5f;
             RunTelemetry.Event("dom_sent", best.name);

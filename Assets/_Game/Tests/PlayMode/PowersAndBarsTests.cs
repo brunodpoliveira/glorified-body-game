@@ -245,6 +245,34 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator OnePose_HerArmRisesToTheTarget_AndWithOrzabalFollowsTheFloater()
+        {
+            // DEMO_PLAN §1, CANON 2026-11-05: "she lifts one arm, the palm out. With mk_orzabal the arm follows the floater".
+            PowerArm arm = powers.GetComponent<PowerArm>();
+            Assert.IsNotNull(arm, "PsychicPowers adds it");
+            Assert.AreEqual(0f, arm.Weight, "no power: her arms as the animation has them");
+            powers.Select(PowerKind.Blast);
+            pad.SetHeld(InputManager.GameAction.Charge, true);
+            yield return new WaitForSeconds(0.7f);
+            Assert.AreEqual(1f, arm.Weight, 0.01f, "the charge raises the arm");
+            Debug.Log($"[PowersAndBarsTests] the arm on the charge: {arm.AimError:0.0} degrees off the target");
+            Assert.Less(arm.AimError, 20f, "it points at the locked target");
+            pad.SetHeld(InputManager.GameAction.Charge, false);
+            yield return new WaitForSeconds(0.6f);
+            Assert.AreEqual(0f, arm.Weight, 0.01f, "the shot gone: the arm goes down");
+
+            powers.Select(PowerKind.Telekinesis);
+            PowerDefinition tk = powers.Selected;
+            powers.FireAt(tk, 1f, dummyB);
+            yield return new WaitForSeconds(tk.liftSeconds + 0.8f);
+            Assert.IsNotNull(dummyB.GetComponent<TelekinesisLift>(), "it floats");
+            Assert.AreEqual(1f, arm.Weight, 0.01f, "she holds it: the arm stays up");
+            Assert.Less(Vector3.Distance(arm.AimPoint, lockOn.HeldThing.position), 0.01f, "it aims at the floater");
+            Debug.Log($"[PowersAndBarsTests] the arm on the floater ({(arm.LeftArm ? "left" : "right")}): {arm.AimError:0.0} degrees off, aim yaw/pitch {arm.AimAngles}, muscles {arm.Muscles}, held at {lockOn.HeldThing.position - powers.transform.position}");
+            Assert.Less(arm.AimError, 25f, "the arm follows the floater");
+        }
+
+        [UnityTest]
         public IEnumerator Telekinesis_ABulletOnHer_DropsTheFloater_Unhurt()
         {
             // Bruno, 2026-11-07: "she won't drop the guy even after being hit multiple times".

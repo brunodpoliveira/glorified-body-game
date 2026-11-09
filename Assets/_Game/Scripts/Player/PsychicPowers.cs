@@ -77,6 +77,8 @@ namespace GlorifiedBody.Player
 
         private void Awake()
         {
+
+            if (GetComponent<PowerArm>() == null) gameObject.AddComponent<PowerArm>(); // one pose for every power (2026-11-08)
             stats = GetComponent<PsychicStats>();
             drugs = GetComponent<DrugInventory>();
             lockOn = GetComponent<LockOnController>();

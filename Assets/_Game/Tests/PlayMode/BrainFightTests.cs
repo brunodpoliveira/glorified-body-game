@@ -172,6 +172,26 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator ItsKill_ShowsItsDeathScreen_ItsThreeLines_AndTheHintOfTheNewFight()
+        {
+            // DEMO_PLAN: "Its death screens are its three lines" (Bruno's, round 25). The hint follows the fight of 2026-11-08.
+            fight.lockSeconds = 0.2f;
+            fight.chargeSeconds = 0.4f;
+            yield return Enter(Middle);
+            health.SetSecondWindEnabled(false);
+            health.SetHealth(1f);
+            tank.Teleport(fight.Aim, 0f);
+            yield return WaitUntil(() => health.IsDead, 4f);
+            Assert.IsTrue(health.IsDead, "the strike kills her");
+            Assert.AreEqual(BrainFight.KillerId, DeathMenuUI.LastKillerId);
+            DeathMenuUI screen = UnityEngine.Object.FindFirstObjectByType<DeathMenuUI>();
+            yield return WaitUntil(() => screen.Shown != null, 5f);
+            Assert.AreEqual("brain", screen.Shown.killerId, "its own entry");
+            StringAssert.Contains("Your life has been full of suffering. But don't worry. It'll be over soon.", screen.Shown.voiceText, "its three lines");
+            StringAssert.Contains("slower than your walk", screen.HintShown, "the hint of the new fight");
+        }
+
+        [UnityTest]
         public IEnumerator DamageInTheCharge_StaggersIt_AndCancelsTheStrike_ThenTheAimStartsFarAgain()
         {
             // "making enough damage staggers the brain to cancel the attack".

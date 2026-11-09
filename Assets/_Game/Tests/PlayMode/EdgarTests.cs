@@ -167,6 +167,27 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator TheCore_SpeaksThroughHer_AtTheTake_TheOrder_AndTheSnap()
+        {
+            // Round 49 (annotated by Bruno, 2026-11-07): "Lucy speaks after she takes a mind", in a voice that is not hers.
+            yield return Only("Soldier_A");
+            GameObject figure = GameObject.Find("Soldier_A");
+            Health hp = figure.GetComponent<Health>();
+            hp.TakeDamage(hp.MaxHealth * 0.6f);
+            yield return null;
+            int before = Dominated.CoreLines;
+            yield return FullCircle();
+            Assert.IsNotNull(Domination.Current, powers.LastResult);
+            Assert.AreEqual(before + 1, Dominated.CoreLines, "the take: one line of the core");
+            Assert.IsTrue(Dominated.CoreTakeLines.Any(l => l.text == Dominated.LastCoreLine), Dominated.LastCoreLine);
+            Assert.IsTrue(GlorifiedBody.Subtitles.SubtitleService.Lines.Any(l => l.Speaker == Dominated.CoreSpeaker && l.Text == Dominated.LastCoreLine),
+                "on screen under VOICE");
+            Domination.Current.SetTimeLeft(0.5f);
+            yield return WaitUntil(() => Dominated.CoreLines > before + 1, 3f);
+            Assert.IsTrue(Dominated.CoreSnapLines.Any(l => l.text == Dominated.LastCoreLine), "the snap: " + Dominated.LastCoreLine);
+        }
+
+        [UnityTest]
         public IEnumerator AGuard_FullHp_Refuses_AtNoCost_AndWithDamage_IsTaken()
         {
             yield return Only("Guard_B");

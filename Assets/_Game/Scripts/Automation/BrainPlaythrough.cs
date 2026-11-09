@@ -147,6 +147,9 @@ namespace GlorifiedBody.Automation
             pad.SetHeld(InputManager.GameAction.Charge, true); // her charge on the brain: the circle over her, the MK bar
             yield return BotClock.Wait(0.7f);
             yield return Shot("her_charge");
+            // A close look at the one pose for every power (PowerArm): the arm up, the palm out.
+            Vector3 chest = tank.transform.position + Vector3.up * 1.3f;
+            yield return Shot("her_arm", chest + tank.transform.forward * 1.8f + tank.transform.right * 0.7f + Vector3.up * 0.1f, chest);
             pad.SetHeld(InputManager.GameAction.Charge, false);
             yield return BotClock.Wait(0.1f);
             if (fight.Aiming == BrainFight.AimState.Charging) powers.FireAt(powers.Selected, 1f, fight.nodes[0].GetComponent<LockOnTargetable>());
