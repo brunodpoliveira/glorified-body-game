@@ -553,6 +553,12 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   to a high target (`TelekinesisLift.HighTarget`). `DemoWorld.BuildAll` takes the sight lists from the saved scene.
   Devlog brief for episodes 11 and 12: `the-glorified-body/devlog/ep11/BRIEF.md`. OPEN: the coda poster test failed 1
   of 4 runs. Numbers PROPOSED.
+- 2026-11-09, the four isolated items (`devlog-notes/2026-11-09_isolated_items.md`): the brain's death screen hint
+  follows the new fight (the writer's CSV; `DeathScreenSetup.Build` also brought the writer's test-room screens in);
+  `Dominated.SayCore` (the core's voice under VOICE at the take, the order, the snap); `Player/Drowsiness` (4 s in the
+  soldiers' gas knocks her out, killer `soldier_gas`, it waits while she is invulnerable: a knock-out of a god-mode
+  Lucy crashed AI TEST); `Player/PowerArm` (one pose for every power: the arm on the target's side, palm out, follows
+  the floater; `PsychicPowers` adds it). Numbers PROPOSED.
 
 ## Rules
 
