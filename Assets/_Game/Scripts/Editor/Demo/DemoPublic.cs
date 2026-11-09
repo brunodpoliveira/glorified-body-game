@@ -193,21 +193,44 @@ namespace GlorifiedBody.Editor.Demo
             r.Figure("Clerk_A", "labworker", new Vector3(9.5f, 0f, -19.6f), 270f, variant: 1);
             r.Figure("Clerk_B", "labworker", new Vector3(12.2f, 0f, -20.3f), 250f, variant: 3);
             r.Sign("Sign_Name", "RECORDS", new Vector3(10.2f, 2f, -16.17f), Vector3.back, new Vector2(1.2f, 0.3f), 40);
+            // The IT note on the clerk's monitor (DEMO_PLAN §10.1, a source of the order of the dark room's units).
+            r.Box(r.Props, "Clerk_Monitor", new Vector3(8.5f, 0.94f, -18.75f), new Vector3(0.5f, 0.38f, 0.08f), DemoRoom.Grey(0.12f));
+            r.Sign("IT_Note", "AFTER AN OUTAGE: NET. THEN REC. THEN ACCESS. NEVER ACCESS FIRST. - T.", new Vector3(8.5f, 1.2f, -18.69f), Vector3.forward, new Vector2(0.5f, 0.2f), 18);
         }
 
         /// <summary>G9: the security office: the monitors, the chair and its scan C7, the logbook L5, the release (beat 23).</summary>
         private static void G9(DemoRoom r)
         {
             r.Prop("Desk", new Vector3(31f, 0f, -14.8f), new Vector3(3.4f, 0.75f, 0.8f), 0.2f); // 3.4 m since v2: 1.3 m to the east wall and the door to G9b
-            r.CrtWall("Screen_Monitors", new Vector3(31f, 0.8f, -15.75f), 5, 2, new List<TapeLine>
+            GameObject wall = r.CrtWall("Screen_Monitors", new Vector3(31f, 0.8f, -15.75f), 5, 2, new List<TapeLine>
             {
                 new TapeLine { at = 0.5f, speaker = "MONITOR", text = "PLACEHOLDER: her face on every monitor." },
             }, faceZ: 0.24f);
+            // The dark room (DEMO_PLAN §10.1, 2026-11-09): when the lights go out the monitors are the only light. Each face
+            // keeps its own colour in the dark (Emissive), and five lights on the dark layer light the room in front of them.
+            foreach (Renderer face in wall.GetComponentsInChildren<Renderer>(true))
+                if (face.name.StartsWith("CrtFace_")) { face.gameObject.isStatic = false; face.gameObject.AddComponent<GlorifiedBody.Rendering.Emissive>(); }
+            for (int i = 0; i < 5; i++)
+            {
+                var lightObj = new GameObject("Monitor_Light_" + i);
+                lightObj.transform.SetParent(r.Props.transform, false);
+                lightObj.transform.position = new Vector3(29.9f + i * 0.55f, 1.3f, -14.9f);
+                Light l = lightObj.AddComponent<Light>();
+                l.type = LightType.Point;
+                l.range = 5f;
+                l.intensity = 1.2f;
+                l.color = new Color(0.55f, 0.85f, 0.7f);
+                l.shadows = LightShadows.None;
+                l.renderingLayerMask = (int)GlorifiedBody.Rendering.Darkness.DarkLayer; // they light only the dark
+            }
             GameObject chair = r.Prop("Security_Chair", new Vector3(31f, 0f, -13.4f), new Vector3(0.6f, 1f, 0.6f), 0.15f);
             r.Scan("Scan_Security_Chair", chair.transform.position + Vector3.up * 0.4f, "demo_c7_chair", "PLACEHOLDER (C7): a man's hands on a row of switches. A wedding ring. A cold coffee.");
             r.Item("L5_Logbook", DemoItems.L5(), new Vector3(29.6f, 0.78f, -14.8f), new Vector3(0.24f, 0.03f, 0.32f));
-            r.Switch("Release_Switch", new Vector3(33.6f, 1.2f, -12.5f), Released, "Release the sector C door?", "release the sector C door",
+            FlagSwitch release = r.Switch("Release_Switch", new Vector3(33.6f, 1.2f, -12.5f), Released, "Release the sector C door?", "release the sector C door",
                 "Somewhere in the hall, the sheeting on the sector C door drops.");
+            release.requiredFlag = DemoDark.UnitsUp; // the ACCESS console is dead until the units run (§10.1)
+            release.waitingText = "WAITING FOR NET.";
+            UnityEditor.EditorUtility.SetDirty(release);
             SaveAssets.SavePoint("Save_G9", new Vector3(33.4f, 0f, -10f), 270f).transform.SetParent(r.Props.transform, true);
             r.Sign("Sign_Comms", "COMMS. AUTHORISED PERSONNEL.", new Vector3(33.83f, 2f, -13f), Vector3.left, new Vector2(1.6f, 0.3f), 36); // the door to G9b (v2)
         }

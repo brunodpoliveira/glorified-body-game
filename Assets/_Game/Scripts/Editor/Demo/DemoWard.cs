@@ -280,6 +280,7 @@ namespace GlorifiedBody.Editor.Demo
         {
             CardDoor(r, "W10", new Vector3(16.82f, 1.2f, -5.7f), Vector3.left); // the code rotation: W10 opens with the card
             r.Prop("Counter", new Vector3(11f, 0f, -6f), new Vector3(3f, 1.05f, 1.6f), 0.1f);
+            DemoDark.HubUnits(r); // a source of the order of the dark room (§10.1)
             r.Prop("Counter_Monitors", new Vector3(11f, 1.05f, -6f), new Vector3(1.2f, 0.4f, 0.2f), 0.35f);
             r.Box(r.Props, "Window", new Vector3(6f, 1.6f, -2.17f), new Vector3(3f, 1.4f, 0.04f), DemoRoom.Colour("window", new Color(0.35f, 0.45f, 0.55f)));
             EnemySpawn marta = r.Figure("Marta", "nurse", new Vector3(4f, 0f, -8.6f), 45f, variant: 1);

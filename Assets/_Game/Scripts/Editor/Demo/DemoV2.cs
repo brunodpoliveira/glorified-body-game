@@ -211,15 +211,13 @@ namespace GlorifiedBody.Editor.Demo
             Material green = DemoRoom.Colour("led_green", new Color(0.2f, 0.9f, 0.3f));
             for (int i = 0; i < 6; i++)
                 Piece(r.Props, $"Rack_Led_{i}", new Vector3(34.6f + i * 0.5f, 1.2f + (i % 3) * 0.3f, -9.705f), new Vector3(0.03f, 0.03f, 0.01f), green, false);
-            Material amber = DemoRoom.Colour("led_amber", new Color(0.95f, 0.6f, 0.1f));
+            // The three units of the dark room (DEMO_PLAN §10.1, 2026-11-09), not in their order on the floor; a PC on each.
             int k = 0;
-            foreach (string label in new[] { "NET", "REC", "ACCESS" })
+            foreach (string label in new[] { "ACCESS", "NET", "REC" })
             {
                 float x = 35f + k++ * 0.9f;
-                r.Prop("UPS_" + label, new Vector3(x, 0f, -15.45f), new Vector3(0.36f, 0.26f, 0.42f), 0.12f);
-                r.Prop("PC_" + label, new Vector3(x, 0.26f, -15.45f), new Vector3(0.3f, 0.42f, 0.42f), 0.3f);
-                Piece(r.Props, "Led_" + label, new Vector3(x - 0.1f, 0.2f, -15.23f), new Vector3(0.03f, 0.03f, 0.01f), amber, false);
-                r.Sign("Label_" + label, label, new Vector3(x, 0.56f, -15.23f), Vector3.forward, new Vector2(0.26f, 0.09f), 22);
+                DarkTestSetup.Unit(r, label, new Vector3(x, 0f, -15.6f), Vector3.forward);
+                r.Prop("PC_" + label, new Vector3(x, 0.5f, -15.65f), new Vector3(0.3f, 0.42f, 0.3f), 0.3f);
             }
             Label(r, "COMMS", new Vector3(34.17f, 2f, -12.4f), Vector3.right, 0.9f);
         }

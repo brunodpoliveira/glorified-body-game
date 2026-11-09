@@ -338,6 +338,35 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator TheDarkRoom_G9_GoesDark_TheUnitsInOrder_BringTheMonitors_ThenTheLights_AndTheRelease()
+        {
+            // DEMO_PLAN §10.1 in the demo (2026-11-09; DARK TEST since 2026-11-08).
+            yield return Coda("G9");
+            GameObject lucy = GameObject.FindGameObjectWithTag("Player");
+            GlorifiedBody.Rooms.Room g9 = GlorifiedBody.Rooms.Room.Of("G9");
+            GlorifiedBody.Rooms.DarkRoom dark = g9.GetComponent<GlorifiedBody.Rooms.DarkRoom>();
+            UpsBank bank = UnityEngine.Object.FindFirstObjectByType<UpsBank>();
+            FlagSwitch release = GameObject.Find("Release_Switch").GetComponent<FlagSwitch>();
+            Assert.IsNotNull(dark, "G9 is a dark room (DemoDark)");
+            Assert.IsFalse(dark.IsDark, "lit until she comes in");
+            lucy.GetComponent<TankController>().Teleport(g9.Centre, 0f);
+            yield return WaitUntil(() => dark.IsDark, 3f);
+            Assert.IsTrue(dark.IsDark, "she enters G9: the lights go out");
+            Assert.IsTrue(bank.Beeping, "the units beep");
+            Assert.AreEqual(0, bank.MonitorsOn, "the monitors go black");
+            Interactor her = lucy.GetComponent<Interactor>();
+            StringAssert.StartsWith("waiting:", release.Confirm(her), "the release waits for the units");
+            Assert.AreEqual(3, bank.units.Length);
+            foreach (string label in new[] { "NET", "REC", "ACCESS" }) bank.Press(bank.units.First(u => u.label == label));
+            Assert.IsTrue(bank.Done, "NET, REC, ACCESS");
+            yield return WaitUntil(() => !dark.IsDark, bank.monitorGap * bank.monitors.Length + bank.lightsBackSeconds + 3f);
+            Assert.AreEqual(bank.monitorLights.Length, bank.MonitorsOn, "every monitor light is on");
+            Assert.IsFalse(dark.IsDark, "the monitors, then the lights");
+            StringAssert.StartsWith("switch:", release.Confirm(her), "the release works");
+            Assert.IsTrue(StoryFlags.Has(release.flag));
+        }
+
+        [UnityTest]
         public IEnumerator TheBrainSector_B1_ItsDeathOpensB2_AndB2CutsToTheCarPark()
         {
             yield return Coda("B1", "demo_crown_gone");

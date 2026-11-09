@@ -27,3 +27,19 @@ Tests: `DemoTests.TheBrainSector_B1_ItsDeathOpensB2_AndB2CutsToTheCarPark` (new)
 (it expected the car park and no HUD: now B1, the fight, and the HUD of the fight with no HP row), the coverage test,
 the room count (43), `BrainFightTests.ItsSceneGoing_InTheFight_GivesTheMusicBack` (new). `BrainFightTests` and
 `KitTests` 22 of 22. The demo bot passed before the eye's wider turn.
+
+## 2. The dark room in G9 and G9b
+
+`Editor/Demo/DemoDark.cs` wires DEMO_PLAN §10.1 into the demo, as DARK TEST has it:
+
+1. She enters G9: the lights of G9 and G9b go out, the ten faces of the monitor wall go black, and the three units in
+   G9b beep. The sector C release waits: "WAITING FOR NET."
+2. The units stand on the floor of G9b, not in their order (ACCESS, NET, REC), each with a PC on it
+   (`DarkTestSetup.Unit`, now shared). A wrong unit: the fault and the countdown, 5 s.
+3. NET, REC, ACCESS: the monitors come back one by one with her face on them (`UpsBank.restoreOwnLook`: a screen
+   shows its own material again), then the room lights. The release works.
+4. The sources of the order: the hub's units under the counter of W9, with their up-times (NET 11:52:07, REC
+   11:51:40, ACCESS 11:51:02), and the IT note on the clerk's monitor in G8.
+5. The demo's sun lights only the lit layer now, so the dark room can leave it.
+
+Test: `DemoTests.TheDarkRoom_G9_...` (new). With `DarkRoomTests` and the coverage test: 7 of 7. The dark bot passes.

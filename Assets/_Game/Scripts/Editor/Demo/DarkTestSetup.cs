@@ -163,26 +163,34 @@ namespace GlorifiedBody.Editor.Demo
         {
             r.Prop("Rack_North", new Vector3(11.3f, 0f, 11.15f), new Vector3(2.0f, 2f, 0.3f), 0.18f);
             for (int i = 0; i < ShelfOrder.Length; i++)
-            {
-                string label = ShelfOrder[i];
-                float z = 9.1f + i * 0.75f;
-                GameObject body = r.Box(r.Props, "UPS_" + label, new Vector3(12.65f, 0.25f, z), new Vector3(0.4f, 0.5f, 0.35f), DemoRoom.Grey(0.2f));
-                GameObject led = r.Box(r.Props, "UPS_LED_" + label, new Vector3(12.44f, 0.4f, z), new Vector3(0.02f, 0.05f, 0.05f), DemoRoom.Colour("ups_led", Color.white));
-                led.isStatic = false;
-                led.AddComponent<Emissive>();
-                GameObject display = r.Sign("UPS_Label_" + label, label, new Vector3(12.44f, 0.62f, z), Vector3.left, new Vector2(0.5f, 0.12f), 30);
-                display.isStatic = false;
-                UpsUnit unit = MenuLoopSetup.EnsureComponent<UpsUnit>(body);
-                unit.label = label;
-                unit.display = display.GetComponentInChildren<UnityEngine.UI.Text>(true); // the front display: the label, or a fault's countdown
-                unit.led = led.GetComponent<Renderer>();
-                unit.pitch = Pitches[System.Array.IndexOf(Labels, label)];
-                GameObject point = MenuLoopSetup.EnsureChild(body, "Point");
-                point.transform.position = new Vector3(12.0f, 0.5f, z);
-                unit.point = point.transform;
-                unit.range = 0.9f;
-                EditorUtility.SetDirty(unit);
-            }
+                Unit(r, ShelfOrder[i], new Vector3(12.65f, 0f, 9.1f + i * 0.75f), Vector3.left);
+        }
+
+        /// <summary>
+        /// One UPS unit on the floor, its front to facing (DARK TEST, and the demo's G9b): the body, the LED and the front
+        /// display on the front, the point of the Interact key in front of it. Its own pitch of beep by its label.
+        /// </summary>
+        public static UpsUnit Unit(DemoRoom r, string label, Vector3 floorPoint, Vector3 facing)
+        {
+            Quaternion turn = Quaternion.LookRotation(facing);
+            Vector3 front = floorPoint + facing * 0.21f;
+            GameObject body = r.Box(r.Props, "UPS_" + label, floorPoint + Vector3.up * 0.25f, DemoRoom.Abs(turn * new Vector3(0.35f, 0.5f, 0.4f)), DemoRoom.Grey(0.2f));
+            GameObject led = r.Box(r.Props, "UPS_LED_" + label, front + Vector3.up * 0.4f, DemoRoom.Abs(turn * new Vector3(0.05f, 0.05f, 0.02f)), DemoRoom.Colour("ups_led", Color.white));
+            led.isStatic = false;
+            led.AddComponent<Emissive>();
+            GameObject display = r.Sign("UPS_Label_" + label, label, front + Vector3.up * 0.62f, facing, new Vector2(0.5f, 0.12f), 30);
+            display.isStatic = false;
+            UpsUnit unit = MenuLoopSetup.EnsureComponent<UpsUnit>(body);
+            unit.label = label;
+            unit.display = display.GetComponentInChildren<UnityEngine.UI.Text>(true); // the front display: the label, or a fault's countdown
+            unit.led = led.GetComponent<Renderer>();
+            unit.pitch = Pitches[System.Array.IndexOf(Labels, label)];
+            GameObject point = MenuLoopSetup.EnsureChild(body, "Point");
+            point.transform.position = floorPoint + facing * 0.65f + Vector3.up * 0.5f;
+            unit.point = point.transform;
+            unit.range = 0.9f;
+            EditorUtility.SetDirty(unit);
+            return unit;
         }
     }
 }

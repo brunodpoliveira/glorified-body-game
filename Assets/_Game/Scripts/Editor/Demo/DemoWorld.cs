@@ -50,6 +50,7 @@ namespace GlorifiedBody.Editor.Demo
             light.type = LightType.Directional;
             light.intensity = 0.9f;
             light.shadows = LightShadows.Hard;
+            light.renderingLayerMask = (int)GlorifiedBody.Rendering.Darkness.LitLayer; // the dark room G9 leaves the sun (2026-11-09)
             sun.transform.rotation = Quaternion.Euler(55f, 30f, 0f);
             var world = new GameObject("[World]");
             world.AddComponent<RoomTracker>();
@@ -69,6 +70,7 @@ namespace GlorifiedBody.Editor.Demo
             Neighbours(rooms);
             Reinforcement(rooms);
             DemoBrain.Wire(rooms); // the brain fight of B1 (2026-11-09)
+            DemoDark.Wire(rooms);  // the dark room of G9 and G9b (2026-11-09)
 
             GameObject director = MenuLoopSetup.EnsureChild(world, "[CameraDirector]");
             MenuLoopSetup.EnsureComponent<FixedCameraDirector>(director).SetDefaultCamera(rooms["W1"].Cameras[0]);

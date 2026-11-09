@@ -31,6 +31,8 @@ namespace GlorifiedBody.Interaction
         [Tooltip("From the last monitor to the room lights.")]
         [Min(0f)] public float lightsBackSeconds = 1.5f;
         public Color screenColour = new Color(0.35f, 0.75f, 0.55f);
+        [Tooltip("On: a screen that comes back shows its own material again (the demo's monitor wall plays her face), not screenColour.")]
+        public bool restoreOwnLook;
         public string recLine = "PLACEHOLDER: the recorder plays the intake tape of cutscene 08.";
         public string accessLine = "POWER LOST. BREAKER G9. OPENED BY HAND.";
 
@@ -171,7 +173,8 @@ namespace GlorifiedBody.Interaction
             {
                 block ??= new MaterialPropertyBlock();
                 screen.GetPropertyBlock(block);
-                block.SetColor("_BaseColor", on ? screenColour : Color.black);
+                if (on && restoreOwnLook) block.Clear(); // its own material again (a screen is Emissive: the dark leaves its colour alone)
+                else block.SetColor("_BaseColor", on ? screenColour : Color.black);
                 screen.SetPropertyBlock(block);
             }
             if (i < monitorLights.Length && monitorLights[i] != null) monitorLights[i].enabled = on;
