@@ -217,8 +217,8 @@ namespace GlorifiedBody.Audio
             ShowLine();
         }
 
-        /// <summary>The music is in Combat: a tape does not play (the inventory says it waits).</summary>
-        public static bool InFight => MusicDirector.Instance != null && MusicDirector.Instance.State == MusicState.Combat;
+        /// <summary>The music is in Combat, or a boss's track plays: a tape does not play (the inventory says it waits).</summary>
+        public static bool InFight => MusicDirector.Instance != null && MusicDirector.Instance.InFight;
 
         /// <summary>The line of this time as a subtitle, once per line.</summary>
         private void ShowLine()

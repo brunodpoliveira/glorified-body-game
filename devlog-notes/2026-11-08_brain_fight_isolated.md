@@ -112,3 +112,18 @@ of the reach the head was on her, and it held her each time. Now (numbers PROPOS
 A walk, a run or a dodge to the side in the lunge escapes it. A hit on it in the wind-up also sends it back.
 `BrainFightTests` 13 of 13 (new: `AGrabber_SheStepsAside_ItMisses`). The new test needs the new wind-up state, so it
 did not run on the old code; the verdict rests on the code. The brain bot passes.
+
+## Later that day: its own music
+
+```text
+there should be an unique song playing as soon as the fight starts; as it is it keeps on the nomral explortation song
+until i attack, then it switches to combat ost for a while and then it goes back to it again
+```
+
+Verdict from the code: CONFIRMED. `BrainFight` never called the music system, so the room's rules played: the explore
+track, then the combat track for 8 s after each hit. Now the fight starts its own track at once
+(`MusicDirector.Score(clip, fight: true)`), keeps it through every hit, stops it at the brain's death (the flare in
+silence), and gives the music back to the room when it is dead. The track counts as a fight, so a tape waits
+(`MusicDirector.InFight`). The placeholder `Resources/Audio/Music/_placeholder/boss.ogg` (38.5 s, a heartbeat, a low
+drone, a dissonant bell) comes from `tools/boss_music_placeholder.py`. `BrainFight.music` takes the real track.
+`BrainFightTests` (14), `AudioLogTests` and `SoundSystemTests`: 27 of 27. The brain bot passes.

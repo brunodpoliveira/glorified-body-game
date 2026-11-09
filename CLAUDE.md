@@ -537,6 +537,22 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   ACCESS), `FlagSwitch.requiredFlag/waitingText`, DARK TEST. THE BRAIN FIGHT, a first slice (`2026-11-08_brain_fight_isolated.md`): `Scripts/Boss/`
   (`BrainFight`, `Grabber`, `BrainNode`), `UI/BrainHud`, BRAIN TEST. None of the three is in the demo yet. OPEN for Bruno: the examine text for
   objects (P7 lets Lucy speak once in act 1), the fallback subtitle label "VOICE" (round 50 gave it to the core's voice). Numbers PROPOSED.
+- 2026-11-08, day, Bruno's manual tests of the three systems (notes `2026-11-08_code_rotation_backtrack.md`,
+  `_examine_and_ward_rotation.md`, and the later sections of `_dark_room_isolated.md`, `_brain_fight_isolated.md`):
+  THE CODE ROTATION is a backtracker: the code is 8675309 (the keypad takes the code's length), `Story/CodeRotation`
+  rotates the codes after the card opened two doors, and `LockedDoor.rotatesOnTry` on the way on. IN THE DEMO: the ward
+  sister's card opens W3 and W10, the W12 stair door rotates at the first try, W13 has the terminal, W14 the code.
+  THE COMMON INTERACTION: `Interaction/Examinable` on every `DemoRoom.Prop` (a placeholder line by type, the writer's
+  `game/examine.csv` replaces them), containers (`DemoRoom.Container`), the lowest focus priority, no hint
+  (`Interactable.ShowsHint`). The test tape lies in KIT TEST. DARK ROOM: the alarm lasts 5 s with a countdown on the
+  unit displays, and the lights come back after the monitors (`DarkRoom.SetLit`, `litFlag`). THE BRAIN FIGHT: an aim
+  that starts far and follows at 1.4 m/s, a lock, a 2 s charge, a stagger at 30 damage in the charge; one body with
+  600 HP at the eye camera, a bar on its HUD, the default lock (`LockOnTargetable.IsPreferred`); the MK bars and the
+  charge circle stay (the circle on her for a target off the screen); a grabber winds up and lunges at a fixed point;
+  its own track (`MusicDirector.Score(clip, fight: true)`, placeholder `tools/boss_music_placeholder.py`). A throw rises
+  to a high target (`TelekinesisLift.HighTarget`). `DemoWorld.BuildAll` takes the sight lists from the saved scene.
+  Devlog brief for episodes 11 and 12: `the-glorified-body/devlog/ep11/BRIEF.md`. OPEN: the coda poster test failed 1
+  of 4 runs. Numbers PROPOSED.
 
 ## Rules
 

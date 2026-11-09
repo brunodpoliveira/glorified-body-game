@@ -68,6 +68,10 @@ namespace GlorifiedBody.Boss
         public float reachSeconds = 0.5f;
         public float pinSeconds = 2f;
 
+        [Tooltip("Its own track, from the first frame of the fight to its death (Bruno, 2026-11-08). Empty: the placeholder.")]
+        public AudioClip music;
+        public const string PlaceholderMusic = "Audio/Music/_placeholder/boss";
+
         public string deathLine = "I was meant to be beautiful.";
         public const string KillerId = "brain";
 
@@ -159,6 +163,9 @@ namespace GlorifiedBody.Boss
             nextGrab = Time.time + firstGrab;
             if (!string.IsNullOrEmpty(beginFlag)) StoryFlags.Raise(beginFlag);
             ResetAim(); // it starts unlocked, far from her
+            // Its own track at once, for the whole fight (Bruno, 2026-11-08: "there should be an unique song playing as soon as
+            // the fight starts"); the room's explore and combat tracks wait. It counts as a fight: a tape waits.
+            GlorifiedBody.Audio.MusicDirector.Score(music != null ? music : Resources.Load<AudioClip>(PlaceholderMusic), fight: true);
             RunTelemetry.Event("brain_fight", "begin");
         }
 
@@ -412,6 +419,7 @@ namespace GlorifiedBody.Boss
             Slowing = false;
             if (!string.IsNullOrEmpty(deadFlag)) StoryFlags.Raise(deadFlag);
             RunTelemetry.Event("brain_fight", "dead");
+            if (!quiet) GlorifiedBody.Audio.MusicDirector.Score(null); // its track stops: the flare in silence
             if (quiet)
             {
                 for (int i = 0; i < workLights.Length; i++) SetLight(i, 0f);
@@ -441,6 +449,7 @@ namespace GlorifiedBody.Boss
         private void Dead()
         {
             Current = Phase.Dead;
+            GlorifiedBody.Audio.MusicDirector.Hold(null); // the room decides again
             if (exitLeaf != null) exitLeaf.SetActive(false);
         }
 

@@ -59,6 +59,9 @@ namespace GlorifiedBody.Audio
         public AudioClip RoomToneClip => roomTone != null ? roomTone.clip : null;
         /// <summary>The music's level now, 0..1, before the slider: the pause, a voice line, a tape (tests).</summary>
         public float DuckFactor { get; private set; } = 1f;
+        /// <summary>A fight with its own track (a boss): a tape waits as in Combat.</summary>
+        public bool InFight => State == MusicState.Combat || (State == MusicState.Score && fightScore);
+        private bool fightScore;
 
         private void Awake()
         {
@@ -101,14 +104,16 @@ namespace GlorifiedBody.Audio
         {
             if (Instance == null) return;
             Instance.hold = state;
-            if (state != MusicState.Score) Instance.score = null;
+            if (state != MusicState.Score) { Instance.score = null; Instance.fightScore = false; }
         }
 
-        /// <summary>A cutscene's own track (Score) until Hold(null); a null clip holds the silence.</summary>
-        public static void Score(AudioClip clip)
+        /// <summary>A cutscene's own track (Score) until Hold(null); a null clip holds the silence. fight: a boss's track,
+        /// which counts as a fight (a tape waits).</summary>
+        public static void Score(AudioClip clip, bool fight = false)
         {
             if (Instance == null) return;
             Instance.score = clip;
+            Instance.fightScore = clip != null && fight;
             Instance.hold = clip != null ? MusicState.Score : MusicState.Silent;
         }
 

@@ -275,6 +275,28 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator ItsOwnTrack_PlaysFromTheFirstFrame_HitsDoNotChangeIt_AndItEndsAtItsDeath()
+        {
+            // Bruno, 2026-11-08: "there should be an unique song playing as soon as the fight starts; as it is it keeps on
+            // the nomral explortation song until i attack, then it switches to combat ost for a while".
+            fight.trackSpeed = 0f;
+            var music = GlorifiedBody.Audio.MusicDirector.Instance;
+            yield return Enter(Middle);
+            yield return WaitUntil(() => music.State == GlorifiedBody.Audio.MusicState.Score, 2f);
+            Assert.AreEqual(GlorifiedBody.Audio.MusicState.Score, music.State, "its own track at once");
+            Assert.AreEqual("boss", music.CurrentClip != null ? music.CurrentClip.name : "", "the boss track (placeholder)");
+            Assert.IsTrue(GlorifiedBody.Audio.TapePlayer.InFight, "it counts as a fight: a tape waits");
+            powers.Select(PowerKind.Blast);
+            powers.FireAt(powers.Selected, 1f, fight.nodes[0].GetComponent<LockOnTargetable>());
+            yield return new WaitForSeconds(0.5f);
+            Assert.AreEqual(GlorifiedBody.Audio.MusicState.Score, music.State, "a hit does not turn it into the combat track");
+            fight.nodes[0].Health.TakeDamage(fight.nodes[0].Health.MaxHealth);
+            yield return WaitUntil(() => fight.Current == BrainFight.Phase.Dead, 6f);
+            yield return WaitUntil(() => music.State != GlorifiedBody.Audio.MusicState.Score, 3f);
+            Assert.AreNotEqual(GlorifiedBody.Audio.MusicState.Score, music.State, "at its death the room decides again");
+        }
+
+        [UnityTest]
         public IEnumerator AGrabber_SheStepsAside_ItMisses()
         {
             // Bruno, 2026-11-08: "the grabbers are still impossible to dogde".
