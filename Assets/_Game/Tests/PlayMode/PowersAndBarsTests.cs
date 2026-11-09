@@ -320,6 +320,28 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator Telekinesis_ABulletOnHerInADodge_KeepsTheFloater()
+        {
+            // 2026-11-09: a bullet on an invulnerable Lucy (a dodge, the second wind) is no hit, so the hold goes on.
+            powers.Select(PowerKind.Telekinesis);
+            PowerDefinition tk = powers.Selected;
+            powers.FireAt(tk, 1f, dummyB);
+            yield return new WaitForSeconds(tk.liftSeconds + 0.3f);
+            TelekinesisLift lift = dummyB.GetComponent<TelekinesisLift>();
+            Assert.IsNotNull(lift, "it floats");
+
+            health.SetRuntimeInvulnerable(true);
+            Transform her = powers.transform;
+            Vector3 chest = her.position + Vector3.up * 1.2f;
+            Vector3 origin = chest + her.right * 4f;
+            EnemyProjectile.Launch(origin, chest - origin, 20f, 5f, dummyA.gameObject, "test_bullet");
+            yield return new WaitForSeconds(0.6f);
+            health.SetRuntimeInvulnerable(false);
+            Assert.IsNotNull(lift, "the floater stays");
+            Assert.IsTrue(lift.CanLaunch, "the hold goes on: " + lift.Ending);
+        }
+
+        [UnityTest]
         public IEnumerator Telekinesis_TheShortsStart_DropsTheFloater_AtOnce()
         {
             // Bruno, 2026-10-26: a short that starts while she holds an enemy in the air drops it at once.

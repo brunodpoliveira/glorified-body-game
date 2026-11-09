@@ -131,7 +131,8 @@ namespace GlorifiedBody.Automation
             Record("soldier_in_cover", covered != null, covered != null ? $"{covered.name} behind {covered.Cover.Id} at {covered.transform.position} spot {covered.Spot} phase {covered.Current}, the piece at {covered.Cover.Bounds.center} size {covered.Cover.Bounds.size}, her at {lucy.transform.position}, on her line {Breakables.CoverOnLine(lucy.transform.position + Vector3.up * 1.2f, covered.GetComponent<LockOnTargetable>().GetLockPoint(), out _)?.Id}" : "nobody in cover in 20 s");
             if (covered == null) { Finish(); yield break; }
             yield return BotClock.Wait(0.5f);
-            Breakable cover = covered.Cover;
+            // The barricade on her line takes the blasts: his own cover can stand off that line, behind another one.
+            Breakable cover = Breakables.CoverOnLine(lucy.transform.position + Vector3.up * 1.2f, covered.GetComponent<LockOnTargetable>().GetLockPoint(), out _) ?? covered.Cover;
             covered.Hold(999f); // he stays for the pictures
             Shot(Path.Combine(shots, "cover_04_soldier_in_cover.png"));
             Vector3 her = lucy.transform.position;

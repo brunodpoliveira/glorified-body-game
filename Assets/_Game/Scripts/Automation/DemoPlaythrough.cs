@@ -181,6 +181,7 @@ namespace GlorifiedBody.Automation
                     Vector3 top = new Vector3(c.x + Mathf.Cos(a) * r, room.BaseY + 2.5f, c.z + Mathf.Sin(a) * r);
                     if (!room.Contains(new Vector3(top.x, room.BaseY, top.z), -0.5f)) continue;
                     if (!Physics.Raycast(top, Vector3.down, out RaycastHit hit, 10f, solid, QueryTriggerInteraction.Ignore)) continue;
+                    if (hit.point.y > room.BaseY + 0.3f) continue; // the top of a counter or a desk (she stood on the W9 counter)
                     if (Physics.CheckCapsule(hit.point + Vector3.up * 0.4f, hit.point + Vector3.up * 1.5f, 0.35f, solid, QueryTriggerInteraction.Ignore)) continue;
                     return hit.point;
                     }

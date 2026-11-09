@@ -202,7 +202,7 @@ namespace GlorifiedBody.Enemy
         {
             GameObject p = GameObject.FindWithTag("Player");
             Health health = p != null ? p.GetComponentInChildren<Health>() : null;
-            if (health == null || health.IsDead) return;
+            if (health == null || health.IsDead || health.IsInvulnerable) return; // no hit in a dodge: the floater stays
             float distance = Flat(p.transform.position, centre);
             if (distance > radius) return;
             float amount = GlorifiedBody.Systems.DifficultyManager.EnemyDamage(DamageAt(distance));

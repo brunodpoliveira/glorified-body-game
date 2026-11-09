@@ -196,7 +196,7 @@ namespace GlorifiedBody.Enemy
             GameObject playerObject = GameObject.FindWithTag("Player");
             if (playerObject == null) return;
             Health health = playerObject.GetComponentInChildren<Health>();
-            if (health == null || health.IsDead) return;
+            if (health == null || health.IsDead || health.IsInvulnerable) return; // no hit in a dodge: the floater stays
             float distance = Flat(playerObject.transform.position, centre);
             if (distance > radius) return;
             float amount = GlorifiedBody.Systems.DifficultyManager.EnemyDamage(DamageAt(distance));

@@ -93,7 +93,10 @@ namespace GlorifiedBody.Rooms
                     {
                         RaycastHit h = hits[k];
                         if (h.distance < solid) { solid = h.distance; solidHit = h.collider; }
-                        if (h.distance < structure && IsStructure(h.collider)) { structure = h.distance; structureHit = h.collider; }
+                        if (!IsStructure(h.collider)) continue;
+                        if (h.distance < structure - TieDistance
+                            || (h.distance < structure + TieDistance && Prefer(h.collider, structureHit, origin + dir * (h.distance - 0.05f))))
+                        { structure = Mathf.Min(structure, h.distance); structureHit = h.collider; }
                     }
                     float far = Mathf.Min(stop, structureHit != null ? structure : Reach);
                     if (structureHit != null)
@@ -110,6 +113,23 @@ namespace GlorifiedBody.Rooms
                         }
                     if (!inside && solidHit != null) CheckGap(own, origin, dir, solid, leave, solidHit, result);
                 }
+        }
+
+        /// <summary>Two walls this close along a ray meet at a corner: the hits come in no fixed order.</summary>
+        private const float TieDistance = 0.005f;
+
+        /// <summary>
+        /// At a corner of two rooms' walls: the wall of the room the ray is in wins, else the lower room id. The physics
+        /// gives the hits in no fixed order, and the editor's scan and the game's scan gave G5 two lists (2026-11-09).
+        /// </summary>
+        private static bool Prefer(Collider candidate, Collider current, Vector3 before)
+        {
+            if (current == null) return true;
+            Room a = candidate.GetComponentInParent<Room>(), b = current.GetComponentInParent<Room>();
+            if (a == b) return false;
+            bool inA = a != null && InFootprint(a, before, 0f), inB = b != null && InFootprint(b, before, 0f);
+            if (inA != inB) return inA;
+            return string.CompareOrdinal(a != null ? a.id : "", b != null ? b.id : "") < 0;
         }
 
         /// <summary>A ray that hits something outside the room, past a line that is no doorway, is a gap.</summary>

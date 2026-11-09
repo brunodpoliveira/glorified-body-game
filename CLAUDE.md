@@ -559,6 +559,13 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   soldiers' gas knocks her out, killer `soldier_gas`, it waits while she is invulnerable: a knock-out of a god-mode
   Lucy crashed AI TEST); `Player/PowerArm` (one pose for every power: the arm on the target's side, palm out, follows
   the floater; `PsychicPowers` adds it). Numbers PROPOSED.
+- 2026-11-09, night, the five demo items (`devlog-notes/2026-11-09_night_demo_items.md`): B1 and B2 on the map floor THE
+  BRAIN (`Editor/Demo/DemoBrain.cs`, the U1 Crown beat cuts to B1, B2 to X1); the dark room in G9 and G9b
+  (`Editor/Demo/DemoDark.cs`, the order under the W9 counter and in G8); L19 (W9, its end unlocks the feed: an audio log
+  raises `readFlag` at its end) and L20 (W11); the writer's backlog rows in the code. The full check found four faults:
+  `RoomSight` ties at a corner (the room the ray is in wins), a bullet or a blast on an invulnerable Lucy raised a hit and
+  dropped the floater (no hit now), `ItemCarrier.SettleMargin`, the cover bot's barricade. OPEN: the fireteam search test
+  (the pair-walk ratio, 1 failure in 3 runs) and the R1 coda poster test are flaky.
 
 ## Rules
 

@@ -78,3 +78,28 @@ The rows of `game/barks.csv` (2026-11-07, PROPOSED) now replace these placeholde
 Still PLACEHOLDERS, with no row from the writer yet: the hiders' lines when she finds them, the guard's retreat line,
 the fighters' feed lines. The rows for G18 and G19 (round 60) wait for those rooms. The lab worker's retreat line was
 the build's already, and the writer kept it. The seven death screens came in with the four items (2026-11-09).
+
+## 5. The full check before a push
+
+The whole PlayMode suite (468 tests, 44 min) and 27 bot runs (65 min). First result: 465 of 468 tests, 25 of 27 bots.
+`TheFrame_Profile` is explicit, so the suite skips it. The other failures, each checked:
+
+| Failure | Verdict | Fix |
+|---|---|---|
+| `DemoTests.TheCull_...`: `Cam_G5_02` saw G14 in play, not in the editor | A FAULT IN THE SCAN. One ray hits the corner where the south wall of G12 meets the east wall of G14, both at 20.19 m. The physics gives the hits in no fixed order, so the editor took one wall and the game took the other | `RoomSight`: at a tie, the wall of the room the ray is in wins, else the lower room id. `Resight` again |
+| The ai bot: the lift of `Soldier_A` dropped at once, and seven steps after it failed | CONFIRMED, A REAL FAULT. A bullet on an invulnerable Lucy (a dodge, the second wind, the test rooms) still raised a hit, and a hit on her drops what she holds (2026-11-07). The melee strike already checked it | `EnemyProjectile`, `EnemyRocket`, `EnemyGrenade`: no hit on an invulnerable Lucy. New test `PowersAndBarsTests.Telekinesis_ABulletOnHerInADodge_KeepsTheFloater` |
+| The cover bot: `barricade_breaks` | A FAULT IN THE BOT. The soldier hid behind `Barricade_1`, but `Barricade_3` stood on her line and took the blasts. The bot waited for the wrong one | The bot breaks the barricade on her line |
+| `ArmedCivilianTests.TheCarrier_DropsTheCard_...`: a limb 0.16 m from the card (the rule: 0.19 m) | A REAL FAULT, small. The card shows 1.2 s after the death, and the body still moves after that | `ItemCarrier.SettleMargin`: the spot keeps 0.1 m more room than the rule |
+
+Also fixed: the demo bot put Lucy on the W9 counter for its shots (since 2026-11-08 at least). `FreePoint` now skips the
+top of a counter or a desk.
+
+The second run, after the fixes: `DemoTests`, `PowersAndBarsTests`, `ArmedCivilianTests` and `EnemyAiTests`, 135 of
+136. The ai, cover, reactions and civilians bots pass.
+
+`DemoTests.TheFireteam_SheHides_...` failed once in that second run: the pair walked together in 3414 of 9947
+frames, and the test allows a quarter. The code under it did not change tonight. Two runs after it passed (160 and 214
+frames together). It is flaky: OPEN. The demo bot passes with the new placement.
+
+Shots: `~/MEGA/glorified-body-renders/game/night_demo_items_2026-11-09/` (B1 from the eye, B2, G9 and G9b dark, G8, W9
+with Lucy on the floor, W11, and `w9_before_on_the_counter.png`).

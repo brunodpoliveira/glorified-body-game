@@ -15876,7 +15876,6 @@ MonoBehaviour:
   shadowDistance: 0
   sees:
   - G1
-  - G13
   - S1
 --- !u!4 &142704890
 Transform:
@@ -31053,7 +31052,6 @@ MonoBehaviour:
   sees:
   - G12
   - G5
-  - G6
   - G9
   - G9b
   - U1
@@ -125970,7 +125968,6 @@ MonoBehaviour:
   followSpeed: 60
   shadowDistance: 0
   sees:
-  - G12
   - G14
   - U1
 --- !u!4 &1119621683
@@ -129295,7 +129292,6 @@ MonoBehaviour:
   - W1
   - W1B
   - W2
-  - W5
 --- !u!4 &1139811061
 Transform:
   m_ObjectHideFlags: 0
@@ -134233,7 +134229,6 @@ MonoBehaviour:
   followSpeed: 60
   shadowDistance: 0
   sees:
-  - G16
   - G2
   - G4
 --- !u!4 &1190573652
@@ -134818,7 +134813,6 @@ MonoBehaviour:
   - G10
   - G2
   - G5
-  - G6
 --- !u!4 &1198994646
 Transform:
   m_ObjectHideFlags: 0
@@ -145999,7 +145993,6 @@ MonoBehaviour:
   followSpeed: 60
   shadowDistance: 0
   sees:
-  - G12
   - G14
   - G5
   - U1
@@ -150398,7 +150391,6 @@ MonoBehaviour:
   sees:
   - G12
   - G5
-  - G6
   - G9
   - G9b
   - U1
@@ -150613,7 +150605,6 @@ MonoBehaviour:
   sees:
   - G12
   - G5
-  - G6
   - G9
   - U1
 --- !u!4 &1350088928
@@ -150862,7 +150853,6 @@ MonoBehaviour:
   - G10
   - G2
   - G5
-  - G7
 --- !u!4 &1351806180
 Transform:
   m_ObjectHideFlags: 0
@@ -184097,7 +184087,6 @@ MonoBehaviour:
   shadowDistance: 0
   sees:
   - W11
-  - W12
   - W16
   - W17
   - W5
@@ -193869,7 +193858,6 @@ MonoBehaviour:
   shadowDistance: 0
   sees:
   - G1
-  - G13
   - G2
   - S1
 --- !u!4 &1707962530
@@ -201657,7 +201645,6 @@ MonoBehaviour:
   - W1
   - W1B
   - W2
-  - W5
 --- !u!4 &1783710190
 Transform:
   m_ObjectHideFlags: 0
@@ -214834,7 +214821,6 @@ MonoBehaviour:
   - G10
   - G2
   - G5
-  - G6
 --- !u!4 &1904592514
 Transform:
   m_ObjectHideFlags: 0
@@ -222672,7 +222658,6 @@ MonoBehaviour:
   shadowDistance: 0
   sees:
   - G1
-  - G13
   - S1
 --- !u!4 &1962504626
 Transform:

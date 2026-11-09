@@ -178,7 +178,8 @@ namespace GlorifiedBody.Enemy
         {
             Health health = playerController.GetComponentInChildren<Health>() ?? playerController.GetComponentInParent<Health>();
             RunTelemetry.Event("projectile_impact", $"{killerId}>{playerController.name}@{point.x:0.0},{point.y:0.0},{point.z:0.0}");
-            if (health != null && !health.IsDead)
+            // An invulnerable Lucy (a dodge, the second wind) takes no hit: no flinch, and the floater stays (as the melee strike).
+            if (health != null && !health.IsDead && !health.IsInvulnerable)
             {
                 DeathMenuUI.LastKillerId = killerId;
                 health.TakeDamage(GlorifiedBody.Systems.DifficultyManager.EnemyDamage(damage));

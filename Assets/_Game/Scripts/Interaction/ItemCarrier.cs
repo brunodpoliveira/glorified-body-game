@@ -24,6 +24,7 @@ namespace GlorifiedBody.Interaction
         public const float BesideBody = 0.5f;     // metres from the hips, her side first
         public const float FarBesideBody = 0.85f; // the second ring when no limb leaves room at the first
         public const float ClearRadius = 0.2f;    // no limb this close to the item
+        public const float SettleMargin = 0.1f;   // the body still moves after FallSeconds: the spot keeps this much more room
         public const float BeltScale = 0.7f;      // the copy on the belt, a share of the pickup's size
         public const string CarriedName = "CarriedItem";
 
@@ -155,7 +156,7 @@ namespace GlorifiedBody.Interaction
                 {
                     Vector3 point = hips + Quaternion.Euler(0f, turn, 0f) * toHer * distance;
                     if (!NavMesh.SamplePosition(point, out NavMeshHit hit, 0.3f, NavMesh.AllAreas)) continue;
-                    if (Covered(hit.position, limbs)) continue;
+                    if (Covered(hit.position, limbs, ClearRadius + SettleMargin)) continue;
                     return hit.position;
                 }
             }
@@ -187,8 +188,8 @@ namespace GlorifiedBody.Interaction
             return list;
         }
 
-        /// <summary>A limb lies within ClearRadius of the point, seen from above.</summary>
-        private static bool Covered(Vector3 point, System.Collections.Generic.List<(Vector3 a, Vector3 b)> limbs)
+        /// <summary>A limb lies within radius of the point, seen from above.</summary>
+        private static bool Covered(Vector3 point, System.Collections.Generic.List<(Vector3 a, Vector3 b)> limbs, float radius)
         {
             Vector2 p = new Vector2(point.x, point.z);
             foreach ((Vector3 a3, Vector3 b3) in limbs)
@@ -196,7 +197,7 @@ namespace GlorifiedBody.Interaction
                 Vector2 a = new Vector2(a3.x, a3.z), b = new Vector2(b3.x, b3.z);
                 Vector2 ab = b - a;
                 float t = ab.sqrMagnitude > 1e-6f ? Mathf.Clamp01(Vector2.Dot(p - a, ab) / ab.sqrMagnitude) : 0f;
-                if (Vector2.Distance(p, a + ab * t) < ClearRadius) return true;
+                if (Vector2.Distance(p, a + ab * t) < radius) return true;
             }
             return false;
         }
