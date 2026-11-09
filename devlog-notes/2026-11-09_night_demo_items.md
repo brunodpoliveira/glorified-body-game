@@ -57,3 +57,24 @@ Test: `DemoTests.TheDarkRoom_G9_...` (new). With `DarkRoomTests` and the coverag
 
 Test: `DemoTests.TheAudioLogs_...` (new): both in their rooms with their clips, the end of L19 unlocks the feed. With
 `AudioLogTests`: 7 of 7.
+
+## 4. The writer's backlog lines
+
+The rows of `game/barks.csv` (2026-11-07, PROPOSED) now replace these placeholders in the code, word for word:
+
+| Where | Line |
+|---|---|
+| The ward sister gives the card (`CarrierTalk.LineGive`) | "Here. Take it. Now go, and you go round the chairs." |
+| G10, the first hider's whisper | "Keep your head down. Don't look at her. Don't look." |
+| G10, the second hider's whisper | "She can see us. She's looking right at us." |
+| The armed lab worker starts the care, drags, does CPR | "Hey. Hey, it's me. Look at me, it's me." / "I don't know how to do this. I'm doing it. I'm doing it." / "Thirty and two. Thirty and two. I did the course." |
+| The shock, a colleague dies / a gruesome death: the soldier | "Man down. Man down, hold the line." / "Control, she took him apart. She took him apart." |
+| The same: the guard | "Oh no. Oh no, oh no." / "Dispatch, what did she do to him? What did she do?" |
+| The same: the armed lab worker | "No. No, he's from my floor. He's from my floor." / "Oh God. It's on the wall. It's all on the wall." |
+| A lab worker sees the feed | "That's... Computer, she's feeding. Advise. Please advise." |
+| A nurse sees the feed | "Sweetheart, no. No, no. Not like that." |
+| A soldier fires the knock-out gas (`DummyShooter.SoldierGasLines`) | the three `soldier_gas_*` rows |
+
+Still PLACEHOLDERS, with no row from the writer yet: the hiders' lines when she finds them, the guard's retreat line,
+the fighters' feed lines. The rows for G18 and G19 (round 60) wait for those rooms. The lab worker's retreat line was
+the build's already, and the writer kept it. The seven death screens came in with the four items (2026-11-09).

@@ -30,6 +30,12 @@ namespace GlorifiedBody.Enemy
         public enum Weapon { Pistol, Rifle, GrenadeLauncher, GasLauncher, ArmourLaunchers, Knife } // Knife: melee only (2026-10-27)
         public enum Attack { None, Shot, Burst, Grenade, Melee, Gas, Rocket }
 
+        /// <summary>The writer's lines as a soldier fires the knock-out gas (barks.csv, soldier_gas_1 to 3, PROPOSED).</summary>
+        public static readonly string[] SoldierGasLines =
+        {
+            "Knock-out going in. Masks.", "Gas out. Put her to sleep, then we walk in.", "She breathes this she's done. Keep her in it.",
+        };
+
         [SerializeField] private string enemyId = "dummy_shooter";
         [SerializeField, Min(1f)] private float range = 10f;
         [SerializeField, Min(0f)] private float aimSeconds = 0.5f;
@@ -447,6 +453,7 @@ namespace GlorifiedBody.Enemy
             else if (CurrentAttack == Attack.Gas)
             {
                 EnemyGrenade.LaunchGas(origin, aimPoint, grenadeFlightSeconds, grenadeFuseSeconds, gasDamagePerSecond, gasRadius, gasSeconds, gameObject, enemyId);
+                Bark.Say(gameObject, SoldierGasLines[Random.Range(0, SoldierGasLines.Length)]); // the knock-out gas (barks.csv, soldier_gas_*, PROPOSED)
             }
             else if (CurrentAttack == Attack.Rocket)
             {

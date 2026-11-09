@@ -15,7 +15,7 @@ namespace GlorifiedBody.Interaction
     public sealed class CarrierTalk : Interactable
     {
         public const float Reach = 1.8f;
-        public const string LineGive = "Take it. Take it and go."; // PLACEHOLDER: the writers' line
+        public const string LineGive = "Here. Take it. Now go, and you go round the chairs."; // the writer's line (barks.csv, "W11, gives the card when asked", PROPOSED)
 
         private ItemCarrier carrier;
         private Health health;

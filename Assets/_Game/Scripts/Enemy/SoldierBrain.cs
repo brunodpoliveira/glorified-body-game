@@ -146,11 +146,11 @@ namespace GlorifiedBody.Enemy
         public bool Retreating => Current == Phase.Retreat || Current == Phase.Cower;
         /// <summary>A soldier tends a body only while he does not see her (CorpseCare).</summary>
         public bool CareIgnoresHer => false;
-        // The care barks (barks.csv, the writer, 2026-10-25): the guard's and the soldier's own.
-        // The armed lab worker's lines are PLACEHOLDERS until the writer gives them.
-        public string CareStartLine => IsArmedCivilian ? "Oh no. No no no. Can you hear me?" : IsGuard ? "Hey. Hey buddy. Look at me. Look at me." : "Casualty. I'm on it.";
-        public string DragLine => IsArmedCivilian ? "I've got you. I've got you. Please." : IsGuard ? "Come on. I'm getting you out of here. I'm getting you out." : "Pulling out. Cover me. Cover me.";
-        public string CprLine => IsArmedCivilian ? "Breathe. Please breathe. Please." : IsGuard ? "One. Two. Three. Four. Five. Come on. Come on." : "Come on. Come on, breathe. Don't you do this.";
+        // The care barks (barks.csv, the writer, 2026-10-25): the guard's and the soldier's own; the armed lab worker's since
+        // 2026-11-07 (PROPOSED).
+        public string CareStartLine => IsArmedCivilian ? "Hey. Hey, it's me. Look at me, it's me." : IsGuard ? "Hey. Hey buddy. Look at me. Look at me." : "Casualty. I'm on it.";
+        public string DragLine => IsArmedCivilian ? "I don't know how to do this. I'm doing it. I'm doing it." : IsGuard ? "Come on. I'm getting you out of here. I'm getting you out." : "Pulling out. Cover me. Cover me.";
+        public string CprLine => IsArmedCivilian ? "Thirty and two. Thirty and two. I did the course." : IsGuard ? "One. Two. Three. Four. Five. Come on. Come on." : "Come on. Come on, breathe. Don't you do this.";
         // What a figure that cowers says when she comes near (barks.csv, cower_*, the writer, PROPOSED). Bruno, 2026-11-05: "he
         // won't attack and keeps turning its back on me?": the line tells the player that he gave up. The first line is the plainest.
         public static readonly string[] GuardCowerLines =
@@ -682,11 +682,13 @@ namespace GlorifiedBody.Enemy
             gun.Stagger(seconds); // the aim breaks; OnStaggered holds the body for the seconds
             Hold(seconds);
             body?.Flinch(transform.position + transform.forward, false);
-            // PLACEHOLDER lines: the writer owns the barks.
-            string[] lines = IsArmedCivilian
-                ? (gruesome ? new[] { "OH GOD. OH GOD.", "SHE TORE HIM APART!" } : new[] { "NO! NOT HIM!", "SOMEBODY HELP!" })
-                : gruesome ? new[] { "OH GOD...", "WHAT DID SHE DO TO HIM?", "JESUS!" } : new[] { "NO!", "MAN DOWN!" };
-            Bark.Say(gameObject, lines[Random.Range(0, lines.Length)]);
+            // The writer's shock lines (barks.csv, "shock: a colleague dies in sight" / "a gruesome death in sight", PROPOSED).
+            string line = IsArmedCivilian
+                ? (gruesome ? "Oh God. It's on the wall. It's all on the wall." : "No. No, he's from my floor. He's from my floor.")
+                : IsGuard
+                    ? (gruesome ? "Dispatch, what did she do to him? What did she do?" : "Oh no. Oh no, oh no.")
+                    : (gruesome ? "Control, she took him apart. She took him apart." : "Man down. Man down, hold the line.");
+            Bark.Say(gameObject, line);
             RunTelemetry.Event("soldier_shocked", $"{name}:{seconds:0.0}s{(gruesome ? ":gruesome" : "")}");
         }
 
@@ -711,7 +713,8 @@ namespace GlorifiedBody.Enemy
             body.Crouch(false);
             body.MoveTo(Spot, MoveSpeed.Sprint);
             timer = 8f;
-            Bark.Say(gameObject, IsArmedCivilian ? "I can't. I can't do this!" : "That's not a patient. That's not a patient!"); // PLACEHOLDER lines
+            // The lab worker's line is the writer's (kept from the build); the guard's is a PLACEHOLDER still.
+            Bark.Say(gameObject, IsArmedCivilian ? "I can't. I can't do this!" : "That's not a patient. That's not a patient!");
             RunTelemetry.Event("soldier_retreat", $"{name}:{reason} to {Spot.x:0.0},{Spot.z:0.0}");
         }
 

@@ -51,9 +51,10 @@ namespace GlorifiedBody.Enemy
         public int Witnessed { get; private set; }
         public int FeedsSeen { get; private set; }
 
-        // PLACEHOLDER lines (the writer refines them): the fighters, then the civilians.
+        // The fighters' lines are PLACEHOLDERS; the lab worker's and the nurse's are the writer's (barks.csv, "sees the feed", PROPOSED).
         public static readonly string[] FighterFeedLines = { "SHE'S FEEDING ON HIM!", "WHAT IS SHE DOING TO HIM?", "GET HER OFF HIM!" };
-        public static readonly string[] CivilianFeedLines = { "Oh God. She's eating him.", "No, no, no. What is she?", "She's... she's feeding." };
+        public const string LabWorkerFeedLine = "That's... Computer, she's feeding. Advise. Please advise.";
+        public const string NurseFeedLine = "Sweetheart, no. No, no. Not like that.";
         public bool DiedGruesome { get; private set; }
         /// <summary>The fear at which this rank retreats. Never for soldiers and heavies.</summary>
         public int FearLimit => rank == Rank.UnarmedCivilian ? 0 : rank == Rank.ArmedCivilian || rank == Rank.Guard ? 3 : int.MaxValue;
@@ -170,8 +171,9 @@ namespace GlorifiedBody.Enemy
             if (Fear >= FearLimit) brain.Retreat("feed");
             else brain.Shock(gruesomeShockSeconds, true);
             bool civilian = rank == Rank.UnarmedCivilian || rank == Rank.ArmedCivilian;
-            string[] lines = civilian ? CivilianFeedLines : FighterFeedLines;
-            Bark.Say(gameObject, lines[UnityEngine.Random.Range(0, lines.Length)]); // after the shock's own line: this one shows
+            string line = !civilian ? FighterFeedLines[UnityEngine.Random.Range(0, FighterFeedLines.Length)]
+                : GlorifiedBody.Subtitles.Speaker.NameOf(gameObject).Contains("NURSE") ? NurseFeedLine : LabWorkerFeedLine;
+            Bark.Say(gameObject, line); // after the shock's own line: this one shows
         }
 
         /// <summary>It saw the death (the range and the line are checked before): the fear, then a shock or a retreat.</summary>
