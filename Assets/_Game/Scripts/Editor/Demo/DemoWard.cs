@@ -94,7 +94,7 @@ namespace GlorifiedBody.Editor.Demo
                 ScriptStep.SetShort(88f),            // round 8: she starts nearly full on the SHORT
                 ScriptStep.LockHer(),
             };
-            wake.Add(ScriptStep.Play(DemoScripts.Fmv("cutscenes/01_the_wake.md", "01_the_wake", "cs01"))); // FMV (Bruno, 2026-11-02)
+            wake.Add(ScriptStep.Play(DemoNight.WithTitle(DemoScripts.Fmv("cutscenes/01_the_wake.md", "01_the_wake", "cs01")))); // FMV (Bruno, 2026-11-02), the card RAVEN first (round 104)
             wake.Add(ScriptStep.FreeHer());
             // The game opens on the cutscene, black from the first frame (Bruno, 2026-11-04).
             r.Beat("W1_Wake", "demo_w1_wake", Vector3.zero, Vector3.zero, wake.ToArray()).startsBlack = true;
@@ -283,6 +283,7 @@ namespace GlorifiedBody.Editor.Demo
             DemoDark.HubUnits(r); // a source of the order of the dark room (§10.1)
             r.Item("L19_Dictaphone", DemoItems.L19(), new Vector3(10.2f, 1.08f, -5.7f), new Vector3(0.08f, 0.04f, 0.16f)); // the incident review (round 44)
             r.Prop("Counter_Monitors", new Vector3(11f, 1.05f, -6f), new Vector3(1.2f, 0.4f, 0.2f), 0.35f);
+            DemoNight.W9Email(r); // L24
             r.Box(r.Props, "Window", new Vector3(6f, 1.6f, -2.17f), new Vector3(3f, 1.4f, 0.04f), DemoRoom.Colour("window", new Color(0.35f, 0.45f, 0.55f)));
             EnemySpawn marta = r.Figure("Marta", "nurse", new Vector3(4f, 0f, -8.6f), 45f, variant: 1);
             marta.fate = "marta";

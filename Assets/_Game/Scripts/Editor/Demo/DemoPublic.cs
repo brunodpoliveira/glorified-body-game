@@ -226,6 +226,7 @@ namespace GlorifiedBody.Editor.Demo
             GameObject chair = r.Prop("Security_Chair", new Vector3(31f, 0f, -13.4f), new Vector3(0.6f, 1f, 0.6f), 0.15f);
             r.Scan("Scan_Security_Chair", chair.transform.position + Vector3.up * 0.4f, "demo_c7_chair", "PLACEHOLDER (C7): a man's hands on a row of switches. A wedding ring. A cold coffee.");
             r.Item("L5_Logbook", DemoItems.L5(), new Vector3(29.6f, 0.78f, -14.8f), new Vector3(0.24f, 0.03f, 0.32f));
+            DemoNight.G9Roster(r); // L29
             FlagSwitch release = r.Switch("Release_Switch", new Vector3(33.6f, 1.2f, -12.5f), Released, "Release the sector C door?", "release the sector C door",
                 "Somewhere in the hall, the sheeting on the sector C door drops.");
             release.requiredFlag = DemoDark.UnitsUp; // the ACCESS console is dead until the units run (§10.1)

@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 202cb6532a4a7f80682b508098ca96f0, type: 3}
+  m_Name: item_l25_winter_schedule
+  m_EditorClassIdentifier: Assembly-CSharp::GlorifiedBody.Interaction.ItemDefinition
+  itemId: l25_winter_schedule
+  displayName: A MEMO
+  kind: 1
+  drugType: 0
+  colour: {r: 0.96, g: 0.95, b: 0.88, a: 1}
+  description: a memo.
+  logText: 'STAFF OFFICE. THE WINTER SCHEDULE. The Memorial keeps its normal schedule
+    on 25 December and 1 January. Our feast is Future Day, in February, and on that
+    day all staff rest with full pay. On 31 December the chapel is open all night.
+    If you keep a private holiday in December, you may request leave, subject to
+    cover. We know this season matters to many of you. Thank you for the hard days.
+
+
+    By
+    hand under it: Subject to cover. There is no cover. That''s the point.'
+  readFlag: 
+  mapFloor: 
+  audioClip: {fileID: 0}
+  tapeLines: []

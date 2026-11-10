@@ -87,9 +87,10 @@ namespace GlorifiedBody.Editor.Demo
             attendant.foundAt = 0f;
             EditorUtility.SetDirty(attendant);
 
+            DemoNight.R1Tv(r); // the news on the TV behind the till (N1b): the poster beat waits for its end (round 108)
             List<ScriptStep> lines = DemoScripts.Steps(File, "cs11");
             ScriptStep Line(int i) => i < lines.Count ? lines[i] : ScriptStep.Wait(0.1f);
-            var beat = new List<ScriptStep> { ScriptStep.LockHer() };
+            var beat = new List<ScriptStep> { ScriptStep.WaitFlag(DemoNight.NewsDone), ScriptStep.LockHer() };
             for (int i = 1; i <= 6; i++) beat.Add(Line(i));
             beat.Add(ScriptStep.Kneel("Attendant"));
             beat.Add(Line(7));

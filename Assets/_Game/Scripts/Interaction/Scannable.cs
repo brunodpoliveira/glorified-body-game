@@ -23,6 +23,8 @@ namespace GlorifiedBody.Interaction
         public Transform focus;
         [Tooltip("A story flag the scan raises (a person's fate: \"marta_scanned\"). Empty: none.")]
         public string raiseFlag = "";
+        [Tooltip("A scan that plays a cutscene instead of a picture (the desktop tree of G10: C10, cutscene 07c). Null: the picture or the clip.")]
+        public GlorifiedBody.Story.CutsceneAsset cutscene;
 
         private static readonly List<Scannable> all = new List<Scannable>();
         public static IReadOnlyList<Scannable> All => all;

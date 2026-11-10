@@ -563,6 +563,10 @@ MonoBehaviour:
       path: '[World]/[W9]/[Props]/L19_Dictaphone'
       position: {x: 10.2, y: -5.7}
       label: A DICTAPHONE
+    - kind: 2
+      path: '[World]/[W9]/[Props]/L24_Station_Email'
+      position: {x: 11.3, y: -6.12}
+      label: A THREAD OF THREE EMAILS
   - scene: W10
     world: Demo
     floor: demo_2
@@ -952,6 +956,10 @@ MonoBehaviour:
       path: '[World]/[G9]/[Props]/L5_Logbook'
       position: {x: 42.1, y: -45.8}
       label: THE SECURITY LOGBOOK
+    - kind: 2
+      path: '[World]/[G9]/[Props]/L29_Holiday_Roster'
+      position: {x: 42.1, y: -40.14}
+      label: A ROSTER
     - kind: 3
       path: '[World]/[G9]/[Props]/Save_G9'
       position: {x: 45.9, y: -41}
@@ -1013,7 +1021,15 @@ MonoBehaviour:
     - path: G10/G5
       position: {x: 40.5, y: -34.5}
       targetScene: G5
-    marks: []
+    marks:
+    - kind: 2
+      path: '[World]/[G10]/[Props]/L25_Winter_Schedule'
+      position: {x: 46.7, y: -35.8}
+      label: A MEMO
+    - kind: 2
+      path: '[World]/[G10]/[Props]/L26_Birthday_Email'
+      position: {x: 48.1, y: -31.14}
+      label: A PRINTED EMAIL
   - scene: G11
     world: Demo
     floor: demo_1
@@ -1032,7 +1048,11 @@ MonoBehaviour:
     - path: G11/G15
       position: {x: 14.5, y: -53}
       targetScene: G15
-    marks: []
+    marks:
+    - kind: 2
+      path: '[World]/[G11]/[Props]/L28_Law_Flyer'
+      position: {x: 11.17, y: -51.2}
+      label: A LAW OFFICE'S FLYER
   - scene: G12
     world: Demo
     floor: demo_1
@@ -1067,7 +1087,11 @@ MonoBehaviour:
     - path: G13/G7
       position: {x: 20.5, y: -40}
       targetScene: G7
-    marks: []
+    marks:
+    - kind: 2
+      path: '[World]/[G13]/[Props]/L27_Reply_All'
+      position: {x: 23.1, y: -34.86}
+      label: A REPLY-ALL THREAD
   - scene: G14
     world: Demo
     floor: demo_1

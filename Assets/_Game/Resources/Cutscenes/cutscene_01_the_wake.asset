@@ -14,6 +14,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GlorifiedBody.Story.CutsceneAsset
   cutsceneId: 01_the_wake
   shots:
+  - still: {fileID: 2800000, guid: 472382bfd6722e4b9ba21459a0d12135, type: 3}
+    video: {fileID: 0}
+    sound: {fileID: 0}
+    seconds: 3.5
+    panFrom: {x: 0, y: 0, z: 1}
+    panTo: {x: 0, y: 0, z: 1}
+    speaker: 
+    lineId: 
+    text: 
   - still: {fileID: 2800000, guid: ac9c33c1e928167c79fe8e580e38f6ef, type: 3}
     video: {fileID: 0}
     sound: {fileID: 0}

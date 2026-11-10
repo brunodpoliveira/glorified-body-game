@@ -155,6 +155,94 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.IsEmpty(failures, string.Join("; ", failures));
         }
 
+        // ── The night of 30 December (2026-11-10: beat 19b, L24 to L29, N1, N2, the title card) ──
+
+        [UnityTest]
+        public IEnumerator TheOpening_ShowsTheCardRaven_First()
+        {
+            // DEMO_PLAN §14 item 14 (rounds 104 and 105): "RAVEN, before cutscene 01, the first thing on screen".
+            var wake = Resources.Load<CutsceneAsset>("Cutscenes/cutscene_01_the_wake");
+            Assert.IsNotNull(wake);
+            Assert.AreEqual("cs00_raven", wake.shots[0].still != null ? wake.shots[0].still.name : "", "the first shot is the card");
+            Assert.Greater(wake.shots.Length, 1, "then the wake");
+            yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator TheCafeteria_G10_TheTreeBlinks_TheRadioPlays_AndTheScanOfTheTreePlaysTheParty()
+        {
+            yield return Coda("G10");
+            GameObject lucy = GameObject.FindGameObjectWithTag("Player");
+            Transform tree = GameObject.Find("Desktop_Tree").transform;
+            lucy.GetComponent<TankController>().Teleport(new Vector3(tree.position.x, tree.position.y - 0.91f, tree.position.z + 1.0f), 180f);
+            yield return WaitUntil(() => GlorifiedBody.Rooms.RoomTracker.CurrentId == "G10", 3f);
+
+            Broadcast radio = GameObject.Find("Radio").GetComponent<Broadcast>();
+            yield return WaitUntil(() => radio.Spoken > 0, 3f);
+            Assert.IsTrue(radio.Started, "the radio plays when she comes in (N1a)");
+            StringAssert.StartsWith("...my door is open", radio.LastText, "mid-sentence");
+
+            GlorifiedBody.Rendering.Blink blink = GameObject.Find("Tree_Lights").GetComponent<GlorifiedBody.Rendering.Blink>();
+            int first = blink.Phase;
+            yield return new WaitForSeconds(blink.seconds + 0.1f);
+            Assert.AreNotEqual(first, blink.Phase, "the lights blink");
+
+            var logs = UnityEngine.Object.FindObjectsByType<ItemPickup>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            foreach (string id in new[] { "l25_winter_schedule", "l26_gene_birthday" })
+                Assert.IsTrue(logs.Any(p => p.item != null && p.item.itemId == id && p.GetComponentInParent<GlorifiedBody.Rooms.Room>()?.id == "G10"), id + " in G10");
+
+            PsychicScanner scanner = lucy.GetComponent<PsychicScanner>();
+            Assert.AreEqual("Scan_Desktop_Tree", scanner.FindFocus()?.name, "the tree is in her scan");
+            Assert.IsTrue(scanner.TryScan(), scanner.LastResult);
+            yield return null;
+            Assert.AreEqual("07c_the_party", CutscenePlayer.Current, "the one scan that plays a cutscene (C10)");
+            Assert.IsTrue(StoryFlags.Has("demo_c10_scanned"));
+            CutscenePlayer.Skip();
+            yield return WaitUntil(() => !CutscenePlayer.IsPlaying, 5f);
+        }
+
+        [UnityTest]
+        public IEnumerator TheLogsOfTheSeason_L24ToL29_StandInTheirRooms()
+        {
+            yield return LoadWorld();
+            var logs = UnityEngine.Object.FindObjectsByType<ItemPickup>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            var expected = new (string id, string room)[]
+            {
+                ("l24_colton_thread", "W9"), ("l25_winter_schedule", "G10"), ("l26_gene_birthday", "G10"),
+                ("l27_the_25th", "G13"), ("l28_law_flyer", "G11"), ("l29_holiday_roster", "G9"),
+            };
+            var failures = new List<string>();
+            foreach ((string id, string room) in expected)
+            {
+                ItemPickup log = logs.FirstOrDefault(p => p.item != null && p.item.itemId == id);
+                if (log == null) { failures.Add(id + ": none"); continue; }
+                string at = log.GetComponentInParent<GlorifiedBody.Rooms.Room>()?.id;
+                if (at != room) failures.Add($"{id}: in {at}, not {room}");
+                if (log.item.kind != ItemKind.Log) failures.Add(id + ": not a log");
+                // She can reach it: a floor point of its room within its range, seen from above.
+                if (!UnityEngine.AI.NavMesh.SamplePosition(new Vector3(log.transform.position.x, GlorifiedBody.Rooms.Room.Of(room).BaseY, log.transform.position.z), out _, log.range + 0.3f, UnityEngine.AI.NavMesh.AllAreas))
+                    failures.Add(id + ": out of her reach");
+            }
+            Assert.IsEmpty(failures, string.Join("; ", failures));
+        }
+
+        [UnityTest]
+        public IEnumerator TheW14Tv_PlaysTheEndOfTheEpisode_WhenSheWalksIn_AndHerTextIsOnIt()
+        {
+            yield return Coda("W14");
+            GameObject lucy = GameObject.FindGameObjectWithTag("Player");
+            InWorldScreen tv = UnityEngine.Object.FindObjectsByType<InWorldScreen>(FindObjectsSortMode.None).First(s => s.GetComponentInParent<GlorifiedBody.Rooms.Room>()?.id == "W14");
+            Assert.IsFalse(tv.IsPlaying, "off before she comes");
+            Assert.AreEqual("CABAL", tv.lines[0].speaker);
+            StringAssert.Contains("THE TECHNOPURITAN CHURCH", tv.lines[tv.lines.Count - 1].text, "the copyright, last (round 109)");
+            Vector3 trigger = GameObject.Find("Trigger_W14_TV")?.transform.position ?? GameObject.Find("W14_TV").transform.position;
+            lucy.GetComponent<TankController>().Teleport(new Vector3(trigger.x, 0f, trigger.z), 270f);
+            yield return WaitUntil(() => tv.IsPlaying, 3f);
+            Assert.IsTrue(tv.IsPlaying, "it plays when she walks in (round 108)");
+            Examinable look = GameObject.Find("TV_Table").GetComponent<Examinable>();
+            StringAssert.StartsWith("Aw, man. I tuned in right at the end!", look.comment, "her text on the TV");
+        }
+
         [UnityTest]
         public IEnumerator TheRouteSwitch_CodeSilverShutsTheW5ToW9Door_ItsLeverInW9OpensIt_ALoadKeepsItOpen()
         {
@@ -319,6 +407,8 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.IsTrue(Feeding.Locked, "round 18: the feed starts locked");
             PsychicStats stats = GameObject.FindGameObjectWithTag("Player").GetComponent<PsychicStats>();
             Assert.Greater(stats.Short, PsychicStats.MaxShort * 0.8f, "round 8: she starts nearly full on the SHORT");
+            // The card RAVEN is the first shot (round 104), then the wake's lines.
+            yield return WaitUntil(() => CutscenePlayer.ShotIndex >= 1 && GlorifiedBody.Subtitles.SubtitleService.Lines.Any(l => l.Speaker == "STEVENS"), 10f);
             Assert.IsTrue(GlorifiedBody.Subtitles.SubtitleService.Lines.Any(l => l.Speaker == "STEVENS"), "Stevens on the speaker (cutscene 01: the FMV slot shows his lines)");
             Assert.IsNotNull(GameObject.Find("L1_Printout"), "the printout on the printer");
         }
@@ -590,6 +680,17 @@ namespace GlorifiedBody.Tests.PlayMode
             PsychicPowers powers = lucy.GetComponent<PsychicPowers>();
             Assert.IsFalse(PsychicPowers.EdgarUnlocked, "before the beat");
             lucy.GetComponent<TankController>().Teleport(GameObject.Find("Entry_R1").transform.position + Vector3.forward * 1.6f, 0f);
+            // The news on the TV behind the till first (N1b, round 108): the beat waits for its end.
+            Broadcast news = GameObject.Find("TV_Till").GetComponent<Broadcast>();
+            yield return WaitUntil(() => news.Spoken > 0, 3f);
+            Assert.IsTrue(news.Started, "the TV plays when she steps in");
+            yield return new WaitForSeconds(3f);
+            Assert.IsFalse(CutscenePlayer.IsPlaying, "the poster beat waits for the news");
+            Assert.IsFalse(lucy.GetComponent<TankController>().MovementLocked, "she walks while it plays");
+            yield return WaitUntil(() => StoryFlags.Has("demo_r1_news_done"), 120f);
+            Assert.IsTrue(news.Done, "the report ends");
+            Assert.AreEqual("low", news.Band, "no kill in this test: the low band");
+            StringAssert.StartsWith("Police are asking citizens", news.LastText, "cut off");
             yield return WaitUntil(() => CutscenePlayer.IsPlaying, 40f);
             Assert.IsTrue(CutscenePlayer.IsPlaying, "the flashback");
             yield return WaitUntil(() => !CutscenePlayer.IsPlaying, 25f);

@@ -1,0 +1,118 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4b009882ac86ab7df88ae9f6a98ca8d5, type: 3}
+  m_Name: cutscene_07c_the_party
+  m_EditorClassIdentifier: Assembly-CSharp::GlorifiedBody.Story.CutsceneAsset
+  cutsceneId: 07c_the_party
+  shots:
+  - still: {fileID: 2800000, guid: e8e3319ee85bf6c489a47e0d307eed31, type: 3}
+    video: {fileID: 0}
+    sound: {fileID: 0}
+    seconds: 2.5
+    panFrom: {x: 0, y: 0, z: 1}
+    panTo: {x: 0, y: 0, z: 1}
+    speaker: 
+    lineId: 
+    text: 
+  - still: {fileID: 2800000, guid: 8bc49436a964bb25f9374e8bffd76ec5, type: 3}
+    video: {fileID: 0}
+    sound: {fileID: 0}
+    seconds: 3.2
+    panFrom: {x: 0, y: 0, z: 1}
+    panTo: {x: 0, y: 0, z: 1}
+    speaker: THE ROOM
+    lineId: cs07c_00
+    text: On a cold winter's night that was so deep.
+  - still: {fileID: 2800000, guid: 756d3e577e1c4edff8923066579a5690, type: 3}
+    video: {fileID: 0}
+    sound: {fileID: 0}
+    seconds: 3
+    panFrom: {x: 0, y: 0, z: 1}
+    panTo: {x: 0, y: 0, z: 1}
+    speaker: THE ROOM
+    lineId: cs07c_01
+    text: Noel, Noel, Noel, Noel.
+  - still: {fileID: 2800000, guid: 0679f5265398f69b6828d56c935b752e, type: 3}
+    video: {fileID: 0}
+    sound: {fileID: 0}
+    seconds: 3
+    panFrom: {x: 0, y: 0, z: 1}
+    panTo: {x: 0, y: 0, z: 1}
+    speaker: THE ROOM
+    lineId: cs07c_02
+    text: Born is the King of Israel.
+  - still: {fileID: 2800000, guid: 48add2c7512dec9b89e3da3992fac0cc, type: 3}
+    video: {fileID: 0}
+    sound: {fileID: 0}
+    seconds: 2
+    panFrom: {x: 0, y: 0, z: 1}
+    panTo: {x: 0, y: 0, z: 1}
+    speaker: SCIENTIST
+    lineId: cs07c_03
+    text: Okay, okay. Cups up.
+  - still: {fileID: 2800000, guid: 48add2c7512dec9b89e3da3992fac0cc, type: 3}
+    video: {fileID: 0}
+    sound: {fileID: 8300000, guid: 3330ca5b9fa2a22fba0545e807c50166, type: 3}
+    seconds: 1.3
+    panFrom: {x: 0, y: 0, z: 1}
+    panTo: {x: 0, y: 0, z: 1}
+    speaker: 
+    lineId: 
+    text: 
+  - still: {fileID: 2800000, guid: 48add2c7512dec9b89e3da3992fac0cc, type: 3}
+    video: {fileID: 0}
+    sound: {fileID: 0}
+    seconds: 5
+    panFrom: {x: 0, y: 0, z: 1}
+    panTo: {x: 0, y: 0, z: 1}
+    speaker: SCIENTIST
+    lineId: cs07c_04
+    text: Merry Christmas, everybody! I wish you all happiness, good health, and
+      lots of money in the bank account!
+  - still: {fileID: 2800000, guid: 6d5b7eed56a86711dab21dbe914ad024, type: 3}
+    video: {fileID: 0}
+    sound: {fileID: 8300000, guid: 4b3e6f7d186f578e1bee773c061b725d, type: 3}
+    seconds: 2.2
+    panFrom: {x: 0, y: 0, z: 1}
+    panTo: {x: 0, y: 0, z: 1}
+    speaker: THE ROOM
+    lineId: cs07c_05
+    text: Merry Christmas!
+  - still: {fileID: 2800000, guid: 6d5b7eed56a86711dab21dbe914ad024, type: 3}
+    video: {fileID: 0}
+    sound: {fileID: 0}
+    seconds: 2
+    panFrom: {x: 0, y: 0, z: 1}
+    panTo: {x: 0, y: 0, z: 1}
+    speaker: A NURSE
+    lineId: cs07c_06
+    text: Happy birthday, Gene!
+  - still: {fileID: 2800000, guid: 6d5b7eed56a86711dab21dbe914ad024, type: 3}
+    video: {fileID: 0}
+    sound: {fileID: 0}
+    seconds: 1.6
+    panFrom: {x: 0, y: 0, z: 1}
+    panTo: {x: 0, y: 0, z: 1}
+    speaker: GENE
+    lineId: cs07c_07
+    text: It's in July.
+  - still: {fileID: 2800000, guid: b80e7a1a8737724029cb9c66eb1fbc94, type: 3}
+    video: {fileID: 0}
+    sound: {fileID: 0}
+    seconds: 2.4
+    panFrom: {x: 0, y: 0, z: 1}
+    panTo: {x: 0, y: 0, z: 1}
+    speaker: 
+    lineId: 
+    text: 
+  music: {fileID: 0}
+  doneFlag: 

@@ -133,7 +133,8 @@ namespace GlorifiedBody.Editor.Demo
         /// </summary>
         private static void W14(DemoRoom r)
         {
-            r.Crt("TV", new Vector3(-9.2f, 0f, 10.2f), 45f, new List<TapeLine>(), interactive: false, loop: false);
+            GameObject tv = r.Crt("TV", new Vector3(-9.2f, 0f, 10.2f), 45f, DemoNight.ThingsToCome(), interactive: false, loop: false);
+            DemoNight.W14Tv(r, tv); // the anime of the church (N2, round 108)
             r.Prop("Low_Table", new Vector3(-6.5f, 0f, 12.3f), new Vector3(1.2f, 0.5f, 0.8f), 0.45f);
             r.Prop("Cup_Warm", new Vector3(-6.3f, 0.5f, 12.2f), new Vector3(0.08f, 0.1f, 0.08f), 0.9f);
             r.Prop("Small_Chair_A", new Vector3(-7.4f, 0f, 11.4f), new Vector3(0.4f, 0.5f, 0.4f), 0.5f);
@@ -255,6 +256,7 @@ namespace GlorifiedBody.Editor.Demo
             EditorUtility.SetDirty(server);
             r.Sign("Sign_Menu", "TONIGHT: SOUP. BREAD. TEA.", new Vector3(37.83f, 2.2f, -2.5f), Vector3.left, new Vector2(1.8f, 0.35f), 36);
             Label(r, "CAFETERIA", new Vector3(32.2f, 2.3f, -0.17f), Vector3.back, 1.6f);
+            DemoNight.Cafeteria(r); // the staff's Christmas (beat 19b, round 59), the radio (N1a)
         }
 
         /// <summary>G11: the staff break room of the public floor. The same counter: a sink, the microwave, the coffee machine.</summary>
@@ -270,6 +272,7 @@ namespace GlorifiedBody.Editor.Demo
                 r.Prop("Chair_" + tag, new Vector3(x, 0f, z), new Vector3(0.4f, 0.45f, 0.4f), 0.2f);
             r.Prop("Lockers", new Vector3(-1.65f, 0f, -20.2f), new Vector3(0.6f, 1.9f, 2.2f), 0.1f);
             Label(r, "STAFF ROOM", new Vector3(5.83f, 2f, -17.3f), Vector3.left, 1f);
+            DemoNight.G11Flyer(r); // L28
         }
 
         /// <summary>
@@ -330,6 +333,7 @@ namespace GlorifiedBody.Editor.Demo
                     r.Prop($"Chair_{n++}", new Vector3(x, 0f, z - 0.8f), new Vector3(0.45f, 0.9f, 0.45f), 0.15f);
                 }
             Label(r, "ADMISSIONS", new Vector3(10.4f, 2.3f, -0.17f), Vector3.back, 1.4f);
+            DemoNight.G13Email(r); // L27
         }
 
         /// <summary>G14: the builders' storage, raw block like U1. Cement bags on a pallet, a ladder, sheeting, a work light.</summary>

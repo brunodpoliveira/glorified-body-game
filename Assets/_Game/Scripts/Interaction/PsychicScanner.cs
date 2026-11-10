@@ -57,11 +57,7 @@ namespace GlorifiedBody.Interaction
             if (Viewing == null)
             {
                 Focus = FindFocus();
-                if (scan && (interactor == null || interactor.Current == Interactor.State.Free))
-                {
-                    if (Focus != null) Begin(Focus);
-                    else Result("nothing");
-                }
+                if (scan && (interactor == null || interactor.Current == Interactor.State.Free)) TryScan();
                 return;
             }
             if (Time.frameCount == startFrame || Time.unscaledTime - ViewStartTime < MinViewSeconds) return;
@@ -69,6 +65,21 @@ namespace GlorifiedBody.Interaction
                 || GameInput.GetActionDown(InputManager.GameAction.Interact, KeyCode.E)
                 || GameInput.GetActionDown(InputManager.GameAction.Back, KeyCode.S);
             if (close) End("closed");
+        }
+
+        /// <summary>The scan key: the scannable in focus, if any. True when a scan started (a picture, a clip or a cutscene).</summary>
+        public bool TryScan()
+        {
+            if (Viewing != null) return false;
+            Focus = FindFocus();
+            if (Focus == null)
+            {
+                Result("nothing");
+                return false;
+            }
+            int before = Scans;
+            Begin(Focus);
+            return Scans > before;
         }
 
         /// <summary>The nearest scannable in its range and inside the cone of her facing. Null when none.</summary>
@@ -92,6 +103,15 @@ namespace GlorifiedBody.Interaction
 
         private void Begin(Scannable target)
         {
+            if (target.cutscene != null)
+            {
+                // The one scan that plays a cutscene (C10, 07c: the writer's note "The game agent decides how a scan starts a cutscene").
+                if (!GlorifiedBody.Story.CutscenePlayer.Play(target.cutscene)) return;
+                Scans++;
+                if (!string.IsNullOrEmpty(target.raiseFlag)) GlorifiedBody.Saving.StoryFlags.Raise(target.raiseFlag);
+                Result("cutscene:" + target.scanId);
+                return;
+            }
             Viewing = target;
             ViewStartTime = Time.unscaledTime;
             startFrame = Time.frameCount;
