@@ -28,7 +28,7 @@ namespace GlorifiedBody.Editor.Demo
         public static List<RoomSpec> Rooms() => new List<RoomSpec>
         {
             Spec("G18", "THE DINING HALL", 35, 0, 47, 10, 5f, G18, new Door('W', 3, "G2", width: 2.4f), new Door('S', 41, "G19")),
-            Spec("G19", "THE KITCHEN", 38, -12, 44, 0, 3.5f, G19, new Door('N', 41, "G18"), ServiceExit("G9b")),
+            Spec("G19", "THE KITCHEN", 38, -12, 44, 0, 3.5f, G19, new Door('N', 41, "G18"), ServiceExit("G9b"), new Door('S', 43, "G17b")), // G17b, facilities, and the halon room (2026-11-10)
         };
 
         /// <summary>The service exit: a push bar on the kitchen side only (a jammed fire door, its one lever in G19, no kick breaks it).</summary>

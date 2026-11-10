@@ -475,7 +475,7 @@ namespace GlorifiedBody.Editor.Destruction
             door.bars = bars.ToArray();
             EditorUtility.SetDirty(door);
             // The levers: beside the doorway away from the pocket, on both wall faces, at hand height. leverSide +1 or -1: on that
-            // face only (the W5 to W9 door opens from the W9 side: the route switch).
+            // face only (the W5 to W9 door opens from the W9 side: the route switch). 2: none (the halon door: its system shuts it).
             foreach (float side in new[] { -1f, 1f })
             {
                 if (leverSide != 0 && side != leverSide) continue;

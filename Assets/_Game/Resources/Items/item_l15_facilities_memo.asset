@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 202cb6532a4a7f80682b508098ca96f0, type: 3}
+  m_Name: item_l15_facilities_memo
+  m_EditorClassIdentifier: Assembly-CSharp::GlorifiedBody.Interaction.ItemDefinition
+  itemId: l15_facilities_memo
+  displayName: A FACILITIES MEMO
+  kind: 1
+  drugType: 0
+  colour: {r: 0.96, g: 0.95, b: 0.88, a: 1}
+  description: a facilities memo.
+  logText: 'FACILITIES. SERVER ROOM, HALON 1301. NEW PRODUCTION ENDED IN 1994 (MONTREAL
+    PROTOCOL). WE ARE NOT REQUIRED TO REMOVE THE SYSTEM. RECYCLED AGENT ONLY. NO
+    TEST DISCHARGE. SWITCHOVER QUOTE: NEW PIPE, NEW NOZZLES, MORE CYLINDERS THAN
+    WE HAVE FLOOR FOR, NINE DAYS WITH BUILDING SYSTEMS DOWN. BUILDING SYSTEMS CANNOT
+    GO DOWN. DEFERRED. FOURTH YEAR.'
+  readFlag: 
+  mapFloor: 
+  audioClip: {fileID: 0}
+  tapeLines: []

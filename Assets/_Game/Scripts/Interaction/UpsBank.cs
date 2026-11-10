@@ -202,6 +202,9 @@ namespace GlorifiedBody.Interaction
             return readyClip;
         }
 
+        /// <summary>The two-tone alarm, shared with the horn of the halon room (G17).</summary>
+        public static AudioClip Alarm => AlarmClip();
+
         // A continuous two-tone alarm: a placeholder sound (no file).
         private static AudioClip alarmClip;
         private static AudioClip AlarmClip()

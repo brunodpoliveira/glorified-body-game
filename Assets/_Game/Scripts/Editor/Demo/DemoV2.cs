@@ -298,6 +298,7 @@ namespace GlorifiedBody.Editor.Demo
             Card(r, "Card_Down_A", "", new Vector3(32.8f, 0.75f, -18.5f));
             Card(r, "Card_Down_B", "", new Vector3(31.4f, 0.75f, -19.5f));
             NameCard head = Card(r, "Card_Head", "DE HOMEM-CRISTO", new Vector3(35.65f, 0.75f, -19f));
+            DemoHalon.ColtonFolder(r); // L16, the unopened folder at the place marked COLTON (§8, round 39)
             head.flashback = Flashback();
             head.flag = CardFlag;
             head.shortGain = ShortGain;

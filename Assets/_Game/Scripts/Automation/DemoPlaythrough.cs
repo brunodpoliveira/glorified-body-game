@@ -30,7 +30,7 @@ namespace GlorifiedBody.Automation
         public static readonly string[] Rooms =
         {
             "W1", "W1B", "W2", "W3", "W4", "W5", "W6", "W7", "W8", "W9", "W10", "W11", "W12", "W13", "W14", "W15", "W16", "W17", "S1",
-            "G1", "G2", "G3", "G4", "G5", "G6", "G7", "G8", "G9", "G9b", "G10", "G11", "G12", "G13", "G14", "G15", "G16", "X1", "R1", "R2", "R3", "U1", "B1", "B2", "G18", "G19",
+            "G1", "G2", "G3", "G4", "G5", "G6", "G7", "G8", "G9", "G9b", "G10", "G11", "G12", "G13", "G14", "G15", "G16", "X1", "R1", "R2", "R3", "U1", "B1", "B2", "G18", "G19", "G17b", "G17",
         };
 
         [Serializable]

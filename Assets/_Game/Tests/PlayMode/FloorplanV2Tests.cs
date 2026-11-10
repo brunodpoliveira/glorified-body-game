@@ -99,7 +99,7 @@ namespace GlorifiedBody.Tests.PlayMode
                 ("G5", new Vector4(12, -16, 28, 0)), ("G9", new Vector4(28, -16, 34, -9)), ("U1", new Vector4(14, -28, 26, -16)),
             })
                 Assert.AreEqual(rect, Room.Of(id).rect, id + " stands where it stood");
-            Assert.AreEqual(45, Room.All.Count, "40 rooms, the stair, the brain sector B1 with its door B2 (2026-11-09), the Dining Hall G18 and its kitchen G19 (2026-11-10)");
+            Assert.AreEqual(47, Room.All.Count, "40 rooms, the stair, the brain sector B1 with its door B2 (2026-11-09), the Dining Hall G18 and its kitchen G19, the halon room G17 and G17b (2026-11-10)");
         }
 
         [UnityTest]

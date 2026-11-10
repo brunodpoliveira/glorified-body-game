@@ -45,6 +45,7 @@ namespace GlorifiedBody.Editor.Demo
             rooms.AddRange(DemoCoda.Rooms());     // the coda (2026-11-06): X1, R1, R2, R3
             rooms.AddRange(DemoBrain.Rooms());    // the brain sector (2026-11-09): B1, B2
             rooms.AddRange(DemoDining.Rooms());   // the Dining Hall (2026-11-10): G18, G19
+            rooms.AddRange(DemoHalon.Rooms());    // the halon room (2026-11-10): G17b, G17
             return rooms;
         }
 

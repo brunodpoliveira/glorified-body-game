@@ -33,7 +33,7 @@ namespace GlorifiedBody.Tests.PlayMode
     {
         private const string World = "Demo";
         private static readonly string[] Rooms = { "W1", "W1B", "W2", "W3", "W4", "W5", "W6", "W7", "W8", "W9", "W10", "W11", "W12", "W13", "W14", "W15", "W16", "W17", "S1",
-            "G1", "G2", "G3", "G4", "G5", "G6", "G7", "G8", "G9", "G9b", "G10", "G11", "G12", "G13", "G14", "G15", "G16", "X1", "R1", "R2", "R3", "U1", "B1", "B2", "G18", "G19" }; // the floorplan v2 (2026-11-05), the brain sector (2026-11-09), the Dining Hall (2026-11-10)
+            "G1", "G2", "G3", "G4", "G5", "G6", "G7", "G8", "G9", "G9b", "G10", "G11", "G12", "G13", "G14", "G15", "G16", "X1", "R1", "R2", "R3", "U1", "B1", "B2", "G18", "G19", "G17b", "G17" }; // the floorplan v2 (2026-11-05), the brain sector (2026-11-09), the Dining Hall and the halon room (2026-11-10)
         private static readonly string[] MainWay = { "W1", "W1B", "W2", "W5", "W7", "W8", "W9", "W11", "W9", "W12", "S1", "G1", "G2", "G5", "G9", "G5", "U1" };
 
         [UnitySetUp]
@@ -127,7 +127,7 @@ namespace GlorifiedBody.Tests.PlayMode
             // Bruno, 2026-11-03: fire doors "in selected chokepoints"; his pick: W2 to W5, W5 to W7, G2 to G5.
             yield return LoadWorld();
             var names = GlorifiedBody.Interaction.FireDoor.All.Select(d => d.name).OrderBy(n => n).ToArray();
-            CollectionAssert.AreEqual(new[] { "FireDoor_G2_G5", "FireDoor_G9b_G19", "FireDoor_W1B_W2", "FireDoor_W2_W5", "FireDoor_W5_W7", "FireDoor_W5_W9" }, names, "the fire doors (W5 to W9: the route switch, §10.5; G19 to G9b: the service exit)");
+            CollectionAssert.AreEqual(new[] { "FireDoor_G17b_G17", "FireDoor_G2_G5", "FireDoor_G9b_G19", "FireDoor_W1B_W2", "FireDoor_W2_W5", "FireDoor_W5_W7", "FireDoor_W5_W9" }, names, "the fire doors (W5 to W9: the route switch, §10.5; G19 to G9b: the service exit; G17: the halon door, §10.4)");
             var failures = new List<string>();
             int solid = LayerMask.GetMask("Default");
             foreach (GlorifiedBody.Interaction.FireDoor door in GlorifiedBody.Interaction.FireDoor.All)
@@ -144,7 +144,7 @@ namespace GlorifiedBody.Tests.PlayMode
                     else rooms.Add(room.id);
                     if (Physics.Linecast(front, lever.transform.position + lever.transform.forward * 0.05f, solid, QueryTriggerInteraction.Ignore)) failures.Add($"{door.name}/{lever.name}: buried");
                 }
-                int sides = door.name == "FireDoor_W5_W9" || door.name == "FireDoor_G9b_G19" ? 1 : 2; // one lever: the route switch (W9 side), the service exit (G19 side)
+                int sides = door.name == "FireDoor_G17b_G17" ? 0 : door.name == "FireDoor_W5_W9" || door.name == "FireDoor_G9b_G19" ? 1 : 2; // one lever: the route switch (W9 side), the service exit (G19 side); none: the halon door
                 if (rooms.Count != sides) failures.Add($"{door.name}: its levers in {rooms.Count} rooms ({string.Join(",", rooms)})");
                 // The open leaf lies in its wall pocket: a line to it from each side meets the wall.
                 Vector3 leafCentre = door.leaf.position + Vector3.up * 1.1f;
@@ -153,6 +153,107 @@ namespace GlorifiedBody.Tests.PlayMode
                         failures.Add($"{door.name}: the open leaf shows on the {(side > 0 ? "outer" : "inner")} side");
             }
             Assert.IsEmpty(failures, string.Join("; ", failures));
+        }
+
+        // ── The halon room (2026-11-10: DEMO_PLAN §10.4, CANON round 39; Bruno: "create the halon room now") ──
+
+        [UnityTest]
+        public IEnumerator TheHalonRoom_G17_OffFacilities_TheWallHidesTheCage_TheLogsInTheirRooms()
+        {
+            yield return LoadWorld();
+            GlorifiedBody.Rooms.Room g17 = GlorifiedBody.Rooms.Room.Of("G17"), g17b = GlorifiedBody.Rooms.Room.Of("G17b");
+            Assert.IsNotNull(g17, "G17, the server room");
+            Assert.IsNotNull(g17b, "G17b, the room beside it, with the lockout cabinet");
+            Assert.IsTrue(GlorifiedBody.Rooms.Room.Of("G19").exits.Any(e => e.to == "G17b"), "off the kitchen");
+            Assert.IsTrue(g17b.exits.Any(e => e.to == "G17"));
+
+            HalonSystem halon = UnityEngine.Object.FindAnyObjectByType<HalonSystem>();
+            Assert.AreEqual(HalonSystem.State.Idle, halon.Current);
+            Assert.IsTrue(halon.wall.IsHeavy && !halon.wall.IsProp, "a heavy wall: no lift, and the lock takes it");
+            Assert.AreEqual("ARMED", halon.panel.text);
+            Assert.IsFalse(halon.cage.activeInHierarchy, "the cage hides behind the boxes");
+            Assert.AreEqual(0, halon.door.GetComponentsInChildren<DoorLever>().Length, "no lever: the horn seals it");
+
+            var pickups = UnityEngine.Object.FindObjectsByType<ItemPickup>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            string RoomOfItem(string id) => pickups.FirstOrDefault(p => p.item != null && p.item.itemId == id)?.GetComponentInParent<GlorifiedBody.Rooms.Room>()?.id ?? "none";
+            Assert.AreEqual("G17b", RoomOfItem("l15_facilities_memo"));
+            Assert.AreEqual("G12", RoomOfItem("l16_counsel_note"));
+            Assert.AreEqual("G17", RoomOfItem("l17_health_note"));
+            Assert.AreEqual("G17", RoomOfItem("l18_stock_ledger"));
+            Assert.AreEqual(7, halon.cage.GetComponentsInChildren<ItemPickup>(true).Count(p => p.item != null && p.item.kind != ItemKind.Log), "two of each power, one second wind (the count of L18)");
+        }
+
+        [UnityTest]
+        public IEnumerator TheHalon_LockoutFirst_ThePartCircleOnlyFlashes_TheFullOneBurnsTheBoxes_NoHorn()
+        {
+            (HalonSystem halon, PsychicPowers powers) = default((HalonSystem, PsychicPowers));
+            yield return InG17(r => (halon, powers) = r);
+            StoryFlags.Raise("halon_lockout");
+            powers.FireAt(powers.Selected, 0.5f, halon.wall);
+            yield return null;
+            Assert.AreEqual(HalonSystem.State.Idle, halon.Current, "a part circle only flashes (the rule of mk_erebus)");
+            powers.FireAt(powers.Selected, 1f, halon.wall);
+            yield return null;
+            Assert.AreEqual(HalonSystem.State.Burning, halon.Current, "a full circle lights the boxes");
+            Assert.IsFalse(halon.HornOn, "the lockout: no horn");
+            Assert.AreEqual(FireDoor.State.Open, halon.door.Current, "the door stays open");
+            Assert.IsTrue(halon.flames.activeInHierarchy, "the fire");
+            yield return WaitUntil(() => halon.Current == HalonSystem.State.Burned, HalonSystem.BurnSeconds + 3f);
+            Assert.IsFalse(halon.boxes.activeInHierarchy, "the boxes are gone");
+            Assert.IsTrue(halon.cage.activeInHierarchy, "the cage shows");
+            Assert.IsTrue(StoryFlags.Has("demo_g17_burned"));
+        }
+
+        [UnityTest]
+        public IEnumerator TheHalon_TheHornSealsTheDoor_AndAbortOpensIt()
+        {
+            (HalonSystem halon, PsychicPowers powers) = default((HalonSystem, PsychicPowers));
+            yield return InG17(r => (halon, powers) = r);
+            powers.FireAt(powers.Selected, 1f, halon.wall);
+            yield return new WaitForSeconds(1f);
+            Assert.AreEqual(HalonSystem.State.Horn, halon.Current);
+            Assert.IsTrue(halon.HornOn, "the horn");
+            Assert.AreEqual(FireDoor.State.Jammed, halon.door.Current, "the door seals");
+            Assert.Greater(halon.SecondsLeft, 27f, "30 s");
+            StringAssert.StartsWith("DISCHARGE IN", halon.panel.text);
+            HalonAbort abort = UnityEngine.Object.FindAnyObjectByType<HalonAbort>();
+            Assert.AreEqual("halon_abort", abort.Confirm(GameObject.FindGameObjectWithTag("Player").GetComponent<Interactor>()));
+            Assert.IsFalse(halon.HornOn, "ABORT stops it");
+            Assert.AreEqual(FireDoor.State.Open, halon.door.Current, "the door opens");
+            yield return WaitUntil(() => halon.Current == HalonSystem.State.Burned, HalonSystem.BurnSeconds + 3f);
+            Assert.IsTrue(halon.cage.activeInHierarchy, "the boxes burn, the cage shows");
+        }
+
+        [UnityTest]
+        public IEnumerator TheHalon_NoAbort_TheHalonComes_AndSheGoesUnder()
+        {
+            (HalonSystem halon, PsychicPowers powers) = default((HalonSystem, PsychicPowers));
+            yield return InG17(r => (halon, powers) = r);
+            Health health = powers.GetComponent<Health>();
+            health.SetInvulnerable(false);
+            health.SetRuntimeInvulnerable(false);
+            powers.FireAt(powers.Selected, 1f, halon.wall);
+            yield return WaitUntil(() => halon.Current == HalonSystem.State.Discharged, HalonSystem.DischargeSeconds + 3f);
+            Assert.AreEqual(HalonSystem.State.Discharged, halon.Current, "30 s, then the halon");
+            Assert.IsFalse(halon.flames.activeInHierarchy, "the fire is out");
+            yield return WaitUntil(() => health.IsDead, HalonSystem.PassOutSeconds + 3f);
+            Assert.IsTrue(health.IsDead, "she passes out: game over (an exception to rule 2)");
+            Assert.AreEqual(HalonSystem.KillerId, GlorifiedBody.UI.DeathMenuUI.LastKillerId, "the death screen of the halon");
+        }
+
+        /// <summary>The demo after the wake, she in G17 facing the box wall, mk_erebus selected and full.</summary>
+        private static IEnumerator InG17(Action<(HalonSystem, PsychicPowers)> found)
+        {
+            yield return Coda("G17");
+            GameObject lucy = GameObject.FindGameObjectWithTag("Player");
+            HalonSystem halon = UnityEngine.Object.FindAnyObjectByType<HalonSystem>();
+            Vector3 wall = halon.wall.transform.position;
+            lucy.GetComponent<TankController>().Teleport(new Vector3(wall.x, GlorifiedBody.Rooms.Room.Of("G17").BaseY, wall.z + 3f), 180f);
+            yield return WaitUntil(() => GlorifiedBody.Rooms.RoomTracker.CurrentId == "G17", 3f);
+            PsychicPowers powers = lucy.GetComponent<PsychicPowers>();
+            powers.Select(PowerKind.Fire);
+            lucy.GetComponent<PsychicStats>().FillMk(PowerKind.Fire);
+            found((halon, powers));
         }
 
         // ── The Dining Hall (2026-11-10: beat 23b, CANON round 60; the second fireteam, round 62) ──

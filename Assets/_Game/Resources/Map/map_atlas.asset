@@ -1078,7 +1078,11 @@ MonoBehaviour:
     - path: G12/G5
       position: {x: 39.5, y: -47}
       targetScene: G5
-    marks: []
+    marks:
+    - kind: 2
+      path: '[World]/[G12]/[Props]/L16_Counsel_Note'
+      position: {x: 42.8, y: -49.8}
+      label: A NOTE FROM COUNSEL
   - scene: G13
     world: Demo
     floor: demo_1
@@ -1324,6 +1328,9 @@ MonoBehaviour:
     - path: G19/G9b
       position: {x: 50.5, y: -41.8}
       targetScene: G9b
+    - path: G19/G17b
+      position: {x: 55.5, y: -43}
+      targetScene: G17b
     marks:
     - kind: 2
       path: '[World]/[G19]/[Props]/L33_Chef_Note'
@@ -1337,6 +1344,81 @@ MonoBehaviour:
       path: '[World]/[G19]/[Props]/L34_Key_Log'
       position: {x: 53.05, y: -42.8}
       label: THE KEY LOG
+  - scene: G17b
+    world: Demo
+    floor: demo_1
+    title: FACILITIES
+    offset: {x: 0, y: 0}
+    areas:
+    - serializedVersion: 2
+      x: 50.5
+      y: -47
+      width: 6
+      height: 4
+    exits:
+    - path: G17b/G19
+      position: {x: 55.5, y: -43}
+      targetScene: G19
+    - path: G17b/G17
+      position: {x: 53.5, y: -47}
+      targetScene: G17
+    marks:
+    - kind: 2
+      path: '[World]/[G17b]/[Props]/L15_Facilities_Memo'
+      position: {x: 51.9, y: -44}
+      label: A FACILITIES MEMO
+  - scene: G17
+    world: Demo
+    floor: demo_1
+    title: SERVER ROOM
+    offset: {x: 0, y: 0}
+    areas:
+    - serializedVersion: 2
+      x: 50.5
+      y: -55
+      width: 8
+      height: 8
+    exits:
+    - path: G17/G17b
+      position: {x: 53.5, y: -47}
+      targetScene: G17b
+    marks:
+    - kind: 2
+      path: '[World]/[G17]/[Props]/L17_Health_Note'
+      position: {x: 55.7, y: -47.16}
+      label: AN OCCUPATIONAL HEALTH NOTE
+    - kind: 1
+      path: '[World]/[G17]/[Props]/Cage_Contents/Cage_Warspite_A'
+      position: {x: 53.3, y: -54.35}
+      label: WARSPITE CAPSULE
+    - kind: 1
+      path: '[World]/[G17]/[Props]/Cage_Contents/Cage_Warspite_B'
+      position: {x: 53.55, y: -54.35}
+      label: WARSPITE CAPSULE
+    - kind: 1
+      path: '[World]/[G17]/[Props]/Cage_Contents/Cage_Erebus_A'
+      position: {x: 53.95, y: -54.35}
+      label: EREBUS CAPSULE
+    - kind: 1
+      path: '[World]/[G17]/[Props]/Cage_Contents/Cage_Erebus_B'
+      position: {x: 54.2, y: -54.35}
+      label: EREBUS CAPSULE
+    - kind: 1
+      path: '[World]/[G17]/[Props]/Cage_Contents/Cage_Orzabal_A'
+      position: {x: 54.6, y: -54.35}
+      label: ORZABAL CAPSULE
+    - kind: 1
+      path: '[World]/[G17]/[Props]/Cage_Contents/Cage_Orzabal_B'
+      position: {x: 54.85, y: -54.35}
+      label: ORZABAL CAPSULE
+    - kind: 1
+      path: '[World]/[G17]/[Props]/Cage_Contents/Cage_Second_Wind'
+      position: {x: 55.3, y: -54.35}
+      label: SECOND WIND PILL
+    - kind: 2
+      path: '[World]/[G17]/[Props]/Cage_Contents/L18_Stock_Ledger'
+      position: {x: 54.5, y: -53.9}
+      label: THE STOCK LEDGER
   - scene: S1
     world: Demo
     floor: demo_2

@@ -31,7 +31,7 @@ namespace GlorifiedBody.Editor.Demo
         public bool Jammed;      // a fire door shut at the start
         public string LeverFlag = ""; // her levers do nothing until this flag goes up
         public string JamFlag = "";   // a fire door shuts and jams when this flag goes up (code silver)
-        public string LeverRoom = ""; // a fire door with one lever: on the face of this room. Empty: both faces
+        public string LeverRoom = ""; // a fire door with one lever: on the face of this room. Empty: both faces. "none": no lever
         public bool Unbreakable;      // a fire door no kick breaks (the service exit of G19: a push bar on one side)
         public Door(char side, float at, string to, float width = 1.6f, string flag = "", bool fire = false, float height = DemoRoom.DoorHeight, int pocket = 1, bool jammed = false, string leverFlag = "", string jamFlag = "", string leverRoom = "", bool unbreakable = false) { Side = side; At = at; To = to; Width = width; Flag = flag; Fire = fire; Height = height; Pocket = pocket; Jammed = jammed; LeverFlag = leverFlag; JamFlag = jamFlag; LeverRoom = leverRoom; Unbreakable = unbreakable; }
     }
@@ -256,7 +256,7 @@ namespace GlorifiedBody.Editor.Demo
                     GlorifiedBody.Editor.Destruction.BreakableAssets.Door(Props, "FireDoor_" + Spec.Id + "_" + d.To, at, Outward(d.Side), d.Width, d.Height, Wall, d.Pocket,
                         Grey(0.34f), Grey(0.5f), Colour("fire_band", new Color(0.55f, 0.12f, 0.1f)), Grey(0.12f), Colour("fire_lever", new Color(0.85f, 0.15f, 0.1f)),
                         Colour("jam_bar", new Color(0.8f, 0.66f, 0.18f)), d.Jammed, d.LeverFlag, d.JamFlag,
-                        string.IsNullOrEmpty(d.LeverRoom) ? 0 : d.LeverRoom == Spec.Id ? -1 : 1, // -1: the face inside this room
+                        string.IsNullOrEmpty(d.LeverRoom) ? 0 : d.LeverRoom == "none" ? 2 : d.LeverRoom == Spec.Id ? -1 : 1, // -1: the face inside this room, 2: no lever
                         canBreak: !d.Unbreakable);
                 return;
             }
