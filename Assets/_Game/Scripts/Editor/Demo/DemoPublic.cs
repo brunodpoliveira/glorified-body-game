@@ -73,7 +73,7 @@ namespace GlorifiedBody.Editor.Demo
             for (int i = 0; i < 6; i++)
             {
                 float x = 9f + i * 4.5f;
-                r.Prop($"Planter_{i}", new Vector3(x, 0f, 3f + (i % 2 == 0 ? 0.8f : -0.8f)), new Vector3(1.2f, 0.95f, 1.2f), 0.2f);
+                r.Planter($"Planter_{i}", new Vector3(x, 0f, 3f + (i % 2 == 0 ? 0.8f : -0.8f)), new Vector3(1.2f, 0.95f, 1.2f)); // she moves them (§10.5)
                 r.Prop($"Column_{i}", new Vector3(x + 2.2f, 0f, 5.4f), new Vector3(0.5f, 6f, 0.5f), 0.6f);
             }
             r.Figure("Soldier_Pair1_A", "soldier_rifle", new Vector3(24f, 0f, 2f), 270f);

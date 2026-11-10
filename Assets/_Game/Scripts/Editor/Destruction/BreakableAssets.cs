@@ -423,7 +423,7 @@ namespace GlorifiedBody.Editor.Destruction
         /// start. The levers stand on the other side of the doorway, on both wall faces. The leaf is on Default: shut, it
         /// stops her, the enemies, the bullets and the sight.
         /// </summary>
-        public static FireDoor Door(GameObject parent, string id, Vector3 mouth, Vector3 outward, float width, float height, float wall, int pocket, Material face, Material inside, Material trim, Material plate, Material handleColour, Material barColour, bool startsJammed = false, string leverFlag = "")
+        public static FireDoor Door(GameObject parent, string id, Vector3 mouth, Vector3 outward, float width, float height, float wall, int pocket, Material face, Material inside, Material trim, Material plate, Material handleColour, Material barColour, bool startsJammed = false, string leverFlag = "", string jamFlag = "", int leverSide = 0)
         {
             outward.y = 0f;
             outward.Normalize();
@@ -455,6 +455,7 @@ namespace GlorifiedBody.Editor.Destruction
             door.openOffset = across * (width + 0.05f);
             door.startsJammed = startsJammed;
             door.leverFlag = leverFlag;
+            door.jamFlag = jamFlag;
             // The bars: one across each face of the jammed door, on two brackets in the wall (shown only while jammed).
             var bars = new List<GameObject>();
             foreach (float side in new[] { -1f, 1f })
@@ -472,9 +473,11 @@ namespace GlorifiedBody.Editor.Destruction
             }
             door.bars = bars.ToArray();
             EditorUtility.SetDirty(door);
-            // The levers: beside the doorway away from the pocket, on both wall faces, at hand height.
+            // The levers: beside the doorway away from the pocket, on both wall faces, at hand height. leverSide +1 or -1: on that
+            // face only (the W5 to W9 door opens from the W9 side: the route switch).
             foreach (float side in new[] { -1f, 1f })
             {
+                if (leverSide != 0 && side != leverSide) continue;
                 Vector3 at = mouth - across * (width * 0.5f + 0.35f) + outward * side * (wall * 0.5f + 0.02f) + Vector3.up * 1.2f;
                 GameObject lever = Child(root.transform, side > 0 ? "Lever_Out" : "Lever_In");
                 lever.transform.SetPositionAndRotation(at, Quaternion.LookRotation(outward * side));

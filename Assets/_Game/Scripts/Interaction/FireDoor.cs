@@ -39,6 +39,8 @@ namespace GlorifiedBody.Interaction
         public bool startsJammed;
         [Tooltip("Her levers do nothing until this story flag goes up (a script opens the door first). Empty: always.")]
         public string leverFlag = "";
+        [Tooltip("The door shuts and jams when this story flag goes up (the W5 to W9 door at code silver: DEMO_PLAN §10.5, the route switch). Empty: never.")]
+        public string jamFlag = "";
         [Tooltip("The bars across the doorway, one on each face: shown while the door is jammed (Bruno: \"a horizontal bar to indicate that she is jamming the door\").")]
         public GameObject[] bars = new GameObject[0];
 
@@ -103,9 +105,30 @@ namespace GlorifiedBody.Interaction
         private void OnEnable()
         {
             if (!all.Contains(this)) all.Add(this);
+            GlorifiedBody.Saving.StoryFlags.OnChanged += OnFlag;
         }
 
-        private void OnDisable() => all.Remove(this);
+        private void OnDisable()
+        {
+            all.Remove(this);
+            GlorifiedBody.Saving.StoryFlags.OnChanged -= OnFlag;
+        }
+
+        /// <summary>
+        /// Its flag shuts it. A load sets every flag at once (the event carries no name): the saved state of the door decides
+        /// then, so a door she opened stays open.
+        /// </summary>
+        private void OnFlag(string flag)
+        {
+            if (string.IsNullOrEmpty(jamFlag) || flag != jamFlag || !GlorifiedBody.Saving.StoryFlags.Has(jamFlag)) return;
+            if (Current == State.Open && !Jam("flag:" + jamFlag) && isActiveAndEnabled) StartCoroutine(JamWhenClear());
+        }
+
+        /// <summary>A body in the doorway when the flag went up: the door shuts as soon as the way is clear.</summary>
+        private IEnumerator JamWhenClear()
+        {
+            while (Current == State.Open && !Jam("flag:" + jamFlag)) yield return new WaitForSeconds(0.25f);
+        }
 
         /// <summary>A body, hers or another's, in the leaf's path.</summary>
         public bool Blocked()

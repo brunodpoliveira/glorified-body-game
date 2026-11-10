@@ -74,6 +74,19 @@ namespace GlorifiedBody.Saving
         public List<FloorItemState> floorItems = new List<FloorItemState>();
         /// <summary>The holes the floor shield tore (2026-10-31).</summary>
         public List<ScarState> scars = new List<ScarState>();
+        /// <summary>The props she moves (MovableProp: the planters, the crates), where they stand (2026-11-10). A prop not here broke.</summary>
+        public List<PropState> props = new List<PropState>();
+        /// <summary>The save holds the props (an older file does not: they stay where the room put them).</summary>
+        public bool propsSaved;
+    }
+
+    /// <summary>A prop she moves: its path in the scene and its pose.</summary>
+    [Serializable]
+    public sealed class PropState
+    {
+        public string path = "";
+        public Vector3 position;
+        public Quaternion rotation = Quaternion.identity;
     }
 
     /// <summary>An item on the floor that the room did not have: its id and its place.</summary>

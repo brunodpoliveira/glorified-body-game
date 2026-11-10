@@ -457,6 +457,9 @@ MonoBehaviour:
     - path: W5/W7
       position: {x: 3, y: 1.5}
       targetScene: W7
+    - path: W5/W9
+      position: {x: 3, y: -6}
+      targetScene: W9
     marks: []
   - scene: W6
     world: Demo
@@ -539,6 +542,9 @@ MonoBehaviour:
     - path: W9/W8
       position: {x: 14, y: -2}
       targetScene: W8
+    - path: W9/W5
+      position: {x: 3, y: -6}
+      targetScene: W5
     - path: W9/W10
       position: {x: 17, y: -7}
       targetScene: W10

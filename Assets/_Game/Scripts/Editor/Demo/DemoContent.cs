@@ -155,7 +155,7 @@ namespace GlorifiedBody.Editor.Demo
 
         public static ItemDefinition L2() => Log("l2_patient_chart", "THE PATIENT'S CHART", "CANDIDATE 0417. STAGE: PRE-TRANSLATION. FAMILY INFORMED. DO NOT DISCUSS OUTCOME WITH CANDIDATE.");
         public static ItemDefinition L3() => Log("l3_code_silver_card", "A LAMINATED CARD", "CODE SILVER. Non-security personnel: shelter in place. Security: respond. Patients in this facility can be confused and dangerous. Do not discuss patients outside the facility.");
-        public static ItemDefinition L4() => Log("l4_whiteboard", "THE WHITEBOARD", "V3 SHOWCASE. RETIRE AFTER V4 TRANSFER. SCHEDULED.\n\nDE HOMEN-CRISTO, LUCIA. NEXT OF KIN: DE HOMEN-CRISTO, H. (MOTHER. CONSENT ON FILE.)\n\nFOURTH FACULTY: NOT FOR SHOWCASE.");
+        public static ItemDefinition L4() => Log("l4_whiteboard", "THE WHITEBOARD", "V3 SHOWCASE. RETIRE AFTER V4 TRANSFER. SCHEDULED.\n\nDE HOMEM-CRISTO, LUCIA. NEXT OF KIN: DE HOMEM-CRISTO, H. (MOTHER. CONSENT ON FILE.)\n\nFOURTH FACULTY: NOT FOR SHOWCASE.");
         public static ItemDefinition L5() => Log("l5_security_logbook", "THE SECURITY LOGBOOK", "01:52 SECTOR C CAMERAS OFF FOR MAINTENANCE. AUTH: STEVENS.");
         public static ItemDefinition L7() => Log("l7_session_note", "A SESSION NOTE", "SESSION 4,211. V3 HELD THE CUP FOR NINE SECONDS WITHOUT HELP. THE WHOLE TEAM CRIED. SHE SMILED, WE THINK. THIS IS WHY WE DO IT.");
         public static ItemDefinition L8() => Log("l8_prayer_card", "A PRAYER CARD", "Tonight we pray for the candidates in surgery, for the children of the programme, and for all who give the body so that humanity endures.");

@@ -239,6 +239,9 @@ namespace GlorifiedBody.Saving
             }
             foreach (GlorifiedBody.Combat.FloorScar scar in UnityEngine.Object.FindObjectsByType<GlorifiedBody.Combat.FloorScar>(FindObjectsSortMode.None))
                 if (scar.gameObject.scene == scene) room.scars.Add(new ScarState { position = scar.transform.position, rotation = scar.transform.rotation });
+            foreach (MovableProp prop in UnityEngine.Object.FindObjectsByType<MovableProp>(FindObjectsSortMode.None))
+                if (prop.gameObject.scene == scene) room.props.Add(new PropState { path = ScenePaths.Of(prop.transform), position = prop.transform.position, rotation = prop.transform.rotation });
+            room.propsSaved = true;
             return room;
         }
 
@@ -301,6 +304,15 @@ namespace GlorifiedBody.Saving
                 if (def != null) FloorItem.Place(def, f.position, f.yaw);
             }
             foreach (ScarState scar in room.scars) GlorifiedBody.Combat.FloorShield.ScarAt(scar.position, scar.rotation);
+            if (room.propsSaved)
+                foreach (MovableProp prop in UnityEngine.Object.FindObjectsByType<MovableProp>(FindObjectsSortMode.None))
+                {
+                    if (prop.gameObject.scene != scene) continue;
+                    string path = ScenePaths.Of(prop.transform);
+                    PropState saved = room.props.Find(p => p.path == path);
+                    if (saved != null) prop.Place(saved.position, saved.rotation);
+                    else UnityEngine.Object.Destroy(prop.gameObject); // it broke
+                }
             HashSet<string> bodies = RoomGore.Restore(scene, room);
             foreach (string path in room.dead)
             {

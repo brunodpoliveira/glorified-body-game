@@ -142,8 +142,8 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.That(stats.Short - before, Is.InRange(9f, 10.01f), "the SHORT bar rises a tenth (PROPOSED)");
             Assert.AreEqual(played + 1, CutscenePlayer.Played);
             Assert.AreEqual(InteractKind.Message, head.KindFor(hands), "the second press shows the card only");
-            Assert.AreEqual("DE HOMEN-CRISTO", head.TextFor(hands));
-            Assert.AreEqual("card:DE HOMEN-CRISTO", head.Confirm(hands));
+            Assert.AreEqual("DE HOMEM-CRISTO", head.TextFor(hands));
+            Assert.AreEqual("card:DE HOMEM-CRISTO", head.Confirm(hands));
             Assert.AreEqual(played + 1, CutscenePlayer.Played, "no second flashback");
             NameCard colton = g12.transform.Find("[Props]/Card_Colton").GetComponent<NameCard>();
             Assert.AreEqual(InteractKind.Message, colton.KindFor(hands));

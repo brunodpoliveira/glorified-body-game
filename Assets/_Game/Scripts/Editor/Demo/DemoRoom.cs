@@ -7,6 +7,7 @@ using UnityEngine;
 using GlorifiedBody.Automation;
 using GlorifiedBody.Cameras;
 using GlorifiedBody.Characters;
+using GlorifiedBody.Combat;
 using GlorifiedBody.Destruction;
 using GlorifiedBody.Enemy;
 using GlorifiedBody.Interaction;
@@ -29,7 +30,9 @@ namespace GlorifiedBody.Editor.Demo
         public int Pocket = 1;   // a fire door's pocket: +1 or -1 along the wall (the room that lists the doorway first builds it)
         public bool Jammed;      // a fire door shut at the start
         public string LeverFlag = ""; // her levers do nothing until this flag goes up
-        public Door(char side, float at, string to, float width = 1.6f, string flag = "", bool fire = false, float height = DemoRoom.DoorHeight, int pocket = 1, bool jammed = false, string leverFlag = "") { Side = side; At = at; To = to; Width = width; Flag = flag; Fire = fire; Height = height; Pocket = pocket; Jammed = jammed; LeverFlag = leverFlag; }
+        public string JamFlag = "";   // a fire door shuts and jams when this flag goes up (code silver)
+        public string LeverRoom = ""; // a fire door with one lever: on the face of this room. Empty: both faces
+        public Door(char side, float at, string to, float width = 1.6f, string flag = "", bool fire = false, float height = DemoRoom.DoorHeight, int pocket = 1, bool jammed = false, string leverFlag = "", string jamFlag = "", string leverRoom = "") { Side = side; At = at; To = to; Width = width; Flag = flag; Fire = fire; Height = height; Pocket = pocket; Jammed = jammed; LeverFlag = leverFlag; JamFlag = jamFlag; LeverRoom = leverRoom; }
     }
 
     /// <summary>One room of the demo: its id, its title, its floor, its place on the floor plan, its doors, its dressing.</summary>
@@ -251,7 +254,8 @@ namespace GlorifiedBody.Editor.Demo
                 if (ledger.Once($"door|{Spec.Floor}|{at.x:0.0}|{at.z:0.0}"))
                     GlorifiedBody.Editor.Destruction.BreakableAssets.Door(Props, "FireDoor_" + Spec.Id + "_" + d.To, at, Outward(d.Side), d.Width, d.Height, Wall, d.Pocket,
                         Grey(0.34f), Grey(0.5f), Colour("fire_band", new Color(0.55f, 0.12f, 0.1f)), Grey(0.12f), Colour("fire_lever", new Color(0.85f, 0.15f, 0.1f)),
-                        Colour("jam_bar", new Color(0.8f, 0.66f, 0.18f)), d.Jammed, d.LeverFlag);
+                        Colour("jam_bar", new Color(0.8f, 0.66f, 0.18f)), d.Jammed, d.LeverFlag, d.JamFlag,
+                        string.IsNullOrEmpty(d.LeverRoom) ? 0 : d.LeverRoom == Spec.Id ? -1 : 1); // -1: the face inside this room
                 return;
             }
             if (!string.IsNullOrEmpty(d.To) || string.IsNullOrEmpty(d.Flag)) return;
@@ -444,6 +448,40 @@ namespace GlorifiedBody.Editor.Demo
             GameObject obj = BreakableType(name, out Breakable.Kind kind, out float health)
                 ? GlorifiedBody.Editor.Destruction.BreakableAssets.PropBox(Props, name, Spec.Id + "_" + name, floorPoint, size, kind, health, Grey(shade), Grey(Mathf.Min(1f, shade + 0.25f))).gameObject
                 : Box(Props, name, floorPoint + Vector3.up * size.y * 0.5f, size, Grey(shade));
+            Examine(obj, name, size);
+            return obj;
+        }
+
+        /// <summary>
+        /// A planter that mk_orzabal moves (DEMO_PLAN §10.5, CANON round 43): a lane, or a wall against the pinch, or a stop in a
+        /// doorway against guards (DoorStop). A prop with a Rigidbody: the mouse carry lifts it, the NavMesh goes around it where it
+        /// rests, the save keeps its place (MovableProp). Not breakable: a thrown one stays whole.
+        /// </summary>
+        public GameObject Planter(string name, Vector3 floorPoint, Vector3 size, float mass = 60f)
+        {
+            GameObject obj = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            obj.name = name;
+            obj.transform.SetParent(Props.transform, false);
+            obj.transform.position = floorPoint + Vector3.up * size.y * 0.5f;
+            obj.transform.localScale = size;
+            obj.GetComponent<Renderer>().sharedMaterial = Colour("planter", new Color(0.36f, 0.33f, 0.3f));
+            LockOnTargetable target = MenuLoopSetup.EnsureComponent<LockOnTargetable>(obj);
+            var so = new SerializedObject(target);
+            so.FindProperty("fallbackHeight").floatValue = 0f; // the lock point is the centre
+            so.FindProperty("isProp").boolValue = true;
+            so.FindProperty("heavy").boolValue = false;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            Rigidbody body = MenuLoopSetup.EnsureComponent<Rigidbody>(obj);
+            body.mass = mass;
+            body.interpolation = RigidbodyInterpolation.Interpolate;
+            body.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
+            UnityEngine.AI.NavMeshObstacle obstacle = MenuLoopSetup.EnsureComponent<UnityEngine.AI.NavMeshObstacle>(obj);
+            obstacle.shape = UnityEngine.AI.NavMeshObstacleShape.Box;
+            obstacle.size = Vector3.one;
+            obstacle.carving = true;
+            obstacle.carveOnlyStationary = true;
+            MenuLoopSetup.EnsureComponent<MovableProp>(obj);
+            MenuLoopSetup.EnsureComponent<DoorStop>(obj);
             Examine(obj, name, size);
             return obj;
         }

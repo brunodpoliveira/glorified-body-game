@@ -103,6 +103,7 @@ namespace GlorifiedBody.Editor.Demo
                 GameObject crate = PropAssets.Box(name, at, CrateEdge, 30f);
                 crate.GetComponent<Renderer>().sharedMaterial = DemoRoom.Grey(0.62f);
                 crate.transform.SetParent(r.Props.transform, true);
+                MenuLoopSetup.EnsureComponent<GlorifiedBody.Interaction.MovableProp>(crate); // the save keeps its place
             }
             r.Capsule("Capsule_G16_A", DrugType.Nalcon, new Vector3(23f, 0.15f, 7.2f));
             r.Capsule("Capsule_G16_B", DrugType.NalconFire, new Vector3(23f, 0.15f, 10.8f));
@@ -273,7 +274,7 @@ namespace GlorifiedBody.Editor.Demo
 
         /// <summary>
         /// G12: the conference room (cutscene 07b, beat 22b, first pass, 0 art). The meeting ended an hour ago: the long
-        /// table, nine chairs pushed back, the name cards (COLTON, CHURCH, two face down, the head: DE HOMEN-CRISTO), the
+        /// table, nine chairs pushed back, the name cards (COLTON, CHURCH, two face down, the head: DE HOMEM-CRISTO), the
         /// last slide on the screen, the projector, a full cup beside the head card. The Interact key on the head card
         /// plays the flashback once and raises the flag; the other cards read their name.
         /// </summary>
@@ -293,7 +294,7 @@ namespace GlorifiedBody.Editor.Demo
             Card(r, "Card_Church", "CHURCH", new Vector3(31.4f, 0.75f, -18.5f));
             Card(r, "Card_Down_A", "", new Vector3(32.8f, 0.75f, -18.5f));
             Card(r, "Card_Down_B", "", new Vector3(31.4f, 0.75f, -19.5f));
-            NameCard head = Card(r, "Card_Head", "DE HOMEN-CRISTO", new Vector3(35.65f, 0.75f, -19f));
+            NameCard head = Card(r, "Card_Head", "DE HOMEM-CRISTO", new Vector3(35.65f, 0.75f, -19f));
             head.flashback = Flashback();
             head.flag = CardFlag;
             head.shortGain = ShortGain;

@@ -127,7 +127,7 @@ namespace GlorifiedBody.Tests.PlayMode
             // Bruno, 2026-11-03: fire doors "in selected chokepoints"; his pick: W2 to W5, W5 to W7, G2 to G5.
             yield return LoadWorld();
             var names = GlorifiedBody.Interaction.FireDoor.All.Select(d => d.name).OrderBy(n => n).ToArray();
-            CollectionAssert.AreEqual(new[] { "FireDoor_G2_G5", "FireDoor_W1B_W2", "FireDoor_W2_W5", "FireDoor_W5_W7" }, names, "the fire doors");
+            CollectionAssert.AreEqual(new[] { "FireDoor_G2_G5", "FireDoor_W1B_W2", "FireDoor_W2_W5", "FireDoor_W5_W7", "FireDoor_W5_W9" }, names, "the fire doors (W5 to W9: the route switch, §10.5)");
             var failures = new List<string>();
             int solid = LayerMask.GetMask("Default");
             foreach (GlorifiedBody.Interaction.FireDoor door in GlorifiedBody.Interaction.FireDoor.All)
@@ -144,7 +144,8 @@ namespace GlorifiedBody.Tests.PlayMode
                     else rooms.Add(room.id);
                     if (Physics.Linecast(front, lever.transform.position + lever.transform.forward * 0.05f, solid, QueryTriggerInteraction.Ignore)) failures.Add($"{door.name}/{lever.name}: buried");
                 }
-                if (rooms.Count != 2) failures.Add($"{door.name}: its levers in {rooms.Count} rooms ({string.Join(",", rooms)})");
+                int sides = door.name == "FireDoor_W5_W9" ? 1 : 2; // the route switch: one lever, on the W9 side
+                if (rooms.Count != sides) failures.Add($"{door.name}: its levers in {rooms.Count} rooms ({string.Join(",", rooms)})");
                 // The open leaf lies in its wall pocket: a line to it from each side meets the wall.
                 Vector3 leafCentre = door.leaf.position + Vector3.up * 1.1f;
                 foreach (float side in new[] { -1f, 1f })
@@ -152,6 +153,29 @@ namespace GlorifiedBody.Tests.PlayMode
                         failures.Add($"{door.name}: the open leaf shows on the {(side > 0 ? "outer" : "inner")} side");
             }
             Assert.IsEmpty(failures, string.Join("; ", failures));
+        }
+
+        [UnityTest]
+        public IEnumerator TheRouteSwitch_CodeSilverShutsTheW5ToW9Door_ItsLeverInW9OpensIt_ALoadKeepsItOpen()
+        {
+            // DEMO_PLAN §10.5, row 3 (CANON, round 43): "The W5 to W9 fire door opens from the W9 side: the ward becomes a ring".
+            yield return LoadWorld();
+            var door = GlorifiedBody.Interaction.FireDoor.All.First(d => d.name == "FireDoor_W5_W9");
+            Assert.AreEqual(GlorifiedBody.Interaction.FireDoor.State.Open, door.Current, "open before code silver");
+            var levers = door.GetComponentsInChildren<GlorifiedBody.Interaction.DoorLever>();
+            Assert.AreEqual(1, levers.Length, "one lever");
+            Vector3 front = levers[0].transform.position + levers[0].transform.forward * 0.3f;
+            Assert.AreEqual("W9", GlorifiedBody.Rooms.Room.At(new Vector3(front.x, 0.1f, front.z))?.id, "on the W9 side");
+
+            StoryFlags.Raise(DemoFlags.CodeSilver);
+            yield return null;
+            Assert.AreEqual(GlorifiedBody.Interaction.FireDoor.State.Jammed, door.Current, "code silver shuts it");
+            Interactor hands = GameObject.FindGameObjectWithTag("Player").GetComponent<Interactor>();
+            Assert.AreEqual("opened:FireDoor_W5_W9", levers[0].Confirm(hands), "her lever in W9 opens it");
+            Assert.AreEqual(GlorifiedBody.Interaction.FireDoor.State.Open, door.Current);
+            StoryFlags.Set(StoryFlags.All.ToList()); // a load sets every flag again
+            yield return null;
+            Assert.AreEqual(GlorifiedBody.Interaction.FireDoor.State.Open, door.Current, "a load does not shut it again");
         }
 
         [UnityTest]
@@ -868,7 +892,7 @@ namespace GlorifiedBody.Tests.PlayMode
             var perRoom = spots.GroupBy(c => GlorifiedBody.Rooms.Room.At(c.Position + Vector3.up * 0.1f)?.id ?? "?").OrderBy(g => g.Key).Select(g => $"{g.Key}={g.Count()}");
             Debug.Log($"[DemoTests] cover: {spots.Count} spots in {CoverMap.BuildMilliseconds:0} ms: low {spots.Count(c => c.Low)}, corners {spots.Count(c => !c.Low)}, on a breakable {spots.Count(c => c.Piece != null)}; {string.Join(" ", perRoom)}");
             Assert.Less(CoverMap.BuildMilliseconds, 1500f, "the scan costs little at the first fight");
-            Assert.IsTrue(spots.Any(c => c.Low && c.Piece != null && c.Piece.name.StartsWith("Planter_")), "low cover that breaks: a planter");
+            Assert.IsTrue(spots.Any(c => c.Low && c.Piece != null), "low cover that breaks (a desk, a cabinet)");
             Assert.IsTrue(spots.Any(c => c.Low && c.Piece == null), "low cover that does not break: a counter");
             GlorifiedBody.Rooms.Room g2 = GlorifiedBody.Rooms.Room.Of("G2");
             Assert.IsTrue(spots.Any(c => !c.Low && g2.Contains(c.Position + Vector3.up * 0.1f)), "a corner in G2: its columns");
@@ -888,7 +912,8 @@ namespace GlorifiedBody.Tests.PlayMode
             yield return new WaitForSeconds(0.5f);
             Destruction.Breakable[] all = UnityEngine.Object.FindObjectsByType<Destruction.Breakable>(FindObjectsSortMode.None);
             Destruction.Breakable Named(string n) => all.FirstOrDefault(b => b.name == n);
-            Assert.IsTrue(Named("Planter_0").IsCover, "a planter is cover that breaks");
+            Assert.IsNull(Named("Planter_0"), "a planter does not break: she moves it (§10.5)");
+            Assert.IsNotNull(GameObject.Find("Planter_0").GetComponent<GlorifiedBody.Interaction.MovableProp>(), "a planter she moves");
             Assert.IsNotNull(Named("Desk_A"), "a desk breaks");
             Assert.IsNull(all.FirstOrDefault(b => b.name == "Counter"), "a counter does not");
             Destruction.Breakable bin = all.FirstOrDefault(b => b.name.StartsWith("Box_"));
@@ -1612,6 +1637,7 @@ namespace GlorifiedBody.Tests.PlayMode
         private static class DemoFlags
         {
             public const string Released = "sector_c_released";
+            public const string CodeSilver = "code_silver"; // DemoWard.CodeSilver
             public const string CodesRotated = "demo_codes_rotated", CardEnrolled = "demo_card_enrolled"; // DemoWard
         }
 

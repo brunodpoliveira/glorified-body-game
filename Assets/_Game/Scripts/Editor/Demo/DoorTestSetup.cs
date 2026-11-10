@@ -105,7 +105,12 @@ namespace GlorifiedBody.Editor.Demo
             r.Sign("Sign_East", "POWER ARMOUR: TWO BLOWS", new Vector3(9.84f, 2.55f, 6.4f), Vector3.left, new Vector2(2.4f, 0.35f), 40);
             r.Sign("Sign_West", "GUARD AND SCIENTIST: THEY BANG", new Vector3(0.16f, 2.55f, 6.4f), Vector3.right, new Vector2(2.6f, 0.35f), 40);
             r.Sign("Sign_South", "CARD DOOR: NOTHING BREAKS IT", new Vector3(7.6f, 2.55f, 0.16f), Vector3.forward, new Vector2(2.6f, 0.35f), 40);
+            // Two planters (DEMO_PLAN §10.5): one in a doorway holds it against guards, not soldiers (DoorStop).
+            r.Planter("Planter_A", new Vector3(1.6f, 0f, 1.4f), PlanterSize);
+            r.Planter("Planter_B", new Vector3(8.4f, 0f, 1.4f), PlanterSize);
         }
+
+        public static readonly Vector3 PlanterSize = new Vector3(1.2f, 0.95f, 1.2f);
 
         private static void DressBarracks(DemoRoom r)
         {

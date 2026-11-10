@@ -263,6 +263,89 @@ namespace GlorifiedBody.Tests.PlayMode
             yield return null;
         }
 
+        // ── The planters (DEMO_PLAN §10.5: "A planter against a door holds it against guards, not soldiers") ──
+
+        [UnityTest]
+        public IEnumerator APlanter_IsAPropSheCanCarry_AndTheSaveKeepsItsPlace()
+        {
+            GameObject planter = Planter("Planter_A");
+            LockOnTargetable target = planter.GetComponent<LockOnTargetable>();
+            Assert.IsTrue(target.IsProp && !target.IsHeavy, "a prop for mk_orzabal, not too heavy");
+            Assert.IsNotNull(planter.GetComponent<Rigidbody>(), "the carry moves it by velocity");
+            Assert.IsTrue(planter.GetComponent<UnityEngine.AI.NavMeshObstacle>().carving, "the NavMesh goes around it");
+
+            Vector3 moved = new Vector3(3f, PlanterHalf, 6f);
+            planter.GetComponent<MovableProp>().Place(moved, Quaternion.Euler(0f, 30f, 0f));
+            yield return new WaitForSeconds(0.3f);
+            RoomState room = SaveSystem.CaptureRoom(SceneManager.GetActiveScene());
+            Assert.IsTrue(room.propsSaved);
+            Assert.AreEqual(2, room.props.Count, "both planters");
+            planter.GetComponent<MovableProp>().Place(new Vector3(7f, PlanterHalf, 5f), Quaternion.identity);
+            SaveSystem.ApplyRoom(SceneManager.GetActiveScene(), room);
+            Assert.Less(Vector3.Distance(moved, planter.transform.position), 0.05f, "the load puts it where she left it");
+        }
+
+        [UnityTest]
+        public IEnumerator APlanterInADoorway_StopsAGuardAndAScientist_TheyOnlyBang()
+        {
+            // The soldiers and the armour out of the way: she waits in the barracks, the office's only way out is the doorway.
+            foreach (string name in new[] { "Soldier_Rifle", "Soldier_Pistol", "Armour", "Closet_Soldier" }) UnityEngine.Object.Destroy(Figure(name).gameObject);
+            lucy.GetComponent<TankController>().Teleport(new Vector3(5f, 0f, 11.5f), 180f);
+            GameObject planter = Planter("Planter_A");
+            DoorStop stop = planter.GetComponent<DoorStop>();
+            Vector3 at = new Vector3(0f, PlanterHalf, 4f); // the office doorway (the fire door stays open in its pocket)
+            planter.GetComponent<MovableProp>().Place(at, Quaternion.identity);
+            yield return WaitUntil(() => stop.Holds, 3f);
+            Assert.IsTrue(stop.Holds, "it holds the office doorway");
+
+            SoldierBrain guard = Figure("Guard"), scientist = Figure("Scientist");
+            guard.Alert("test", callOthers: false);
+            scientist.Alert("test", callOthers: false);
+            yield return WaitUntil(() => stop.Bangs >= 3, 30f);
+            Assert.GreaterOrEqual(stop.Bangs, 3, "they bang on it");
+            yield return new WaitForSeconds(4f);
+            Assert.AreEqual(0, stop.Kicks, "no kick");
+            Assert.AreEqual(0, stop.Shoves, "it stays");
+            Assert.Less(Vector3.Distance(at, planter.transform.position), 0.25f, "in the doorway");
+            Assert.AreEqual("D4", RoomOf(guard), "the guard stays in the office");
+            Assert.AreEqual("D4", RoomOf(scientist), "and the scientist");
+        }
+
+        [UnityTest]
+        public IEnumerator APlanterInADoorway_ASoldierKicksItAway_AndComesThrough()
+        {
+            // The others out of the way: she waits in the office, the barracks' only way out is the doorway.
+            foreach (string name in new[] { "Guard", "Scientist", "Armour", "Closet_Soldier" }) UnityEngine.Object.Destroy(Figure(name).gameObject);
+            lucy.GetComponent<TankController>().Teleport(new Vector3(-3f, 0f, 2f), 90f);
+            GameObject planter = Planter("Planter_B");
+            DoorStop stop = planter.GetComponent<DoorStop>();
+            Vector3 at = new Vector3(5f, PlanterHalf, 8f); // the barracks doorway
+            planter.GetComponent<MovableProp>().Place(at, Quaternion.identity);
+            yield return WaitUntil(() => stop.Holds, 3f);
+            Assert.IsTrue(stop.Holds, "it holds the barracks doorway");
+
+            SoldierBrain a = Figure("Soldier_Rifle"), b = Figure("Soldier_Pistol");
+            a.Alert("test", callOthers: false);
+            b.Alert("test", callOthers: false);
+            yield return WaitUntil(() => stop.Shoves > 0, 30f);
+            Assert.Greater(stop.Kicks, 0, "a soldier kicks it");
+            Assert.AreEqual(1, stop.Shoves, "the kicks move it");
+            Assert.AreEqual(0, stop.Bangs, "a soldier does not bang");
+            yield return new WaitForSeconds(1.5f);
+            Assert.Greater(Vector3.Distance(at, planter.transform.position), 0.6f, "out of the doorway's middle");
+            yield return WaitUntil(() => RoomOf(a) == "D1" || RoomOf(b) == "D1", 20f);
+            Assert.IsTrue(RoomOf(a) == "D1" || RoomOf(b) == "D1", "they come through");
+        }
+
+        private const float PlanterHalf = 0.95f * 0.5f; // DoorTestSetup.PlanterSize (editor code)
+
+        private static GameObject Planter(string name)
+        {
+            MovableProp prop = UnityEngine.Object.FindObjectsByType<MovableProp>(FindObjectsSortMode.None).FirstOrDefault(p => p.name == name);
+            Assert.IsNotNull(prop, name + " (DoorTestSetup.BuildDoorTest)");
+            return prop.gameObject;
+        }
+
         // ── Helpers ───────────────────────────────────────────────────
 
         /// <summary>The hall's fire door to the room.</summary>
