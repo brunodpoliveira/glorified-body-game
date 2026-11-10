@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 202cb6532a4a7f80682b508098ca96f0, type: 3}
+  m_Name: item_l33_chef_note
+  m_EditorClassIdentifier: Assembly-CSharp::GlorifiedBody.Interaction.ItemDefinition
+  itemId: l33_chef_note
+  displayName: A NOTE FROM THE CHEF
+  kind: 1
+  drugType: 0
+  colour: {r: 0.96, g: 0.95, b: 0.88, a: 1}
+  description: a note from the chef.
+  logText: 'FROM THE CHEF. If a guest asks for a Christmas menu, offer the winter
+    menu. Do not say no, and do not say Christmas. Future Day is in February, and
+    it is the best night of our year. The private room gets the tasting menu, no
+    substitutions.
+
+
+    By hand under it: Turkey for the caf is in walk-in 2. It
+    is for GENE''S BIRTHDAY. Nobody touch it.'
+  readFlag: 
+  mapFloor: 
+  audioClip: {fileID: 0}
+  tapeLines: []

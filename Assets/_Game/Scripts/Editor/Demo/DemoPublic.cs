@@ -28,7 +28,7 @@ namespace GlorifiedBody.Editor.Demo
             {
                 Room("G1", "STAIR LANDING", 0, 0, 5, 5, 3f, G1, new Door('N', 2.5f, "S1"), new Door('E', 2.5f, "G2")),
                 Room("G2", "THE CONCOURSE", 5, 0, 35, 6, 6f, G2, new Door('W', 2.5f, "G1"), new Door('N', 12, "G3"), new Door('N', 28, "G4"), new Door('S', 20, "G5", fire: true),
-                    new Door('S', 8, "G13"), new Door('S', 30, "G10"), new Door('N', 18, "G16")),
+                    new Door('S', 8, "G13"), new Door('S', 30, "G10"), new Door('N', 18, "G16"), new Door('E', 3, "G18", width: 2.4f)), // the glass doors of the Dining Hall (2026-11-10)
                 Room("G3", "THE DONOR WALL", 8, 6, 16, 12, 3.5f, G3, new Door('S', 12, "G2")),
                 Room("G4", "THE CHAPEL", 24, 6, 32, 14, 4f, G4, new Door('S', 28, "G2")),
                 // The floorplan v2 (2026-11-05) moved two side rooms off G5's walls: G13 takes G6's old place (it needs G2 and G7), G10
@@ -44,6 +44,7 @@ namespace GlorifiedBody.Editor.Demo
             rooms.AddRange(DemoV2.PublicRooms()); // the floorplan v2 (2026-11-05): G9b to G15
             rooms.AddRange(DemoCoda.Rooms());     // the coda (2026-11-06): X1, R1, R2, R3
             rooms.AddRange(DemoBrain.Rooms());    // the brain sector (2026-11-09): B1, B2
+            rooms.AddRange(DemoDining.Rooms());   // the Dining Hall (2026-11-10): G18, G19
             return rooms;
         }
 
@@ -90,6 +91,7 @@ namespace GlorifiedBody.Editor.Demo
             r.Figure("Reinforcement_C", "soldier_rifle", new Vector3(16f, 0f, 4f), 90f, parent: after);
             r.Figure("Reinforcement_D", "soldier_shield", new Vector3(24.5f, 0f, 4f), 270f, parent: after);
             // The mission statement (the plan names the company: it waits for the name check, so only the motto for now).
+            DemoDining.GlassDoors(r); // the words over the glass doors of the Dining Hall
             r.Sign("Sign_Mission", "SO THAT HUMANITY ENDURES.", new Vector3(20f, 4.2f, 5.83f), Vector3.back, new Vector2(6f, 0.8f), 72);
             r.Sign("Sign_Directory", "THE WARD  -  2ND FLOOR\nTHE CHAPEL\nRECEPTION\nSECURITY", new Vector3(5.17f, 1.6f, 4.6f), Vector3.right, new Vector2(1.2f, 1.2f), 36);
         }
@@ -231,6 +233,7 @@ namespace GlorifiedBody.Editor.Demo
                 "Somewhere in the hall, the sheeting on the sector C door drops.");
             release.requiredFlag = DemoDark.UnitsUp; // the ACCESS console is dead until the units run (§10.1)
             release.waitingText = "WAITING FOR NET.";
+            DemoDining.Release(r, release); // and the duty key (beat 23, round 60)
             UnityEditor.EditorUtility.SetDirty(release);
             SaveAssets.SavePoint("Save_G9", new Vector3(33.4f, 0f, -10f), 270f).transform.SetParent(r.Props.transform, true);
             r.Sign("Sign_Comms", "COMMS. AUTHORISED PERSONNEL.", new Vector3(33.83f, 2f, -13f), Vector3.left, new Vector2(1.6f, 0.3f), 36); // the door to G9b (v2)

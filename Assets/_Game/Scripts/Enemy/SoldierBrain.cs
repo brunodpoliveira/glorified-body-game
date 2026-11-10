@@ -315,6 +315,38 @@ namespace GlorifiedBody.Enemy
             passive = true;
         }
 
+        /// <summary>
+        /// A post he holds (the second fireteam in the Dining Hall, DEMO_PLAN §3.4: "It does not leave the room to hunt her
+        /// before she takes the duty key"): he fights inside the room, and every move ends inside it until the flag goes up.
+        /// </summary>
+        public void LeashUntil(GlorifiedBody.Rooms.Room room, string flag)
+        {
+            leashRoom = room;
+            leashFlag = flag;
+        }
+
+        public bool Leashed => leashRoom != null && (string.IsNullOrEmpty(leashFlag) || !GlorifiedBody.Saving.StoryFlags.Has(leashFlag));
+        public GlorifiedBody.Rooms.Room LeashRoom => leashRoom;
+        private GlorifiedBody.Rooms.Room leashRoom;
+        private string leashFlag = "";
+        public const float LeashMargin = 0.8f; // m inside the room's walls
+
+        /// <summary>Every move of the fight goes here: on a leash, a point outside the room becomes the nearest point inside it.</summary>
+        private Vector3 Go(Vector3 point, MoveSpeed speed)
+        {
+            if (Leashed && !leashRoom.Contains(point, -LeashMargin))
+            {
+                Vector3 local = point - leashRoom.transform.position;
+                local.x = Mathf.Clamp(local.x, leashRoom.rect.x + LeashMargin, leashRoom.rect.z - LeashMargin);
+                local.z = Mathf.Clamp(local.z, leashRoom.rect.y + LeashMargin, leashRoom.rect.w - LeashMargin);
+                Vector3 inside = leashRoom.transform.position + local;
+                inside.y = leashRoom.BaseY;
+                point = UnityEngine.AI.NavMesh.SamplePosition(inside, out UnityEngine.AI.NavMeshHit hit, 2f, UnityEngine.AI.NavMesh.AllAreas) ? hit.position : inside;
+            }
+            body.MoveTo(point, speed);
+            return point;
+        }
+
         private bool passive;
         private Vector3? scriptWalk;
         private bool scriptFacesHer;
@@ -711,7 +743,7 @@ namespace GlorifiedBody.Enemy
             Current = Phase.Retreat;
             Spot = FleeSpot();
             body.Crouch(false);
-            body.MoveTo(Spot, MoveSpeed.Sprint);
+            Spot = Go(Spot, MoveSpeed.Sprint);
             timer = 8f;
             // The lab worker's line is the writer's (kept from the build); the guard's is a PLACEHOLDER still.
             Bark.Say(gameObject, IsArmedCivilian ? "I can't. I can't do this!" : "That's not a patient. That's not a patient!");
@@ -922,8 +954,7 @@ namespace GlorifiedBody.Enemy
                 {
                     searchGoal = order;
                     searchLegStart = Time.time;
-                    Spot = order.Value;
-                    body.MoveTo(order.Value, MoveSpeed.Walk);
+                    Spot = Go(order.Value, MoveSpeed.Walk);
                     Moves++;
                     RunTelemetry.Event("soldier_search", $"{name}:{order.Value.x:0.0},{order.Value.z:0.0}");
                 }
@@ -955,9 +986,8 @@ namespace GlorifiedBody.Enemy
             gun.HoldFire = true;
             gun.FromCover = false;
             Vector3 spot = PickSpot();
-            Spot = spot;
             bool sprint = (spot - transform.position).magnitude > sprintOver;
-            body.MoveTo(spot, sprint ? MoveSpeed.Sprint : MoveSpeed.Run);
+            Spot = Go(spot, sprint ? MoveSpeed.Sprint : MoveSpeed.Run);
             timer = Rusher ? RushRepathSeconds : Random.Range(moveSeconds.x, moveSeconds.y);
             moveStarted = Time.time;
             Current = Phase.Move;
@@ -1204,7 +1234,7 @@ namespace GlorifiedBody.Enemy
             timer = Random.Range(DuckSeconds.x, DuckSeconds.y);
             // He goes to the spot first: a walk that ran out of time left him short of it, and he crouched and hid in the open (2026-11-06).
             Spot = HeldCover.Position;
-            body.MoveTo(HeldCover.Position, MoveSpeed.Run);
+            Go(HeldCover.Position, MoveSpeed.Run);
             RunTelemetry.Event("soldier_duck", name);
         }
 
@@ -1218,7 +1248,7 @@ namespace GlorifiedBody.Enemy
         private void StepOutToFire()
         {
             Spot = HeldCover.Step;
-            body.MoveTo(Spot, MoveSpeed.Run);
+            Spot = Go(Spot, MoveSpeed.Run);
             timer = CoverWalkSeconds;
             moveStarted = Time.time;
             Current = Phase.Move;

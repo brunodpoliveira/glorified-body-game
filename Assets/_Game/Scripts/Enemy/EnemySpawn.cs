@@ -39,6 +39,8 @@ namespace GlorifiedBody.Enemy
 
         [Tooltip("A test room with its AI off: it stands still whatever she does to it, until this story flag goes up or mk_edgar takes it.")]
         public string passiveUntilFlag = "";
+        [Tooltip("A post: he fights inside his room and does not leave it until this flag goes up (the Dining Hall team: the duty key). Empty: none.")]
+        public string leashUntilFlag = "";
 
         [Tooltip("mk_edgar takes it at full HP (a puzzle figure; Bruno, 2026-11-06: \"in puzzles (so it controls enemies at full health)\").")]
         public bool dominableUnhurt;
@@ -74,6 +76,8 @@ namespace GlorifiedBody.Enemy
             if (!string.IsNullOrEmpty(line) && figure.TryGetComponent(out PatientBrain patient)) patient.Line = line;
             if (hides && figure.TryGetComponent(out CivilianBrain hider)) hider.SetHider(hideLine, foundLine, foundAt);
             if (!string.IsNullOrEmpty(heldUntilFlag) && figure.TryGetComponent(out SoldierBrain held)) held.ScriptHoldUntil(heldUntilFlag);
+            if (!string.IsNullOrEmpty(leashUntilFlag) && figure.TryGetComponent(out SoldierBrain post))
+                post.LeashUntil(GetComponentInParent<GlorifiedBody.Rooms.Room>(), leashUntilFlag);
             if (!string.IsNullOrEmpty(passiveUntilFlag))
             {
                 if (figure.TryGetComponent(out SoldierBrain passive)) passive.PassiveUntil(passiveUntilFlag);

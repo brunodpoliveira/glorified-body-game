@@ -78,6 +78,7 @@ namespace GlorifiedBody.Editor
             { "G14", "BUILDERS' STORE" }, { "G15", "STAFF TOILETS" }, { "G16", "RISER ROOM" },
             { "X1", "CAR PARK" }, { "R1", "THE SHOP" }, { "R2", "SERVICE BAY" }, { "R3", "TOLL YARD" },
             { "B1", "THE BRAIN" }, { "B2", "BUILDERS' DOOR" }, // 2026-11-09
+            { "G18", "THE DINING HALL" }, { "G19", "THE KITCHEN" }, // 2026-11-10
         };
 
         [MenuItem("GlorifiedBody/Build Map Atlas")]

@@ -39,7 +39,7 @@ namespace GlorifiedBody.Tests.PlayMode
         private static readonly (string id, string[] doors)[] Map =
         {
             ("W13", new[] { "W12", "W10" }), ("W14", new[] { "W2" }), ("W15", new[] { "W2" }), ("W16", new[] { "W11" }), ("W17", new[] { "W11" }),
-            ("G9b", new[] { "G9" }), ("G10", new[] { "G2", "G5" }), ("G11", new[] { "G8", "G15" }), ("G12", new[] { "G5" }), ("G13", new[] { "G2", "G7" }),
+            ("G9b", new[] { "G9", "G19" }), // G19's service exit opens into G9b: G9 has no free wall (2026-11-10, the Dining Hall) ("G10", new[] { "G2", "G5" }), ("G11", new[] { "G8", "G15" }), ("G12", new[] { "G5" }), ("G13", new[] { "G2", "G7" }),
             ("G14", new[] { "U1" }), ("G15", new[] { "G11" }), ("G6", new[] { "G5" }), ("G8", new[] { "G5", "G11" }),
         };
         private static readonly string[] NewRooms = { "W13", "W14", "W15", "W16", "W17", "G9b", "G10", "G11", "G12", "G13", "G14", "G15" };
@@ -99,7 +99,7 @@ namespace GlorifiedBody.Tests.PlayMode
                 ("G5", new Vector4(12, -16, 28, 0)), ("G9", new Vector4(28, -16, 34, -9)), ("U1", new Vector4(14, -28, 26, -16)),
             })
                 Assert.AreEqual(rect, Room.Of(id).rect, id + " stands where it stood");
-            Assert.AreEqual(43, Room.All.Count, "40 rooms, the stair, and the brain sector B1 with its door B2 (2026-11-09)");
+            Assert.AreEqual(45, Room.All.Count, "40 rooms, the stair, the brain sector B1 with its door B2 (2026-11-09), the Dining Hall G18 and its kitchen G19 (2026-11-10)");
         }
 
         [UnityTest]

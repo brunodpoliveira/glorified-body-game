@@ -423,7 +423,7 @@ namespace GlorifiedBody.Editor.Destruction
         /// start. The levers stand on the other side of the doorway, on both wall faces. The leaf is on Default: shut, it
         /// stops her, the enemies, the bullets and the sight.
         /// </summary>
-        public static FireDoor Door(GameObject parent, string id, Vector3 mouth, Vector3 outward, float width, float height, float wall, int pocket, Material face, Material inside, Material trim, Material plate, Material handleColour, Material barColour, bool startsJammed = false, string leverFlag = "", string jamFlag = "", int leverSide = 0)
+        public static FireDoor Door(GameObject parent, string id, Vector3 mouth, Vector3 outward, float width, float height, float wall, int pocket, Material face, Material inside, Material trim, Material plate, Material handleColour, Material barColour, bool startsJammed = false, string leverFlag = "", string jamFlag = "", int leverSide = 0, bool canBreak = true)
         {
             outward.y = 0f;
             outward.Normalize();
@@ -456,6 +456,7 @@ namespace GlorifiedBody.Editor.Destruction
             door.startsJammed = startsJammed;
             door.leverFlag = leverFlag;
             door.jamFlag = jamFlag;
+            door.canBreak = canBreak;
             // The bars: one across each face of the jammed door, on two brackets in the wall (shown only while jammed).
             var bars = new List<GameObject>();
             foreach (float side in new[] { -1f, 1f })

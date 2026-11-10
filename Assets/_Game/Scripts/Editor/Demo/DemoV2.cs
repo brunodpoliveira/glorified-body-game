@@ -48,7 +48,7 @@ namespace GlorifiedBody.Editor.Demo
         /// <summary>The seven new rooms of the public floor, in plan metres (DemoWorld moves the floor to its place).</summary>
         public static List<RoomSpec> PublicRooms() => new List<RoomSpec>
         {
-            Spec("G9b", "COMMS CLOSET", DemoItems.Floor1, DemoPublic.Music, 34, -16, 38, -9, 3f, G9b, new Door('W', -14.5f, "G9")),
+            Spec("G9b", "COMMS CLOSET", DemoItems.Floor1, DemoPublic.Music, 34, -16, 38, -9, 3f, G9b, new Door('W', -14.5f, "G9"), DemoDining.ServiceExit("G19")),
             // Two doors: off the concourse and off the hall (a second way into G5, §12).
             Spec("G10", "CAFETERIA", DemoItems.Floor1, DemoPublic.Music, 28, -5, 38, 0, 4f, G10, new Door('N', 30, "G2"), new Door('W', -3.5f, "G5")),
             Spec("G11", "STAFF BREAK ROOM", DemoItems.Floor1, DemoPublic.Music, -2, -22, 6, -16, 3f, G11, new Door('E', -19, "G8"), new Door('S', 2, "G15")),
@@ -209,7 +209,7 @@ namespace GlorifiedBody.Editor.Demo
         private static void G9b(DemoRoom r)
         {
             r.Prop("Rack_N", new Vector3(36f, 0f, -9.4f), new Vector3(3.4f, 2.2f, 0.6f), 0.2f);
-            r.Prop("Rack_E", new Vector3(37.65f, 0f, -12.6f), new Vector3(0.6f, 2.2f, 4.4f), 0.2f);
+            r.Prop("Rack_E", new Vector3(37.65f, 0f, -14f), new Vector3(0.6f, 2.2f, 2.2f), 0.2f); // 2.2 m since 2026-11-10: the service exit of G19 opens in this wall
             Material green = DemoRoom.Colour("led_green", new Color(0.2f, 0.9f, 0.3f));
             for (int i = 0; i < 6; i++)
                 Piece(r.Props, $"Rack_Led_{i}", new Vector3(34.6f + i * 0.5f, 1.2f + (i % 3) * 0.3f, -9.705f), new Vector3(0.03f, 0.03f, 0.01f), green, false);

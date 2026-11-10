@@ -789,6 +789,9 @@ MonoBehaviour:
     - path: G2/G16
       position: {x: 30.5, y: -25}
       targetScene: G16
+    - path: G2/G18
+      position: {x: 47.5, y: -28}
+      targetScene: G18
     marks: []
   - scene: G3
     world: Demo
@@ -960,6 +963,10 @@ MonoBehaviour:
       path: '[World]/[G9]/[Props]/L29_Holiday_Roster'
       position: {x: 42.1, y: -40.14}
       label: A ROSTER
+    - kind: 2
+      path: '[World]/[G9]/[Props]/L30_Release_Card'
+      position: {x: 46.32, y: -44.1}
+      label: A FACILITIES CARD
     - kind: 3
       path: '[World]/[G9]/[Props]/Save_G9'
       position: {x: 45.9, y: -41}
@@ -1002,6 +1009,9 @@ MonoBehaviour:
     - path: G9b/G9
       position: {x: 46.5, y: -45.5}
       targetScene: G9
+    - path: G9b/G19
+      position: {x: 50.5, y: -41.8}
+      targetScene: G19
     marks: []
   - scene: G10
     world: Demo
@@ -1269,6 +1279,64 @@ MonoBehaviour:
       position: {x: 113.5, y: -19}
       targetScene: B1
     marks: []
+  - scene: G18
+    world: Demo
+    floor: demo_1
+    title: THE DINING HALL
+    offset: {x: 0, y: 0}
+    areas:
+    - serializedVersion: 2
+      x: 47.5
+      y: -31
+      width: 12
+      height: 10
+    exits:
+    - path: G18/G2
+      position: {x: 47.5, y: -28}
+      targetScene: G2
+    - path: G18/G19
+      position: {x: 53.5, y: -31}
+      targetScene: G19
+    marks:
+    - kind: 2
+      path: '[World]/[G18]/[Props]/L31_Reservation_Book'
+      position: {x: 49.05, y: -26.1}
+      label: THE BOOK OF TONIGHT
+    - kind: 2
+      path: '[World]/[G18]/[Props]/L32_Comment_Card'
+      position: {x: 49.3, y: -26.25}
+      label: A GUEST COMMENT CARD
+  - scene: G19
+    world: Demo
+    floor: demo_1
+    title: THE KITCHEN
+    offset: {x: 0, y: 0}
+    areas:
+    - serializedVersion: 2
+      x: 50.5
+      y: -43
+      width: 6
+      height: 12
+    exits:
+    - path: G19/G18
+      position: {x: 53.5, y: -31}
+      targetScene: G18
+    - path: G19/G9b
+      position: {x: 50.5, y: -41.8}
+      targetScene: G9b
+    marks:
+    - kind: 2
+      path: '[World]/[G19]/[Props]/L33_Chef_Note'
+      position: {x: 54.2, y: -33.3}
+      label: A NOTE FROM THE CHEF
+    - kind: 1
+      path: '[World]/[G19]/[Props]/Duty_Key'
+      position: {x: 52.45, y: -42.8}
+      label: THE DUTY KEY
+    - kind: 2
+      path: '[World]/[G19]/[Props]/L34_Key_Log'
+      position: {x: 53.05, y: -42.8}
+      label: THE KEY LOG
   - scene: S1
     world: Demo
     floor: demo_2

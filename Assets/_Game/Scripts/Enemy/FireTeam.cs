@@ -87,8 +87,10 @@ namespace GlorifiedBody.Enemy
         public static FireTeam Join(SoldierBrain who, Vector3 her)
         {
             teams.RemoveAll(t => t.Empty);
+            // A man on a post (the Dining Hall, SoldierBrain.LeashUntil) fights with the men of his post only: the team of the
+            // concourse next door must not count him as one who bounds (2026-11-10, TheFireteam_Bounds: 100 % both moving).
             foreach (FireTeam team in teams)
-                if (team.Near(who.transform.position)) return team.Add(who);
+                if (team.Near(who.transform.position) && team.Post == PostOf(who)) return team.Add(who);
             var fresh = new FireTeam { boundStart = Time.time, LastSeen = her, lastSeenTime = Time.time };
             teams.Add(fresh);
             return fresh.Add(who);
@@ -102,6 +104,20 @@ namespace GlorifiedBody.Enemy
                     foreach (SoldierBrain b in e)
                         if (Live(b)) return false;
                 return true;
+            }
+        }
+
+        private static GlorifiedBody.Rooms.Room PostOf(SoldierBrain b) => b != null && b.Leashed ? b.LeashRoom : null;
+
+        /// <summary>The post of the team: the room its live men hold, or null for a team that hunts.</summary>
+        private GlorifiedBody.Rooms.Room Post
+        {
+            get
+            {
+                foreach (List<SoldierBrain> e in elements)
+                    foreach (SoldierBrain b in e)
+                        if (Live(b)) return PostOf(b);
+                return null;
             }
         }
 

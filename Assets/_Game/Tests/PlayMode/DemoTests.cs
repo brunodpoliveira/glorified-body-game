@@ -33,7 +33,7 @@ namespace GlorifiedBody.Tests.PlayMode
     {
         private const string World = "Demo";
         private static readonly string[] Rooms = { "W1", "W1B", "W2", "W3", "W4", "W5", "W6", "W7", "W8", "W9", "W10", "W11", "W12", "W13", "W14", "W15", "W16", "W17", "S1",
-            "G1", "G2", "G3", "G4", "G5", "G6", "G7", "G8", "G9", "G9b", "G10", "G11", "G12", "G13", "G14", "G15", "G16", "X1", "R1", "R2", "R3", "U1", "B1", "B2" }; // the floorplan v2 (2026-11-05), the brain sector (2026-11-09)
+            "G1", "G2", "G3", "G4", "G5", "G6", "G7", "G8", "G9", "G9b", "G10", "G11", "G12", "G13", "G14", "G15", "G16", "X1", "R1", "R2", "R3", "U1", "B1", "B2", "G18", "G19" }; // the floorplan v2 (2026-11-05), the brain sector (2026-11-09), the Dining Hall (2026-11-10)
         private static readonly string[] MainWay = { "W1", "W1B", "W2", "W5", "W7", "W8", "W9", "W11", "W9", "W12", "S1", "G1", "G2", "G5", "G9", "G5", "U1" };
 
         [UnitySetUp]
@@ -127,13 +127,13 @@ namespace GlorifiedBody.Tests.PlayMode
             // Bruno, 2026-11-03: fire doors "in selected chokepoints"; his pick: W2 to W5, W5 to W7, G2 to G5.
             yield return LoadWorld();
             var names = GlorifiedBody.Interaction.FireDoor.All.Select(d => d.name).OrderBy(n => n).ToArray();
-            CollectionAssert.AreEqual(new[] { "FireDoor_G2_G5", "FireDoor_W1B_W2", "FireDoor_W2_W5", "FireDoor_W5_W7", "FireDoor_W5_W9" }, names, "the fire doors (W5 to W9: the route switch, §10.5)");
+            CollectionAssert.AreEqual(new[] { "FireDoor_G2_G5", "FireDoor_G9b_G19", "FireDoor_W1B_W2", "FireDoor_W2_W5", "FireDoor_W5_W7", "FireDoor_W5_W9" }, names, "the fire doors (W5 to W9: the route switch, §10.5; G19 to G9b: the service exit)");
             var failures = new List<string>();
             int solid = LayerMask.GetMask("Default");
             foreach (GlorifiedBody.Interaction.FireDoor door in GlorifiedBody.Interaction.FireDoor.All)
             {
                 // The door of W1B to W2 starts shut (Bruno, 2026-11-05). The others stand open.
-                if (door.name == "FireDoor_W1B_W2") door.Open("test", instant: true);
+                if (door.name == "FireDoor_W1B_W2" || door.name == "FireDoor_G9b_G19") door.Open("test", instant: true); // shut at the start: the W1B door, the service exit
                 if (door.Current != GlorifiedBody.Interaction.FireDoor.State.Open) failures.Add(door.name + ": not open at the start");
                 var rooms = new HashSet<string>();
                 foreach (GlorifiedBody.Interaction.DoorLever lever in door.GetComponentsInChildren<GlorifiedBody.Interaction.DoorLever>())
@@ -144,7 +144,7 @@ namespace GlorifiedBody.Tests.PlayMode
                     else rooms.Add(room.id);
                     if (Physics.Linecast(front, lever.transform.position + lever.transform.forward * 0.05f, solid, QueryTriggerInteraction.Ignore)) failures.Add($"{door.name}/{lever.name}: buried");
                 }
-                int sides = door.name == "FireDoor_W5_W9" ? 1 : 2; // the route switch: one lever, on the W9 side
+                int sides = door.name == "FireDoor_W5_W9" || door.name == "FireDoor_G9b_G19" ? 1 : 2; // one lever: the route switch (W9 side), the service exit (G19 side)
                 if (rooms.Count != sides) failures.Add($"{door.name}: its levers in {rooms.Count} rooms ({string.Join(",", rooms)})");
                 // The open leaf lies in its wall pocket: a line to it from each side meets the wall.
                 Vector3 leafCentre = door.leaf.position + Vector3.up * 1.1f;
@@ -153,6 +153,71 @@ namespace GlorifiedBody.Tests.PlayMode
                         failures.Add($"{door.name}: the open leaf shows on the {(side > 0 ? "outer" : "inner")} side");
             }
             Assert.IsEmpty(failures, string.Join("; ", failures));
+        }
+
+        // ── The Dining Hall (2026-11-10: beat 23b, CANON round 60; the second fireteam, round 62) ──
+
+        [UnityTest]
+        public IEnumerator TheDiningHall_G18AndItsKitchen_TheDutyKey_TheLogs_TheServiceExit()
+        {
+            yield return LoadWorld();
+            GlorifiedBody.Rooms.Room g2 = GlorifiedBody.Rooms.Room.Of("G2"), g18 = GlorifiedBody.Rooms.Room.Of("G18"), g19 = GlorifiedBody.Rooms.Room.Of("G19");
+            Assert.IsNotNull(g18, "G18, the Dining Hall");
+            Assert.IsNotNull(g19, "G19, its kitchen");
+            Assert.IsTrue(g2.exits.Any(e => e.to == "G18"), "the glass doors from the concourse");
+            Assert.IsTrue(g18.exits.Any(e => e.to == "G19"), "the hall to the kitchen");
+            Assert.IsTrue(g19.exits.Any(e => e.to == "G9b"), "the service exit (into the closet of G9: G9 has no free wall)");
+
+            var pickups = UnityEngine.Object.FindObjectsByType<ItemPickup>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            string RoomOfItem(string id) => pickups.FirstOrDefault(p => p.item != null && p.item.itemId == id)?.GetComponentInParent<GlorifiedBody.Rooms.Room>()?.id ?? "none";
+            Assert.AreEqual("G19", RoomOfItem("duty_key"), "the duty key on its hook in the kitchen office");
+            Assert.AreEqual("G9", RoomOfItem("l30_release_card"));
+            Assert.AreEqual("G18", RoomOfItem("l31_reservation_book"));
+            Assert.AreEqual("G18", RoomOfItem("l32_comment_card"));
+            Assert.AreEqual("G19", RoomOfItem("l33_chef_note"));
+            Assert.AreEqual("G19", RoomOfItem("l34_key_log"));
+
+            // The service exit: a push bar on the kitchen side only, and no kick breaks it.
+            var exit = GlorifiedBody.Interaction.FireDoor.All.First(d => d.name == "FireDoor_G9b_G19");
+            Assert.AreEqual(GlorifiedBody.Interaction.FireDoor.State.Jammed, exit.Current, "shut at the start");
+            Assert.IsFalse(exit.canBreak, "no kick breaks it");
+            var levers = exit.GetComponentsInChildren<GlorifiedBody.Interaction.DoorLever>();
+            Assert.AreEqual(1, levers.Length);
+            Vector3 front = levers[0].transform.position + levers[0].transform.forward * 0.3f;
+            Assert.AreEqual("G19", GlorifiedBody.Rooms.Room.At(new Vector3(front.x, g19.BaseY + 0.1f, front.z))?.id, "the bar is on the kitchen side");
+            Interactor hands = GameObject.FindGameObjectWithTag("Player").GetComponent<Interactor>();
+            Assert.AreEqual("opened:FireDoor_G9b_G19", levers[0].Confirm(hands));
+        }
+
+        [UnityTest]
+        public IEnumerator TheForwardPost_HoldsTheHall_UntilSheTakesTheKey_AndItsTrackPlaysWhileTheySeeHer()
+        {
+            yield return Coda("G18");
+            GameObject lucy = GameObject.FindGameObjectWithTag("Player");
+            GlorifiedBody.Rooms.Room g18 = GlorifiedBody.Rooms.Room.Of("G18");
+            SoldierBrain[] team = GameObject.Find("Hall_Team").GetComponentsInChildren<SoldierBrain>();
+            Assert.AreEqual(4, team.Length, "the second fireteam of four (round 62)");
+            Assert.IsTrue(team.Any(b => b.name == "Ortiz") && team.Any(b => b.name == "Brandt"), "Ortiz and Brandt");
+            Assert.IsTrue(team.All(b => b.Leashed && b.LeashRoom == g18), "they hold the hall");
+
+            GlorifiedBody.Audio.RoomScore score = GameObject.Find("Score_G18").GetComponent<GlorifiedBody.Audio.RoomScore>();
+            lucy.GetComponent<TankController>().Teleport(g18.transform.position + new Vector3(36.3f, 0f, 3f), 90f);
+            yield return WaitUntil(() => GlorifiedBody.Rooms.RoomTracker.CurrentId == "G18", 3f);
+            team[0].Alert("test", callOthers: true);
+            yield return WaitUntil(() => score.Playing, 3f);
+            Assert.IsTrue(score.Playing, "its own track when they see her (§12, round 103)");
+            Assert.IsTrue(GlorifiedBody.Audio.MusicDirector.Instance.InFight);
+
+            // She runs back to the concourse: they stay in the hall, and the track stops.
+            lucy.GetComponent<TankController>().Teleport(g18.transform.position + new Vector3(30f, 0f, 3f), 270f);
+            yield return WaitUntil(() => GlorifiedBody.Rooms.RoomTracker.CurrentId == "G2", 3f);
+            yield return new WaitForSeconds(8f);
+            foreach (SoldierBrain b in team)
+                Assert.IsTrue(g18.Contains(b.transform.position, 0.3f), $"{b.name} holds the hall: {b.transform.position}");
+            Assert.IsFalse(score.Playing, "she left: the room's music again");
+
+            StoryFlags.Raise("demo_duty_key_taken");
+            Assert.IsTrue(team.All(b => !b.Leashed), "after the key, they follow her (round 62)");
         }
 
         // ── The night of 30 December (2026-11-10: beat 19b, L24 to L29, N1, N2, the title card) ──
@@ -476,6 +541,10 @@ namespace GlorifiedBody.Tests.PlayMode
             yield return WaitUntil(() => !dark.IsDark, bank.monitorGap * bank.monitors.Length + bank.lightsBackSeconds + 3f);
             Assert.AreEqual(bank.monitorLights.Length, bank.MonitorsOn, "every monitor light is on");
             Assert.IsFalse(dark.IsDark, "the monitors, then the lights");
+            // The second key (beat 23, round 60): the duty key from the kitchen of the Dining Hall.
+            Assert.AreEqual("DUTY KEY REQUIRED.", release.TextFor(her), "the console without the key");
+            StringAssert.StartsWith("missing:", release.Confirm(her));
+            her.Inventory.TryAdd(UnityEngine.Object.FindObjectsByType<ItemPickup>(FindObjectsInactive.Include, FindObjectsSortMode.None).First(p => p.name == "Duty_Key").item);
             StringAssert.StartsWith("switch:", release.Confirm(her), "the release works");
             Assert.IsTrue(StoryFlags.Has(release.flag));
         }
@@ -1343,6 +1412,9 @@ namespace GlorifiedBody.Tests.PlayMode
         {
             // 2026-11-08: the gap leaves the crate 5 cm on each side, and a drop near it rested on the rim.
             yield return LoadWorld();
+            yield return WaitUntil(() => CutscenePlayer.IsPlaying && CutscenePlayer.ShotIndex >= 0, 10f);
+            CutscenePlayer.Skip(); // the wake stops the world: the physics of the test runs after it
+            yield return WaitUntil(() => StoryFlags.Has("demo_w1_wake") && Time.timeScale > 0f, 10f);
             GlorifiedBody.Rooms.Room room = GlorifiedBody.Rooms.Room.Of("G16");
             GlorifiedBody.Interaction.PitReturn pit = room.GetComponentInChildren<GlorifiedBody.Interaction.PitReturn>();
             Rigidbody crate = GameObject.Find("Riser_Crate_A").GetComponent<Rigidbody>();
