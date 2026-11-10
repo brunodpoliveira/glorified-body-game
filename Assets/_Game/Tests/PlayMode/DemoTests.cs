@@ -242,7 +242,8 @@ namespace GlorifiedBody.Tests.PlayMode
             lucy.GetComponent<TankController>().Teleport(new Vector3(tree.position.x, tree.position.y - 0.91f, tree.position.z + 1.0f), 180f);
             yield return WaitUntil(() => GlorifiedBody.Rooms.RoomTracker.CurrentId == "G10", 3f);
 
-            Broadcast radio = GameObject.Find("Radio").GetComponent<Broadcast>();
+            // Two props are named "Radio" (G10, W13): the one in G10 plays.
+            Broadcast radio = UnityEngine.Object.FindObjectsByType<Broadcast>(FindObjectsSortMode.None).First(b => b.roomId == "G10");
             yield return WaitUntil(() => radio.Spoken > 0, 3f);
             Assert.IsTrue(radio.Started, "the radio plays when she comes in (N1a)");
             StringAssert.StartsWith("...my door is open", radio.LastText, "mid-sentence");

@@ -64,3 +64,11 @@ proved). It skips the wake now, as the other demo tests do.
 
 Shots: `~/MEGA/glorified-body-renders/game/dining_hall_2026-11-10/` (G18 with the four, G19, the service exit in G9b).
 Numbers PROPOSED.
+
+## The full check (step 5 of the day)
+
+The whole suite: 477 of 479. `TheFrame_Profile` is explicit, so the suite skips it. One fault was in a test:
+`TheCafeteria_G10_...` found the radio by the name "Radio", and W13 has a prop with the same name. It now finds the
+`Broadcast` of G10, and it passes. The other names that the new tests look up appear once in the scene.
+
+All 27 bot runs pass, the tutorial bot included.
