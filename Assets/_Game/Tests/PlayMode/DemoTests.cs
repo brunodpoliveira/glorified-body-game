@@ -1418,7 +1418,9 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.GreaterOrEqual(team.Count(b => b.Current == SoldierBrain.Phase.Search), 2, "they go into the search");
             Assert.GreaterOrEqual(fire.Route.Count, 2, "the place, then the rooms next to it");
             Assert.Less(Vector3.Distance(fire.Route[0], fire.LastSeen), 3.5f, "the first point: where they lost her");
-            int frames = 0, bothWalk = 0, walkOne = 0;
+            int frames = 0, bothWalk = 0, walkOne = 0, bothWithSlot = 0;
+            var streak = new Dictionary<SoldierBrain, float>();
+            var longest = new Dictionary<SoldierBrain, float>();
             t0 = Time.time;
             while (Time.time - t0 < 25f && fire.Lost)
             {
@@ -1428,12 +1430,16 @@ namespace GlorifiedBody.Tests.PlayMode
                     SoldierBrain partner = fire.PartnerOf(b);
                     if (partner == null || b.GetInstanceID() > partner.GetInstanceID() || b.Current != SoldierBrain.Phase.Search || partner.Current != SoldierBrain.Phase.Search) continue;
                     frames++;
-                    if (b.Body.IsMoving && partner.Body.IsMoving) bothWalk++;
+                    bool both = b.Body.IsMoving && partner.Body.IsMoving;
+                    if (both) { bothWalk++; if (b.Gun.HoldsSlot || partner.Gun.HoldsSlot) bothWithSlot++; }
                     else if (b.Body.IsMoving || partner.Body.IsMoving) walkOne++;
+                    // The diagnostic (2026-11-10, the flaky run of 2026-11-09): how long both walk at once, pair by pair.
+                    streak[b] = both ? (streak.TryGetValue(b, out float run) ? run : 0f) + Time.deltaTime : 0f;
+                    longest[b] = Mathf.Max(longest.TryGetValue(b, out float l) ? l : 0f, streak[b]);
                 }
                 yield return null;
             }
-            Debug.Log($"[DemoTests] the search in 25 s: {fire.LegsDone} legs, {fire.Route.Count} points, pair frames {frames}: one walks {walkOne}, both walk {bothWalk}; {string.Join("; ", team.Select(b => $"{b.name} {b.Current} {b.transform.position}"))}");
+            Debug.Log($"[DemoTests] the search in 25 s: {fire.LegsDone} legs, {fire.Route.Count} points, pair frames {frames}: one walks {walkOne}, both walk {bothWalk} ({bothWithSlot} with a gun slot held); the longest both-walk streak by pair: {string.Join(", ", longest.Select(p => $"{p.Key.name}+{fire.PartnerOf(p.Key)?.name} {p.Value:0.00} s"))}; {string.Join("; ", team.Select(b => $"{b.name} {b.Current} {b.transform.position}"))}");
             Assert.Greater(fire.LegsDone, 1, "the pairs go from point to point");
             Assert.Greater(walkOne, bothWalk * 3, "one walks, and the other covers him");
         }

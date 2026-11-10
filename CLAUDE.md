@@ -585,7 +585,13 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   wall is a heavy lock target; a full circle of mk_erebus lights it (`Interaction/HalonSystem`): LOCKOUT first = it burns
   with no horn; else the horn, the door seals (a fire door with no lever, `Door.LeverRoom = "none"`), 30 s, ABORT on the
   panel (`HalonAbort`) or the halon: she passes out, killer `halon`. His answers: keep the places and the numbers, the
-  cage holds one of each (L18 still counts two: a task for the writer).
+  cage holds one of each.
+- 2026-11-10, evening (`devlog-notes/2026-11-10_flaky_tests_and_lines.md`, `_manual_tests.md`): the fireteam search test
+  was flaky because of an AI fault: the second man's spot beside the first swung with his walk and snapped next to the
+  first, and the walker shoved his partner for seconds. `FireTeam.Beside` picks it once per leg, 1.1 m clear: both walk
+  2 to 4 % of the frames, 6 legs in 25 s. The R1 poster test: not reproduced in 11 runs, on watch. The writer's round
+  113 lines replace the last PLACEHOLDER barks (the night manager, the G10 hiders found, the fighters' feed, the guard's
+  retreat), and L18 counts one of each. Manual list for Bruno: 41 rows.
 
 ## Rules
 

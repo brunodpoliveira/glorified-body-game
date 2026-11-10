@@ -112,8 +112,8 @@ namespace GlorifiedBody.Editor.Demo
             // The night manager of the lodge by walk-in 1: he begs her to take the key.
             EnemySpawn manager = r.Figure("Night_Manager", "labworker", new Vector3(41.9f, 0f, -6.4f), 90f, variant: 1);
             manager.hides = true;
-            manager.hideLine = "Please. Please, I've got nothing.";              // PLACEHOLDER
-            manager.foundLine = "The key? It's on the board. Take it. Take it and go."; // PLACEHOLDER: the writer's line comes later
+            manager.hideLine = "Kitchen's closed. Kitchen's closed. Kitchen's closed."; // the writer's (barks.csv, round 113, PROPOSED)
+            manager.foundLine = "Ma'am. The key's on the board, in the office. Take it. I'll sign it out. Just take it and go.";
             EditorUtility.SetDirty(manager);
 
             // The kitchen office in the south-west corner: the key board, the DUTY KEY on its hook, the key log (L34).

@@ -51,8 +51,9 @@ namespace GlorifiedBody.Enemy
         public int Witnessed { get; private set; }
         public int FeedsSeen { get; private set; }
 
-        // The fighters' lines are PLACEHOLDERS; the lab worker's and the nurse's are the writer's (barks.csv, "sees the feed", PROPOSED).
-        public static readonly string[] FighterFeedLines = { "SHE'S FEEDING ON HIM!", "WHAT IS SHE DOING TO HIM?", "GET HER OFF HIM!" };
+        // Every line is the writer's (barks.csv, "sees the feed", PROPOSED; the fighters' second lines: round 113).
+        public static readonly string[] SoldierFeedLines = { "Contact. She's — Jesus. She's eating.", "She's on him! Put her down! Put her down!" };
+        public static readonly string[] GuardFeedLines = { "Oh God. Oh God, she's — get away from him!", "Hey! Leave him alone! Leave him alone!" };
         public const string LabWorkerFeedLine = "That's... Computer, she's feeding. Advise. Please advise.";
         public const string NurseFeedLine = "Sweetheart, no. No, no. Not like that.";
         public bool DiedGruesome { get; private set; }
@@ -171,7 +172,8 @@ namespace GlorifiedBody.Enemy
             if (Fear >= FearLimit) brain.Retreat("feed");
             else brain.Shock(gruesomeShockSeconds, true);
             bool civilian = rank == Rank.UnarmedCivilian || rank == Rank.ArmedCivilian;
-            string line = !civilian ? FighterFeedLines[UnityEngine.Random.Range(0, FighterFeedLines.Length)]
+            string[] fighter = rank == Rank.Guard ? GuardFeedLines : SoldierFeedLines;
+            string line = !civilian ? fighter[UnityEngine.Random.Range(0, fighter.Length)]
                 : GlorifiedBody.Subtitles.Speaker.NameOf(gameObject).Contains("NURSE") ? NurseFeedLine : LabWorkerFeedLine;
             Bark.Say(gameObject, line); // after the shock's own line: this one shows
         }

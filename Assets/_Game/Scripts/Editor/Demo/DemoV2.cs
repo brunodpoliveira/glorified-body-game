@@ -227,8 +227,7 @@ namespace GlorifiedBody.Editor.Demo
         /// <summary>
         /// G10: the cafeteria. Trays on a hot counter, tables, the microwave and the coffee machine on a side counter, two
         /// civilians who shelter by the tables (hiders; a figure cannot crouch inside a table top's collider, so they are
-        /// beside the tables, low). Their whispers are the writer's (barks.csv, "G10, the first/second hider", PROPOSED); the
-        /// lines when she finds them stay PLACEHOLDERS.
+        /// beside the tables, low). Their whispers and the lines when she finds them are the writer's (barks.csv, PROPOSED).
         /// </summary>
         private static void G10(DemoRoom r)
         {
@@ -247,12 +246,12 @@ namespace GlorifiedBody.Editor.Demo
             EnemySpawn cook = r.Figure("Hider_Cook", "labworker", new Vector3(36f, 0f, -2.5f), 270f, variant: 1);
             cook.hides = true;
             cook.hideLine = "Keep your head down. Don't look at her. Don't look."; // the writer's (the first hider, to the other)
-            cook.foundLine = "Please. I'll stay down. I'll stay right here."; // PLACEHOLDER
+            cook.foundLine = "Please. I just make the soup. I just make the soup."; // the writer's (barks.csv, round 113, PROPOSED)
             EditorUtility.SetDirty(cook);
             EnemySpawn server = r.Figure("Hider_Server", "labworker", new Vector3(32.9f, 0f, -2.5f), 90f, variant: 3);
             server.hides = true;
             server.hideLine = "She can see us. She's looking right at us."; // the writer's (the second hider)
-            server.foundLine = "Please. We're not part of it. We just work here."; // PLACEHOLDER
+            server.foundLine = "Please. I'm off at six. I just want to go home at six."; // the writer's (barks.csv, round 113, PROPOSED)
             EditorUtility.SetDirty(server);
             r.Sign("Sign_Menu", "TONIGHT: SOUP. BREAD. TEA.", new Vector3(37.83f, 2.2f, -2.5f), Vector3.left, new Vector2(1.8f, 0.35f), 36);
             Label(r, "CAFETERIA", new Vector3(32.2f, 2.3f, -0.17f), Vector3.back, 1.6f);

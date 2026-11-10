@@ -745,8 +745,8 @@ namespace GlorifiedBody.Enemy
             body.Crouch(false);
             Spot = Go(Spot, MoveSpeed.Sprint);
             timer = 8f;
-            // The lab worker's line is the writer's (kept from the build); the guard's is a PLACEHOLDER still.
-            Bark.Say(gameObject, IsArmedCivilian ? "I can't. I can't do this!" : "That's not a patient. That's not a patient!");
+            // Both lines are the writer's: the lab worker's (kept from the build), the guard's (barks.csv, round 113, PROPOSED).
+            Bark.Say(gameObject, IsArmedCivilian ? "I can't. I can't do this!" : "Dispatch, I'm pulling back! Somebody else take her!");
             RunTelemetry.Event("soldier_retreat", $"{name}:{reason} to {Spot.x:0.0},{Spot.z:0.0}");
         }
 

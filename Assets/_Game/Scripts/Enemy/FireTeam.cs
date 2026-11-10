@@ -28,6 +28,7 @@ namespace GlorifiedBody.Enemy
         public const float LostAfter = 8f;     // s with no line: they search
         private const float SightGap = 0.2f;   // s between the sight checks of a team
         private const float PartnerOffset = 1.5f; // m: the second of a pair stops this far beside the first
+        private const float MinPartnerGap = 1.1f; // m: never closer to the first than this (two agents of 0.5 m)
         private const float SearchCallDelay = 2.5f; // s from "clear" to the next leg's line
         private const int RouteLength = 5;     // the place, then the nearest rooms next to it
 
@@ -53,6 +54,8 @@ namespace GlorifiedBody.Enemy
             public SoldierBrain first, second;
             public int leg;
             public bool secondWalks;
+            public Vector3 beside;      // the second's spot for this leg: chosen once (it swung with his own walk)
+            public int besideLeg = -1;
         }
 
         /// <summary>The last place where a soldier of the team saw her.</summary>
@@ -298,8 +301,34 @@ namespace GlorifiedBody.Enemy
             SoldierBrain walker = pair.secondWalks ? (secondLive ? pair.second : pair.first) : (firstLive ? pair.first : pair.second);
             if (who != walker) return null;
             if (who != pair.second) return point;
-            Vector3 beside = point + Vector3.Cross(Vector3.up, (point - who.transform.position).normalized) * PartnerOffset;
-            return NavMesh.SamplePosition(beside, out NavMeshHit hit, 1.5f, NavMesh.AllAreas) ? hit.position : point;
+            if (pair.besideLeg != pair.leg)
+            {
+                pair.beside = Beside(point, pair.first, who);
+                pair.besideLeg = pair.leg;
+            }
+            return pair.beside;
+        }
+
+        /// <summary>
+        /// The second's spot by the first: to one side of the line he came along, else the other side, else behind, and never
+        /// closer than MinPartnerGap to where the first stands (2026-11-10: a spot snapped to the NavMesh by a wall put them
+        /// 0.6 m apart, and on the next leg the walker shoved his partner along for seconds).
+        /// </summary>
+        private static Vector3 Beside(Vector3 point, SoldierBrain first, SoldierBrain second)
+        {
+            Vector3 along = point - second.transform.position;
+            along.y = 0f;
+            along = along.sqrMagnitude > 0.01f ? along.normalized : second.transform.forward;
+            Vector3 side = Vector3.Cross(Vector3.up, along);
+            Vector3 firstAt = first != null ? first.transform.position : point;
+            foreach (Vector3 offset in new[] { side, -side, -along })
+            {
+                if (!NavMesh.SamplePosition(point + offset * PartnerOffset, out NavMeshHit hit, 0.6f, NavMesh.AllAreas)) continue;
+                Vector3 gap = hit.position - firstAt;
+                gap.y = 0f;
+                if (gap.magnitude >= MinPartnerGap) return hit.position;
+            }
+            return NavMesh.SamplePosition(point - along * PartnerOffset * 1.5f, out NavMeshHit back, 1.5f, NavMesh.AllAreas) ? back.position : point;
         }
 
         /// <summary>He got to his point: his partner goes, or the pair takes the next point.</summary>
