@@ -7,6 +7,8 @@
   present on black, the memory on a warm card (the one warm light of act 1). Sounds in Cutscenes/sfx/: cs07c_cork (a
   pop and the foam), cs07c_cheer (a room that cheers once). The carol stays silent until the voices (the writer's
   needs, item 2).
+- The night behind the yard of W9 (beat 14): Assets/_Game/Props/yard_backdrop.png, a dark sky, a tree line, the far
+  lights of the road. No real place.
 - The music of the sets (Assets/_Game/Audio/Broadcast/): station_loop (a radio's hits of the season, low and thin,
   12 s), tv_music_loop (the channel the attendant switches to). No real song: a few chords on bells.
 
@@ -117,6 +119,31 @@ def bells_loop(rng, seconds, thin):
     return normalise(out, 0.6)
 
 
+def backdrop(path):
+    """The night behind the yard: a sky that is almost black at the top, a lighter band at the horizon, a tree line, far lights."""
+    w, h = 1024, 512
+    rng = np.random.default_rng(64)
+    y = np.linspace(0, 1, h)[:, None]
+    sky = np.stack([10 + 22 * y, 12 + 26 * y, 20 + 34 * y], axis=-1) * np.ones((1, w, 1))
+    img = Image.fromarray(np.clip(sky, 0, 255).astype(np.uint8), "RGB")
+    d = ImageDraw.Draw(img)
+    horizon = int(h * 0.72)
+    x, top = 0, horizon
+    points = [(0, h)]
+    while x <= w:
+        top = int(np.clip(top + rng.integers(-9, 10), horizon - 60, horizon - 8))
+        points.append((x, top))
+        x += int(rng.integers(6, 18))
+    points.append((w, h))
+    d.polygon(points, fill=(6, 8, 10))
+    for _ in range(14):
+        lx, ly = int(rng.integers(0, w)), int(rng.integers(horizon - 4, horizon + 30))
+        d.ellipse([lx - 2, ly - 2, lx + 2, ly + 2], fill=(150, 130, 90))
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    img.save(path)
+    print(os.path.relpath(path, GAME), img.size)
+
+
 def main():
     os.makedirs(BROADCAST, exist_ok=True)
     os.makedirs(os.path.join(CUTSCENES, "sfx"), exist_ok=True)
@@ -126,6 +153,7 @@ def main():
     write_ogg(os.path.join(BROADCAST, "station_loop.ogg"), bells_loop(rng, 12.0, thin=True))
     write_ogg(os.path.join(BROADCAST, "tv_music_loop.ogg"), bells_loop(rng, 9.6, thin=True))
 
+    backdrop(os.path.join(GAME, "Props", "yard_backdrop.png"))
     card(os.path.join(CUTSCENES, "cs00_raven.png"), "PLACEHOLDER: the picture of act 1 and its bird.", title="RAVEN")
     card(os.path.join(CUTSCENES, "cs07c_s1.png"), "PLACEHOLDER (07c, S1): a desktop tree a foot tall, small lights that blink, paper ornaments. "
          "Over it, in marker on printer paper: HAPPY BIRTHDAY GENE!!! Under the next table, two pairs of work shoes that do not move.")

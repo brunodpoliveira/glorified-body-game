@@ -20,7 +20,13 @@ The details are PROPOSED.
 The plan has the service exit of the kitchen open into G9. On the built map G9 has no free wall: G5, G6, G9b and G12
 close it in. The service exit opens into G9b, the comms closet, and G9b opens into G9. It is a jammed fire door with
 one lever, on the kitchen side (the push bar), and no kick breaks it. The serving hatch to G10 is a shutter on each
-face of the wall, with SERVERY CLOSED., and no opening yet. A question for Bruno: keep it as built, or move rooms.
+face of the wall, with SERVERY CLOSED., and no opening yet. Bruno, the same day:
+
+```text
+1: it should open into g9b
+```
+
+So it stays as built.
 
 ## 3. The forward post
 

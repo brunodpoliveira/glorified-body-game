@@ -566,6 +566,20 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   `RoomSight` ties at a corner (the room the ray is in wins), a bullet or a blast on an invulnerable Lucy raised a hit and
   dropped the floater (no hit now), `ItemCarrier.SettleMargin`, the cover bot's barricade. OPEN: the fireteam search test
   (the pair-walk ratio, 1 failure in 3 runs) and the R1 coda poster test are flaky.
+- 2026-11-10, the rest of the demo list while Bruno was at an event (notes `2026-11-10_route_switch_planters.md`,
+  `_the_night.md`, `_dining_hall.md`): THE ROUTE SWITCH (code silver jams the W5 to W9 fire door, `FireDoor.jamFlag`, one
+  lever on the W9 side, `Door.LeverRoom`). THE PLANTERS of G2 move by mk_orzabal (`DemoRoom.Planter`), a planter in a
+  doorway holds it against guards, a soldier kicks it away (`Interaction/DoorStop`); the save keeps moved props
+  (`MovableProp`, `RoomState.props`). DE HOMEM-CRISTO. THE NIGHT: G10 at Christmas (the tree, `Rendering/Blink`, L25,
+  L26), the scan C10 plays cutscene 07c (`Scannable.cutscene`), L24/L27/L28/L29, the radio of G10 and the TV of R1
+  (`Interaction/Broadcast`: the R1 report ends by the bulletin's band, the poster beat waits for it), the W14 TV (N2),
+  the card RAVEN first in cutscene 01. THE DINING HALL: G18 east of G2, G19 its kitchen, the second fireteam on a post
+  until the duty key (`EnemySpawn.leashUntilFlag`, `SoldierBrain.LeashUntil`, a post fights only with its post in
+  `FireTeam.Join`), its track (`Audio/RoomScore`), the release needs the key (`FlagSwitch.missingText`), L30 to L34. The
+  service exit opens into G9b, not G9 (G9 has no free wall); Bruno: "it should open into g9b". THE YARD (Bruno: "add
+  placeholder vans / background"): the W9 window is in its east wall now (`DemoNight.Yard`: a sill, a pane collider), and
+  outside, 4 m down, the yard, a fence, two grey vans with the gear, lamps, a night backdrop, all with no collider.
+  Numbers PROPOSED.
 
 ## Rules
 

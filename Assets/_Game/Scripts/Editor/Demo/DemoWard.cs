@@ -34,7 +34,8 @@ namespace GlorifiedBody.Editor.Demo
                 Room("W6", "STAFF LOCKERS", -7, 2, 0, 8, W6, new Door('E', 5, "W5")),
                 Room("W7", "THERAPY GYM", 3, -2, 11, 5, W7, new Door('W', 1.5f, "W5", fire: true), new Door('E', 1.5f, "W8")),
                 Room("W8", "INDUCTION SUITE", 11, -2, 17, 5, W8, new Door('W', 1.5f, "W7"), new Door('S', 14, "W9")),
-                Room("W9", "NURSES' STATION", 3, -10, 17, -2, W9, new Door('N', 14, "W8"), new Door('W', -6, "W5", fire: true, jamFlag: CodeSilver, leverRoom: "W9"), new Door('E', -7, "W10"), new Door('S', 8, "W11"), new Door('S', 15, "W12")),
+                Room("W9", "NURSES' STATION", 3, -10, 17, -2, W9, new Door('N', 14, "W8"), new Door('W', -6, "W5", fire: true, jamFlag: CodeSilver, leverRoom: "W9"), new Door('E', -7, "W10"), new Door('S', 8, "W11"), new Door('S', 15, "W12"),
+                    new Door('E', -3, "", width: DemoNight.YardWindowWidth)), // the window on the yard (beat 14, 2026-11-10): an opening, the glass in DemoNight.Yard
                 Room("W10", "RESEARCH OFFICE", 17, -10, 23, -4, W10, new Door('W', -7, "W9"), new Door('S', 20, "W13")),
                 Room("W11", "MAPPING LAB", 3, -18, 13, -10, W11, new Door('N', 8, "W9"), new Door('S', 5.25f, "W16"), new Door('S', 11.25f, "W17")),
                 Room("W12", "STAIRWELL", 13, -14, 17, -10, W12, new Door('N', 15, "W9"), new Door('S', 15, "S1"), new Door('E', -12, "W13")),
@@ -284,7 +285,7 @@ namespace GlorifiedBody.Editor.Demo
             r.Item("L19_Dictaphone", DemoItems.L19(), new Vector3(10.2f, 1.08f, -5.7f), new Vector3(0.08f, 0.04f, 0.16f)); // the incident review (round 44)
             r.Prop("Counter_Monitors", new Vector3(11f, 1.05f, -6f), new Vector3(1.2f, 0.4f, 0.2f), 0.35f);
             DemoNight.W9Email(r); // L24
-            r.Box(r.Props, "Window", new Vector3(6f, 1.6f, -2.17f), new Vector3(3f, 1.4f, 0.04f), DemoRoom.Colour("window", new Color(0.35f, 0.45f, 0.55f)));
+            DemoNight.Yard(r); // the window on the yard and the two vans (beat 14; Bruno, 2026-11-10: "add placeholder vans / background")
             EnemySpawn marta = r.Figure("Marta", "nurse", new Vector3(4f, 0f, -8.6f), 45f, variant: 1);
             marta.fate = "marta";
             marta.scanImage = TutorialSetup.EnsureScanImage();

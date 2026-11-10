@@ -276,6 +276,103 @@ namespace GlorifiedBody.Editor.Demo
             EditorUtility.SetDirty(news);
         }
 
+        // ── W9, the window on the yard (beat 14) ──────────────────────
+
+        public const float YardWindowWidth = 1.4f;
+        public const string BackdropPath = "Assets/_Game/Props/yard_backdrop.png";
+        private const float WindowX = 17f, WindowZ = -3f, Sill = 0.9f, YardY = -4f;
+
+        /// <summary>
+        /// The window of W9 on the yard (beat 14, CANON round 64 and 65: two grey armoured vans, an MRAP and a caveirão,
+        /// weathered, the church's gear stencilled on them). Bruno, 2026-11-10: "add placeholder vans / background". The old
+        /// window looked into the gym W7, so the window is in the east wall of W9 where no room touches it. A sill, a frame
+        /// and a pane she cannot pass (a collider, no picture). Outside, 4 m down at the level of floor 1: the yard, a
+        /// fence, two vans in boxes, two yard lamps, and a night backdrop. Nothing outside has a collider (the room scans
+        /// and the NavMesh ignore it); it draws with W9.
+        /// </summary>
+        public static void Yard(DemoRoom r)
+        {
+            float height = DemoRoom.DoorHeight;
+            GameObject window = MenuLoopSetup.EnsureChild(r.Props, "Yard_Window");
+            r.Box(window, "Sill", new Vector3(WindowX, Sill * 0.5f, WindowZ), new Vector3(DemoRoom.Wall, Sill, YardWindowWidth), DemoRoom.Grey(0.3f));
+            r.Box(window, "Mullion", new Vector3(WindowX, (Sill + height) * 0.5f, WindowZ), new Vector3(0.06f, height - Sill, 0.06f), DemoRoom.Grey(0.2f));
+            GameObject pane = MenuLoopSetup.EnsureChild(window, "Pane");
+            pane.transform.position = new Vector3(WindowX, (Sill + height) * 0.5f, WindowZ);
+            BoxCollider glass = MenuLoopSetup.EnsureComponent<BoxCollider>(pane);
+            glass.size = new Vector3(0.1f, height - Sill, YardWindowWidth);
+
+            GameObject yard = MenuLoopSetup.EnsureChild(r.Props, "Yard");
+            Bare(r.Box(yard, "Yard_Ground", new Vector3(29f, YardY - 0.05f, -1f), new Vector3(24f, 0.1f, 26f), DemoRoom.Colour("yard_ground", new Color(0.11f, 0.11f, 0.12f))));
+            Bare(r.Box(yard, "Yard_Fence", new Vector3(41f, YardY + 1.5f, -1f), new Vector3(0.3f, 3f, 26f), DemoRoom.Colour("yard_fence", new Color(0.16f, 0.16f, 0.17f))));
+            Bare(r.Box(yard, "Yard_Backdrop", new Vector3(48f, YardY + 7f, -1f), new Vector3(0.05f, 14f, 32f), Backdrop()));
+            foreach ((string tag, float x, float z) in new[] { ("A", 24f, 7f), ("B", 37f, -10f) })
+            {
+                Bare(r.Box(yard, "Lamp_Post_" + tag, new Vector3(x, YardY + 2.5f, z), new Vector3(0.15f, 5f, 0.15f), DemoRoom.Grey(0.15f)));
+                Bare(r.Box(yard, "Lamp_Head_" + tag, new Vector3(x, YardY + 5f, z), new Vector3(0.5f, 0.2f, 0.3f), DemoRoom.Colour("lamp_head", new Color(1f, 0.9f, 0.65f))));
+            }
+            // An MRAP, tall and square, and a caveirão, lower, its nose sloped: flat grey, weathered, the gear on the near side.
+            Van(r, yard, "Van_MRAP", new Vector3(27f, YardY, -4.5f), new Vector3(2.5f, 2.6f, 6.4f), sloped: false);
+            Van(r, yard, "Van_Caveirao", new Vector3(31.5f, YardY, 1.5f), new Vector3(2.4f, 2.2f, 5.6f), sloped: true);
+        }
+
+        private static void Van(DemoRoom r, GameObject yard, string name, Vector3 floor, Vector3 size, bool sloped)
+        {
+            GameObject van = MenuLoopSetup.EnsureChild(yard, name);
+            Material grey = DemoRoom.Colour("van_grey", new Color(0.36f, 0.37f, 0.36f)), dark = DemoRoom.Colour("van_dark", new Color(0.06f, 0.06f, 0.07f));
+            float clearance = 0.55f;
+            Bare(r.Box(van, "Body", floor + new Vector3(0f, clearance + size.y * 0.5f, 0f), size, grey));
+            Bare(r.Box(van, "Windscreen", floor + new Vector3(0f, clearance + size.y * 0.78f, size.z * 0.5f + 0.01f), new Vector3(size.x * 0.8f, size.y * 0.22f, 0.02f), dark));
+            if (sloped)
+            {
+                GameObject nose = Bare(r.Box(van, "Nose", floor + new Vector3(0f, clearance + size.y * 0.35f, size.z * 0.5f + 0.45f), new Vector3(size.x * 0.96f, size.y * 0.7f, 1.1f), grey));
+                nose.transform.rotation = Quaternion.Euler(-35f, 0f, 0f);
+            }
+            foreach (float dz in new[] { -size.z * 0.32f, size.z * 0.32f })
+                foreach (float dx in new[] { -size.x * 0.5f, size.x * 0.5f })
+                    Bare(r.Box(van, $"Wheel_{(dx < 0 ? "W" : "E")}{(dz < 0 ? "S" : "N")}", floor + new Vector3(dx, 0.5f, dz), new Vector3(0.4f, 1f, 1f), dark));
+            // The gear of the church, stencilled on the side she sees (the west side, toward the window).
+            GameObject gear = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            gear.name = "Gear_Stencil";
+            gear.transform.SetParent(van.transform, false);
+            gear.transform.position = floor + new Vector3(-size.x * 0.5f - 0.02f, clearance + size.y * 0.55f, 0f);
+            gear.transform.rotation = Quaternion.Euler(0f, 0f, 90f);
+            gear.transform.localScale = new Vector3(0.9f, 0.01f, 0.9f);
+            gear.GetComponent<Renderer>().sharedMaterial = DemoRoom.Colour("van_stencil", new Color(0.75f, 0.75f, 0.72f));
+            Bare(gear);
+        }
+
+        /// <summary>No collider and no shadow: the yard is a picture through the window.</summary>
+        private static GameObject Bare(GameObject obj)
+        {
+            Collider c = obj.GetComponent<Collider>();
+            if (c != null) Object.DestroyImmediate(c);
+            Renderer renderer = obj.GetComponent<Renderer>();
+            if (renderer != null) renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            return obj;
+        }
+
+        private static Material Backdrop()
+        {
+            string path = ItemAssets.MaterialsFolder + "/GB_Yard_Backdrop.mat";
+            var material = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (material == null)
+            {
+                material = new Material(Shader.Find(ItemAssets.UnlitShaderName));
+                AssetDatabase.CreateAsset(material, path);
+            }
+            var texture = AssetDatabase.LoadAssetAtPath<Texture2D>(BackdropPath);
+            if (texture == null)
+            {
+                AssetDatabase.ImportAsset(BackdropPath);
+                texture = AssetDatabase.LoadAssetAtPath<Texture2D>(BackdropPath);
+            }
+            if (texture == null) Debug.LogWarning("[DemoNight] no backdrop " + BackdropPath + " (run tools/christmas_placeholders.py)");
+            material.SetTexture("_BaseMap", texture);
+            material.SetColor("_BaseColor", Color.white);
+            EditorUtility.SetDirty(material);
+            return material;
+        }
+
         // ── Helpers ───────────────────────────────────────────────────
 
         private static Broadcast.Line Line(string speaker, string id, string text, string picture = "") =>
