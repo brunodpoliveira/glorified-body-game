@@ -584,8 +584,8 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   G17b FACILITIES off G19 (L15, the LOCKOUT key switch), G17 SERVER ROOM (`Editor/Demo/DemoHalon.cs`), L16 in G12. The box
   wall is a heavy lock target; a full circle of mk_erebus lights it (`Interaction/HalonSystem`): LOCKOUT first = it burns
   with no horn; else the horn, the door seals (a fire door with no lever, `Door.LeverRoom = "none"`), 30 s, ABORT on the
-  panel (`HalonAbort`) or the halon: she passes out, killer `halon`. The cage holds the count of L18 (two of each, one
-  second wind): OPEN for Bruno, §10.4 says one of each. Numbers PROPOSED.
+  panel (`HalonAbort`) or the halon: she passes out, killer `halon`. His answers: keep the places and the numbers, the
+  cage holds one of each (L18 still counts two: a task for the writer).
 
 ## Rules
 

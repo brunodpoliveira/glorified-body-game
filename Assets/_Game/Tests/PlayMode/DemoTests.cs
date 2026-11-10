@@ -180,7 +180,7 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.AreEqual("G12", RoomOfItem("l16_counsel_note"));
             Assert.AreEqual("G17", RoomOfItem("l17_health_note"));
             Assert.AreEqual("G17", RoomOfItem("l18_stock_ledger"));
-            Assert.AreEqual(7, halon.cage.GetComponentsInChildren<ItemPickup>(true).Count(p => p.item != null && p.item.kind != ItemKind.Log), "two of each power, one second wind (the count of L18)");
+            Assert.AreEqual(4, halon.cage.GetComponentsInChildren<ItemPickup>(true).Count(p => p.item != null && p.item.kind != ItemKind.Log), "one of each power, one second wind (§10.4; Bruno, 2026-11-10)");
         }
 
         [UnityTest]
@@ -201,6 +201,16 @@ namespace GlorifiedBody.Tests.PlayMode
             yield return WaitUntil(() => halon.Current == HalonSystem.State.Burned, HalonSystem.BurnSeconds + 3f);
             Assert.IsFalse(halon.boxes.activeInHierarchy, "the boxes are gone");
             Assert.IsTrue(halon.cage.activeInHierarchy, "the cage shows");
+            // She reaches the cage: a free place on the floor in front of its shelf, and every item in its range from there.
+            Physics.SyncTransforms();
+            Vector3 shelf = halon.cage.transform.parent.Find("Reserve_Cage/Cage_Shelf").position;
+            Vector3 stand = new Vector3(shelf.x, GlorifiedBody.Rooms.Room.Of("G17").BaseY, shelf.z + 0.9f);
+            Assert.IsFalse(Physics.CheckCapsule(stand + Vector3.up * 0.4f, stand + Vector3.up * 1.4f, 0.3f, LayerMask.GetMask("Default"), QueryTriggerInteraction.Ignore), "room to stand where the boxes were");
+            foreach (ItemPickup item in halon.cage.GetComponentsInChildren<ItemPickup>())
+            {
+                Vector3 flat = item.transform.position - (stand + Vector3.up * 1f);
+                Assert.Less(flat.magnitude, item.range, $"{item.name} within her reach from there");
+            }
             Assert.IsTrue(StoryFlags.Has("demo_g17_burned"));
         }
 
@@ -1625,9 +1635,12 @@ namespace GlorifiedBody.Tests.PlayMode
         {
             yield return LoadWorld();
             var counts = new Dictionary<DrugType, int>();
+            HalonSystem halon = UnityEngine.Object.FindAnyObjectByType<HalonSystem>();
             foreach (ItemPickup pickup in UnityEngine.Object.FindObjectsByType<ItemPickup>(FindObjectsInactive.Include, FindObjectsSortMode.None))
             {
                 if (pickup.item == null || pickup.item.kind != ItemKind.Drug) continue;
+                // The reserve cage of G17 is a reward behind the box wall, not on the way: the halon tests reach it after the fire.
+                if (halon != null && pickup.transform.IsChildOf(halon.cage.transform)) continue;
                 counts[pickup.item.drugType] = counts.TryGetValue(pickup.item.drugType, out int n) ? n + 1 : 1;
                 Assert.IsNotNull(GlorifiedBody.Rooms.Room.At(pickup.transform.position), pickup.name + " lies in a room");
                 Vector3 floor = pickup.transform.position;

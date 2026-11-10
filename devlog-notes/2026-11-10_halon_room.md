@@ -32,9 +32,15 @@ DEMO_PLAN §10.4 (CANON round 39: the fire, the gas, the pass-out; round 41: the
 
 ## 3. The cage
 
-L18 counts two of each of her three powers and one second wind. §10.4 says one of each. The cage follows the count of
-L18: two MK capsules of each power, one second wind pill, the empty tray with the violet label, and L18 on its clip.
-A question for Bruno if one of each is meant.
+The cage holds one MK capsule for each of her three powers, one second wind pill, the empty tray with the violet
+label, and L18 on its clip. Bruno, the same day:
+
+```text
+1:go with your picks. 2:one of each.
+```
+
+So the places, the 8 s burn and the 3 s pass-out stand. FOR THE WRITER: L18 still counts WARSPITE 2. EREBUS 2. ORZABAL
+2. The count needs a 1 for each to match the cage.
 
 ## Proof
 
@@ -46,3 +52,11 @@ A question for Bruno if one of each is meant.
 
 Shots: `~/MEGA/glorified-body-renders/game/halon_room_2026-11-10/`. The red sphere over the boxes is the lock marker:
 the auto-lock takes the wall. Numbers PROPOSED: the burn 8 s, the pass-out 3 s.
+
+## The whole check after the cage change
+
+The rebuild, then the whole suite: 481 of 483 (`TheFrame_Profile` is explicit, so the suite skips it). One failure:
+`TheCapsules_LieOnTheWay_...` asks that every capsule lie within 1.2 m of the floor she walks at the start. The cage
+capsules lie behind the box wall on purpose, as a reward, so the test skips the cage now. In exchange, the LOCKOUT test
+checks the reach after the fire: a free place on the floor where the boxes were, and every cage item within its range
+from there. The three tests pass (3 of 3). All 27 bot runs pass, the tutorial bot included.

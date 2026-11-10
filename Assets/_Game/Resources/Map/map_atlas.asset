@@ -1388,32 +1388,20 @@ MonoBehaviour:
       position: {x: 55.7, y: -47.16}
       label: AN OCCUPATIONAL HEALTH NOTE
     - kind: 1
-      path: '[World]/[G17]/[Props]/Cage_Contents/Cage_Warspite_A'
-      position: {x: 53.3, y: -54.35}
+      path: '[World]/[G17]/[Props]/Cage_Contents/Cage_Warspite'
+      position: {x: 53.5, y: -54.35}
       label: WARSPITE CAPSULE
     - kind: 1
-      path: '[World]/[G17]/[Props]/Cage_Contents/Cage_Warspite_B'
-      position: {x: 53.55, y: -54.35}
-      label: WARSPITE CAPSULE
-    - kind: 1
-      path: '[World]/[G17]/[Props]/Cage_Contents/Cage_Erebus_A'
-      position: {x: 53.95, y: -54.35}
+      path: '[World]/[G17]/[Props]/Cage_Contents/Cage_Erebus'
+      position: {x: 54.05, y: -54.35}
       label: EREBUS CAPSULE
     - kind: 1
-      path: '[World]/[G17]/[Props]/Cage_Contents/Cage_Erebus_B'
-      position: {x: 54.2, y: -54.35}
-      label: EREBUS CAPSULE
-    - kind: 1
-      path: '[World]/[G17]/[Props]/Cage_Contents/Cage_Orzabal_A'
+      path: '[World]/[G17]/[Props]/Cage_Contents/Cage_Orzabal'
       position: {x: 54.6, y: -54.35}
       label: ORZABAL CAPSULE
     - kind: 1
-      path: '[World]/[G17]/[Props]/Cage_Contents/Cage_Orzabal_B'
-      position: {x: 54.85, y: -54.35}
-      label: ORZABAL CAPSULE
-    - kind: 1
       path: '[World]/[G17]/[Props]/Cage_Contents/Cage_Second_Wind'
-      position: {x: 55.3, y: -54.35}
+      position: {x: 55.15, y: -54.35}
       label: SECOND WIND PILL
     - kind: 2
       path: '[World]/[G17]/[Props]/Cage_Contents/L18_Stock_Ledger'

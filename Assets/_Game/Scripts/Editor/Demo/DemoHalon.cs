@@ -132,7 +132,8 @@ namespace GlorifiedBody.Editor.Demo
             GameObject ashPile = r.Box(ash, "Ash", wallAt + Vector3.up * 0.08f, new Vector3(3.4f, 0.16f, 0.9f), DemoRoom.Grey(0.06f));
             Object.DestroyImmediate(ashPile.GetComponent<Collider>());
 
-            // The reserve cage behind it (CANON round 41; the count of L18: two of each of her three powers, one second wind).
+            // The reserve cage behind it (CANON round 41): one capsule for each of her three powers and one second wind pill (§10.4;
+            // Bruno, 2026-11-10: "one of each").
             GameObject cageFrame = MenuLoopSetup.EnsureChild(r.Props, "Reserve_Cage");
             Vector3 cageAt = new Vector3(42f, 0f, -23.35f);
             foreach (float dx in new[] { -1.5f, 1.5f })
@@ -141,10 +142,10 @@ namespace GlorifiedBody.Editor.Demo
             GameObject contents = MenuLoopSetup.EnsureChild(r.Props, "Cage_Contents");
             var stock = new (string name, DrugType type, float x)[]
             {
-                ("Cage_Warspite_A", DrugType.Nalcon, -1.2f), ("Cage_Warspite_B", DrugType.Nalcon, -0.95f),
-                ("Cage_Erebus_A", DrugType.NalconFire, -0.55f), ("Cage_Erebus_B", DrugType.NalconFire, -0.3f),
-                ("Cage_Orzabal_A", DrugType.NalconLift, 0.1f), ("Cage_Orzabal_B", DrugType.NalconLift, 0.35f),
-                ("Cage_Second_Wind", DrugType.DFelon, 0.8f),
+                ("Cage_Warspite", DrugType.Nalcon, -1.0f),
+                ("Cage_Erebus", DrugType.NalconFire, -0.45f),
+                ("Cage_Orzabal", DrugType.NalconLift, 0.1f),
+                ("Cage_Second_Wind", DrugType.DFelon, 0.65f),
             };
             foreach ((string name, DrugType type, float x) in stock)
                 r.Capsule(name, type, cageAt + new Vector3(x, 1.0f, 0f)).transform.SetParent(contents.transform, true);
