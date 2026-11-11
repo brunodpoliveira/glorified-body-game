@@ -49,6 +49,14 @@ The writer agent wrote the rows of `game/barks.csv`. They replace the last PLACE
 The writer also set L18 to one of each, logged round 113 in `RULINGS.md`, and brought `DEMO_PLAN.md` §10 and §13 up
 to date. Two questions for Bruno are in its §15: the old night manager rows (a man inside walk-in 1, the build has him
 beside it), and the code 867-5309 is the number of a well-known song.
+Bruno, the same evening:
+
+```text
+1: beside it.
+2: keep it
+```
+
+The night manager stays beside walk-in 1, as built, and the code stays 8675309. No change in the game.
 
 ## 5. The devlog brief
 
