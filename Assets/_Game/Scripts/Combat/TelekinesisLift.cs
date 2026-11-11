@@ -361,6 +361,7 @@ namespace GlorifiedBody.Combat
             set
             {
                 if (stays && !value && attacker != null) holdYaw = attacker.transform.eulerAngles.y; // no jump when it starts to turn with her
+                if (!stays && value && attacker != null) holdOffset = Quaternion.Euler(0f, HoldYawNow(attacker.transform), 0f) * holdOffset; // nor when it stops
                 stays = value;
             }
         }

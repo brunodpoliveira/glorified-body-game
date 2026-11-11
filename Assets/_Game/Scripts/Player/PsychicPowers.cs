@@ -541,6 +541,10 @@ namespace GlorifiedBody.Player
                     lift.StaysWhenSheTurns = false; // from now on it turns with her, so she aims the throw with the tank turn
                 }
             }
+            // A charge turns her to the lock, and the floater stays where it hangs until the throw or the slam (Bruno, 2026-11-11:
+            // "the enemy floating should stay put until i let go or fully charge"). A cancelled charge lets it turn with her again.
+            if (lift != null && !carrying && liftTurnUntil < 0f)
+                lift.StaysWhenSheTurns = lockOn.IsCharging || GameInput.GetAction(InputManager.GameAction.Charge, KeyCode.Mouse0);
             bool mine = lift != null && Selected.kind == PowerKind.Telekinesis;
             if (tank != null) tank.MouseTurnPaused = mine;
             if (carrying)

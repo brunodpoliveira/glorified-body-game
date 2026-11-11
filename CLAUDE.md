@@ -596,6 +596,9 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   the player started to interact with it and she'll only say this line at the end of the broadcast"): `InWorldScreen.watchable`
   (Interact on a playing screen = the lines left as a cutscene made at run time, the show goes on from there after a skip),
   `InWorldScreen.endComment` (her text by itself at the end, in the room; `Interactor.ShowMessage`, `Interactable.MessageTime`).
+- 2026-11-11, the floater in a charge (`devlog-notes/2026-11-11_floater_stays_in_charge.md`, Bruno: "the enemy floating should
+  stay put until i let go or fully charge"): while the charge key is held, the floater does not turn with her
+  (`PsychicPowers.UpdateHeld`, `StaysWhenSheTurns`); she still turns to the lock.
 
 ## Rules
 

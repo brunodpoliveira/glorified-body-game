@@ -684,6 +684,41 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator Telekinesis_TheFloaterStaysPut_WhileSheChargesAtAnother()
+        {
+            // Bruno, 2026-11-11: "when i aim my floater at someone else, the floater stays close to the target as i charge ...
+            // the enemy floating should stay put until i let go or fully charge". The charge turns her to the lock, and the
+            // floater swung with her.
+            powers.Select(PowerKind.Telekinesis);
+            PowerDefinition tk = powers.Selected;
+            powers.FireAt(tk, 1f, dummyA);
+            yield return new WaitForSeconds(tk.liftSeconds + 0.1f);
+            Assert.IsNotNull(powers.HeldLift, "she holds Dummy_A in the air");
+            // She turns away first, so the charge must turn her back to Dummy_B.
+            pad.SetHeld(InputManager.GameAction.TurnRight, true);
+            yield return new WaitForSeconds(0.5f);
+            pad.ReleaseAll();
+            yield return null;
+            lockOn.SetTarget(dummyB);
+            Vector3 hung = dummyA.transform.position;
+            float yaw0 = player.transform.eulerAngles.y;
+
+            pad.SetHeld(InputManager.GameAction.Charge, true);
+            yield return new WaitForSeconds(Mathf.Min(0.5f, tk.fullChargeTime * 0.6f));
+            float turned = Mathf.Abs(Mathf.DeltaAngle(yaw0, player.transform.eulerAngles.y));
+            float moved = Vector3.Distance(hung, dummyA.transform.position);
+            Debug.Log($"[PowersAndBarsTests] the charge turned her {turned:0} degrees, the floater moved {moved:0.00} m");
+            Assert.IsTrue(lockOn.IsCharging, "she charges");
+            Assert.Greater(turned, 20f, "the charge turned her to Dummy_B");
+            Assert.Less(moved, 0.1f, "the floater stays where it hangs");
+
+            pad.SetHeld(InputManager.GameAction.Charge, false);
+            yield return null;
+            yield return null;
+            Assert.AreEqual("launch:Dummy_B", powers.LastResult, "the release throws it at Dummy_B");
+        }
+
+        [UnityTest]
         public IEnumerator Fire_PartCharge_FlashesTheShooter()
         {
             // Bruno, 2026-10-20, option c: a part charge of FIRE breaks the shooter's aim, no burn.
