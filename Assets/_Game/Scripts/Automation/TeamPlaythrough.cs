@@ -166,7 +166,17 @@ namespace GlorifiedBody.Automation
                 Draw("G5");
                 Vector3 both = (walker.transform.position + partner.transform.position) * 0.5f + Vector3.up;
                 CloseShot(both, Vector3.Cross(Vector3.up, walker.transform.position - partner.transform.position), Path.Combine(shots, "team_03_search_pair.png"), Mathf.Max(5f, Vector3.Distance(walker.transform.position, partner.transform.position) * 1.2f), 1.5f);
-                Record("pair_one_walks", !partner.Body.IsMoving || !walker.Body.IsMoving, $"{walker.name} walks, {partner.name} {(partner.Body.IsMoving ? "walks too" : "covers")}");
+                // Over 3 s, not one frame: at a handover both walk for a moment (2 to 4 % of the frames, 2026-11-10).
+                int walkOne = 0, bothWalk = 0;
+                float t0 = BotClock.Now;
+                while (BotClock.Now - t0 < 3f && fire.Lost)
+                {
+                    stats.AddShort(-PsychicStats.MaxShort);
+                    if (walker.Body.IsMoving && partner.Body.IsMoving) bothWalk++;
+                    else if (walker.Body.IsMoving || partner.Body.IsMoving) walkOne++;
+                    yield return null;
+                }
+                Record("pair_one_walks", walkOne > bothWalk * 3, $"{walker.name} and {partner.name} in 3 s: one walks {walkOne} frames, both walk {bothWalk}");
             }
 
             // The first team dies, sector C is released: the second fireteam comes, after the silence.
