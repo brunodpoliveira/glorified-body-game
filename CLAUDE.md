@@ -592,6 +592,10 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   2 to 4 % of the frames, 6 legs in 25 s. The R1 poster test: not reproduced in 11 runs, on watch. The writer's round
   113 lines replace the last PLACEHOLDER barks (the night manager, the G10 hiders found, the fighters' feed, the guard's
   retreat), and L18 counts one of each. Manual list for Bruno: 41 rows.
+- 2026-11-11, the W14 TV (`devlog-notes/2026-11-11_w14_tv_watch.md`, Bruno: "she is meant to watch the cutscene from where
+  the player started to interact with it and she'll only say this line at the end of the broadcast"): `InWorldScreen.watchable`
+  (Interact on a playing screen = the lines left as a cutscene made at run time, the show goes on from there after a skip),
+  `InWorldScreen.endComment` (her text by itself at the end, in the room; `Interactor.ShowMessage`, `Interactable.MessageTime`).
 
 ## Rules
 

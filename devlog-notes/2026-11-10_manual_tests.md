@@ -17,7 +17,7 @@ what you see if it is broken. Write the row number and a screenshot for each fau
 | 8 | In W9, look out of the window in the east wall. | The yard 4 m down, a fence, two grey vans with the gear, lamps, the night. | Black, or the old blue window on the north wall. |
 | 9 | Try to walk out of that window. | The pane stops her. | She falls out. |
 | 10 | In W14, walk in. | The TV plays the end of Things to Come as subtitles, then the credits and the copyright line. | Nothing plays. |
-| 11 | Interact on the TV table in W14. | Her text: "Aw, man. I tuned in right at the end!..." | A placeholder line. |
+| 11 | (Changed 2026-11-11.) Interact on the TV while it plays. Then wait for the end. | The rest of the show full screen, from the line that plays now. She stays where she stood. At the end, her text: "Aw, man. I tuned in right at the end!..." | Her text before the end, or no cutscene. |
 
 ## The public floor
 

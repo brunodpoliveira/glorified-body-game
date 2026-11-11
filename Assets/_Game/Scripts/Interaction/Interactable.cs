@@ -74,5 +74,8 @@ namespace GlorifiedBody.Interaction
 
         /// <summary>The message is on screen now (InteractKind.Message): a sound, a light. The result word, or null for the usual one.</summary>
         public virtual string Shown(Interactor who) => null;
+
+        /// <summary>How long the message stays when no key closes it (a long text of hers needs longer).</summary>
+        public virtual float MessageTime => Interactor.MessageSeconds;
     }
 }

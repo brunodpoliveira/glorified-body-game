@@ -221,16 +221,21 @@ namespace GlorifiedBody.Editor.Demo
         /// <summary>Lucy's examine text on the TV of W14 (CANON rounds 108 to 110; text only: not one of her spoken lines).</summary>
         public const string LucyOnTheTv = "Aw, man. I tuned in right at the end! Things to Come is the best cartoon I've ever seen. Like Starship Troopers, you can watch it for the pew-pew space lasers, or as a meditation on progress and technology. And this one is clearly on the side of the man in the arena, as Roosevelt said. Well, I can ask a nurse to put in the Blu-ray so I can catch up later.";
 
-        /// <summary>The W14 TV plays the end of the episode when she walks in (round 108: "with no input from the player").</summary>
+        /// <summary>
+        /// The W14 TV plays the end of the episode when she walks in (round 108: "with no input from the player"). Interact
+        /// watches the rest full screen from where she stands, and her text shows at the end of the show (Bruno, 2026-11-11).
+        /// </summary>
         public static void W14Tv(DemoRoom r, GameObject tv)
         {
             r.Beat("W14_TV", W14TvDone, new Vector3(-1.1f, 1f, 12.75f), new Vector3(1.2f, 2f, 1.8f), ScriptStep.Screen(tv));
-            GameObject table = r.Props.transform.Find("TV_Table")?.gameObject;
-            Examinable look = table != null ? table.GetComponent<Examinable>() : null;
-            if (look == null) return;
-            look.thing = "the TV";
-            look.comment = LucyOnTheTv;
-            EditorUtility.SetDirty(look);
+            InWorldScreen screen = tv.GetComponent<InWorldScreen>();
+            screen.thing = "the TV";
+            screen.range = 3.2f;
+            screen.watchable = true;
+            screen.watchStill = DemoV2.Still("n2_speech");
+            screen.creditsStill = DemoV2.Still("n2_credits");
+            screen.endComment = LucyOnTheTv;
+            EditorUtility.SetDirty(screen);
         }
 
         // ── R1, the TV behind the till (N1b) ──────────────────────────

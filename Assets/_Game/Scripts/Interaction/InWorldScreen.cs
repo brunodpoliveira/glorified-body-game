@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.Video;
 using GlorifiedBody.Audio;
 using GlorifiedBody.DebugTools;
+using GlorifiedBody.Story;
 using GlorifiedBody.Subtitles;
 using GlorifiedBody.Systems;
 
@@ -19,6 +20,10 @@ namespace GlorifiedBody.Interaction
     /// it again with the tape key). With no clip it runs its lines alone on its own clock (the greybox card).
     /// Interact turns it on and off when it is interactive; a ScriptedSequence step (StepKind.Screen) starts it when
     /// she walks in.
+    /// A watchable screen (2026-11-11, Bruno: the W14 TV, "she is meant to watch the cutscene from where the player started
+    /// to interact with it and she'll only say this line at the end of the broadcast"): Interact while it plays shows the
+    /// rest of the show full screen as a cutscene, from the line that plays now, and she stays where she stands. After the
+    /// cutscene the show goes on from where the cutscene stopped. At the end her text shows, if she is in its room.
     /// </summary>
     public sealed class InWorldScreen : Interactable
     {
@@ -39,6 +44,16 @@ namespace GlorifiedBody.Interaction
         public bool pausesTape = true;
         [Tooltip("The words of the hint: \"turn on the screen\".")]
         public string thing = "the screen";
+
+        [Header("Watch (2026-11-11)")]
+        [Tooltip("Interact while it plays: she watches the rest full screen, as a cutscene of the lines left.")]
+        public bool watchable;
+        [Tooltip("The still of a line with a speaker, in the watch view.")]
+        public Texture2D watchStill;
+        [Tooltip("The still of a line with no speaker (the credits), in the watch view. Null: watchStill.")]
+        public Texture2D creditsStill;
+        [Tooltip("Her text at the end of the show, when she is in its room. Interact after the end shows it again.")]
+        [TextArea] public string endComment = "";
 
         private static readonly List<InWorldScreen> playing = new List<InWorldScreen>();
         /// <summary>A screen that lowers the music plays now (MusicDirector).</summary>
@@ -64,8 +79,16 @@ namespace GlorifiedBody.Interaction
         private float clock; // the time of a clip with no video, or the video's last time
         private int shownLine = -1;
         private Transform lucy;
+        private CutsceneAsset view; // the watch view of now
+        private bool watching;
+        private float watchedFrom, watchedFor;
+        private int skipsBefore;
 
         public bool IsPlaying => on;
+        public bool IsWatched => watching;
+        public int Watches { get; private set; }
+        /// <summary>The times her text showed by itself at the end (the tests).</summary>
+        public int EndComments { get; private set; }
         public int Plays { get; private set; }
         public int Ends { get; private set; }
         /// <summary>The time in the clip, in seconds.</summary>
@@ -145,6 +168,7 @@ namespace GlorifiedBody.Interaction
             playing.Remove(this);
             if (texture != null) { texture.Release(); Destroy(texture); }
             if (shown != null) Destroy(shown);
+            if (view != null) Destroy(view);
         }
 
         /// <summary>Starts the clip from its start. False when it plays already.</summary>
@@ -200,11 +224,88 @@ namespace GlorifiedBody.Interaction
             Stop();
             RunTelemetry.Event("screen_end", name);
             OnEnded?.Invoke();
+            SayEndComment();
+        }
+
+        private void SayEndComment()
+        {
+            if (string.IsNullOrEmpty(endComment)) return;
+            if (lucy == null) FindLucy();
+            if (lucy == null || !GlorifiedBody.Rooms.Room.Same(lucy.position, SoundPoint)) return;
+            Interactor hands = lucy.GetComponent<Interactor>();
+            if (hands != null && hands.ShowMessage(endComment, EndCommentSeconds, "screen_comment:" + name)) EndComments++;
+        }
+
+        /// <summary>Time to read her text at the end (no cap: Interact closes it sooner).</summary>
+        public float EndCommentSeconds => Mathf.Max(Interactor.MessageSeconds, 1f + 0.055f * endComment.Length);
+
+        // ── Watch ─────────────────────────────────────────────────────
+
+        /// <summary>Shows the rest of the show full screen. False when it does not play, or a cutscene cannot start.</summary>
+        public bool Watch()
+        {
+            if (!on || watching || !watchable) return false;
+            float from = Time;
+            CutsceneAsset next = WatchCutscene(from);
+            if (next.shots.Length == 0) { Destroy(next); return false; }
+            skipsBefore = CutscenePlayer.Skipped;
+            if (!CutscenePlayer.Play(next)) { Destroy(next); return false; }
+            if (view != null) Destroy(view);
+            view = next;
+            watching = true;
+            watchedFrom = from;
+            watchedFor = 0f;
+            Watches++;
+            SubtitleService.Hide(SubtitleOwner);
+            shownLine = -1;
+            RunTelemetry.Event("screen_watch", $"{name} at {from:0.0}");
+            return true;
+        }
+
+        /// <summary>The lines left after the time, one shot a line. The line that plays now comes first, for the part of it that is left.</summary>
+        public CutsceneAsset WatchCutscene(float now)
+        {
+            var cut = ScriptableObject.CreateInstance<CutsceneAsset>();
+            cut.name = cut.cutsceneId = "watch_" + name;
+            var shots = new List<CutsceneAsset.Shot>();
+            for (int i = 0; i < lines.Count; i++)
+            {
+                float end = i + 1 < lines.Count ? lines[i + 1].at : Length;
+                if (end <= now) continue;
+                TapeLine l = lines[i];
+                bool credits = string.IsNullOrEmpty(l.speaker);
+                shots.Add(new CutsceneAsset.Shot
+                {
+                    still = credits && creditsStill != null ? creditsStill : watchStill,
+                    seconds = Mathf.Max(0.5f, end - Mathf.Max(l.at, now)),
+                    speaker = credits ? "SCREEN" : l.speaker,
+                    text = l.text,
+                });
+            }
+            cut.shots = shots.ToArray();
+            return cut;
+        }
+
+        // The world stops for the cutscene: the show's clock counts the shots the cutscene plays, and goes on from there.
+        private void FollowWatch()
+        {
+            if (CutscenePlayer.IsPlaying)
+            {
+                if (CutscenePlayer.ShotIndex >= 0 && !CutscenePlayer.MenuOpen) watchedFor += UnityEngine.Time.unscaledDeltaTime;
+                return;
+            }
+            watching = false;
+            bool skipped = CutscenePlayer.Skipped != skipsBefore;
+            float to = skipped ? watchedFrom + watchedFor : Length;
+            RunTelemetry.Event("screen_watched", $"{name} to {to:0.0}{(skipped ? " skipped" : "")}");
+            if (to >= Length && !loop) Finish();
+            else Seek(Mathf.Min(to, Length));
         }
 
         private void Update()
         {
             if (!on) return;
+            if (watching) { FollowWatch(); return; }
             GameManager gm = GameManager.Instance;
             bool stopped = gm != null && !gm.IsPlaying;
             // The clip stops with the world (a pause, the inventory, the map, a log, a cutscene) and goes on after it.
@@ -273,13 +374,20 @@ namespace GlorifiedBody.Interaction
 
         // ── Interact ──────────────────────────────────────────────────
 
-        public override bool Available => interactive && base.Available;
-        public override string Hint => (on ? "turn off " : "turn on ") + thing;
-        public override InteractKind KindFor(Interactor who) => InteractKind.Act;
-        public override string TextFor(Interactor who) => "";
+        // A watchable screen: Interact watches it while it plays, and shows her text again after the end.
+        private bool CanWatch => watchable && on && !watching;
+        private bool AfterEnd => !interactive && !on && Ends > 0 && !string.IsNullOrEmpty(endComment);
+
+        public override bool Available => (interactive || CanWatch || AfterEnd) && base.Available;
+        public override string Hint => CanWatch ? "watch " + thing : AfterEnd ? "look at " + thing : (on ? "turn off " : "turn on ") + thing;
+        public override InteractKind KindFor(Interactor who) => AfterEnd ? InteractKind.Message : InteractKind.Act;
+        public override string TextFor(Interactor who) => AfterEnd ? endComment : "";
+        public override float MessageTime => AfterEnd ? EndCommentSeconds : base.MessageTime;
+        public override string Shown(Interactor who) => "screen_comment:" + name;
 
         public override string Confirm(Interactor who)
         {
+            if (CanWatch) return Watch() ? "screen_watch:" + name : "screen_busy:" + name;
             if (on) { Stop(); return "screen_off:" + name; }
             Play();
             return "screen_on:" + name;

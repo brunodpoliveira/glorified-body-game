@@ -118,7 +118,7 @@ namespace GlorifiedBody.Interaction
             Text = target.TextFor(this);
             if (target.KindFor(this) == InteractKind.Message)
             {
-                messageUntil = Time.time + MessageSeconds;
+                messageUntil = Time.time + target.MessageTime;
                 SetState(State.Message);
                 Result(target.Shown(this) ?? (target is LockedDoor ? "locked:" : "message:") + target.name);
                 return;
@@ -180,6 +180,17 @@ namespace GlorifiedBody.Interaction
             SetState(State.Free);
             GameManager.Instance?.EndReading();
             Result("closed:" + id);
+        }
+
+        /// <summary>Shows her words in the message box with no key (the end of the W14 show, 2026-11-11). False while the box is busy.</summary>
+        public bool ShowMessage(string text, float seconds, string what)
+        {
+            if (Current != State.Free || string.IsNullOrEmpty(text)) return false;
+            Text = text;
+            messageUntil = Time.time + seconds;
+            SetState(State.Message);
+            Result(what);
+            return true;
         }
 
         private void EndMessage()

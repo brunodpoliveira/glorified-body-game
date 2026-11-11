@@ -404,8 +404,10 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator TheW14Tv_PlaysTheEndOfTheEpisode_WhenSheWalksIn_AndHerTextIsOnIt()
+        public IEnumerator TheW14Tv_PlaysWhenSheWalksIn_InteractWatchesTheRest_HerTextComesAtTheEnd()
         {
+            // 2026-11-11, Bruno: "she is meant to watch the cutscene from where the player started to interact with it and
+            // she'll only say this line at the end of the broadcast" (her text was on the table, at any time).
             yield return Coda("W14");
             GameObject lucy = GameObject.FindGameObjectWithTag("Player");
             InWorldScreen tv = UnityEngine.Object.FindObjectsByType<InWorldScreen>(FindObjectsSortMode.None).First(s => s.GetComponentInParent<GlorifiedBody.Rooms.Room>()?.id == "W14");
@@ -417,7 +419,49 @@ namespace GlorifiedBody.Tests.PlayMode
             yield return WaitUntil(() => tv.IsPlaying, 3f);
             Assert.IsTrue(tv.IsPlaying, "it plays when she walks in (round 108)");
             Examinable look = GameObject.Find("TV_Table").GetComponent<Examinable>();
-            StringAssert.StartsWith("Aw, man. I tuned in right at the end!", look.comment, "her text on the TV");
+            StringAssert.DoesNotStartWith("Aw, man.", look.comment, "her text is not on the table");
+            Interactor hands = lucy.GetComponent<Interactor>();
+            Assert.IsTrue(tv.Available, "the TV takes the key while it plays");
+            Assert.AreEqual(InteractKind.Act, tv.KindFor(hands), "no message: the key watches it");
+
+            // Mid-show: the watch view starts at the line that plays now, and only the lines left come.
+            int mid = 8;
+            tv.Seek(tv.lines[mid].at + 0.3f);
+            CutsceneAsset rest = tv.WatchCutscene(tv.Time);
+            Assert.AreEqual(tv.lines.Count - mid, rest.shots.Length, "one shot a line left");
+            Assert.AreEqual(tv.lines[mid].text, rest.shots[0].text, "from the line that plays now");
+            Assert.AreEqual(tv.watchStill, rest.shots[0].still);
+            Assert.AreEqual(tv.creditsStill, rest.shots[rest.shots.Length - 1].still, "the credits on their card");
+            UnityEngine.Object.Destroy(rest);
+            Vector3 stood = lucy.transform.position;
+            float from = tv.Time;
+            Assert.AreEqual("screen_watch:TV", tv.Confirm(hands));
+            Assert.IsTrue(CutscenePlayer.IsPlaying, "a cutscene");
+            yield return new WaitForSecondsRealtime(2.5f);
+            Assert.AreEqual(0, tv.EndComments, "no text before the end");
+            CutscenePlayer.Skip();
+            yield return WaitUntil(() => !CutscenePlayer.IsPlaying, 3f);
+            yield return null;
+            Assert.IsTrue(tv.IsPlaying, "after a skip the show goes on");
+            Assert.Greater(tv.Time, from + 1f, "from where the cutscene stopped");
+            Assert.Less(tv.Time, tv.Length);
+            Assert.Less(Vector3.Distance(stood, lucy.transform.position), 0.05f, "she watched from where she stood");
+            Assert.AreEqual(0, tv.EndComments, "still no text");
+
+            // The end, watched: her text shows by itself, once, for its time.
+            tv.Seek(tv.Length - 1.5f);
+            Assert.AreEqual("screen_watch:TV", tv.Confirm(hands));
+            yield return WaitUntil(() => !tv.IsPlaying, 6f);
+            Assert.AreEqual(1, tv.Ends, "the show ends with the cutscene");
+            Assert.AreEqual(1, tv.EndComments, "her text at the end");
+            Assert.AreEqual(Interactor.State.Message, hands.Current);
+            StringAssert.StartsWith("Aw, man. I tuned in right at the end!", hands.Text);
+            Assert.Greater(tv.EndCommentSeconds, 15f, "long enough to read");
+
+            // After the end the key on the TV shows it again.
+            Assert.IsTrue(tv.Available);
+            Assert.AreEqual(InteractKind.Message, tv.KindFor(hands));
+            StringAssert.StartsWith("Aw, man.", tv.TextFor(hands));
         }
 
         [UnityTest]
