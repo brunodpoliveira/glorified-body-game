@@ -221,18 +221,44 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator TheInventory_PlaysTheTape_AndItGoesOnWhenTheInventoryCloses()
+        {
+            // Bruno, 2026-11-12: "audio logs should play if player on inventory screen and they press the play button.
+            // it should continue when inv menu dismissed (and when not in combat)".
+            ItemDefinition tape = GiveTape();
+            InventoryUI inventory = UnityEngine.Object.FindFirstObjectByType<InventoryUI>();
+            yield return Press(InputManager.GameAction.Inventory);
+            Assert.IsTrue(GameManager.Instance.IsInventory);
+            inventory.SelectIndex(IndexOf(inventory, tape));
+            StringAssert.StartsWith("tape_play:", inventory.Act(), "Interact on the tape plays it");
+            float at = Tapes.Position;
+            yield return new WaitForSecondsRealtime(0.8f);
+            Assert.IsTrue(GameManager.Instance.IsInventory, "the inventory is still open");
+            Assert.Greater(Tapes.Position, at + 0.5f, "the world stops, the tape does not");
+            Assert.IsTrue(Tapes.PassesThePause, "its sound passes the stop of the world sounds");
+            float closedAt = Tapes.Position;
+            yield return Press(InputManager.GameAction.Inventory);
+            Assert.IsFalse(GameManager.Instance.IsInventory);
+            yield return new WaitForSeconds(0.5f);
+            Assert.IsTrue(Tapes.IsPlaying, "it goes on when the inventory closes");
+            Assert.Greater(Tapes.Position, closedAt + 0.3f);
+            Assert.IsFalse(Tapes.PassesThePause, "out of the inventory, the pause menu stops it again");
+        }
+
+        [UnityTest]
         public IEnumerator TheTape_PlaysOnThroughADoor_AndStopsWithTheWorld()
         {
             ItemDefinition tape = GiveTape();
             Tapes.Play(tape);
             yield return new WaitForSeconds(1f);
-            GameManager.Instance.OpenInventory(); // the inventory stops the world (the map does not, since 2026-11-02)
+            GameManager.Instance.Pause(); // the pause menu stops the world and the tape (the inventory does not, since 2026-11-12)
             yield return null;
-            Assert.IsTrue(GameManager.Instance.IsInventory);
+            Assert.IsTrue(GameManager.Instance.IsPaused);
             float at = Tapes.Position;
             yield return new WaitForSecondsRealtime(0.6f);
             Assert.AreEqual(at, Tapes.Position, 0.01f, "the tape stops with the world");
-            GameManager.Instance.CloseInventory();
+            Assert.IsFalse(Tapes.PassesThePause, "and its sound stops with the world sounds");
+            GameManager.Instance.Resume();
             yield return null;
             int arrivals = SaveSystem.Arrivals;
             Assert.IsTrue(GameObject.Find("Exit_ToB").GetComponent<RoomExit>().Use());

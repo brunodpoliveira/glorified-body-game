@@ -437,7 +437,7 @@ namespace GlorifiedBody.UI
                 }
                 bool plays = tapes != null && tapes.Toggle(e.Item);
                 Select(Selected);
-                wordsText.text = plays ? "It plays. Close the inventory to hear it." : "Paused.";
+                wordsText.text = plays ? "It plays." : "Paused.";
                 return (plays ? "tape_play:" : "tape_pause:") + e.Item.itemId;
             }
             if (e.Item != null && e.Item.kind == ItemKind.Log)

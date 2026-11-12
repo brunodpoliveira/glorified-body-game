@@ -599,6 +599,9 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
 - 2026-11-11, the floater in a charge (`devlog-notes/2026-11-11_floater_stays_in_charge.md`, Bruno: "the enemy floating should
   stay put until i let go or fully charge"): while the charge key is held, the floater does not turn with her
   (`PsychicPowers.UpdateHeld`, `StaysWhenSheTurns`); she still turns to the lock.
+- 2026-11-12, the tape in the inventory (`devlog-notes/2026-11-12_tape_plays_in_inventory.md`, Bruno: "audio logs should play if player
+  on inventory screen"): in the inventory the tape sound passes the listener pause and its clock runs on real time
+  (`TapePlayer.PassesThePause`); it goes on after the close; the pause menu still stops it.
 
 ## Rules
 

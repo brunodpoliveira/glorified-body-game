@@ -15,8 +15,8 @@ namespace GlorifiedBody.Audio
     /// inventory "yes"). A taken audio log plays at once on the Voice channel, in her ear (2D), and the world goes on.
     /// Its lines show as subtitles at their times. While it plays the music drops to MusicLevel (MusicDirector). When the
     /// music goes to Combat the tape pauses, and it stays paused: she plays it again from the inventory (Interact on
-    /// it plays or pauses it; at its end it plays from the start), or with the tape key (T; not during a fight). The pause, the inventory and the map stop it with
-    /// the world sounds. It lives on the sound system's object, so it plays on through a door. A small label at the
+    /// it plays or pauses it; at its end it plays from the start), or with the tape key (T; not during a fight). It plays on
+    /// in the inventory (2026-11-12). The pause menu stops it with the world sounds. It lives on the sound system's object, so it plays on through a door. A small label at the
     /// top right shows the tape and its time. Placeholder look.
     /// </summary>
     public sealed class TapePlayer : MonoBehaviour
@@ -49,6 +49,8 @@ namespace GlorifiedBody.Audio
         public float Position => tape == null ? 0f : playing ? clock : resumeAt;
         public string LabelShown => label != null && label.gameObject.activeSelf ? label.text : "";
         public Canvas Canvas => canvas;
+        /// <summary>Its sound plays through the stop of the world sounds (in the inventory only).</summary>
+        public bool PassesThePause => source != null && source.ignoreListenerPause;
 
         private float LinesLength
         {
@@ -183,6 +185,10 @@ namespace GlorifiedBody.Audio
         {
             GameManager gm = GameManager.Instance;
             ForgetIfNotHers(gm);
+            // The inventory stops the world, but not the tape (Bruno, 2026-11-12: "audio logs should play if player on
+            // inventory screen"). The pause menu, a page and a cutscene still stop it.
+            bool inInventory = gm != null && gm.IsInventory;
+            if (source.ignoreListenerPause != inInventory) source.ignoreListenerPause = inInventory;
             // The tape key (Bruno, 2026-10-31: a key that plays it again without the inventory). In a fight it waits.
             if (tape != null && gm != null && gm.IsPlaying && GameInput.GetActionDown(InputManager.GameAction.Tape, KeyCode.T))
             {
@@ -202,7 +208,7 @@ namespace GlorifiedBody.Audio
                 Pause(PausedByCombat);
                 return;
             }
-            clock += Time.deltaTime;
+            clock += inInventory ? Time.unscaledDeltaTime : Time.deltaTime;
             if (clock >= Length)
             {
                 playing = false;
