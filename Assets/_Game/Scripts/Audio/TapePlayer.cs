@@ -22,7 +22,7 @@ namespace GlorifiedBody.Audio
     public sealed class TapePlayer : MonoBehaviour
     {
         public const float MusicLevel = 0.08f; // "music goes down to almost nothing", PROPOSED
-        public const string SubtitleOwner = "tape";
+        public const string SubtitleOwner = SubtitleService.TapeOwner;
         public const string PausedByCombat = "combat";
         public const string PausedByPlayer = "player";
         public const string Ended = "end";

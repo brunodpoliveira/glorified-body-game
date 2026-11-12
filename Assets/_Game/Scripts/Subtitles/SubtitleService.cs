@@ -17,6 +17,8 @@ namespace GlorifiedBody.Subtitles
     {
         public const int MaxLines = 3;
         public const string UnknownSpeaker = "VOICE";
+        /// <summary>The owner of the tape's lines (TapePlayer): the only lines that show over the inventory.</summary>
+        public const string TapeOwner = "tape";
 
         public sealed class Line
         {

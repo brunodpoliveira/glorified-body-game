@@ -22,8 +22,16 @@ namespace GlorifiedBody.Subtitles
         private static SubtitleUI instance;
         private Canvas canvas;
         private readonly List<Text> texts = new List<Text>();
+        private RectTransform box;
         private int drawnVersion = -1;
         private int drawnSize = -1;
+        private Place drawnPlace = Place.Bottom;
+        private GlorifiedBody.UI.InventoryUI inventory;
+
+        // In the inventory the tape's line shows above the panels; over a log page, at the top of the screen.
+        private enum Place { Bottom, OverInventory, OverPage }
+        private const float OverInventoryGap = 560f; // the inventory panels end at 530 px of a 1080 frame
+        private const float OverPageGap = 8f; // a log page starts 100 px under the top
 
         public static SubtitleUI Instance => instance;
         /// <summary>The lines the screen shows now, as drawn (tests).</summary>
@@ -38,6 +46,8 @@ namespace GlorifiedBody.Subtitles
         public bool Visible => canvas != null && canvas.enabled;
         public int FontSize => texts.Count > 0 ? texts[0].fontSize : 0;
         public IReadOnlyList<Text> Texts => texts;
+        /// <summary>Where the lines show: Bottom, OverInventory or OverPage (tests).</summary>
+        public string PlaceShown => drawnPlace.ToString();
 
         /// <summary>Makes the overlay once (the first line said makes it).</summary>
         public static void Ensure()
@@ -60,12 +70,9 @@ namespace GlorifiedBody.Subtitles
 
             var box = new GameObject("Lines", typeof(RectTransform));
             box.transform.SetParent(transform, false);
-            var rect = (RectTransform)box.transform;
-            rect.anchorMin = new Vector2(0.5f, 0f);
-            rect.anchorMax = new Vector2(0.5f, 0f);
-            rect.pivot = new Vector2(0.5f, 0f);
-            rect.anchoredPosition = new Vector2(0f, BottomGap);
-            rect.sizeDelta = new Vector2(Width, 0f);
+            this.box = (RectTransform)box.transform;
+            this.box.sizeDelta = new Vector2(Width, 0f);
+            PlaceBox(Place.Bottom);
             var layout = box.AddComponent<VerticalLayoutGroup>();
             layout.childAlignment = TextAnchor.LowerCenter;
             layout.spacing = 6f;
@@ -103,22 +110,36 @@ namespace GlorifiedBody.Subtitles
         {
             SubtitleService.Tick();
             SettingsManager settings = SettingsManager.Instance;
-            // Hidden under the pause menu and the inventory (2026-10-26: a line drew over the pause menu).
+            // Hidden under the pause menu (2026-10-26: a line drew over the pause menu). In the inventory only the tape's
+            // line shows, over the panels (Bruno, 2026-11-12: the tape plays in the inventory, "subtitles show").
             GameManager gm = GameManager.Instance;
-            bool stopped = gm != null && (gm.IsPaused || gm.IsInventory);
-            canvas.enabled = (settings == null || settings.SubtitlesOn) && !stopped;
+            bool inInventory = gm != null && gm.IsInventory;
+            canvas.enabled = (settings == null || settings.SubtitlesOn) && !(gm != null && gm.IsPaused);
+            if (inInventory && inventory == null) inventory = FindFirstObjectByType<GlorifiedBody.UI.InventoryUI>();
+            Place place = !inInventory ? Place.Bottom : inventory != null && inventory.ReaderOpen ? Place.OverPage : Place.OverInventory;
             int size = Sizes[Mathf.Clamp(settings != null ? settings.SubtitleSize : 1, 0, Sizes.Length - 1)];
-            if (SubtitleService.Version == drawnVersion && size == drawnSize) return;
+            if (SubtitleService.Version == drawnVersion && size == drawnSize && place == drawnPlace) return;
             drawnVersion = SubtitleService.Version;
             drawnSize = size;
-            IReadOnlyList<SubtitleService.Line> lines = SubtitleService.Lines;
+            if (place != drawnPlace) PlaceBox(place);
+            drawnPlace = place;
+            var shown = new List<SubtitleService.Line>();
+            foreach (SubtitleService.Line line in SubtitleService.Lines)
+                if (!inInventory || line.Owner == SubtitleService.TapeOwner) shown.Add(line);
             for (int i = 0; i < texts.Count; i++)
             {
-                bool used = i < lines.Count;
+                bool used = i < shown.Count;
                 texts[i].gameObject.SetActive(used);
                 texts[i].fontSize = size;
-                if (used) texts[i].text = SubtitleService.Format(lines[i]);
+                if (used) texts[i].text = SubtitleService.Format(shown[i]);
             }
+        }
+
+        private void PlaceBox(Place place)
+        {
+            bool top = place == Place.OverPage;
+            box.anchorMin = box.anchorMax = box.pivot = new Vector2(0.5f, top ? 1f : 0f);
+            box.anchoredPosition = new Vector2(0f, top ? -OverPageGap : place == Place.OverInventory ? OverInventoryGap : BottomGap);
         }
     }
 }

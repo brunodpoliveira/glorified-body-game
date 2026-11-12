@@ -24,7 +24,20 @@ audio logs should play if player on inventory screen and they press the play but
    until it ends." (2026-10-31).
 5. The inventory text is now "It plays."
 
-The subtitles stay hidden under the inventory (2026-10-26). The line of the moment shows when the inventory closes.
+## The subtitles in the inventory
+
+Bruno's answer to the open question:
+
+```text
+subtitles show
+```
+
+1. In the inventory, the tape line shows above the panels (`SubtitleUI`, 560 px from the bottom of a 1080 frame).
+2. Only the tape line shows there (`SubtitleService.TapeOwner`). A line of the stopped world stays hidden.
+3. Over a log page, the tape line moves to the top of the screen.
+4. The pause menu still hides all subtitles.
+
+Shot: `~/MEGA/glorified-body-renders/game/tape_inventory/2026-11-12_tape_subtitles_in_inventory.png`.
 
 ## Proof
 
@@ -35,9 +48,5 @@ The subtitles stay hidden under the inventory (2026-10-26). The line of the mome
 | `AudioLogTests` | 7 of 7, `runs/20261112-020506-test-playmode-431442` |
 | `ScreenTests`, `RoomSeamTests` | 14 of 14, `runs/20261112-020745-test-playmode-432662` |
 | bot `tape` (TRAVEL A) | pass, 3 of 3 steps, `runs/20261112-020652-play-432193` |
-
-No shot: the change is in the sound. Listen to it in the editor.
-
-## Open for Bruno
-
-1. The tape subtitles under the inventory: keep them hidden (now), or show them above the inventory panel?
+| After the subtitles: `AudioLogTests`, `SubtitleTests`, `SystemSeamTests` | 21 of 21, `runs/20261112-023957-test-playmode-436709` |
+| After the subtitles: bot `tape`, new step `plays_in_the_inventory` | pass, 4 of 4 steps, `runs/20261112-024241-play-437402` |

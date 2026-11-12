@@ -226,6 +226,9 @@ namespace GlorifiedBody.Tests.PlayMode
             // Bruno, 2026-11-12: "audio logs should play if player on inventory screen and they press the play button.
             // it should continue when inv menu dismissed (and when not in combat)".
             ItemDefinition tape = GiveTape();
+            ItemDefinition log = Resources.Load<ItemDefinition>("Items/item_test_log");
+            Assert.IsNotNull(log, "the test log");
+            lucy.GetComponent<ItemInventory>().TryAdd(log);
             InventoryUI inventory = UnityEngine.Object.FindFirstObjectByType<InventoryUI>();
             yield return Press(InputManager.GameAction.Inventory);
             Assert.IsTrue(GameManager.Instance.IsInventory);
@@ -236,6 +239,23 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.IsTrue(GameManager.Instance.IsInventory, "the inventory is still open");
             Assert.Greater(Tapes.Position, at + 0.5f, "the world stops, the tape does not");
             Assert.IsTrue(Tapes.PassesThePause, "its sound passes the stop of the world sounds");
+
+            // Bruno, 2026-11-12: "subtitles show". Only the tape's line, over the panels; over a log page, at the top.
+            SubtitleService.Show("test_guard", "GUARD", "A line of the stopped world.");
+            yield return null;
+            var shown = SubtitleUI.Instance.Shown.ToList();
+            Assert.IsTrue(SubtitleUI.Instance.Visible, "the subtitles show in the inventory");
+            Assert.AreEqual(1, shown.Count, "only the tape's line: " + string.Join(" | ", shown));
+            Assert.IsFalse(shown[0].Contains("stopped world"), "not the guard's line");
+            Assert.AreEqual("OverInventory", SubtitleUI.Instance.PlaceShown, "above the inventory panels");
+            inventory.SelectIndex(IndexOf(inventory, log));
+            StringAssert.StartsWith("read:", inventory.Act(), "a log page opens");
+            yield return null;
+            Assert.AreEqual("OverPage", SubtitleUI.Instance.PlaceShown, "over a log page, at the top of the screen");
+            Assert.AreEqual(1, SubtitleUI.Instance.Shown.Count(), "the tape's line still shows");
+            yield return Press(InputManager.GameAction.Back);
+            Assert.IsFalse(inventory.ReaderOpen, "the page closes");
+            SubtitleService.Hide("test_guard");
             float closedAt = Tapes.Position;
             yield return Press(InputManager.GameAction.Inventory);
             Assert.IsFalse(GameManager.Instance.IsInventory);

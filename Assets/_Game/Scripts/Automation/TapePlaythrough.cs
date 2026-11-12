@@ -149,6 +149,13 @@ namespace GlorifiedBody.Automation
             shotIndex++;
             yield return GlorifiedBody.UI.OverlayShot.Capture(inventory.Canvas, $"tape_{shotIndex:00}_inventory.png", 0f);
             string act = inventory.Act();
+            // It plays in the inventory, its line over the panels (Bruno, 2026-11-12).
+            float before = tapes.Position;
+            yield return new WaitForSecondsRealtime(1.2f);
+            yield return Shot("inventory_playing", inventory.Canvas);
+            Record("plays_in_the_inventory", GameManager.Instance.IsInventory && tapes.Position > before + 0.8f
+                && SubtitleUI.Instance.PlaceShown == "OverInventory" && SubtitleUI.Instance.Shown.Any(),
+                $"moved {tapes.Position - before:0.0} s, subtitles {SubtitleUI.Instance.PlaceShown}: {string.Join(" | ", SubtitleUI.Instance.Shown)}");
             pad.Tap(InputManager.GameAction.Inventory);
             yield return BotClock.Wait(1.2f);
             yield return Shot("playing_again");
@@ -157,13 +164,14 @@ namespace GlorifiedBody.Automation
         }
 
         /// <summary>The room through the main camera with the tape label and the subtitles over it.</summary>
-        private IEnumerator Shot(string moment)
+        private IEnumerator Shot(string moment, Canvas under = null)
         {
             shotIndex++;
             yield return null; // not WaitForEndOfFrame: it never comes in a batch run
             Camera cam = Camera.main;
             if (cam == null) yield break;
             var canvases = new List<Canvas>();
+            if (under != null) canvases.Add(under);
             if (TapePlayer.Instance != null && TapePlayer.Instance.Canvas != null) canvases.Add(TapePlayer.Instance.Canvas);
             if (SubtitleUI.Instance != null) canvases.Add(SubtitleUI.Instance.GetComponent<Canvas>());
             var old = canvases.Select(c => (c.renderMode, c.worldCamera, c.planeDistance)).ToList();
