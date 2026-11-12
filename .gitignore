@@ -142,3 +142,10 @@ InitTestScene*.unity*
 # The web build copies the clips here for the build only (PlayerBuild.CopyWebVideos).
 /Assets/StreamingAssets/Video/
 /Assets/StreamingAssets/Video.meta
+
+# T38: Unity samples (Unity Companion License), local only, never in the public repo.
+/Assets/Samples/
+/Assets/Samples.meta
+# T38: a copy of the sample RainFloorExample graph (Unity Companion License): tools/ak_import_weather.py writes it.
+/Assets/_Game/Arkham/AK_WetFloor.shadergraph
+/Assets/_Game/Arkham/AK_WetFloor.shadergraph.meta

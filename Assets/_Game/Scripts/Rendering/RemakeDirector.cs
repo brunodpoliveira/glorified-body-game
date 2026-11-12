@@ -104,6 +104,9 @@ namespace GlorifiedBody.Rendering
         private readonly List<Renderer> characterRenderers = new List<Renderer>();
         private float nextCharacterCheck;
 
+        /// <summary>T38: another director (ArkhamDirector) drives this one: no F3 here and no label.</summary>
+        [NonSerialized] public bool driven;
+
         public bool IsOn(RemakeSwitch s) => on[(int)s];
         public int CycleStep => cycle;
         public string Label { get; private set; } = "all on";
@@ -132,7 +135,7 @@ namespace GlorifiedBody.Rendering
 
         private void Update()
         {
-            if (!GameInput.GetKeyDown(CycleKey)) return;
+            if (driven || !GameInput.GetKeyDown(CycleKey)) return;
             // F3: B all on, each switch off, all off, then profile A, then around.
             int next = (cycle + 1) % (SwitchCount + 3);
             if (next == SwitchCount + 2) { cycle = next; SetProfileA(true); } else Cycle(next);
@@ -321,7 +324,7 @@ namespace GlorifiedBody.Rendering
 
         private void OnGUI()
         {
-            if (!string.IsNullOrEmpty(GlorifiedBody.Automation.BotArgs.Bot)) return;
+            if (driven || !string.IsNullOrEmpty(GlorifiedBody.Automation.BotArgs.Bot)) return;
             GUI.Label(new Rect(12f, 8f, 1200f, 24f), $"REMAKE LOOK ({Current})  {Label}  switches {Describe()}  (F3 cycles)");
         }
     }

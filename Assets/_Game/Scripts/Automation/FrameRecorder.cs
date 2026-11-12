@@ -115,33 +115,178 @@ namespace GlorifiedBody.Automation
                 if (hud != null && hud.Canvas != null && hud.Canvas.gameObject.activeInHierarchy) canvases.Add(hud.Canvas);
             }
 
-            var saved = new List<(Canvas canvas, RenderMode mode, Camera camera, float plane)>();
-            foreach (Canvas canvas in canvases)
-            {
-                if (canvas == null || canvas.renderMode != RenderMode.ScreenSpaceOverlay) continue;
-                saved.Add((canvas, canvas.renderMode, canvas.worldCamera, canvas.planeDistance));
-                canvas.renderMode = RenderMode.ScreenSpaceCamera;
-                canvas.worldCamera = cam;
-                canvas.planeDistance = cam.nearClipPlane + 0.05f;
-            }
-            if (saved.Count > 0) Canvas.ForceUpdateCanvases();
+            // The HUD after the post-processing, as the game draws it (a Screen Space Overlay canvas): the scene through the
+            // main camera, then the canvases alone through a HUD camera with no post, once on black and once on white, and
+            // out = hud_on_black + scene * (hud_on_white - hud_on_black), on the GPU (GB_HudComposite.shader). Before T38
+            // the canvases went through the main camera and took its grade, bloom and chromatic aberration (fault 4 of
+            // T38 run 1). During the capture the canvases sit on HudLayer, and the HUD camera draws that layer only.
+            canvases.RemoveAll(c => c == null || c.renderMode != RenderMode.ScreenSpaceOverlay || !c.gameObject.activeInHierarchy);
             try
             {
                 frame++;
-                ShotRenderer.Render(cam, Path.Combine(dir, frame.ToString("00000") + ".png"), Width, Height, useTargetTexture: true);
+                string file = Path.Combine(dir, frame.ToString("00000") + ".png");
+                if (canvases.Count == 0) ShotRenderer.Render(cam, file, Width, Height, useTargetTexture: true);
+                else SaveWithHud(cam, canvases, file);
             }
             catch (Exception ex)
             {
                 Debug.LogWarning("[Recorder] frame failed: " + ex.Message);
             }
+        }
+
+        private Camera hudCamera;
+
+        private Camera HudCamera()
+        {
+            if (hudCamera != null) return hudCamera;
+            var go = new GameObject("[RecorderHudCamera]") { hideFlags = HideFlags.DontSave };
+            go.transform.SetParent(transform, false);
+            hudCamera = go.AddComponent<Camera>();
+            hudCamera.enabled = false;
+            hudCamera.clearFlags = CameraClearFlags.SolidColor;
+            hudCamera.allowHDR = false;
+            hudCamera.allowMSAA = false;
+            hudCamera.nearClipPlane = 0.1f;
+            hudCamera.farClipPlane = 10f;
+            var data = go.AddComponent<UnityEngine.Rendering.Universal.UniversalAdditionalCameraData>();
+            data.renderPostProcessing = false;
+            data.renderShadows = false;
+            data.antialiasing = UnityEngine.Rendering.Universal.AntialiasingMode.None;
+            data.SetRenderer(0);
+            return hudCamera;
+        }
+
+        /// <summary>The layer the HUD canvases sit on during a capture. Layer 30 has no name and no script uses it. The
+        /// game makes its canvases in code on the Default layer, so a mask built from their own layers also drew every
+        /// Default object within the HUD camera's 10 m (the tutorial check of 2026-11-12: a white frame, a line and a
+        /// red ellipse over the room).</summary>
+        public const int HudLayer = 30;
+
+        private static Material compositeMaterial;
+        private static bool compositeMissingLogged;
+
+        private static Material CompositeMaterial()
+        {
+            if (compositeMaterial != null) return compositeMaterial;
+            Shader shader = Shader.Find("Hidden/GB/HudComposite");
+            if (shader == null || !shader.isSupported)
+            {
+                if (!compositeMissingLogged) Debug.LogWarning("[Recorder] Hidden/GB/HudComposite is missing: the HUD blend runs on the CPU (slow)");
+                compositeMissingLogged = true;
+                return null;
+            }
+            compositeMaterial = new Material(shader) { hideFlags = HideFlags.DontSave };
+            return compositeMaterial;
+        }
+
+        private static void RenderInto(Camera c, RenderTexture rt)
+        {
+            RenderTexture prevTarget = c.targetTexture;
+            try
+            {
+                c.targetTexture = rt;
+                c.Render();
+            }
             finally
             {
-                foreach (var s in saved)
+                c.targetTexture = prevTarget;
+            }
+        }
+
+        private static Color32[] Read(RenderTexture rt)
+        {
+            RenderTexture.active = rt;
+            var tex = new Texture2D(Width, Height, TextureFormat.RGBA32, false);
+            tex.ReadPixels(new Rect(0, 0, Width, Height), 0, 0);
+            Color32[] px = tex.GetPixels32();
+            DestroyImmediate(tex);
+            return px;
+        }
+
+        private void SaveWithHud(Camera cam, List<Canvas> canvases, string file)
+        {
+            var urp = UnityEngine.Rendering.Universal.UniversalRenderPipeline.asset;
+            int samples = cam.allowMSAA && urp != null ? Mathf.Max(1, urp.msaaSampleCount) : 1;
+            RenderTexture scene = RenderTexture.GetTemporary(Width, Height, 24, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Default, samples);
+            RenderTexture onBlack = RenderTexture.GetTemporary(Width, Height, 24, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Default, 1);
+            RenderTexture onWhite = RenderTexture.GetTemporary(Width, Height, 24, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Default, 1);
+            RenderTexture output = RenderTexture.GetTemporary(Width, Height, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Default, 1);
+            RenderTexture prevActive = RenderTexture.active;
+            try
+            {
+                RenderInto(cam, scene);
+
+                Camera hudCam = HudCamera();
+                hudCam.cullingMask = 1 << HudLayer;
+                var savedCanvases = new List<(Canvas canvas, Camera camera, float plane)>();
+                var savedLayers = new List<(GameObject go, int layer)>();
+                try
                 {
-                    s.canvas.renderMode = s.mode;
-                    s.canvas.worldCamera = s.camera;
-                    s.canvas.planeDistance = s.plane;
+                    foreach (Canvas canvas in canvases)
+                    {
+                        savedCanvases.Add((canvas, canvas.worldCamera, canvas.planeDistance));
+                        foreach (Transform t in canvas.GetComponentsInChildren<Transform>(true))
+                        {
+                            savedLayers.Add((t.gameObject, t.gameObject.layer));
+                            t.gameObject.layer = HudLayer;
+                        }
+                        canvas.renderMode = RenderMode.ScreenSpaceCamera;
+                        canvas.worldCamera = hudCam;
+                        canvas.planeDistance = 1f;
+                    }
+                    Canvas.ForceUpdateCanvases();
+                    hudCam.backgroundColor = new Color(0f, 0f, 0f, 0f);
+                    RenderInto(hudCam, onBlack);
+                    hudCam.backgroundColor = new Color(1f, 1f, 1f, 0f);
+                    RenderInto(hudCam, onWhite);
                 }
+                finally
+                {
+                    foreach (var s in savedCanvases)
+                    {
+                        s.canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+                        s.canvas.worldCamera = s.camera;
+                        s.canvas.planeDistance = s.plane;
+                    }
+                    foreach (var s in savedLayers)
+                        if (s.go != null) s.go.layer = s.layer;
+                }
+
+                var tex = new Texture2D(Width, Height, TextureFormat.RGB24, false);
+                Material composite = CompositeMaterial();
+                if (composite != null)
+                {
+                    composite.SetTexture("_HudBlack", onBlack);
+                    composite.SetTexture("_HudWhite", onWhite);
+                    Graphics.Blit(scene, output, composite);
+                    RenderTexture.active = output;
+                    tex.ReadPixels(new Rect(0, 0, Width, Height), 0, 0);
+                }
+                else
+                {
+                    // The CPU fallback (about twice the frame time of a clip without HUD, 2026-11-12).
+                    Color32[] s = Read(scene), b = Read(onBlack), w = Read(onWhite);
+                    var outPx = new Color32[s.Length];
+                    for (int i = 0; i < s.Length; i++)
+                    {
+                        outPx[i] = new Color32(
+                            (byte)Mathf.Min(255, b[i].r + s[i].r * Mathf.Max(0, w[i].r - b[i].r) / 255),
+                            (byte)Mathf.Min(255, b[i].g + s[i].g * Mathf.Max(0, w[i].g - b[i].g) / 255),
+                            (byte)Mathf.Min(255, b[i].b + s[i].b * Mathf.Max(0, w[i].b - b[i].b) / 255), 255);
+                    }
+                    tex.SetPixels32(outPx);
+                }
+                Directory.CreateDirectory(Path.GetDirectoryName(file));
+                File.WriteAllBytes(file, tex.EncodeToPNG());
+                DestroyImmediate(tex);
+            }
+            finally
+            {
+                RenderTexture.active = prevActive;
+                RenderTexture.ReleaseTemporary(scene);
+                RenderTexture.ReleaseTemporary(onBlack);
+                RenderTexture.ReleaseTemporary(onWhite);
+                RenderTexture.ReleaseTemporary(output);
             }
         }
 

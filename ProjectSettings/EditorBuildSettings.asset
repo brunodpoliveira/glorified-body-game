@@ -83,5 +83,11 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/_Game/Scenes/BrainTest.unity
     guid: 08f8937c6fd7ef22a8b36e7deb73074d
+  - enabled: 1
+    path: Assets/_Game/Scenes/ArkhamLook.unity
+    guid: aba07f6e26b53a6ff9767fb94a66fad3
+  - enabled: 1
+    path: Assets/_Game/Scenes/ArkhamLookBright.unity
+    guid: 864a32ed180d4708eb35f6f8824b18e5
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0
