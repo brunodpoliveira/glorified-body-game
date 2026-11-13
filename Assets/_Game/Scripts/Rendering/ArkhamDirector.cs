@@ -122,7 +122,9 @@ namespace GlorifiedBody.Rendering
                 l.range = rimRange;
                 l.spotAngle = rimAngle;
                 l.innerSpotAngle = rimAngle * 0.6f;
-                l.lightmapBakeType = LightmapBakeType.Realtime;
+#if UNITY_EDITOR
+                l.lightmapBakeType = LightmapBakeType.Realtime; // an editor-only property: the player build failed on it (2026-11-13)
+#endif
                 l.renderingLayerMask = (int)RimLayer;
                 var data = l.GetUniversalAdditionalLightData();
                 data.renderingLayers = RimLayer;
