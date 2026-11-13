@@ -61,7 +61,7 @@ The presets (PROPOSED):
 | Bot `play TrainingRoom Main_Menu structural 300` (new shots of the tab) | pass |
 | The whole PlayMode suite, run `20261103-025417-test-playmode-399784` | 345 of 345 |
 
-Shots: `~/MEGA/glorified-body-renders/game/options/2026-11-03/` (`options_display.png` the top of the tab,
+Shots: `~/MEGA/glorified/renders/game/options/2026-11-03/` (`options_display.png` the top of the tab,
 `options_display_lower.png` the rest).
 
 ## The empty dropdown lists (2026-11-05)

@@ -77,7 +77,7 @@ You can do the 6 8 hour fix if the first hand fix fails, I'm patient
 | The gun and AI tests: EnemyAiTests, ArmedCivilianTests, RagdollTests, EnemyMoraleTests | 44/44 |
 | Bots: "cpr" in AI TEST and WARD TEST, "holds" in AI TEST | pass |
 
-Shots for Bruno: `~/MEGA/glorified-body-renders/game/animation/shots/`
+Shots for Bruno: `~/MEGA/glorified/renders/game/animation/shots/`
 
 | File | It shows |
 |---|---|

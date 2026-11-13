@@ -69,7 +69,7 @@ The fix:
   - Her kills are the saved ones, and no one witnesses the deaths.
   - After 2.5 s nothing moved, no pool grew, and no one tends a body.
   - Gore Off: the bodies only.
-- Shots: `~/glorified-body-renders/game/saves/2026-10-25_gore/sheet.png` (before the save, after the load: the room,
+- Shots: `~/MEGA/glorified/renders/game/saves/2026-10-25_gore/sheet.png` (before the save, after the load: the room,
   the burst head, the cut arm, the ragdoll).
 - The full run (23:55): EditMode 46/46. PlayMode 188/189. The six bots pass (ai, cover, civilians, tutorial,
   structural, look). The structural bot's slowest frame is 507 ms.

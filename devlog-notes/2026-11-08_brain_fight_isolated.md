@@ -38,7 +38,7 @@ All numbers are PROPOSED.
 
 The first bot shots showed the lock frame beside her, not on her. The frame used screen pixels, and a shot renders at another size. It sits at her viewport point now.
 
-Shots: `~/MEGA/glorified-body-renders/game/brain_fight_2026-11-08/`.
+Shots: `~/MEGA/glorified/renders/game/brain_fight_2026-11-08/`.
 
 ## Not yet done
 

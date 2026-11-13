@@ -1,7 +1,7 @@
 # Audio sweep, THE GLORIFIED BODY (2026-10-26, read-only)
 
 Paths are relative to `/home/pc/MEGA/code/glorified-body-game` unless they start with `/`.
-"Writer CSV" = `/home/pc/MEGA/code/reality-fabricator/the-glorified-body/game/`.
+"Writer CSV" = `~/MEGA/glorified/game/`.
 
 Only 13 game scripts touch audio at run time: `ShotEffects`, `EnemyGun`, `EnemyShield`, `GasCloud`,
 `EnemyGrenade`/`EnemyRocket` (through `ShotEffects.Explosion`), `DestructionFx`, `ShortController`, `PlayerHud`,

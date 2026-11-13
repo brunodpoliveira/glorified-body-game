@@ -33,7 +33,7 @@ All numbers are PROPOSED.
 
 ## Two faults outside the cover work
 
-1. **The writer's folder moved** to `/home/pc/MEGA/code/the-glorified-body` (2026-11-05, 17:01). A rebuild then emptied the cutscene and beat lines with only a warning. I corrected the path in `DemoContent`, `DeathScreenSetup`, three tools, one skill, `CLAUDE.md` and one memory. The rebuild restored the lines. A warning does not stop a build, so the next move can do the same.
+1. **The writer's folder moved** to `/home/pc/MEGA/glorified` (2026-11-05, 17:01). A rebuild then emptied the cutscene and beat lines with only a warning. I corrected the path in `DemoContent`, `DeathScreenSetup`, three tools, one skill, `CLAUDE.md` and one memory. The rebuild restored the lines. A warning does not stop a build, so the next move can do the same.
 2. **The suite now takes 31 minutes**, and `tools/unity.sh` stops a run at 30. Use `GB_BATCH_TIMEOUT=5400 tools/unity.sh test playmode`.
 
 The old path also hid a stale test: `DeathScreenContentTests` wanted 7 writer rows and a "COMPUTER:" guard line. The writer's file has 6 rows since round 28. The test now reads that. `DeathScreenContent.asset` still holds the older lines: run `DeathScreenSetup.Build` to take the new ones (not done, not part of this task).
@@ -56,7 +56,7 @@ Limits:
 - A soldier with no spot still uses the old 6 m ring, so he can still close in. The team AI (§13.6) changes that.
 - W1 and W1B have spots but no fight in W1. A soldier can choose a spot in the next room when the line through a doorway is clear.
 
-Shots: `~/MEGA/glorified-body-renders/game/demo/cover_2026-11-06/`.
+Shots: `~/MEGA/glorified/renders/game/demo/cover_2026-11-06/`.
 
 ## The answer on targeting (no code)
 

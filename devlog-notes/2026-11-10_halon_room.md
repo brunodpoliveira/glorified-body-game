@@ -50,7 +50,7 @@ So the places, the 8 s burn and the 3 s pass-out stand. FOR THE WRITER: L18 stil
 | The world, camera, exit, cull, gap and fire door tests, `FloorplanV2Tests` (47 rooms) | pass: 14 of 14 with the new ones |
 | The demo bot | passes |
 
-Shots: `~/MEGA/glorified-body-renders/game/halon_room_2026-11-10/`. The red sphere over the boxes is the lock marker:
+Shots: `~/MEGA/glorified/renders/game/halon_room_2026-11-10/`. The red sphere over the boxes is the lock marker:
 the auto-lock takes the wall. Numbers PROPOSED: the burn 8 s, the pass-out 3 s.
 
 ## The whole check after the cage change

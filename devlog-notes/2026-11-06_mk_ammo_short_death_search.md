@@ -80,4 +80,4 @@ After the suite I changed the HUD (one MK row), the pairs of the search (the nea
 
 Nobody played any of it by hand.
 
-Shots: `~/MEGA/glorified-body-renders/game/demo/team_ai_2026-11-06/`.
+Shots: `~/MEGA/glorified/renders/game/demo/team_ai_2026-11-06/`.

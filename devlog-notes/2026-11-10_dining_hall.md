@@ -62,7 +62,7 @@ proved). It skips the wake now, as the other demo tests do.
 | New tests | `TheDiningHall_G18AndItsKitchen_TheDutyKey_TheLogs_TheServiceExit`, `TheForwardPost_HoldsTheHall_UntilSheTakesTheKey_AndItsTrackPlaysWhileTheySeeHer`. The dark room test now needs the key |
 | The demo bot, the team bot | pass |
 
-Shots: `~/MEGA/glorified-body-renders/game/dining_hall_2026-11-10/` (G18 with the four, G19, the service exit in G9b).
+Shots: `~/MEGA/glorified/renders/game/dining_hall_2026-11-10/` (G18 with the four, G19, the service exit in G9b).
 Numbers PROPOSED.
 
 ## The full check (step 5 of the day)

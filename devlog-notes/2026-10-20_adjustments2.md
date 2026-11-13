@@ -106,5 +106,5 @@ RUNS: `runs/20261020-235543-exec-383660` (scene and asset rebuild, CLEAN: the sc
 (4.6, 2.8, -4.6), the 16 s short and the 2 per second recharge), `runs/20261020-235628-test-playmode-385373`
 (45/45, CLEAN), `runs/20261020-235930-play-383659` (bot 23/23, CLEAN, `edge_arrow`: hidden=True arrows=1,
 `short_and_drug`: slow walk on during the short and off after the drug).
-SHOTS: `~/glorified-body-renders/game/adjustments2/` (17 bot shots, `hud_edge_arrow.png` and `cam_southwest.png`
+SHOTS: `~/MEGA/glorified/renders/game/adjustments2/` (17 bot shots, `hud_edge_arrow.png` and `cam_southwest.png`
 are the new views, `how_to_play_ui.png` has the F8 / F9 row).

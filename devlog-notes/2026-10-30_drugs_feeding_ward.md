@@ -88,8 +88,8 @@ Two faults of the tutorial drive, found in the record runs and fixed:
 
 The record limit for the tutorial is 900 s now (23 steps; the 500 s run ended at step 17).
 
-Clips: `~/MEGA/glorified-body-renders/game/ward/` (the feed with blood: `clips/ward_04_feed.mp4`, `shots/ward_04_feed_sheet.png`)
-and `~/MEGA/glorified-body-renders/game/tutorial/2026-10-30/` (`tut_14_capsule`, `tut_15_feed`, `tut_22_short`).
+Clips: `~/MEGA/glorified/renders/game/ward/` (the feed with blood: `clips/ward_04_feed.mp4`, `shots/ward_04_feed_sheet.png`)
+and `~/MEGA/glorified/renders/game/tutorial/2026-10-30/` (`tut_14_capsule`, `tut_15_feed`, `tut_22_short`).
 
 ## 6. The tutorial
 
@@ -124,7 +124,7 @@ Both used a drug that has nothing to do now. Both use the SHORT capsule now. The
 
 Measured: the lab worker gave 40.0 HP in one feed. A hit after 1.0 s stopped a feed at 16.0 HP, and the body kept 24.0.
 
-Shots and clips for Bruno: `~/MEGA/glorified-body-renders/game/ward/`
+Shots and clips for Bruno: `~/MEGA/glorified/renders/game/ward/`
 
 | File | It shows |
 |---|---|

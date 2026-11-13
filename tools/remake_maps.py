@@ -3,7 +3,7 @@
 
   python3 tools/remake_maps.py
 
-Source: the T22 tiles (~/MEGA/glorified-body-renders/T22_black_look/tex/, the _1 of each): tile_black, ceiling_grid,
+Source: the T22 tiles (~/MEGA/glorified/renders/T22_black_look/tex/, the _1 of each): tile_black, ceiling_grid,
 chrome, granite_black, gear_decal. No RFab call.
 1. Profile A (the current look): the 1024 pictures as they are (blk_<name>.png). A uses Simple Lit with the colour
    map only, as LookTest2 does.
@@ -24,7 +24,7 @@ import numpy as np
 from PIL import Image, ImageFilter
 
 TOP = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-T22 = os.path.expanduser("~/MEGA/glorified-body-renders/T22_black_look/tex")
+T22 = os.path.expanduser("~/MEGA/glorified/renders/T22_black_look/tex")
 OUT = os.path.join(TOP, "Assets/_Game/Remake/Textures")
 PROPS = os.path.join(TOP, "Assets/_Game/Remake/Props")
 os.makedirs(OUT, exist_ok=True)

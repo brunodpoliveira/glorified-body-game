@@ -154,7 +154,7 @@ Men in black, an enemy type: "man in black types that can use one of her power s
 
 Nobody played this by hand.
 
-Shots: `~/MEGA/glorified-body-renders/game/orzabal_2026-11-07/`.
+Shots: `~/MEGA/glorified/renders/game/orzabal_2026-11-07/`.
 
 ## The whole run, overnight, on commit `10acf04`
 

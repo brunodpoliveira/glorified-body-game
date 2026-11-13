@@ -58,7 +58,7 @@ the north wall does not have). No green cursor showed in the tutorial or in LOOK
 | AudioLogTests (5, one new): the tape key pauses and plays, not in a fight | 5/5 |
 | The bot: `tools/unity.sh play ScreenTest Main_Menu screens 300` | 4/4 steps |
 
-Shots for Bruno: `~/MEGA/glorified-body-renders/game/screens/shots/`
+Shots for Bruno: `~/MEGA/glorified/renders/game/screens/shots/`
 
 | File | It shows |
 |---|---|

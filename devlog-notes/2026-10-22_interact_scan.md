@@ -63,7 +63,7 @@ and 195656 (the look bots), 195842 (the structural bot).
 
 ## The shots
 
-`~/glorified-body-renders/game/tutorial/`: `sheet_interact_scan.png` (the question "Take the test log?", the open
+`~/MEGA/glorified/renders/game/tutorial/`: `sheet_interact_scan.png` (the question "Take the test log?", the open
 log, the scan of the door, the clip of the monitors at 1.6 s), `sheet_tutorial.png` (the fourteen prompts), the
 frames at 1920 x 1080. Checked at full size. In the shots the panels look more see-through than in the game: the
 bot draws the overlays through the camera, so they pass through the dither; the game draws them on top.

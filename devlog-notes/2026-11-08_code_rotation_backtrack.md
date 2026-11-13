@@ -32,7 +32,7 @@ post (W13).
 | `CodeRotationTests` (7, one new: the card opens two doors, then the PA, then the third door refuses) | `20261108-142724-test-playmode` | 7 of 7 |
 | The code bot, `play CodeTest Main_Menu code 300` | `20261108-143120-play` | 7 of 7 steps, triage CLEAN |
 
-Shots: `~/MEGA/glorified-body-renders/game/code_rotation_backtrack_2026-11-08/`.
+Shots: `~/MEGA/glorified/renders/game/code_rotation_backtrack_2026-11-08/`.
 
 1. `code_01_pa_rotates_the_codes.png`: store B is open, its reader is green, and the PA line shows.
 2. `code_02_reader_refuses.png`: the way on refuses the card. CODE ROTATED. SEE SECURITY.

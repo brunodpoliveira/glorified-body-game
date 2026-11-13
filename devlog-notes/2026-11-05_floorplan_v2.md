@@ -1,7 +1,7 @@
 # 2026-11-05: the floorplan v2 in greybox
 
 Bruno, round 34: "you can get started on the v2 map; i'll be going to sleep, so order the coding agent to build it as well".
-The map: `game/act1_map_v2.py` by the writer, and `~/MEGA/glorified-body-renders/game_design/act1_map_v2.png`. The table:
+The map: `game/act1_map_v2.py` by the writer, and `~/MEGA/glorified/renders/game_design/act1_map_v2.png`. The table:
 `game/DEMO_PLAN.md` §3.4. The beat: `game/cutscenes/07b_the_conference_room.md`, beat 22b.
 
 ## What is built
@@ -151,7 +151,7 @@ The four v2 tests: the twelve rooms with the doors of the map, a camera each, th
 unmoved. The head card and the flashback. The 16 fixtures. "Encore." in U1. In the editor report the ward rooms show 0
 reached from G5: the stairwell card door stands in W12, as before.
 
-Shots: `~/MEGA/glorified-body-renders/game/demo/floorplan_v2_2026-11-05/` (`demo_cam_<room>_<n>.png`). The run
+Shots: `~/MEGA/glorified/renders/game/demo/floorplan_v2_2026-11-05/` (`demo_cam_<room>_<n>.png`). The run
 `20261105-052931-play-186308` holds the same shots from before the two wall fixes, with the holes and the hidden signs.
 
 Limits: only the suites above ran, not the whole PlayMode suite. Nobody played the rooms by hand. The sounds and the cards

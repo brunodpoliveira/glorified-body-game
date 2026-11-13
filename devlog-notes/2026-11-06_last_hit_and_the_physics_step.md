@@ -86,7 +86,7 @@ The suite now has 394 tests and should take about 37 minutes. I did not run the 
 
 **The open failure.** Over the 9 runs since the cover change, the share was 2, 5, 6, 12, 37, 2, 0, 11 and 5 %. So 1 run of 9 went over the limit. In that run the team made 5 bounds, not the usual 9 to 13. I think that one soldier stalls and holds his element in the move, but I did not prove it. I did not move the limit. Before the cover change, the last whole run gave 2 %, so the cover change can be part of the cause.
 
-Shots, checked at full size: `~/MEGA/glorified-body-renders/game/tutorial_greybox_2026-11-06/` (`tutorial_27`, `28`, `34`), `~/MEGA/glorified-body-renders/game/demo/coda_2026-11-06/` (`demo_cam_g16_00`).
+Shots, checked at full size: `~/MEGA/glorified/renders/game/tutorial_greybox_2026-11-06/` (`tutorial_27`, `28`, `34`), `~/MEGA/glorified/renders/game/demo/coda_2026-11-06/` (`demo_cam_g16_00`).
 
 Nobody played any of it by hand. Manual steps 76 to 78 in `2026-11-03_manual_tests.md`.
 
@@ -103,7 +103,7 @@ Verdict: confirmed, and wider than the report. Every pistol had the fault, also 
 
 `EnemyGun.PistolHold`: at the aim the grip is ahead of the chest, and the forearm lies along the barrel. At rest he holds a low ready. The right hand lies on the grip. A lab worker's left hand cups it from under. A shield guard keeps one hand. The test `ThePistol_LiesInBothHands_TheForearmAlongTheAim` failed first at 56 degrees, and it gives 24 to 29 degrees now.
 
-Proof: `ArmedCivilianTests` 10 of 10 in two runs. `EnemyAiTests`, `EnemyMoraleTests`, `EdgarTests`, `HitReactionTests`, `DummyShooterTests`, `FlankingTests`: 54 of 54, run `20261106-221338-test-playmode-572529`. Bot `holds` in LAB TEST and AI TEST: pass. Shots: `~/MEGA/glorified-body-renders/game/holds_pistol_2026-11-06/`. `TheCarrier_DropsTheCard` failed once in the first build of the pose by 1.4 cm, and passed in the two runs after. The whole suite did not run on this commit.
+Proof: `ArmedCivilianTests` 10 of 10 in two runs. `EnemyAiTests`, `EnemyMoraleTests`, `EdgarTests`, `HitReactionTests`, `DummyShooterTests`, `FlankingTests`: 54 of 54, run `20261106-221338-test-playmode-572529`. Bot `holds` in LAB TEST and AI TEST: pass. Shots: `~/MEGA/glorified/renders/game/holds_pistol_2026-11-06/`. `TheCarrier_DropsTheCard` failed once in the first build of the pose by 1.4 cm, and passed in the two runs after. The whole suite did not run on this commit.
 
 Not checked: the knife hold. The T19 rigs have no finger bones, so the fingers stay straight on the grip.
 
@@ -114,7 +114,7 @@ With new models: the numbers follow the arm's length and the bind pose, but this
 Bruno:
 
 ```text
-/home/pc/MEGA/glorified-body-renders/T27_baked_characters/guard
+/home/pc/MEGA/glorified/renders/T27_baked_characters/guard
 has the files of a baked character; check if our fixes hold
 ```
 
@@ -141,5 +141,5 @@ Fix: `HumanoidRagdoll.BodyFront` reads the facing from the thighs and `EnemyGun.
 
 Not tested on the baked mesh: the whole suite, the demo bot, Lucy (`t27_lucy`), the cost of the limb cut in milliseconds, and the wider test set after the fix. The T27 gloves are modelled half closed, so this file needs no finger curl.
 
-Shots: `~/MEGA/glorified-body-renders/game/t27_guard_rehearsal_2026-11-06/`.
+Shots: `~/MEGA/glorified/renders/game/t27_guard_rehearsal_2026-11-06/`.
 

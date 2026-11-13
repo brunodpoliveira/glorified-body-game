@@ -42,7 +42,7 @@ moves**.
 | Edit mode, all | 61 of 61 |
 | Bot `play TravelTest_A Main_Menu map 300`, run `20261102-191002-play-305783` (new step "real_time": she walked 1.92 m with the map on) | 9 of 9 |
 
-Shots: `~/MEGA/glorified-body-renders/game/map/corner_2026-11-02/`. The bot shots are 1280 x 720, so the words are
+Shots: `~/MEGA/glorified/renders/game/map/corner_2026-11-02/`. The bot shots are 1280 x 720, so the words are
 smaller than in the game. `map_07_walking.png` shows the room and the corner map while she walks.
 
 ## Open for Bruno

@@ -116,7 +116,7 @@ The reactions run before the gun (`[DefaultExecutionOrder(-10)]`): the gun and t
   dead-front picture of our own lab worker FBX in Blender and made a new model on rfab.ai from it.
 - Spent: the model 20,000, the rig 25,000, ten motions 100,000 tokens. Total 145,000 tokens ($2.90).
 - The ten clips are out of the game after the ruling of Bruno (Invector has hit clips). They stay in
-  `~/glorified-body-renders/game/reactions/rfab_hits/` (the FBX in `unused_in_game/`).
+  `~/MEGA/glorified/renders/game/reactions/rfab_hits/` (the FBX in `unused_in_game/`).
 - Gap 15 (new): ten motions in one call fail at the provider. Groups of three work.
 - Gap 16 (new): no hit while walking, no limp, no writhe, no electrocution in the presets. The game makes them in code.
 
@@ -129,7 +129,7 @@ The reactions run before the gun (`[DefaultExecutionOrder(-10)]`): the gun and t
 | Bots: structural, look, tutorial, ai, cover, civilians, reactions | the same chain | 7/7 PASS, triage CLEAN |
 | Reactions bot, record mode | `runs/20261027-151336-record-174862` | 12/12 steps |
 
-Clips for Bruno (1920 x 1080): `~/glorified-body-renders/game/reactions/clips/latest/`
+Clips for Bruno (1920 x 1080): `~/MEGA/glorified/renders/game/reactions/clips/latest/`
 
 | Clip | It shows |
 |---|---|

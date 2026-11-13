@@ -27,7 +27,7 @@ The PA line comes from the writer's `T5_pa.md`. All other words on the screens a
 
 My first test run had two faults, both in the test. One compared colours exactly. The other was a dial loop that read the cursor as its own limit. The first bot shots showed no Interact message, because the shot took only the canvases it named. It takes every overlay now.
 
-Shots: `~/MEGA/glorified-body-renders/game/code_rotation_2026-11-08/`.
+Shots: `~/MEGA/glorified/renders/game/code_rotation_2026-11-08/`.
 
 ## Not yet in the demo
 

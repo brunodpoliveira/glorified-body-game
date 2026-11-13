@@ -2,7 +2,7 @@
 
 Bruno (2026-11-11): "I'd like for experiments, same as we did for re 2002; let's do research on how arknight did its
 graphics, pull examples, and do experiments." The research and the 19 reference shots are in the writing repo
-(`the-glorified-body/tests/T38_arkham_look/PLAN.md`, `reference/generic/games/arkham_knight/`). This note is the Unity
+(`~/MEGA/glorified/production/tests/T38_arkham_look/PLAN.md`, `reference/generic/games/arkham_knight/`). This note is the Unity
 experiment. Status: a TEST. Nothing here is a style ruling until Bruno picks.
 
 No Arkham Knight picture is in this repo or in a render. The tools read only the reference NUMBERS
@@ -229,7 +229,7 @@ level cameras, 1080p.
 
 ### The files of run 1
 
-`~/MEGA/glorified-body-renders/T38_arkham_look/run1/`:
+`~/MEGA/glorified/renders/T38_arkham_look/run1/`:
 - `BA_<dark|bright>_<camera>.png`: B-game left, AK right (look at these first).
 - `ablation_<dark|bright>_<camera>.png`: AK all on, each switch off, B-game, 4 x 3 at full size.
 - `stats_<room>.txt`, `contrast_<room>.txt`, `lut_fit_<room>.txt`, `time/` (frame times, VRAM samples).
@@ -242,7 +242,7 @@ Runs: build `20261111-203643-exec-346488` (the last `ArkhamLookSetup.Build`), sh
 
 ## The files (run 2)
 
-`~/MEGA/glorified-body-renders/T38_arkham_look/`:
+`~/MEGA/glorified/renders/T38_arkham_look/`:
 - `BA_<dark|bright>_<camera>.png`: B-game left, AK right (look at these first).
 - `ablation_<dark|bright>_<camera>.png`: AK all on, each switch off, B-game, 4 x 3 at full size.
 - `faults_<room>.txt` (the four faults, PASS or FAIL), `hud_check_<room>.txt` and `hud_<room>.png` (the HUD boxes at 2x,

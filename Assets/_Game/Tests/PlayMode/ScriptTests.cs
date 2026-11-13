@@ -264,7 +264,7 @@ namespace GlorifiedBody.Tests.PlayMode
         /// <summary>The frame with every overlay canvas on it (the cutscene, the subtitles), for Bruno.</summary>
         private static void OverlayShot(string name)
         {
-            string folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "glorified-body-renders", "game", "story", "2026-10-26");
+            string folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "MEGA", "glorified", "renders", "game", "story", "2026-10-26");
             Camera cam = Camera.main;
             if (cam == null) return;
             var canvases = UnityEngine.Object.FindObjectsByType<Canvas>(FindObjectsSortMode.None).Where(c => c.isRootCanvas && c.enabled && c.renderMode == RenderMode.ScreenSpaceOverlay).ToArray();

@@ -31,7 +31,7 @@ the Interact key. Commit `a8edeff`. L19 and L20 go into the demo after the manua
    type ("Desk_Nurse" is a Desk). The structure (walls, handrails, stairs) gets none. `DemoRoom.Container` makes a
    container with items.
 6. The lines are PLACEHOLDERS: "A desk. Nothing of note here.", "A cabinet. Nothing of note in it." The writer can
-   replace any of them by type in `the-glorified-body/game/examine.csv` (two columns: `type,line`). The next build
+   replace any of them by type in `~/MEGA/glorified/game/examine.csv` (two columns: `type,line`). The next build
    reads the file.
 
 P7 (Lucy speaks once in act 1): the comment is text in the message box, with no speaker label and no voice. The
@@ -85,5 +85,5 @@ There is no soft lock: W13 is open from W12 at all times.
 2. A comment shows no hint on the HUD (`Interactable.ShowsHint`). A container shows none too, because the hint
    would tell the player what is inside. `ExamineTests` checks that the hint is empty.
 
-Shots: `~/MEGA/glorified-body-renders/game/examine_and_ward_rotation_2026-11-08/` (`code_01_table_comment.png`: the
+Shots: `~/MEGA/glorified/renders/game/examine_and_ward_rotation_2026-11-08/` (`code_01_table_comment.png`: the
 comment in the message box).

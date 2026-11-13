@@ -60,7 +60,7 @@ The night manager stays beside walk-in 1, as built, and the code stays 8675309. 
 
 ## 5. The devlog brief
 
-Today's beats are at the end of `the-glorified-body/devlog/ep11/BRIEF.md`.
+Today's beats are at the end of `~/MEGA/glorified/devlog/ep11/BRIEF.md`.
 
 ## Proof
 

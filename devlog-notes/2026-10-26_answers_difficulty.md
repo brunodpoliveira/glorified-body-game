@@ -105,7 +105,7 @@ MK. The design file still says NALCON in §2 and §12: a row for the writer.
 - The six bots CLEAN. The structural bot has a new step, `difficulty_ui` (150 % PRESET, then 205 % CUSTOM).
 - The four kit rooms refer to 0 of 3310 vendor asset ids.
 
-Shots, checked at full size: `~/glorified-body-renders/game/menu/2026-10-26_difficulty/` (`difficulty_ui.png` the
+Shots, checked at full size: `~/MEGA/glorified/renders/game/menu/2026-10-26_difficulty/` (`difficulty_ui.png` the
 150 % preset, `difficulty_custom_ui.png` with THICK SKIN and ONE-HIT WONDER on, `hud.png` with the MK CAPSULE line).
 
 ## For the writer

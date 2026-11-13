@@ -33,7 +33,7 @@ it waits during the pause (the bug of the seam sweep).
 
 The test cutscene (`Resources/Cutscenes/cutscene_test.asset`): two stills (the scan card, the gear emblem) and the scan
 video, three lines. Lucy's line uses the voice test clip, so a recorded line is proved. Frame:
-`~/glorified-body-renders/game/story/2026-10-26/cutscene_shot0.png`.
+`~/MEGA/glorified/renders/game/story/2026-10-26/cutscene_shot0.png`.
 
 ## Proof
 

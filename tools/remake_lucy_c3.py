@@ -9,7 +9,7 @@ outside it.
 
   python3 tools/remake_lucy_c3.py
 
-In:  ~/MEGA/glorified-body-renders/T20_lucy_body/models/subtle/ (lucy_c3_basecolor_gold, _normal_gold,
+In:  ~/MEGA/glorified/renders/T20_lucy_body/models/subtle/ (lucy_c3_basecolor_gold, _normal_gold,
      _metalrough_gold), T21_crown/crown_fixed.glb (its UVs), the T19 lucy_bare base colour (the helmet paint).
 Out: Assets/_Game/Remake/Characters/lucy_c3_{base,n,ms}_{4k,1k}.{jpg,png}: 4096 for profile B, 1024 for profile A
      (the game's character size).
@@ -23,9 +23,9 @@ from PIL import Image, ImageDraw, ImageFilter
 
 HOME = os.path.expanduser("~")
 TOP = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-T20 = f"{HOME}/MEGA/glorified-body-renders/T20_lucy_body/models/subtle"
-CROWN = f"{HOME}/MEGA/glorified-body-renders/T21_crown/crown_fixed.glb"
-T19 = f"{HOME}/MEGA/glorified-body-renders/T19_characters/models/lucy_bare_game.glb"
+T20 = f"{HOME}/MEGA/glorified/renders/T20_lucy_body/models/subtle"
+CROWN = f"{HOME}/MEGA/glorified/renders/T21_crown/crown_fixed.glb"
+T19 = f"{HOME}/MEGA/glorified/renders/T19_characters/models/lucy_bare_game.glb"
 OUT = os.path.join(TOP, "Assets/_Game/Remake/Characters")
 S = 4096
 

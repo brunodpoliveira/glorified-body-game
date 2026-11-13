@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """T26 remake look: the figure-against-background contrast of Lucy and the guard, the way T22 measured it
-(the-glorified-body/tests/T22_black_look/contrast.py), plus the colour checks of the brief.
+(~/MEGA/glorified/production/tests/T22_black_look/contrast.py), plus the colour checks of the brief.
 
   python3 -I tools/remake_contrast.py <shots dir> [out.txt]
 

@@ -25,7 +25,7 @@ Start the player build, then create the floor 2 and 1 of the demo I greybox
 
 ## 2. The demo, floors 2 and 1, in greybox
 
-The rooms come from the demo plan (`the-glorified-body/game/DEMO_PLAN.md`), one scene a room, in
+The rooms come from the demo plan (`~/MEGA/glorified/game/DEMO_PLAN.md`), one scene a room, in
 `Assets/_Game/Scenes/Demo/`. Build them with:
 
 ```text
@@ -99,7 +99,7 @@ speaks as "THE PROGRAM" (the act 1 rule: Kyoko is not named). The signs do not u
   - U1 ends it: the grab takes the uniform, the bulletin shows, then the main menu.
 - The demo bot (`DemoPlaythrough`, `tools/unity.sh play Demo_W1 Main_Menu demo 900`, run
   `20261031-135337-play-993894`): 75 of 75 steps, one shot for each of the 53 cameras.
-- Shots: `~/MEGA/glorified-body-renders/game/demo_greybox_2026-10-31/` (`demo_cam_<room>_<n>.png`).
+- Shots: `~/MEGA/glorified/renders/game/demo_greybox_2026-10-31/` (`demo_cam_<room>_<n>.png`).
 
 I looked at all 53 shots. The first set had walls at grey 0.12, the same tone as the dark background, and the floors
 seemed to float. The walls are at 0.22 now.

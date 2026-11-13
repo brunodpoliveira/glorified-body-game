@@ -34,7 +34,7 @@ The sounds are placeholders made in code. The recorder line and the console line
 
 The first run failed twice, and both faults were real. The closet rack stood over the NET unit, so Lucy could not reach it. The light layers alone changed the frame by 17 %, because the greybox is unlit. That fault led to the unlit tint. The first glow made the dark room almost as bright as the lit one, so I cut it to a third.
 
-Shots: `~/MEGA/glorified-body-renders/game/dark_room_2026-11-08/`.
+Shots: `~/MEGA/glorified/renders/game/dark_room_2026-11-08/`.
 
 ## Not yet in the demo
 

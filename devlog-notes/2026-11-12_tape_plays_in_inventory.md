@@ -37,7 +37,7 @@ subtitles show
 3. Over a log page, the tape line moves to the top of the screen.
 4. The pause menu still hides all subtitles.
 
-Shot: `~/MEGA/glorified-body-renders/game/tape_inventory/2026-11-12_tape_subtitles_in_inventory.png`.
+Shot: `~/MEGA/glorified/renders/game/tape_inventory/2026-11-12_tape_subtitles_in_inventory.png`.
 
 ## Proof
 

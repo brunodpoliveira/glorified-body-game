@@ -3,13 +3,13 @@
 A tank-control horror game in Unity 6, a refinement of Galerians (PS1, 1999). Lucy, a young adult woman with no
 memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the pivot from the video series).
 
-- **Design (CANON):** `/home/pc/MEGA/code/the-glorified-body/DEMO_PLAN.md` (the rules, the map, the beats, the
+- **Design (CANON):** `/home/pc/MEGA/glorified/DEMO_PLAN.md` (the rules, the map, the beats, the
   puzzles, what waits on Bruno). If the code and this file disagree, the file wins, or you ask Bruno.
-- **World and story:** `/home/pc/MEGA/code/the-glorified-body/LORE.md`, and the lines in `DEMO_SCRIPT.md` there.
+- **World and story:** `/home/pc/MEGA/glorified/LORE.md`, and the lines in `DEMO_SCRIPT.md` there.
   Bruno's words by round: `RULINGS.md`. The old `03_GAME_DESIGN.md` and the bible are in its `archive/`
   (consolidated 2026-11-06).
-- **Art rules, read before any art work:** `ART_LESSONS.md` (this folder).
-- **Asset lessons, full detail:** `/home/pc/MEGA/code/the-glorified-body/tests/T15_3d_set/LESSONS_LEARNED.md`.
+- **Art rules, read before any art work:** `~/MEGA/glorified/production/ART_LESSONS.md`.
+- **Asset lessons, full detail:** `/home/pc/MEGA/glorified/production/tests/T15_3d_set/LESSONS_LEARNED.md`.
 - **Agents:** `glorified-body-game` builds the game, `glorified-body-writer` writes the story, the cutscenes, the
   barks and the devlog scripts. Bruno decides.
 
@@ -61,7 +61,7 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   for the whole game: render scale 2/3 (720p of 1080p), linear upscale, hard shadows only, per-pixel spots.
   Textures: `tools/look_textures.sh` (RFab Nano Banana, 1024 px, mirror wrap) with
   `tools/look_textures_procedural.py` as the fallback (RFab gap 11: the default model draws scenes). F11 in the
-  training room loads the look test room. Shots for Bruno's pick: `~/MEGA/glorified-body-renders/game/look_test/`.
+  training room loads the look test room. Shots for Bruno's pick: `~/MEGA/glorified/renders/game/look_test/`.
 - 2026-10-22, the second look test (`devlog-notes/2026-10-22_look_test2.md`), after Bruno's morning rulings
   (F10 is the editor's menu key, 2K textures and clarity, the relief painted in the texture and subtle greebles
   on concrete, a camera for every section): `LookTest2.unity` is the skylight corridor of T12 GALLERY_v3 plus
@@ -521,7 +521,7 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   non-starter"; "add some prop types"): `Enemy/CoverMap.cs` scans the live NavMesh at the first need (rays at 0.7 m and 1.35 m: low cover, corners; 512
   spots in 48 ms). `SoldierBrain`: `Phase.Duck` between shots, `DummyShooter.FromCover`, `LockOnTargetable.InCover` (a thing on her line stops her power while
   he hides). `DemoRoom.Prop` makes fifteen types breakable by name (`BreakableAssets.PropBox`). The whole PlayMode suite takes 31 minutes: run it with
-  `GB_BATCH_TIMEOUT=5400`. The writer's folder is now `/home/pc/MEGA/code/the-glorified-body`.
+  `GB_BATCH_TIMEOUT=5400`. The writer's folder is now `/home/pc/MEGA/glorified`.
 
 - 2026-11-06, night, THE FIRE TEAM (`devlog-notes/2026-11-06_fire_team.md`, DEMO_PLAN §13.6): `Enemy/FireTeam.cs`: the soldiers of a fight take turns in two elements,
   one moves, one holds and fires (`SoldierBrain.BoundNow`), a wanted range of 8 m and no spot under 5 m, the writer's calls (`barks.csv`, `team_*`), the last two fall back.
@@ -551,7 +551,7 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   charge circle stay (the circle on her for a target off the screen); a grabber winds up and lunges at a fixed point;
   its own track (`MusicDirector.Score(clip, fight: true)`, placeholder `tools/boss_music_placeholder.py`). A throw rises
   to a high target (`TelekinesisLift.HighTarget`). `DemoWorld.BuildAll` takes the sight lists from the saved scene.
-  Devlog brief for episodes 11 and 12: `the-glorified-body/devlog/ep11/BRIEF.md`. OPEN: the coda poster test failed 1
+  Devlog brief for episodes 11 and 12: `~/MEGA/glorified/devlog/ep11/BRIEF.md`. OPEN: the coda poster test failed 1
   of 4 runs. Numbers PROPOSED.
 - 2026-11-09, the four isolated items (`devlog-notes/2026-11-09_isolated_items.md`): the brain's death screen hint
   follows the new fight (the writer's CSV; `DeathScreenSetup.Build` also brought the writer's test-room screens in);
@@ -627,7 +627,7 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
    (RAM gate, one batch slot shared with Warspite, run folders in `runs/`). One batch Unity at a time. Close the
    editor before a batch run.
 2. `.megaignore` keeps Library, Temp, Logs, UserSettings, builds, `runs/` and the vendor folders out of MEGA. Keep
-   it. Renders and captures go in `~/MEGA/glorified-body-renders/game/`.
+   it. Renders and captures go in `~/MEGA/glorified/renders/game/`.
 3. Keyboard and mouse only for now. Render pipeline: URP. Input: the legacy Input Manager with the KeyCode remapper.
 4. Packages (Bruno, 2026-10-20): Invector Shooter + FSM AI templates and Gore System URP (That Individual), imported
    from `~/.local/share/unity3d/Asset Store-5.x/` with `tools/unity.sh import`, plus Warspite2's gore and Invector
@@ -643,7 +643,7 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
 7. Writing style for anything Bruno reads: ASD-STE100.
 8. Every step ends with a note in `devlog-notes/` and the shots Bruno can open, checked at full size first.
 9. The game is RFab's dogfood (Bruno, 2026-10-22). Every RFab bug, limit or missing piece found while building
-   goes the same day as one row in `/home/pc/MEGA/code/the-glorified-body/RFAB_GAPS.md`,
+   goes the same day as one row in `/home/pc/MEGA/glorified/production/RFAB_GAPS.md`,
    with the evidence file. The RFab agent works that list.
 10. Test cadence (Bruno, 2026-11-06): during a round, run only the test classes of the changed code and the bots of that feature. Run the whole PlayMode suite and all the bots once, before a push or overnight (about 50 minutes). Only the tutorial bot walks the whole tutorial, so it runs before every push.
 
@@ -653,7 +653,7 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   (`DummyShooter.SuppressPoint`, 1.5 s with no line), the team knows only what it saw (`LastSeen`), the search in pairs (`Phase.Search`, 8 s). `Story/TeamReinforcement.cs`: the four of G2 dead and sector C released = a
   second fireteam of four after 20 s. Bot `play Demo Main_Menu team 300`. Numbers PROPOSED.
 
-- 2026-11-06, afternoon and evening (`devlog-notes/2026-11-06_autofire_inventory_carry_edgar.md`, `2026-11-06_coda.md`): a full circle fires by itself, the defend key cancels a charge. The inventory has three lists (W S scroll, A D change the list, S no longer closes). THE MOUSE CARRY: mk_orzabal, hold the defend key to lift a prop, the mouse moves it, the wheel raises it, a release drops it, no MK (`TelekinesisLift.SteerBy`, `PropAssets.Box`, `PressurePlate`, PHYSICS TEST). MK_EDGAR: key 4, a full circle only, 75 MK, 6 m, the target kneels (`KneelPose`), civilians and puzzle figures at full HP, guards need damage, bosses never (`Enemy/Domination.cs`, `Dominated`, `SentSwitch`, EDGAR TEST, flag `mk_edgar_unlocked`); before the flag the capsule is UNKNOWN CAPSULE. A short that takes the second wind goes on with no more HP loss. The TUTORIAL is grey boxes with no bake, 34 steps, an annex. G16 has a gap a crate fills (`PitReturn`). THE CODA (`Editor/Demo/DemoCoda.cs`): X1, R1, R2, R3 on the map floor THE ROAD, the title at its end. This demo is not the final demo. Devlog brief: `the-glorified-body/devlog/ep07/BRIEF.md`. Numbers PROPOSED.
+- 2026-11-06, afternoon and evening (`devlog-notes/2026-11-06_autofire_inventory_carry_edgar.md`, `2026-11-06_coda.md`): a full circle fires by itself, the defend key cancels a charge. The inventory has three lists (W S scroll, A D change the list, S no longer closes). THE MOUSE CARRY: mk_orzabal, hold the defend key to lift a prop, the mouse moves it, the wheel raises it, a release drops it, no MK (`TelekinesisLift.SteerBy`, `PropAssets.Box`, `PressurePlate`, PHYSICS TEST). MK_EDGAR: key 4, a full circle only, 75 MK, 6 m, the target kneels (`KneelPose`), civilians and puzzle figures at full HP, guards need damage, bosses never (`Enemy/Domination.cs`, `Dominated`, `SentSwitch`, EDGAR TEST, flag `mk_edgar_unlocked`); before the flag the capsule is UNKNOWN CAPSULE. A short that takes the second wind goes on with no more HP loss. The TUTORIAL is grey boxes with no bake, 34 steps, an annex. G16 has a gap a crate fills (`PitReturn`). THE CODA (`Editor/Demo/DemoCoda.cs`): X1, R1, R2, R3 on the map floor THE ROAD, the title at its end. This demo is not the final demo. Devlog brief: `~/MEGA/glorified/devlog/ep07/BRIEF.md`. Numbers PROPOSED.
 
 - 2026-11-06, night (`devlog-notes/2026-11-06_last_hit_and_the_physics_step.md`, Bruno: "any hit that would kill the player will first degrade them to 1 hp"): a lethal hit from above 1 HP leaves her at 1 HP with 0.5 s of invulnerability (`Health.LastHpInvulnerableSeconds`), the next one takes the second wind or kills her; `Health.Kill()` goes past the rule. The gas smoke is white. A STOP WRITES ONLY THE TIME SCALE: `Time.fixedDeltaTime = 0` threw a landing body 149 m up; never write it. OPEN: `TheFireteam_Bounds` failed in 1 run of 9 (37 % against 35 %, cause not proved). FOR LATER (his annotations, in the design): firemen with CO2 grenades, the computer room with halon (G17).
 - 2026-11-06, night, the pistol hold (same note, Bruno: "the scientist with the gun is holding the weapon wrong"): `EnemyGun.PistolHold` (the forearm along the barrel, a low ready at rest, a lab worker's left hand under the grip; every pistol). AFTER A MODEL SWAP: run the `holds` bot in AI TEST and LAB TEST, and `ArmedCivilianTests`; a rig with finger bones needs a finger curl (none exists). FOR LATER (Bruno): power armour loadouts, "some power armor troopers carry a minigun, others a laser gun, others a rocket; all of them can lob rockets".

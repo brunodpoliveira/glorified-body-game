@@ -4,8 +4,8 @@ Bruno (2026-11-01, night, design §28a items 7 to 9): the game meshes take more 
 baked in; Lucy gets the most faces, on a female base body from outside with our C3 paint; the helmet smoother, with
 scratches, above 2,500 faces. Full meshes stay for cutscenes.
 
-Full report: `/home/pc/MEGA/code/reality-fabricator/the-glorified-body/tests/T27_baked_characters/RESULT.md`.
-Sheets and Unity shots: `/home/pc/MEGA/glorified-body-renders/T27_baked_characters/` (`sheets/`, `unity/`).
+Full report: `~/MEGA/glorified/production/tests/T27_baked_characters/RESULT.md`.
+Sheets and Unity shots: `/home/pc/MEGA/glorified/renders/T27_baked_characters/` (`sheets/`, `unity/`).
 
 ## What is in the project (new files only, nothing old changed, not committed)
 
@@ -42,6 +42,6 @@ Bruno: the veins are "closer to yellow rather than gold", "darker, more metallic
 gold was one flat yellow (sRGB 255, 200, 58) at metal 0.6. Now it is a darker gold (median 181, 141, 76), bright in
 the middle of each vein and dark at its edges, at metal 0.9 and smoothness 0.65 (the C3 value). Only the gold texels
 of `t27_lucy_base.png` and `t27_lucy_ms.png` changed. The veins and the normal map stay as they are. Script:
-`the-glorified-body/tests/T27_baked_characters/lucy_gold_fix.py`. Sheet: `sheets/lucy_gold_fix3.png`.
+`~/MEGA/glorified/production/tests/T27_baked_characters/lucy_gold_fix.py`. Sheet: `sheets/lucy_gold_fix3.png`.
 Both bots PASS, triage CLEAN: bright 11.73 / 12.48 ms, dark 21.04 / 21.42 ms (old pair / new pair). Unity sheet at 2x:
 `sheets/lucy_gold_fix3_unity.png`.

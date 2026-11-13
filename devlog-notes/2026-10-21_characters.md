@@ -1,6 +1,6 @@
 # Devlog notes, the cast into the engine (2026-10-21)
 
-The nine T19 characters (`~/glorified-body-renders/T19_characters/models/`) are in the training room: Lucy in the
+The nine T19 characters (`~/MEGA/glorified/renders/T19_characters/models/`) are in the training room: Lucy in the
 nude outfit on the tank controls, the guard and the soldier as the two dummies, the other six along the north
 wall for the look. Bruno's go of 2026-10-21, with his heights, and "put them all in the room now to test
 materials". The look test (step 4) comes next, with this cast in it.
@@ -173,5 +173,5 @@ shot), `runs/20261021-014023-test-playmode-418305` (49/49), `runs/20261021-01432
 single line-up shot cut two figures off, the marker on the face, max frame 1,738 ms on the first skinned
 frames). The first chain: `runs/20261021-013057-exec-414842` (CLEAN), `runs/20261021-013452-test-playmode-416686`
 (47/49: the power armour 14 cm in the air with the guard's idle, the charge check during the roll clip).
-SHOTS: `~/glorified-body-renders/game/characters/` (19 bot shots, `cast_lineup_west.png` and
+SHOTS: `~/MEGA/glorified/renders/game/characters/` (19 bot shots, `cast_lineup_west.png` and
 `cast_lineup_east.png` are the look check, `play_training_room.png` the whole room).

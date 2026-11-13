@@ -41,7 +41,7 @@ namespace GlorifiedBody.Enemy
         /// The CPR's arms (2026-10-31, Bruno: the CPR pose "sometimes comes extremely uncanny"; "do them now"): both arms
         /// straight down to the chest, the head down, as humanoid muscles, so one set fits every rig (the old code turned
         /// the bones along +y, which only some rigs have). Over the vendor kneel. PROPOSED (picked from the PoseProbe sheet
-        /// over Pick_Down, set B: ~/MEGA/glorified-body-renders/game/animation/shots/cpr_probe_sheet.png).
+        /// over Pick_Down, set B: ~/MEGA/glorified/renders/game/animation/shots/cpr_probe_sheet.png).
         /// </summary>
         public static readonly (string muscle, float value)[] CprArms =
         {
@@ -61,7 +61,7 @@ namespace GlorifiedBody.Enemy
         /// <summary>
         /// The CPR's legs (2026-11-02, Bruno: "both knees"): the vendor kneel has one knee up. Both thighs straight down,
         /// the shins flat on the floor behind. PoseProbe over Pick_Down at 0.43 s: the knees 0.07 to 0.09 m over the
-        /// floor, the ankles about 0.09 m (~/MEGA/glorified-body-renders/game/animation/shots/cpr_knees_probe_sheet2.png).
+        /// floor, the ankles about 0.09 m (~/MEGA/glorified/renders/game/animation/shots/cpr_knees_probe_sheet2.png).
         /// </summary>
         public static readonly (string muscle, float value)[] CprLegs =
         {

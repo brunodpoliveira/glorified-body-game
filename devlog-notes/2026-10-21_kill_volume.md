@@ -23,4 +23,4 @@ prop, it had no mark, and the room had no other box of that shape.
 PlayMode 55 of 55 (with the dodge tests of the same day, `2026-10-21_dodge_input.md`), the bot 24 of 24, all
 CLEAN. RUNS: 20261021-175122-exec-55310 (the scene rebuild), 20261021-175156-test-playmode-55723,
 20261021-175522-play-56367.
-Shot: `~/glorified-body-renders/game/kill_volume/play_training_room.png` (the wide camera, no box at the east wall).
+Shot: `~/MEGA/glorified/renders/game/kill_volume/play_training_room.png` (the wide camera, no box at the east wall).

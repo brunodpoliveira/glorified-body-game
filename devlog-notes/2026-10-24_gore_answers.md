@@ -48,7 +48,7 @@ never falls). Answer 1 above changes the third choice: a telekinesis kill now bu
   flies. Gore Low cuts nothing. Plus the rules for every kill.
 - The "ai" bot (29 steps): `gore_head_burst` (the slam kill), `gore_limb_cut` and `limb_flies` (a full blast kill
   of the gas grenadier: 170 triangles, flew 1.1 m, settled).
-- Shots: `~/glorified-body-renders/game/ai/gore2/`.
+- Shots: `~/MEGA/glorified/renders/game/ai/gore2/`.
 
 ## The textured sprays (Bruno, 2026-10-24, evening: "change it to the textured sprays")
 

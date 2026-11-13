@@ -67,7 +67,7 @@ each time: the code set a velocity on a kinematic body.
   tremble. The nurse: the drag, then the CPR, 4.1 m from her with a clear sight line. Also: the run and the cower
   after a kill, the beg, the lab worker's care after she leaves, and the short on a civilian.
 - The "civilians" bot, 9 of 9: `tools/unity.sh play CivilianTest Main_Menu civilians 300`.
-- Shots: `~/glorified-body-renders/game/civilians/2026-10-25_afternoon/`. They show the wary walk, the beg, the
+- Shots: `~/MEGA/glorified/renders/game/civilians/2026-10-25_afternoon/`. They show the wary walk, the beg, the
   cornered nurse, the run, the cower, the drag, the CPR and the death screen.
 - After the two last fixes, the AI bot passes with 0 warnings (55 last night). The
   cover bot passes with 2. These are the drift check of a lifted soldier, an old diagnostic. The enemy, civilian and

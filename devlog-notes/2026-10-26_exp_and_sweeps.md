@@ -48,7 +48,7 @@ Proof:
   the body pay nothing. Level 2 adds 10 HP and 10 % damage, and the HUD shows "LV 2" and "LEVEL 2". A save and a
   load give back the exp, the level and the maximum HP.
 - PlayMode `CivilianTests.HerKillOfACivilian_PaysMoreExpThanTheGuard`: a lab worker pays 50, the guard 15.
-- Shot: `~/glorified-body-renders/game/exp/2026-10-26/level_up.png`.
+- Shot: `~/MEGA/glorified/renders/game/exp/2026-10-26/level_up.png`.
 
 Not in the tutorial: exp is passive, so it has no step to teach. The tutorial targets pay exp too, but the tutorial
 is a separate mode, and its exp goes nowhere.

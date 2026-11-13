@@ -30,7 +30,7 @@ The code: `Combat/FloorShield.cs` (the slab, its HP, the scar, the turn), `Psych
 | FloorShieldTests (4): the hold tears a slab out in front of her, between her and her target, upright, it turns with her, one at a time; bullets stop on it and break it at 80 HP, and the next one rises; the attack key throws it and it hurts the target; another power does nothing | 4/4 |
 | The bot: `tools/unity.sh play AiTest Main_Menu shield 300` | 4/4 steps: the slab tears out; in 12 s facing the rifle soldier no rifle bullet reached her (he held his fire); three rounds stop on the slab; the throw takes 80 HP off the power armour |
 
-Shots for Bruno: `~/MEGA/glorified-body-renders/game/shield/shots/`
+Shots for Bruno: `~/MEGA/glorified/renders/game/shield/shots/`
 
 | File | It shows |
 |---|---|

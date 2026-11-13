@@ -9,7 +9,7 @@ namespace GlorifiedBody.Editor
     /// <summary>
     /// T27 (2026-11-01, design §28a items 7 to 9): the baked game characters. The new guard (8,999 triangles), Lucy's new
     /// body (18,000) and the new helmet (2,800), each with 2048 maps baked in Blender
-    /// (the-glorified-body/tests/T27_baked_characters/), as prefabs beside the old ones. Nothing old changes.
+    /// (~/MEGA/glorified/production/tests/T27_baked_characters/), as prefabs beside the old ones. Nothing old changes.
     /// In: Assets/_Game/Characters/T27/ t27_guard.fbx, t27_lucy.fbx, t27_crown.fbx and the maps t27_&lt;id&gt;_base / _n / _ms
     /// (_ao for the guard and the helmet). Out: Resources/T27/t27_guard.prefab and t27_lucy.prefab (the helmet on her
     /// mixamorig:Head, placed once at the rest pose), the URP Lit materials.

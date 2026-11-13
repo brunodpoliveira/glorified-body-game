@@ -28,7 +28,7 @@ Bruno's answers:
   world before they press a key (`BotClock.WaitWorld`).
 
 RFab: `frustrated_01`, `frustrated_02` and `hurt` on Lucy (model `ce7c93c2-…`), 30,000 tokens ($0.60). Sheets:
-`~/glorified-body-renders/game/short/rfab_pain/` (`pain_sheet.png`, `frustrated_02_frames.png`). `frustrated_01` (a
+`~/MEGA/glorified/renders/game/short/rfab_pain/` (`pain_sheet.png`, `frustrated_02_frames.png`). `frustrated_01` (a
 stamp of the foot) is not in use.
 
 ## Proof
@@ -41,7 +41,7 @@ stamp of the foot) is not in use.
   `OnTheWall_SheComesNear_ItSlidesDown_ThenBegsFromTheFloor`.
 - The structural bot's slowest frame is 650 ms. The earlier runs gave 477 to 493 ms. I did not find the cause yet.
   The first load of the new clips and sounds at the short's start is my first suspect.
-- Shots: `~/glorified-body-renders/game/civilians/2026-10-25_late/`. `civ_08b` shows the slide (half-way down),
+- Shots: `~/MEGA/glorified/renders/game/civilians/2026-10-25_late/`. `civ_08b` shows the slide (half-way down),
   `civ_08c` the beg from the floor, and `civ_09` and `civ_09b` Lucy's head pain in the frozen world.
 
 ## Open for Bruno

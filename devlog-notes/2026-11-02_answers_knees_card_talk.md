@@ -38,7 +38,7 @@ PoseProbe sheets over `Pick_Down` at 0.43 s (the probe now logs the knee and foo
 The care test measures the knees in the game: before the change L 0.46 m, R 0.23 m (the test failed), after it L 0.08 m,
 R 0.10 m.
 
-Shots: `~/MEGA/glorified-body-renders/game/animation/shots/cpr_both_knees_side.png`, `cpr_both_knees_front.png`. The probe
+Shots: `~/MEGA/glorified/renders/game/animation/shots/cpr_both_knees_side.png`, `cpr_both_knees_front.png`. The probe
 sheets: `cpr_knees_probe_sheet.png`, `cpr_knees_probe_sheet2.png` (same folder).
 
 ## 2. The card by a word (`Interaction/CarrierTalk.cs`)
@@ -56,7 +56,7 @@ sheets: `cpr_knees_probe_sheet.png`, `cpr_knees_probe_sheet2.png` (same folder).
 
 ## 3. For the second pass (not built)
 
-His list is in `the-glorified-body/game/DEMO_PLAN.md` §12: backtracking, and new rooms and puzzles (more bathrooms,
+His list is in `~/MEGA/glorified/game/DEMO_PLAN.md` §12: backtracking, and new rooms and puzzles (more bathrooms,
 storage rooms, a child's play room, a coffee break room, a conference room, an office with rows of computers, a cold
 materials freezer room).
 

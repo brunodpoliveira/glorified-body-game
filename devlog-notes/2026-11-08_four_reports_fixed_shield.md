@@ -65,7 +65,7 @@ The writer removed the two CROWN readout lines from cutscene 02b in round 52 (`0
 
 Not run on this code: the whole PlayMode suite and the other bots. Rule 10 asks for them before a push. Nobody played this by hand.
 
-Shots: `~/MEGA/glorified-body-renders/game/four_reports_2026-11-08/`. `demo_cam_g1_00.png` is the camera of the first screenshot: the top right shows no other room now. `shield_02_shield_stays.png` shows the slab in place after she steps aside.
+Shots: `~/MEGA/glorified/renders/game/four_reports_2026-11-08/`. `demo_cam_g1_00.png` is the camera of the first screenshot: the top right shows no other room now. `shield_02_shield_stays.png` shows the slab in place after she steps aside.
 
 ## Limits and open points
 

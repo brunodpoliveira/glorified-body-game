@@ -60,7 +60,7 @@ bots), 211743 (the structural bot).
 
 ## The shots
 
-`~/glorified-body-renders/game/tutorial/`: `sheet_door_inventory.png` (the question "Use the test key?", the
+`~/MEGA/glorified/renders/game/tutorial/`: `sheet_door_inventory.png` (the question "Use the test key?", the
 open door, the inventory on the test log and on the test key), `sheet_interact_scan.png` (the log question and
 page, the two scans), `sheet_tutorial.png` (the seventeen prompts). Checked at full size: the inventory reads
 "SLOTS 0 / 4, KEY ITEMS 2 (no slot)" after the capsule was used, the selected cell carries the outline. The

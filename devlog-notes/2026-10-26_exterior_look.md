@@ -4,7 +4,7 @@ Bruno's question: "we'll likely to have exterior envs. is the method we're doing
 them fine?" His answer to my study: "yes", build the test.
 
 **The answer: yes.** The rooms' method works outdoors with a sun in place of the spots. The shots:
-`~/glorified-body-renders/game/look_test/2026-10-26_exterior/` (`sheet_baked.png` holds four cameras).
+`~/MEGA/glorified/renders/game/look_test/2026-10-26_exterior/` (`sheet_baked.png` holds four cameras).
 
 ## The room
 

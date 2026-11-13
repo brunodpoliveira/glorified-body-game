@@ -117,7 +117,7 @@ should the hall's squad hear a fight in G2?
 3. The music: `MusicScopeTests` 1 of 1; `SoundSystemTests`, the hunting test of `EnemyAiTests` and the lock test of
    `HoldTests`: 9 of 9.
 4. The demo bot (`play Demo Main_Menu demo 1200`): 242 of 242 steps, 55 rooms, 0 missing figures. The shots of the
-   Hold: `~/MEGA/glorified-body-renders/game/hold_2026-11-13/`.
+   Hold: `~/MEGA/glorified/renders/game/hold_2026-11-13/`.
 5. The release build for Linux: `builds/release_linux/TheGlorifiedBody.x86_64` (441 MB), zip
    `builds/the_glorified_body_linux.zip`. Every player build failed since T38 (an editor-only light property in
    `ArkhamDirector`); fixed.

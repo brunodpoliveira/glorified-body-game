@@ -38,7 +38,7 @@ The light in the air is the big cost (9.5 to 12 ms).
 
 ## 3. T27: baked characters (2026-11-02, night)
 
-Note: `2026-11-02_baked_characters.md`. Report: `the-glorified-body/tests/T27_baked_characters/RESULT.md`.
+Note: `2026-11-02_baked_characters.md`. Report: `~/MEGA/glorified/production/tests/T27_baked_characters/RESULT.md`.
 
 Bruno's idea (design §28a items 7 to 9): more faces for the game meshes, with the detail of the full mesh baked in
 ("don't need to break the bank"). Lucy gets the most faces, on a free outside body, with our paint. The helmet gets
@@ -63,7 +63,7 @@ yellow at half metal. Now they are a darker gold, bright in the middle of each v
 
 ## 4. T28: act 2 concept art (2026-11-02, night, then the redo in the day)
 
-Report: `the-glorified-body/tests/T28_act2_concepts/RESULT.md`. Files: `/home/pc/MEGA/glorified-body-renders/T28_act2_concepts/`.
+Report: `~/MEGA/glorified/production/tests/T28_act2_concepts/RESULT.md`. Files: `/home/pc/MEGA/glorified/renders/T28_act2_concepts/`.
 
 The brief: act 2 (the Swan) in winter Philadelphia: a city street, an apartment hallway and an elevated station. Some
 street concepts match the camera of the snowy-alley reference exactly. The sky references set the sky, the light and
@@ -88,7 +88,7 @@ with real logos that Bruno must delete.
 
 ## 5. T29: the Galerians fonts (2026-11-02, night)
 
-Report: `the-glorified-body/tests/T29_fonts/RESULT.md`. Sheets: `/home/pc/MEGA/glorified-body-renders/T29_fonts/sheets/`.
+Report: `~/MEGA/glorified/production/tests/T29_fonts/RESULT.md`. Sheets: `/home/pc/MEGA/glorified/renders/T29_fonts/sheets/`.
 
 The source is the "STAFF'S COMENTS" page of the Galerians guidebook (the typo is in the print). The page has five
 type styles. The free picks (SIL OFL), each with the way to set it:

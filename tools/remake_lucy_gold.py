@@ -21,7 +21,7 @@ from PIL import Image, ImageFilter
 
 TOP = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DIR = os.path.join(TOP, "Assets/_Game/Remake/Characters")
-SRC = os.path.expanduser("~/MEGA/glorified-body-renders/T26_remake_look/lucy_src")  # outside Assets: no import
+SRC = os.path.expanduser("~/MEGA/glorified/renders/T26_remake_look/lucy_src")  # outside Assets: no import
 GOLD = np.array([1.00, 0.76, 0.22], np.float32)
 SHADE = 0.4
 METAL = 0.6

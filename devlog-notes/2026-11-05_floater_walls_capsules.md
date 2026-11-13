@@ -61,4 +61,4 @@ follows the floater.
 Limits: the whole PlayMode suite did not run. The tests use a test wall (a box on the wall layer), and nobody tried the fix by
 hand in a game room.
 
-Shot: `~/MEGA/glorified-body-renders/game/demo/opening_2026-11-05b/demo_meet_2_capsules.png`.
+Shot: `~/MEGA/glorified/renders/game/demo/opening_2026-11-05b/demo_meet_2_capsules.png`.

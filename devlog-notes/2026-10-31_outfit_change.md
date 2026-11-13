@@ -40,7 +40,7 @@ step on the square runs the grab once: the uniform tears off and the pills over 
 | The tests of the rebuilt rooms: Outfit, Screen, Kit, Ward, ArmedCivilian, Map, AudioLog | 49/49 (`runs/20261031-080913-test-playmode-909903`) |
 | The bot: `tools/unity.sh play OutfitTest Main_Menu outfit 300` | 3/3 steps |
 
-Shots for Bruno: `~/MEGA/glorified-body-renders/game/outfit/shots/`
+Shots for Bruno: `~/MEGA/glorified/renders/game/outfit/shots/`
 
 | File | It shows |
 |---|---|

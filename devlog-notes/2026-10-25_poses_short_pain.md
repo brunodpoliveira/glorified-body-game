@@ -16,7 +16,7 @@ Bruno's answers to the afternoon questions and to the study (`2026-10-25_study_w
 ## 1. The RFab fear presets
 
 - `rfab model animate 2482e45d-… --motions scared_01,scared_02,afraid` on the T19 lab worker. Cost: 30,000 tokens
-  ($0.60), as estimated. Log: `~/glorified-body-renders/game/civilians/rfab_fear/log.jsonl`.
+  ($0.60), as estimated. Log: `~/MEGA/glorified/renders/game/civilians/rfab_fear/log.jsonl`.
 - `afraid` (2.6 s) is a startle: a hand to the chest, then back. `scared_01` (3.3 s) is a shaking stance with the
   knees bent. `scared_02` (3.3 s) is a self-hug. None of the three moves the body (measured: under 1 cm).
 - `tools/characters_export.py` made `Models/labworker_fear.fbx` (900 KB) with its `labworker_fear.clips.json`. It is a
@@ -77,7 +77,7 @@ wall by about 1 m. A lean civilian now checks again once it stands.
   - `TheShort_HurtsACivilian` checks the stun and the jolt too.
 - One old test changed: `FullShort_StartsOnTheAttackPress_SlowWalk_AndADrugEndsIt` now waits for the start freeze
   to end before it checks her legs.
-- Shots: `~/glorified-body-renders/game/civilians/2026-10-25_evening/`. `civ_04b` shows the fear stance, `civ_06` the
+- Shots: `~/MEGA/glorified/renders/game/civilians/2026-10-25_evening/`. `civ_04b` shows the fear stance, `civ_06` the
   wall lean, `civ_09` Lucy's pain at the start, and `civ_10` the arc. `rfab_fear_sheet.png` shows the three presets.
 
 ## Open for Bruno

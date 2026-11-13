@@ -64,7 +64,7 @@ None this step. The first build failed on a missing `using` in the new builder c
 | The doors bot | passes |
 | The demo bot | passes |
 
-Shots: `~/MEGA/glorified-body-renders/game/route_switch_planters_2026-11-10/` (G2 with the planters, W5, W9 with the
+Shots: `~/MEGA/glorified/renders/game/route_switch_planters_2026-11-10/` (G2 with the planters, W5, W9 with the
 one lever on the W5 wall).
 
 OPEN: a soldier's cover spots come from a scan at the first fight. A planter that she moves later leaves those spots

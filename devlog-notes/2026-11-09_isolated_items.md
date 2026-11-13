@@ -62,7 +62,7 @@ floater of the test hung 82° to her left, out of the reach of the right arm.
 
 `PowersAndBarsTests.OnePose_...`: on a charge the arm points 0.2° off the target, on the floater (left arm) 0.7° off.
 The palm: the first value of the hand muscle (Hand Down-Up +0.7) bent the hand toward her. The other sign (-0.7)
-shows the palm to the target. Shots: `~/MEGA/glorified-body-renders/game/isolated_items_2026-11-09/`
+shows the palm to the target. Shots: `~/MEGA/glorified/renders/game/isolated_items_2026-11-09/`
 (`arm_first_try_palm_in.png`, `arm_palm_out.png`, from the brain bot: she charges at the brain, at the camera).
 
 ## Proof

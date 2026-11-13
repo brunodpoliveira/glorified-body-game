@@ -71,7 +71,7 @@ comes head-on and retreats. He replaces the guard in the second pair of G2 (`Sol
 Limits: the whole PlayMode suite did not run. Nobody played the new camera cuts by hand. The test for the soldier with a shield checks the rank,
 the style, the pistol and the front of the shield, but not a fight.
 
-Shots: `~/MEGA/glorified-body-renders/game/demo/opening_2026-11-05c/`.
+Shots: `~/MEGA/glorified/renders/game/demo/opening_2026-11-05c/`.
 
 ## Open for Bruno
 
@@ -100,5 +100,5 @@ A load brings a living figure back with its weapon, by the rule of 2026-10-26: o
 Limits: the whole PlayMode suite and the bot did not run. In the shots the knife lies beside the crouched lab worker, but the guard's camera
 does not show his gun: the test measures it. Nobody saw the unarmed crouch up close.
 
-Shots: `~/MEGA/glorified-body-renders/game/demo/cower_2026-11-05/`.
+Shots: `~/MEGA/glorified/renders/game/demo/cower_2026-11-05/`.
 

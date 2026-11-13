@@ -110,7 +110,7 @@ shadow map).
 
 ### The final files
 
-`~/MEGA/glorified-body-renders/T26_remake_look/game/`:
+`~/MEGA/glorified/renders/T26_remake_look/game/`:
 - `AB_bright_<camera>.png`, `AB_dark_<camera>.png`: A beside B-game, three cameras each.
 - `air_bright_<camera>.png`, `air_dark_<camera>.png`: B-game with the room's air setting beside the other one.
 - `tiers_<room>_<lucy|guard>_<camera>.png` and `tiers_<room>.txt`: the texture pick.
@@ -127,7 +127,7 @@ The first pass of the afternoon used the wrong style and the wrong guard texture
    (design §13.8, "act 1 is nigredo").
 2. The guard wore the OLD navy base colour (mean colour 37, 37, 43). Round 16 (T24) gave him the light kit.
 
-Its renders are kept, not deleted: `~/MEGA/glorified-body-renders/T26_remake_look/superseded_first_pass/`
+Its renders are kept, not deleted: `~/MEGA/glorified/renders/T26_remake_look/superseded_first_pass/`
 (AB_*, ablation_*, shots/, clips/). Its materials and room textures are out of the project.
 
 ## What was built
@@ -180,7 +180,7 @@ Its renders are kept, not deleted: `~/MEGA/glorified-body-renders/T26_remake_loo
 The detailed texture stage with the same picture gave 4096 base colour, normal and metal-rough maps. The rig (v1.0,
 mixamo, 23 bones) and idle plus walk worked in one pass each. The price is the same as for the 2,500 mesh. In
 Unity it imports as Humanoid and plays the game's guard controller. Files:
-`~/MEGA/glorified-body-renders/T26_remake_look/full_mesh/` (model id `99a6e3b2-02be-4401-9c2e-27beb9770e67`).
+`~/MEGA/glorified/renders/T26_remake_look/full_mesh/` (model id `99a6e3b2-02be-4401-9c2e-27beb9770e67`).
 
 **Lucy has no full mesh.** Image to 3D refused the T19 doll picture `lucy_bare_plain_1.png` (Tripo code 2008,
 "content policy", no charge). The same picture passed on 2026-10-21. With the two T20 refusals (the C3 skin, the
@@ -271,7 +271,7 @@ setup B (a light that lights the background more than the figure).
 
 ## The files
 
-`~/MEGA/glorified-body-renders/T26_remake_look/`:
+`~/MEGA/glorified/renders/T26_remake_look/`:
 - `AB_cam_recovery.png`, `AB_cam_recovery_bed.png`, `AB_cam_recovery_long.png`: A left, B (all on) right, 1920 x
   1080 each.
 - `ablation_<camera>.png`: B all on, each switch off alone, all off, 4 x 3 at full size.

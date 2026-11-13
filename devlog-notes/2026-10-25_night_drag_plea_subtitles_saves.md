@@ -39,7 +39,7 @@ distance, and through a wall.
 - Every second civilian (the lean and the shaking variants) begs with both hands up (`PleaHands`). The palms
   point to her, and the head comes up. The others keep the hands low.
 - The pose is by code, on the Unity humanoid muscles, so one set fits every rig.
-- I picked the numbers from rendered sheets (`PoseProbe`, `~/glorified-body-renders/game/civilians/plea_probe/`).
+- I picked the numbers from rendered sheets (`PoseProbe`, `~/MEGA/glorified/renders/game/civilians/plea_probe/`).
 - The first pick sank to the knees in the game, because the sit and the lean hunch the back. The hands are now at
   the face.
 
@@ -84,11 +84,11 @@ distance, and through a wall.
 - New tests: `CivilianTests` (the limp drag and the freeze, the plea, the low hands, the fall at the wall),
   `SubtitleTests` (5), `SaveTests` (5), `SaveDataTests` (3, EditMode), and a subtitle check on `DeathScreenTests`.
 - The bots: the civilian bot has a subtitle step (13 steps), the structural bot a save step.
-- Shots in `~/glorified-body-renders/game/civilians/2026-10-25_night/`:
+- Shots in `~/MEGA/glorified/renders/game/civilians/2026-10-25_night/`:
   - `sheet.png`: the drag, the CPR, the slide.
   - `civ_08c_beg_on_floor.png`: the plea.
   - `civ_08d_subtitle.png` and `death_subtitle.png`: the subtitles.
-- Shots in `~/glorified-body-renders/game/saves/2026-10-25/`: the slot menu and the note.
+- Shots in `~/MEGA/glorified/renders/game/saves/2026-10-25/`: the slot menu and the note.
 - The full run (21:14): EditMode 46/46, PlayMode 181/181, and the six bots pass (ai, cover, civilians, tutorial,
   structural, look). The structural bot's slowest frame is 515 ms.
 

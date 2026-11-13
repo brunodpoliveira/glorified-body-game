@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 """Devlog visuals catalog: lists the stills and the clips the writer can name in a script.
 
-Walks ~/MEGA/glorified-body-renders/ (override: GB_RENDERS), skips frame sequences (files named 0001.png) and the
+Walks ~/MEGA/glorified/renders/ (override: GB_RENDERS), skips frame sequences (files named 0001.png) and the
 proxies, caps each folder at 40 stills, and writes:
-  ~/MEGA/glorified-body-renders/devlog/VISUALS.md    for the writer (a copy goes to the writers' folder, see --copy)
-  ~/MEGA/glorified-body-renders/devlog/visuals.json  for assemble.py
-Run: python3 -I catalog.py [--copy /path/to/the-glorified-body/devlog]
+  ~/MEGA/glorified/renders/devlog/VISUALS.md    for the writer (a copy goes to the writers' folder, see --copy)
+  ~/MEGA/glorified/renders/devlog/visuals.json  for assemble.py
+Run: python3 -I catalog.py [--copy ~/MEGA/glorified/devlog]
 """
 import json
 import os
 import subprocess
 import sys
 
-ROOT = os.environ.get("GB_RENDERS", os.path.expanduser("~/MEGA/glorified-body-renders"))
+ROOT = os.environ.get("GB_RENDERS", os.path.expanduser("~/MEGA/glorified/renders"))
 OUT = os.path.join(ROOT, "devlog")
 STILL = {".png", ".jpg", ".jpeg", ".webp"}
 CLIP = {".mp4", ".mov", ".webm"}
@@ -44,7 +44,7 @@ NOTES = {
     "T12/edit": "The finished 2:16 clip of the slice (T12_slice_1080.mp4) and its contact sheet. The masters are ProRes.",
     "T12/edit/T12_slice_1080.mp4": "The whole slice: open plug, seven shots, end plug. The best 'before' footage.",
     "T12/shots": "Frame sequences of the slice shots (s1 to s7). Name a folder to use it as a clip.",
-    "T14": "The faces test: 3D Studio heads at the table. The uncanny valley lesson (ART_LESSONS.md section 3).",
+    "T14": "The faces test: 3D Studio heads at the table. The uncanny valley lesson (~/MEGA/glorified/production/ART_LESSONS.md section 3).",
     "T15": "The 3D set and head checks. Also faces that failed: see cast_heads_vs_galerians.png.",
     "T16": "The translation look test (forearm frame, textures).",
     "T17": "Ava's demon: Seedance motion tests and keyframes.",

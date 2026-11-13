@@ -4,7 +4,7 @@
 # in samples, so MusicDirector keeps the beat when the state changes. They are studies, not the final track.
 # exploration = Ambient, search = Tension, combat = Combat. Usage: tools/music_states_placeholder.sh
 set -euo pipefail
-SRC="${HOME}/MEGA/glorified-body-renders/T41_music_layers/complex"
+SRC="${HOME}/MEGA/glorified/renders/T41_music_layers/complex"
 DST="$(git rev-parse --show-toplevel)/Assets/_Game/Resources/Audio/Music/_placeholder"
 for pair in "state_explore_loop:ambient" "state_search_loop:tension" "state_combat_loop:combat"; do
   src="${pair%%:*}"; dst="${pair##*:}"

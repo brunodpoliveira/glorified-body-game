@@ -46,7 +46,7 @@ animation errors" as the animation faults he marked FOR LATER. I checked each on
 | the long-gun arms (right arm high, left arm loose) | A close shot of the rifle soldier. | NOT CHANGED: it reads well at play size. His ruling was "let it be". |
 | the drag and the CPR pose "sometimes comes extremely uncanny" (the nurse) | The CPR shot of a soldier. | NOT CHANGED: the poses are RFab presets. A better pose needs new clips (RFab), not code. |
 
-Shots for Bruno: `~/MEGA/glorified-body-renders/game/animation/shots/`
+Shots for Bruno: `~/MEGA/glorified/renders/game/animation/shots/`
 
 | File | It shows |
 |---|---|

@@ -114,7 +114,7 @@ All numbers here are PROPOSED.
   - A soldier takes cover behind a barricade on its far side from her.
 - The "cover" bot (`tools/unity.sh play CoverTest Main_Menu cover 300`, 8 steps): the room, a soldier in cover,
   the blast on cover, the barricade breaks, the table breaks (4 of 4 items move), the plaster falls, the lamps go
-  out, the room is still broken when she comes back. Shots: `~/glorified-body-renders/game/ai/cover/`.
+  out, the room is still broken when she comes back. Shots: `~/MEGA/glorified/renders/game/ai/cover/`.
 - The tutorial bot: the cover step in 29 s, 24 of 24 bot steps (22 tutorial steps).
 - The full run: EditMode 39/39, PlayMode 134/134, the bots cover 8/8, tutorial 24/24, structural 24/24, look 32/32,
   ai 29/29. The first ai run missed its "telegraph" watch (12 s) while the soldiers fired. The second run passed:

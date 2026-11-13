@@ -53,7 +53,7 @@ poster "THANK YOU FOR THE HARD DAYS." over the lockers.
 | CivilianTests, KitTests, SaveGoreTests, TravelTests, TutorialTests, InteractionTests | 58/58 |
 | The bot: `tools/unity.sh play WardTest Main_Menu pieces 300` | 4/4 steps |
 
-Shots for Bruno: `~/MEGA/glorified-body-renders/game/demo_pieces/shots/`
+Shots for Bruno: `~/MEGA/glorified/renders/game/demo_pieces/shots/`
 
 | File | It shows |
 |---|---|

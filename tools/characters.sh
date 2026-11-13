@@ -3,7 +3,7 @@
 #
 #   tools/characters.sh [class ...]     default: the nine demo classes
 #
-# Source: ~/MEGA/glorified-body-renders/T19_characters/models/<class>_animated.glb (the rig and the actions) and
+# Source: ~/MEGA/glorified/renders/T19_characters/models/<class>_animated.glb (the rig and the actions) and
 #         <class>_game.glb (the base colour). Output: Assets/_Game/Characters/Models/<class>.fbx,
 #         <class>_basecolor.png|jpg and <class>.clips.json (the travel of each clip). Then the Unity side:
 #   tools/unity.sh exec GlorifiedBody.Editor.Characters.CreateCharacterAssets.BuildAll
@@ -11,9 +11,9 @@
 # Blender runs through the RFab kit wrapper (one at a time, a RAM cap), or straight from the snap without it.
 set -u
 TOP="$(cd "$(dirname "$0")/.." && pwd)"
-SRC="${GB_CHARACTER_SRC:-$HOME/MEGA/glorified-body-renders/T19_characters/models}"
+SRC="${GB_CHARACTER_SRC:-$HOME/MEGA/glorified/renders/T19_characters/models}"
 OUT="$TOP/Assets/_Game/Characters/Models"
-RUNNER="${GB_BLENDER_RUNNER:-$HOME/MEGA/code/the-glorified-body/kit/run_blender.sh}"
+RUNNER="${GB_BLENDER_RUNNER:-$HOME/MEGA/glorified/production/kit/run_blender.sh}"
 BLENDER="${GB_BLENDER:-/snap/blender/current/blender}"
 classes=("$@")
 [ ${#classes[@]} -eq 0 ] && classes=(lucy_bare lucy_guard patient nurse labworker guard soldier fireman power_armour)

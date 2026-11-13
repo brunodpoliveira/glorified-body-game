@@ -39,7 +39,7 @@ All of it is a placeholder until the sound source is chosen (RFab gap 14):
   at 140 bpm, menu 38 s), the room tone, the hum, the chime, the sting and the hiss in numpy.
 - It copies Kenney's CC0 packs ("Impact Sounds", "Interface Sounds", "RPG Audio", "Sci-fi Sounds") for the rest. The
   licences are in `Resources/Audio/Sfx/License_*.txt`. All of it is safe for the public repo. Size: 4.5 MB.
-- Spectrograms of the four tracks: `~/glorified-body-renders/game/audio/2026-10-26/music_spectrograms.png`.
+- Spectrograms of the four tracks: `~/MEGA/glorified/renders/game/audio/2026-10-26/music_spectrograms.png`.
 
 To replace a sound, put a file in its folder. A file named like a placeholder replaces it. To give a room or a
 sector its music, add `Resources/Audio/Music/<key>/ambient.ogg` (and `tension`, `combat`, `room_tone`). To voice a

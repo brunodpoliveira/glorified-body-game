@@ -11,7 +11,7 @@ logic except the bot that records the clips.
    - `script.js`: the script format. Front matter (episode, kind, title, voice), then `## N. Name`, `VISUAL:`
      lines (still, clip with a time range, seq, card), `NARRATION:`.
    - `narrate.js`: one WAV for each section through RFab Voice Scenes with Bruno's clone (`me` on the local
-     backend). The cache `~/glorified-body-renders/devlog/<ep>/audio_cache/` is keyed by the voice and the text,
+     backend). The cache `~/MEGA/glorified/renders/devlog/<ep>/audio_cache/` is keyed by the voice and the text,
      so a revision bills only the changed sections, at any position, long or short.
    - `assemble.py`: the long video (1920x1080) and the short (1080x1920, the title on top, the section text as a
      caption). A still gets a slow push-in, a clip is cut or held, a card is drawn. Plus `contact_sheet.png`,
@@ -22,7 +22,7 @@ logic except the bot that records the clips.
    per second only inside a clip (`Time.captureFramerate`), renders every frame at 1920x1080 through the main
    camera with the HUD over it, and ffmpeg makes one MP4 for each clip: tank_controls, camera_cuts,
    lock_on_charge, telegraph, blast_kill, drug_pickup, short. Copies go to
-   `~/glorified-body-renders/devlog/clips/{latest,<stamp>}/`. Outside a clip the bot runs as before.
+   `~/MEGA/glorified/renders/devlog/clips/{latest,<stamp>}/`. Outside a clip the bot runs as before.
 3. The project skill `/devlog-night <ep>`: reads Bruno's notes, asks the writer for the next version, runs the
    night, reports the packet.
 
@@ -38,11 +38,11 @@ logic except the bot that records the clips.
 
 - Two `record` runs, both CLEAN, 23 of 23 bot steps. The first gave clips of 0.1 to 2.3 s: the bot is fast by
   design. `Linger(seconds)` now holds the game clock inside a clip, on video only. The second run: seven clips of
-  1.9 to 4.9 s (`runs/20261021-011231-record-406267`, `~/glorified-body-renders/devlog/clips/latest/`).
+  1.9 to 4.9 s (`runs/20261021-011231-record-406267`, `~/MEGA/glorified/renders/devlog/clips/latest/`).
 - The writer's v1 scripts: ep00 long 18 sections 923 words, short 7 sections, ep01 long 20 sections 992 words,
-  short 7 sections (`the-glorified-body/devlog/ep0{0,1}/`).
+  short 7 sections (`~/MEGA/glorified/devlog/ep0{0,1}/`).
 - `night.sh ep00` and `night.sh ep01`: ep00 long 353 s, short 59 s. ep01 long 387 s, short 58 s. No MISSING
-  visual. Packets: `~/glorified-body-renders/devlog/ep00/v1/README.md` and `ep01/v1/README.md`.
+  visual. Packets: `~/MEGA/glorified/renders/devlog/ep00/v1/README.md` and `ep01/v1/README.md`.
 
 ## Version 2, the same night (01:50 to 02:11)
 
@@ -51,7 +51,7 @@ model and provider. The writer changed 20 of 52 sections (Unity 6, Blender 5.2, 
 Fish Audio behind the Voice Cloner, Gemini TTS behind Voice Scenes, Nano Banana Pro, GPT Image 2, Seedream 4.5,
 Seedance, Mureka V9, Lyria 3 Pro, Claude Code and Claude Fable 5.1, ffmpeg) and showed the nine game models in
 ep01. The audio cache paid only for those sections: 18,591 tokens for v2 against 35,136 for v1. Packets:
-`~/glorified-body-renders/devlog/ep00/v2/README.md`, `ep01/v2/README.md`. Lengths: ep00 long 6:48, short 1:16,
+`~/MEGA/glorified/renders/devlog/ep00/v2/README.md`, `ep01/v2/README.md`. Lengths: ep00 long 6:48, short 1:16,
 ep01 long 7:14, short 1:05. The whole night: about 54,000 tokens.
 
 ## Owed
@@ -71,7 +71,7 @@ ep01 long 7:14, short 1:05. The whole night: about 54,000 tokens.
 `Assets/_Game/Scripts/Automation/FrameRecorder.cs` (new), `BotArgs.cs`, `StructuralPlaythrough.cs` (the clip
 markers), `Assets/_Game/Scripts/Editor/Automation/PlaythroughRunner.cs` (`-gbRecord`), `tools/unity.sh`
 (`record` mode), `.claude/skills/devlog-night/SKILL.md`. Private, outside git:
-`~/glorified-body-renders/devlog/voices.json`.
+`~/MEGA/glorified/renders/devlog/voices.json`.
 
 ## Episodes 2 and 3 (2026-10-23, 00:30 to 02:10)
 
@@ -86,7 +86,7 @@ markers), `Assets/_Game/Scripts/Editor/Automation/PlaythroughRunner.cs` (`-gbRec
 - The first render failed at the narration: the local backend was down ("fetch failed"). `night.sh` now checks
   `/status` first and stops with a clear message.
 - Renders: ep02 long 7:02, short 1:10. ep03 long 6:34, short 1:09. Narration 37,388 tokens. Packets in
-  `~/glorified-body-renders/devlog/ep02/v1/` and `ep03/v1/`.
+  `~/MEGA/glorified/renders/devlog/ep02/v1/` and `ep03/v1/`.
 
 ## Episode 4 (2026-10-25, 01:20 to 02:10)
 
@@ -99,7 +99,7 @@ markers), `Assets/_Game/Scripts/Editor/Automation/PlaythroughRunner.cs` (`-gbRec
 
 ## Episodes 4 (re-planned), 5 and 6 (2026-10-31, 00:30 to 01:40)
 
-- The renders of episode 4 were lost in the move to `~/MEGA/glorified-body-renders`. Its scripts and the 12 AI
+- The renders of episode 4 were lost in the move to `~/MEGA/glorified/renders`. Its scripts and the 12 AI
   clips (in `runs/20261025-013936-record-603053/clips/`) survived.
 - `DevlogClip` (Room, Close, End) is the shared clip helper. The civilians bot records 8 clips (`7b3b1da`).
   The AI room recorded again: 12 clips, CLEAN.
@@ -107,4 +107,4 @@ markers), `Assets/_Game/Scripts/Editor/Automation/PlaythroughRunner.cs` (`-gbRec
 - Known fault: a Close clip whose side comes from `Lean.WallNormal` (cower, slide) films the wall, while the bot's
   still from the same spot is right. The videos use the stills. The drag clip is good for its first 17 s.
 - Renders: ep04 v2 7:03 and 0:59, ep05 v1 6:54 and 1:01, ep06 v1 6:56 and 1:05. Morning summary:
-  `~/MEGA/glorified-body-renders/devlog/MORNING_2026-10-31.md`.
+  `~/MEGA/glorified/renders/devlog/MORNING_2026-10-31.md`.

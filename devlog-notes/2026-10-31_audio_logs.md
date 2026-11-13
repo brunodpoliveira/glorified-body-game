@@ -70,7 +70,7 @@ Faults found on the way:
 - In the bot the tape paused again at once, because the fight's music holds Combat for 8 s after the last hit. This
   is correct. The bot now waits for the fight to end before it plays the tape again.
 
-Shots for Bruno: `~/MEGA/glorified-body-renders/game/tape/shots/`
+Shots for Bruno: `~/MEGA/glorified/renders/game/tape/shots/`
 
 | File | It shows |
 |---|---|

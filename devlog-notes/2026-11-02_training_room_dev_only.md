@@ -25,7 +25,7 @@ menu loop tests, the save tests, and more).
 | `PlayerBuildFlagTests` (a release menu has no TRAINING ROOM button, START loads W1; in a dev menu the button is in the test column and loads the room), `MenuLoopTests` | 11 of 11 |
 | Bot `play TrainingRoom Main_Menu structural 300`, run `20261102-203246-play-322604` | pass |
 
-Shot: `~/MEGA/glorified-body-renders/game/menu/main_menu_dev_2026-11-02.png` (the dev menu: the test column fits on the
+Shot: `~/MEGA/glorified/renders/game/menu/main_menu_dev_2026-11-02.png` (the dev menu: the test column fits on the
 screen with one more button).
 
 The player builds in `builds/` still have the training room. Build them again before an upload.

@@ -184,4 +184,4 @@ RUNS (the SHORT rule): `runs/20261020-202445-test-playmode-316605` (35/35 with t
 (33/33), `runs/20261020-193914-play-303046` (20/20), `runs/20261020-194238-test-playmode-305831` (34/34),
 `runs/20261020-194420-play-305208` (20/20), `runs/20261020-194747-test-playmode-307375` (34/34),
 `runs/20261020-194946-play-307374` (21/21, the shot that showed the premise overlap).
-SHOTS: `~/glorified-body-renders/game/adjustments1/` (the 14 bot shots, `how_to_play_ui.png` is the new one).
+SHOTS: `~/MEGA/glorified/renders/game/adjustments1/` (the 14 bot shots, `how_to_play_ui.png` is the new one).

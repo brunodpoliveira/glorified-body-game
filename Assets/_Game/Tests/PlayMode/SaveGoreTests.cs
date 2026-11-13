@@ -156,7 +156,7 @@ namespace GlorifiedBody.Tests.PlayMode
         /// <summary>Shots for Bruno: the room from above, and the burst head and the cut arm up close.</summary>
         private static void Shots(string when)
         {
-            string folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "glorified-body-renders", "game", "saves", "2026-10-25_gore");
+            string folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "MEGA", "glorified", "renders", "game", "saves", "2026-10-25_gore");
             var obj = new GameObject("TestShotCamera");
             Camera cam = obj.AddComponent<Camera>();
             cam.fieldOfView = 55f;

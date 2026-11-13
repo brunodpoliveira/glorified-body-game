@@ -21,8 +21,8 @@ namespace GlorifiedBody.Editor
     /// </summary>
     public static class DeathScreenSetup
     {
-        /// <summary>The writer's file, from the project root (the two repos sit side by side in ~/MEGA/code).</summary>
-        public const string WriterCsv = "../the-glorified-body/game/death_screens.csv";
+        /// <summary>The writer's file, from the project root (~/MEGA/code/glorified-body-game to ~/MEGA/glorified/game).</summary>
+        public const string WriterCsv = "../../glorified/game/death_screens.csv";
 
         private static readonly (string id, string classId, string note, string hint)[] Placeholders =
         {

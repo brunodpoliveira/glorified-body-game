@@ -101,5 +101,5 @@ The second run, after the fixes: `DemoTests`, `PowersAndBarsTests`, `ArmedCivili
 frames, and the test allows a quarter. The code under it did not change tonight. Two runs after it passed (160 and 214
 frames together). It is flaky: OPEN. The demo bot passes with the new placement.
 
-Shots: `~/MEGA/glorified-body-renders/game/night_demo_items_2026-11-09/` (B1 from the eye, B2, G9 and G9b dark, G8, W9
+Shots: `~/MEGA/glorified/renders/game/night_demo_items_2026-11-09/` (B1 from the eye, B2, G9 and G9b dark, G8, W9
 with Lucy on the floor, W11, and `w9_before_on_the_counter.png`).

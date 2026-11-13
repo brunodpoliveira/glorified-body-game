@@ -64,7 +64,7 @@ director tests the box itself and needs no trigger events). After that change al
   - a real guard kill shows the `guard` entry from the writer
   - a reload clears the killer
 - The "civilians" bot, 7 of 7: `tools/unity.sh play CivilianTest Main_Menu civilians 300`.
-- Shots: `~/glorified-body-renders/game/civilians/` (the office, the run, the cower, the beg, the cornered nurse, the
+- Shots: `~/MEGA/glorified/renders/game/civilians/` (the office, the run, the cower, the beg, the cornered nurse, the
   death screen, the main menu).
 
 ## Open for Bruno

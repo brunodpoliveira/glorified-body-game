@@ -146,7 +146,7 @@ namespace GlorifiedBody.Tests.PlayMode
         /// <summary>The room with the HUD over it, for Bruno (the overlay canvas renders only through a camera).</summary>
         private static void HudShot(PlayerHud hud, string name)
         {
-            string folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "glorified-body-renders", "game", "exp", "2026-10-26");
+            string folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "MEGA", "glorified", "renders", "game", "exp", "2026-10-26");
             Camera cam = Camera.main;
             Canvas canvas = hud.Canvas;
             if (cam == null || canvas == null) return;
