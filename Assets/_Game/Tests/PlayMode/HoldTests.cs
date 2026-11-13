@@ -213,6 +213,10 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.IsTrue(alarm.Ringing, "a full circle on the drapes starts the alarm");
             Assert.IsTrue(door.IsOpen && !door.IsBroken, "the lock releases: the door opens whole");
             Assert.IsTrue(alarm.lamps.activeSelf && alarm.flames.activeSelf, "the red lamps, the drapes burn");
+            Assert.AreEqual("THEATRE CONTROL. AUTHORISED STAFF ONLY. DOOR RELEASES ON FIRE ALARM.", door.lockedText, "the sign of DEMO_PLAN §7");
+            Assert.AreEqual(2, alarm.paLines.Length, "call F of T5_pa.md");
+            yield return WaitUntil(() => alarm.PaSaid >= 1 && GlorifiedBody.Subtitles.SubtitleService.Lines.Any(l => l.Speaker == "PA"), 4f);
+            Assert.IsTrue(GlorifiedBody.Subtitles.SubtitleService.Lines.Any(l => l.Speaker == "PA" && l.Text.StartsWith("Fire alarm")), "the PA call under the bell");
             // The nurse is a hider in the booth; she answers when asked for the card.
             AskTalk nurse = UnityEngine.Object.FindObjectsByType<AskTalk>(FindObjectsSortMode.None).FirstOrDefault(a => a.name == "Nurse_Booth");
             Assert.IsNotNull(nurse, "the nurse can be asked");

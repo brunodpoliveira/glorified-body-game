@@ -20,6 +20,8 @@ namespace GlorifiedBody.Interaction
         public Vector3 size = new Vector3(6f, 4f, 5f);
         public GameObject lamps;
         public GameObject flames;
+        [Tooltip("The PA call of the alarm (the writer's T5_pa.md, call F): once for each alarm, under the bell.")]
+        public string[] paLines = new string[0];
 
         public bool Ringing => StoryFlags.Has(flag);
         public string LastCause { get; private set; } = "";
@@ -47,6 +49,19 @@ namespace GlorifiedBody.Interaction
             if (flames != null && !on) flames.SetActive(false);
         }
 
+        public int PaSaid { get; private set; }
+
+        private System.Collections.IEnumerator Call()
+        {
+            for (int i = 0; i < paLines.Length; i++)
+            {
+                string id = $"pa_fire_{i:00}";
+                Voice.PA(id, paLines[i]);
+                PaSaid++;
+                yield return new WaitForSeconds(Voice.PaDelay + GlorifiedBody.Story.ScriptedSequence.LineSeconds(id, paLines[i]) + GlorifiedBody.Story.ScriptedSequence.LineGap);
+            }
+        }
+
         private void OnHit(HitInfo hit)
         {
             if (hit == null || hit.Victim == null || Ringing) return;
@@ -64,6 +79,7 @@ namespace GlorifiedBody.Interaction
             if (flames != null && cause.Contains("Drape")) flames.SetActive(true);
             StoryFlags.Raise(flag);
             Sfx.Play(Sfx.Fire, transform.position + Vector3.up * 1.5f, 0.9f);
+            if (paLines.Length > 0) StartCoroutine(Call());
             RunTelemetry.Event("fire_alarm", $"{name}:{cause}");
         }
     }

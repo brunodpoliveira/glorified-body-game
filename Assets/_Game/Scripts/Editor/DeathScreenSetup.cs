@@ -88,6 +88,25 @@ namespace GlorifiedBody.Editor
                     voiceText = parent != null ? parent.voiceText : ""
                 });
             }
+            // The writer's death lines (game/death_lines.csv: enemy, when, line, direction): every line of an id with a row. The
+            // speaker is the row's (the part of voice_line before the colon). The "when" rule is not read yet (§3.6).
+            string lines = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(WriterCsv), "death_lines.csv"));
+            foreach (DeathScreenContent.Entry e in content.entries) e.moreLines.Clear();
+            if (File.Exists(lines))
+            {
+                List<string[]> table = ReadCsv(File.ReadAllText(lines));
+                for (int i = 1; i < table.Count; i++)
+                {
+                    string[] r = table[i];
+                    if (r.Length < 3 || string.IsNullOrWhiteSpace(r[0])) continue;
+                    DeathScreenContent.Entry e = content.Exact(r[0].Trim());
+                    if (e == null) continue;
+                    int colon = e.voiceText.IndexOf(':');
+                    string speaker = colon > 0 ? e.voiceText.Substring(0, colon) : "";
+                    string line = string.IsNullOrEmpty(speaker) ? r[2].Trim() : speaker + ": " + r[2].Trim();
+                    if (line != e.voiceText && !e.moreLines.Contains(line)) e.moreLines.Add(line);
+                }
+            }
             content.fallback.hint = "PLACEHOLDER HINT: watch the red line and the ring. Step out before it closes.";
             content.fallback.pictureNote = "PLACEHOLDER: the room from the floor";
             return rows;

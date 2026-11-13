@@ -122,3 +122,20 @@ should the hall's squad hear a fight in G2?
    `builds/the_glorified_body_linux.zip`. Every player build failed since T38 (an editor-only light property in
    `ArkhamDirector`); fixed.
 6. A look item seen in the shots: in the frame the cage and the straps stand a little off her head and body.
+
+## 8. The answers (round 130 and the writer's words), same day
+
+1. Stay at post (Bruno: "Stay at post", DEMO_PLAN §3.4 item 4): a man on a post (`SoldierBrain.LeashUntil`) holds it
+   while she is outside his post. He hears the fight, sees her through the glass doors, or feels a power near him,
+   and he does not wake (`SoldierBrain.HoldsPost`, `PostHeld` counts it). He wakes when she is in his post, when he is
+   hurt, when a shield blocks her, or when a script calls him. After the duty key the leash goes, as before. The G2
+   cover test runs with the six in the scene again (the workaround is gone) and checks that none of them wakes.
+2. The booth door: the sign of §7, "THEATRE CONTROL. AUTHORISED STAFF ONLY. DOOR RELEASES ON FIRE ALARM.", on the wall
+   over the door and as the door's Interact message.
+3. The fire alarm: call F of `game/lines/T5_pa.md` plays once for each alarm, under the bell (`FireAlarm.paLines`).
+4. The prompts stay. The empty bar: "The gurney does not rise. The mk_orzabal bar is empty."
+5. The death screens: the writer's row `soldier_shotgun`; the grenadiers already took `soldier_grenades`. The
+   writer's `death_lines.csv` was not read by the game at all: now `DeathScreenSetup` adds the lines of each id to its
+   entry (`moreLines`, with the row's speaker), and the screen picks one at random, never the same twice in a row
+   (`DeathMenuUI.PickLine`). The `when` column is still not read.
+6. Not done: the four `ghost_*` barks of round 123 (a new trigger: the first blast in sight, and Lucy's head turn).

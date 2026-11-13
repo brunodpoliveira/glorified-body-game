@@ -268,6 +268,11 @@ namespace GlorifiedBody.Enemy
                 player = p != null ? p.transform : null;
                 if (player == null) return;
             }
+            if (HoldsPost(reason))
+            {
+                PostHeld++;
+                return;
+            }
             ScriptHeld = false;
             Alerted = true;
             AlertReason = reason;
@@ -324,6 +329,21 @@ namespace GlorifiedBody.Enemy
             leashRoom = room;
             leashFlag = flag;
         }
+
+        /// <summary>
+        /// Stay at post (Bruno, round 130, DEMO_PLAN §3.4 item 4: the six of the Dining Hall stay in G18 during a fight in
+        /// G2): a man on a post hears a fight, sees her or feels a power outside his post, and holds it. He wakes when she
+        /// is in his post, when he is hurt, a shield blocks her, or a script calls him. After the duty key the leash goes.
+        /// </summary>
+        private bool HoldsPost(string reason)
+        {
+            if (!Leashed || player == null) return false;
+            if (reason == "hurt" || reason == "blocked" || reason == "script" || reason == "control") return false;
+            return GlorifiedBody.Rooms.Room.At(player.position + Vector3.up * 0.1f) != leashRoom;
+        }
+
+        /// <summary>The alerts he let pass to hold his post (a test reads it).</summary>
+        public int PostHeld { get; private set; }
 
         public bool Leashed => leashRoom != null && (string.IsNullOrEmpty(leashFlag) || !GlorifiedBody.Saving.StoryFlags.Has(leashFlag));
         public GlorifiedBody.Rooms.Room LeashRoom => leashRoom;

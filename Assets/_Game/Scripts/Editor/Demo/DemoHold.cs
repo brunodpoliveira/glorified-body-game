@@ -45,6 +45,7 @@ namespace GlorifiedBody.Editor.Demo
         public const string OfficeShut = "hold_h9_shut";
         public const string Music = DemoWard.Music;
 
+        public const string BoothSign = "THEATRE CONTROL. AUTHORISED STAFF ONLY. DOOR RELEASES ON FIRE ALARM."; // DEMO_PLAN §7 (the writer, round 125)
         public static readonly string[] Ids = { "H1", "H2", "H3", "H4", "H5", "HT", "H6", "H7", "H8", "H9" };
 
         // The places (metres, the ward's frame: x east, z north). The writer's drawing, H6 and the box 5 m north.
@@ -260,7 +261,8 @@ namespace GlorifiedBody.Editor.Demo
             gd.openOffset = new Vector3(doorW + 0.05f, 0f, 0f);
             gd.openFlag = Alarm;
             gd.brokenFlag = GlassBroken;
-            gd.lockedText = "LOCKED FROM INSIDE. PLACEHOLDER SIGN: IN A FIRE ALARM THIS DOOR RELEASES."; // the words: the writer's (§10.6)
+            gd.lockedText = BoothSign; // DEMO_PLAN §7
+            r.Sign("Sign_Booth_Door", BoothSign, new Vector3(doorX, 2.45f, front - 0.06f), Vector3.back, new Vector2(1.0f, 0.22f), 16);
             gd.range = 1.4f;
             GameObject crack = Visual(r, r.Props, "Booth_Door_Crack", new Vector3(doorX, 1.3f, front - 0.05f), new Vector3(0.7f, 0.04f, 0.01f), new Color(0.95f, 0.95f, 0.95f), "glass_crack");
             crack.transform.rotation = Quaternion.Euler(0f, 0f, 35f);
@@ -306,6 +308,7 @@ namespace GlorifiedBody.Editor.Demo
             FireAlarm alarm = MenuLoopSetup.EnsureComponent<FireAlarm>(alarmObj);
             alarm.flag = Alarm;
             alarm.size = new Vector3(6f, 3.5f, 5f);
+            alarm.paLines = DemoScripts.Lines("lines/T5_pa.md", "Call F", "*").ConvertAll(l => l.text).ToArray(); // round 125: call F
             GameObject lamps = MenuLoopSetup.EnsureChild(r.Props, "Alarm_Lamps");
             foreach (float x in new[] { 9.4f, 14.6f })
                 Visual(r, lamps, "Alarm_Lamp_" + x.ToString("0.0"), new Vector3(x, 2.7f, 38.25f), new Vector3(0.25f, 0.18f, 0.12f), new Color(1f, 0.1f, 0.05f), "alarm_red");

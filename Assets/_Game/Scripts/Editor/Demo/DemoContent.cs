@@ -33,7 +33,7 @@ namespace GlorifiedBody.Editor.Demo
             bool inPart = false, inScript = false;
             foreach (string raw in File.ReadAllLines(path))
             {
-                if (raw.StartsWith("## ")) { inPart = raw.Substring(3).StartsWith(part); inScript = false; continue; }
+                if (raw.StartsWith("## ")) { inPart = raw.Substring(3).StartsWith(part); inScript = sub == "*"; continue; } // "*": every line of the part (a PA call)
                 if (raw.StartsWith("### ")) { inScript = raw.Substring(4).StartsWith(string.IsNullOrEmpty(sub) ? "The script" : sub); continue; }
                 if (!inPart || !inScript) continue;
                 Match m = LineRx.Match(raw);

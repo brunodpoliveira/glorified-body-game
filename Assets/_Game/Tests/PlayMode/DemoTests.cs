@@ -1293,10 +1293,7 @@ namespace GlorifiedBody.Tests.PlayMode
             stats.AddShort(-PsychicStats.MaxShort);
             TankController tank = lucy.GetComponent<TankController>();
             Vector3 g2 = GlorifiedBody.Rooms.Room.Of("G2").transform.position;
-            // The six of the Dining Hall (round 122) hear this fight through the glass doors and join it from their post: with
-            // them in, no man of G2 took cover in 40 s (2026-11-13, 3 runs); with them out, one ducks after 3.7 s. This test is
-            // the cover of G2, so the hall's squad stays out of it. Whether the hall should hear G2: OPEN for Bruno.
-            GameObject.Find("Hall_Team")?.SetActive(false);
+            // The six of the Dining Hall stay in the scene: they hear this fight and hold their post (round 130, "Stay at post").
             tank.Teleport(g2 + new Vector3(19f, 0f, 1f), 90f);
             yield return WaitUntil(() => GlorifiedBody.Rooms.RoomTracker.CurrentId == "G2", 3f);
             SoldierBrain[] pairs = UnityEngine.Object.FindObjectsByType<SoldierBrain>(FindObjectsSortMode.None).Where(b => b.name.StartsWith("Soldier_Pair")).ToArray();
@@ -1311,9 +1308,12 @@ namespace GlorifiedBody.Tests.PlayMode
             }
             Debug.Log($"[DemoTests] after {Time.time - t0:0.0} s: " + string.Join("; ", pairs.Select(b => $"{b.name} {b.Current} cover={(b.HeldCover == null ? "none" : (b.HeldCover.Low ? "low " : "corner ") + (b.Cover != null ? b.Cover.name : "solid"))} ducks={b.Ducks}")));
             Debug.Log("[DemoTests] the hall's squad then: " + string.Join("; ", UnityEngine.Object.FindObjectsByType<SoldierBrain>(FindObjectsSortMode.None).Where(b => !b.name.StartsWith("Soldier_Pair"))
-                .Select(b => $"{b.name} {b.Current} alerted={b.Alerted} team={(b.Team != null ? b.Team.GetHashCode().ToString() : "none")} room={GlorifiedBody.Rooms.Room.At(b.transform.position + Vector3.up * 0.1f)?.id}"))
+                .Select(b => $"{b.name} {b.Current} alerted={b.Alerted} postHeld={b.PostHeld} team={(b.Team != null ? b.Team.GetHashCode().ToString() : "none")} room={GlorifiedBody.Rooms.Room.At(b.transform.position + Vector3.up * 0.1f)?.id}"))
                 + " | the pairs' team " + string.Join(",", pairs.Select(b => b.Team != null ? b.Team.GetHashCode().ToString() + ":" + b.Team.GetType().Name : "none")));
             Assert.IsNotNull(ducking, "a soldier takes cover in the fight, and hides between shots");
+            SoldierBrain[] hall = GameObject.Find("Hall_Team").GetComponentsInChildren<SoldierBrain>();
+            Assert.AreEqual(6, hall.Length, "the six of the Dining Hall are in the scene");
+            Assert.IsTrue(hall.All(b => !b.Alerted), "round 130: the hall's squad holds its post during the fight in G2");
             Assert.Greater(Vector3.Distance(ducking.transform.position, lucy.transform.position), 2.5f, "he stays off her: no charge to cover");
             CoverSpot spot = ducking.HeldCover;
             Assert.IsNotNull(spot);

@@ -20,6 +20,7 @@ MonoBehaviour:
       closes.'
     voiceLine: {fileID: 0}
     voiceText: 
+    moreLines: []
   entries:
   - killerId: dummy_shooter
     picture: {fileID: 0}
@@ -30,6 +31,7 @@ MonoBehaviour:
     voiceLine: {fileID: 0}
     voiceText: 'PRESENTER: And that is why we step out of the circle. Again, from
       the top.'
+    moreLines: []
   - killerId: guard
     picture: {fileID: 0}
     pictureNote: the guard lowering the pistol, the goggles and the respirator filling
@@ -38,6 +40,11 @@ MonoBehaviour:
       Once he has aimed, he cannot aim again.
     voiceLine: {fileID: 0}
     voiceText: 'GUARD: It''s all right. It''s all right. You''re going back to bed.'
+    moreLines:
+    - 'GUARD: Dispatch, she''s down. Send the chair.'
+    - 'GUARD: Gloves. Gloves first. Don''t touch her hands.'
+    - 'GUARD: Ma''am, I did ask.'
+    - "GUARD: She just stopped. Is she \u2014 Danny, is she breathing?"
   - killerId: scientist
     picture: {fileID: 0}
     pictureNote: the blue hood from below, the knife, the collar piece with its green
@@ -46,6 +53,7 @@ MonoBehaviour:
       to you. The knife is only a knife.
     voiceLine: {fileID: 0}
     voiceText: 'COMPUTER: Subject contained. Return the tray to the dispensary.'
+    moreLines: []
   - killerId: scientist_group
     picture: {fileID: 0}
     pictureNote: four blue suits around her on the tiles, the ampoules on the floor
@@ -53,6 +61,7 @@ MonoBehaviour:
       ampoule during a short ends it.
     voiceLine: {fileID: 0}
     voiceText: 'COMPUTER: Subject contained. Four personnel to the infirmary.'
+    moreLines: []
   - killerId: soldier
     picture: {fileID: 0}
     pictureNote: the shield from the floor, the gas mask above it, the SMG resting
@@ -62,6 +71,11 @@ MonoBehaviour:
       ring, blast the second.'
     voiceLine: {fileID: 0}
     voiceText: 'SOLDIER: Target down. Clear. (then, quieter) Was that a kid?'
+    moreLines:
+    - 'SOLDIER: Target down. Reyes, check Okafor.'
+    - "SOLDIER: Control, target is down. \u2014 Say again? \u2014 Say again, Control."
+    - 'SOLDIER: Masks stay on. Nobody looks.'
+    - "SOLDIER: She's not moving. \u2014 Shoot her anyway."
   - killerId: soldier_pair
     picture: {fileID: 0}
     pictureNote: two shields, two masks, the lobby, the gear on the wall behind them
@@ -69,6 +83,7 @@ MonoBehaviour:
       the second before his ring closes.
     voiceLine: {fileID: 0}
     voiceText: 'SOLDIER: Target down. Both of you, check Miller.'
+    moreLines: []
   - killerId: fire
     picture: {fileID: 0}
     pictureNote: the records room burning, her own hand in the flame
@@ -77,6 +92,9 @@ MonoBehaviour:
     voiceLine: {fileID: 0}
     voiceText: 'PA: Fire, records. Fire doors are closing. Please remain where you
       are.'
+    moreLines:
+    - 'PA: Smoke on the ground floor. Ventilation closed.'
+    - 'PA: Fire crew to records. One patient. Take all the time you need.'
   - killerId: short
     picture: {fileID: 0}
     pictureNote: 'through the slit: her gold-seamed hands open on the black tile,
@@ -88,6 +106,9 @@ MonoBehaviour:
     voiceLine: {fileID: 0}
     voiceText: 'PA: Electrical fault, this floor. A member of staff will come to
       you.'
+    moreLines:
+    - 'PA: Power fault on this floor. Please remain where you are.'
+    - 'PA: The fault has cleared. There is no need to hurry.'
   - killerId: soldier_rifle
     picture: {fileID: 0}
     pictureNote: the rifle's muzzle from the floor, the laser line across her, the
@@ -97,6 +118,7 @@ MonoBehaviour:
     voiceLine: {fileID: 0}
     voiceText: 'SOLDIER: Three rounds, centre mass. She''s down. Control, she''s
       down.'
+    moreLines: []
   - killerId: soldier_gas
     picture: {fileID: 0}
     pictureNote: 'from the floor: a white cloud, boots in it, a gas mask with round
@@ -105,6 +127,7 @@ MonoBehaviour:
       out of the white cloud, or catch the grenade with mk_orzabal.
     voiceLine: {fileID: 0}
     voiceText: 'SOLDIER: Knock-out''s working. She''s out. Control, she''s out.'
+    moreLines: []
   - killerId: soldier_grenades
     picture: {fileID: 0}
     pictureNote: the red ring on the floor, her feet in it, the grenade rolling to
@@ -113,6 +136,7 @@ MonoBehaviour:
       grenade with mk_orzabal and send it back.
     voiceLine: {fileID: 0}
     voiceText: 'SOLDIER: Frag out. (the blast) Clear. Nobody go in there yet.'
+    moreLines: []
   - killerId: power_armour
     picture: {fileID: 0}
     pictureNote: the power armour from the floor, its lenses looking down, the tubes
@@ -121,6 +145,7 @@ MonoBehaviour:
       then burn it with mk_erebus. Up close, its launcher will not fire.
     voiceLine: {fileID: 0}
     voiceText: 'POWER ARMOUR: Subject neutralised. Requesting the recovery team.'
+    moreLines: []
   - killerId: power_armour_launchers
     picture: {fileID: 0}
     pictureNote: the trail of the rocket from the floor, the armour behind it, the
@@ -129,6 +154,7 @@ MonoBehaviour:
       and send it back.
     voiceLine: {fileID: 0}
     voiceText: 'POWER ARMOUR: Direct hit. Hold fire. Hold fire, she''s down.'
+    moreLines: []
   - killerId: labworker_pistol
     picture: {fileID: 0}
     pictureNote: the lab worker's pistol from the floor, both hands shaking, the
@@ -137,6 +163,7 @@ MonoBehaviour:
       step is enough. Close the distance and he drops the aim.'
     voiceLine: {fileID: 0}
     voiceText: 'LAB WORKER: I hit her. Computer, I hit her. What do I do now?'
+    moreLines: []
   - killerId: labworker_knife
     picture: {fileID: 0}
     pictureNote: the knife over her, the lab coat behind it, the scalpel light
@@ -144,6 +171,7 @@ MonoBehaviour:
       it, then strike. At a distance he is nothing.
     voiceLine: {fileID: 0}
     voiceText: 'LAB WORKER: Hold still. Hold still, it''s quicker if you hold still.'
+    moreLines: []
   - killerId: labworker
     picture: {fileID: 0}
     pictureNote: the blue hood from below, the scalpel, the collar piece with its
@@ -153,6 +181,11 @@ MonoBehaviour:
       the SHORT bar.'
     voiceLine: {fileID: 0}
     voiceText: 'LAB WORKER: Hold her head. I need the jugular.'
+    moreLines:
+    - 'LAB WORKER: Shh. It''s only the dose. It''s only the dose.'
+    - 'LAB WORKER: Log it. Dose, time, who. She''ll ask.'
+    - 'LAB WORKER: Who''s hurt? Then get up. Somebody get the tray.'
+    - 'LAB WORKER: That''s the short. Trolley, before it passes.'
   - killerId: ward_sister
     picture: {fileID: 0}
     pictureNote: red scrubs, the white hood, the pistol held wrong, the card swinging
@@ -160,6 +193,11 @@ MonoBehaviour:
     hint: She fires wide and slowly. Come at her from the side. The card is on her.
     voiceLine: {fileID: 0}
     voiceText: 'WARD SISTER: I was aiming at the floor. I was aiming at the floor.'
+    moreLines:
+    - 'WARD SISTER: (shaking) Somebody call it in. Somebody, please.'
+    - "WARD SISTER: Lucy? Lucy, look at me. Look at \u2014 oh. Oh, no."
+    - 'WARD SISTER: Don''t let Marta in. Don''t let Marta see.'
+    - 'WARD SISTER: I thought she was getting up. I thought she was getting up.'
   - killerId: brain
     picture: {fileID: 0}
     pictureNote: the corridor from high above, the brain's eye, Lucy small and bare-headed
@@ -170,6 +208,9 @@ MonoBehaviour:
     voiceLine: {fileID: 0}
     voiceText: 'BRAIN: Your life has been full of suffering. But don''t worry. It''ll
       be over soon.'
+    moreLines:
+    - 'BRAIN: Brain beats brawn... as you well know.'
+    - 'BRAIN: Only human.'
   - killerId: halon
     picture: {fileID: 0}
     pictureNote: 'through the slit: server racks in a thin white fog, the red strobe
@@ -179,6 +220,9 @@ MonoBehaviour:
     voiceLine: {fileID: 0}
     voiceText: 'PA: Fire suppression complete, server room. A member of staff will
       come to you.'
+    moreLines:
+    - 'PA: Suppression successful. The room is secure.'
+    - 'PA: Do not re-enter until the all clear. There is no need to hurry.'
   - killerId: fireman_gas
     picture: {fileID: 0}
     pictureNote: 'from the floor: a white cloud, a fireman''s mask over her, a gloved
@@ -187,6 +231,7 @@ MonoBehaviour:
       of the white cloud, or catch it with mk_orzabal.
     voiceLine: {fileID: 0}
     voiceText: 'FIREMAN: I got one breathing! Get a mask on her, get a mask on her!'
+    moreLines: []
   - killerId: power_armour_guns
     picture: {fileID: 0}
     pictureNote: the floor of the Dining Hall from low down, the white linen torn,
@@ -195,3 +240,19 @@ MonoBehaviour:
       ring fills. Up close, mk_warspite breaks its aim.
     voiceLine: {fileID: 0}
     voiceText: 'POWER ARMOUR: Target down. Cease fire. Cease fire.'
+    moreLines:
+    - 'POWER ARMOUR: That''s it. That''s it. Get the families back from the door.'
+    - 'POWER ARMOUR: Clear. Somebody tell Control the heavy did its job.'
+  - killerId: soldier_shotgun
+    picture: {fileID: 0}
+    pictureNote: the tiles of the floor close up, the spent shells beside her hand,
+      two boots and the short barrel above her
+    hint: The red wedge is short. Step out of it, or stay out of its reach and make
+      him come to you.
+    voiceLine: {fileID: 0}
+    voiceText: 'SOLDIER: Down. She''s down. Stay back from her, it''s not over till
+      the medic says.'
+    moreLines:
+    - 'SOLDIER: Close enough. Close enough. Somebody check her.'
+    - "SOLDIER: Control, she came right at us. \u2014 I know. \u2014 I know, I'm
+      fine."

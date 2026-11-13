@@ -32,6 +32,23 @@ namespace GlorifiedBody.UI
         public DeathScreenContent.Entry Shown { get; private set; }
         public string CaptionShown => caption != null ? caption.text : "";
         public string HintShown => hint != null ? hint.text : "";
+        /// <summary>The killer's line on this screen ("SPEAKER: words").</summary>
+        public string ShownLine { get; private set; } = "";
+        private static string lastLine = "";
+
+        /// <summary>The row's line, or one of the writer's death lines at random, not the line of the last screen.</summary>
+        public static string PickLine(DeathScreenContent.Entry entry)
+        {
+            if (entry == null) return "";
+            var pool = new System.Collections.Generic.List<string>();
+            if (!string.IsNullOrEmpty(entry.voiceText)) pool.Add(entry.voiceText);
+            foreach (string l in entry.moreLines) if (!string.IsNullOrEmpty(l) && !pool.Contains(l)) pool.Add(l);
+            if (pool.Count == 0) return "";
+            if (pool.Count > 1) pool.Remove(lastLine);
+            lastLine = pool[Random.Range(0, pool.Count)];
+            return lastLine;
+        }
+
         public string PictureNoteShown => pictureNote != null && pictureNote.gameObject.activeSelf ? pictureNote.text : "";
 
         [SerializeField] private DeathScreenContent content;
@@ -131,11 +148,13 @@ namespace GlorifiedBody.UI
                 caption.gameObject.SetActive(false); // the line shows as a subtitle (Bruno, 2026-10-25)
             }
 
-            // The voice line as a subtitle with its speaker ("COMPUTER: Subject contained."), until the screen goes.
+            // The voice line as a subtitle with its speaker ("COMPUTER: Subject contained."), until the screen goes. With the
+            // writer's death lines (DEMO_PLAN §3.6), one at random, never the same twice in a row.
             GlorifiedBody.Subtitles.SubtitleService.Clear();
-            if (entry != null && !string.IsNullOrEmpty(entry.voiceText))
+            ShownLine = PickLine(entry);
+            if (!string.IsNullOrEmpty(ShownLine))
             {
-                (string speaker, string words) = GlorifiedBody.Subtitles.SubtitleService.Split(entry.voiceText, GlorifiedBody.Subtitles.SubtitleService.UnknownSpeaker);
+                (string speaker, string words) = GlorifiedBody.Subtitles.SubtitleService.Split(ShownLine, GlorifiedBody.Subtitles.SubtitleService.UnknownSpeaker);
                 GlorifiedBody.Subtitles.SubtitleService.Show(SubtitleKey, speaker, words);
             }
 

@@ -26,6 +26,8 @@ namespace GlorifiedBody.UI
             public AudioClip voiceLine;
             [Tooltip("The words of the voice line, shown as a caption.")]
             [TextArea(1, 2)] public string voiceText = "";
+            [Tooltip("More lines of the killer (the writer's death_lines.csv, \"SPEAKER: words\"): the screen picks one at random, never the same twice in a row. Empty: voiceText.")]
+            public List<string> moreLines = new List<string>();
         }
 
         public Entry fallback = new Entry();

@@ -102,7 +102,21 @@ namespace GlorifiedBody.Tests.EditMode
             Assert.IsNotNull(guns, "the writer's row power_armour_guns");
             StringAssert.StartsWith("POWER ARMOUR:", guns.voiceText);
             StringAssert.Contains("sweep", guns.hint);
-            Assert.AreEqual("soldier", content.Find("soldier_shotgun").killerId, "the shotgunner takes the soldier's screen until the writer gives it its own");
+            DeathScreenContent.Entry shotgun = content.Exact("soldier_shotgun");
+            Assert.IsNotNull(shotgun, "round 125: the writer's row soldier_shotgun");
+            StringAssert.Contains("wedge", shotgun.hint);
+            Assert.AreEqual(2, shotgun.moreLines.Count, "the two other lines of death_lines.csv (the first is the row's)");
+            Assert.IsTrue(shotgun.moreLines.TrueForAll(l => l.StartsWith("SOLDIER: ")), "with the row's speaker");
+            Assert.IsNotNull(content.Exact("soldier_grenades"), "the grenadiers of G18 take the row soldier_grenades");
+            Assert.AreEqual("soldier_grenades", DummyShooter.KillerIdFor("soldier", DummyShooter.Weapon.GrenadeLauncher));
+            string last = "";
+            for (int i = 0; i < 30; i++)
+            {
+                string line = DeathMenuUI.PickLine(shotgun);
+                Assert.AreNotEqual(last, line, "never the same line twice in a row");
+                last = line;
+            }
+            Debug.Log($"[DeathScreenCsv] soldier_shotgun: '{shotgun.hint}' / {1 + shotgun.moreLines.Count} lines");
             Debug.Log($"[DeathScreenCsv] power_armour_guns: '{guns.voiceText}' / '{guns.hint}'");
             Object.DestroyImmediate(content);
         }
