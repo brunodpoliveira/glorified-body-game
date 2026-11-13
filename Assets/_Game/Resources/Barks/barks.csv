@@ -1,0 +1,1040 @@
+enemy,personality,situation,line,direction
+computer,,scientist asks for advice,Maintain distance and discharge your weapon at the subject.,flat; pleasant; from the collar piece; from barks.csv
+patient,,hears Lucy,Is it done? Is mine done?,sitting up; the band turns toward the sound; from barks.csv
+marta,,sees Lucy,Lucy. It's Marta. I taught you to hold a cup.,backing into the corner; the way you say a child's name; from barks.csv
+marta,,in the scan,Again. Again. Good girl. Again.,thirteen years ago; counting; tired or crying; not clear; from barks.csv
+fireman,,sees Lucy near the fire,Get clear! Get clear of the door!,shouting through the mask; not afraid of her; from barks.csv
+fireman,,working,Hit it low. Low. Sweep.,to the other fireman; from barks.csv
+guard,,"after code silver, sees she has no gun","Where's the weapon? Dispatch, I don't see a weapon.",confused; the grunt test cracking; into the radio; from barks.csv
+guard,,"Lucy in the disguise, at a distance",Who's that? You. Badge number.,calls across the room; one step toward her; the hand on the holster; from barks.csv
+soldier,,"sector C door, after PA call 4",Negative. We hold here. Nobody goes in.,to the other soldier; not to her; from barks.csv
+nurse,,"W4, hides in a shower stall, Lucy close",It is sown in weakness. It is raised in power. It is sown in weakness.,a whisper behind the stall door; the chapel verse; over and over; from barks.csv
+nurse,,"W4, found in the stall",I'm not here. Please. I'm not here.,pressed into the corner of the stall; the hood in her hands; from barks.csv
+technician,,"W8, behind the induction chair",It's a pain protocol. It's only for the pain. I only ran the pain.,crouched behind the chair; to nobody; from barks.csv
+clerk,,"G6, in a toilet stall, Lucy at the door",Occupied.,a thin voice; then silence; then a sob he swallows; from barks.csv
+nurse,,"G4, the chapel, prays when Lucy comes in",...and for the one who is lost tonight. Bring her home.,kneeling; does not turn around; does not stop; from barks.csv
+nurse,,"G4, the chapel, Lucy close behind her",I'm almost done. Let me finish.,calm; eyes closed; the hands stay folded; from barks.csv
+patient,,"W3, if Lucy stays",They said it doesn't hurt after. Does it hurt after?,sitting up; hopeful; the band turned toward her; from barks.csv
+ward sister,,"W11, hit",Not the chairs. Don't you touch the chairs.,through her teeth; on one knee; from barks.csv
+scientist,,"W2, the three, before the short",Is that V3? That's V3. She's not scheduled to be awake.,to each other; not to her; pistols up; from barks.csv
+soldier,,radio: Control says hold the concourse,"Copy, Control. Holding. — Reyes, she's right there. — I heard it. We hold.",two voices; the first clipped; the second is the one who wants to go; from barks.csv
+soldier,,radio: Control says target moving to reception,"Control, negative, she's on the stairs. — Control says reception. — ...Copy. Reception.",two of the fireteam look at each other through the masks; then they go the wrong way; from barks.csv
+soldier,,"radio: Control says casualty noted, hold","Hold? He's — copy. Copy, Control.",the voice goes flat on the second copy; he stays where he is; from barks.csv
+soldier,,radio: Control says stand down at the sector C door,"Control, the door is open. Repeat, the door is OPEN. — Stand down. — ...Standing down.",the shield lowers; he does not look at the door again; from barks.csv
+soldier,,"at the sector C door, after Control","That's an order. That's an order, Reyes.","to the other soldier, who took one step; not to her; from barks.csv"
+guard,,"radio, early","Control, this is three. She's in the gym. — Control says let the tape finish. — The what?",before code silver; into the radio; the first wrong thing he hears tonight; from barks.csv
+guard,,"W5, the pair, idle, before they see her",You see what Stevens drives? — The black one. — On what we make. — On what HE makes.,"two guards, low, walking; the first wrong thing about Stevens; they stop talking when they see her; from barks.csv"
+guard,,"radio, at his post, after call 1C (the codes rotate)","Dispatch, say again the new site code. — Eight. Six. Seven. Five. Three. Oh. Nine. — Copy. Eight six seven, five three oh nine.",into the radio; he writes it on the back of his glove; the second source of the code (DEMO_PLAN §10.2); PROPOSED (round 113: the code 8675309); from barks.csv
+guard,,"after call 1B, to his partner",They're pulling us back. — Good. — Good?,low; the second one means it; the first one does not answer; from barks.csv
+soldier,,radio: Control recommends lethal force,"Copy, Control. — Recommended? — Copy means copy.",two voices; the second is the one who asks about the kid later; from barks.csv
+soldier,,"at the sector C door, after Control, second team",That's an order. I said that's an order.,"to the other soldier, who took one step; not to her; replaces the row that names Reyes when the first team is dead; PROPOSED; from barks.csv"
+fighter,,edgar: kneel fighter,My legs. What'd you do to my legs?,to her; his knees hit the floor on the question; angry and then not; PROPOSED; from barks.csv
+fighter,,edgar: kneel fighter,"Control, I'm down. I don't know why.",into the radio; clipped; the drill holds for one more breath; no answer plays; PROPOSED; from barks.csv
+fighter,,edgar: kneel fighter,I can't lift it. Somebody take the shot!,to the others; the gun sinks by itself; he looks at his own arm; PROPOSED; from barks.csv
+fighter,,edgar: kneel fighter,That's not me. That's not me thinking that.,low; to himself; he is already on his knees; PROPOSED; from barks.csv
+fighter,,edgar: kneel fighter,It stopped hurting. Why'd it stop hurting?,his hand on the wound; he is more afraid of this than of the wound; a fighter must be hurt before she can take him; PROPOSED; from barks.csv
+civilian,,edgar: kneel civilian,"I think it's a stroke. Somebody, it's a stroke.",the ward voice; a diagnosis; the signs counted out loud; PROPOSED; from barks.csv
+civilian,,edgar: kneel civilian,"I'll do it. Whatever it is, you don't have to...",hands up; fast; the bargain stops in the middle; PROPOSED; from barks.csv
+civilian,,edgar: kneel civilian,I have two kids. I have... What are their names?,a plea; then a real question; PROPOSED; from barks.csv
+civilian,,edgar: kneel civilian,"It's going quiet. No. No, no, no.",a whisper; the fear goes out of the voice before the words stop; PROPOSED; from barks.csv
+civilian,,edgar: kneel civilian,I was sheltering. I did what the card said.,thin; hurt feelings; the laminated card of L3; PROPOSED; from barks.csv
+any,,edgar: taken,...Yes.,flat; no breath before it; the tremble is gone; PROPOSED; from barks.csv
+any,,edgar: taken,I hear you.,flat; to nobody in the room; PROPOSED; from barks.csv
+any,,edgar: taken,Tell me where.,flat; he stands up as he says it; PROPOSED; from barks.csv
+any,,edgar: taken,It doesn't hurt.,flat; the answer to the patient's question in W3 and to the kneel line; no relief in it; PROPOSED; from barks.csv
+any,,edgar: taken,There was something. ...It's gone.,flat; a small search; it does not trouble him; PROPOSED; from barks.csv
+any,,edgar: sent,Going.,flat; he is already walking; PROPOSED; from barks.csv
+any,,edgar: sent,I know the way.,flat; he has worked here for years and that part is still there; PROPOSED; from barks.csv
+any,,edgar: sent,You stay there. I'll get it.,flat; the words of the ward with nobody behind them; PROPOSED; from barks.csv
+any,,edgar: sent,Back in five.,flat; what he says to the desk when he goes for a smoke; PROPOSED; from barks.csv
+any,,edgar: sent,Whatever you need.,flat; polite; he does not look back; PROPOSED; from barks.csv
+fighter,,edgar: seen,"Hey! It's me! It's me, what are you doing?",shouted; he lowers his gun an inch; he thinks it is a mistake; PROPOSED; from barks.csv
+fighter,,edgar: seen,Check fire! Check your fire! You're hitting us!,shouted; the drill; it does not work and he hears that; PROPOSED; from barks.csv
+fighter,,edgar: seen,"Control, one of ours is firing on us. One of ours.",into the radio; level; the second part slower; no answer plays; PROPOSED; from barks.csv
+fighter,,edgar: seen,He's not answering. There's nobody in there.,low; to the man beside him; he has stopped calling the name; PROPOSED; from barks.csv
+fighter,,edgar: seen,I can't. I can't shoot. We came in together.,the voice gives way; the gun stays on the target and does not fire; PROPOSED; from barks.csv
+any,,edgar: letgo,"It's back. Oh God, it's all back.",a gasp; the first breath in minutes; the pain and the fear come in together; PROPOSED; from barks.csv
+any,,edgar: letgo,What did I do? What did you make me do?,he looks at his hands; then at her; PROPOSED; from barks.csv
+any,,edgar: letgo,I remember it. I remember all of it.,low; shaking; she took his will and left him the memory; PROPOSED; from barks.csv
+any,,edgar: letgo,How long was I gone? How long?,to the room; he does not know this room; PROPOSED; from barks.csv
+any,,edgar: letgo,Not again. Stay back. Not again!,backing away; a shout that breaks; this is the one who fights her now; PROPOSED; from barks.csv
+civilian,,coda: mechanic,"We're closed. Hey. Lady, we're closed.",behind the rail; he does not look up at first; R2; PROPOSED; from barks.csv
+civilian,,coda: mechanic,You want the shutter? It's right behind me. Just say.,backing to the wall; he wants to help; this is the hint; R2; PROPOSED; from barks.csv
+civilian,,coda: mechanic,"You got no face on. Oh God, you got no face on.",he sees her properly; he turns his head away; R2; PROPOSED; from barks.csv
+guard,,coda: guard,"Bridge is closed, ma'am. Turn around.",from the booth; bored; he has not looked at her yet; R3; PROPOSED; from barks.csv
+guard,,coda: guard,That's far enough. Hands where I can see them.,firmer; the hand on the holster; R3; PROPOSED; from barks.csv
+guard,,coda: guard,"Dispatch, it's her. It's the one on the sheet.",into the radio; the gun comes up as he says it; R3; PROPOSED; from barks.csv
+fireman,,fireman: launch,Canister out! Everybody clear!,shouted through the mask; aimed at the fire; PROPOSED; from barks.csv
+fireman,,fireman: launch,Lady! Get out of there! I'm putting one in!,shouted; he has not read any bulletin; he is warning her; PROPOSED; from barks.csv
+fireman,,fireman: launch,"Stairs are gone, I'm going over them. Canister!",to the crew; shouted; this is the reason for the launcher; PROPOSED; from barks.csv
+voice,,edgar: voice take,You will obey!,Bruno's line (round 49); from her mouth and not her voice; pleased; the exclamation is the attack and not the volume; from the coda on; CANON; from barks.csv
+voice,,edgar: voice take,Suffer me now!,Bruno's line (round 49); the same voice; CANON; from barks.csv
+voice,,edgar: voice take,My command is your wish!,Bruno's line (round 49); the same voice; CANON; from barks.csv
+voice,,edgar: voice take,Kneel. Good.,low; a kindness in its own ears; PROPOSED; from barks.csv
+voice,,edgar: voice take,Your will is a small thing. Give it here.,patient; a hand held out; PROPOSED; from barks.csv
+voice,,edgar: voice take,Hush. You are thinking again.,soft; to the one on his knees; PROPOSED; from barks.csv
+voice,,edgar: voice take,There. Is that not easier?,warm; the worst one; PROPOSED; from barks.csv
+voice,,edgar: voice take,One. Two. Three. There.,the count of the man of the flashbacks; in English; nobody explains it; PROPOSED; from barks.csv
+voice,,edgar: voice sent,Walk. I did not say stop.,flat; to the back of the one she sends; PROPOSED; from barks.csv
+voice,,edgar: voice sent,Stand. You have work.,brisk; PROPOSED; from barks.csv
+voice,,edgar: voice sent,Go on. You know the way.,almost kind; PROPOSED; from barks.csv
+voice,,edgar: voice snap,Already? Weak.,bored; when a held mind snaps back (the limit by rank); PROPOSED; from barks.csv
+voice,,edgar: voice snap,Keep it. You will bring it back.,a promise; PROPOSED; from barks.csv
+voice,,edgar: voice snap,Run. I counted.,low; PROPOSED; from barks.csv
+ward sister,,"W11, gives the card when asked","Here. Take it. Now go, and you go round the chairs.","she holds it out at arm's length; her eyes stay on the small chairs, not on Lucy; replaces the placeholder of CarrierTalk; PROPOSED; from barks.csv"
+civilian,,"G10, the first hider, by a table, Lucy close",Keep your head down. Don't look at her. Don't look.,to the other hider; a whisper that carries; PROPOSED; from barks.csv
+civilian,,"G10, the second hider, by a table, Lucy close",She can see us. She's looking right at us.,flat with fear; he does not move; PROPOSED; from barks.csv
+civilian,,"G10, either hider, after the scan of the tree",I swapped for tonight. I wasn't even supposed to be here.,a whisper into the floor; to nobody; the tree lights blink over him; PROPOSED (round 59); from barks.csv
+soldier,,"G18, the forward post, she comes through the glass doors",Lodge door is ours. Nobody gets past the bar.,clipped; an order to the room; the shield goes up; PROPOSED (round 60); from barks.csv
+soldier,,"G18, radio: Control says hold the Dining Hall","Copy, Control. Holding the Dining Hall. — The families are behind that door, Ortiz. — I know where they are.","two voices; the first clipped; the second low, not to the radio; PROPOSED (round 60); from barks.csv"
+soldier,,"G18, she runs for the kitchen doors",Kitchen! She's going for the kitchen!,loud; he turns his whole body to follow her; PROPOSED (round 60); from barks.csv
+soldier,,"G18, a tablecloth catches fire","Fire on the tables! Off the linen, off the linen!",over the shots; the brass lamps swing; PROPOSED (round 60); from barks.csv
+civilian,,"G19, the night manager of the lodge, beside walk-in 1, she leaves him (after his found line)",I'm staying in here. I'm staying in here.,to himself; he steps into walk-in 1 and pulls the door shut from inside; his breath shows in the cold; PROPOSED (round 60; round 113: he hides beside it); from barks.csv
+civilian,,"G19, the night manager of the lodge, hides by walk-in 1, Lucy within 4.5 m (his hide line)",Kitchen's closed. Kitchen's closed. Kitchen's closed.,"a whisper through the white mask, to himself; the words he says to late guests; his back pressed to the steel of the walk-in; PROPOSED (round 113); from barks.csv"
+civilian,,"G19, the night manager of the lodge, found by walk-in 1, Lucy within 2 m (his found line)","Ma'am. The key's on the board, in the office. Take it. I'll sign it out. Just take it and go.","hands up, the white mask turned to the floor; the hotel voice, polite out of habit; it breaks on ""just""; he points at the office with his chin; PROPOSED (round 113); from barks.csv"
+civilian,,"G10, the first hider (the cook), found by the table, Lucy within 2 m (his found line)",Please. I just make the soup. I just make the soup.,"flat on the floor, the hands over his head; to the floor, not to her; PROPOSED (round 113); from barks.csv"
+civilian,,"G10, the second hider (the server), found by the table, Lucy within 2 m (his found line)",Please. I'm off at six. I just want to go home at six.,a whisper that breaks; he keeps his eyes on the floor; PROPOSED (round 113); from barks.csv
+labworker,,h2: runner,Open the door! Open it! Please!,round 118; H2; he hits the panel of the door to H3 with both hands; to the guards through the glass; PROPOSED; from barks.csv
+labworker,,h2: runner,She killed him. You saw it. Let me through!,round 118; the same; the voice breaks; then he cowers; PROPOSED; from barks.csv
+labworker,,h2_deny_card,I don't have anything. I swear. I don't have anything.,round 118; asked before the scan C11; his hand over the lanyard; PROPOSED; from barks.csv
+labworker,,h2_give_card,Here. Take it. It opens the landing. Take it.,round 118; asked after the scan C11; he holds it out at arm's length; PROPOSED; from barks.csv
+guard,,h3_enter,Ma'am. Back in the frame. Nobody has to get hurt.,round 118; the guards of H3 open the door after the scientist cowers; calm; he means it; PROPOSED; from barks.csv
+guard,,h3_deny_card,The card stays with the techs. That's protocol.,round 118; a cowering guard asked for the card; PROPOSED; from barks.csv
+nurse,,h4: booth,Stay back. This glass is rated. It's rated.,round 118; locked in the booth of H4; to herself as much as to her; PROPOSED; from barks.csv
+nurse,,h4: booth,I'm not opening it. I'm not allowed to open it.,round 118; the same; PROPOSED; from barks.csv
+nurse,,h4_ask_card,I don't know where it is. I don't. Ask them.,round 118; asked for the card; PROPOSED; from barks.csv
+scientist,bargaining,talks to Ghost,That's not V3. That's Ghost. Ghost is out.,round 123; after her first blast in his sight; to the collar or to the one beside him; he knows the name from the sessions; PROPOSED; from barks.csv
+scientist,bargaining,talks to Ghost,"Ghost. Ghost, stand down. The session's over.","round 123; the voice of the chair, firm and flat; it worked once, years ago; PROPOSED; from barks.csv"
+nurse,bargaining,talks to Ghost,"Ghost, sweetheart. Where's Lucy? Can I talk to Lucy?","round 123; the ward voice; she asks for the front, as she was trained to; PROPOSED; from barks.csv"
+nurse,bargaining,talks to Ghost,"It's all right, Ghost. You did your job. You can go now.",round 123; soft; she thinks the core will step back if it is thanked; PROPOSED; from barks.csv
+labworker,confused,spots Lucy,"Hey. Hey, is that— who's she with? Is she off the fourth floor?",take s2.1; PROPOSED
+labworker,confused,spots Lucy,"Okay, that's a patient. That's somebody's patient, right? Whose is that?",take s2.2; PROPOSED
+labworker,confused,spots Lucy,Is this the drill? Nobody said there was a drill tonight.,take s2.3; PROPOSED
+labworker,confused,spots Lucy,"Ma'am? Ma'am, you can't be out here, we're on a code blue. Silver. Whatever.",take s2.4; PROPOSED
+labworker,confused,spots Lucy,"Wait, they said shelter in place, why is anybody walking around, who is that?",take s1.4; PROPOSED
+labworker,confused,spots Lucy,"Did they call that in? Somebody call that in, I don't have a—",take s2.5; PROPOSED
+labworker,confused,fires,"Oh God, I didn't— okay, that went off, that was me, that went off.",take s2.9; PROPOSED
+labworker,confused,fires,"Oh God, did that go off, did I do that? I didn't mean— stay back!",take s1.9; PROPOSED
+labworker,confused,fires,Was that— did I hit anything? Did that even go anywhere?,take s2.10; PROPOSED
+labworker,confused,fires,"That's— okay, that was me, that was me, I'm sorry, stop, just stop coming.",take s1.10; PROPOSED
+labworker,confused,hit,"What did— what was that, what did she do, what was that?",take s2.12; PROPOSED
+labworker,confused,hit,"Okay, I'm bleeding. I'm bleeding, that's, who do I report that to?",take s2.13; PROPOSED
+labworker,confused,hit,"Okay, that's, that's a— I need to log that, somebody needs to— God, that hurts.",take s1.13; PROPOSED
+labworker,confused,hit,"That's not right, that's— I need a, somebody get a form, or—",take s2.14; PROPOSED
+labworker,confused,begs,"Okay wait, wait, I'm not— I don't even work this floor.",take s2.15; PROPOSED
+labworker,confused,begs,"Ma'am, please, I'm not even clinical, I do samples, I do the samples, I'm nobody.",take s1.15; PROPOSED
+labworker,confused,begs,"I'm research. I'm in research, I'm just here for the holiday coverage.",take s2.16; PROPOSED
+labworker,confused,begs,Can we just— can somebody page whoever's supposed to be doing this?,take s2.17; PROPOSED
+labworker,confused,shock,"No, no, hey, he's— get up, come on, we gotta— he's not—",take s2.18; PROPOSED
+labworker,confused,shock,"He— wait, no, he's on nights, he's just on nights with me, get up, come on.",take s1.18; PROPOSED
+labworker,confused,shock,"Is that— that's not real, that's part of the drill, that's part of it.",take s2.19; PROPOSED
+labworker,confused,shock,"Is he— somebody check him, I don't do that, I don't know how to check him.",take s1.19; PROPOSED
+labworker,confused,shock,"That's not— people don't go like that, that's not how that—",take s2.21; PROPOSED
+labworker,confused,shock,"I'm gonna be sick, I'm— what department is this, who handles this?",take s2.22; PROPOSED
+labworker,confused,shock,"Don't look, don't, that's, we're not supposed to see that.",take s2.23; PROPOSED
+labworker,confused,shock,"I can't, I can't look at that, somebody has to call somebody, that's a person.",take s1.23; PROPOSED
+labworker,confused,sees the feed,"What is she— is she helping him? Is that, what is that?",take s2.24; PROPOSED
+labworker,confused,sees the feed,"Hey. Hey, that's a person, you can't— ma'am, that's a person.",take s2.25; PROPOSED
+labworker,confused,sees the feed,"Okay that's, I don't, that's not a— somebody needs to see this, is anyone seeing this?",take s1.25; PROPOSED
+labworker,confused,sees the feed,"I don't— okay, I don't understand, somebody tell me what I'm looking at.",take s2.26; PROPOSED
+labworker,confused,"retreats, fear at the limit","Nope. Nope, this is not my department, this is not mine.",take s2.27; PROPOSED
+labworker,confused,"retreats, fear at the limit","Nope, nope, I'm not— I'm going to find the charge desk, I'm going!",take s1.27; PROPOSED
+labworker,confused,"retreats, fear at the limit","I'm going to the lab, I'm going back to the lab, I'm sorry.",take s2.28; PROPOSED
+labworker,confused,"retreats, fear at the limit","That's it, that's it, I'm done, I don't work here, I don't work here!",take s1.28; PROPOSED
+labworker,confused,cower,"Okay, I put it down, see, I'm putting it down, that's down.",plays first; take s2.30; PROPOSED
+labworker,confused,cower,"I'm not— I don't do this, I'm a tech, I run samples.",take s2.31; PROPOSED
+labworker,confused,cower,"I just run the samples, I just run the samples, that's all I do here.",take s1.31; PROPOSED
+labworker,confused,cower,"I'll fill out whatever you want. Whatever the form is, I'll do it.",take s2.32; PROPOSED
+labworker,confused,cower,"I think there's been a mistake, there's been a— this isn't my department.",take s1.32; PROPOSED
+labworker,confused,cower,"Is she, is she still— okay. Okay. Okay, she's still there.",take s2.33; PROPOSED
+labworker,confused,starts the care,"Hey, hey, hey, you with me? Come on, man, look at me.",take s2.35; PROPOSED
+labworker,confused,starts the care,"Hey, hey, is she gone? Okay. Okay, you're okay, I'm— is he breathing?",take s1.35; PROPOSED
+labworker,confused,starts the care,"Okay, I know this part. I know this part, I took the class.",take s2.36; PROPOSED
+labworker,confused,starts the care,"Hold on, I'm coming, I don't, I don't know what I'm doing but I'm coming.",take s1.36; PROPOSED
+labworker,confused,drags a body,"Okay, I got you, I got you, we're just going to— over here, okay.",take s2.38; PROPOSED
+labworker,confused,drags a body,"Is this, am I supposed to move him? You're not supposed to move them.",take s2.39; PROPOSED
+labworker,confused,drags a body,"Come on, you're heavy, buddy, help me out, just— there, there.",take s2.40; PROPOSED
+labworker,confused,CPR,"One, two, three— is it thirty? It's thirty, right? And then the two?",take s2.41; PROPOSED
+labworker,confused,CPR,"Is it thirty? It's thirty and then— thirty and then the breaths, I think, I think.",take s1.41; PROPOSED
+labworker,confused,CPR,"Come on, come on, I did this on the dummy, it's the same, it's the same.",take s2.42; PROPOSED
+labworker,confused,CPR,"Is that too hard? I feel something, is that supposed to— okay, keep going.",take s2.43; PROPOSED
+labworker,afraid,spots Lucy,"Oh no. Oh no no no, that's her, that's the one, that's—",take s2.44; PROPOSED
+labworker,afraid,spots Lucy,"Please don't. Please, I'm not even supposed to be here tonight, I swapped—",take s2.45; PROPOSED
+labworker,afraid,spots Lucy,"Please, I just came in to cover, I just came in, I'm supposed to be home.",take s1.45; PROPOSED
+labworker,afraid,spots Lucy,Okay okay okay okay. Okay. She's just walking. She's just walking.,take s2.46; PROPOSED
+labworker,afraid,spots Lucy,"Don't— okay, okay, she sees me, she sees me, she's looking right at me.",take s1.46; PROPOSED
+labworker,afraid,spots Lucy,"God, if you're— I know I don't, I know, but please, just this one.",take s2.47; PROPOSED
+labworker,afraid,fires,"Oh God oh God I'm sorry, I'm sorry, I'm sorry, I didn't want to.",take s2.52; PROPOSED
+labworker,afraid,fires,"Sorry! Sorry, I'm sorry, I'm sorry— stay back, I'm sorry!",take s1.52; PROPOSED
+labworker,afraid,fires,"Did I— did it go in, is she, is she down, is she down?",take s2.53; PROPOSED
+labworker,afraid,fires,"I didn't want to, I didn't, God forgive me, I didn't want to!",take s1.53; PROPOSED
+labworker,afraid,hit,"Oh. Oh, that hurts, that really— okay, okay, I'm okay, I'm okay.",take s2.55; PROPOSED
+labworker,afraid,hit,"Oh God, oh God, it hurts, it hurts, I don't want to die on Christmas week.",take s1.55; PROPOSED
+labworker,afraid,hit,"Please, that's enough, that's enough, I'm done, I'm done, I'm done.",take s2.56; PROPOSED
+labworker,afraid,hit,"I'm hit, I'm— no, I'm okay, I'm okay, I'm not okay, I'm not.",take s1.56; PROPOSED
+labworker,afraid,begs,"I was supposed to be off. I was off, I traded, I did a favor.",take s2.58; PROPOSED
+labworker,afraid,begs,"I have people waiting on me, I have people, please, I'm not anybody to you.",take s1.58; PROPOSED
+labworker,afraid,begs,"I can't do it, I can't, my finger won't, I'm sorry, I'm sorry.",take s2.59; PROPOSED
+labworker,afraid,begs,"Please, I just do bloodwork, I was going home, I was almost in the car.",take s1.59; PROPOSED
+labworker,afraid,shock,"No, no, no, no, he was just, he was just standing there, he was—",take s2.61; PROPOSED
+labworker,afraid,shock,"No— no, we were gonna carpool, we were— no, no, no.",take s1.61; PROPOSED
+labworker,afraid,shock,"I'm next. I'm next, I'm next, oh God, I'm next.",take s2.62; PROPOSED
+labworker,afraid,shock,"Oh God, oh God, oh God, I'm next, I'm next, I'm next.",take s1.62; PROPOSED
+labworker,afraid,shock,"Oh God oh God oh God, I can't, I can't, I can't look, I can't—",take s2.64; PROPOSED
+labworker,afraid,shock,"I'm gonna be sick, I'm gonna— oh God, don't look, don't look at it.",take s1.64; PROPOSED
+labworker,afraid,shock,"That's a person. That was a, that was, oh my God, oh my God.",take s2.65; PROPOSED
+labworker,afraid,shock,"I'm gonna throw up in the hood, I can't, I can't get it off.",take s2.66; PROPOSED
+labworker,afraid,sees the feed,What is she doing. What is she doing. What is she doing to him.,take s2.67; PROPOSED
+labworker,afraid,sees the feed,"Oh God, what is she— don't let me see that, I didn't see that, I didn't.",take s1.67; PROPOSED
+labworker,afraid,sees the feed,"Please stop, please stop, he's dead, he's already, please stop.",take s2.68; PROPOSED
+labworker,afraid,sees the feed,"She's— oh no, oh no, I'll never get that out, I'll never, oh God.",take s1.68; PROPOSED
+labworker,afraid,"retreats, fear at the limit","I'm sorry, I'm sorry, I'm going, I'm going, I'm going.",take s2.70; PROPOSED
+labworker,afraid,"retreats, fear at the limit","I'm going home, I'm going home, I'm sorry, I'm going home!",take s1.70; PROPOSED
+labworker,afraid,"retreats, fear at the limit",I just want to go home. I just want to drive home. Please.,take s2.71; PROPOSED
+labworker,afraid,"retreats, fear at the limit","Run, run, run, oh God, where's the stairs, where are the stairs!",take s1.71; PROPOSED
+labworker,afraid,cower,"Okay, I dropped it, it's down, it's down, I'm not, I'm not, I'm not.",plays first; take s2.73; PROPOSED
+labworker,afraid,cower,I can hear you. I can hear you walking. Please walk the other way.,take s2.74; PROPOSED
+labworker,afraid,cower,I'm not looking at you. I'm not looking. I'll stay like this. I'll stay.,take s1.74; PROPOSED
+labworker,afraid,cower,"Our Father who— who art— I can't remember the rest, I can't—",take s2.75; PROPOSED
+labworker,afraid,cower,"Please just go past, please, I don't need to go home, I'll stay right here.",take s1.75; PROPOSED
+labworker,afraid,cower,You're right behind me. You're right behind me. Okay. Okay. Okay.,take s2.76; PROPOSED
+labworker,afraid,starts the care,"Oh God, oh no, okay, okay, I'm coming, I'm coming, hold on, hold on.",take s2.78; PROPOSED
+labworker,afraid,starts the care,"Okay, okay, she's gone, she's gone, hang on, hang on, I'm coming over.",take s1.78; PROPOSED
+labworker,afraid,starts the care,Is she gone? Is she gone? Okay. Okay. Hey. Hey. Stay with me.,take s2.79; PROPOSED
+labworker,afraid,starts the care,"Oh God, you're— stay with me, stay with me, please, I can't be alone up here.",take s1.79; PROPOSED
+labworker,afraid,drags a body,"Come on, come on, come on, I got you, we're going, we're going.",take s2.81; PROPOSED
+labworker,afraid,drags a body,"Don't look at me, I'm trying, I'm trying, you're so heavy, I'm sorry.",take s2.82; PROPOSED
+labworker,afraid,drags a body,"Just a little further, just a little, please, before she comes back, please.",take s1.82; PROPOSED
+labworker,afraid,drags a body,If she comes back I'm leaving you. I'm sorry. I'm sorry. I won't. I won't.,take s2.83; PROPOSED
+labworker,afraid,CPR,"One two three four, come on, come on, come on, five six seven—",take s2.84; PROPOSED
+labworker,afraid,CPR,"I don't know if I'm doing it right, I don't, just, come back, come back.",take s2.85; PROPOSED
+labworker,afraid,CPR,"Please, please, please, come on, come on, please— thirteen, fourteen—",take s1.85; PROPOSED
+labworker,afraid,CPR,"Please God, please, I'll go back to church, I'll go, just let him.",take s2.86; PROPOSED
+labworker,bargaining,spots Lucy,Ghost. Hey. It's me. You know me. You know my voice.,take s2.87; PROPOSED
+labworker,bargaining,spots Lucy,"Okay. Okay, V3. Easy. Nobody's going to touch you, I'm right here.",take s2.88; PROPOSED
+labworker,bargaining,spots Lucy,Lucy? Is it Lucy right now? Can I talk to Lucy for a second?,take s2.89; PROPOSED
+labworker,bargaining,spots Lucy,"It's you. Okay. It's okay. It's just me, I'm not with them, I'm not with security.",take s1.89; PROPOSED
+labworker,bargaining,spots Lucy,"Hey. Hey, hey, easy, easy, same voice as always, I'm not going anywhere.",take s2.90; PROPOSED
+labworker,bargaining,spots Lucy,"Ghost, honey, stop there for me, just stop there for me like we practiced.",take s1.90; PROPOSED
+labworker,bargaining,fires,"That wasn't— Ghost, that was a warning, I pulled wide, I pulled wide.",take s2.95; PROPOSED
+labworker,bargaining,fires,"I'm sorry, I'm sorry, you came at me, you came at me, I didn't have a—",take s1.95; PROPOSED
+labworker,bargaining,fires,"Okay, okay, I'm sorry, that's on me, that's on me, I'm putting it down.",take s2.96; PROPOSED
+labworker,bargaining,fires,"Ghost, stop, stop, I don't want this, stop walking and I'll stop!",take s1.96; PROPOSED
+labworker,bargaining,hit,Okay. Okay. Fair. That's fair. I'm not going to say that's not fair.,take s2.98; PROPOSED
+labworker,bargaining,hit,"Okay. Okay, I had that coming. I know I did. I know.",take s1.98; PROPOSED
+labworker,bargaining,hit,"Lucy, I know. I know. It hurt. It hurt, I was there, I know.",take s2.99; PROPOSED
+labworker,bargaining,hit,"God— Ghost, it's me, it's me, I'm not the one you want, I'm not.",take s1.99; PROPOSED
+labworker,bargaining,begs,"I'll open the door. I'll badge you out, Ghost, I'll walk you right out.",take s2.101; PROPOSED
+labworker,bargaining,begs,"It was for something. I swear to God it was for something, Lucy.",take s2.102; PROPOSED
+labworker,bargaining,begs,I'll tell them you went down the stairs. You go up. I'll tell them stairs.,take s2.103; PROPOSED
+labworker,bargaining,begs,"I'm on your side, I always was, I'm the one who brought you the blanket, remember?",take s1.103; PROPOSED
+labworker,bargaining,shock,"Okay. Okay, Ghost, he's gone, he's gone, you don't need to— okay.",take s2.104; PROPOSED
+labworker,bargaining,shock,"She didn't know, Ghost, she didn't know you, she just worked here, she just worked here.",take s1.104; PROPOSED
+labworker,bargaining,shock,"He never ran a session. Not one. Ghost, he was never in the room.",take s2.105; PROPOSED
+labworker,bargaining,shock,"Ghost, that's enough. Look at me. Same voice. That's enough now.",take s2.106; PROPOSED
+labworker,bargaining,shock,"Oh God. Oh— okay. Okay, V3. Okay. We don't do that. We don't do that.",take s2.107; PROPOSED
+labworker,bargaining,shock,"Ghost, I know it's— I know. But that's not you. That's not Lucy.",take s2.108; PROPOSED
+labworker,bargaining,shock,"I didn't— that's not what you were for, that's not what any of it was for.",take s1.108; PROPOSED
+labworker,bargaining,shock,"Easy, easy, easy, you're all the way out, come back down, come back.",take s2.109; PROPOSED
+labworker,bargaining,sees the feed,"Okay. Okay, I've seen it before, I've seen it, it's okay, finish, finish.",take s2.110; PROPOSED
+labworker,bargaining,sees the feed,"That's— okay. Okay. I know what that is. I know. Just, just not here, not him.",take s1.110; PROPOSED
+labworker,bargaining,sees the feed,"Nobody's watching, Ghost. It's just me. Do what you need to.",take s2.111; PROPOSED
+labworker,bargaining,sees the feed,"Ghost, honey, we never let you see that part, we never— I'm sorry you had to.",take s1.111; PROPOSED
+labworker,bargaining,"retreats, fear at the limit","I'm going for the door. For you. I'm getting you a door, Ghost.",take s2.113; PROPOSED
+labworker,bargaining,"retreats, fear at the limit","I can't, Ghost, I can't do this with you tonight, I'm sorry, I'm sorry!",take s1.113; PROPOSED
+labworker,bargaining,"retreats, fear at the limit","Don't, I'm on your side, I'm leaving, I was always on your side.",take s2.114; PROPOSED
+labworker,bargaining,"retreats, fear at the limit","I'm going, I'm going, I'll leave the stairwell open, I'll leave it open for you!",take s1.114; PROPOSED
+labworker,bargaining,cower,"Okay, it's down, the gun's down, hands where you can see them, same as the room.",plays first; take s2.116; PROPOSED
+labworker,bargaining,cower,I know those steps. I know those steps. Okay. Okay. Okay.,take s2.117; PROPOSED
+labworker,bargaining,cower,You remember my voice. I know you do. I was there every time. Every time.,take s1.117; PROPOSED
+labworker,bargaining,cower,I counted you down a hundred times. Let me count now. Ten. Nine.,take s2.118; PROPOSED
+labworker,bargaining,cower,"It hurt. I know it hurt. It was for something, honey, it was for something.",take s1.118; PROPOSED
+labworker,bargaining,cower,"Lucy. Lucy, if you're in there. It was for something. I'd do it again.",take s2.119; PROPOSED
+labworker,bargaining,starts the care,"Okay, she's clear, she's clear, hey, hey, buddy, I got you, I got you.",take s2.121; PROPOSED
+labworker,bargaining,starts the care,"It's okay. It's okay. She's not angry at you, she's not, hold on.",take s2.122; PROPOSED
+labworker,bargaining,starts the care,"Hey, hey, look at me, you didn't know her, you didn't, you didn't deserve this.",take s1.122; PROPOSED
+labworker,bargaining,starts the care,"Come on, come on, we've patched worse, we've patched worse, stay here.",take s2.123; PROPOSED
+labworker,bargaining,drags a body,"Backwards, backwards, come on, before she loops around, come on.",take s2.124; PROPOSED
+labworker,bargaining,drags a body,"Come on, come on, I know, I know, she'll be back, she always came back.",take s1.124; PROPOSED
+labworker,bargaining,drags a body,"I got you, I got you, we're just getting out of the lane, that's all.",take s2.125; PROPOSED
+labworker,bargaining,drags a body,She'll come back for the— for this. We can't be here. Come on.,take s2.126; PROPOSED
+labworker,bargaining,CPR,"Come on. Come on. You don't get to quit, not tonight, come on.",take s2.127; PROPOSED
+labworker,bargaining,CPR,"Twenty-eight, twenty-nine, thirty, breathe for me, breathe, okay, again.",take s2.128; PROPOSED
+labworker,bargaining,CPR,"One, two, three— stay with me— I know this part, I know this part.",take s1.128; PROPOSED
+labworker,bargaining,CPR,Stay. Stay. She didn't mean it. She doesn't know who's who. Stay.,take s2.129; PROPOSED
+nurse,confused,backs away slowly,"Honey, you're not supposed to be out here, where's your gown?",take s2.130; PROPOSED
+nurse,confused,backs away slowly,"Sweetheart, we're sheltering, okay? Everybody's gotta stay in their rooms right now.",take s2.131; PROPOSED
+nurse,confused,backs away slowly,"Hold on, are you— did somebody discharge you? Nobody told me, nobody tells me anything.",take s1.131; PROPOSED
+nurse,confused,backs away slowly,"Are you— what unit are you? Who's your nurse tonight, hon?",take s2.132; PROPOSED
+nurse,confused,backs away slowly,"Okay. Okay. I'm just going to go get your chart, you stay right there.",take s2.133; PROPOSED
+nurse,confused,backs away slowly,"Did somebody call for her? Is this the lockdown thing, is she why they called it?",take s1.133; PROPOSED
+nurse,confused,shock,"No. No, no, no, get up, come on, you're okay, get up, you're okay.",take s2.135; PROPOSED
+nurse,confused,shock,"Oh— no, she was just here, she was just covering, somebody get the charge nurse.",take s1.135; PROPOSED
+nurse,confused,shock,"That's— okay, somebody call a rapid, is that a rapid? Call something.",take s2.136; PROPOSED
+nurse,confused,shock,"Okay, what, what just— did she fall, did she fall, is that what that was?",take s1.136; PROPOSED
+nurse,confused,shock,"Oh my— no, no, that's, that's not, I don't— oh my God.",take s2.138; PROPOSED
+nurse,confused,shock,"Don't, don't, don't do that, you don't do that, honey, you don't.",take s2.139; PROPOSED
+nurse,confused,shock,Okay. Okay. I need to call the house supervisor. I need to call somebody.,take s2.140; PROPOSED
+nurse,confused,sees the feed,"Sweetheart, what are you— no, honey, no, no, that's not food, that's—",take s2.141; PROPOSED
+nurse,confused,sees the feed,"Honey, you can't do that, you can't— what is she— somebody get the charge nurse.",take s1.141; PROPOSED
+nurse,confused,sees the feed,"Okay, you stop that. You stop that right now, do you hear me?",take s2.142; PROPOSED
+nurse,confused,sees the feed,"Okay, that's— no. No. That's not— I need to go. I need to go find somebody.",take s1.142; PROPOSED
+nurse,confused,goes to a body,"Okay, I'm here, I'm here, honey, can you hear me? Squeeze my hand.",take s2.144; PROPOSED
+nurse,confused,goes to a body,"Okay, is she gone? Okay. Hey. Hey, honey, I'm here, I got you, talk to me.",take s1.144; PROPOSED
+nurse,confused,goes to a body,"Where's the cart? Who took the cart off this floor, I need the cart.",take s2.145; PROPOSED
+nurse,confused,goes to a body,"All right, let's see what— okay, what happened to you, what happened, I just got here.",take s1.145; PROPOSED
+nurse,confused,drags a body,"Okay, we're just gonna scoot, hon, we're just gonna scoot you over here.",take s2.147; PROPOSED
+nurse,confused,drags a body,"Lift with your, no, okay, I got you, I got you, almost there.",take s2.148; PROPOSED
+nurse,confused,drags a body,"Okay, up we go— okay, not up, okay, we'll slide, we'll slide, hang on.",take s1.148; PROPOSED
+nurse,confused,drags a body,This isn't how we do this. This isn't how we— okay. Okay. Come on.,take s2.149; PROPOSED
+nurse,confused,CPR,"One and two and three and four, come on, stay with me, stay with me.",take s2.150; PROPOSED
+nurse,confused,CPR,"Okay, we're gonna do this right, one, two, three, four, five—",take s1.150; PROPOSED
+nurse,confused,CPR,"Where's the— somebody get the pads, there should be pads, where's the pads?",take s2.151; PROPOSED
+nurse,confused,CPR,"Come on, come on, I've got the count, somebody find a cart, somebody find a cart.",take s1.151; PROPOSED
+nurse,afraid,backs away slowly,"Okay, okay, I'm going, I'm going, honey, I'm going, see, I'm going.",take s2.153; PROPOSED
+nurse,afraid,backs away slowly,"Okay, okay, okay, you're okay, I'm okay, we're both okay, okay.",take s1.153; PROPOSED
+nurse,afraid,backs away slowly,"Please, I just— I have a drive, I have a long drive, please.",take s2.154; PROPOSED
+nurse,afraid,backs away slowly,"Please, honey, I'm just the night nurse, I'm just the night nurse, please.",take s1.154; PROPOSED
+nurse,afraid,backs away slowly,"I'm backing up, see, I'm backing up, don't— oh God, don't, please.",take s1.155; PROPOSED
+nurse,afraid,backs away slowly,"Don't— please don't, I'm backing up, I'm backing up, I'm not doing anything.",take s2.157; PROPOSED
+nurse,afraid,shock,"Oh no, oh no, oh no, she was right there, she was right there, oh no.",take s2.158; PROPOSED
+nurse,afraid,shock,"No— no, she— oh God, I can't do this alone, I can't do this floor alone.",take s1.158; PROPOSED
+nurse,afraid,shock,"I'm sorry, I'm sorry, I'm sorry, I can't, I can't go to her, I'm sorry.",take s2.159; PROPOSED
+nurse,afraid,shock,"Lord, Lord, Lord, I don't, I don't, please, not her, not her, not—",take s1.159; PROPOSED
+nurse,afraid,shock,"No no no no no, I can't, I can't, oh God, I can't look at that.",take s2.161; PROPOSED
+nurse,afraid,shock,Oh my God. Oh my God. Oh my God. Oh my God.,take s2.162; PROPOSED
+nurse,afraid,shock,"Jesus, Jesus, Jesus, please, please, I'm sorry, I'm sorry, I'm sorry.",take s1.162; PROPOSED
+nurse,afraid,shock,"I'm gonna be sick, I'm gonna— okay, breathe, breathe, breathe, you're a nurse.",take s2.163; PROPOSED
+nurse,afraid,sees the feed,"Oh, honey, no. No. Oh God, no, no, no, please no.",take s2.164; PROPOSED
+nurse,afraid,sees the feed,"No, no, no, stop, stop, please stop, I'll pray for you, I'll pray, just stop.",take s1.164; PROPOSED
+nurse,afraid,sees the feed,"Don't look at it, don't look at it, don't look, don't look, don't.",take s2.165; PROPOSED
+nurse,afraid,sees the feed,"I can't— I can't be seeing that, that's not, oh God, oh God.",take s1.165; PROPOSED
+nurse,afraid,goes to a body,"Is she gone? Okay. Okay. I'm coming, I'm coming, sweetheart, hang on.",take s2.167; PROPOSED
+nurse,afraid,goes to a body,"Okay, okay, she's gone, she's gone, hang on honey, hang on, I'm coming.",take s1.167; PROPOSED
+nurse,afraid,goes to a body,"Oh God, okay, okay, you're okay, I'm here, I'm here, I'm here.",take s2.168; PROPOSED
+nurse,afraid,goes to a body,"Please be breathing, please, please, please, please be breathing.",take s2.169; PROPOSED
+nurse,afraid,drags a body,"Come on, come on, come on, honey, I got you, I got you, come on.",take s2.170; PROPOSED
+nurse,afraid,drags a body,"Come on, honey, come on, I'm not leaving you, I'm not, I'm not, okay.",take s1.170; PROPOSED
+nurse,afraid,drags a body,"If she comes back— okay, don't think, don't think, just pull, just pull.",take s2.171; PROPOSED
+nurse,afraid,drags a body,"I got you, I got you, I got you, please, she's coming back, please.",take s1.171; PROPOSED
+nurse,afraid,CPR,"One, two, three, four, come on, honey, five, six, seven, oh God, eight.",take s2.173; PROPOSED
+nurse,afraid,CPR,"Don't you do this, don't you dare, nineteen, twenty, I'm not losing you tonight.",take s2.175; PROPOSED
+nurse,afraid,CPR,"Come on, come on, come on, please, please, stay, stay, stay with me, stay.",take s1.174; PROPOSED
+nurse,afraid,CPR,"Lord, Lord, please— eleven, twelve— please, please— fifteen—",take s1.175; PROPOSED
+nurse,bargaining,backs away slowly,"Ghost, honey. Hey. It's me. It's just me, okay? Easy.",take s2.176; PROPOSED
+nurse,bargaining,backs away slowly,"Ghost, you remember me. I'm the one who always warmed up the blanket.",take s2.177; PROPOSED
+nurse,bargaining,backs away slowly,"Okay, Ghost, I'm not gonna hold you, I'm never gonna hold you again, I swear.",take s1.177; PROPOSED
+nurse,bargaining,backs away slowly,"Lucy? Honey, is it Lucy? Can I talk to Lucy, sweetheart?",take s2.178; PROPOSED
+nurse,bargaining,backs away slowly,"Lucy? Lucy, honey, is it you? No. Okay. Ghost. Okay. Hi, honey. Hi.",take s1.178; PROPOSED
+nurse,bargaining,backs away slowly,"Okay, V3, okay, we're just gonna breathe together, same as before, in and out.",take s2.179; PROPOSED
+nurse,bargaining,shock,"Ghost, no, honey, she didn't— she just did the vitals, that's all she did.",take s2.181; PROPOSED
+nurse,bargaining,shock,"Ghost, no— she didn't know you, honey, she never once set foot in that room.",take s1.181; PROPOSED
+nurse,bargaining,shock,"Okay. Okay, sweetheart, that's enough now. That's enough. Look at me.",take s2.182; PROPOSED
+nurse,bargaining,shock,"Oh, honey. Oh, honey, what did you— okay. Okay. I'm still here.",take s2.183; PROPOSED
+nurse,bargaining,shock,"Ghost. Ghost, honey, no. No. We don't do that. You know we don't.",take s2.184; PROPOSED
+nurse,bargaining,shock,"Oh God. Oh God, Ghost, we never did that to you. We never. Not like that.",take s1.184; PROPOSED
+nurse,bargaining,shock,"Oh God— okay. Okay, V3, come down, come back down to me, come on.",take s2.185; PROPOSED
+nurse,bargaining,shock,"That's not Lucy. Honey, that's not her, I know it's not, come back.",take s2.186; PROPOSED
+nurse,bargaining,sees the feed,"It's okay, honey. It's okay. I know you need it. I always knew.",take s2.187; PROPOSED
+nurse,bargaining,sees the feed,"Ghost, I'm turning around. I'm not watching. You take what you need.",take s2.188; PROPOSED
+nurse,bargaining,sees the feed,"Ghost, sweetheart, okay. Okay. I know what that is. I know. I'll look away.",take s1.188; PROPOSED
+nurse,bargaining,sees the feed,"It hurt, I know it hurt, sweetheart, but it was for something, it was.",take s2.189; PROPOSED
+nurse,bargaining,goes to a body,"Okay, okay, she's gone, honey, I'm here, I'm here, let me see you.",take s2.190; PROPOSED
+nurse,bargaining,goes to a body,"Okay, she's gone, she's gone, honey, I got you, I got you, I'm so sorry.",take s1.190; PROPOSED
+nurse,bargaining,goes to a body,"She didn't mean it. She doesn't know you. Come on, stay with me.",take s2.191; PROPOSED
+nurse,bargaining,goes to a body,Hey. Hey. Look at me. You didn't know her. You didn't know. This isn't yours.,take s1.191; PROPOSED
+nurse,bargaining,drags a body,"Come on, sweetheart, we're just getting out of her way, that's all.",take s2.193; PROPOSED
+nurse,bargaining,drags a body,"Come on, honey, come on, I know, I know, she'll be back, she always came back.",take s1.193; PROPOSED
+nurse,bargaining,drags a body,"Backwards, backwards, honey, she doesn't come back for the ones who leave.",take s2.194; PROPOSED
+nurse,bargaining,drags a body,"I got you, I got you, she'll be back for— come on, come on.",take s2.195; PROPOSED
+nurse,bargaining,CPR,"Come on, honey. Twenty-six, twenty-seven, come on, you're not done.",take s2.196; PROPOSED
+nurse,bargaining,CPR,"Come on, come on, I've brought people back harder than this, come on.",take s1.196; PROPOSED
+nurse,bargaining,CPR,"Stay. Stay. I was gentle with her, I'll be gentle with you, stay.",take s2.197; PROPOSED
+nurse,bargaining,CPR,"One, two, three— not you, not tonight, come on— six, seven—",take s1.197; PROPOSED
+guard,overconfident,spots Lucy,"Ma'am, you're gonna wanna stop right there, I'm not asking twice tonight.",take g2.2; PROPOSED
+guard,overconfident,spots Lucy,"Okay, ma'am, there she is. Dispatch, I got your shooter, and she's got no gun.",take g1.1; PROPOSED
+guard,overconfident,spots Lucy,That's it? That's the shooter? Somebody owes me a sandwich for this.,take g2.3; PROPOSED
+guard,overconfident,spots Lucy,"Easy, ma'am, easy. You're gonna walk back to your room with me, that's all.",take g1.2; PROPOSED
+guard,overconfident,spots Lucy,"Hey, hey, helmet lady, I'm talking to you, turn around, hands where I see 'em.",take g2.4; PROPOSED
+guard,overconfident,spots Lucy,"That's the one? That's the whole code silver? Come on, we're good here.",take g1.3; PROPOSED
+guard,overconfident,fires,"There, happy now? That's on you, ma'am, I gave you every chance.",take g2.9; PROPOSED
+guard,overconfident,fires,"Hey! I warned you! Dispatch, shots fired, the patient didn't, she didn't go down.",take g1.9; PROPOSED
+guard,overconfident,fires,"I hit her, I know I hit her, she's just, she's still, hang on.",take g2.10; PROPOSED
+guard,overconfident,fires,"Stay down, stay down, that's what happens, that's what I said would happen.",take g1.10; PROPOSED
+guard,overconfident,hit,"Okay that, that's fine, that's just the vest, I'm fine, shut up, I'm fine.",take g2.12; PROPOSED
+guard,overconfident,hit,"Ow, what the, what was that? That's not, she didn't even touch me.",take g1.12; PROPOSED
+guard,overconfident,hit,"Who the hell signed off on this lighting, I can't, I can't see her.",take g2.13; PROPOSED
+guard,overconfident,hit,"Okay. Okay, that's it, ma'am, that's assault, you don't get to do that.",take g1.13; PROPOSED
+guard,overconfident,partner down,"Get up, man, get up, it's not even that bad, I've seen worse, get up.",take g2.15; PROPOSED
+guard,overconfident,partner down,"Dispatch, I need somebody down here, now, my partner's, just send somebody.",take g2.16; PROPOSED
+guard,overconfident,partner down,"No, no, he's fine, he's just, Dispatch, my partner's down, I don't, just get up.",take g1.16; PROPOSED
+guard,overconfident,partner down,"No no no, this is, this is on the roster, this is on them, not me.",take g2.17; PROPOSED
+guard,overconfident,shock,"He was right there. He was right there a second ago, what did she, what.",take g2.18; PROPOSED
+guard,overconfident,shock,"That's not how this works. That's not, you can't, he had a vest on.",take g1.18; PROPOSED
+guard,overconfident,shock,"That's not, no, you don't get to do that, you hear me, you don't.",take g2.19; PROPOSED
+guard,overconfident,shock,"Dispatch he's, he's gone, he just, no, that's not how it goes.",take g1.19; PROPOSED
+guard,overconfident,shock,"Oh come on, come on, that's a wall, people don't go through, that's a wall.",take g2.21; PROPOSED
+guard,overconfident,shock,"What did you, what is that, that's a wall, that's a person, no.",take g1.21; PROPOSED
+guard,overconfident,shock,"Don't look at it, don't look, we're fine, we are completely fine, keep moving.",take g2.22; PROPOSED
+guard,overconfident,shock,"That's not, you can't just, ma'am, that's enough! That's enough!",take g1.22; PROPOSED
+guard,overconfident,sees the feed,"What is she, is she, no, hey, get off him, get the hell off him.",take g2.24; PROPOSED
+guard,overconfident,sees the feed,"Hey! Get off him! Get off him, that's, what are you, get off him!",take g1.24; PROPOSED
+guard,overconfident,sees the feed,"I don't, I don't know what that is, I'm not paid to know what that is.",take g2.25; PROPOSED
+guard,overconfident,sees the feed,"Ma'am, you step back from that right now, that's a, that's not yours.",take g1.25; PROPOSED
+guard,overconfident,"retreats, fear at the limit","Nope. Nope nope, that's it, I'm out, somebody else can have the overtime.",take g2.27; PROPOSED
+guard,overconfident,"retreats, fear at the limit","Nope, nope, that's not, Dispatch I need everybody, everybody, right now, I'm pulling back.",take g1.27; PROPOSED
+guard,overconfident,"retreats, fear at the limit","Dispatch, forget it, forget everything I said, we are not, she just, I'm leaving.",take g2.28; PROPOSED
+guard,overconfident,"retreats, fear at the limit","Okay, okay, I'm not, I'm not paid for that, go, go, go!",take g1.28; PROPOSED
+guard,overconfident,"retreats, fear at the limit","Tactical, that's tactical, I'm repositioning, don't you dare write it up different.",take g2.30; PROPOSED
+guard,overconfident,"retreats, fear at the limit","Fine! Fine, you win, ma'am, you win, I'm going, I'm going!",take g1.30; PROPOSED
+guard,overconfident,"retreats, fear at the limit","I'm not running, I'm, the radio's bad down here, I need to get, I'm going.",take g2.31; PROPOSED
+guard,overconfident,"retreats, fear at the limit","I'm not, I didn't, this is somebody else's call, this isn't mine!",take g1.31; PROPOSED
+guard,overconfident,cower,"Okay. Okay okay okay. I'm down, see? Gun's down, I'm down, I'm nobody.",plays first; take g2.33; PROPOSED
+guard,overconfident,cower,"I got a shift Thursday. I'll be gone, you won't see me, I swear to God.",take g2.34; PROPOSED
+guard,overconfident,cower,"I'm not looking, I'm not looking at you, just keep walking, just go.",take g1.34; PROPOSED
+guard,overconfident,cower,"Just keep walking, just keep going past, I'm not even here, I'm furniture.",take g2.35; PROPOSED
+guard,overconfident,cower,"I said easy and I meant it, ma'am, I meant it, easy, please, easy.",take g1.35; PROPOSED
+guard,overconfident,cower,"It's the cap, it's just the cap, I'm not security, not really, they barely pay me.",take g2.36; PROPOSED
+guard,overconfident,starts the care,"Alright, she's gone, I got you, I got you, don't you quit on me now.",take g2.38; PROPOSED
+guard,overconfident,starts the care,"Hang on, buddy, hang on, I got you, she's gone, she's gone, I'm here.",take g1.38; PROPOSED
+guard,overconfident,starts the care,"Look at me, you're fine, you're gonna be fine, we're laughing about this later.",take g2.39; PROPOSED
+guard,overconfident,starts the care,"Hey, hey, look at me, look at me, don't you quit on me, don't.",take g1.39; PROPOSED
+guard,overconfident,drags a body,"Lift your feet, man, help me out, you're heavier than you look, come on.",take g2.41; PROPOSED
+guard,overconfident,drags a body,"Come on, come on, you're heavy, you're a heavy guy, I got you, we're good.",take g1.41; PROPOSED
+guard,overconfident,drags a body,"Strap's holding, strap's holding, we're going around the corner, you're good, almost.",take g2.42; PROPOSED
+guard,overconfident,drags a body,"Back, back, back, just to the doors, just to the doors, hang in there.",take g1.42; PROPOSED
+guard,overconfident,CPR,"One, two, three, four, come on, five, six, breathe already, seven, eight.",take g2.44; PROPOSED
+guard,overconfident,CPR,"Fifteen, sixteen, seventeen, this works, it always works, nineteen, twenty.",take g2.45; PROPOSED
+guard,overconfident,CPR,"Twenty-one, twenty-two, come on, you're fine, twenty-three, you're fine, twenty-four.",take g1.45; PROPOSED
+guard,overconfident,CPR,"Twenty-six, twenty-seven, don't you make me do thirty for nothing, twenty-nine, thirty.",take g2.46; PROPOSED
+guard,sarcastic,spots Lucy,I can't believe my luck is this bad.,"Bruno's words, CANON (round 133); the situation PROPOSED; take g1.47"
+guard,sarcastic,spots Lucy,"Ma'am? Ma'am, hi, if you could just not, that'd be great for my night.",take g2.48; PROPOSED
+guard,sarcastic,spots Lucy,"Christmas week, double shift, and I get the patient with a fish on her head.",take g2.50; PROPOSED
+guard,sarcastic,spots Lucy,"Oh good. A shooter with no gun. Dispatch, you wanna check your definitions?",take g1.48; PROPOSED
+guard,sarcastic,spots Lucy,You think they'll cover the dry cleaning on this? Me neither.,to his partner; take g2.51; PROPOSED
+guard,sarcastic,spots Lucy,"Christmas week, half the floor's home, and I get the one in the helmet. Great.",take g1.49; PROPOSED
+guard,sarcastic,fires,"Okay, that hit. That definitely hit. Why is she still walking, is my question.",take g2.55; PROPOSED
+guard,sarcastic,fires,"Well, that's my first one. Dispatch, shots fired, and she's, huh. Still up. Okay.",take g1.55; PROPOSED
+guard,sarcastic,fires,"Great, now I've got paperwork and she's got, apparently, nothing.",take g2.56; PROPOSED
+guard,sarcastic,fires,"Great, I shot her, she's walking, that's, yeah, put that in my review.",take g1.56; PROPOSED
+guard,sarcastic,hit,"Oh, that's gonna be a workman's comp fight, I can feel it already.",take g2.59; PROPOSED
+guard,sarcastic,hit,Ow. Okay. That one's going on the comp claim. Don't know what to call it.,take g1.58; PROPOSED
+guard,sarcastic,hit,"Nice, ma'am, real nice, I hope that felt good for one of us.",take g2.60; PROPOSED
+guard,sarcastic,hit,"Fantastic, she can do that. Nobody told me she can do that.",take g1.59; PROPOSED
+guard,sarcastic,partner down,"Get up, I'm not doing the rest of this shift solo, that's not funny.",take g2.61; PROPOSED
+guard,sarcastic,partner down,"Hey. Hey. You don't get to lie down, buddy, I'm not covering your hours.",take g1.61; PROPOSED
+guard,sarcastic,partner down,"Come on, you were gonna cover my Thursday, you don't get out that easy.",take g2.63; PROPOSED
+guard,sarcastic,partner down,"Dispatch, partner's down, no I don't know how, she looked at him, I think.",take g1.62; PROPOSED
+guard,sarcastic,shock,"Yeah. Yeah, okay. That's a guy I knew. Great. Okay.",take g2.64; PROPOSED
+guard,sarcastic,shock,Well. He had the vest on. Lot of good the vest did. Lot of good.,take g1.64; PROPOSED
+guard,sarcastic,shock,"Dispatch, we're, we're down one. Ask me later how, I'm busy.",take g2.65; PROPOSED
+guard,sarcastic,shock,"Yeah. Yeah, he's gone. Dispatch, you can stop paging him, he's gone.",take g1.65; PROPOSED
+guard,sarcastic,shock,"Who's gonna explain that to facilities, 'cause it's not gonna be me.",take g2.67; PROPOSED
+guard,sarcastic,shock,"That's a, huh. Okay. That used to be a guy. Somebody's gonna need a mop.",take g1.67; PROPOSED
+guard,sarcastic,shock,Okay. People don't bend that way. Noted. Moving on.,take g2.68; PROPOSED
+guard,sarcastic,shock,"Oh, that's, no, that's not, I did not sign up for the wall part.",take g1.68; PROPOSED
+guard,sarcastic,sees the feed,"Nope, don't need to know what she's doing to him, don't want the training.",take g2.70; PROPOSED
+guard,sarcastic,sees the feed,"Oh, no, don't, that's, ma'am, that's, you know what, I'm gonna look at the floor.",take g1.70; PROPOSED
+guard,sarcastic,sees the feed,Cool. Cool cool cool. So that's a thing that happens in this building.,take g2.71; PROPOSED
+guard,sarcastic,sees the feed,"She's, she's eating him. She's eating him. Dispatch, I'm, I'm not gonna describe it.",take g1.71; PROPOSED
+guard,sarcastic,"retreats, fear at the limit",Good thing I didn't save for retirement.,"Bruno's words, CANON (round 133); the situation PROPOSED; take g2.73"
+guard,sarcastic,"retreats, fear at the limit","One shot, he's gone, and I make fifteen an hour. Bye, ma'am.",take g2.74; PROPOSED
+guard,sarcastic,"retreats, fear at the limit","Nope. Nope, that's it, I'm done, somebody else's turn, I'm out.",take g1.74; PROPOSED
+guard,sarcastic,"retreats, fear at the limit","Dispatch, I'm leaving the floor, put it in the file, I don't care.",take g2.75; PROPOSED
+guard,sarcastic,"retreats, fear at the limit","Yep, running, that's me, the guy with the shield, running.",take g2.76; PROPOSED
+guard,sarcastic,"retreats, fear at the limit","Okay, yeah, that's, that's enough hospital for one night, I'm going.",take g1.76; PROPOSED
+guard,sarcastic,"retreats, fear at the limit","I'm gonna go check the vending machine, that's a security matter, don't follow.",take g2.77; PROPOSED
+guard,sarcastic,"retreats, fear at the limit","I quit. I'll tell 'em Monday. I quit, I'm running, I quit.",take g1.77; PROPOSED
+guard,sarcastic,cower,"Okay, I'm down, I'm down. Gun's over there. Shield's, whatever, take it.",plays first; take g2.79; PROPOSED
+guard,sarcastic,cower,"I'm the funny one, ma'am, nobody needs the funny one dead, it's bad for morale.",take g2.80; PROPOSED
+guard,sarcastic,cower,"Just walk on by, I'm furniture, I'm, I'm a chair, chairs are fine.",take g1.80; PROPOSED
+guard,sarcastic,cower,"Just go past. I'll be quiet. I'm great at quiet, ask my ex.",take g2.81; PROPOSED
+guard,sarcastic,cower,You don't want me. I'm the cheap one. They got better guys upstairs.,take g1.81; PROPOSED
+guard,sarcastic,cower,Fifteen an hour. I keep saying it 'cause it keeps being true.,take g2.82; PROPOSED
+guard,sarcastic,starts the care,"Hey, she's gone, you can stop being dramatic, sit up, come on.",take g2.84; PROPOSED
+guard,sarcastic,starts the care,"Alright, buddy, she's gone, she's, hey, hey, I'm here, don't make me do this alone.",take g1.84; PROPOSED
+guard,sarcastic,starts the care,"Oh buddy. Oh no, okay, where's the, okay, pressure, I remember pressure.",take g2.85; PROPOSED
+guard,sarcastic,starts the care,"Okay, where's it, where'd she, talk to me, I'm bad at this part.",take g1.85; PROPOSED
+guard,sarcastic,drags a body,"I'm pulling you, don't help, you'd just do it wrong anyway.",take g2.87; PROPOSED
+guard,sarcastic,drags a body,"Come on, you big, come on, I got your straps, I got you, back we go.",take g1.87; PROPOSED
+guard,sarcastic,drags a body,"Around the corner, that's all, then you can be heavy somewhere safe.",take g2.88; PROPOSED
+guard,sarcastic,drags a body,"Should've taken the gym membership. Should've, come on, come on, almost there.",take g1.88; PROPOSED
+guard,sarcastic,CPR,"One, two, three, four, come on, five, six, I hate this part, eight.",take g2.90; PROPOSED
+guard,sarcastic,CPR,"Fourteen, fifteen, sixteen, you owe me lunch for this, eighteen, nineteen.",take g2.91; PROPOSED
+guard,sarcastic,CPR,"Fifteen, sixteen, I'm not, seventeen, I'm not telling your, eighteen, nineteen, breathe!",take g1.91; PROPOSED
+guard,sarcastic,CPR,"Twenty-seven, twenty-eight, twenty-nine, thirty, breathe, you jerk, breathe.",take g2.92; PROPOSED
+guard,professional,spots Lucy,"Ma'am, hospital security. I need you to stop walking and face me, please.",take g2.94; PROPOSED
+guard,professional,spots Lucy,"Dispatch, visual on the subject, east corridor. Unarmed. Repeat, no weapon visible. Advise.",take g1.93; PROPOSED
+guard,professional,spots Lucy,"Ma'am, nobody's going to hurt you, I just need you to stand still for me.",take g2.95; PROPOSED
+guard,professional,spots Lucy,"Stay behind the shield, I'll do the talking, you watch the doors.",to his partner; take g2.96; PROPOSED
+guard,professional,spots Lucy,"Ma'am, I'm going to stay right here. You're safe. Can you tell me your name?",take g1.95; PROPOSED
+guard,professional,spots Lucy,"Ma'am, can you hear me okay in there? Nod if you can hear me.",take g2.97; PROPOSED
+guard,professional,fires,"Ma'am, stop. Ma'am, stop. I'll fire again, ma'am, stop.",take g2.102; PROPOSED
+guard,professional,fires,"Shots fired, shots fired, Dispatch, subject's, subject is still up. Still up.",take g1.101; PROPOSED
+guard,professional,fires,"Reloading, cover me, cover me, Dispatch, we need more people down here.",take g2.103; PROPOSED
+guard,professional,fires,"Ma'am, stop, I don't, I hit you, I know I hit you, stop.",take g1.102; PROPOSED
+guard,professional,hit,"I'm hit, I'm okay, I'm okay, Dispatch, I'm okay, stay on her.",take g2.104; PROPOSED
+guard,professional,hit,"Vest took it. Vest took it. Keep your spacing, don't close on her.",take g2.105; PROPOSED
+guard,professional,hit,"Okay. Okay. Partner, you cover, I'm, I just need a second, I'm good.",take g1.105; PROPOSED
+guard,professional,hit,"Ma'am, that's assault on, ma'am, that's, you need to stop now.",take g2.106; PROPOSED
+guard,professional,partner down,"Stay with me, keep your eyes on me, help's coming, I called it in.",take g2.108; PROPOSED
+guard,professional,partner down,"Dispatch, officer down, officer down, east wing, I need medical, now, now.",take g1.107; PROPOSED
+guard,professional,partner down,"I've got you, I've got you, Dispatch, where's my backup, where is it.",take g2.109; PROPOSED
+guard,professional,partner down,"Dispatch, I'm not leaving him. I'm not leaving him. Send somebody. Send somebody.",take g1.109; PROPOSED
+guard,professional,shock,"Ma'am. Ma'am, that was a, that was a person, ma'am.",take g2.111; PROPOSED
+guard,professional,shock,"Dispatch he's, he's, copy. Copy. Officer is, officer's deceased. Officer's deceased.",take g1.110; PROPOSED
+guard,professional,shock,"No. No, he had the, he had his vest. He had the vest on.",take g1.111; PROPOSED
+guard,professional,shock,"Ma'am, you stop. You stop right now. You stop. You stop.",take g1.112; PROPOSED
+guard,professional,shock,"Dispatch, we have a, I'm looking at, I can't describe it, send everybody.",take g2.113; PROPOSED
+guard,professional,shock,"Dispatch I, I can't, I can't identify, I can't identify the, there's no.",take g1.113; PROPOSED
+guard,professional,shock,Don't look at the wall. Eyes on her. Eyes on her. Eyes on her.,take g2.114; PROPOSED
+guard,professional,shock,"Okay. Okay. That's, breathe. That's a, Dispatch I need, I need a supervisor.",take g1.114; PROPOSED
+guard,professional,sees the feed,"Ma'am, get away from him. Ma'am, that's a, get away from him, please.",take g2.116; PROPOSED
+guard,professional,sees the feed,"Dispatch, the patient is, she's in contact with the deceased, she's, I don't.",take g2.117; PROPOSED
+guard,professional,sees the feed,"Dispatch she's, I don't, I don't have a code for this, I don't.",take g1.117; PROPOSED
+guard,professional,sees the feed,"Hold position. Don't engage. Don't engage. Let her, let her finish.",take g2.118; PROPOSED
+guard,professional,"retreats, fear at the limit","Dispatch, one shot, one, he's gone, we're pulling out, we're pulling out.",take g2.120; PROPOSED
+guard,professional,"retreats, fear at the limit","Dispatch, falling back, falling back, I can't hold this, I cannot hold this.",take g1.119; PROPOSED
+guard,professional,"retreats, fear at the limit","I'm not holding this, I'm not, moving to the stairwell, moving, moving.",take g2.121; PROPOSED
+guard,professional,"retreats, fear at the limit","Go, go, go, don't look, go, I'm behind you, I'm right behind you.",take g1.120; PROPOSED
+guard,professional,"retreats, fear at the limit","Breaking contact, Dispatch, moving to the stairwell, patient's behind me, behind me.",take g2.122; PROPOSED
+guard,professional,"retreats, fear at the limit","Dispatch, I'm pulling out, I'm, I'm not effective, I'm not effective down here.",take g1.122; PROPOSED
+guard,professional,"retreats, fear at the limit",Tactical withdrawal. Tactical. Stay on the radio. Stay on the radio.,take g2.123; PROPOSED
+guard,professional,"retreats, fear at the limit","Moving back, moving back, Dispatch, I need a door I can lock, any door.",take g1.123; PROPOSED
+guard,professional,cower,"Weapon's down. Weapon's down, ma'am. I'm not a threat. I'm not a threat.",plays first; take g2.125; PROPOSED
+guard,professional,cower,"Ma'am, I'm going to stay right here, I'm not going to move, okay?",take g2.126; PROPOSED
+guard,professional,cower,"Ma'am, I'm staying down, I'm staying right here. You can go. You can go.",take g1.126; PROPOSED
+guard,professional,cower,"Ma'am, you can go. You can just go. Nobody's going to follow you.",take g2.128; PROPOSED
+guard,professional,cower,"Dispatch, I'm, I'm not in a position, I'm, just keep walking, ma'am.",take g1.127; PROPOSED
+guard,professional,cower,"Breathing, I'm breathing, that's her, that's her walking, that's her, that's her.",whispered; take g2.129; PROPOSED
+guard,professional,starts the care,"Clear, she's clear, I'm coming, talk to me, tell me where it hurts.",take g2.130; PROPOSED
+guard,professional,starts the care,"Dispatch, she's clear, she's clear, I'm going to him, I'm going to him now.",take g1.130; PROPOSED
+guard,professional,starts the care,"I've got you, I've got you, pressure here, hold that, hold that for me.",take g2.132; PROPOSED
+guard,professional,starts the care,"Hey, hey, it's me, it's me, she's gone, where are you hit, where?",take g1.131; PROPOSED
+guard,professional,drags a body,"Straps, I've got the straps, you just breathe, I'll do the moving.",take g2.133; PROPOSED
+guard,professional,drags a body,"I got your straps, I got you, back, back, back, keep your head up.",take g1.133; PROPOSED
+guard,professional,drags a body,"Backing up, backing up, keep talking to me, keep talking, almost there.",take g2.134; PROPOSED
+guard,professional,drags a body,"Dispatch, moving him to the stairwell, moving him, need hands at the stairwell.",take g1.134; PROPOSED
+guard,professional,CPR,"One, two, three, four, five, six, seven, eight, come on, nine, ten.",take g2.136; PROPOSED
+guard,professional,CPR,"Eighteen, nineteen, twenty, twenty-one, stay with me, twenty-two, twenty-three, twenty-four.",take g2.137; PROPOSED
+guard,professional,CPR,"Twenty-four, twenty-five, stay, twenty-six, stay, twenty-seven, stay, twenty-eight.",take g1.137; PROPOSED
+guard,professional,CPR,"Twenty-nine, thirty. Breaths. Breaths. Okay. Again. One, two, three.",take g2.138; PROPOSED
+guard,overconfident,spots Lucy,"Oh, this is nothing. This is a Tuesday.",take g2.139; PROPOSED
+guard,overconfident,spots Lucy,"There she is. Dispatch, relax, it's one patient, no gun, we're good.",take g1.139; PROPOSED
+guard,overconfident,spots Lucy,"Ma'am, you lost? 'Cause you're about to find a floor real fast.",take g2.140; PROPOSED
+guard,overconfident,spots Lucy,"Easy, ma'am, easy. You're gonna come with me, we're getting you back in bed.",take g1.140; PROPOSED
+guard,overconfident,spots Lucy,"Active shooter, they said. Where's the gun, ma'am? In the helmet?",take g2.141; PROPOSED
+guard,overconfident,spots Lucy,"That's the code silver? Somebody got scared of the helmet. Easy, ma'am.",take g1.141; PROPOSED
+guard,overconfident,fires,"Bang. Told you. Told you, Dispatch, textbook, she's done, she's, hang on.",take g2.147; PROPOSED
+guard,overconfident,fires,"Told you! Told, wait. Wait. Why's she, Dispatch, she's still up. She's still up.",take g1.147; PROPOSED
+guard,overconfident,fires,"That's two, that's two in her, she's, why isn't she, she's fine?",take g2.148; PROPOSED
+guard,overconfident,fires,"No, no, I hit her, I hit her dead center, why is she, why is she.",take g1.148; PROPOSED
+guard,broken,spots Lucy,"She's here, she's here, Dispatch she's here, oh God, oh God, she's here.",take g2.150; PROPOSED
+guard,broken,spots Lucy,"Oh no. No no no, Dispatch she's back, she's back, I can see her, please.",take g1.150; PROPOSED
+guard,broken,spots Lucy,"I see her, I see her, I don't want to see her, I don't, please.",take g2.151; PROPOSED
+guard,broken,spots Lucy,"Don't, don't, don't come this way, don't come this way, please, go the other way.",take g1.151; PROPOSED
+guard,broken,spots Lucy,"No no no, not again, not again, I can't, I said it was easy, I said.",take g2.152; PROPOSED
+guard,broken,spots Lucy,"I said easy, I said easy, oh God, Dispatch, she found me, she found me.",take g1.152; PROPOSED
+guard,broken,fires,"I'm sorry, I'm sorry, I'm sorry, I didn't, I'm sorry, ma'am.",take g2.158; PROPOSED
+guard,broken,fires,"It doesn't work, it doesn't do anything, why doesn't it do anything.",take g2.159; PROPOSED
+guard,broken,fires,"I shot her, Dispatch, I shot her and she, it doesn't, oh God.",take g2.160; PROPOSED
+guard,broken,hit,"It hurts, it hurts, Dispatch, I'm hurt, I'm hurt, she touched me.",take g2.161; PROPOSED
+guard,broken,hit,"Ah! Ah, no, no, no, don't, I'm hurt, Dispatch I'm hurt, she hurt me.",take g1.161; PROPOSED
+guard,broken,hit,"I'm bleeding, am I bleeding, I can't tell, I can't look, is it bad.",take g2.162; PROPOSED
+guard,broken,hit,"Please no, please no, I'm sorry, I'm sorry, I said it, I said easy, I'm sorry.",take g1.162; PROPOSED
+guard,broken,partner down,"Get up, get up, you have to get up, I can't do this by myself.",take g2.164; PROPOSED
+guard,broken,partner down,"Dispatch, he's down, he's down, I don't know what to do, tell me what to do.",take g2.165; PROPOSED
+guard,broken,partner down,"I told him it was easy. I told him. Oh God, I told him.",take g2.166; PROPOSED
+guard,broken,partner down,"No, no, no, not you, not you too, I need you, I need you, get up!",take g1.166; PROPOSED
+guard,broken,shock,"He's dead, he's dead, Dispatch, he's, I watched it, I watched it.",take g2.167; PROPOSED
+guard,broken,shock,I said it was nothing. I said it was a Tuesday. Oh God.,take g2.168; PROPOSED
+guard,broken,shock,"Oh God, oh God, that's him, that's him, I was just talking to him.",take g1.168; PROPOSED
+guard,broken,shock,"I can't, I can't, I can't, somebody, somebody, he's just, I can't.",take g2.169; PROPOSED
+guard,broken,shock,"That's a, that was a, no, no, I can't, that's, that was a person.",take g2.170; PROPOSED
+guard,broken,shock,"What is that, what is that, what is, oh God, oh God, that's a man.",take g1.170; PROPOSED
+guard,broken,shock,"I'm gonna be sick, I'm, Dispatch, I'm gonna be sick, don't, don't come.",take g2.171; PROPOSED
+guard,broken,shock,"That's on the wall, he's on the wall, Dispatch he's on the wall, please.",take g1.171; PROPOSED
+guard,broken,sees the feed,"Don't, don't do that, please, please don't do that, please, that's, no.",take g2.173; PROPOSED
+guard,broken,sees the feed,"She's, no, no, no, she's eating him, she's eating him, Dispatch, she's eating him!",take g1.173; PROPOSED
+guard,broken,sees the feed,"Dispatch, she's, I can't say it, she's on him, I can't, I can't say it.",take g2.174; PROPOSED
+guard,broken,sees the feed,"Don't, don't, stop, please stop, that's a person, that's, oh God, oh God.",take g1.174; PROPOSED
+guard,broken,"retreats, fear at the limit","No, no, no, run, run, I'm running, Dispatch I'm running, I'm sorry.",take g2.176; PROPOSED
+guard,broken,"retreats, fear at the limit","One shot, one, he was right there, I'm not, I can't, I'm gone.",take g2.177; PROPOSED
+guard,broken,"retreats, fear at the limit","I can't, I can't, I'm not staying, I'm sorry, I'm sorry, I'm going, I'm going!",take g1.177; PROPOSED
+guard,broken,"retreats, fear at the limit","I said it was easy, I said it was easy, I'm sorry, I'm sorry.",take g2.178; PROPOSED
+guard,broken,"retreats, fear at the limit","I'm going, I'm going, I'm sorry, I'm sorry, I'm going, don't follow me.",take g2.179; PROPOSED
+guard,broken,"retreats, fear at the limit","Let me out, let me out, Dispatch open the doors, open the doors, please!",take g1.179; PROPOSED
+guard,broken,"retreats, fear at the limit","Dispatch, I'm leaving, I'm leaving, I know, I know, I'm leaving.",take g2.180; PROPOSED
+guard,broken,"retreats, fear at the limit","I'm not, I'm not, I'm not going back, don't make me, don't make me go back.",take g1.180; PROPOSED
+guard,broken,cower,"Okay, okay, I'm down, I'm down, see, gun's gone, please, please, please.",plays first; take g2.182; PROPOSED
+guard,broken,cower,"That's her, that's her walking, that's her, I hear her, I hear her.",whispered; take g2.183; PROPOSED
+guard,broken,cower,"Don't, don't, I'm not looking, I'm not looking, I'm not, I'm not anything.",take g1.183; PROPOSED
+guard,broken,cower,"I was just doing my job, ma'am, I'm sorry, I'm so sorry, I'm sorry.",take g2.184; PROPOSED
+guard,broken,cower,I said easy. I said easy to you. I'm sorry. I'm sorry I said it.,take g1.184; PROPOSED
+guard,broken,cower,"Dispatch, if you can hear me, I'm on the floor, she's, she's right there.",crying; take g2.185; PROPOSED
+guard,broken,starts the care,"She's gone, she's gone, okay, okay, I'm here, I'm here, don't be dead.",take g2.187; PROPOSED
+guard,broken,starts the care,"What do I do, what do I do, tell me, Dispatch, tell me what to do.",take g2.188; PROPOSED
+guard,broken,starts the care,"Please be okay, please be okay, I'm here, I'm sorry I ran, I'm sorry.",take g1.188; PROPOSED
+guard,broken,starts the care,"Okay, okay, pressure, pressure, I remember, I remember, please be okay.",take g2.189; PROPOSED
+guard,broken,drags a body,"I got you, I got you, I'm sorry, I'm sorry, I'm pulling, I'm pulling.",take g2.190; PROPOSED
+guard,broken,drags a body,"Come on, come on, please, you're so heavy, I'm sorry, I got you, I got you.",take g1.190; PROPOSED
+guard,broken,drags a body,"You're so heavy, I can't, I can, I can, I'm not leaving you, I'm not.",take g2.191; PROPOSED
+guard,broken,drags a body,"Back, back, back, don't look at the, don't look, I'm not, we're going, we're going.",take g1.191; PROPOSED
+guard,broken,CPR,"One, two, three, four, please, five, six, please, seven, eight, please.",take g2.193; PROPOSED
+guard,broken,CPR,"Sixteen, seventeen, I can't do this, eighteen, nineteen, I'm doing it, twenty.",take g2.194; PROPOSED
+guard,broken,CPR,"Fourteen, fifteen, I'm sorry, sixteen, seventeen, I'm sorry, eighteen, I'm sorry.",take g1.194; PROPOSED
+guard,broken,CPR,"Twenty-eight, twenty-nine, thirty, please, please, come back, please come back.",take g2.195; PROPOSED
+soldier,professional,spots Lucy,"Contact, east hall, thirty meters. Helmet, painted mouth. Control, I have her.",take f1.1; PROPOSED
+soldier,professional,spots Lucy,"Contact, twelve o'clock, end of the hall, by the nurses' station. Hold.",PLACE: nurses' station; take f2.1; PROPOSED
+soldier,professional,spots Lucy,"Eyes on target, top of the stairs. She's coming down. Shield forward.",take f1.2; PROPOSED
+soldier,professional,spots Lucy,"Control, visual, restaurant, far wall. One female, nothing in her hands. Confirm go.",PLACE: restaurant; take f1.3; PROPOSED
+soldier,professional,spots Lucy,"Control, visual on the target, reception, ground floor. Say your orders.",PLACE: reception; take f2.3; PROPOSED
+soldier,professional,spots Lucy,"There, there, by the elevators. Everybody off the glass.",PLACE: elevators; take f1.4; PROPOSED
+soldier,professional,reloads,"Reloading, cover the door. Keep that shield up, I'm behind it.",take f1.11; PROPOSED
+soldier,professional,reloads,"Reloading, cover me, cover me. Shield, don't you move an inch.",take f2.11; PROPOSED
+soldier,professional,reloads,Mag change. Three more and we're walking out of here.,take f1.12; PROPOSED
+soldier,professional,reloads,"Mag change, ten seconds. Keep her at that end of the hall.",take f2.12; PROPOSED
+soldier,professional,partner down,"Man dow— okay. Okay. Shield, close up, cover me.",take f1.14; PROPOSED
+soldier,professional,partner down,"No. No, he's— Control, one casualty, east hall, we're holding.",take f1.15; PROPOSED
+soldier,professional,partner down,"Ma— get down, get down, I got him. Keep her off us.",take f1.16; PROPOSED
+soldier,professional,partner down,"Talk to me, buddy, talk to me. Two, get over here, cover him.",take f2.16; PROPOSED
+soldier,professional,shock,"Control, that's two. Say again, that's two down. We need more than four.",take f1.17; PROPOSED
+soldier,professional,shock,"No. Control, one KIA, say again, one KIA. Holding position.",take f2.17; PROPOSED
+soldier,professional,shock,Don't look at him. Look at her. Watch your sectors.,take f1.18; PROPOSED
+soldier,professional,shock,"He's gone. He's gone, leave him, keep the line, keep the line.",take f2.18; PROPOSED
+soldier,professional,shock,"Jesus. Okay. Okay. Nobody go near the wall, she's still in there.",take f1.20; PROPOSED
+soldier,professional,shock,"Oh, God. Don't look at it. Eyes on the hall, eyes on the hall.",take f2.20; PROPOSED
+soldier,professional,shock,"Fire, fire on him, get him— he's not, he's done. Back, back.",take f1.21; PROPOSED
+soldier,professional,shock,That's— that was him. All right. Shields front. We hold this doorway.,take f2.21; PROPOSED
+soldier,professional,sees the feed,"Control, she's... she's on the bodies. She's on our guys. What is— what is this.",take f1.23; PROPOSED
+soldier,professional,sees the feed,"She's on the body. She's on him. Control, what am I looking at?",take f2.23; PROPOSED
+soldier,professional,sees the feed,"Shoot. Shoot her, get her off him. That's one of ours.",take f1.24; PROPOSED
+soldier,professional,sees the feed,"Get her off him. Open fire, open fire, she's on one of ours.",take f2.24; PROPOSED
+soldier,professional,starts the care,"She's out of sight. I'm on him, you two watch the hall.",take f1.26; PROPOSED
+soldier,professional,starts the care,"Clear? Say clear. Okay. I'm on him. Watch the doors, both doors.",take f2.26; PROPOSED
+soldier,professional,starts the care,"Hold the door. Tourniquet high, tight. Stay with me, buddy, stay with me.",take f1.27; PROPOSED
+soldier,professional,starts the care,"Kit, now. Two, you've got the hall. I've got him. Stay with me, pal.",take f2.27; PROPOSED
+soldier,professional,drags a body,"Dragging, dragging, cover the hall behind me, I can't see.",take f1.29; PROPOSED
+soldier,professional,drags a body,"Pulling him back. Walk with me, shield, walk backwards, I can't see.",take f2.29; PROPOSED
+soldier,professional,drags a body,"Got the handle. Back, back, back. Keep her off us, somebody, keep her off.",take f2.30; PROPOSED
+soldier,professional,drags a body,Moving him. Somebody on the doors. Don't let her come back around.,take f1.31; PROPOSED
+soldier,professional,CPR,"Come on. Come on. Thirty, then breathe. Get the gauze.",take f1.32; PROPOSED
+soldier,professional,CPR,"Stay. Stay with me. Count with me, one, two, three.",take f1.33; PROPOSED
+soldier,professional,CPR,"Keep compressions, I'll breathe. Control, we need extraction at reception, now.",PLACE: reception; take f2.33; PROPOSED
+soldier,professional,CPR,"Control, doing compressions, need a medic at reception. Need him now.",PLACE: reception; take f1.34; PROPOSED
+soldier,professional,team: moving,"Moving. Cover the stairwell, I'm going to the desk.",PLACE: desk; take t2.1; PROPOSED
+soldier,professional,team: moving,"Bounding to the pillar, watch my left.",PLACE: pillar; take t2.2; PROPOSED
+soldier,professional,team: moving,"Pushing up, hold your fire till I'm set.",take t1.2; PROPOSED
+soldier,professional,team: moving,"On me, next cover's the counter, go when I'm set.",PLACE: counter; take t2.3; PROPOSED
+soldier,professional,team: moving,"Moving up. Control, we're advancing, copy?",take t2.4; PROPOSED
+soldier,professional,team: moving,"Moving left, keep her off the doors.",take t1.4; PROPOSED
+soldier,professional,team: covering,"Set, covering. Go, go, I got the doorway.",take t2.6; PROPOSED
+soldier,professional,team: covering,"Covering fire on the kitchen, move now.",PLACE: kitchen; take t2.7; PROPOSED
+soldier,professional,team: covering,"Set. Move now, I'm on her.",take t1.7; PROPOSED
+soldier,professional,team: covering,"Go, I have her sector, move, move.",take t2.8; PROPOSED
+soldier,professional,team: covering,"You're clear, run it, I'll keep her head down.",take t1.8; PROPOSED
+soldier,professional,team: covering,"Firing, you're clear to the stairs, go.",take t2.9; PROPOSED
+soldier,professional,team: man down,"Man down, man down, two's hit, Control, we have a casualty.",take t2.11; PROPOSED
+soldier,professional,team: man down,"Three's down, somebody get a hand on, no, hold your sector, hold it.",take t2.12; PROPOSED
+soldier,professional,team: man down,"No, no, get him, get him behind the... cover, cover him.",take t1.12; PROPOSED
+soldier,professional,team: man down,Four's not moving. Four's... stay on her. Stay on her.,take t2.13; PROPOSED
+soldier,professional,team: two left,"Two of us, fall back to the stairs, I'll cover, go.",take t2.14; PROPOSED
+soldier,professional,team: two left,"Back to the hall, bounding, don't wait for me to call it.",take t2.15; PROPOSED
+soldier,professional,team: two left,"Two left, Control, requesting... stay on me, we're moving back.",take t1.15; PROPOSED
+soldier,professional,team: two left,"It's you and me. Cover behind the counter, go now.",PLACE: counter; take t2.16; PROPOSED
+soldier,professional,team: one left,"Control, this is... Control, I'm alone up here, say something.",take t2.17; PROPOSED
+soldier,professional,team: one left,"Four effectives down to one, I am holding at the restaurant, copy.",PLACE: restaurant; take t2.18; PROPOSED
+soldier,professional,team: one left,"Control, team is down, repeat, team is down. I'm holding.",take t1.18; PROPOSED
+soldier,professional,team: one left,"Control, do you read. Control. Okay. Okay, I'm on her.",take t2.19; PROPOSED
+soldier,professional,team: suppressing,"Keep it on the doors, don't let her come out.",take t2.20; PROPOSED
+soldier,professional,team: suppressing,"Keep her pinned, don't let her move, keep it on that corner.",take t1.20; PROPOSED
+soldier,professional,team: suppressing,"Suppressing the linen cart, she's behind it, keep it up.","PLACE: linen, cart; take t2.21; PROPOSED"
+soldier,professional,team: suppressing,"Fire on the counter, fire on the counter, she's behind it.",PLACE: counter; take t1.21; PROPOSED
+soldier,professional,team: lost her,"Lost contact, lost contact, who's got eyes?",take t2.23; PROPOSED
+soldier,professional,team: lost her,"Lost her. Nobody move, eyes on every door.",take t1.23; PROPOSED
+soldier,professional,team: lost her,"Negative on the target, scan your sectors, call it.",take t2.24; PROPOSED
+soldier,professional,team: lost her,"Where'd she go, where'd she go, watch the stairwell.",take t1.24; PROPOSED
+soldier,professional,"team: search, moving","I'm walking point, cover the doors on my right.",take t2.26; PROPOSED
+soldier,professional,"team: search, moving","I'll take point. Stay on my shoulder, check the rooms.",take t1.26; PROPOSED
+soldier,professional,"team: search, moving","Moving to clear the kitchen, stay on the hall.",PLACE: kitchen; take t2.27; PROPOSED
+soldier,professional,"team: search, moving","Walking it. Watch the ceiling, she came from up there last time.",take t1.27; PROPOSED
+soldier,professional,"team: search, covering","I got you, go. Doors are mine.",take t2.29; PROPOSED
+soldier,professional,"team: search, covering","Got your back, take the door.",take t1.29; PROPOSED
+soldier,professional,"team: search, covering","Covering, take your time, check the corners.",take t2.30; PROPOSED
+soldier,professional,"team: search, covering","I'm on the hall, you check the kitchen.",PLACE: kitchen; take t1.30; PROPOSED
+soldier,professional,"team: search, clear",Restaurant's clear. Nothing but the tables.,"PLACE: restaurant, tables; take t2.32; PROPOSED"
+soldier,professional,"team: search, clear",Clear. Next one.,take t1.32; PROPOSED
+soldier,professional,"team: search, clear","Clear, clear, nobody in here. Moving on.",take t2.33; PROPOSED
+soldier,professional,"team: search, clear","Room's empty. Moving on, stay tight.",take t1.33; PROPOSED
+soldier,professional,team: contact,"Contact, contact, stairs, east stairs, engage!",take t2.35; PROPOSED
+soldier,professional,team: contact,"There she is, hallway, open up, open up!",take t2.36; PROPOSED
+soldier,professional,team: contact,"Eyes on, eyes on, by the doors, engage.",take t1.36; PROPOSED
+soldier,professional,team: contact,"Contact front, get the shield up, get it up!",take t2.37; PROPOSED
+soldier,professional,team: contact,"There, there, I see her, hit her, hit her now.",take t1.37; PROPOSED
+soldier,professional,team: contact,"Target in the hall, Control, we have contact, engaging!",take t2.38; PROPOSED
+soldier,professional,team: second team,"First team's down. All of them. Control, you copy, first team's KIA.",take t2.40; PROPOSED
+soldier,professional,team: second team,"Control, first team is down, all of them, I count four.",take t1.40; PROPOSED
+soldier,professional,team: second team,Check them. Check them anyway. Then we hold the stairs.,take t2.41; PROPOSED
+soldier,professional,team: second team,"Oh, God. Okay. Check them. Check for... just check them.",take t1.41; PROPOSED
+soldier,callous,spots Lucy,"There she is. Walked right into the lobby, didn't even hurry. Great.",PLACE: lobby; take f1.35; PROPOSED
+soldier,callous,spots Lucy,"Target. Behind the Christmas tree, obviously. Shoot through it.",PLACE: Christmas tree; take f1.36; PROPOSED
+soldier,callous,spots Lucy,"Target, end of the hall. Great. Somebody wake up the shield.",take f2.36; PROPOSED
+soldier,callous,spots Lucy,Got her. One woman in a helmet. This is what took the whole guard shift.,take f1.37; PROPOSED
+soldier,callous,spots Lucy,"Yeah, I see her. She sees us. Nobody's happy. Let's go.",take f2.37; PROPOSED
+soldier,callous,spots Lucy,Contact. Tell Control she's not where Control said she'd be. Again.,take f1.38; PROPOSED
+soldier,callous,reloads,Reloading. Somebody useful stand in front of me.,take f1.45; PROPOSED
+soldier,callous,reloads,"Reloading. Shield, do your one job for once.",take f2.45; PROPOSED
+soldier,callous,reloads,"Mag. Don't die while I'm doing this, I'm not carrying you.",take f1.46; PROPOSED
+soldier,callous,reloads,"Dry. Hang on. She'll wait, she's got nowhere to be.",take f2.46; PROPOSED
+soldier,callous,partner down,"He's down. Step over him, he's wider than the door.",take f1.48; PROPOSED
+soldier,callous,partner down,"That's one less rifle. Spread out, fill the gap, nothing changes.",take f1.49; PROPOSED
+soldier,callous,partner down,"Great, he's on the floor again. Somebody grab his gun.",take f2.49; PROPOSED
+soldier,callous,partner down,Down. Figured. He was the one who talked.,take f1.50; PROPOSED
+soldier,callous,shock,"Dead. Okay. That's his vest, somebody grab the spare mags off him.",take f1.51; PROPOSED
+soldier,callous,shock,Well. That's one less to split the overtime with.,take f2.51; PROPOSED
+soldier,callous,shock,"He's done. Control wants to know, tell them, I'm busy.",take f1.52; PROPOSED
+soldier,callous,shock,"He's dead. Stop yelling at him, it doesn't help.",take f2.52; PROPOSED
+soldier,callous,shock,She put him through a wall. That's new. Keep shooting.,take f1.54; PROPOSED
+soldier,callous,shock,Huh. That's gonna take a mop. Eyes front.,take f2.54; PROPOSED
+soldier,callous,shock,Well. Nobody's dragging that out of here in one trip.,take f1.55; PROPOSED
+soldier,callous,shock,He's on both sides of the hallway. Mind your feet.,take f1.56; PROPOSED
+soldier,callous,sees the feed,She's eating him. Okay. Didn't have that on the sheet.,take f1.57; PROPOSED
+soldier,callous,sees the feed,Huh. So that's what the guards were for.,take f1.58; PROPOSED
+soldier,callous,sees the feed,"Oh, good, she's hungry. Shoot her, she's distracted.",take f2.58; PROPOSED
+soldier,callous,sees the feed,She's— yeah. Shoot her while she's busy. She's not going to stop for us.,take f1.59; PROPOSED
+soldier,callous,starts the care,She's gone. Fine. Somebody stop him bleeding before I slip in it.,take f1.60; PROPOSED
+soldier,callous,starts the care,"Fine. Fine, I'll look at him. Keep the doors, somebody.",take f2.60; PROPOSED
+soldier,callous,starts the care,I got him. Not because I want to. Watch the door.,take f1.61; PROPOSED
+soldier,callous,starts the care,He's leaking. I'm gonna do the thing. Don't let her back in.,take f2.61; PROPOSED
+soldier,callous,drags a body,Pulling him. He's heavier than he looks. Shoot her if she shows.,take f1.63; PROPOSED
+soldier,callous,drags a body,Dragging. If she comes back I'm dropping him.,take f1.64; PROPOSED
+soldier,callous,drags a body,"Handle's on. Back. Mind the blood, it's slick.",take f2.64; PROPOSED
+soldier,callous,drags a body,"Got the handle. Cover me or don't, I'm going anyway.",take f1.65; PROPOSED
+soldier,callous,CPR,"Compressions. Somebody count, I'm not counting.",take f1.66; PROPOSED
+soldier,callous,CPR,Pushing. For the report. Cover the hall.,take f2.66; PROPOSED
+soldier,callous,CPR,He's not coming back. Giving it a minute so Control stops asking.,take f1.67; PROPOSED
+soldier,callous,CPR,"One, two, three— look, if it doesn't work, I tried.",take f2.67; PROPOSED
+soldier,callous,team: moving,Moving. Try not to hit me this time.,take t2.43; PROPOSED
+soldier,callous,team: moving,"Going to the desk, keep her busy, that's the whole job.",PLACE: desk; take t2.44; PROPOSED
+soldier,callous,team: moving,"Fine, I'll go. Somebody's gotta.",take t1.44; PROPOSED
+soldier,callous,team: moving,"Next pillar. If I drop, don't come get me, I mean it.",PLACE: pillar; take t2.46; PROPOSED
+soldier,callous,team: moving,"Moving up. Don't wait on him, he's slow.",take t1.46; PROPOSED
+soldier,callous,team: moving,"Going. Control's not gonna say when, so I am.",take t2.47; PROPOSED
+soldier,callous,team: covering,"Covering. Walk, don't admire the tile.",take t2.48; PROPOSED
+soldier,callous,team: covering,Go. I'll waste some rounds for you.,take t1.48; PROPOSED
+soldier,callous,team: covering,"Go. I'm shooting at a wall, she won't care, but go.",take t2.49; PROPOSED
+soldier,callous,team: covering,"Covering. Move your feet, I'm not doing this twice.",take t1.49; PROPOSED
+soldier,callous,team: covering,"Fine, I've got her. Go already.",take t1.50; PROPOSED
+soldier,callous,team: covering,Covering the stairs. Go before I get bored.,take t2.51; PROPOSED
+soldier,callous,team: man down,"Two's down. Leave him, he's not getting lighter.",take t2.53; PROPOSED
+soldier,callous,team: man down,He's done. Step over him.,take t1.53; PROPOSED
+soldier,callous,team: man down,That's three. Who wants to carry him? Nobody. Good.,take t2.54; PROPOSED
+soldier,callous,team: man down,Four's dead. Fine. Means she's one closer to this ending.,take t2.55; PROPOSED
+soldier,callous,team: two left,"Two left. Stairs. Walk, I'm not dragging you.",take t2.56; PROPOSED
+soldier,callous,team: two left,Just you and me. Fantastic. Back to the doors.,take t1.56; PROPOSED
+soldier,callous,team: two left,Back to the hall. I'd like to be bored somewhere with a door.,take t2.57; PROPOSED
+soldier,callous,team: two left,"Two left, and Control's still not answering. Move.",take t1.57; PROPOSED
+soldier,callous,team: one left,"Just me, then. Control, you're welcome to chime in anytime.",take t2.59; PROPOSED
+soldier,callous,team: one left,"Control, it's just me now. Figured you'd want to know.",take t1.59; PROPOSED
+soldier,callous,team: one left,"Last one. Figures. Fine, I'll finish it since nobody else did.",take t2.60; PROPOSED
+soldier,callous,team: one left,Everybody's dead. I'm not. Yet. Sitting tight.,take t1.60; PROPOSED
+soldier,callous,team: suppressing,Keeping her behind the cart. Somebody with a plan can take over.,PLACE: cart; take t2.62; PROPOSED
+soldier,callous,team: suppressing,"Keep shooting at that corner. It's doing nothing, but keep shooting.",take t1.62; PROPOSED
+soldier,callous,team: suppressing,"Rounds on the door. If she pokes out, that's on her.",take t2.63; PROPOSED
+soldier,callous,team: suppressing,She's behind the counter. Shoot the counter. Simple.,PLACE: counter; take t1.63; PROPOSED
+soldier,callous,team: lost her,"Lost her. Of course we did. Anybody see anything, or just tile?",take t2.65; PROPOSED
+soldier,callous,team: lost her,And she's gone. Of course she is.,take t1.65; PROPOSED
+soldier,callous,team: lost her,"Gone. Check the kitchen, she's not gonna wave.",PLACE: kitchen; take t2.66; PROPOSED
+soldier,callous,team: lost her,Lost her. Anybody want to tell Control? No? Me neither.,take t1.66; PROPOSED
+soldier,callous,"team: search, moving","I'll walk. You'd miss anyway, might as well be behind me.",take t2.68; PROPOSED
+soldier,callous,"team: search, moving",I'll walk it. Somebody's gotta get there first.,take t1.68; PROPOSED
+soldier,callous,"team: search, moving","Walking point. Kitchen first, it's got the most stuff to throw.",PLACE: kitchen; take t2.69; PROPOSED
+soldier,callous,"team: search, moving","Checking the ward. If I yell, don't bother coming.",PLACE: ward; take t1.69; PROPOSED
+soldier,callous,"team: search, covering","Covering. Go slow if you want, I'm getting paid either way.",take t2.71; PROPOSED
+soldier,callous,"team: search, covering","Got the hall. Go look, I'm not doing it.",take t1.71; PROPOSED
+soldier,callous,"team: search, covering","Covering. You open it, I'd rather not.",take t1.72; PROPOSED
+soldier,callous,"team: search, covering","Set. You check the corners, I'll watch you check them.",take t2.73; PROPOSED
+soldier,callous,"team: search, clear",Clear. Nice dinner they were gonna have.,PLACE: dinner; take t2.74; PROPOSED
+soldier,callous,"team: search, clear",Empty. Shocker.,take t1.74; PROPOSED
+soldier,callous,"team: search, clear",Nothing here. Just plates. Next.,PLACE: plates; take t2.75; PROPOSED
+soldier,callous,"team: search, clear","Empty. Another room full of nothing, moving on.",take t2.76; PROPOSED
+soldier,callous,team: contact,"There. Shoot her. That's the job, do it.",take t2.77; PROPOSED
+soldier,callous,team: contact,There. Finally. Shoot her.,take t1.77; PROPOSED
+soldier,callous,team: contact,"Contact, by the stairs. Finally.",take t2.78; PROPOSED
+soldier,callous,team: contact,Contact. Stairs. Try hitting her this time.,take t1.78; PROPOSED
+soldier,callous,team: contact,"Hallway, she's right there, somebody hit her for once.",take t2.79; PROPOSED
+soldier,callous,team: contact,She's back. Hallway. Somebody shoot.,take t1.79; PROPOSED
+soldier,callous,team: second team,First team's dead. Well. Four fewer to split the bonus with.,take t2.82; PROPOSED
+soldier,callous,team: second team,"There's first team. Well, parts of it.",take t1.82; PROPOSED
+soldier,callous,team: second team,"They're gone. Don't check pulses, check corners.",take t2.83; PROPOSED
+soldier,callous,team: second team,Four down. Guess the briefing was light.,take t1.83; PROPOSED
+soldier,sadistic,spots Lucy,"There you are. Oh, there you are. I was getting bored.",take f1.69; PROPOSED
+soldier,sadistic,spots Lucy,Look at that helmet. She painted a face on it. Let's wreck it.,take f2.70; PROPOSED
+soldier,sadistic,spots Lucy,"Look at her, standing in the open, not even running. Come on, then.",take f1.71; PROPOSED
+soldier,sadistic,spots Lucy,"Contact. Oh, this is gonna be a good night. Finally.",take f2.73; PROPOSED
+soldier,sadistic,spots Lucy,"She's here, she's here, she came to us. Finally, something fun.",take f1.72; PROPOSED
+soldier,sadistic,reloads,"Reloading, hang on, hang on, don't start without me.",take f1.79; PROPOSED
+soldier,sadistic,reloads,"Hang on, hang on, don't go anywhere, I'm just getting more.",take f2.79; PROPOSED
+soldier,sadistic,reloads,"Give me two seconds, don't you dare go down before I'm back.",take f1.80; PROPOSED
+soldier,sadistic,reloads,Reloading. You hear that click? That's for you. Wait for it.,take f2.80; PROPOSED
+soldier,sadistic,partner down,"Oh, you're paying for that. Every single bit of that.",take f1.82; PROPOSED
+soldier,sadistic,partner down,She got him. Okay. That's on you now. That's on you.,take f2.82; PROPOSED
+soldier,sadistic,partner down,Man down. You see what she did? Good. Now I'm angry. Now it's fun.,take f2.83; PROPOSED
+soldier,sadistic,partner down,"Down. Down. That's fine, that just means more for me.",take f1.84; PROPOSED
+soldier,sadistic,shock,You killed him. Okay. Okay. That's a whole new price.,take f1.85; PROPOSED
+soldier,sadistic,shock,He's dead and she's still breathing. Not for long. Not for long.,take f2.85; PROPOSED
+soldier,sadistic,shock,Look at that. Look what you did. I'm going to make you so sorry.,take f1.86; PROPOSED
+soldier,sadistic,shock,He's dead. Hear me? That's one you owe. I'm collecting.,take f1.87; PROPOSED
+soldier,sadistic,shock,Through the wall. Through the wall!,take f1.88; PROPOSED
+soldier,sadistic,shock,"Oh, that's nasty. That's nasty. I'm gonna take her apart just like that.",take f2.89; PROPOSED
+soldier,sadistic,shock,"You tore him up. Good, good, now I know what you can take.",take f1.89; PROPOSED
+soldier,sadistic,sees the feed,Oh. So that's how you fix yourself. Fine. I'll just keep breaking you.,take f1.92; PROPOSED
+soldier,sadistic,sees the feed,"Look at her. Look at her eat. Oh, you're hungry? Here. Have some lead.",take f2.91; PROPOSED
+soldier,sadistic,sees the feed,Eat. Go on. Get your strength back. I don't want this to be over.,take f1.93; PROPOSED
+soldier,sadistic,sees the feed,"Ha, she's at the body. Dinner's over. Hey. Hey. Up here.",PLACE: dinner; take f2.93; PROPOSED
+soldier,sadistic,starts the care,"Where'd she go. Where'd she go. Hang on, I'm here, she's not getting this one.",take f1.94; PROPOSED
+soldier,sadistic,starts the care,"Hold on, hold on, I'm patching him. Come back, I'll be right with you.",take f2.94; PROPOSED
+soldier,sadistic,starts the care,"She ran. She ran! Hold still, man, I'll fix you, then I'll fix her.",take f1.95; PROPOSED
+soldier,sadistic,starts the care,"I got him. You hear me, she left? She left. She walked away from me.",take f2.95; PROPOSED
+soldier,sadistic,drags a body,"Pulling him out. Come on back, I know you're hungry. Come get me instead.",take f1.97; PROPOSED
+soldier,sadistic,drags a body,"Pulling him. Come on, come on. She'll be back. I hope she's back.",take f2.97; PROPOSED
+soldier,sadistic,drags a body,Moving him. Watch the corners. She's going to want him back.,take f1.99; PROPOSED
+soldier,sadistic,drags a body,"Got the handle. Watch her. If she shows, I drop him and we go again.",take f2.98; PROPOSED
+soldier,sadistic,CPR,"Come on. Breathe. Breathe, I need you to see what I do to her.",take f1.100; PROPOSED
+soldier,sadistic,CPR,"Come on, come on, come on, you don't get to miss the end.",take f2.100; PROPOSED
+soldier,sadistic,CPR,"One, two, three. Don't quit. Don't quit on me. She's still out there.",take f1.101; PROPOSED
+soldier,sadistic,CPR,"Pushing. Don't die, I need somebody to watch me finish her.",take f2.101; PROPOSED
+soldier,sadistic,team: moving,"Moving! Keep her looking at you, I want to get close!",take t2.85; PROPOSED
+soldier,sadistic,team: moving,"Going up, I'm coming for you, you hear me?",take t2.86; PROPOSED
+soldier,sadistic,team: moving,"Going in, don't you dare kill her before I get there.",take t1.86; PROPOSED
+soldier,sadistic,team: moving,"I'm up! Watch this, watch me go.",take t1.89; PROPOSED
+soldier,sadistic,team: moving,"I'm moving, cover me, I want her to see me coming!",take t2.88; PROPOSED
+soldier,sadistic,team: covering,"Firing! Go! Oh, she doesn't like that, go!",take t2.92; PROPOSED
+soldier,sadistic,team: covering,"Go, go, I got her, I'm gonna make this hurt!",take t1.90; PROPOSED
+soldier,sadistic,team: covering,"Covering, come on, I'm not leaving her any room!",take t2.93; PROPOSED
+soldier,sadistic,team: covering,"Covering! Come get some, come on, come on!",take t1.91; PROPOSED
+soldier,sadistic,team: covering,"Go, I'm keeping her head down, she can wait for me!",take t2.94; PROPOSED
+soldier,sadistic,team: covering,"Move, I'm on her, oh she's gonna feel this one.",take t1.92; PROPOSED
+soldier,sadistic,team: man down,"Ha! She got two! Okay, okay, now it's a fight!",take t2.95; PROPOSED
+soldier,sadistic,team: man down,Three's down! You see that? She put him through a table!,PLACE: table; take t2.96; PROPOSED
+soldier,sadistic,team: man down,"He's down, she's good, she's really good, keep going!",take t1.96; PROPOSED
+soldier,sadistic,team: man down,"That's four, she's hurting you boys, come on, hurt her back!",take t2.97; PROPOSED
+soldier,sadistic,team: two left,"Two of us! Back to the stairs, I want the high ground on her!",take t2.98; PROPOSED
+soldier,sadistic,team: two left,"Just us and her. Perfect. Fall back, let her come.",take t1.98; PROPOSED
+soldier,sadistic,team: two left,"Fall back! She's coming, good, let her come, let her come!",take t2.99; PROPOSED
+soldier,sadistic,team: two left,"Two left, she's gonna have to work for it now.",take t1.99; PROPOSED
+soldier,sadistic,team: one left,"Just me now! I'm still here, come on, come get me!",take t2.101; PROPOSED
+soldier,sadistic,team: one left,Just you and me now. You wanna finish this? Come on!,take t1.101; PROPOSED
+soldier,sadistic,team: one left,"Everybody's down and I'm still laughing, you hear that?",take t2.102; PROPOSED
+soldier,sadistic,team: one left,"They're all down, it's just me. I'm good. I'm great. Come on.",take t1.102; PROPOSED
+soldier,sadistic,team: suppressing,"Stay behind that cart! Stay there, I'm coming to you!",PLACE: cart; take t2.104; PROPOSED
+soldier,sadistic,team: suppressing,"Keep her in there, I want her scared when she comes out.",take t1.104; PROPOSED
+soldier,sadistic,team: suppressing,"Shoot the counter, keep her head down, keep her down!",PLACE: counter; take t1.105; PROPOSED
+soldier,sadistic,team: suppressing,"She's hiding! Don't hide, I'm not done with you!",take t2.106; PROPOSED
+soldier,sadistic,team: lost her,"Lost her! Aw, don't go, we were just getting warmed up!",take t2.107; PROPOSED
+soldier,sadistic,team: lost her,"Where'd you go? Don't quit on me now, we were just starting.",take t1.107; PROPOSED
+soldier,sadistic,team: lost her,"Lost her. Come on, come out, I know you're still here.",take t1.108; PROPOSED
+soldier,sadistic,team: lost her,"No eyes! She's playing, okay, I like that, I'll play!",take t2.109; PROPOSED
+soldier,sadistic,"team: search, moving",Moving in! Kitchen! Bet she's got a knife in there for me!,PLACE: kitchen; take t2.112; PROPOSED
+soldier,sadistic,"team: search, moving","I'll go first, you're all too slow. Where are you?",take t1.110; PROPOSED
+soldier,sadistic,"team: search, moving",Here I come. One room at a time. Come find me first.,take t1.112; PROPOSED
+soldier,sadistic,"team: search, covering","Got you covered, go slow, let her get a good look!",take t2.113; PROPOSED
+soldier,sadistic,"team: search, covering","Open it, I've got the hall. Hope she's in there.",take t1.113; PROPOSED
+soldier,sadistic,"team: search, covering","Covering. Walk right at her, I want to see her jump!",take t2.114; PROPOSED
+soldier,sadistic,"team: search, covering","Covering. Go on, surprise her. Or let her surprise you.",take t1.114; PROPOSED
+soldier,sadistic,"team: search, clear",Clear. Damn. Thought I had her.,take t2.116; PROPOSED
+soldier,sadistic,"team: search, clear",Empty. Damn it.,take t1.116; PROPOSED
+soldier,sadistic,"team: search, clear","Nothing! Come on, where are you, this is no fun!",take t2.117; PROPOSED
+soldier,sadistic,"team: search, clear",Nothing. She's playing with us. I like it.,take t1.117; PROPOSED
+soldier,sadistic,team: contact,"There you are! Hahaha, there you are, hit her!",take t2.119; PROPOSED
+soldier,sadistic,team: contact,There she is! There she is! Light her up!,take t1.119; PROPOSED
+soldier,sadistic,team: contact,"Contact! Stairs! Oh, I've been waiting on you!",take t2.120; PROPOSED
+soldier,sadistic,team: contact,"Stairs! She's on the stairs, hit her, hit her, make it hurt!",take t1.121; PROPOSED
+soldier,sadistic,team: contact,"She's back! She came back for more, give her more!",take t2.121; PROPOSED
+soldier,sadistic,team: contact,Found you! Ha! Found you! Shoot!,take t1.122; PROPOSED
+soldier,sadistic,team: second team,First team's down. All four. She did this herself? Good.,take t2.124; PROPOSED
+soldier,sadistic,team: second team,"Oh, she took the whole team. The whole team. Okay. Okay.",take t1.124; PROPOSED
+soldier,sadistic,team: second team,"They're dead, yeah. Means she's warmed up. Let's go find her.",take t2.126; PROPOSED
+soldier,sadistic,team: second team,Look at this. Look at this. She's good. I want a shot at her.,take t1.125; PROPOSED
+armour,professional,armour_enter,Stay down behind me. I've got her.,take a2.1; PROPOSED
+armour,professional,armour_enter,"Control, heavy's on the floor. Three up, three down, I'm in between.",take a2.2; PROPOSED
+armour,professional,armour_enter,"Wounded to the columns. I'm taking the middle, nobody else is.",take a2.3; PROPOSED
+armour,professional,armour_enter,"Get behind the columns, I'll walk it, you hold fire till I call it.",take a1.3; PROPOSED
+armour,professional,armour_enter,Nothing goes past my shoulder. You hear me? Nothing.,take a2.4; PROPOSED
+armour,professional,armour_enter,"Control, I'm off the lodge door, say again who's got the families now.",take a1.4; PROPOSED
+armour,professional,spots Lucy,"There. Under the skylight. Control, I have eyes on the target.",take a2.7; PROPOSED
+armour,professional,spots Lucy,"Contact, far wall, under the mezzanine, nobody move yet.",take a1.6; PROPOSED
+armour,professional,spots Lucy,"She's on the mezzanine rail. Everybody down, that's down, not crouched.",take a2.8; PROPOSED
+armour,professional,spots Lucy,"Control, I have her, thirty meters, between the long tables.",take a1.7; PROPOSED
+armour,professional,spots Lucy,"There, left of the lamps, that's her, that's the one, hold.",take a1.8; PROPOSED
+armour,professional,fires,Firing. Keep your heads down.,take a2.14; PROPOSED
+armour,professional,fires,"Burst, long. Stay in cover till I call it.",take a2.15; PROPOSED
+armour,professional,fires,"Control, heavy's engaging, long burst, far side of the hall.",take a1.15; PROPOSED
+armour,professional,fires,"Rounds out. Control, target under fire, no change yet.",take a2.16; PROPOSED
+armour,professional,fires,"On her, on her, on the, hold, she's moving, I'm walking it.",take a1.16; PROPOSED
+armour,professional,fires,"Pouring it on. Somebody watch my left, I can't.",take a2.17; PROPOSED
+armour,professional,hit,Plate. That's just plate. Keep moving.,take a2.19; PROPOSED
+armour,professional,hit,"Took one on the shoulder, I'm fine, plates are fine, keep working.",take a1.19; PROPOSED
+armour,professional,hit,"That's the arm, that's nothing, she's just hitting plate.",take a1.20; PROPOSED
+armour,professional,hit,"Control, contact's engaging me, no effect. Say again, no effect.",take a2.21; PROPOSED
+armour,professional,too heavy,"She's trying to lift me. She can't. Go now, while she's on me.",take a2.25; PROPOSED
+armour,professional,too heavy,"Suit's holding ground. Control, target attempting to move the suit, negative.",take a2.26; PROPOSED
+armour,professional,too heavy,"Control, she's got hold of the suit somehow, it's not moving, I'm not moving.",take a1.26; PROPOSED
+armour,professional,too heavy,"Pulling on me, I can feel it. Not happening. Flank her, she's busy.",take a2.27; PROPOSED
+armour,professional,team: man down,"Man down, right side. Somebody drag him, I'll cover, go.",take a2.28; PROPOSED
+armour,professional,team: man down,"Man down, man down, who is that, who, Control one more down.",take a1.28; PROPOSED
+armour,professional,team: man down,"He's—no. No, leave him. Get behind the column. Get behind the column.",take a2.29; PROPOSED
+armour,professional,team: man down,"Don't go to him. Don't, he's gone, stay behind the column, stay.",take a1.29; PROPOSED
+armour,professional,team: one left,"Control, I'm the last one up. Say again, I'm all that's standing.",take a2.31; PROPOSED
+armour,professional,team: one left,"Control, friendlies are all down, it's the suit and her, that's the room.",take a1.31; PROPOSED
+armour,professional,team: one left,"Nobody left to cover. Fine. Fine. Just me and her, then.",take a2.32; PROPOSED
+armour,professional,team: one left,"Okay. Okay, nobody behind me now, so I'm done worrying about my line.",take a1.32; PROPOSED
+armour,professional,sees the feed,"She's on the body. She's—Control, she's doing something to the body.",take a2.34; PROPOSED
+armour,professional,sees the feed,"Control, she's on one of the bodies, she's, I don't know what she's doing.",take a1.34; PROPOSED
+armour,professional,sees the feed,"Don't watch that. Eyes on me, not on that. Hold the column.",take a2.35; PROPOSED
+armour,professional,sees the feed,"Get off him. Get off, that's one of mine, get off him.",take a1.35; PROPOSED
+armour,professional,shock,"That's a wall. She put him through a wall. Hold, hold.",take a2.37; PROPOSED
+armour,professional,shock,"Jesus, oh, Jesus, that was, that was him, that was all of him.",take a1.37; PROPOSED
+armour,professional,shock,"He's burning. He's—no, stay back, you can't help him, stay back.",take a2.38; PROPOSED
+armour,professional,shock,"Control, she put him through the wall, through it, there's nothing to pick up.",take a1.38; PROPOSED
+armour,professional,team: lost her,"Lost her. Lost her, where'd she go, call it, call it.",take a2.40; PROPOSED
+armour,professional,team: lost her,Negative contact. Nobody move till I find her. Nobody.,take a2.41; PROPOSED
+armour,professional,team: lost her,"Nobody move. She's in here, she's just not where I'm looking.",take a1.41; PROPOSED
+armour,professional,team: lost her,"Control, target's off my lenses. Checking the mezzanine.",take a2.42; PROPOSED
+armour,professional,team: contact,"Got her, left side, by the lamps. Down, down.",take a2.43; PROPOSED
+armour,professional,team: contact,"Contact, contact, mezzanine, she's above us, up, look up.",take a1.43; PROPOSED
+armour,professional,team: contact,"There she is. Behind me, behind me, I've got her.",take a2.44; PROPOSED
+armour,professional,team: contact,"Reacquired. Control, reacquired, she's close. Too close.",take a2.45; PROPOSED
+armour,professional,team: contact,"Got her, behind me, she got behind me, turning, turning.",take a1.45; PROPOSED
+armour,confident,armour_enter,"Alright, easy, I'm here. Everybody breathe.",take a2.46; PROPOSED
+armour,confident,armour_enter,"All right, breathe, boys, the big fella's here, she's got no answer for this.",take a1.46; PROPOSED
+armour,confident,armour_enter,You can stop yelling now. Heavy's in the room.,take a2.47; PROPOSED
+armour,confident,armour_enter,"Hey. Hey, look at me, I'm nine feet of nope, stand up straight.",take a1.47; PROPOSED
+armour,confident,armour_enter,"Get behind me, fellas, this part's mine. You've done enough.",take a2.48; PROPOSED
+armour,confident,armour_enter,"Control, heavy's in, three up, we're good, we're good now.",take a1.48; PROPOSED
+armour,confident,spots Lucy,There you are. Thought you'd gone home.,take a2.51; PROPOSED
+armour,confident,spots Lucy,Oh there you are. Hi. Been hearing all about you.,take a1.51; PROPOSED
+armour,confident,spots Lucy,"Got her, under the skylight. Standing still, that's nice of her.",take a2.52; PROPOSED
+armour,confident,spots Lucy,"Got her, boys, the one in the helmet, under the balcony.",take a1.52; PROPOSED
+armour,confident,spots Lucy,"Mezzanine. She likes it up high. Fine, I like it down here.",take a2.53; PROPOSED
+armour,confident,spots Lucy,"Yeah, that's her, that's the whole problem, kind of small from here.",take a1.53; PROPOSED
+armour,confident,fires,"Here we go. Heads down, it's a long one.",take a2.59; PROPOSED
+armour,confident,fires,"Firing. Let it run, it knows what it's doing.",take a2.60; PROPOSED
+armour,confident,fires,"Keep your heads down, boys, I'm redecorating.",take a1.60; PROPOSED
+armour,confident,fires,Pouring it in. She'll feel that one.,take a2.61; PROPOSED
+armour,confident,fires,"Still shooting, still shooting, she's running, they always run.",take a1.61; PROPOSED
+armour,confident,fires,"Rounds going, rounds going. Stay cozy back there.",take a2.62; PROPOSED
+armour,confident,hit,Ha. Felt that. Didn't hurt.,take a2.64; PROPOSED
+armour,confident,hit,"Ha, okay, that's a chair, she threw a chair at me.",take a1.64; PROPOSED
+armour,confident,hit,That's the plate. That's what it's for. Keep breathing back there.,take a2.65; PROPOSED
+armour,confident,hit,"Plate's fine, boys, this is what it's for, keep working.",take a1.65; PROPOSED
+armour,confident,too heavy,She's tugging on me. Cute. Suit weighs more than the truck it came in.,take a2.70; PROPOSED
+armour,confident,too heavy,"Oh, she's trying to lift me, boys, look at that, I'm not budging.",take a1.70; PROPOSED
+armour,confident,too heavy,"Nope. Not going anywhere. Go on, keep trying.",take a2.71; PROPOSED
+armour,confident,too heavy,"Go ahead, pull, I've got about a ton of no in these legs.",take a1.71; PROPOSED
+armour,confident,team: man down,"Man down. Alright, stay with me, stay with me, rest of you.",take a2.73; PROPOSED
+armour,confident,team: man down,"Ah, no, no, okay, stay with me, you two, stay with me.",take a1.73; PROPOSED
+armour,confident,team: man down,"Got one hit back there. Leave him, I'll cover, grab him after.",take a2.74; PROPOSED
+armour,confident,team: man down,"Hey. Hey, don't look at him, look at her, I've got him covered.",take a1.74; PROPOSED
+armour,confident,team: one left,"Just me, huh. Alright. Alright, it was always gonna be me.",take a2.76; PROPOSED
+armour,confident,team: one left,"Okay. Just me and you then, huh. Fine, I like it quiet.",take a1.76; PROPOSED
+armour,confident,team: one left,Okay. Nobody to look after. Makes it simpler.,take a2.77; PROPOSED
+armour,confident,team: one left,"Control, I'm the last one up, so, yeah, hang on to that channel.",take a1.77; PROPOSED
+armour,confident,sees the feed,"Oh, hey. Hey, get off him. Get off him.",take a2.79; PROPOSED
+armour,confident,sees the feed,"Whoa, whoa, hey, what is she, what's she doing to him.",take a1.79; PROPOSED
+armour,confident,sees the feed,"What's she—don't look. Seriously, don't look at that.",take a2.80; PROPOSED
+armour,confident,sees the feed,"Get off him. Hey. Get off, that's, Control she's on one of mine.",take a1.80; PROPOSED
+armour,confident,shock,Jeez. Okay. Nobody go over there.,take a2.82; PROPOSED
+armour,confident,shock,"Oh. Oh God. Okay. Okay, I didn't, that was fast.",take a1.82; PROPOSED
+armour,confident,shock,Through the wall. She put him through the—okay. Okay.,take a2.83; PROPOSED
+armour,confident,shock,"That's fire. That's a lot of fire. Stay back, stay way back.",take a2.84; PROPOSED
+armour,confident,team: lost her,"Lost her. Hang on. Hang on, she's in here somewhere.",take a2.85; PROPOSED
+armour,confident,team: lost her,"Where'd she go, don't tell me she, hey, somebody call it.",take a1.85; PROPOSED
+armour,confident,team: lost her,"Where'd she—nope. Nope, don't love that. Stay close.",take a2.86; PROPOSED
+armour,confident,team: lost her,"Okay, lost her, no big deal, she's in a room with me, she's not winning that.",take a1.86; PROPOSED
+armour,confident,team: contact,"There she is. Easy, I see her. Heads down.",take a2.88; PROPOSED
+armour,confident,team: contact,"There you are, hi again, thought you left.",take a1.88; PROPOSED
+armour,confident,team: contact,"Found her. Right there, by the lamps. Relax, I've got her.",take a2.89; PROPOSED
+armour,confident,team: contact,"Got her, boys, she's up top, she's doing the balcony thing.",take a1.89; PROPOSED
+armour,confident,team: contact,Back again. Alright. Round two.,take a2.90; PROPOSED
+armour,confident,team: contact,"Oh, she's close. She's close, okay, that's, hey, back up, back up.",take a1.90; PROPOSED
+armour,cocky,armour_enter,"You called? Yeah, I bet you did.",take a2.91; PROPOSED
+armour,cocky,armour_enter,"Okay, okay, who called the big gun, you can stop crying now.",take a1.91; PROPOSED
+armour,cocky,armour_enter,Move. Grown-up's here.,take a2.92; PROPOSED
+armour,cocky,armour_enter,Three of you left? Lot of noise for one target.,take a1.92; PROPOSED
+armour,cocky,armour_enter,"Step aside, this is what she's been waiting for, this is the main event.",take a1.93; PROPOSED
+armour,cocky,armour_enter,Look at this place. All this for one lady with no gun.,take a2.94; PROPOSED
+armour,cocky,spots Lucy,"Oh, there she is. Nice helmet.",take a2.96; PROPOSED
+armour,cocky,spots Lucy,"There she is. Oh, I was told you were scary.",take a1.96; PROPOSED
+armour,cocky,spots Lucy,Hi. You the one scaring everybody?,take a2.97; PROPOSED
+armour,cocky,spots Lucy,That's it? That's what's got everybody hiding under the tables?,take a1.97; PROPOSED
+armour,cocky,spots Lucy,Up on the rail. Great. I'll wait.,take a2.98; PROPOSED
+armour,cocky,spots Lucy,"Found her. Nobody needed to help me with that, by the way.",take a1.98; PROPOSED
+armour,cocky,fires,Here it comes. Long one.,take a2.104; PROPOSED
+armour,cocky,fires,"There it is, there it is, that's the sound, that's the sound.",take a1.104; PROPOSED
+armour,cocky,fires,Yeah! Still going! Still going!,take a2.105; PROPOSED
+armour,cocky,fires,"Say something. No? Nothing? That's fine, I'll do the talking.",take a1.105; PROPOSED
+armour,cocky,fires,Eat that. All of it.,take a2.106; PROPOSED
+armour,cocky,fires,"Still going, still going, I could do this all night, I might.",take a1.106; PROPOSED
+armour,cocky,hit,That it? That's what you've got?,take a2.109; PROPOSED
+armour,cocky,hit,Was that it? Was that the thing everyone's scared of? A lamp?,take a1.109; PROPOSED
+armour,cocky,hit,Didn't even feel that. Barely.,take a2.110; PROPOSED
+armour,cocky,hit,"Ha, you dented the paint, somebody's paying for that, not me.",take a1.110; PROPOSED
+armour,cocky,too heavy,"You lifting? Keep going, I'll tell you when I feel it.",take a2.115; PROPOSED
+armour,cocky,too heavy,"You trying to lift me? Me? Oh, that's hilarious, go on, strain.",take a1.115; PROPOSED
+armour,cocky,too heavy,She's trying to pick me up. Ha. Good luck with that.,take a2.116; PROPOSED
+armour,cocky,too heavy,"Legs locked, don't even need to, she can't, nope, look at her try.",take a1.116; PROPOSED
+armour,cocky,team: man down,Told you to stay down. Didn't I say stay down?,take a2.118; PROPOSED
+armour,cocky,team: man down,"Oh, come on, I told you to stay behind me, I said that.",take a1.118; PROPOSED
+armour,cocky,team: man down,"One more off the floor. That's on you, not me.",take a2.119; PROPOSED
+armour,cocky,team: man down,"Another one? What are you guys doing back there, is this a contest.",take a1.119; PROPOSED
+armour,cocky,team: one left,Just me. Finally. Took you long enough.,take a2.121; PROPOSED
+armour,cocky,team: one left,"Okay. Everybody else is done, so, so it's just the show, it's just me.",take a1.121; PROPOSED
+armour,cocky,team: one left,"All of them. Huh. Okay. Okay, now it's a fight.",take a2.122; PROPOSED
+armour,cocky,team: one left,"Control, no friendlies up, which is, honestly, fewer people to trip over.",take a1.122; PROPOSED
+armour,cocky,sees the feed,"Oh, what, you're—no. No. Get off him.",take a2.124; PROPOSED
+armour,cocky,sees the feed,"Hey, hey, what are you, get off him, what is that.",take a1.124; PROPOSED
+armour,cocky,sees the feed,That's disgusting. That is—okay. Okay. Done watching.,take a2.125; PROPOSED
+armour,cocky,sees the feed,"Oh, that's, no, you don't get to, Control she's doing something to the body.",take a1.125; PROPOSED
+armour,cocky,shock,Whoa. Okay. That's a wall.,take a2.127; PROPOSED
+armour,cocky,shock,"Whoa. Whoa, okay. Okay. Didn't, didn't need to see that.",take a1.127; PROPOSED
+armour,cocky,shock,"Ha—no. No, that's not funny. That's not funny.",take a2.128; PROPOSED
+armour,cocky,shock,"Through the wall? Through the, that was a person, that was a guy.",take a1.128; PROPOSED
+armour,cocky,team: lost her,"Where'd you go? Hey. Hey, come on, I'm right here.",take a2.130; PROPOSED
+armour,cocky,team: lost her,Lost her. Fine. She's hiding. From me.,take a2.131; PROPOSED
+armour,cocky,team: lost her,"Lost her, which, fine, I lose keys, I always find keys.",take a1.131; PROPOSED
+armour,cocky,team: lost her,Come out. Come on. Don't make me bored.,take a2.132; PROPOSED
+armour,cocky,team: contact,There you are. Miss me?,take a2.133; PROPOSED
+armour,cocky,team: contact,Found you. Let's go again.,take a2.134; PROPOSED
+armour,cocky,team: contact,"Got her, up top, showing off, that's my thing, get down here.",take a1.134; PROPOSED
+armour,cocky,team: contact,"Yeah. Yeah, there she is. Round two, let's go.",take a2.135; PROPOSED
+armour,cocky,team: contact,"Oh she's close, she's real close, that's, hey, that's close.",take a1.135; PROPOSED
+guard,overconfident,approaches with the baton,"Okay, ma'am, hands where I can see 'em, that's all I need.",take b1.1; PROPOSED (round 134)
+guard,overconfident,approaches with the baton,"Dispatch, I got eyes on the patient, she's unarmed, copy.",take b1.2; PROPOSED (round 134)
+guard,overconfident,approaches with the baton,"All right, you're confused, I get it, we'll walk back together.",take b1.3; PROPOSED (round 134)
+guard,overconfident,approaches with the baton,"Nobody's mad at you, ma'am, I just need you to step back.",take b1.4; PROPOSED (round 134)
+guard,overconfident,approaches with the baton,"Yeah, relax, I got this one, go cover the elevators.",take b1.5; PROPOSED (round 134)
+guard,overconfident,chases her,"Oh, come on, ma'am, don't do this to me tonight.",take b1.6; PROPOSED (round 134)
+guard,overconfident,chases her,"Dispatch, she's running, east hall, I'm on her, send somebody.",take b1.7; PROPOSED (round 134)
+guard,overconfident,chases her,"There's nowhere to go, ma'am, that door's locked, I'm telling you.",take b1.8; PROPOSED (round 134)
+guard,overconfident,chases her,"You're gonna fall in that thing, just stop, just, stop.",take b1.9; PROPOSED (round 134)
+guard,overconfident,chases her,"Great, holiday week, and I'm the one chasing her, perfect.",take b1.10; PROPOSED (round 134)
+guard,overconfident,draws the gun,"Hey, what the, hey, back off!",take b1.11; PROPOSED (round 134)
+guard,overconfident,draws the gun,"Okay, no, that's, no, get back!",take b1.12; PROPOSED (round 134)
+guard,overconfident,draws the gun,"What'd you just, get off, get off me!",take b1.13; PROPOSED (round 134)
+guard,overconfident,draws the gun,"Dispatch, shots, I'm firing, she came at me!",take b1.14; PROPOSED (round 134)
+guard,overconfident,draws the gun,"You don't get to do that, ma'am!",take b1.15; PROPOSED (round 134)
+guard,overconfident,approaches with the baton,"Okay, ma'am, let's keep it easy, hands where I can see 'em.",take b2.1; PROPOSED (round 134)
+guard,overconfident,approaches with the baton,"Nobody's getting hurt tonight, ma'am, you just gotta sit down for me.",take b2.2; PROPOSED (round 134)
+guard,overconfident,approaches with the baton,"I've done this a hundred times, ma'am, don't make it a thing.",take b2.4; PROPOSED (round 134)
+guard,overconfident,approaches with the baton,"Watch the door, I got her, she's just confused, that's all.",take b2.5; PROPOSED (round 134)
+guard,overconfident,chases her,"Ma'am, where you gonna go, every door on this floor's locked.",take b2.6; PROPOSED (round 134)
+guard,overconfident,chases her,"Dispatch, she's running, west stairwell, I got eyes, stand by.",take b2.7; PROPOSED (round 134)
+guard,overconfident,chases her,"Come on, ma'am, I'm too old for this, slow down.",take b2.8; PROPOSED (round 134)
+guard,overconfident,chases her,"She's headed your way, don't let her past you, I'm right behind.",take b2.9; PROPOSED (round 134)
+guard,overconfident,chases her,"It's fine, it's fine, she's gonna run outta hallway any second.",take b2.10; PROPOSED (round 134)
+guard,overconfident,draws the gun,"What the hell was— get back, get back!",take b2.11; PROPOSED (round 134)
+guard,overconfident,draws the gun,"Okay, no, okay, that's it, you're done.",take b2.12; PROPOSED (round 134)
+guard,overconfident,draws the gun,Hands! Hands! Don't you— I will shoot you!,take b2.13; PROPOSED (round 134)
+guard,overconfident,draws the gun,"Dispatch, shots fired, I need somebody up here!",take b2.14; PROPOSED (round 134)
+guard,overconfident,draws the gun,"The hell'd you do, what did you— stay down!",take b2.15; PROPOSED (round 134)

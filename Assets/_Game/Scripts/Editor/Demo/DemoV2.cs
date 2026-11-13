@@ -245,13 +245,13 @@ namespace GlorifiedBody.Editor.Demo
             CoffeeMachine(r, "Coffee_Machine", new Vector3(31.2f, 0.9f, -4.7f), Vector3.forward);
             EnemySpawn cook = r.Figure("Hider_Cook", "labworker", new Vector3(36f, 0f, -2.5f), 270f, variant: 1);
             cook.hides = true;
-            cook.hideLine = "Keep your head down. Don't look at her. Don't look."; // the writer's (the first hider, to the other)
-            cook.foundLine = "Please. I just make the soup. I just make the soup."; // the writer's (barks.csv, round 113, PROPOSED)
+            cook.hideLine = BarkBookSetup.Scripted("civilian", "G10, the first hider, by a table, Lucy close", 0, "Keep your head down. Don't look at her. Don't look."); // the writer's (the first hider, to the other)
+            cook.foundLine = BarkBookSetup.Scripted("civilian", "G10, the first hider (the cook), found by the table, Lucy within 2 m (his found line)", 0, "Please. I just make the soup. I just make the soup."); // the writer's (barks.csv, round 113, PROPOSED)
             EditorUtility.SetDirty(cook);
             EnemySpawn server = r.Figure("Hider_Server", "labworker", new Vector3(32.9f, 0f, -2.5f), 90f, variant: 3);
             server.hides = true;
-            server.hideLine = "She can see us. She's looking right at us."; // the writer's (the second hider)
-            server.foundLine = "Please. I'm off at six. I just want to go home at six."; // the writer's (barks.csv, round 113, PROPOSED)
+            server.hideLine = BarkBookSetup.Scripted("civilian", "G10, the second hider, by a table, Lucy close", 0, "She can see us. She's looking right at us."); // the writer's (the second hider)
+            server.foundLine = BarkBookSetup.Scripted("civilian", "G10, the second hider (the server), found by the table, Lucy within 2 m (his found line)", 0, "Please. I'm off at six. I just want to go home at six."); // the writer's (barks.csv, round 113, PROPOSED)
             EditorUtility.SetDirty(server);
             r.Sign("Sign_Menu", "TONIGHT: SOUP. BREAD. TEA.", new Vector3(37.83f, 2.2f, -2.5f), Vector3.left, new Vector2(1.8f, 0.35f), 36);
             Label(r, "CAFETERIA", new Vector3(32.2f, 2.3f, -0.17f), Vector3.back, 1.6f);

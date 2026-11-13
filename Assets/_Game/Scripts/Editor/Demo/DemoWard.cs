@@ -90,8 +90,8 @@ namespace GlorifiedBody.Editor.Demo
             r.Prop("Stall_Wall_B", new Vector3(22.1f, 0f, 18.9f), new Vector3(0.06f, 2f, 2.2f), 0.35f);
             EnemySpawn nurse = r.Figure("Hider_Nurse", "nurse", new Vector3(21.35f, 0f, 19.4f), 0f, variant: 0);
             nurse.hides = true;
-            nurse.hideLine = "It is sown in weakness. It is raised in power. It is sown in weakness.";
-            nurse.foundLine = "I'm not here. Please. I'm not here.";
+            nurse.hideLine = BarkBookSetup.Scripted("nurse", "W4, hides in a shower stall, Lucy close", 0, "It is sown in weakness. It is raised in power. It is sown in weakness.");
+            nurse.foundLine = BarkBookSetup.Scripted("nurse", "W4, found in the stall", 0, "I'm not here. Please. I'm not here.");
             EditorUtility.SetDirty(nurse);
             r.Prop("Laundry_Cart", new Vector3(23.6f, 0f, 14.8f), new Vector3(0.7f, 0.9f, 0.5f), 0.4f);
             r.Capsule("Capsule_W4", DrugType.NalconFire, new Vector3(21.5f, 0.15f, 14.8f));
@@ -171,7 +171,7 @@ namespace GlorifiedBody.Editor.Demo
             r.Prop("Machine_Ring", new Vector3(14f, 2.35f, 2.2f), new Vector3(2.4f, 0.08f, 2.4f), 0.6f);
             EnemySpawn tech = r.Figure("Hider_Technician", "labworker", new Vector3(15.3f, 0f, 3.8f), 45f, variant: 0);
             tech.hides = true;
-            tech.hideLine = "It's a pain protocol. It's only for the pain. I only ran the pain.";
+            tech.hideLine = BarkBookSetup.Scripted("technician", "W8, behind the induction chair", 0, "It's a pain protocol. It's only for the pain. I only ran the pain.");
             tech.foundLine = "Please. I only ran the pain.";
             EditorUtility.SetDirty(tech);
             r.Prop("Monitor_Cart", new Vector3(12f, 0f, 3.8f), new Vector3(0.6f, 1.2f, 0.5f), 0.35f);

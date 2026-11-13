@@ -47,7 +47,7 @@ namespace GlorifiedBody.Enemy
         private bool searching;
         private readonly List<Vector3> route = new List<Vector3>();
         private readonly List<SearchPair> pairs = new List<SearchPair>();
-        private readonly List<(float at, SoldierBrain who, string[] lines)> queued = new List<(float at, SoldierBrain who, string[] lines)>();
+        private readonly List<(float at, SoldierBrain who, string situation)> queued = new List<(float at, SoldierBrain who, string situation)>();
 
         private sealed class SearchPair
         {
@@ -173,7 +173,7 @@ namespace GlorifiedBody.Enemy
             if (replyAt > 0f && Time.time >= replyAt)
             {
                 replyAt = -1f;
-                Say(elements[1 - moving], CoveringLines);
+                Say(elements[1 - moving], BarkSituation.TeamCovering);
             }
             if (Alive < 2) return;
             float bound = Time.time - boundStart;
@@ -211,7 +211,7 @@ namespace GlorifiedBody.Enemy
             queued.Clear();
             boundStart = Time.time;
             RunTelemetry.Event("team_contact", $"{her.x:0.0},{her.z:0.0}");
-            if (Say(elements[moving], ContactLines) || Say(elements[1 - moving], ContactLines)) nextCall = Time.time + CallGap;
+            if (Say(elements[moving], BarkSituation.TeamContact) || Say(elements[1 - moving], BarkSituation.TeamContact)) nextCall = Time.time + CallGap;
         }
 
         /// <summary>One holder calls it, when the team starts to fire at the place.</summary>
@@ -219,7 +219,7 @@ namespace GlorifiedBody.Enemy
         {
             RunTelemetry.Event("team_suppress", who.name);
             if (Time.time < nextCall) return;
-            Bark.Say(who.gameObject, SuppressLines[Random.Range(0, SuppressLines.Length)], 2f);
+            BarkBook.Say(who.gameObject, BarkSituation.TeamSuppressing, 2f);
             nextCall = Time.time + CallGap;
         }
 
@@ -259,7 +259,7 @@ namespace GlorifiedBody.Enemy
                 pairs.Add(new SearchPair { first = first, second = second, leg = pairs.Count });
             }
             RunTelemetry.Event("team_lost_her", $"{LastSeen.x:0.0},{LastSeen.z:0.0}: {pairs.Count} pairs, {route.Count} points");
-            if (Say(elements[moving], LostLines) || Say(elements[1 - moving], LostLines)) nextCall = Time.time + CallGap;
+            if (Say(elements[moving], BarkSituation.TeamLostHer) || Say(elements[1 - moving], BarkSituation.TeamLostHer)) nextCall = Time.time + CallGap;
         }
 
         private void AddToRoute(Vector3 point)
@@ -343,12 +343,12 @@ namespace GlorifiedBody.Enemy
             }
             pair.secondWalks = false;
             pair.leg++;
-            if (Time.time < nextCall || !Say(new List<SoldierBrain> { who }, ClearLines)) return;
+            if (Time.time < nextCall || !Say(new List<SoldierBrain> { who }, BarkSituation.TeamSearchClear)) return;
             nextCall = Time.time + CallGap;
             // The next leg, as a dialogue between the two (F.E.A.R.: the player hears that it is on purpose).
             if (!Live(pair.first) || !Live(pair.second)) return;
-            queued.Add((Time.time + SearchCallDelay, pair.first, SearchMoveLines));
-            queued.Add((Time.time + SearchCallDelay + ReplyDelay, pair.second, SearchCoverLines));
+            queued.Add((Time.time + SearchCallDelay, pair.first, BarkSituation.TeamSearchMoving));
+            queued.Add((Time.time + SearchCallDelay + ReplyDelay, pair.second, BarkSituation.TeamSearchCovering));
         }
 
         private void SayQueued()
@@ -356,7 +356,7 @@ namespace GlorifiedBody.Enemy
             for (int i = queued.Count - 1; i >= 0; i--)
             {
                 if (Time.time < queued[i].at) continue;
-                if (searching && Live(queued[i].who)) Say(new List<SoldierBrain> { queued[i].who }, queued[i].lines);
+                if (searching && Live(queued[i].who)) Say(new List<SoldierBrain> { queued[i].who }, queued[i].situation);
                 queued.RemoveAt(i);
             }
         }
@@ -382,7 +382,7 @@ namespace GlorifiedBody.Enemy
             Swaps++;
             foreach (SoldierBrain b in elements[moving]) b.BoundNow();
             RunTelemetry.Event("team_bound", $"element {moving}");
-            if (Time.time >= nextCall && Say(elements[moving], MovingLines))
+            if (Time.time >= nextCall && Say(elements[moving], BarkSituation.TeamMoving))
             {
                 nextCall = Time.time + CallGap;
                 replyAt = Time.time + ReplyDelay;
@@ -392,7 +392,7 @@ namespace GlorifiedBody.Enemy
         private void CountLoss()
         {
             if (Alive == 0) return;
-            string[] lines = Alive == 1 ? LastOneLines : Alive == 2 ? LastTwoLines : ManDownLines;
+            string lines = Alive == 1 ? BarkSituation.TeamOneLeft : Alive == 2 ? BarkSituation.TeamTwoLeft : BarkSituation.TeamManDown;
             if (Alive == 2)
                 foreach (SoldierBrain b in Members) b.BoundNow(); // the last two fall back at once
             Say(elements[elements[0].Count > 0 ? 0 : 1], lines);
@@ -401,29 +401,34 @@ namespace GlorifiedBody.Enemy
             RunTelemetry.Event("team_lost", $"{Alive} left");
         }
 
-        private static bool Say(List<SoldierBrain> element, string[] lines)
+        /// <summary>
+        /// The first live man of the element with a line for the call says it (barks.csv, BarkBook). A power armour in the fight,
+        /// in the room of that man, takes some of the calls he has rows for (contact, lost her, man down, one left; PROPOSED):
+        /// he is not a member of the team, but he is in the fight.
+        /// </summary>
+        private static bool Say(List<SoldierBrain> element, string situation)
         {
+            SoldierBrain speaker = null;
             foreach (SoldierBrain b in element)
-            {
-                if (!Live(b)) continue;
-                Bark.Say(b.gameObject, lines[Random.Range(0, lines.Length)], 2f);
-                return true;
-            }
-            return false;
+                if (Live(b) && BarkBook.CanSay(b.gameObject, situation)) { speaker = b; break; }
+            if (speaker == null) return false;
+            SoldierBrain heavy = HeavyNear(speaker, situation);
+            if (heavy != null && Random.value < HeavyCallChance) speaker = heavy;
+            return BarkBook.Say(speaker.gameObject, situation, 2f);
         }
 
-        // The writer's lines (barks.csv, team_*), PROPOSED.
-        public static readonly string[] MovingLines = { "Moving up.", "Moving. Cover me.", "Next cover. Moving.", "I'm up. Moving.", "Changing position." };
-        public static readonly string[] CoveringLines = { "Covering. Go.", "You're covered.", "Go. I've got you.", "Holding here. Go.", "Keeping her pinned." };
-        public static readonly string[] ManDownLines = { "Man down. Keep firing.", "Man down. Oh, Jesus. Man down.", "Don't look. Stay on her.", "He's gone. Stay tight." };
-        public static readonly string[] LastTwoLines = { "Two left. Fall back to cover.", "Falling back. Control, need support.", "Stay with me. Back to cover." };
-        public static readonly string[] SuppressLines = { "Keep her head down.", "Putting rounds on it. Move.", "She's behind that. Keep it coming.", "Stay down. Just stay down.", "Suppressing. Go." };
-        public static readonly string[] LostLines = { "Lost her.", "Anybody got eyes?", "Where'd she go?", "Nothing. I've got nothing.", "Control, we've lost visual." };
-        public static readonly string[] SearchMoveLines = { "On me. Nice and slow.", "I'll look. You watch.", "Checking this side.", "Stepping up. Stay on me.", "Going ahead. Don't lose me." };
-        public static readonly string[] SearchCoverLines = { "Right behind you.", "Easy. Don't rush it.", "I see you. Keep going.", "Mind the corners.", "Hold on. ...Nothing. Go on." };
-        public static readonly string[] ClearLines = { "Clear.", "Nothing here.", "Empty. Next.", "Nobody. Move on.", "Clear. I don't like this." };
-        public static readonly string[] ContactLines = { "Contact!", "There. There she is.", "Contact. She's right there.", "Got her. On me, on me.", "Eyes on. Eyes on! Contact!" };
-        public static readonly string[] ReinforceLines = { "Second team inside. First team, sound off.", "No answer from first team. Stay tight.", "Control said one target. One.", "That's all of them? That's the whole team?", "Nobody goes alone. Stay on me." };
-        public static readonly string[] LastOneLines = { "Cover me. Somebody cover me.", "Control, come in. Control?", "It's just me. Hold. Hold." };
+        private const float HeavyCallChance = 0.5f;
+
+        private static SoldierBrain HeavyNear(SoldierBrain near, string situation)
+        {
+            foreach (EnemyMorale m in EnemyMorale.All)
+            {
+                if (m == null || m.RankOf != EnemyMorale.Rank.Heavy || m.Health == null || m.Health.IsDead) continue;
+                if (!m.TryGetComponent(out SoldierBrain heavy) || !heavy.Alerted || !Live(heavy)) continue;
+                if (!GlorifiedBody.Rooms.Room.Same(heavy.transform.position, near.transform.position)) continue;
+                if (BarkBook.CanSay(heavy.gameObject, situation)) return heavy;
+            }
+            return null;
+        }
     }
 }

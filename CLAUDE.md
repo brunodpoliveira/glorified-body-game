@@ -620,6 +620,14 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   (`tools/music_states_placeholder.sh`). AFTER A VENDOR IMPORT: `BuildEnemyPrefabs` makes 15 kinds now. Tests:
   `HoldTests` (13), `DiningHallTests` (3). The search music counts hunters in her room and the rooms next door only (`MusicDirector.InSearchScope`, `MusicScopeTests`). Round 130: a man on a post holds it while she is outside it (`SoldierBrain.HoldsPost`). The death screen reads the writer's `death_lines.csv` (`moreLines`, `DeathMenuUI.PickLine`). The brain row of the writer's `death_screens.csv` is cut (unquoted commas):
   the writer quoted it the same day (63 of 63 EditMode). Numbers PROPOSED.
+- 2026-11-13, THE BARK BOOK (`devlog-notes/2026-11-13_bark_book.md`, rounds 133 to 135, the spec `~/MEGA/glorified/dialogue/takes/barks_v2/GAME_NOTES.md`):
+  the game reads the writer's `game/barks.csv` (enemy, personality, situation, line, direction). `BarkBookSetup.Build` copies it to
+  `Resources/Barks/barks.csv` (AFTER THE WRITER CHANGES IT: run it; `DemoWorld.BuildAll` runs it). `Enemy/BarkBook` finds the rows (the
+  personality's, else the empty personality's; a nurse takes her nearest situation, a lab worker the scientist's), `Enemy/BarkVoice` is one
+  person's enemy and personality (given at the spawn, PROPOSED weights and confused curve): a guard who panics is broken, the staff turn
+  afraid when she kills or hurts someone in their sight. One deck a situation: "plays first" first, no repeat, a PLACE row only in its room.
+  `BarkBook.Asked` lists every pair the code asks for; `BarkBookTests` checks each has rows for every personality. No copied lines in the
+  code now. NOT WIRED: the overconfident guard's baton (a question for Bruno), `reloads` (no reload), `armour_call` (cut in round 135).
 
 ## Rules
 

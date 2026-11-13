@@ -119,7 +119,7 @@ namespace GlorifiedBody.Editor.Demo
             EnemySpawn mechanic = r.Figure("Mechanic", "labworker", new Vector3(72f, 0f, 24.4f), 180f, variant: 1);
             mechanic.hides = true;
             mechanic.foundAt = 0f;
-            mechanic.hideLine = "We're closed. Hey. Lady, we're closed.";
+            mechanic.hideLine = BarkBookSetup.Scripted("civilian", "coda: mechanic", 0, "We're closed. Hey. Lady, we're closed.");
             EditorUtility.SetDirty(mechanic);
             Spare(r, "Mechanic", "labworker", new Vector3(69f, 0f, 25.3f), ShutterFlag, true);
             SaveAssets.SavePoint("Save_R2", new Vector3(68.6f, 0f, 19f), 90f).transform.SetParent(r.Props.transform, true);

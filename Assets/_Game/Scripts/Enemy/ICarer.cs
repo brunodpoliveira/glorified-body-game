@@ -13,7 +13,7 @@ namespace GlorifiedBody.Enemy
         IEnemyBody Body { get; }
         bool TryBeginCare();
         void EndCare();
-        /// <summary>The barks of the care (the writer's barks.csv). Null: no bark.</summary>
+        /// <summary>The barks of the care (the writer's barks.csv, BarkBook). Each read gives the next line. Null: no bark.</summary>
         string CareStartLine { get; }
         string DragLine { get; }
         string CprLine { get; }

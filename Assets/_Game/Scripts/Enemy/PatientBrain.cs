@@ -17,9 +17,12 @@ namespace GlorifiedBody.Enemy
     [RequireComponent(typeof(Health))]
     public sealed class PatientBrain : MonoBehaviour, IFearful, IStaggerable
     {
-        public const string DefaultLine = "Is mine done? Are they done with mine yet?";
+        /// <summary>The writer's line when the room gives none: the patient's "hears Lucy" row (barks.csv, BarkBook).</summary>
+        public static string DefaultLine => BarkBook.Scripted("patient", BarkSituation.HearsLucy);
+        /// <summary>The old built-in line: the enemy prefabs built before 2026-11-13 hold it. It stands for "no line of the room".</summary>
+        private const string OldDefaultLine = "Is mine done? Are they done with mine yet?";
 
-        [SerializeField] private string line = DefaultLine;
+        [SerializeField] private string line = "";
         [SerializeField, Min(0.5f)] private float lineRange = 2.5f;
         [SerializeField, Range(0f, 1f)] private float alertTremble = 0.3f;
         [SerializeField, Range(0f, 1f)] private float fearTremble = 0.9f;
@@ -86,10 +89,10 @@ namespace GlorifiedBody.Enemy
                 player = p != null ? p.transform : null;
                 if (player == null) return;
             }
-            if (!Spoke && !string.IsNullOrEmpty(line) && EnemyNav.Flat(transform.position, player.position) <= lineRange)
+            if (!Spoke && EnemyNav.Flat(transform.position, player.position) <= lineRange)
             {
                 Spoke = true;
-                Bark.Say(gameObject, line, 3f);
+                Bark.Say(gameObject, string.IsNullOrEmpty(line) || line == OldDefaultLine ? DefaultLine : line, 3f);
                 RunTelemetry.Event("patient_line", name);
             }
         }

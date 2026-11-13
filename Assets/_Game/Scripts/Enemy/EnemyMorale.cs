@@ -22,7 +22,9 @@ namespace GlorifiedBody.Enemy
     /// rocket), an explosion, a full-charge mk_warspite (it cuts a limb). A part-charge mk_warspite kill is not.
     /// All numbers and the gruesome list are PROPOSED.
     /// A feed (Bruno, 2026-10-30: "they should react to it"): a witness of her feed on a body (the same sight rule)
-    /// takes it as a gruesome death: +2 fear, a shock or a retreat, and a line. The lines are PLACEHOLDERS for the writer.
+    /// takes it as a gruesome death: +2 fear, a shock or a retreat, and a line ("sees the feed", barks.csv).
+    /// The staff turn afraid (round 134, BarkVoice.Frighten): a nurse or a lab worker that sees her kill or hurt someone, or
+    /// feed, says the afraid rows from then on. A hurt counts when she is the attacker and the staff member sees the victim.
     /// </summary>
     [RequireComponent(typeof(Health))]
     public sealed class EnemyMorale : MonoBehaviour
@@ -51,11 +53,6 @@ namespace GlorifiedBody.Enemy
         public int Witnessed { get; private set; }
         public int FeedsSeen { get; private set; }
 
-        // Every line is the writer's (barks.csv, "sees the feed", PROPOSED; the fighters' second lines: round 113).
-        public static readonly string[] SoldierFeedLines = { "Contact. She's — Jesus. She's eating.", "She's on him! Put her down! Put her down!" };
-        public static readonly string[] GuardFeedLines = { "Oh God. Oh God, she's — get away from him!", "Hey! Leave him alone! Leave him alone!" };
-        public const string LabWorkerFeedLine = "That's... Computer, she's feeding. Advise. Please advise.";
-        public const string NurseFeedLine = "Sweetheart, no. No, no. Not like that.";
         public bool DiedGruesome { get; private set; }
         /// <summary>The fear at which this rank retreats. Never for soldiers and heavies.</summary>
         public int FearLimit => rank == Rank.UnarmedCivilian ? 0 : rank == Rank.ArmedCivilian || rank == Rank.Guard ? 3 : int.MaxValue;
@@ -114,9 +111,33 @@ namespace GlorifiedBody.Enemy
 
         private void OnHit(HitInfo hit)
         {
-            if (hit.Victim != gameObject) return;
+            if (hit.Victim != gameObject)
+            {
+                SeeHurt(hit);
+                return;
+            }
             lastType = hit.DamageType;
             lastCharge = hit.Charge;
+            if (hit.Attacker != null && hit.Attacker.CompareTag("Player")) BarkVoice.Of(gameObject)?.Frighten();
+        }
+
+        /// <summary>The staff see her hurt someone (round 134): afraid from now on. The same sight rule as a death.</summary>
+        private void SeeHurt(HitInfo hit)
+        {
+            if (health.IsDead || hit.Victim == null || hit.Attacker == null || !hit.Attacker.CompareTag("Player")) return;
+            if (rank != Rank.UnarmedCivilian && rank != Rank.ArmedCivilian) return;
+            BarkVoice voice = BarkVoice.Of(gameObject);
+            if (voice == null || !voice.IsStaff || voice.Personality == BarkVoice.Afraid) return;
+            if (hit.Victim.GetComponentInParent<Health>() == null) return; // a crate, a wall: no one is hurt
+            if (Sees(hit.Victim.transform.position + Vector3.up * GlorifiedBody.Characters.Body.ChestHeight)) voice.Frighten();
+        }
+
+        private bool Sees(Vector3 at)
+        {
+            Vector3 eye = transform.position + Vector3.up * 1.6f;
+            float distance = Vector3.Distance(eye, at);
+            bool near = distance <= hearRange && GlorifiedBody.Rooms.Room.Same(transform.position, at);
+            return near || (distance <= witnessRange && !Physics.Linecast(eye, at, LayerMask.GetMask("Default"), QueryTriggerInteraction.Ignore));
         }
 
         /// <summary>A body that a load puts back (SaveSystem): its death is old, so no one sees it or fears it again.</summary>
@@ -166,16 +187,13 @@ namespace GlorifiedBody.Enemy
             if (health.IsDead) return;
             FeedsSeen++;
             Fear += 2;
+            BarkVoice.Of(gameObject)?.Frighten();
             RunTelemetry.Event("enemy_saw_feed", $"{name}:{bodyName} fear={Fear}");
             if (brain == null) return;
             brain.Alert("feed", callOthers: false);
             if (Fear >= FearLimit) brain.Retreat("feed");
             else brain.Shock(gruesomeShockSeconds, true);
-            bool civilian = rank == Rank.UnarmedCivilian || rank == Rank.ArmedCivilian;
-            string[] fighter = rank == Rank.Guard ? GuardFeedLines : SoldierFeedLines;
-            string line = !civilian ? fighter[UnityEngine.Random.Range(0, fighter.Length)]
-                : GlorifiedBody.Subtitles.Speaker.NameOf(gameObject).Contains("NURSE") ? NurseFeedLine : LabWorkerFeedLine;
-            Bark.Say(gameObject, line); // after the shock's own line: this one shows
+            BarkBook.Say(gameObject, BarkSituation.SeesFeed); // after the shock's own line: this one shows
         }
 
         /// <summary>It saw the death (the range and the line are checked before): the fear, then a shock or a retreat.</summary>
@@ -184,6 +202,7 @@ namespace GlorifiedBody.Enemy
             if (health.IsDead) return;
             Witnessed++;
             Fear += gruesome ? 2 : 1;
+            BarkVoice.Of(gameObject)?.Frighten(); // the staff: afraid from now on (round 134)
             RunTelemetry.Event("enemy_witness", $"{name}:{(corpse != null ? corpse.name : "?")}{(gruesome ? ":gruesome" : "")} fear={Fear}");
             if (brain == null) return;
             brain.Alert("colleague died", callOthers: false);

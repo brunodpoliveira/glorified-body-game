@@ -76,7 +76,10 @@ namespace GlorifiedBody.Tests.PlayMode
             yield return WaitUntil(() => Bark.CountOf(armour.gameObject) > 0, 3f);
             Debug.Log($"[DiningHallTests] the armour: called at {arrival.StandingAtCall} standing, {fromDoor:0.0} m from the lodge door, the call heard {called}, its line '{armour.GetComponent<Bark>().Shown}'");
             Assert.IsTrue(called, "a soldier calls for it (barks.csv, armour_call)");
-            StringAssert.StartsWith("Stay down behind me", armour.GetComponent<Bark>().Shown, "its operator speaks (armour_enter)");
+            // A row of his own personality (barks.csv, BarkBook, 2026-11-13).
+            BarkVoice voice = BarkVoice.Of(armour.gameObject);
+            CollectionAssert.Contains(BarkBook.RowsFor(voice.Enemy, voice.Personality, BarkSituation.ArmourEnter).Select(r => r.line).ToList(),
+                armour.GetComponent<Bark>().Shown, "its operator speaks (armour_enter, " + voice.Personality + ")");
             yield return WaitUntil(() => armour.Alerted, 3f);
             Assert.IsTrue(armour.Alerted, "it hunts her");
         }

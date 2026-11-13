@@ -105,6 +105,9 @@ namespace GlorifiedBody.Enemy
         private const float CowerLineRange = 4f;      // m: she comes this near, and a figure that cowers speaks, PROPOSED
         private const float CowerLineGap = 6f;        // s between its lines, PROPOSED
         private const float CowerLineSeconds = 3f;
+        private const float HitLineGap = 4f;          // s: one "hit" line in this time at most, PROPOSED
+        private const float FireLineGap = 8f;         // s: one "fires" line in this time at most, PROPOSED
+        private const float FireLineChance = 0.35f;   // a shot gives a line this often (the gap allows it), PROPOSED
         private const float ArmedCivilianNerves = 0.35f; // the tremble of an alerted armed civilian, PROPOSED
         private const float CoverMinRange = 2.5f;    // m from her: closer is no cover
         private const float CoverExtraRange = 4f;    // m beyond the preferred range
@@ -146,49 +149,26 @@ namespace GlorifiedBody.Enemy
         public bool Retreating => Current == Phase.Retreat || Current == Phase.Cower;
         /// <summary>A soldier tends a body only while he does not see her (CorpseCare).</summary>
         public bool CareIgnoresHer => false;
-        // The care barks (barks.csv, the writer, 2026-10-25): the guard's and the soldier's own; the armed lab worker's since
-        // 2026-11-07 (PROPOSED).
-        public string CareStartLine => IsArmedCivilian ? "Hey. Hey, it's me. Look at me, it's me." : IsGuard ? "Hey. Hey buddy. Look at me. Look at me." : "Casualty. I'm on it.";
-        public string DragLine => IsArmedCivilian ? "I don't know how to do this. I'm doing it. I'm doing it." : IsGuard ? "Come on. I'm getting you out of here. I'm getting you out." : "Pulling out. Cover me. Cover me.";
-        public string CprLine => IsArmedCivilian ? "Thirty and two. Thirty and two. I did the course." : IsGuard ? "One. Two. Three. Four. Five. Come on. Come on." : "Come on. Come on, breathe. Don't you do this.";
-        // What a figure that cowers says when she comes near (barks.csv, cower_*, the writer, PROPOSED). Bruno, 2026-11-05: "he
-        // won't attack and keeps turning its back on me?": the line tells the player that he gave up. The first line is the plainest.
-        public static readonly string[] GuardCowerLines =
-        {
-            "I'm done. I'm not gonna shoot.", "Gun's down, ma'am. Go on past.", "I'm not looking. Just walk by me.",
-            "I'm staying right here. I won't follow.", "Dispatch, I'm not engaging. I'm staying down.", "Please, ma'am. I'm not your problem.",
-        };
-        public static readonly string[] LabWorkerCowerLines =
-        {
-            "I won't hurt you. I can't do this.", "I'm not security. I'm not fighting you.", "They handed me this. I won't use it.",
-            "My eyes are closed. Please just go.", "This isn't my department. Please, just go past.", "I'll stay here. I won't report this.",
-        };
-        private readonly System.Collections.Generic.List<int> cowerLinesLeft = new System.Collections.Generic.List<int>();
-        private bool cowerSpoke;
+        // The care barks: the writer's rows of his enemy and personality (barks.csv, BarkBook, 2026-11-13).
+        public string CareStartLine => BarkBook.Line(gameObject, BarkSituation.StartsCare);
+        public string DragLine => BarkBook.Line(gameObject, BarkSituation.Drags);
+        public string CprLine => BarkBook.Line(gameObject, BarkSituation.Cpr);
         private float nextCowerLine;
 
-        /// <summary>Line 1 first, then the others at random, with no repeat until all have played.</summary>
+        /// <summary>
+        /// What a figure that cowers says when she comes near (Bruno, 2026-11-05: "he won't attack and keeps turning its back on
+        /// me?": the line tells the player that he gave up). The writer's "cower" rows of his personality (BarkBook): the
+        /// "plays first" row first (the weapon goes down), then the others at random, with no repeat until all have played.
+        /// </summary>
         private void CowerLine()
         {
             if (Time.time < nextCowerLine) return;
             Vector3 her = TargetPosition;
             if (Flat(transform.position, her) > CowerLineRange || !GlorifiedBody.Rooms.Room.Same(transform.position, her)) return;
-            string[] lines = IsArmedCivilian ? LabWorkerCowerLines : GuardCowerLines;
-            if (cowerLinesLeft.Count == 0)
-                for (int i = cowerSpoke ? 0 : 1; i < lines.Length; i++) cowerLinesLeft.Add(i);
-            int line = 0;
-            if (cowerSpoke)
-            {
-                int pick = Random.Range(0, cowerLinesLeft.Count);
-                line = cowerLinesLeft[pick];
-                cowerLinesLeft.RemoveAt(pick);
-            }
-            cowerSpoke = true;
             nextCowerLine = Time.time + CowerLineGap;
-            Bark.Say(gameObject, lines[line], CowerLineSeconds);
+            BarkBook.Say(gameObject, BarkSituation.Cower, CowerLineSeconds);
         }
 
-        private bool IsGuard => GetComponent<EnemyMorale>() is EnemyMorale m && m.RankOf == EnemyMorale.Rank.Guard;
         private bool IsArmedCivilian => GetComponent<EnemyMorale>() is EnemyMorale m && m.RankOf == EnemyMorale.Rank.ArmedCivilian;
         private EnemyMorale.Rank RankOf => GetComponent<EnemyMorale>() is EnemyMorale m ? m.RankOf : EnemyMorale.Rank.Soldier;
         public string AlertReason { get; private set; } = "";
@@ -276,6 +256,7 @@ namespace GlorifiedBody.Enemy
             ScriptHeld = false;
             Alerted = true;
             AlertReason = reason;
+            if (reason == "sight") BarkBook.Say(gameObject, BarkSituation.SpotsLucy, 2.2f); // the first sight of her (barks.csv, "spots Lucy")
             if (RankOf == EnemyMorale.Rank.Soldier) Team = FireTeam.Join(this, player.position);
             body.Track(player);
             RunTelemetry.Event("soldier_alerted", $"{name}:{reason}");
@@ -403,12 +384,14 @@ namespace GlorifiedBody.Enemy
         private void OnHurt(float amount)
         {
             if (health.IsDead) return;
+            BarkVoice.Of(gameObject)?.SayNow(BarkSituation.Hit, HitLineGap);
             Alert("hurt", callOthers: true);
             Team?.Heard(player != null ? player.position : transform.position); // she did this: he knows where she is
         }
 
         private void OnOwnShot(Vector3 origin, Vector3 direction)
         {
+            BarkVoice.Of(gameObject)?.SayNow(BarkSituation.Fires, FireLineGap, FireLineChance);
             EnemyAlert.Raise(transform.position, alertRadius, "gunshot");
         }
 
@@ -734,13 +717,9 @@ namespace GlorifiedBody.Enemy
             gun.Stagger(seconds); // the aim breaks; OnStaggered holds the body for the seconds
             Hold(seconds);
             body?.Flinch(transform.position + transform.forward, false);
-            // The writer's shock lines (barks.csv, "shock: a colleague dies in sight" / "a gruesome death in sight", PROPOSED).
-            string line = IsArmedCivilian
-                ? (gruesome ? "Oh God. It's on the wall. It's all on the wall." : "No. No, he's from my floor. He's from my floor.")
-                : IsGuard
-                    ? (gruesome ? "Dispatch, what did she do to him? What did she do?" : "Oh no. Oh no, oh no.")
-                    : (gruesome ? "Control, she took him apart. She took him apart." : "Man down. Man down, hold the line.");
-            Bark.Say(gameObject, line);
+            // The writer's lines (barks.csv, round 135: one "shock"): a plain death is "partner down" when his voice has the
+            // rows (the guard, the soldier), else "shock"; a gruesome one is always "shock".
+            if (gruesome || !BarkBook.Say(gameObject, BarkSituation.PartnerDown)) BarkBook.Say(gameObject, BarkSituation.Shock);
             RunTelemetry.Event("soldier_shocked", $"{name}:{seconds:0.0}s{(gruesome ? ":gruesome" : "")}");
         }
 
@@ -765,8 +744,9 @@ namespace GlorifiedBody.Enemy
             body.Crouch(false);
             Spot = Go(Spot, MoveSpeed.Sprint);
             timer = 8f;
-            // Both lines are the writer's: the lab worker's (kept from the build), the guard's (barks.csv, round 113, PROPOSED).
-            Bark.Say(gameObject, IsArmedCivilian ? "I can't. I can't do this!" : "Dispatch, I'm pulling back! Somebody else take her!");
+            // A guard who panics is broken for the rest of the night (round 134). The line: "retreats, fear at the limit".
+            BarkVoice.Of(gameObject)?.Panic();
+            BarkBook.Say(gameObject, BarkSituation.Retreats);
             RunTelemetry.Event("soldier_retreat", $"{name}:{reason} to {Spot.x:0.0},{Spot.z:0.0}");
         }
 

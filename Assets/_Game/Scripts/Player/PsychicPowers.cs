@@ -57,6 +57,7 @@ namespace GlorifiedBody.Player
         /// <summary>The enemy she holds in the air with telekinesis, while a launch is possible.</summary>
         public TelekinesisLift HeldLift => activeLift != null && activeLift.CanLaunch ? activeLift : null;
         private string lastResult = "";
+        private const float TooHeavyLineGap = 5f; // s between the armour's "too heavy" lines, PROPOSED
         /// <summary>The last result: "fired", "slam", "launch:...", "catch...", "drug:...", "too_heavy", "no_nalcon"...</summary>
         public string LastResult
         {
@@ -638,7 +639,11 @@ namespace GlorifiedBody.Player
             LockOnTargetable target = lockOn.CurrentTarget;
             if (target == null || !target.IsAlive || Vector3.Distance(transform.position, target.GetLockPoint()) > power.range) return Result("no_target", 0f);
             // Too heavy to lift (the power armour): no lift and no cost.
-            if (target.IsHeavy) return Result("too_heavy", 0f);
+            if (target.IsHeavy)
+            {
+                GlorifiedBody.Enemy.BarkVoice.Of(target.gameObject)?.SayNow(GlorifiedBody.Enemy.BarkSituation.TooHeavy, TooHeavyLineGap); // the armour mocks her (barks.csv)
+                return Result("too_heavy", 0f);
+            }
             TelekinesisLift flying = target.GetComponentInParent<TelekinesisLift>();
             if (flying != null && flying.IsLifted) return false; // a throw of it is on its way
             float scale = DamageScale; // the boost is read before the cost lowers the bar
@@ -762,6 +767,7 @@ namespace GlorifiedBody.Player
                 case PowerKind.Telekinesis:
                     if (target.IsHeavy)
                     {
+                        GlorifiedBody.Enemy.BarkVoice.Of(target.gameObject)?.SayNow(GlorifiedBody.Enemy.BarkSituation.TooHeavy, TooHeavyLineGap);
                         Result("too_heavy", charge);
                         return;
                     }

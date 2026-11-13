@@ -222,12 +222,13 @@ namespace GlorifiedBody.Automation
             Record("civ_slide_beg", sat && begFloor, $"{lab.name} sat={sat} beg on the floor={begFloor} now {lab.Current}/{lab.CurrentPose}");
 
             // Its plea as a subtitle at the bottom, with the speaker's name (Bruno, 2026-10-25).
-            Bark.Say(lab.gameObject, CivilianBrain.LineBeg);
+            string plea = BarkBook.Line(lab.gameObject, BarkSituation.Begs) ?? "";
+            Bark.Say(lab.gameObject, plea);
             yield return null;
             string subtitle = GlorifiedBody.Subtitles.SubtitleUI.Instance != null ? string.Join(" | ", GlorifiedBody.Subtitles.SubtitleUI.Instance.Shown) : "";
             if (GlorifiedBody.Subtitles.SubtitleUI.Instance != null)
                 yield return OverlayShot.Capture(GlorifiedBody.Subtitles.SubtitleUI.Instance.GetComponent<Canvas>(), "civ_08d_subtitle.png", 0.05f);
-            Record("civ_subtitle", subtitle.Contains("LAB WORKER: " + CivilianBrain.LineBeg), $"'{subtitle}'");
+            Record("civ_subtitle", plea.Length > 0 && subtitle.Contains("LAB WORKER: " + plea), $"'{subtitle}'");
 
             // The short near the nurse: the start freezes the game while Lucy shows pain, then each shock arcs to its
             // victim, zaps and stuns it (Bruno, 2026-10-25).

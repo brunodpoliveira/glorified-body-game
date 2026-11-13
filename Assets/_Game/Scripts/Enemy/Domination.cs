@@ -98,13 +98,7 @@ namespace GlorifiedBody.Enemy
         private const float SprintOver = 8f;     // m
         private const float SwitchReach = 1.2f;  // m
         public const float MarkOverHead = 2.25f, MarkOverArmour = 3f; // m over his feet
-        // The writer's lines (barks.csv, edgar_*), PROPOSED.
-        public static readonly string[] KneelFighterLines = { "My legs. What'd you do to my legs?", "Control, I'm down. I don't know why.", "I can't lift it. Somebody take the shot!", "That's not me. That's not me thinking that.", "It stopped hurting. Why'd it stop hurting?" };
-        public static readonly string[] KneelCivilianLines = { "I think it's a stroke. Somebody, it's a stroke.", "I'll do it. Whatever it is, you don't have to...", "I have two kids. I have... What are their names?", "It's going quiet. No. No, no, no.", "I was sheltering. I did what the card said." };
-        private static readonly string[] TakenLines = { "...Yes.", "I hear you.", "Tell me where.", "It doesn't hurt.", "There was something. ...It's gone." };
-        private static readonly string[] SentLines = { "Going.", "I know the way.", "You stay there. I'll get it.", "Back in five.", "Whatever you need." };
-        private static readonly string[] SeenLines = { "Hey! It's me! It's me, what are you doing?", "Check fire! Check your fire! You're hitting us!", "Control, one of ours is firing on us. One of ours.", "He's not answering. There's nobody in there.", "I can't. I can't shoot. We came in together." };
-        private static readonly string[] LetGoLines = { "It's back. Oh God, it's all back.", "What did I do? What did you make me do?", "I remember it. I remember all of it.", "How long was I gone? How long?", "Not again. Stay back. Not again!" };
+        // The writer's lines (barks.csv, BarkBook): the groups of the enemy column, "fighter", "civilian" and "any", PROPOSED.
         private const float KneelLineSeconds = 2.5f; // the writer: the kneel lines have the whole circle
 
         // The core's voice through her (DEMO_PLAN, annotated by Bruno 2026-11-07, round 49: "Lucy speaks after she takes a
@@ -112,21 +106,9 @@ namespace GlorifiedBody.Enemy
         // writer's lines (barks.csv, kind voice): the first three takes are Bruno's (CANON), the rest PROPOSED. No clip yet:
         // the subtitle alone (Voice.SayAs logs voice_missing).
         public const string CoreSpeaker = "VOICE";
-        public static readonly (string id, string text)[] CoreTakeLines =
-        {
-            ("edgar_voice_take_1", "You will obey!"), ("edgar_voice_take_2", "Suffer me now!"), ("edgar_voice_take_3", "My command is your wish!"),
-            ("edgar_voice_take_4", "Kneel. Good."), ("edgar_voice_take_5", "Your will is a small thing. Give it here."),
-            ("edgar_voice_take_6", "Hush. You are thinking again."), ("edgar_voice_take_7", "There. Is that not easier?"),
-            ("edgar_voice_take_8", "One. Two. Three. There."),
-        };
-        public static readonly (string id, string text)[] CoreSentLines =
-        {
-            ("edgar_voice_sent_1", "Walk. I did not say stop."), ("edgar_voice_sent_2", "Stand. You have work."), ("edgar_voice_sent_3", "Go on. You know the way."),
-        };
-        public static readonly (string id, string text)[] CoreSnapLines =
-        {
-            ("edgar_voice_snap_1", "Already? Weak."), ("edgar_voice_snap_2", "Keep it. You will bring it back."), ("edgar_voice_snap_3", "Run. I counted."),
-        };
+        public static (string id, string text)[] CoreTakeLines => BarkBook.Set("voice", BarkSituation.EdgarVoiceTake, "edgar_voice_take_");
+        public static (string id, string text)[] CoreSentLines => BarkBook.Set("voice", BarkSituation.EdgarVoiceSent, "edgar_voice_sent_");
+        public static (string id, string text)[] CoreSnapLines => BarkBook.Set("voice", BarkSituation.EdgarVoiceSnap, "edgar_voice_snap_");
         /// <summary>The core's lines said so far (the tests).</summary>
         public static int CoreLines { get; private set; }
         public static string LastCoreLine { get; private set; } = "";
@@ -134,6 +116,7 @@ namespace GlorifiedBody.Enemy
         /// <summary>The core speaks through her: one line of the set, as a subtitle under VOICE (and its clip, when it exists).</summary>
         public static void SayCore((string id, string text)[] set)
         {
+            if (set.Length == 0) return;
             (string id, string text) line = set[Random.Range(0, set.Length)];
             CoreLines++;
             LastCoreLine = line.text;
@@ -144,8 +127,8 @@ namespace GlorifiedBody.Enemy
         /// <summary>A figure goes down on its knees: its line (the armed say the fighter lines).</summary>
         public static void SayKneel(GameObject figure, bool fighter)
         {
-            string[] lines = fighter ? KneelFighterLines : KneelCivilianLines;
-            Bark.Say(figure, lines[Random.Range(0, lines.Length)], KneelLineSeconds);
+            if (fighter) BarkBook.SayAs(figure, "fighter", BarkSituation.EdgarKneelFighter, KneelLineSeconds);
+            else BarkBook.SayAs(figure, "civilian", BarkSituation.EdgarKneelCivilian, KneelLineSeconds);
         }
 
         private static float nextSeen;
@@ -155,7 +138,7 @@ namespace GlorifiedBody.Enemy
         {
             if (Time.time < nextSeen) return;
             nextSeen = Time.time + SeenGap;
-            Bark.Say(colleague, SeenLines[Random.Range(0, SeenLines.Length)], 2.5f);
+            BarkBook.SayAs(colleague, "fighter", BarkSituation.EdgarSeen, 2.5f);
         }
 
 
@@ -191,7 +174,7 @@ namespace GlorifiedBody.Enemy
             mind.TakeMind(this);
             Mark();
             SayCore(CoreTakeLines); // the core first, through her mouth
-            Bark.Say(gameObject, TakenLines[Random.Range(0, TakenLines.Length)], 2f);
+            BarkBook.SayAs(gameObject, "any", BarkSituation.EdgarTaken, 2f);
         }
 
         /// <summary>A small violet light over the head: her enemies wear no mark, and she must tell this one from them. PLACEHOLDER.</summary>
@@ -282,7 +265,7 @@ namespace GlorifiedBody.Enemy
             gameObject.AddComponent<MindSnapped>();
             mind.BeginKneel();
             SayCore(CoreSnapLines);
-            Bark.Say(gameObject, LetGoLines[Random.Range(0, LetGoLines.Length)], SnapKneelSeconds);
+            BarkBook.SayAs(gameObject, "any", BarkSituation.EdgarLetGo, SnapKneelSeconds);
             RunTelemetry.Event("dom_snap", name);
         }
 
@@ -303,7 +286,7 @@ namespace GlorifiedBody.Enemy
             if (health != null) health.OnDeath?.RemoveListener(OnDied);
             if (mark != null) Destroy(mark);
             mind.ReleaseMind();
-            Bark.Say(gameObject, LetGoLines[Random.Range(0, LetGoLines.Length)], 2.5f);
+            BarkBook.SayAs(gameObject, "any", BarkSituation.EdgarLetGo, 2.5f);
             RunTelemetry.Event("dom_let_go", name);
             Destroy(this);
         }
@@ -343,7 +326,7 @@ namespace GlorifiedBody.Enemy
             sentTo = best;
             body.MoveTo(best.Point, MoveSpeed.Run);
             SayCore(CoreSentLines);
-            Bark.Say(gameObject, SentLines[Random.Range(0, SentLines.Length)], 2f);
+            BarkBook.SayAs(gameObject, "any", BarkSituation.EdgarSent, 2f);
             nextFollow = Time.time + 0.5f;
             RunTelemetry.Event("dom_sent", best.name);
             return true;

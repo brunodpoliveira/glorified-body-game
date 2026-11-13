@@ -15,7 +15,8 @@ namespace GlorifiedBody.Interaction
     public sealed class CarrierTalk : Interactable
     {
         public const float Reach = 1.8f;
-        public const string LineGive = "Here. Take it. Now go, and you go round the chairs."; // the writer's line (barks.csv, "W11, gives the card when asked", PROPOSED)
+        /// <summary>The line when the room gives none: the ward sister's (barks.csv, "W11, gives the card when asked", BarkBook).</summary>
+        public static string LineGive => GlorifiedBody.Enemy.BarkBook.Scripted("ward sister", "W11, gives the card when asked");
 
         [Tooltip("He gives the item only when this flag is up (the scan C11 of the Hold, round 118). Before it he denies. Empty: he always gives.")]
         public string giveAfterFlag = "";

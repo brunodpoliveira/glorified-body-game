@@ -1181,10 +1181,10 @@ namespace GlorifiedBody.Tests.PlayMode
             lucy.GetComponentInChildren<Health>().SetInvulnerable(true);
             TankController tank = lucy.GetComponent<TankController>();
             SoldierBrain[] all = UnityEngine.Object.FindObjectsByType<SoldierBrain>(FindObjectsSortMode.None);
-            foreach ((string who, string[] lines, Vector3 start) in new[]
+            foreach ((string who, Vector3 start) in new[]
             {
-                ("Guard_A", SoldierBrain.GuardCowerLines, new Vector3(1.5f, 0f, 3f)),
-                ("Scientist_B", SoldierBrain.LabWorkerCowerLines, new Vector3(12.5f, 0f, 26f)), // the gallery H7 since the Hold (round 118)
+                ("Guard_A", new Vector3(1.5f, 0f, 3f)),
+                ("Scientist_B", new Vector3(12.5f, 0f, 26f)), // the gallery H7 since the Hold (round 118)
             })
             {
                 SoldierBrain figure = all.First(b => b.name == who);
@@ -1207,6 +1207,12 @@ namespace GlorifiedBody.Tests.PlayMode
                 bool startFar = Vector3.Distance(far, at) > 4.5f;
                 if (startFar) tank.Teleport(far, 180f);
                 yield return new WaitForSeconds(0.3f);
+                // The writer's "cower" rows of his personality (BarkBook, 2026-11-13): a guard who panics is broken (round 134).
+                BarkVoice voice = BarkVoice.Of(figure.gameObject);
+                if (who == "Guard_A") Assert.AreEqual(BarkVoice.Broken, voice.Personality, who + ": a guard who panics is broken");
+                List<BarkRow> rows = BarkBook.RowsFor(voice.Enemy, voice.Personality, BarkSituation.Cower);
+                string[] lines = rows.OrderByDescending(r => r.first).Select(r => r.line).ToArray();
+                Assert.IsTrue(rows.Any(r => r.first), who + ": a 'plays first' row for " + voice.Personality);
                 int before = Bark.CountOf(figure.gameObject);
                 if (startFar)
                 {

@@ -154,7 +154,7 @@ namespace GlorifiedBody.Editor.Demo
             DemoV2.Toilet(r, "Toilet_B", new Vector3(33.25f, 0f, -5.45f), Vector3.back, works: false);
             EnemySpawn clerk = r.Figure("Hider_Clerk", "labworker", new Vector3(31.75f, 0f, -5.6f), 0f, variant: 0);
             clerk.hides = true;
-            clerk.hideLine = "Occupied.";
+            clerk.hideLine = BarkBookSetup.Scripted("clerk", "G6, in a toilet stall, Lucy at the door", 0, "Occupied.");
             clerk.foundLine = "Please. Please don't.";
             EditorUtility.SetDirty(clerk);
             for (int i = 0; i < 3; i++) r.Prop($"Sink_{i}", new Vector3(29.3f + i * 1.6f, 0f, -8.6f), new Vector3(0.6f, 0.85f, 0.5f), 0.55f);
@@ -181,7 +181,7 @@ namespace GlorifiedBody.Editor.Demo
             {
                 EnemySpawn staff = r.Figure($"Hider_Staff_{i}", i == 0 ? "labworker" : "nurse", new Vector3(11.2f, 0f, -15.4f + i * 1.2f), 135f, variant: i + 1);
                 staff.hides = true;
-                staff.hideLine = CivilianBrain.LineBeg;
+                staff.hideLine = "Please. Please. I'm sheltering, I'm sheltering in place."; // not in barks.csv since round 135
                 staff.foundLine = "We're sheltering. We're only sheltering.";
                 EditorUtility.SetDirty(staff);
             }

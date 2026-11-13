@@ -68,7 +68,7 @@ namespace GlorifiedBody.Editor
             MenuLoopSetup.EnsureLucy(catalog, new Vector3(-7f, 0f, -4.5f), 45f);
             GameObject figures = MenuLoopSetup.EnsureRoot("[Enemies]");
             EnemySpawn patient = RoomKit.Spawn(figures, Patient, "patient", BedTop, 90f);
-            patient.line = PatientBrain.DefaultLine; // PLACEHOLDER: the writer's line
+            patient.line = ""; // the brain's own: the writer's "hears Lucy" row (BarkBook)
             EditorUtility.SetDirty(patient);
             EnemySpawn marta = RoomKit.Spawn(figures, Marta, "nurse", new Vector3(3f, 0f, 4.5f), 200f, variant: 0);
             marta.fate = Fate;
@@ -80,8 +80,8 @@ namespace GlorifiedBody.Editor
             // A hider (2026-10-31; the demo plan: the nurse in the W4 shower stall). The writer's lines (barks.csv).
             EnemySpawn hider = RoomKit.Spawn(figures, Hider, "nurse", HiderSpot, 45f, variant: 0);
             hider.hides = true;
-            hider.hideLine = "It is sown in weakness. It is raised in power. It is sown in weakness.";
-            hider.foundLine = "I'm not here. Please. I'm not here.";
+            hider.hideLine = BarkBookSetup.Scripted("nurse", "W4, hides in a shower stall, Lucy close", 0, "It is sown in weakness. It is raised in power. It is sown in weakness.");
+            hider.foundLine = BarkBookSetup.Scripted("nurse", "W4, found in the stall", 0, "I'm not here. Please. I'm not here.");
             EditorUtility.SetDirty(hider);
 
             // The game remembers: a mark on the north wall that shows only when Marta is dead. PLACEHOLDER.

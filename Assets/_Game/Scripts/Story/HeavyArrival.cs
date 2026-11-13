@@ -52,7 +52,9 @@ namespace GlorifiedBody.Story
             SoldierBrain armour = armourGroup != null ? armourGroup.GetComponentInChildren<SoldierBrain>() : null;
             if (armour != null)
             {
-                if (!string.IsNullOrEmpty(enterLine)) Bark.Say(armour.gameObject, enterLine, 2.6f);
+                // His own personality's "armour_enter" row (barks.csv, BarkBook), else the line the room gave.
+                if (!GlorifiedBody.Enemy.BarkBook.Say(armour.gameObject, GlorifiedBody.Enemy.BarkSituation.ArmourEnter, 2.6f) && !string.IsNullOrEmpty(enterLine))
+                    Bark.Say(armour.gameObject, enterLine, 2.6f);
                 armour.Alert("script", callOthers: false);
             }
             RunTelemetry.Event("armour_enter", armour != null ? armour.name : "none");

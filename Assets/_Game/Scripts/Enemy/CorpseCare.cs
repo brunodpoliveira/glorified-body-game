@@ -187,7 +187,7 @@ namespace GlorifiedBody.Enemy
             stepTimer = 8f;
             brain.Body.MoveTo(BodySide(), MoveSpeed.Run);
             RunTelemetry.Event("care_start", $"{name}>{body.name}");
-            if (brain.CareStartLine != null) Bark.Say(gameObject, brain.CareStartLine);
+            Bark.Say(gameObject, brain.CareStartLine); // read once: each read takes the next line (BarkBook)
             return true;
         }
 
@@ -370,7 +370,7 @@ namespace GlorifiedBody.Enemy
             stepTimer = dragDistance / dragSpeed + 3f;
             restrafeAt = 0f;
             RunTelemetry.Event("care_drag", $"{name}>{patient.name} to {dragTarget.x:0.0},{dragTarget.z:0.0}");
-            if (brain.DragLine != null) Bark.Say(gameObject, brain.DragLine);
+            Bark.Say(gameObject, brain.DragLine);
         }
 
         private void DragTick(float dt)
@@ -454,7 +454,7 @@ namespace GlorifiedBody.Enemy
                 kneel.Play(kneelClip, loop: true, fade: 0f, from: KneelFrom, length: KneelLength);
             }
             RunTelemetry.Event("care_cpr", $"{name}>{patient.name} dragged {Dragged:0.0} m");
-            if (brain.CprLine != null) Bark.Say(gameObject, brain.CprLine);
+            Bark.Say(gameObject, brain.CprLine);
         }
 
         /// <summary>Debug (F12): the care counts her as unseen, so a colleague tends a body in an open room (Bruno, 2026-10-24: "B9 is really hard to test").</summary>

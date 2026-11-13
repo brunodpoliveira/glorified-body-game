@@ -38,12 +38,8 @@ namespace GlorifiedBody.Enemy
     {
         public enum Phase { Idle, Wary, Flee, Cower, Beg, Care, Dead }
 
-        public const string LineBeg = "Please. Please. I'm sheltering, I'm sheltering in place.";
-        public const string LineRun = "Don't. Don't, don't, don't.";
-        public const string LineCower = "I didn't see anything. I didn't see anything.";
-        public const string LineBack = "Okay. Okay. I'm going back to my station. I'm going.";
-        public const string LineNurseBack = "Nobody's angry with you. You're a little confused, that's all.";
-        public const string LineKillSeen = "Oh God. Oh God, she's killing people!";
+        // The lines are the writer's rows of its voice (barks.csv, BarkBook, 2026-11-13): a nurse says the nurse rows, a lab
+        // worker the labworker rows of its personality (GAME_NOTES.md: the unarmed staff use the nurse and labworker rows).
 
         [SerializeField] private bool nurse;
         [Tooltip("A hider (the demo plan: the nurse in the W4 shower stall, the technician behind the W8 chair, the clerk in " +
@@ -272,14 +268,15 @@ namespace GlorifiedBody.Enemy
             if (Panicked || Current == Phase.Dead || body == null || Passive) return;
             Panicked = true; // before the alert: an idle one runs at once, it does not back away first
             PanicReason = reason;
-            panicLine = LineKillSeen;
+            panicLine = BarkSituation.Shock; // the first run after a kill: "shock"
             bool wasAlerted = Alerted;
             Alert(reason, callOthers: false);
             if (!Alerted) { Panicked = false; return; }
             RunTelemetry.Event("civilian_panic", $"{name}:{reason}");
             if (wasAlerted && !suspended && Current != Phase.Care) Flee();
         }
-        private string panicLine = LineRun;
+        private string panicLine = BarkSituation.Retreats;
+        private bool sawHer;
 
         /// <summary>A death it saw (EnemyMorale): an unarmed civilian's fear limit is 0, so it always panics.</summary>
         public void Retreat(string reason) { if (Mind == null) Panic(reason); }
@@ -342,6 +339,7 @@ namespace GlorifiedBody.Enemy
         {
             if (health.IsDead) return;
             if (Mind != null) return;
+            BarkVoice.Of(gameObject)?.SayNow(BarkSituation.Hit, 4f); // a nurse has no "hit" rows: no line
             Alert("hurt", callOthers: true); // a hurt alerts it; only a kill makes it run (Bruno, 2026-10-25)
         }
 
@@ -376,9 +374,10 @@ namespace GlorifiedBody.Enemy
         public bool CanCare => Mind == null && !kneeling && Current != Phase.Dead && Current != Phase.Beg && Current != Phase.Care && !suspended && body != null;
         public bool CareIgnoresHer => nurse;
         // The care barks (barks.csv, the writer, 2026-10-25). The lab worker has no drag line, and no collar (Bruno).
-        public string CareStartLine => nurse ? "Don't move. Don't try to move, I'm coming." : "Is she gone? Okay. Hey. Hey. Can you hear me?";
-        public string DragLine => nurse ? "I've got you. Nearly there. Nearly there." : null;
-        public string CprLine => nurse ? "Come on. Breathe for me. I'm not done with you." : "How hard do I push? How hard do I push?";
+        // The care barks (BarkBook): the nurse "goes to a body", the lab worker "starts the care"; both drag and do the CPR.
+        public string CareStartLine => BarkBook.Line(gameObject, BarkSituation.StartsCare);
+        public string DragLine => BarkBook.Line(gameObject, BarkSituation.Drags);
+        public string CprLine => BarkBook.Line(gameObject, BarkSituation.Cpr);
 
         public bool TryBeginCare()
         {
@@ -411,7 +410,11 @@ namespace GlorifiedBody.Enemy
             SetPose(Pose.Controller);
             body.Crouch(false);
             tremble.Amount = waryTremble;
-            Bark.Say(gameObject, nurse ? LineNurseBack : LineBack);
+            // The first sight: one who bargains talks to Ghost (round 133), the others say "spots Lucy" (a nurse: "backs away slowly").
+            BarkVoice voice = BarkVoice.Of(gameObject);
+            bool ghost = !sawHer && voice != null && voice.Personality == BarkVoice.Bargaining && BarkBook.Say(gameObject, BarkSituation.TalksToGhost, 2.6f);
+            if (!ghost) BarkBook.Say(gameObject, BarkSituation.SpotsLucy, 2.2f);
+            sawHer = true;
             RunTelemetry.Event("civilian_wary", name);
         }
 
@@ -429,7 +432,7 @@ namespace GlorifiedBody.Enemy
                 body.MoveTo(Spot, MoveSpeed.Sprint);
                 timer = fleeSeconds + 4f;
                 if (escapeLines.Length > 0) Bark.Say(gameObject, escapeLines[0], 2.2f);
-                panicLine = LineRun;
+                panicLine = BarkSituation.Retreats;
                 RunTelemetry.Event("civilian_flee", $"{name} to the fixed spot {Spot.x:0.0},{Spot.z:0.0}");
                 return;
             }
@@ -445,8 +448,8 @@ namespace GlorifiedBody.Enemy
             body.Crouch(false);
             body.MoveTo(Spot, MoveSpeed.Sprint);
             timer = fleeSeconds;
-            Bark.Say(gameObject, panicLine); // the first run after a kill: the kill line, then the run line
-            panicLine = LineRun;
+            BarkBook.Say(gameObject, panicLine); // the first run after a kill: "shock", then "retreats, fear at the limit"
+            panicLine = BarkSituation.Retreats;
             RunTelemetry.Event("civilian_flee", $"{name} to {Spot.x:0.0},{Spot.z:0.0}");
         }
 
@@ -461,7 +464,7 @@ namespace GlorifiedBody.Enemy
             if (!leaning) SetPose(variant == 0 ? Pose.Crouch : variant == 3 ? Pose.Shake : Pose.Hug);
             body.Crouch(CurrentPose == Pose.Crouch);
             if (escapeRun && escapeLines.Length > 1 && !escapeCowered) Bark.Say(gameObject, escapeLines[1], 2.4f);
-            else Bark.Say(gameObject, LineCower);
+            else BarkBook.Say(gameObject, BarkSituation.Cower);
             if (escapeRun && !escapeCowered && !string.IsNullOrEmpty(escapeCowerFlag)) GlorifiedBody.Saving.StoryFlags.Raise(escapeCowerFlag);
             if (escapeRun) escapeCowered = true;
             RunTelemetry.Event("civilian_cower", name);
@@ -478,7 +481,7 @@ namespace GlorifiedBody.Enemy
             else SetPose(Pose.Crouch);
             body.Crouch(CurrentPose == Pose.Crouch);
             tremble.Amount = 1f;
-            Bark.Say(gameObject, LineBeg);
+            BarkBook.Say(gameObject, BarkSituation.Begs, begBarkSeconds);
             nextBark = Time.time + begBarkSeconds;
             RunTelemetry.Event("civilian_beg", $"{name}:{why}");
         }
@@ -573,7 +576,7 @@ namespace GlorifiedBody.Enemy
                     }
                     else if (Time.time >= nextBark)
                     {
-                        Bark.Say(gameObject, LineBeg);
+                        BarkBook.Say(gameObject, BarkSituation.Begs, begBarkSeconds);
                         nextBark = Time.time + begBarkSeconds;
                     }
                     break;

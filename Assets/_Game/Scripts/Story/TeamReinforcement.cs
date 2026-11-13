@@ -86,7 +86,7 @@ namespace GlorifiedBody.Story
             if (brains.Length == 0) return;
             toldGroup = true;
             foreach (SoldierBrain brain in brains) Tell(brain);
-            if (brains[0].Current != SoldierBrain.Phase.Dead) Bark.Say(brains[0].gameObject, FireTeam.ReinforceLines[Random.Range(0, FireTeam.ReinforceLines.Length)], 2f);
+            if (brains[0].Current != SoldierBrain.Phase.Dead) BarkBook.Say(brains[0].gameObject, BarkSituation.TeamSecond, 2f);
         }
 
         private static void Tell(SoldierBrain brain)

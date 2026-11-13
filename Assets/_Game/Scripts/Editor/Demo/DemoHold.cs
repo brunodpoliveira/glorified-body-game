@@ -557,20 +557,30 @@ namespace GlorifiedBody.Editor.Demo
 
         // ── The writer's barks ────────────────────────────────────────
 
-        private static Dictionary<string, string> barks;
-
-        /// <summary>A line of game/barks.csv by its situation id (h2_runner_1 ...). Missing: a PLACEHOLDER with the id.</summary>
+        /// <summary>
+        /// A scripted line of game/barks.csv by its old id (h2_runner_1 ...). Since round 135 the file has no ids: the id names an
+        /// enemy, a situation and the place of the row in it (BarkBookSetup.Scripted). Missing: a PLACEHOLDER with the id.
+        /// </summary>
         public static string Bark(string id)
         {
-            if (barks == null)
+            switch (id)
             {
-                barks = new Dictionary<string, string>();
-                string path = System.IO.Path.GetFullPath(DemoScripts.WriterGame + "/barks.csv");
-                if (System.IO.File.Exists(path))
-                    foreach (string[] row in DeathScreenSetup.ReadCsv(System.IO.File.ReadAllText(path)))
-                        if (row.Length >= 3 && !barks.ContainsKey(row[1].Trim())) barks[row[1].Trim()] = row[2].Trim();
+                case "h2_runner_1": return BarkBookSetup.Scripted("labworker", "h2: runner", 0, "PLACEHOLDER " + id);
+                case "h2_runner_2": return BarkBookSetup.Scripted("labworker", "h2: runner", 1, "PLACEHOLDER " + id);
+                case "h2_deny_card": return BarkBookSetup.Scripted("labworker", "h2_deny_card", 0, "PLACEHOLDER " + id);
+                case "h2_give_card": return BarkBookSetup.Scripted("labworker", "h2_give_card", 0, "PLACEHOLDER " + id);
+                case "h3_deny_card": return BarkBookSetup.Scripted("guard", "h3_deny_card", 0, "PLACEHOLDER " + id);
+                case "h3_enter": return BarkBookSetup.Scripted("guard", "h3_enter", 0, "PLACEHOLDER " + id);
+                case "h4_booth_1": return BarkBookSetup.Scripted("nurse", "h4: booth", 0, "PLACEHOLDER " + id);
+                case "h4_booth_2": return BarkBookSetup.Scripted("nurse", "h4: booth", 1, "PLACEHOLDER " + id);
+                case "h4_ask_card": return BarkBookSetup.Scripted("nurse", "h4_ask_card", 0, "PLACEHOLDER " + id);
+                // Round 135 cut the squad leader's call with the old generic rows (old_generic_rows.md, row 124), but the README
+                // of barks_v2 keeps it: a question for the writer. Until then the old line of rounds 124 and 125.
+                case "armour_call": return BarkBookSetup.Scripted("soldier", "armour_call", 0, "We're at half! Send the heavy out! Send it now!");
+                // The armour's first row; in play HeavyArrival takes a row of his own personality.
+                case "armour_enter": return BarkBookSetup.Scripted("armour", "armour_enter", 0, "PLACEHOLDER " + id);
+                default: return "PLACEHOLDER " + id;
             }
-            return barks.TryGetValue(id, out string line) ? line : "PLACEHOLDER " + id;
         }
     }
 }

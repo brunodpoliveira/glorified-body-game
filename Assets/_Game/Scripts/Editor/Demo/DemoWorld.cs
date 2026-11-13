@@ -40,6 +40,7 @@ namespace GlorifiedBody.Editor.Demo
         public static void BuildAll()
         {
             Directory.CreateDirectory(DemoRoom.Folder);
+            BarkBookSetup.Build(); // the writer's barks into Resources (the figures read them in play)
             GlorifiedBody.Editor.Destruction.BreakableAssets.EnsureAll();
             Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             CharacterCatalog catalog = MenuLoopSetup.LoadCatalog();

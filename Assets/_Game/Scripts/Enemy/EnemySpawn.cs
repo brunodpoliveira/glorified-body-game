@@ -84,6 +84,7 @@ namespace GlorifiedBody.Enemy
             figure.name = figureName;
             figure.transform.SetSiblingIndex(transform.GetSiblingIndex());
             if (variant >= 0 && figure.TryGetComponent(out CivilianBrain civilian)) civilian.SetVariant(variant);
+            BarkVoice.Of(figure); // its personality for the night, from the room it spawns in (rounds 133 and 134)
             if (drop != null) figure.AddComponent<GlorifiedBody.Interaction.ItemCarrier>().Bind(drop);
             // Bruno, 2026-11-02: she can also ask an unarmed civilian for the item.
             if (drop != null && figure.GetComponent<CivilianBrain>() != null)
