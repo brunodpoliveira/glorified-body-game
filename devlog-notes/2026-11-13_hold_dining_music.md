@@ -70,7 +70,7 @@ On a corkboard on the east wall of G11, by the union letter L14 on the fridge (L
 with the plan's words). The text of L37 is the plan's row, in the order of the board: the notice over the sheet,
 then the sheet, then the hand lines.
 
-## 5. The music: the state switch BUILT (placeholder audio)
+## 5. The music: the state switch BUILT (placeholder audio; the ledger now calls the music round 126)
 
 1. The music director already had the three states: Ambient (exploration), Tension (search: an alerted soldier
    hunts her, no gun aims), Combat (a gun aims, or a hit in the last 8 s). The set piece of G18 keeps its own track
@@ -79,3 +79,25 @@ then the sheet, then the hand lines.
    the sample of the old one. The crossfade keeps the beat (`MusicDirector.SamePiece`, `Locks`).
 3. The placeholders are the T41 study loops (`complex/state_*_loop.wav`, 34.3 s each, the same length):
    `tools/music_states_placeholder.sh`. They are studies, not the final track.
+
+## 6. The scope of the search music (Bruno, the same day): FIXED
+
+Bruno: "have the game agent fix the search scope to the room", then "how about it being on the room and the
+attached room? like if lucy is a room right next to where they're searching the song changes and the player has
+time to strategize".
+
+1. The fact check (`MusicScopeTests`, before the fix): one alerted soldier of G2 hunts, his gun off. Lucy in W6, on
+   the other floor: the music was Tension. `MusicDirector.Decide` counted every alerted soldier of the world scene,
+   and `Alerted` never goes back to false.
+2. The fix: `MusicDirector.InSearchScope`. A hunter counts in her room and in every room that shares a doorway with
+   it (`Room.neighbours`, from the exits; a locked or jammed door still joins two rooms). Two doors away does not
+   count. A scene with no rooms (the test rooms) counts every hunter. Combat does not change (an aim, a hit).
+3. The test picks the rooms from where the hunter stands: the other floor and two doors away give Ambient, the room
+   next door gives Tension.
+
+## 7. A finding for Bruno: the hall's six hear the concourse
+
+The DemoTests cover test of G2 failed after the Dining Hall change: in 40 s no man of G2 took cover (3 runs). With
+the hall's squad switched off, one ducks after 3.7 s. The six of G18 hear the G2 fight through the glass doors
+(a shot or an alert within 25 m), and they join it from their post. The test now leaves the hall's squad out. OPEN:
+should the hall's squad hear a fight in G2?

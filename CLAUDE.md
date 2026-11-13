@@ -618,7 +618,7 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   `power_armour_guns` steps out (`Story/HeavyArrival`; the sweep laser, 12 rounds). G11: L14 and L37. THE MUSIC: two
   states of one piece keep the sample (`MusicDirector.SamePiece`); placeholders from T41
   (`tools/music_states_placeholder.sh`). AFTER A VENDOR IMPORT: `BuildEnemyPrefabs` makes 15 kinds now. Tests:
-  `HoldTests` (13), `DiningHallTests` (3). The brain row of the writer's `death_screens.csv` is cut (unquoted commas):
+  `HoldTests` (13), `DiningHallTests` (3). The search music counts hunters in her room and the rooms next door only (`MusicDirector.InSearchScope`, `MusicScopeTests`). The brain row of the writer's `death_screens.csv` is cut (unquoted commas):
   the writer quoted it the same day (63 of 63 EditMode). Numbers PROPOSED.
 
 ## Rules

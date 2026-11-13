@@ -14,7 +14,7 @@ namespace GlorifiedBody.Audio
     /// The music (Bruno, 2026-10-26: "music for combat, tension, ambient for sectors/environments, and placeholders in
     /// case there's a gap"). One director for the whole game, so the music runs on through a door.
     /// - The state: Combat while an enemy aims at her, or for CombatHoldSeconds after a hit from her or on her.
-    ///   Tension while an armed enemy in the room hunts her (alerted, alive, not in retreat). Else Ambient. Menu on
+    ///   Tension while an armed enemy in her room or a room next door hunts her (alerted, alive, not in retreat). Else Ambient. Menu on
     ///   the main menu, Silent on the death screen (the sting plays) and for a cutscene (Hold).
     /// - The track: Resources/Audio/Music/&lt;room key&gt;/&lt;state&gt;, the room key from a RoomMusic in the scene (a
     ///   sector name) or the scene name. A gap takes Resources/Audio/Music/_placeholder/&lt;state&gt; and logs once.
@@ -219,9 +219,11 @@ namespace GlorifiedBody.Audio
             {
                 nextHuntCheck = Time.unscaledTime + HuntCheckSeconds;
                 hunting = false;
+                GlorifiedBody.Rooms.Room here = GlorifiedBody.Rooms.RoomTracker.Current;
                 foreach (SoldierBrain brain in FindObjectsByType<SoldierBrain>(FindObjectsSortMode.None))
                 {
                     if (!brain.Alerted) continue;
+                    if (!InSearchScope(brain.transform.position, here)) continue;
                     SoldierBrain.Phase p = brain.Current;
                     if (p == SoldierBrain.Phase.Dead || p == SoldierBrain.Phase.Retreat || p == SoldierBrain.Phase.Cower) continue;
                     hunting = true;
@@ -229,6 +231,20 @@ namespace GlorifiedBody.Audio
                 }
             }
             return hunting ? MusicState.Tension : MusicState.Ambient;
+        }
+
+        /// <summary>
+        /// The scope of the search (Bruno, 2026-11-13: "how about it being on the room and the attached room? like if lucy is
+        /// a room right next to where they're searching the song changes and the player has time to strategize"): a hunter
+        /// counts in her room and in every room that shares a doorway with it (Room.neighbours, from the exits: a locked or
+        /// jammed door still joins two rooms). A hunter two doors away does not. A hunter in no room (a doorway line)
+        /// counts. A scene with no rooms (the test rooms): every hunter counts. Combat does not change: an aim or a hit.
+        /// </summary>
+        public static bool InSearchScope(Vector3 hunter, GlorifiedBody.Rooms.Room here)
+        {
+            if (here == null) return true;
+            GlorifiedBody.Rooms.Room at = GlorifiedBody.Rooms.Room.At(hunter + Vector3.up * 0.1f);
+            return at == null || at == here || here.IsNeighbour(at.id);
         }
 
         /// <summary>The clip of the room for the name, else the placeholder (logged once).</summary>
@@ -245,7 +261,7 @@ namespace GlorifiedBody.Audio
         }
 
         /// <summary>
-        /// One piece with three states (rounds 119 and 123, CANON: exploration, search and combat are cut from the same
+        /// One piece with three states (rounds 119 and 126, CANON: exploration, search and combat are cut from the same
         /// audio, so they lock by construction and the game can switch on any beat). Ambient is exploration, Tension is
         /// search (a squad hunts her, no fight yet), Combat is combat. When the old and the new clip are two states of one
         /// piece (the same length in samples), the new one starts at the old one's sample: the crossfade keeps the beat.
