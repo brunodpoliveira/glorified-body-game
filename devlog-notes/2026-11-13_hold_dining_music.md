@@ -101,3 +101,24 @@ The DemoTests cover test of G2 failed after the Dining Hall change: in 40 s no m
 the hall's squad switched off, one ducks after 3.7 s. The six of G18 hear the G2 fight through the glass doors
 (a shot or an alert within 25 m), and they join it from their post. The test now leaves the hall's squad out. OPEN:
 should the hall's squad hear a fight in G2?
+
+## Proof (2026-11-13)
+
+1. EditMode: 63 of 63, after the writer quoted the brain row and `DeathScreenSetup.Build` ran.
+2. PlayMode, the 13 classes of the change (HoldTests, DiningHallTests, DemoTests, FloorplanV2Tests, SoundSystemTests,
+   DummyShooterTests, CivilianTests, DeathScreenTests, EnemyAiTests, ArmedCivilianTests, WardTests, DoorTests,
+   MapTests): 176 of 181. The five red, and the fix of each:
+   - R1: the frame empties the EDGAR bar too; the test helper now refills all four bars once.
+   - The forward post: the music director takes the score in its next Update; the test waits for it.
+   - The sight test: a camera of H6 saw over the 3 m tube doorway; the tube doorways are 2.9 m now.
+   - The coverage test: the talk camera of H2 is on the south wall, its zone leaves the south strip to the cells.
+   - The cover test of G2: the hall's squad is out of it (section 7).
+   The five pass in the reruns. The whole set did not run again after the fixes.
+3. The music: `MusicScopeTests` 1 of 1; `SoundSystemTests`, the hunting test of `EnemyAiTests` and the lock test of
+   `HoldTests`: 9 of 9.
+4. The demo bot (`play Demo Main_Menu demo 1200`): 242 of 242 steps, 55 rooms, 0 missing figures. The shots of the
+   Hold: `~/MEGA/glorified-body-renders/game/hold_2026-11-13/`.
+5. The release build for Linux: `builds/release_linux/TheGlorifiedBody.x86_64` (441 MB), zip
+   `builds/the_glorified_body_linux.zip`. Every player build failed since T38 (an editor-only light property in
+   `ArkhamDirector`); fixed.
+6. A look item seen in the shots: in the frame the cage and the straps stand a little off her head and body.
