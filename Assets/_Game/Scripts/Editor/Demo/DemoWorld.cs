@@ -54,7 +54,7 @@ namespace GlorifiedBody.Editor.Demo
             sun.transform.rotation = Quaternion.Euler(55f, 30f, 0f);
             var world = new GameObject("[World]");
             world.AddComponent<RoomTracker>();
-            DemoRoom.Lucy = MenuLoopSetup.EnsureLucy(catalog, Vector3.zero, 0f); // the W1 dressing puts her on her bed
+            DemoRoom.Lucy = MenuLoopSetup.EnsureLucy(catalog, Vector3.zero, 0f); // the H1 dressing puts her in the frame (the Hold, 2026-11-13)
 
             List<RoomSpec> ward = DemoWard.Rooms(), floor1 = DemoPublic.Rooms();
             var ledger = new WallLedger(ward.Concat(floor1).ToList());
@@ -71,10 +71,11 @@ namespace GlorifiedBody.Editor.Demo
             Reinforcement(rooms);
             DemoBrain.Wire(rooms); // the brain fight of B1 (2026-11-09)
             DemoDark.Wire(rooms);  // the dark room of G9 and G9b (2026-11-09)
+            DemoHold.Wire(rooms);  // the Hold (2026-11-13): the guards of H3, the black hall
 
             GameObject director = MenuLoopSetup.EnsureChild(world, "[CameraDirector]");
-            MenuLoopSetup.EnsureComponent<FixedCameraDirector>(director).SetDefaultCamera(rooms["W1"].Cameras[0]);
-            Room w1 = world.transform.Find("[W1]").GetComponent<Room>();
+            MenuLoopSetup.EnsureComponent<FixedCameraDirector>(director).SetDefaultCamera(rooms["H1"].Cameras[0]);
+            Room w1 = world.transform.Find("[H1]").GetComponent<Room>();
             MenuLoopSetup.EnsureCamera(w1.Centre + new Vector3(0f, 3f, -4f), w1.Centre, 60f);
             RoomKit.BakeNavMesh(world, NavPath);
             MenuLoopSetup.EnsureGameplaySystems();

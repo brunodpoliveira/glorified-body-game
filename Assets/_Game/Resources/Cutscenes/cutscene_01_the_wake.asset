@@ -62,12 +62,30 @@ MonoBehaviour:
   - still: {fileID: 2800000, guid: ac9c33c1e928167c79fe8e580e38f6ef, type: 3}
     video: {fileID: 0}
     sound: {fileID: 0}
-    seconds: 2.4650002
+    seconds: 4.225
     panFrom: {x: 0, y: 0, z: 1}
     panTo: {x: 0, y: 0, z: 1}
     speaker: STEVENS
     lineId: cs01_04
-    text: The screen by the door.
+    text: I can't open that frame from here. Nobody can, tonight.
+  - still: {fileID: 2800000, guid: ac9c33c1e928167c79fe8e580e38f6ef, type: 3}
+    video: {fileID: 0}
+    sound: {fileID: 0}
+    seconds: 2
+    panFrom: {x: 0, y: 0, z: 1}
+    panTo: {x: 0, y: 0, z: 1}
+    speaker: STEVENS
+    lineId: cs01_05
+    text: You can.
+  - still: {fileID: 2800000, guid: ac9c33c1e928167c79fe8e580e38f6ef, type: 3}
+    video: {fileID: 0}
+    sound: {fileID: 0}
+    seconds: 5.05
+    panFrom: {x: 0, y: 0, z: 1}
+    panTo: {x: 0, y: 0, z: 1}
+    speaker: STEVENS
+    lineId: cs01_06
+    text: When you're out, there's an office. There's a printer. Take the sheet.
   - still: {fileID: 2800000, guid: ac9c33c1e928167c79fe8e580e38f6ef, type: 3}
     video: {fileID: 0}
     sound: {fileID: 0}
@@ -75,18 +93,9 @@ MonoBehaviour:
     panFrom: {x: 0, y: 0, z: 1}
     panTo: {x: 0, y: 0, z: 1}
     speaker: STEVENS
-    lineId: cs01_05
+    lineId: cs01_07
     text: The part in red. Nobody's finished it. There are no cameras in there. I'll
       make sure it's empty.
-  - still: {fileID: 2800000, guid: ac9c33c1e928167c79fe8e580e38f6ef, type: 3}
-    video: {fileID: 0}
-    sound: {fileID: 0}
-    seconds: 2.025
-    panFrom: {x: 0, y: 0, z: 1}
-    panTo: {x: 0, y: 0, z: 1}
-    speaker: STEVENS
-    lineId: cs01_06
-    text: Take the sheet.
   - still: {fileID: 2800000, guid: ac9c33c1e928167c79fe8e580e38f6ef, type: 3}
     video: {fileID: 0}
     sound: {fileID: 0}
@@ -94,7 +103,7 @@ MonoBehaviour:
     panFrom: {x: 0, y: 0, z: 1}
     panTo: {x: 0, y: 0, z: 1}
     speaker: STEVENS
-    lineId: cs01_07
+    lineId: cs01_08
     text: I can't walk you there. You'll have to find your own way.
   music: {fileID: 0}
   doneFlag: 

@@ -1,0 +1,46 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4b009882ac86ab7df88ae9f6a98ca8d5, type: 3}
+  m_Name: cutscene_l36_incident_tape
+  m_EditorClassIdentifier: Assembly-CSharp::GlorifiedBody.Story.CutsceneAsset
+  cutsceneId: l36_incident_tape
+  shots:
+  - still: {fileID: 2800000, guid: ac9c33c1e928167c79fe8e580e38f6ef, type: 3}
+    video: {fileID: 0}
+    sound: {fileID: 0}
+    seconds: 3.895
+    panFrom: {x: 0, y: 0, z: 1}
+    panTo: {x: 0, y: 0, z: 1}
+    speaker: TAPE
+    lineId: l36_00
+    text: INCIDENT 0612. SUBJECT V3. WARD ROOM 4. CAMERA 2.
+  - still: {fileID: 2800000, guid: ac9c33c1e928167c79fe8e580e38f6ef, type: 3}
+    video: {fileID: 0}
+    sound: {fileID: 0}
+    seconds: 2.41
+    panFrom: {x: 0, y: 0, z: 1}
+    panTo: {x: 0, y: 0, z: 1}
+    speaker: ORDERLY
+    lineId: l36_01
+    text: Morning. It's only me.
+  - still: {fileID: 2800000, guid: ac9c33c1e928167c79fe8e580e38f6ef, type: 3}
+    video: {fileID: 0}
+    sound: {fileID: 0}
+    seconds: 5.435
+    panFrom: {x: 0, y: 0, z: 1}
+    panTo: {x: 0, y: 0, z: 1}
+    speaker: TAPE
+    lineId: l36_02
+    text: SUBJECT RESTRAINED 06:41. TRANSFER TO THE HOLD AUTHORISED. NEVER ENTER
+      ALONE.
+  music: {fileID: 0}
+  doneFlag: 

@@ -177,6 +177,27 @@ namespace GlorifiedBody.Editor.Demo
         /// <summary>L27 on a monitor of G13 that a clerk left when she ran.</summary>
         public static void G13Email(DemoRoom r) => r.Item("L27_Reply_All", L27(), new Vector3(10.6f, 0.92f, -3.86f), new Vector3(0.34f, 0.24f, 0.01f));
 
+        /// <summary>L14, the union letter (DEMO_PLAN §8): on the fridge of G11, a copy a guard kept. The plan's words, PROPOSED.</summary>
+        public static ItemDefinition L14() => DemoItems.Log("l14_union_letter", "A UNION LETTER",
+            "Commissioner: My members did not sign up to carry grenade launchers. You bought them after the tower fire, when the ladders stopped at the ninth floor and nobody could get up the stairs. Fine. It worked that night. Since then the papers call us the army, the police ask to borrow them, and a probationer put a canister through a window with a family behind it. No other department in the country does this. Take them back. The union.");
+
+        /// <summary>
+        /// L37, the union sign-up sheet (round 119, CANON: the union angle; DEMO_PLAN §8, the words PROPOSED): on the
+        /// corkboard of G11 by the union letter L14, the executive notice pinned over it.
+        /// </summary>
+        public static ItemDefinition L37() => DemoItems.Log("l37_union_sheet", "A SIGN-UP SHEET",
+            "Pinned over it: A MESSAGE FROM THE EXECUTIVE OFFICE. WE VALUE DIRECT CONVERSATION WITH EVERY MEMBER OF OUR FAMILY. OUR DOOR IS OPEN. NO THIRD PARTY KNOWS YOUR WORK AS WE DO.\n\n" +
+            "Under it: STAFF OF THE MEMORIAL. YOU HAVE THE RIGHT TO ASK FOR A VOTE. SIGN HERE. Thirty-one names. Four are crossed out.\n\n" +
+            "By hand: Christmas was the last straw.\nA union won't get you Christmas. Talk to HR, they listened about the parking.\nHR works for them.");
+
+        /// <summary>L14 on the fridge, L37 on the corkboard of the east wall (round 119).</summary>
+        public static void G11Union(DemoRoom r)
+        {
+            r.Item("L14_Union_Letter", L14(), new Vector3(5.3f, 1.3f, -16.97f), new Vector3(0.21f, 0.28f, 0.01f));
+            r.Box(r.Props, "Corkboard", new Vector3(5.84f, 1.4f, -17.75f), new Vector3(0.03f, 0.6f, 0.8f), DemoRoom.Colour("cork", new Color(0.6f, 0.45f, 0.3f)));
+            r.Item("L37_Union_Sheet", L37(), new Vector3(5.81f, 1.4f, -17.75f), new Vector3(0.01f, 0.3f, 0.22f));
+        }
+
         /// <summary>L28 taped to the lockers of G11.</summary>
         public static void G11Flyer(DemoRoom r) => r.Item("L28_Law_Flyer", L28(), new Vector3(-1.33f, 1.3f, -20.2f), new Vector3(0.01f, 0.28f, 0.21f));
 

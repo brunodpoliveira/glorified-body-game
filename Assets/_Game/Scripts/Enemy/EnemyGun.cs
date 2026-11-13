@@ -542,7 +542,7 @@ namespace GlorifiedBody.Enemy
             AimClicks++;
             ShotEffects fx = ShotEffects.Load();
             AudioClip aim = fx == null ? null
-                : shooter.WeaponKind == DummyShooter.Weapon.Rifle && fx.rifleAimClip != null ? fx.rifleAimClip
+                : (shooter.WeaponKind == DummyShooter.Weapon.Rifle || shooter.WeaponKind == DummyShooter.Weapon.ArmourGuns) && fx.rifleAimClip != null ? fx.rifleAimClip
                 : shooter.WeaponKind != DummyShooter.Weapon.Pistol && fx.launcherAimClip != null ? fx.launcherAimClip
                 : fx.aimClip;
             if (source != null && aim != null) source.PlayOneShot(aim, 0.7f);
@@ -576,7 +576,7 @@ namespace GlorifiedBody.Enemy
             AudioClip[] set = fx == null ? null
                 : shooter.CurrentAttack == DummyShooter.Attack.Rocket && fx.rocketFireClips != null && fx.rocketFireClips.Length > 0 ? fx.rocketFireClips
                 : DummyShooter.IsLobbed(shooter.CurrentAttack) && fx.launcherFireClips != null && fx.launcherFireClips.Length > 0 ? fx.launcherFireClips
-                : shooter.WeaponKind == DummyShooter.Weapon.Rifle && fx.rifleFireClips != null && fx.rifleFireClips.Length > 0 ? fx.rifleFireClips
+                : (shooter.WeaponKind == DummyShooter.Weapon.Rifle || shooter.WeaponKind == DummyShooter.Weapon.ArmourGuns) && fx.rifleFireClips != null && fx.rifleFireClips.Length > 0 ? fx.rifleFireClips
                 : fx.fireClips;
             if (source != null && set != null && set.Length > 0)
             {

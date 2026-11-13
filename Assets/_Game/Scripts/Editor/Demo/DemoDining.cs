@@ -24,6 +24,7 @@ namespace GlorifiedBody.Editor.Demo
         public const string DutyKeyId = "duty_key";
         public const string DutyKeyTaken = "demo_duty_key_taken";
         public const string TeamGroup = "Hall_Team";
+        public const string ArmourFlag = "demo_g18_armour";
 
         public static List<RoomSpec> Rooms() => new List<RoomSpec>
         {
@@ -70,20 +71,40 @@ namespace GlorifiedBody.Editor.Demo
             r.Sign("Sign_Lodge", "THE LODGE. FOR THE FAMILIES OF OUR PATIENTS, AND FOR OUR GUESTS. THE CITY IS AN HOUR AWAY. STAY CLOSE TO THEM.", new Vector3(44f, 2.85f, 9.83f), Vector3.back, new Vector2(2.6f, 0.4f), 22);
             r.Sign("Sign_Lodge_Closed", "LODGE CLOSED. GUESTS: STAY IN YOUR ROOMS. A MEMBER OF STAFF WILL COME TO YOU.", new Vector3(44f, 1.5f, 9.8f), Vector3.back, new Vector2(0.8f, 0.35f), 16);
 
-            // The second fireteam (round 62): its forward post, the lodge door behind it. Ortiz and Brandt, and two more.
+            // The second squad (rounds 62 and 122, CANON): six soldiers, two sets of a shield, a grenadier and a shotgunner, at
+            // their forward post, the lodge door behind them. Ortiz, Brandt and four more (the names PROPOSED).
             GameObject team = MenuLoopSetup.EnsureChild(r.Figures, TeamGroup);
             foreach ((string name, string kind, Vector3 at) in new[]
             {
-                ("Ortiz", "soldier_rifle", new Vector3(40.4f, 0f, 2.2f)),
-                ("Brandt", "soldier_pistol", new Vector3(41.6f, 0f, 8.3f)),
-                ("Hall_Soldier_C", "soldier_rifle", new Vector3(44.8f, 0f, 4.2f)),
-                ("Hall_Soldier_D", "soldier_shield", new Vector3(45.4f, 0f, 6.6f)), // the shield at the bar
+                ("Ortiz", "soldier_shield", new Vector3(40.4f, 0f, 2.2f)),
+                ("Hall_Grenadier_A", "soldier_grenades", new Vector3(45.3f, 0f, 1.4f)),
+                ("Hall_Shotgun_A", "soldier_shotgun", new Vector3(42.6f, 0f, 3.4f)),
+                ("Brandt", "soldier_shield", new Vector3(40.6f, 0f, 8.3f)),
+                ("Hall_Grenadier_B", "soldier_grenades", new Vector3(46.2f, 0f, 9.1f)),
+                ("Hall_Shotgun_B", "soldier_shotgun", new Vector3(42.6f, 0f, 7.0f)),
             })
             {
                 EnemySpawn s = r.Figure(name, kind, at, 270f, parent: team);
                 s.leashUntilFlag = DutyKeyTaken;
                 EditorUtility.SetDirty(s);
             }
+
+            // The power armour (rounds 121 and 122, CANON): at three left it comes in, the autofire archetype (the gun pod,
+            // no brand on screen). PROPOSED: out of the lodge door, when the squad calls for it (barks.csv, armour_*).
+            GameObject heavy = MenuLoopSetup.EnsureChild(team, "Hall_Armour");
+            FlagGate gate = MenuLoopSetup.EnsureComponent<FlagGate>(heavy);
+            gate.flag = ArmourFlag;
+            gate.showWhenRaised = true;
+            gate.waitUnseen = false; // it steps out in her view
+            r.Figure("Hall_Power_Armour", "power_armour_guns", new Vector3(43.0f, 0f, 9.0f), 180f, parent: heavy);
+            HeavyArrival arrival = MenuLoopSetup.EnsureComponent<HeavyArrival>(MenuLoopSetup.EnsureChild(r.Story, "Armour_Arrival"));
+            arrival.squad = team.transform;
+            arrival.armourGroup = heavy;
+            arrival.flag = ArmourFlag;
+            arrival.standingAtMost = 3;
+            arrival.callLine = DemoHold.Bark("armour_call");
+            arrival.enterLine = DemoHold.Bark("armour_enter");
+            EditorUtility.SetDirty(arrival);
 
             // Its own track (§12, round 103): it starts when they see her in the hall, it ends with the last one.
             GameObject holder = MenuLoopSetup.EnsureChild(r.Story, "Score_G18");

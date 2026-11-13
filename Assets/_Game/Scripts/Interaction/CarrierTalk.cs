@@ -17,8 +17,16 @@ namespace GlorifiedBody.Interaction
         public const float Reach = 1.8f;
         public const string LineGive = "Here. Take it. Now go, and you go round the chairs."; // the writer's line (barks.csv, "W11, gives the card when asked", PROPOSED)
 
+        [Tooltip("He gives the item only when this flag is up (the scan C11 of the Hold, round 118). Before it he denies. Empty: he always gives.")]
+        public string giveAfterFlag = "";
+        public string denyLine = "";
+        public string giveLine = "";
+
         private ItemCarrier carrier;
         private Health health;
+
+        private bool Denies => !string.IsNullOrEmpty(giveAfterFlag) && !GlorifiedBody.Saving.StoryFlags.Has(giveAfterFlag);
+        public int Denials { get; private set; }
 
         private void Awake()
         {
@@ -43,13 +51,19 @@ namespace GlorifiedBody.Interaction
         public override string Confirm(Interactor who)
         {
             ItemPickup pickup = Item;
+            if (Denies)
+            {
+                Denials++;
+                Bark.Say(gameObject, string.IsNullOrEmpty(denyLine) ? "I don't have anything." : denyLine, 2.4f);
+                return "denied:" + pickup.item.itemId;
+            }
             ItemInventory inventory = who != null ? who.Inventory : null;
             if (inventory == null || !inventory.TryAdd(pickup.item)) return "full:" + pickup.item.itemId;
             string id = pickup.item.itemId;
             pickup.MarkTaken();
             Destroy(pickup.gameObject);
             carrier.HideCarried();
-            Bark.Say(gameObject, LineGive);
+            Bark.Say(gameObject, string.IsNullOrEmpty(giveLine) ? LineGive : giveLine, 2.4f);
             return "given:" + id;
         }
     }

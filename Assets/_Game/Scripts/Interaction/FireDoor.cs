@@ -41,6 +41,8 @@ namespace GlorifiedBody.Interaction
         public string leverFlag = "";
         [Tooltip("The door shuts and jams when this story flag goes up (the W5 to W9 door at code silver: DEMO_PLAN §10.5, the route switch). Empty: never.")]
         public string jamFlag = "";
+        [Tooltip("The door opens when this flag goes up (the guard post opens the door of H2, round 118). Empty: never.")]
+        public string openFlag = "";
         [Tooltip("The bars across the doorway, one on each face: shown while the door is jammed (Bruno: \"a horizontal bar to indicate that she is jamming the door\").")]
         public GameObject[] bars = new GameObject[0];
 
@@ -120,6 +122,11 @@ namespace GlorifiedBody.Interaction
         /// </summary>
         private void OnFlag(string flag)
         {
+            if (!string.IsNullOrEmpty(openFlag) && flag == openFlag && GlorifiedBody.Saving.StoryFlags.Has(openFlag) && Current == State.Jammed)
+            {
+                Open("flag:" + openFlag);
+                return;
+            }
             if (string.IsNullOrEmpty(jamFlag) || flag != jamFlag || !GlorifiedBody.Saving.StoryFlags.Has(jamFlag)) return;
             if (Current == State.Open && !Jam("flag:" + jamFlag) && isActiveAndEnabled) StartCoroutine(JamWhenClear());
         }

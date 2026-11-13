@@ -20,6 +20,70 @@ namespace GlorifiedBody.Editor.Demo
         public const string WriterGame = "../the-glorified-body/game";
         private static readonly Regex LineRx = new Regex(@"^\s*([A-Z][A-Z .'\-]*[A-Z]):\s+(.+?)\s*(\(.*\))?\s*$");
 
+        /// <summary>
+        /// The lines of one part of a writer's file (2026-11-13, game/lines/H1_the_hold.md: one file, three logs and the
+        /// voice): the lines under the "## " heading that starts with part, and under its "### The script" headings.
+        /// With sub: only under the "### " heading that starts with sub.
+        /// </summary>
+        public static List<(string speaker, string text)> Lines(string file, string part, string sub = "")
+        {
+            var lines = new List<(string, string)>();
+            string path = Path.Combine(WriterGame, file);
+            if (!File.Exists(path)) { Debug.LogWarning("[DemoScripts] no file " + path); return lines; }
+            bool inPart = false, inScript = false;
+            foreach (string raw in File.ReadAllLines(path))
+            {
+                if (raw.StartsWith("## ")) { inPart = raw.Substring(3).StartsWith(part); inScript = false; continue; }
+                if (raw.StartsWith("### ")) { inScript = raw.Substring(4).StartsWith(string.IsNullOrEmpty(sub) ? "The script" : sub); continue; }
+                if (!inPart || !inScript) continue;
+                Match m = LineRx.Match(raw);
+                if (!m.Success) continue;
+                string text = m.Groups[2].Value.Trim().Trim('"');
+                if (text == "..." || text.Length == 0) continue;
+                lines.Add((m.Groups[1].Value.Trim(), text));
+            }
+            return lines;
+        }
+
+        /// <summary>The lines of a part as subtitle steps with their speaker (the voice of the airlock: KNIGHT).</summary>
+        public static List<ScriptStep> Steps(string file, string part, string sub, string idPrefix)
+        {
+            var steps = new List<ScriptStep>();
+            int n = 0;
+            foreach ((string speaker, string text) in Lines(file, part, sub))
+                steps.Add(ScriptStep.Radio(speaker, $"{idPrefix}_{n++:00}", text));
+            return steps;
+        }
+
+        /// <summary>A cutscene of dark cards from the lines of one part of a file (the incident tape L36).</summary>
+        public static CutsceneAsset Cards(List<(string speaker, string text)> lines, string cutsceneId, string idPrefix)
+        {
+            Directory.CreateDirectory(ScriptTestSetup.CutscenesFolder);
+            string path = ScriptTestSetup.CutscenesFolder + "/cutscene_" + cutsceneId + ".asset";
+            var asset = AssetDatabase.LoadAssetAtPath<CutsceneAsset>(path);
+            if (asset == null)
+            {
+                asset = ScriptableObject.CreateInstance<CutsceneAsset>();
+                AssetDatabase.CreateAsset(asset, path);
+            }
+            asset.cutsceneId = cutsceneId;
+            asset.music = null;
+            Texture2D card = Card();
+            var shots = new List<CutsceneAsset.Shot>();
+            int n = 0;
+            foreach ((string speaker, string text) in lines)
+                shots.Add(new CutsceneAsset.Shot
+                {
+                    still = card, seconds = Mathf.Clamp(1.2f + text.Length * 0.055f, 2f, 6f),
+                    panFrom = new Vector3(0f, 0f, 1f), panTo = new Vector3(0f, 0f, 1f),
+                    speaker = speaker, lineId = $"{idPrefix}_{n++:00}", text = text,
+                });
+            asset.shots = shots.ToArray();
+            EditorUtility.SetDirty(asset);
+            AssetDatabase.SaveAssets();
+            return asset;
+        }
+
         public static List<(string speaker, string text)> Lines(string file)
         {
             var lines = new List<(string, string)>();
@@ -164,7 +228,7 @@ namespace GlorifiedBody.Editor.Demo
         /// the writer's game/lines/T14_incident_review.md, PROPOSED). It plays when taken, and at its end the feed unlocks.
         /// The clip is a placeholder (tools/audio_log_placeholders.py); the line times are its times.
         /// </summary>
-        public static ItemDefinition L19() => AudioLog("l19_incident_review", "A DICTAPHONE", "REVIEWER", GlorifiedBody.Player.Feeding.UnlockFlag,
+        public static ItemDefinition L19() => AudioLog("l19_incident_review", "A DICTAPHONE", "REVIEWER", "", // round 118: L19 no longer unlocks the feed (L36 does)
             new[] { 0.6f, 4.9f, 13.1f, 17.1f, 26.4f, 31.5f, 35.1f, 46.0f },
             new[]
             {
@@ -201,6 +265,42 @@ namespace GlorifiedBody.Editor.Demo
             item.readFlag = endFlag; // an audio log raises it at its end (TapePlayer)
             UnityEditor.EditorUtility.SetDirty(item);
             return item;
+        }
+
+        public const string HoldLines = "lines/H1_the_hold.md";
+
+        /// <summary>
+        /// L35, the frame protocol: the audio log on the bench of H2 (round 118; the writer's H1_the_hold.md, PROPOSED). The
+        /// lines come from the file; the times follow tools/audio_log_placeholders.py (words at 2.6 a second, at least
+        /// 1.8 s, 0.5 s between lines), so the placeholder clip and the subtitles agree.
+        /// </summary>
+        public static ItemDefinition L35()
+        {
+            List<(string speaker, string text)> lines = DemoScripts.Lines(HoldLines, "L35");
+            var at = new List<float>();
+            float t = 0.6f;
+            foreach ((string _, string text) in lines)
+            {
+                at.Add(t);
+                t += Mathf.Max(1.8f, text.Split(new[] { ' ' }, System.StringSplitOptions.RemoveEmptyEntries).Length / 2.6f) + 0.5f;
+            }
+            return AudioLog("l35_frame_protocol", "A RECORDER", lines.Count > 0 ? lines[0].speaker : "TECHNICIAN", "", at.ToArray(), lines.ConvertAll(l => l.text).ToArray());
+        }
+
+        /// <summary>
+        /// L36, the incident tape: the video log on the monitors of the booth of H4 (round 118, CANON: it unlocks the feed).
+        /// After it plays, the tape lies in her logs: its lines as text.
+        /// </summary>
+        public static ItemDefinition L36()
+        {
+            List<(string speaker, string text)> lines = DemoScripts.Lines(HoldLines, "L36");
+            return Log("l36_incident_tape", "THE INCIDENT TAPE", string.Join("\n\n", lines.ConvertAll(l => l.speaker + ": " + l.text)));
+        }
+
+        /// <summary>The airlock card of the second scientist of H2 (round 118): it opens the card door of the landing H6.</summary>
+        public static ItemDefinition AirlockCard()
+        {
+            return ItemAssets.Item("airlock_card", "THE AIRLOCK CARD", ItemKind.Key, ItemAssets.KeyColour, "A white card on a lanyard. AIRLOCK.", "", DrugType.Nalcon);
         }
 
         public static ItemDefinition L9() => Log("l9_care_chart", "HER CARE CHART", "V3. DAILY CARE. ORAL INTAKE: NONE. PCDH-Y: DONOR TISSUE PER PROTOCOL 7 (ALL DONORS CONSENTED). LAST DOSE: 6 DAYS AGO, HELD FOR THE V4 TRANSFER. EXPECT THE SUBJECT TO SEEK A SOURCE. NEVER ENTER ALONE.");

@@ -10,8 +10,8 @@ using GlorifiedBody.Story;
 namespace GlorifiedBody.Editor.Demo
 {
     /// <summary>
-    /// Floor 2 of the demo, the ward (the demo plan §3.1): W1, W1B and W2 to W12, in greybox. The plan coordinates (metres, x east,
-    /// z north) put the rooms side by side as the map shows them. The way: W1, W1B, W2, W5, W7, W8, W9, W11, back to W9, W12,
+    /// Floor 2 of the demo, the ward (the demo plan §3.1): the Hold (DemoHold, map v3) and W2 to W12, in greybox. The plan coordinates (metres, x east,
+    /// z north) put the rooms side by side as the map shows them. The way: the Hold (H1 to H9), W2, W5, W7, W8, W9, W11, back to W9, W12,
     /// down. Side rooms: W3, W4, W6, W10, and since 2026-11-05 W13 to W17 (DemoV2, the floorplan v2). The beats of §4 (1 to 16) run as sequences; the cutscenes play as subtitles
     /// from the writers' scripts. Batch: tools/unity.sh exec GlorifiedBody.Editor.Demo.DemoWard.BuildAll
     /// </summary>
@@ -24,9 +24,7 @@ namespace GlorifiedBody.Editor.Demo
         {
             var rooms = new List<RoomSpec>
             {
-                Room("W1", "RECOVERY ROOM", 0, 19, 8, 26, W1, new Door('S', 4, "W1B")),
-                Room("W1B", "TREATMENT ROOM", 1, 14, 7, 19, W1B, new Door('N', 4, "W1"), new Door('S', 4, "W2", fire: true, jammed: true, leverFlag: ScientistDone)),
-                Room("W2", "NORTH CORRIDOR", 0, 11, 24, 14, W2, new Door('N', 4, "W1B", fire: true), new Door('N', 13, "W3"), new Door('N', 22, "W4"), new Door('S', 1.5f, "W5", fire: true, pocket: -1),
+                Room("W2", "NORTH CORRIDOR", 0, 11, 24, 14, W2, new Door('N', 4, "H9"), new Door('N', 13, "W3"), new Door('N', 22, "W4"), new Door('S', 1.5f, "W5", fire: true, pocket: -1),
                     new Door('W', 12.75f, "W14"), new Door('E', 12.75f, "W15")),
                 Room("W3", "PATIENT ROOMS", 9, 14, 17, 19, W3, new Door('S', 13, "W2")),
                 Room("W4", "SHOWER ROOM", 19, 14, 25, 20, W4, new Door('S', 22, "W2")),
@@ -41,6 +39,8 @@ namespace GlorifiedBody.Editor.Demo
                 Room("W12", "STAIRWELL", 13, -14, 17, -10, W12, new Door('N', 15, "W9"), new Door('S', 15, "S1"), new Door('E', -12, "W13")),
             };
             rooms.AddRange(DemoV2.WardRooms()); // the floorplan v2 (2026-11-05): W13 to W17
+            // W2's north door at x 4 opens into the office H9 of the Hold (round 119: where W1B was).
+            rooms.InsertRange(0, DemoHold.Rooms()); // map v3 (round 118, 2026-11-13): the Hold, H1 to H9, replaces W1 and W1B
             return rooms;
         }
 
@@ -56,106 +56,10 @@ namespace GlorifiedBody.Editor.Demo
 
         // ── The rooms ─────────────────────────────────────────────────
 
-        private const string ScientistDone = "demo_w1b_scientist";
-        private const string CapsulesFall = "demo_w1b_capsules";
-        private const string ChartDone = "demo_w2_chart";
-
-        /// <summary>
-        /// The feed opens by a cutscene (Bruno, 2026-11-05: "the unlocking oif the eating/feeding should be a cutscene; i missed
-        /// the log note so i had to do the entire demo without healing"). A skip still opens it. The chart goes to her items.
-        /// </summary>
-        private static List<ScriptStep> Chart() => new List<ScriptStep>
-        {
-            ScriptStep.LockHer(),
-            ScriptStep.Play(DemoScripts.Fmv("cutscenes/02b_the_chart.md", "02b_the_chart", "cs02b")),
-            ScriptStep.Give(DemoItems.L9().itemId),
-            ScriptStep.Raise(Feeding.UnlockFlag),
-            ScriptStep.FreeHer(),
-        };
-
-        /// <summary>
-        /// W1: she wakes (beat 1), Stevens on the speaker and the printout (2). The quiet room: no enemy and no beat until she
-        /// leaves it (Bruno, 2026-11-05: "a mini-tutorial/safe space, one where the player has a chance to situate themsevles
-        /// and acclimatize to the controls before moving on towards their firswt combat").
-        /// </summary>
-        private static void W1(DemoRoom r)
-        {
-            r.Prop("Bed", new Vector3(5.6f, 0f, 24.6f), new Vector3(2.1f, 0.6f, 1f), 0.55f);
-            r.Prop("Strap_Burned", new Vector3(5.6f, 0.6f, 24.6f), new Vector3(0.1f, 0.05f, 1.02f), 0.05f);
-            r.Prop("Drip_Stand", new Vector3(7f, 0f, 25.4f), new Vector3(0.1f, 1.8f, 0.1f), 0.7f);
-            r.Prop("Cabinet", new Vector3(1f, 0f, 25.4f), new Vector3(0.8f, 1.1f, 0.5f), 0.25f);
-            MenuLoopSetup.EnsurePickup("Capsule_W1", DrugType.Nalcon, new Vector3(1f, 1.3f, 25.2f)); // the capsule of the power she starts with
-            r.Prop("Screen_By_Door", new Vector3(2.2f, 1.2f, 19.2f), new Vector3(0.8f, 0.5f, 0.06f), 0.6f);
-            r.Prop("Printer", new Vector3(2.2f, 0f, 19.5f), new Vector3(0.5f, 0.9f, 0.4f), 0.35f);
-            r.Item("L1_Printout", DemoItems.Plan(), new Vector3(2.2f, 0.95f, 19.5f), new Vector3(0.24f, 0.02f, 0.32f));
-            r.PlaceLucy(new Vector3(3.9f, 0f, 24.2f), 180f);
-            var wake = new List<ScriptStep>
-            {
-                ScriptStep.Raise(Feeding.LockFlag),  // round 18: the feed starts locked
-                ScriptStep.SetShort(88f),            // round 8: she starts nearly full on the SHORT
-                ScriptStep.LockHer(),
-            };
-            wake.Add(ScriptStep.Play(DemoNight.WithTitle(DemoScripts.Fmv("cutscenes/01_the_wake.md", "01_the_wake", "cs01")))); // FMV (Bruno, 2026-11-02), the card RAVEN first (round 104)
-            wake.Add(ScriptStep.FreeHer());
-            // The game opens on the cutscene, black from the first frame (Bruno, 2026-11-04).
-            r.Beat("W1_Wake", "demo_w1_wake", Vector3.zero, Vector3.zero, wake.ToArray()).startsBlack = true;
-        }
-
-        /// <summary>
-        /// W1B: the scientist and the collar computer (beat 3, cutscene 02). Bruno, 2026-11-05: "add a second room that the
-        /// first scientist will be in, not at the corridor". He works at a bed behind a screen, so no line from W1 reaches him.
-        /// A line across the room stops her a step past the doorway, he walks out and talks (the FMV), and he attacks after the
-        /// last line. The door to W2 stays shut, with the three behind it. Her lever opens it after the talk.
-        /// </summary>
-        private static void W1B(DemoRoom r)
-        {
-            r.Prop("Treatment_Bed", new Vector3(6.5f, 0f, 15.6f), new Vector3(1f, 0.6f, 2f), 0.55f);
-            r.Prop("Sleeper_Under_Sheet", new Vector3(6.5f, 0.6f, 15.6f), new Vector3(0.6f, 0.22f, 1.7f), 0.75f); // "a patient who sleeps" (the script)
-            r.Prop("Dressing_Cart", new Vector3(6.4f, 0f, 17f), new Vector3(0.7f, 0.9f, 0.4f), 0.45f);
-            r.Prop("Privacy_Screen", new Vector3(5.6f, 0f, 17.5f), new Vector3(2.8f, 1.8f, 0.06f), 0.65f);
-            GameObject scientist = MenuLoopSetup.EnsureChild(r.Figures, "Group_Scientist");
-            EnemySpawn knife = r.Figure("Scientist_Knife", "labworker_knife", new Vector3(5.6f, 0f, 16f), 90f, parent: scientist);
-            knife.heldUntilFlag = ScientistDone;
-            EditorUtility.SetDirty(knife);
-            // The capsules roll off his tray in the talk (cutscene 02, note 1, Bruno: "yes add the capsules"). They show under
-            // the cut, so nothing pops up in view, and she can take them after the fight. One for each of the other two powers.
-            GameObject tray = MenuLoopSetup.EnsureChild(r.Story, "Gate_Capsules");
-            FlagGate fallen = MenuLoopSetup.EnsureComponent<FlagGate>(tray);
-            fallen.flag = CapsulesFall;
-            fallen.showWhenRaised = true;
-            foreach (var capsule in new[] { ("Capsule_W1B_A", DrugType.NalconFire, new Vector3(4.7f, 0.15f, 15.6f)), ("Capsule_W1B_B", DrugType.NalconLift, new Vector3(3.5f, 0.15f, 15.9f)) })
-                ItemAssets.Pickup(tray, capsule.Item1, ItemAssets.Drug(capsule.Item2), PrimitiveType.Capsule, capsule.Item3, Vector3.one * 0.3f, Quaternion.Euler(0f, 0f, 90f));
-            var meet = new List<ScriptStep>
-            {
-                ScriptStep.LockHer(),
-                ScriptStep.Approach(scientist, new Vector3(4.3f, 0f, 16f)),
-                ScriptStep.Wait(1.8f),
-                ScriptStep.Raise(CapsulesFall),
-                ScriptStep.Play(DemoScripts.Fmv("cutscenes/02_the_scientist.md", "02_the_scientist", "cs02")),
-                ScriptStep.Approach(scientist, new Vector3(4.1f, 0f, 16.6f)), // "he steps closer. Louder. Worse."
-                ScriptStep.Wait(0.5f),
-                ScriptStep.FreeHer(),
-                ScriptStep.AlertAlone(scientist), // he calls nobody: the three behind the door stay unaware
-            };
-            r.Beat("W1B_Scientist", ScientistDone, new Vector3(4f, 1f, 17.9f), new Vector3(6f, 2f, 0.6f), meet.ToArray()); // wall to wall: no way past it
-            // The talk has its own camera on the west wall: her, him, both doors. The cell cameras split the room down the line she
-            // walks, and one stood in the bay with the screen between it and her.
-            r.ExtraCamera("talk", new Vector3(1.35f, 2.75f, 16.5f), new Vector3(4.6f, 1f, 17.5f), 72f, new Vector3(3.9f, 1.5f, 17.35f), new Vector3(2.6f, 3f, 3.3f));
-        }
-
-        /// <summary>W2: three armed scientists outside (beat 4), then her care chart: a cutscene opens the feed (5, cutscene 02b).</summary>
+        /// <summary>W2: a quiet corridor (round 119: the three armed scientists moved to the gallery H7 of the Hold, and the feed unlocks in the Hold).</summary>
         private static void W2(DemoRoom r)
         {
             CardDoor(r, "W3", new Vector3(14.3f, 1.2f, 13.82f), Vector3.back); // the code rotation: W3 opens with the card
-            // One pistol and two knives (Bruno, 2026-11-05: "helps to escalate better"), behind the shut door of W1B.
-            GameObject three = MenuLoopSetup.EnsureChild(r.Figures, "Group_Three");
-            r.Figure("Scientist_A", "labworker_pistol", new Vector3(6.5f, 0f, 12.2f), 300f, parent: three);
-            r.Figure("Scientist_B", "labworker_knife", new Vector3(8.5f, 0f, 13f), 280f, parent: three);
-            r.Figure("Scientist_C", "labworker_knife", new Vector3(10.5f, 0f, 12.2f), 270f, parent: three);
-            // The chart: when the three are dead, or in W5 when she runs past them (W5_Chart). The bodies fall first.
-            var chart = new List<ScriptStep> { ScriptStep.WaitDead(three), ScriptStep.Wait(1.5f), ScriptStep.StopIfFlag(ChartDone) };
-            chart.AddRange(Chart());
-            r.Beat("W2_Chart", ChartDone, Vector3.zero, Vector3.zero, chart.ToArray());
             r.Sign("Sign_Pain", "YOUR PAIN IS SEEN. ASK FOR RELIEF.", new Vector3(18f, 1.9f, 13.83f), Vector3.back, new Vector2(2.6f, 0.5f));
             r.Prop("Bench_A", new Vector3(16f, 0f, 11.4f), new Vector3(1.6f, 0.45f, 0.45f));
             r.Prop("Cart", new Vector3(20f, 0f, 11.5f), new Vector3(0.9f, 0.9f, 0.5f), 0.45f);
@@ -208,7 +112,6 @@ namespace GlorifiedBody.Editor.Demo
             r.Prop("Gurney", new Vector3(2.4f, 0f, 7f), new Vector3(0.7f, 0.8f, 1.9f), 0.5f);
             r.Prop("Wall_Phone", new Vector3(0.05f, 1.3f, 8.5f), new Vector3(0.1f, 0.25f, 0.18f), 0.6f);
             r.Sign("Sign_Fire_Door", "FIRE DOOR. KEEP CLEAR.", new Vector3(2.83f, 2.45f, -6f), Vector3.left, new Vector2(1.4f, 0.3f), 40);
-            r.Beat("W5_Chart", ChartDone, new Vector3(1.5f, 1f, 10.1f), new Vector3(3f, 2f, 0.6f), Chart().ToArray()); // she ran past the three: the feed still opens
             var silver = new List<ScriptStep> { ScriptStep.Wait(1.5f) };
             silver.AddRange(DemoScripts.Steps("cutscenes/03_code_silver.md", "cs03", 5));
             silver.Add(ScriptStep.Raise(CodeSilver)); // the fire door to W9 shuts: the way on is through the gym

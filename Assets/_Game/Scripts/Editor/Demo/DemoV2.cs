@@ -272,6 +272,7 @@ namespace GlorifiedBody.Editor.Demo
             r.Prop("Lockers", new Vector3(-1.65f, 0f, -20.2f), new Vector3(0.6f, 1.9f, 2.2f), 0.1f);
             Label(r, "STAFF ROOM", new Vector3(5.83f, 2f, -17.3f), Vector3.left, 1f);
             DemoNight.G11Flyer(r); // L28
+            DemoNight.G11Union(r); // L14 and L37 (round 119: the union angle)
         }
 
         /// <summary>

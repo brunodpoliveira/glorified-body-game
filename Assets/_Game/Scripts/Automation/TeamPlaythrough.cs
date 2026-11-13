@@ -28,6 +28,20 @@ namespace GlorifiedBody.Automation
     [DefaultExecutionOrder(-1000)]
     public class TeamPlaythrough : MonoBehaviour
     {
+
+        /// <summary>The wake is done: since the Hold (2026-11-13) she starts in the frame, so the test frees her as the last press would.</summary>
+        private static bool Woke()
+        {
+            // The frame empties every MK bar (round 119); these tests were written for full bars: they get them back once.
+            bool held = UnityEngine.Object.FindObjectsByType<GlorifiedBody.Interaction.UprightRestraint>(FindObjectsSortMode.None).Any(r => r.Holding);
+            GlorifiedBody.Interaction.UprightRestraint.FreeAll();
+            if (held)
+            {
+                var stats = GameObject.FindGameObjectWithTag("Player")?.GetComponent<GlorifiedBody.Player.PsychicStats>();
+                if (stats != null) foreach (GlorifiedBody.Player.PowerKind k in new[] { GlorifiedBody.Player.PowerKind.Blast, GlorifiedBody.Player.PowerKind.Fire, GlorifiedBody.Player.PowerKind.Telekinesis, GlorifiedBody.Player.PowerKind.Domination }) stats.FillMk(k);
+            }
+            return GlorifiedBody.Saving.StoryFlags.Has("demo_h1_wake");
+        }
         private const string SceneName = "Demo";
         private const int ShotWidth = 1920, ShotHeight = 1080;
         private const string Released = "sector_c_released"; // DemoPublic.Released (editor code)
@@ -96,7 +110,7 @@ namespace GlorifiedBody.Automation
             if (gm != null) gm.LoadLevel(SceneName); else SceneManager.LoadScene(SceneName);
             yield return Until(() => SceneManager.GetActiveScene().name == SceneName && CutscenePlayer.IsPlaying && CutscenePlayer.ShotIndex >= 0, 30f);
             CutscenePlayer.Skip();
-            yield return Until(() => StoryFlags.Has("demo_w1_wake"), 10f);
+            yield return Until(() => Woke(), 10f);
             string shots = Path.Combine(BotArgs.RunDir, "shots");
             Directory.CreateDirectory(shots);
 

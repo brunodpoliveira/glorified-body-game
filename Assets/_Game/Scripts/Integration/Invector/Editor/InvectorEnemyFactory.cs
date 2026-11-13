@@ -78,6 +78,7 @@ namespace GlorifiedBody.Integration.Invector.Build
         {
             "soldier_pistol", "soldier_rifle", "soldier_gas", "soldier_shield", "guard_pistol", "guard_shield", "power_armour", "labworker", "nurse",
             "labworker_pistol", "labworker_knife", "patient",
+            "soldier_shotgun", "soldier_grenades", "power_armour_guns", // the Dining Hall (rounds 121 and 122)
         };
 
         /// <summary>The spec of a kind: the class's spec with the kind's weapon and shield.</summary>
@@ -88,6 +89,11 @@ namespace GlorifiedBody.Integration.Invector.Build
                 case "soldier_rifle": { Spec s = SpecFor("soldier"); s.weapon = DummyShooter.Weapon.Rifle; return s; }
                 case "soldier_gas": { Spec s = SpecFor("soldier"); s.weapon = DummyShooter.Weapon.GasLauncher; return s; }
                 case "soldier_shield": { Spec s = SpecFor("soldier"); s.shield = true; return s; } // Bruno, 2026-11-05: "shield dude also needs to have a soldier variant"
+                // The Dining Hall (round 122): the shotgunner (close range: its cone reaches 6 m, PROPOSED), the grenadier
+                // (frag grenades), and the power armour as the autofire archetype (no grenades, no rockets in that fight).
+                case "soldier_shotgun": { Spec s = SpecFor("soldier"); s.weapon = DummyShooter.Weapon.Shotgun; s.range = 6f; return s; }
+                case "soldier_grenades": { Spec s = SpecFor("soldier"); s.weapon = DummyShooter.Weapon.GrenadeLauncher; return s; }
+                case "power_armour_guns": { Spec s = SpecFor("power_armour"); s.weapon = DummyShooter.Weapon.ArmourGuns; s.range = 12f; return s; }
                 case "guard_pistol": return SpecFor("guard");
                 case "guard_shield": { Spec s = SpecFor("guard"); s.shield = true; return s; }
                 case "power_armour": { Spec s = SpecFor("power_armour"); s.weapon = DummyShooter.Weapon.ArmourLaunchers; return s; }
@@ -474,9 +480,10 @@ namespace GlorifiedBody.Integration.Invector.Build
         {
             // The launchers (frag, gas, the power armour's frag and rockets) use the vendor shotgun as a placeholder.
             bool launcher = weapon == DummyShooter.Weapon.GrenadeLauncher || weapon == DummyShooter.Weapon.GasLauncher || weapon == DummyShooter.Weapon.ArmourLaunchers;
-            string path = weapon == DummyShooter.Weapon.Rifle ? RiflePrefabPath : launcher ? LauncherPrefabPath : GunPrefabPath;
+            bool longGun = weapon == DummyShooter.Weapon.Rifle || weapon == DummyShooter.Weapon.Shotgun || weapon == DummyShooter.Weapon.ArmourGuns; // the vendor rifle stands in
+            string path = longGun ? RiflePrefabPath : launcher ? LauncherPrefabPath : GunPrefabPath;
             // The vendor animator's weapon set: handgun 1, rifle 2, shotgun 3 (the vendor prefabs' upperBodyID).
-            int animatorId = weapon == DummyShooter.Weapon.Rifle ? 2 : launcher ? 3 : 1;
+            int animatorId = longGun ? 2 : launcher ? 3 : 1;
             GameObject gun = StrippedVendorModel(path, "Gun", root, rootScale);
             if (gun == null) return;
             // The left-hand grip stays on the long guns and the two-hand pistol (EnemyGun holds them with both hands).

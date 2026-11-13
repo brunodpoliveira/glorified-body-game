@@ -46,6 +46,20 @@ namespace GlorifiedBody.Enemy
         public bool dominableUnhurt;
         [Tooltip("A boss: mk_edgar never takes it, and the shocks of the short pass it.")]
         public bool boss;
+        [Header("The Hold (round 118)")]
+        [Tooltip("A civilian's first run goes here (H2: the door to H3), then it cowers. Unused when escapeLines is empty and escapeTo is null.")]
+        public Transform escapeTo;
+        public string[] escapeLines = new string[0];
+        [Tooltip("Raised when it cowers at the end of its first run.")]
+        public string cowerFlag = "";
+        [Tooltip("With a drop: it gives the item only after this flag (the scan C11). Before it, the deny line.")]
+        public string giveAfterFlag = "";
+        public string denyLine = "";
+        public string giveLine = "";
+        [Tooltip("No drop: asked for an item, it says this line (AskTalk). Empty: no talk.")]
+        public string askLine = "";
+        public string askItemId = "";
+        public string askItemName = "";
 
         public static int Spawned { get; private set; }
         public static int Missing { get; private set; }
@@ -72,7 +86,21 @@ namespace GlorifiedBody.Enemy
             if (variant >= 0 && figure.TryGetComponent(out CivilianBrain civilian)) civilian.SetVariant(variant);
             if (drop != null) figure.AddComponent<GlorifiedBody.Interaction.ItemCarrier>().Bind(drop);
             // Bruno, 2026-11-02: she can also ask an unarmed civilian for the item.
-            if (drop != null && figure.GetComponent<CivilianBrain>() != null) figure.AddComponent<GlorifiedBody.Interaction.CarrierTalk>();
+            if (drop != null && figure.GetComponent<CivilianBrain>() != null)
+            {
+                var talk = figure.AddComponent<GlorifiedBody.Interaction.CarrierTalk>();
+                talk.giveAfterFlag = giveAfterFlag;
+                talk.denyLine = denyLine;
+                talk.giveLine = giveLine;
+            }
+            if (drop == null && !string.IsNullOrEmpty(askLine))
+            {
+                var ask = figure.AddComponent<GlorifiedBody.Interaction.AskTalk>();
+                ask.line = askLine;
+                ask.itemId = askItemId;
+                ask.itemName = askItemName;
+            }
+            if (escapeTo != null && figure.TryGetComponent(out CivilianBrain runner)) runner.SetEscape(escapeTo.position, escapeLines, cowerFlag);
             if (!string.IsNullOrEmpty(line) && figure.TryGetComponent(out PatientBrain patient)) patient.Line = line;
             if (hides && figure.TryGetComponent(out CivilianBrain hider)) hider.SetHider(hideLine, foundLine, foundAt);
             if (!string.IsNullOrEmpty(heldUntilFlag) && figure.TryGetComponent(out SoldierBrain held)) held.ScriptHoldUntil(heldUntilFlag);

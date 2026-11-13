@@ -303,7 +303,9 @@ def main():
         raise SystemExit(__doc__)
     rng = np.random.default_rng(26)
     for state, make in (("ambient", ambient), ("tension", tension), ("combat", combat), ("menu", menu)):
-        write_ogg(os.path.join(MUSIC, state + ".ogg"), make(rng))
+        audio = make(rng)  # made in every case: the random stream of the sounds below stays the same
+        if state == "menu":  # since 2026-11-13 the three states come from tools/music_states_placeholder.sh (T41)
+            write_ogg(os.path.join(MUSIC, state + ".ogg"), audio)
     for event, make in (("room_tone", room_tone), ("charge_hum", charge_hum), ("pa_chime", pa_chime),
                         ("death_sting", death_sting), ("gas_hiss", gas_hiss)):
         write_ogg(os.path.join(SFX, event, event + ".ogg"), make(rng))

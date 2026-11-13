@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 202cb6532a4a7f80682b508098ca96f0, type: 3}
+  m_Name: item_l14_union_letter
+  m_EditorClassIdentifier: Assembly-CSharp::GlorifiedBody.Interaction.ItemDefinition
+  itemId: l14_union_letter
+  displayName: A UNION LETTER
+  kind: 1
+  drugType: 0
+  colour: {r: 0.96, g: 0.95, b: 0.88, a: 1}
+  description: a union letter.
+  logText: 'Commissioner: My members did not sign up to carry grenade launchers.
+    You bought them after the tower fire, when the ladders stopped at the ninth floor
+    and nobody could get up the stairs. Fine. It worked that night. Since then the
+    papers call us the army, the police ask to borrow them, and a probationer put
+    a canister through a window with a family behind it. No other department in the
+    country does this. Take them back. The union.'
+  readFlag: 
+  mapFloor: 
+  audioClip: {fileID: 0}
+  tapeLines: []

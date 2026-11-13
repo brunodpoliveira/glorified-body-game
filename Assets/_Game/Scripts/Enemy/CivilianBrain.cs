@@ -221,6 +221,26 @@ namespace GlorifiedBody.Enemy
         /// <summary>A test room with its AI off (SoldierBrain.PassiveUntil): it stands still until the flag, or until mk_edgar takes its mind.</summary>
         public void PassiveUntil(string flag) => passiveFlag = flag;
 
+        /// <summary>
+        /// A fixed first run (the second scientist of H2, round 118: "the other one runs away to open the door, to no
+        /// avail"): the first flee goes to this spot with these lines (the first at the start, the second when he gets
+        /// there), and he cowers there. The flag goes up when he cowers. Later runs pick their own spot.
+        /// </summary>
+        public void SetEscape(Vector3 spot, string[] lines, string cowerFlag)
+        {
+            escapeSpot = spot;
+            hasEscape = true;
+            escapeLines = lines ?? new string[0];
+            escapeCowerFlag = cowerFlag ?? "";
+        }
+
+        private Vector3 escapeSpot;
+        private bool hasEscape;
+        private string[] escapeLines = new string[0];
+        private string escapeCowerFlag = "";
+        private bool escapeRun;
+        private bool escapeCowered;
+
         private string passiveFlag = "";
         private bool Passive => !string.IsNullOrEmpty(passiveFlag) && Mind == null && !GlorifiedBody.Saving.StoryFlags.Has(passiveFlag);
 
@@ -400,6 +420,19 @@ namespace GlorifiedBody.Enemy
             if (hides) { Cower(); return; } // cornered: it stays where it hid
             tremble.Amount = 0f;
             SetPose(Pose.Controller);
+            if (hasEscape && !escapeRun)
+            {
+                escapeRun = true;
+                Spot = escapeSpot;
+                Current = Phase.Flee;
+                body.Crouch(false);
+                body.MoveTo(Spot, MoveSpeed.Sprint);
+                timer = fleeSeconds + 4f;
+                if (escapeLines.Length > 0) Bark.Say(gameObject, escapeLines[0], 2.2f);
+                panicLine = LineRun;
+                RunTelemetry.Event("civilian_flee", $"{name} to the fixed spot {Spot.x:0.0},{Spot.z:0.0}");
+                return;
+            }
             if (!EnemyNav.TryEscape(transform.position, Her, avoidRadius, cornerGain, out Vector3 spot))
             {
                 // Nowhere to run: it kneels and begs when she is near, else it cowers where it stands.
@@ -427,7 +460,10 @@ namespace GlorifiedBody.Enemy
             bool leaning = variant == 1 && TryLean();
             if (!leaning) SetPose(variant == 0 ? Pose.Crouch : variant == 3 ? Pose.Shake : Pose.Hug);
             body.Crouch(CurrentPose == Pose.Crouch);
-            Bark.Say(gameObject, LineCower);
+            if (escapeRun && escapeLines.Length > 1 && !escapeCowered) Bark.Say(gameObject, escapeLines[1], 2.4f);
+            else Bark.Say(gameObject, LineCower);
+            if (escapeRun && !escapeCowered && !string.IsNullOrEmpty(escapeCowerFlag)) GlorifiedBody.Saving.StoryFlags.Raise(escapeCowerFlag);
+            if (escapeRun) escapeCowered = true;
             RunTelemetry.Event("civilian_cower", name);
         }
 

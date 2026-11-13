@@ -53,6 +53,60 @@ namespace GlorifiedBody.Tests.EditMode
             Assert.AreEqual("c", rows[2][3]);
         }
 
+        /// <summary>
+        /// The writer's file as the game reads it (2026-11-13, the brain row check): every row has the header's column
+        /// count, and the brain row gives the game its whole hint. The game uses columns 0 to 3 (enemy, picture,
+        /// voice_line, hint); speaker and outcome are for the writer. An unquoted comma in a cell splits it, and the
+        /// game keeps only the part before the first comma. The log prints what the game stores for the brain.
+        /// </summary>
+        [Test]
+        public void TheWritersFile_EveryRowHasTheHeadersColumns_AndTheBrainHintIsWhole()
+        {
+            string path = System.IO.Path.GetFullPath(DeathScreenSetup.WriterCsv);
+            if (!System.IO.File.Exists(path)) Assert.Ignore("no writer file at " + path);
+            List<string[]> rows = DeathScreenSetup.ReadCsv(System.IO.File.ReadAllText(path));
+            int columns = rows[0].Length;
+            var bad = new List<string>();
+            for (int i = 1; i < rows.Count; i++)
+                if (rows[i].Length != columns) bad.Add($"{rows[i][0]} (line {i + 1}: {rows[i].Length} columns)");
+
+            var content = ScriptableObject.CreateInstance<DeathScreenContent>();
+            DeathScreenSetup.Fill(content);
+            DeathScreenContent.Entry brain = content.Exact("brain");
+            string[] raw = rows.Find(r => r[0].Trim() == "brain");
+            Debug.Log($"[DeathScreenCsv] header columns {columns}; brain row columns {(raw != null ? raw.Length : 0)}");
+            if (raw != null)
+                for (int c = 0; c < raw.Length; c++)
+                    Debug.Log($"[DeathScreenCsv] brain column {c} ({(c < columns ? rows[0][c] : "EXTRA")}): '{raw[c]}'");
+            if (brain != null)
+            {
+                Debug.Log($"[DeathScreenCsv] game entry brain.pictureNote = '{brain.pictureNote}'");
+                Debug.Log($"[DeathScreenCsv] game entry brain.voiceText   = '{brain.voiceText}'");
+                Debug.Log($"[DeathScreenCsv] game entry brain.hint        = '{brain.hint}'");
+            }
+            Object.DestroyImmediate(content);
+            Assert.IsEmpty(bad, $"rows with a column count other than the header's {columns}: " + string.Join(", ", bad)
+                + ". Put a cell with a comma in double quotes.");
+        }
+
+        [Test]
+        public void TheArmourGuns_HaveTheirOwnDeathScreen_FromTheWritersRow()
+        {
+            // Round 122 (PROPOSED by the writer: one new death screen for the guns of the armour, and three death lines).
+            Assert.AreEqual("power_armour_guns", DummyShooter.KillerIdFor("power_armour", DummyShooter.Weapon.ArmourGuns));
+            Assert.AreEqual("soldier_shotgun", DummyShooter.KillerIdFor("soldier", DummyShooter.Weapon.Shotgun));
+            if (!System.IO.File.Exists(System.IO.Path.GetFullPath(DeathScreenSetup.WriterCsv))) Assert.Ignore("no writer file");
+            var content = ScriptableObject.CreateInstance<DeathScreenContent>();
+            DeathScreenSetup.Fill(content);
+            DeathScreenContent.Entry guns = content.Exact("power_armour_guns");
+            Assert.IsNotNull(guns, "the writer's row power_armour_guns");
+            StringAssert.StartsWith("POWER ARMOUR:", guns.voiceText);
+            StringAssert.Contains("sweep", guns.hint);
+            Assert.AreEqual("soldier", content.Find("soldier_shotgun").killerId, "the shotgunner takes the soldier's screen until the writer gives it its own");
+            Debug.Log($"[DeathScreenCsv] power_armour_guns: '{guns.voiceText}' / '{guns.hint}'");
+            Object.DestroyImmediate(content);
+        }
+
         [Test]
         public void TheBuiltContent_HasAnEntry_ForEveryKillerOfTheTestRooms()
         {

@@ -40,6 +40,10 @@ namespace GlorifiedBody.Story
         WaitItem,    // until she carries the item (id)
         Kneel,       // the figure named id goes down on its knees (mk_edgar)
         TakeMind,    // mk_edgar takes the figure named id, for no MK (a story beat)
+        Restraint,   // the upright restraint under target holds her (her feet stop, every MK bar at zero) until she breaks free (the Hold, round 118)
+        StopUnlessFlag, // the sequence ends here when the flag (id) is NOT up (a branch: the other sequence plays its content)
+        WaitRoom,    // until she stands in the room (id)
+        Feast,       // her first feed (cutscene 02b, round 118): she kneels at the nearest dead body, the cutscene plays, she heals to full, the feed unlocks
     }
 
     /// <summary>One step of a sequence: what it does and its data (the room builder fills them in code).</summary>
@@ -85,6 +89,10 @@ namespace GlorifiedBody.Story
         public static ScriptStep WaitItem(string itemId) => new ScriptStep { kind = StepKind.WaitItem, id = itemId };
         public static ScriptStep Kneel(string figure) => new ScriptStep { kind = StepKind.Kneel, id = figure };
         public static ScriptStep TakeMind(string figure) => new ScriptStep { kind = StepKind.TakeMind, id = figure };
+        public static ScriptStep Restraint(GameObject restraint) => new ScriptStep { kind = StepKind.Restraint, target = restraint };
+        public static ScriptStep StopUnlessFlag(string flag) => new ScriptStep { kind = StepKind.StopUnlessFlag, id = flag };
+        public static ScriptStep WaitRoom(string room) => new ScriptStep { kind = StepKind.WaitRoom, id = room };
+        public static ScriptStep Feast(CutsceneAsset asset) => new ScriptStep { kind = StepKind.Feast, cutscene = asset };
     }
 
     /// <summary>
@@ -160,6 +168,7 @@ namespace GlorifiedBody.Story
                 ScriptStep step = steps[StepIndex];
                 if (step == null) continue;
                 if (step.kind == StepKind.StopIfFlag && StoryFlags.Has(step.id)) break;
+                if (step.kind == StepKind.StopUnlessFlag && !StoryFlags.Has(step.id)) break;
                 yield return Do(step);
             }
             ClearCover();
@@ -265,6 +274,20 @@ namespace GlorifiedBody.Story
                     if (mind != null && !mind.IsDeadFigure && Lucy() != null) Domination.Take(mind, Lucy());
                     break;
                 }
+                case StepKind.Restraint:
+                {
+                    var restraint = step.target != null ? step.target.GetComponentInChildren<GlorifiedBody.Interaction.UprightRestraint>() : null;
+                    if (restraint == null || restraint.Broken) break;
+                    restraint.Hold(Lucy());
+                    while (restraint != null && restraint.Holding) yield return null;
+                    break;
+                }
+                case StepKind.WaitRoom:
+                    while (GlorifiedBody.Rooms.RoomTracker.CurrentId != step.id) yield return null;
+                    break;
+                case StepKind.Feast:
+                    yield return FirstFeed.Feast(step.cutscene, Lucy());
+                    break;
                 case StepKind.LockHer: SetLock(true); break;
                 case StepKind.FreeHer: SetLock(false); break;
                 case StepKind.EndDemo:

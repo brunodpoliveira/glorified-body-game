@@ -48,7 +48,7 @@ MonoBehaviour:
 
     Recommendation.
     Do not hold a batch. Never enter alone. End of review.'
-  readFlag: feed_unlocked
+  readFlag: 
   mapFloor: 
   audioClip: {fileID: 8300000, guid: 139cd5abd2ee765db8ecef896e8b8dfb, type: 3}
   tapeLines:

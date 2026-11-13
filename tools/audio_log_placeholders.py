@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The placeholder recordings of the demo's two audio logs (2026-11-09): L19, the incident review (W9), and L20, the
+"""The placeholder recordings of the demo's audio logs (2026-11-09; L35 2026-11-13): L19, the incident review (W9), and L20, the
 calibration note (W11). The writer's words (game/lines/T14_incident_review.md, L20_calibration.md) as subtitles, and
 under each line the muffled voice-like sound of tools/tape_placeholder.py. The real voices come later.
 
@@ -33,6 +33,17 @@ LOGS = {
         ("Recommendation. Retain for v4 transfer.", False),
         ("Note. Affect flatter than day one.", True),
         ("Acceptable. End of note.", False),
+    ],
+    # L35, the frame protocol (H2 of the Hold, round 118): the writer's game/lines/H1_the_hold.md, no pauses.
+    # DemoItems.L35 reads the same lines from that file and computes the same times.
+    "l35_frame_protocol": [
+        ("Upright restraint. Protocol for the Hold. Listen to this before your first shift.", False),
+        ("The line stays in. The filter takes the tincture out of her blood, and while it runs she can't do anything. Nothing. She's a patient.", False),
+        ("The cage stays on the Crown. If you find it off, it goes back on before you do anything else.", False),
+        ("Never enter alone. Two in the box, two in the post, at all times.", False),
+        ("If the line comes out, you don't put it back in. The Hold seals by itself. You get behind a door, and you wait for the tube.", False),
+        ("It's for her as much as for you.", False),
+        ("Nobody's ever had to. Listen to it anyway.", False),
     ],
 }
 

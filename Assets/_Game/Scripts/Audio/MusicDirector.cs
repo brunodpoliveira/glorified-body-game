@@ -244,13 +244,35 @@ namespace GlorifiedBody.Audio
             return Resources.Load<AudioClip>(Folder + Placeholder + "/" + name);
         }
 
+        /// <summary>
+        /// One piece with three states (rounds 119 and 123, CANON: exploration, search and combat are cut from the same
+        /// audio, so they lock by construction and the game can switch on any beat). Ambient is exploration, Tension is
+        /// search (a squad hunts her, no fight yet), Combat is combat. When the old and the new clip are two states of one
+        /// piece (the same length in samples), the new one starts at the old one's sample: the crossfade keeps the beat.
+        /// </summary>
+        public static bool SamePiece(AudioClip from, AudioClip to) =>
+            from != null && to != null && from != to && from.samples == to.samples && from.frequency == to.frequency;
+
+        /// <summary>The sample the music plays now (a test of the lock reads it).</summary>
+        public int CurrentSample => current != null && current.clip != null ? current.timeSamples : 0;
+        public int Locks { get; private set; }
+
         private void StartTrack(AudioClip clip)
         {
             AudioSource next = current == a ? b : a;
             next.Stop();
             next.clip = clip;
             next.volume = 0f;
-            if (clip != null) next.Play();
+            bool locked = SamePiece(current.clip, clip) && current.isPlaying && State != MusicState.Score && State != MusicState.Menu;
+            if (clip != null)
+            {
+                next.Play();
+                if (locked)
+                {
+                    next.timeSamples = current.timeSamples;
+                    Locks++;
+                }
+            }
             current = next;
             fade = 0f;
             Changes++;

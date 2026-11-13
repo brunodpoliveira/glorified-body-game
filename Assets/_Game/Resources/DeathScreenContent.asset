@@ -164,7 +164,9 @@ MonoBehaviour:
     picture: {fileID: 0}
     pictureNote: the corridor from high above, the brain's eye, Lucy small and bare-headed
       in grey folds
-    hint: 'Its ring is slower than your walk: keep moving. When it locks'
+    hint: 'Its ring is slower than your walk: keep moving. When it locks, hurt it
+      before the charge fires, or leave the ring. A grabber swells before it lunges:
+      step aside.'
     voiceLine: {fileID: 0}
     voiceText: 'BRAIN: Your life has been full of suffering. But don''t worry. It''ll
       be over soon.'
@@ -185,3 +187,11 @@ MonoBehaviour:
       of the white cloud, or catch it with mk_orzabal.
     voiceLine: {fileID: 0}
     voiceText: 'FIREMAN: I got one breathing! Get a mask on her, get a mask on her!'
+  - killerId: power_armour_guns
+    picture: {fileID: 0}
+    pictureNote: the floor of the Dining Hall from low down, the white linen torn,
+      the gun pod of the armour still smoking past its shoulder
+    hint: The guns follow the sweep of the laser. Get behind a column before the
+      ring fills. Up close, mk_warspite breaks its aim.
+    voiceLine: {fileID: 0}
+    voiceText: 'POWER ARMOUR: Target down. Cease fire. Cease fire.'

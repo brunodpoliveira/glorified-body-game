@@ -1,0 +1,75 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 202cb6532a4a7f80682b508098ca96f0, type: 3}
+  m_Name: item_l35_frame_protocol
+  m_EditorClassIdentifier: Assembly-CSharp::GlorifiedBody.Interaction.ItemDefinition
+  itemId: l35_frame_protocol
+  displayName: A RECORDER
+  kind: 6
+  drugType: 0
+  colour: {r: 0.95, g: 0.55, b: 0.2, a: 1}
+  description: A recording. It plays while she walks. A fight pauses it.
+  logText: 'Upright restraint. Protocol for the Hold. Listen to this before your
+    first shift.
+
+
+    The line stays in. The filter takes the tincture out of her
+    blood, and while it runs she can''t do anything. Nothing. She''s a patient.
+
+
+    The
+    cage stays on the Crown. If you find it off, it goes back on before you do anything
+    else.
+
+
+    Never enter alone. Two in the box, two in the post, at all times.
+
+
+    If
+    the line comes out, you don''t put it back in. The Hold seals by itself. You
+    get behind a door, and you wait for the tube.
+
+
+    It''s for her as much as
+    for you.
+
+
+    Nobody''s ever had to. Listen to it anyway.'
+  readFlag: 
+  mapFloor: 
+  audioClip: {fileID: 8300000, guid: f007568d0bd9c11a980403374c8bc39a, type: 3}
+  tapeLines:
+  - at: 0.6
+    speaker: TECHNICIAN
+    text: Upright restraint. Protocol for the Hold. Listen to this before your first
+      shift.
+  - at: 6.1
+    speaker: TECHNICIAN
+    text: The line stays in. The filter takes the tincture out of her blood, and
+      while it runs she can't do anything. Nothing. She's a patient.
+  - at: 16.215385
+    speaker: TECHNICIAN
+    text: The cage stays on the Crown. If you find it off, it goes back on before
+      you do anything else.
+  - at: 24.407694
+    speaker: TECHNICIAN
+    text: Never enter alone. Two in the box, two in the post, at all times.
+  - at: 30.292309
+    speaker: TECHNICIAN
+    text: If the line comes out, you don't put it back in. The Hold seals by itself.
+      You get behind a door, and you wait for the tube.
+  - at: 41.176926
+    speaker: TECHNICIAN
+    text: It's for her as much as for you.
+  - at: 44.75385
+    speaker: TECHNICIAN
+    text: Nobody's ever had to. Listen to it anyway.

@@ -193,6 +193,16 @@ namespace GlorifiedBody.Player
             OnChanged?.Invoke();
         }
 
+        /// <summary>
+        /// The drain line of the upright restraint (round 118, CANON: it pulls the tincture out of her blood): every MK bar
+        /// at zero. She breaks free with empty bars, and the first capsule gives her the first power back.
+        /// </summary>
+        public void EmptyMk()
+        {
+            for (int i = 0; i < bars.Length; i++) bars[i] = 0f;
+            OnChanged?.Invoke();
+        }
+
         /// <summary>Debug key and bots only (F7): every bar as new. No drug does this since 2026-10-30.</summary>
         public void RefillAll()
         {

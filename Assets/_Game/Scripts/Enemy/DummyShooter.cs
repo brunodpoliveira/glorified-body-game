@@ -27,8 +27,21 @@ namespace GlorifiedBody.Enemy
     public sealed class DummyShooter : MonoBehaviour, IStaggerable
     {
         public enum State { Idle, Aiming, Telegraph, Firing, Cooldown, Staggered, Dead }
-        public enum Weapon { Pistol, Rifle, GrenadeLauncher, GasLauncher, ArmourLaunchers, Knife } // Knife: melee only (2026-10-27)
-        public enum Attack { None, Shot, Burst, Grenade, Melee, Gas, Rocket }
+        public enum Weapon { Pistol, Rifle, GrenadeLauncher, GasLauncher, ArmourLaunchers, Knife, Shotgun, ArmourGuns } // Knife: melee only (2026-10-27); Shotgun, ArmourGuns: the Dining Hall (round 122)
+        public enum Attack { None, Shot, Burst, Grenade, Melee, Gas, Rocket, Spread, Sweep }
+
+        // The shotgun (round 122, PROPOSED: "a short wide cone instead of a line, close range only"): the cone shows in the
+        // aim and the circle, then the pellets fly inside it. Numbers PROPOSED.
+        public const float ConeHalfAngle = 18f;
+        public const int Pellets = 7;
+        public const float PelletDamage = 5f;
+        // The autofire of the power armour (round 122, PROPOSED: "the laser line sweeps across her, the ring fills, then a
+        // long burst follows the sweep. Cover breaks the burst"). Numbers PROPOSED.
+        public const float SweepHalfWidth = 1.6f;   // m each side of her
+        public const float SweepPeriod = 1.2f;      // s for one sweep across and back
+        public const int SweepRounds = 12;
+        public const float SweepSpacing = 0.08f;
+        public const float SweepRoundDamage = 5f;
 
         /// <summary>The writer's lines as a soldier fires the knock-out gas (barks.csv, soldier_gas_1 to 3, PROPOSED).</summary>
         public static readonly string[] SoldierGasLines =
@@ -148,6 +161,8 @@ namespace GlorifiedBody.Enemy
                 case Weapon.GasLauncher: return Attack.Gas;
                 case Weapon.ArmourLaunchers: return Attack.Grenade; // and Rocket, one after the other
                 case Weapon.Knife: return Attack.None; // a knife only strikes
+                case Weapon.Shotgun: return Attack.Spread;
+                case Weapon.ArmourGuns: return Attack.Sweep;
                 default: return Attack.Shot;
             }
         }
@@ -169,6 +184,8 @@ namespace GlorifiedBody.Enemy
                 Weapon.GasLauncher => "gas",
                 Weapon.ArmourLaunchers => "launchers",
                 Weapon.Knife => "knife",
+                Weapon.Shotgun => "shotgun",
+                Weapon.ArmourGuns => "guns",
                 _ => "pistol"
             };
             return classId + "_" + w;
@@ -207,6 +224,8 @@ namespace GlorifiedBody.Enemy
             health = GetComponent<Health>();
             laser = MakeLine("Laser", new Color(1f, 0.1f, 0.1f), 0.03f, 2);
             laser.enabled = false;
+            cone = MakeLine("Cone", new Color(1f, 0.1f, 0.1f), 0.03f, 3); // the shotgun's wedge: one edge, the muzzle, the other edge
+            cone.enabled = false;
         }
 
         private void OnEnable()
@@ -280,8 +299,11 @@ namespace GlorifiedBody.Enemy
                         }
                         Current = State.Aiming;
                         timer = aim;
+                        sweepClock = 0f;
+                        sweepCentre = chest;
+                        sweepMin = sweepMax = 0f;
                         aimPoint = AimFor(next, chest);
-                        laser.enabled = next != Attack.Melee; // the laser is the gun's aim; a strike has none
+                        laser.enabled = next != Attack.Melee && next != Attack.Spread; // the laser is the gun's aim; a strike has none; the shotgun shows its cone
                         RunTelemetry.Event("enemy_aim", $"{enemyId}:{next}");
                         OnAimStarted?.Invoke();
                     }
@@ -301,6 +323,7 @@ namespace GlorifiedBody.Enemy
                     break;
 
                 case State.Telegraph:
+                    if (CurrentAttack == Attack.Sweep && !Suppressing) aimPoint = AimFor(CurrentAttack, chest);
                     DrawLaser();
                     timer -= dt;
                     if (timer <= 0f) Fire();
@@ -351,7 +374,32 @@ namespace GlorifiedBody.Enemy
         }
 
         /// <summary>The gun aims at her chest, a grenade at the floor under her.</summary>
-        private Vector3 AimFor(Attack attack, Vector3 chest) => IsLobbed(attack) ? new Vector3(chest.x, player.position.y, chest.z) : chest;
+        private Vector3 AimFor(Attack attack, Vector3 chest)
+        {
+            if (IsLobbed(attack)) return new Vector3(chest.x, player.position.y, chest.z);
+            if (attack == Attack.Sweep)
+            {
+                // The laser sweeps across her, side to side, through the aim and the circle.
+                sweepClock += Time.deltaTime;
+                return chest + SweepSide(chest) * (Mathf.Sin(sweepClock * 2f * Mathf.PI / SweepPeriod) * SweepHalfWidth);
+            }
+            return chest;
+        }
+
+        private Vector3 SweepSide(Vector3 at)
+        {
+            Vector3 line = at - Muzzle;
+            line.y = 0f;
+            return line.sqrMagnitude < 0.0001f ? transform.right : Vector3.Cross(Vector3.up, line.normalized);
+        }
+
+        private LineRenderer cone;
+        private float sweepClock;
+        private Vector3 sweepCentre;
+        /// <summary>The widest sideways travel of the sweep laser in the last aim (a test reads it), m.</summary>
+        public float LastSweepSpan { get; private set; }
+        private float sweepMin, sweepMax;
+        public bool ConeShown => cone != null && cone.enabled;
 
         /// <summary>
         /// The lock of a shaky shooter: the point moves off her chest, square to the line of fire, up to aimSpread.
@@ -412,9 +460,29 @@ namespace GlorifiedBody.Enemy
 
         private void DrawLaser()
         {
+            if (CurrentAttack == Attack.Spread && !Suppressing)
+            {
+                // The wedge: the muzzle, the two edges at the gun's range.
+                Vector3 to = aimPoint - Muzzle;
+                to.y = 0f;
+                if (to.sqrMagnitude < 0.0001f) to = transform.forward;
+                Vector3 along = to.normalized * range;
+                cone.enabled = true;
+                cone.SetPosition(0, Muzzle + Quaternion.Euler(0f, -ConeHalfAngle, 0f) * along);
+                cone.SetPosition(1, Muzzle);
+                cone.SetPosition(2, Muzzle + Quaternion.Euler(0f, ConeHalfAngle, 0f) * along);
+                return;
+            }
             if (!laser.enabled) return;
             laser.SetPosition(0, Muzzle);
             laser.SetPosition(1, aimPoint);
+            if (CurrentAttack == Attack.Sweep)
+            {
+                float off = Vector3.Dot(aimPoint - sweepCentre, SweepSide(sweepCentre));
+                sweepMin = Mathf.Min(sweepMin, off);
+                sweepMax = Mathf.Max(sweepMax, off);
+                LastSweepSpan = sweepMax - sweepMin;
+            }
         }
 
         private void Fire()
@@ -426,6 +494,30 @@ namespace GlorifiedBody.Enemy
                 case Attack.Melee:
                     Strike();
                     CancelAim(State.Cooldown, RestSeconds);
+                    return;
+                case Attack.Spread:
+                {
+                    // The pellets fan out inside the cone (round 122, PROPOSED).
+                    cone.enabled = false;
+                    Vector3 origin = Muzzle;
+                    Vector3 to = aimPoint - origin;
+                    for (int i = 0; i < Pellets; i++)
+                    {
+                        float a = Mathf.Lerp(-ConeHalfAngle, ConeHalfAngle, Pellets > 1 ? i / (float)(Pellets - 1) : 0.5f);
+                        EnemyProjectile.Launch(origin, Quaternion.Euler(0f, a, 0f) * to, projectileSpeed, PelletDamage, gameObject, enemyId);
+                        RoundsFired++;
+                    }
+                    OnFired?.Invoke(origin, to.normalized);
+                    CancelAim(State.Cooldown, RestSeconds);
+                    return;
+                }
+                case Attack.Sweep:
+                    // The long burst follows the sweep: the rounds walk across her from one side to the other.
+                    laser.enabled = false;
+                    sweepCentre = player != null ? player.position + Vector3.up * Body.ChestHeight : aimPoint;
+                    roundsLeft = SweepRounds;
+                    Current = State.Firing;
+                    FireRound();
                     return;
                 case Attack.Burst:
                     // The rounds go 0.1 s apart to the locked point: one dodge clears the burst.
@@ -459,6 +551,13 @@ namespace GlorifiedBody.Enemy
             {
                 EnemyRocket.Launch(origin, aimPoint - origin, rocketSpeed, rocketDamage, rocketRadius, gameObject, enemyId);
             }
+            else if (CurrentAttack == Attack.Sweep)
+            {
+                float t = 1f - (roundsLeft - 1) / (float)Mathf.Max(1, SweepRounds - 1); // 0 at the first round, 1 at the last
+                Vector3 at = sweepCentre + SweepSide(sweepCentre) * Mathf.Lerp(-SweepHalfWidth, SweepHalfWidth, t);
+                direction = (at - origin).normalized;
+                EnemyProjectile.Launch(origin, at - origin, projectileSpeed, SweepRoundDamage, gameObject, enemyId);
+            }
             else
             {
                 float damage = CurrentAttack == Attack.Burst ? burstRoundDamage : projectileDamage;
@@ -471,7 +570,7 @@ namespace GlorifiedBody.Enemy
             if (roundsLeft > 0)
             {
                 Current = State.Firing;
-                timer = burstSpacing;
+                timer = CurrentAttack == Attack.Sweep ? SweepSpacing : burstSpacing;
             }
             else
             {
@@ -524,6 +623,7 @@ namespace GlorifiedBody.Enemy
             if (HoldsSlot) ShooterScheduler.Release(this);
             Suppressing = false;
             laser.enabled = false;
+            if (cone != null) cone.enabled = false;
             Current = next;
             timer = seconds;
             if (wasAiming) OnAimEnded?.Invoke();

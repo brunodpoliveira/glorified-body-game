@@ -29,7 +29,7 @@ namespace GlorifiedBody.Automation
         public const int ShotWidth = 1920, ShotHeight = 1080;
         public static readonly string[] Rooms =
         {
-            "W1", "W1B", "W2", "W3", "W4", "W5", "W6", "W7", "W8", "W9", "W10", "W11", "W12", "W13", "W14", "W15", "W16", "W17", "S1",
+            "H1", "H2", "H3", "H4", "H5", "HT", "H6", "H7", "H8", "H9", "W2", "W3", "W4", "W5", "W6", "W7", "W8", "W9", "W10", "W11", "W12", "W13", "W14", "W15", "W16", "W17", "S1",
             "G1", "G2", "G3", "G4", "G5", "G6", "G7", "G8", "G9", "G9b", "G10", "G11", "G12", "G13", "G14", "G15", "G16", "X1", "R1", "R2", "R3", "U1", "B1", "B2", "G18", "G19", "G17b", "G17",
         };
 
@@ -103,7 +103,8 @@ namespace GlorifiedBody.Automation
             FixedCameraDirector director = FixedCameraDirector.Instance;
             Record("world", SceneManager.GetActiveScene().name == World && lucy != null && director != null && GlorifiedBody.Rooms.Room.All.Count == Rooms.Length && EnemySpawn.Missing == 0,
                 $"scene={SceneManager.GetActiveScene().name} rooms={GlorifiedBody.Rooms.Room.All.Count} figures={FindObjectsByType<FeedableBody>(FindObjectsSortMode.None).Length} missing={EnemySpawn.Missing}");
-            // The opening: the wake plays first (2026-11-04), and the scientist waits in the next room, W1B (2026-11-05).
+            // The opening: the wake plays first (2026-11-04), she is in the frame of the cell H1 (the Hold, 2026-11-13), and the
+            // scientist waits in the next room, H2.
             if (lucy != null)
             {
                 float t2 = Time.realtimeSinceStartup;
@@ -112,21 +113,25 @@ namespace GlorifiedBody.Automation
                 GlorifiedBody.Story.CutscenePlayer.Skip();
                 while (GlorifiedBody.Story.CutscenePlayer.IsPlaying && Time.realtimeSinceStartup - t2 < 15f) yield return null;
                 yield return new WaitForSecondsRealtime(0.8f);
-                ShotRenderer.Render(Camera.main, Path.Combine(shotsDir, "demo_meet_0_safe_room.png"), ShotWidth, ShotHeight, useTargetTexture: true);
-                lucy.GetComponent<GlorifiedBody.Player.TankController>().Teleport(new Vector3(4f, 0f, 18.4f), 180f);
+                ShotRenderer.Render(Camera.main, Path.Combine(shotsDir, "demo_meet_0_in_the_frame.png"), ShotWidth, ShotHeight, useTargetTexture: true);
+                GlorifiedBody.Interaction.UprightRestraint.FreeAll();
+                yield return new WaitForSecondsRealtime(0.6f);
+                ShotRenderer.Render(Camera.main, Path.Combine(shotsDir, "demo_meet_0a_free.png"), ShotWidth, ShotHeight, useTargetTexture: true);
+                lucy.GetComponent<GlorifiedBody.Player.TankController>().Teleport(new Vector3(21.5f, 0f, 35.5f), 270f);
                 yield return new WaitForSecondsRealtime(0.4f);
                 ShotRenderer.Render(Camera.main, Path.Combine(shotsDir, "demo_meet_0b_the_doorway.png"), ShotWidth, ShotHeight, useTargetTexture: true);
-                lucy.GetComponent<GlorifiedBody.Player.TankController>().Teleport(new Vector3(4f, 0f, 17.9f), 180f);
+                lucy.GetComponent<GlorifiedBody.Player.TankController>().Teleport(new Vector3(20.1f, 0f, 35.5f), 270f);
                 yield return new WaitForSecondsRealtime(1.5f);
                 ShotRenderer.Render(Camera.main, Path.Combine(shotsDir, "demo_meet_1_he_comes.png"), ShotWidth, ShotHeight, useTargetTexture: true);
                 t2 = Time.realtimeSinceStartup;
                 while (!GlorifiedBody.Story.CutscenePlayer.IsPlaying && Time.realtimeSinceStartup - t2 < 5f) yield return null;
-                Record("the_talk_in_w1b", GlorifiedBody.Story.CutscenePlayer.Current == "02_the_scientist", GlorifiedBody.Story.CutscenePlayer.Current);
+                Record("the_talk_in_h2", GlorifiedBody.Story.CutscenePlayer.Current == "02_the_scientist", GlorifiedBody.Story.CutscenePlayer.Current);
                 GlorifiedBody.Story.CutscenePlayer.Skip();
                 while (GlorifiedBody.Story.CutscenePlayer.IsPlaying && Time.realtimeSinceStartup - t2 < 15f) yield return null;
                 yield return new WaitForSecondsRealtime(1.2f); // he steps in
                 ShotRenderer.Render(Camera.main, Path.Combine(shotsDir, "demo_meet_2_after_the_talk.png"), ShotWidth, ShotHeight, useTargetTexture: true);
             }
+            GlorifiedBody.Saving.StoryFlags.Raise("hold_tube_out"); // the tube of the Hold out: its floor to stand on in the tour
             foreach (string id in Rooms)
             {
                 GlorifiedBody.Rooms.Room room = GlorifiedBody.Rooms.Room.Of(id);

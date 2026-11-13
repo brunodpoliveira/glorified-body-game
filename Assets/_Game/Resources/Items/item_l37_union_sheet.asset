@@ -1,0 +1,40 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 202cb6532a4a7f80682b508098ca96f0, type: 3}
+  m_Name: item_l37_union_sheet
+  m_EditorClassIdentifier: Assembly-CSharp::GlorifiedBody.Interaction.ItemDefinition
+  itemId: l37_union_sheet
+  displayName: A SIGN-UP SHEET
+  kind: 1
+  drugType: 0
+  colour: {r: 0.96, g: 0.95, b: 0.88, a: 1}
+  description: a sign-up sheet.
+  logText: 'Pinned over it: A MESSAGE FROM THE EXECUTIVE OFFICE. WE VALUE DIRECT
+    CONVERSATION WITH EVERY MEMBER OF OUR FAMILY. OUR DOOR IS OPEN. NO THIRD PARTY
+    KNOWS YOUR WORK AS WE DO.
+
+
+    Under it: STAFF OF THE MEMORIAL. YOU HAVE THE
+    RIGHT TO ASK FOR A VOTE. SIGN HERE. Thirty-one names. Four are crossed out.
+
+
+    By
+    hand: Christmas was the last straw.
+
+    A union won''t get you Christmas. Talk
+    to HR, they listened about the parking.
+
+    HR works for them.'
+  readFlag: 
+  mapFloor: 
+  audioClip: {fileID: 0}
+  tapeLines: []

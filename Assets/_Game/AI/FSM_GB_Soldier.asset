@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!114 &-8332072155816250624
+--- !u!114 &-3990342145098071022
 MonoBehaviour:
   m_ObjectHideFlags: 1
   m_CorrespondingSourceObject: {fileID: 0}
@@ -9,101 +9,14 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c98aadafa8d79206c856aa5f0c235721, type: 3}
-  m_Name: Is Alerted
-  m_EditorClassIdentifier: Assembly-CSharp::GlorifiedBody.Integration.Invector.GbAlertedDecision
+  m_Script: {fileID: 11500000, guid: dd5ac94e5e12f6248b8bbf505de7edad, type: 3}
+  m_Name: Find Target
+  m_EditorClassIdentifier: Assembly-CSharp::Invector.vCharacterController.AI.FSMBehaviour.vAIFindTargetAction
   parentFSM: {fileID: 0}
+  executionType: 1
   editingName: 0
-  trueRect:
-    serializedVersion: 2
-    x: 0
-    y: 0
-    width: 10
-    height: 10
-  falseRect:
-    serializedVersion: 2
-    x: 0
-    y: 0
-    width: 10
-    height: 10
-  selectedTrue: 0
-  selectedFalse: 0
---- !u!114 &-3400120967930676429
-MonoBehaviour:
-  m_ObjectHideFlags: 1
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3b73a6f13cf18194e889cafd0287a9ec, type: 3}
-  m_Name: Idle
-  m_EditorClassIdentifier: Assembly-CSharp::Invector.vCharacterController.AI.FSMBehaviour.vFSMState
-  description: 'Unaware: looks for Lucy (sight). A hit or an alert also wakes it
-    (SoldierBrain).'
-  selectedDecisionIndex: 0
-  canRemove: 1
-  canTranstTo: 1
-  canSetAsDefault: 1
-  canEditName: 1
-  canEditColor: 1
-  isOpen: 0
-  isSelected: 0
-  nodeRect:
-    serializedVersion: 2
-    x: 300
-    y: 40
-    width: 180
-    height: 30
-  positionRect: {x: 0, y: 0}
-  rectWidth: 0
-  editingName: 0
-  nodeColor: {r: 0.5, g: 0.7, b: 1, a: 1}
-  resizeLeft: 0
-  resizeRight: 0
-  inDrag: 0
-  resetCurrentDestination: 1
-  transitions:
-  - decisions:
-    - trueValue: 1
-      decision: {fileID: -8332072155816250624}
-      isValid: 0
-      validated: 0
-    trueState: {fileID: 7623862308571137232}
-    falseState: {fileID: 0}
-    muteTrue: 0
-    muteFalse: 0
-    transitionType: 0
-    transitionDelay: 0
-    parentState: {fileID: -3400120967930676429}
-    trueRect:
-      serializedVersion: 2
-      x: 0
-      y: 0
-      width: 0
-      height: 0
-    falseRect:
-      serializedVersion: 2
-      x: 0
-      y: 0
-      width: 0
-      height: 0
-    selectedTrue: 0
-    selectedFalse: 0
-    trueSideRight: 0
-    falseSideRight: 0
-    decisionEditor: {fileID: 0}
-    isOpen: 0
-    scroolView: {x: 0, y: 0, z: 0}
-    sameTargetCount: 0
-  actions:
-  - {fileID: 2102190438040498141}
-  useActions: 1
-  useDecisions: 1
-  parentGraph: {fileID: 11400000}
-  defaultTransition: {fileID: 0}
---- !u!114 &-728464838833533832
+  checkForObstacles: 1
+--- !u!114 &-1234109647455037194
 MonoBehaviour:
   m_ObjectHideFlags: 1
   m_CorrespondingSourceObject: {fileID: 0}
@@ -143,7 +56,22 @@ MonoBehaviour:
   useActions: 0
   useDecisions: 0
   parentGraph: {fileID: 11400000}
-  defaultTransition: {fileID: -3400120967930676429}
+  defaultTransition: {fileID: 4557412768489214682}
+--- !u!114 &-37523188770005338
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d4294f65f714852ce88954d46c5b3879, type: 3}
+  m_Name: Move Or Shoot
+  m_EditorClassIdentifier: Assembly-CSharp::GlorifiedBody.Integration.Invector.GbEngageAction
+  parentFSM: {fileID: 0}
+  executionType: 5
+  editingName: 0
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -161,60 +89,16 @@ MonoBehaviour:
   connectionNode: {fileID: 0}
   showProperties: 0
   states:
-  - {fileID: -728464838833533832}
-  - {fileID: 5861768278707954329}
-  - {fileID: -3400120967930676429}
-  - {fileID: 7623862308571137232}
+  - {fileID: -1234109647455037194}
+  - {fileID: 850296635505991953}
+  - {fileID: 4557412768489214682}
+  - {fileID: 2985346406478588232}
   panOffset: {x: 0, y: 0}
   overNode: 0
   actions: []
   decisions: []
   icon: {fileID: 0}
---- !u!114 &2102190438040498141
-MonoBehaviour:
-  m_ObjectHideFlags: 1
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: dd5ac94e5e12f6248b8bbf505de7edad, type: 3}
-  m_Name: Find Target
-  m_EditorClassIdentifier: Assembly-CSharp::Invector.vCharacterController.AI.FSMBehaviour.vAIFindTargetAction
-  parentFSM: {fileID: 0}
-  executionType: 1
-  editingName: 0
-  checkForObstacles: 1
---- !u!114 &3591200597398297755
-MonoBehaviour:
-  m_ObjectHideFlags: 1
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c98aadafa8d79206c856aa5f0c235721, type: 3}
-  m_Name: Is Alerted
-  m_EditorClassIdentifier: Assembly-CSharp::GlorifiedBody.Integration.Invector.GbAlertedDecision
-  parentFSM: {fileID: 0}
-  editingName: 0
-  trueRect:
-    serializedVersion: 2
-    x: 0
-    y: 0
-    width: 10
-    height: 10
-  falseRect:
-    serializedVersion: 2
-    x: 0
-    y: 0
-    width: 10
-    height: 10
-  selectedTrue: 0
-  selectedFalse: 0
---- !u!114 &5861768278707954329
+--- !u!114 &850296635505991953
 MonoBehaviour:
   m_ObjectHideFlags: 1
   m_CorrespondingSourceObject: {fileID: 0}
@@ -255,22 +139,7 @@ MonoBehaviour:
   useDecisions: 1
   parentGraph: {fileID: 11400000}
   defaultTransition: {fileID: 0}
---- !u!114 &6462610312310424940
-MonoBehaviour:
-  m_ObjectHideFlags: 1
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d4294f65f714852ce88954d46c5b3879, type: 3}
-  m_Name: Move Or Shoot
-  m_EditorClassIdentifier: Assembly-CSharp::GlorifiedBody.Integration.Invector.GbEngageAction
-  parentFSM: {fileID: 0}
-  executionType: 5
-  editingName: 0
---- !u!114 &7623862308571137232
+--- !u!114 &2985346406478588232
 MonoBehaviour:
   m_ObjectHideFlags: 1
   m_CorrespondingSourceObject: {fileID: 0}
@@ -309,16 +178,16 @@ MonoBehaviour:
   transitions:
   - decisions:
     - trueValue: 0
-      decision: {fileID: 3591200597398297755}
+      decision: {fileID: 4891986254500356752}
       isValid: 0
       validated: 0
-    trueState: {fileID: -3400120967930676429}
+    trueState: {fileID: 4557412768489214682}
     falseState: {fileID: 0}
     muteTrue: 0
     muteFalse: 0
     transitionType: 0
     transitionDelay: 0
-    parentState: {fileID: 7623862308571137232}
+    parentState: {fileID: 2985346406478588232}
     trueRect:
       serializedVersion: 2
       x: 0
@@ -340,8 +209,139 @@ MonoBehaviour:
     scroolView: {x: 0, y: 0, z: 0}
     sameTargetCount: 0
   actions:
-  - {fileID: 6462610312310424940}
+  - {fileID: -37523188770005338}
   useActions: 1
   useDecisions: 1
   parentGraph: {fileID: 11400000}
   defaultTransition: {fileID: 0}
+--- !u!114 &4557412768489214682
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3b73a6f13cf18194e889cafd0287a9ec, type: 3}
+  m_Name: Idle
+  m_EditorClassIdentifier: Assembly-CSharp::Invector.vCharacterController.AI.FSMBehaviour.vFSMState
+  description: 'Unaware: looks for Lucy (sight). A hit or an alert also wakes it
+    (SoldierBrain).'
+  selectedDecisionIndex: 0
+  canRemove: 1
+  canTranstTo: 1
+  canSetAsDefault: 1
+  canEditName: 1
+  canEditColor: 1
+  isOpen: 0
+  isSelected: 0
+  nodeRect:
+    serializedVersion: 2
+    x: 300
+    y: 40
+    width: 180
+    height: 30
+  positionRect: {x: 0, y: 0}
+  rectWidth: 0
+  editingName: 0
+  nodeColor: {r: 0.5, g: 0.7, b: 1, a: 1}
+  resizeLeft: 0
+  resizeRight: 0
+  inDrag: 0
+  resetCurrentDestination: 1
+  transitions:
+  - decisions:
+    - trueValue: 1
+      decision: {fileID: 6973700218029126579}
+      isValid: 0
+      validated: 0
+    trueState: {fileID: 2985346406478588232}
+    falseState: {fileID: 0}
+    muteTrue: 0
+    muteFalse: 0
+    transitionType: 0
+    transitionDelay: 0
+    parentState: {fileID: 4557412768489214682}
+    trueRect:
+      serializedVersion: 2
+      x: 0
+      y: 0
+      width: 0
+      height: 0
+    falseRect:
+      serializedVersion: 2
+      x: 0
+      y: 0
+      width: 0
+      height: 0
+    selectedTrue: 0
+    selectedFalse: 0
+    trueSideRight: 0
+    falseSideRight: 0
+    decisionEditor: {fileID: 0}
+    isOpen: 0
+    scroolView: {x: 0, y: 0, z: 0}
+    sameTargetCount: 0
+  actions:
+  - {fileID: -3990342145098071022}
+  useActions: 1
+  useDecisions: 1
+  parentGraph: {fileID: 11400000}
+  defaultTransition: {fileID: 0}
+--- !u!114 &4891986254500356752
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c98aadafa8d79206c856aa5f0c235721, type: 3}
+  m_Name: Is Alerted
+  m_EditorClassIdentifier: Assembly-CSharp::GlorifiedBody.Integration.Invector.GbAlertedDecision
+  parentFSM: {fileID: 0}
+  editingName: 0
+  trueRect:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 10
+    height: 10
+  falseRect:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 10
+    height: 10
+  selectedTrue: 0
+  selectedFalse: 0
+--- !u!114 &6973700218029126579
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c98aadafa8d79206c856aa5f0c235721, type: 3}
+  m_Name: Is Alerted
+  m_EditorClassIdentifier: Assembly-CSharp::GlorifiedBody.Integration.Invector.GbAlertedDecision
+  parentFSM: {fileID: 0}
+  editingName: 0
+  trueRect:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 10
+    height: 10
+  falseRect:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 10
+    height: 10
+  selectedTrue: 0
+  selectedFalse: 0

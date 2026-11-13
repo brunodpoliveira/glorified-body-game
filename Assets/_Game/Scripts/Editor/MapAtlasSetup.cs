@@ -67,7 +67,10 @@ namespace GlorifiedBody.Editor
         /// <summary>The short names of the demo's rooms on the map (the world scene, 2026-11-02).</summary>
         private static readonly Dictionary<string, string> DemoTitles = new Dictionary<string, string>
         {
-            { "W1", "RECOVERY" }, { "W1B", "TREATMENT" }, { "W2", "NORTH CORRIDOR" }, { "W3", "PATIENTS" }, { "W4", "SHOWERS" }, { "W5", "SOUTH CORRIDOR" },
+            // The Hold, map v3 (2026-11-13): H1 to H9 and the tube replace W1 and W1B.
+            { "H1", "THE CELL" }, { "H2", "TREATMENT" }, { "H3", "GUARD POST" }, { "H4", "THE THEATRE" }, { "H5", "AIRLOCK" },
+            { "HT", "THE TUBE" }, { "H6", "LANDING" }, { "H7", "THE GALLERY" }, { "H8", "SAVE ROOM" }, { "H9", "COLTON'S OFFICE" },
+            { "W2", "NORTH CORRIDOR" }, { "W3", "PATIENTS" }, { "W4", "SHOWERS" }, { "W5", "SOUTH CORRIDOR" },
             { "W6", "LOCKERS" }, { "W7", "THERAPY GYM" }, { "W8", "INDUCTION" }, { "W9", "NURSES' STATION" }, { "W10", "RESEARCH" },
             { "W11", "MAPPING LAB" }, { "W12", "STAIRWELL" }, { Demo.DemoWorld.Stair, "STAIRS" },
             { "G1", "LANDING" }, { "G2", "CONCOURSE" }, { "G3", "DONOR WALL" }, { "G4", "CHAPEL" }, { "G5", "RECEPTION" },

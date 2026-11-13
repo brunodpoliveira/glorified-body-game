@@ -31,6 +31,20 @@ namespace GlorifiedBody.Tests.PlayMode
     /// </summary>
     public class FloorplanV2Tests
     {
+
+        /// <summary>The wake is done: since the Hold (2026-11-13) she starts in the frame, so the test frees her as the last press would.</summary>
+        private static bool Woke()
+        {
+            // The frame empties every MK bar (round 119); these tests were written for full bars: they get them back once.
+            bool held = UnityEngine.Object.FindObjectsByType<GlorifiedBody.Interaction.UprightRestraint>(FindObjectsSortMode.None).Any(r => r.Holding);
+            GlorifiedBody.Interaction.UprightRestraint.FreeAll();
+            if (held)
+            {
+                var stats = GameObject.FindGameObjectWithTag("Player")?.GetComponent<GlorifiedBody.Player.PsychicStats>();
+                if (stats != null) foreach (GlorifiedBody.Player.PowerKind k in new[] { GlorifiedBody.Player.PowerKind.Blast, GlorifiedBody.Player.PowerKind.Fire, GlorifiedBody.Player.PowerKind.Telekinesis, GlorifiedBody.Player.PowerKind.Domination }) stats.FillMk(k);
+            }
+            return GlorifiedBody.Saving.StoryFlags.Has("demo_h1_wake");
+        }
         private const string World = "Demo";
         private const string CardFlag = "demo_g12_card";
         private const string FlashbackId = "07b_the_conference_room";
@@ -94,12 +108,12 @@ namespace GlorifiedBody.Tests.PlayMode
             // The main way did not move (Bruno: "the main way does not change").
             foreach ((string id, Vector4 rect) in new[]
             {
-                ("W1", new Vector4(0, 19, 8, 26)), ("W2", new Vector4(0, 11, 24, 14)), ("W5", new Vector4(0, -9, 3, 11)), ("W9", new Vector4(3, -10, 17, -2)),
+                ("H1", new Vector4(21, 33, 27, 38)), ("H9", new Vector4(1, 14, 7, 19)), ("W2", new Vector4(0, 11, 24, 14)), ("W5", new Vector4(0, -9, 3, 11)), ("W9", new Vector4(3, -10, 17, -2)),
                 ("W11", new Vector4(3, -18, 13, -10)), ("W12", new Vector4(13, -14, 17, -10)), ("G1", new Vector4(0, 0, 5, 5)), ("G2", new Vector4(5, 0, 35, 6)),
                 ("G5", new Vector4(12, -16, 28, 0)), ("G9", new Vector4(28, -16, 34, -9)), ("U1", new Vector4(14, -28, 26, -16)),
             })
                 Assert.AreEqual(rect, Room.Of(id).rect, id + " stands where it stood");
-            Assert.AreEqual(47, Room.All.Count, "40 rooms, the stair, the brain sector B1 with its door B2 (2026-11-09), the Dining Hall G18 and its kitchen G19, the halon room G17 and G17b (2026-11-10)");
+            Assert.AreEqual(55, Room.All.Count, "the Hold (H1 to H9 and the tube HT, map v3, 2026-11-13) in place of W1 and W1B, 38 more rooms, the stair, the brain sector B1 with its door B2 (2026-11-09), the Dining Hall G18 and its kitchen G19, the halon room G17 and G17b (2026-11-10)");
         }
 
         [UnityTest]
@@ -273,7 +287,7 @@ namespace GlorifiedBody.Tests.PlayMode
         {
             yield return WaitUntil(() => CutscenePlayer.IsPlaying && CutscenePlayer.ShotIndex >= 0, 10f);
             CutscenePlayer.Skip();
-            yield return WaitUntil(() => StoryFlags.Has("demo_w1_wake") && !CutscenePlayer.IsPlaying, 10f);
+            yield return WaitUntil(() => Woke() && !CutscenePlayer.IsPlaying, 10f);
             yield return null;
         }
 

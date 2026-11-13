@@ -604,6 +604,23 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   (`TapePlayer.PassesThePause`); it goes on after the close; the pause menu still stops it. Bruno: "subtitles show": in
   the inventory only the tape line shows, above the panels, and at the top over a log page (`SubtitleUI.PlaceShown`).
 
+- 2026-11-13, rounds 118 to 123 from the writing chat (`devlog-notes/2026-11-13_hold_dining_music.md`): THE HOLD, map v3
+  (`Editor/Demo/DemoHold.cs`): H1 to H9 and the tube HT replace W1 and W1B (H6 and the box 5 m north of the writer's
+  drawing, H7 6 m deep). She starts in the upright frame (`Interaction/UprightRestraint`, `StepKind.Restraint`: MK 0,
+  SHORT 90, Interact 12 times); the runner of H2 (`CivilianBrain.SetEscape`), the guards open the door
+  (`FireDoor.openFlag`); the booth of H4 (`GlassDoor`: two blasts, or `FireAlarm` on a full mk_erebus); L36 unlocks
+  the feed, L19 no longer does; the gurney ride (`GurneyRide`: Interact, walk keys, 40 MK, no landing over the gap,
+  `PitReturn`); EXTEND, the scan C11, the card denied then given (`CarrierTalk.giveAfterFlag`, `AskTalk`); KNIGHT in
+  H5 (`StopUnlessFlag`, `WaitRoom`, `StepKind.Feast`), the first feed is 02b (`Story/FirstFeed`); H7 the arena, H8 the
+  save, the hidden door shuts behind her (`jamFlag`), H9 opens into W2. Tests and bots free her with
+  `UprightRestraint.FreeAll`; the wake flag is `demo_h1_wake`. THE DINING HALL: six soldiers (two shields, two
+  `soldier_grenades`, two `soldier_shotgun`: a wedge telegraph, 7 pellets), at three standing the
+  `power_armour_guns` steps out (`Story/HeavyArrival`; the sweep laser, 12 rounds). G11: L14 and L37. THE MUSIC: two
+  states of one piece keep the sample (`MusicDirector.SamePiece`); placeholders from T41
+  (`tools/music_states_placeholder.sh`). AFTER A VENDOR IMPORT: `BuildEnemyPrefabs` makes 15 kinds now. Tests:
+  `HoldTests` (13), `DiningHallTests` (3). The brain row of the writer's `death_screens.csv` is cut (unquoted commas):
+  the writer quoted it the same day (63 of 63 EditMode). Numbers PROPOSED.
+
 ## Rules
 
 1. Unity 6000.3.15f1 (installed at `/home/pc/Unity/Hub/Editor/6000.3.15f1`). Start it only through `tools/unity.sh`
