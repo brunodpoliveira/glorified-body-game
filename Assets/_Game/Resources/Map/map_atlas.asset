@@ -663,15 +663,18 @@ MonoBehaviour:
       x: -7
       y: 2
       width: 7
-      height: 6
+      height: 7
     exits:
     - path: W6/W5
       position: {x: 0, y: 5}
       targetScene: W5
+    - path: W6/W14
+      position: {x: -1.6, y: 9}
+      targetScene: W14
     marks:
     - kind: 2
       path: '[World]/[W6]/[Props]/L3_Card'
-      position: {x: -2.2, y: 7.4}
+      position: {x: -3, y: 8.4}
       label: A LAMINATED CARD
     - kind: 1
       path: '[World]/[W6]/[Props]/Capsule_W6'
@@ -876,6 +879,9 @@ MonoBehaviour:
     - path: W14/W2
       position: {x: 0, y: 12.75}
       targetScene: W2
+    - path: W14/W6
+      position: {x: -1.6, y: 9}
+      targetScene: W6
     marks: []
   - scene: W15
     world: Demo
@@ -1293,6 +1299,9 @@ MonoBehaviour:
     - path: G12/G5
       position: {x: 39.5, y: -47}
       targetScene: G5
+    - path: G12/G17
+      position: {x: 50.5, y: -51.4}
+      targetScene: G17
     marks:
     - kind: 2
       path: '[World]/[G12]/[Props]/L16_Counsel_Note'
@@ -1619,6 +1628,9 @@ MonoBehaviour:
     - path: G17/G17b
       position: {x: 53.5, y: -47}
       targetScene: G17b
+    - path: G17/G12
+      position: {x: 50.5, y: -51.4}
+      targetScene: G12
     marks:
     - kind: 2
       path: '[World]/[G17]/[Props]/L17_Health_Note'

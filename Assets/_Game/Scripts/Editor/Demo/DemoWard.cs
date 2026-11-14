@@ -29,7 +29,7 @@ namespace GlorifiedBody.Editor.Demo
                 Room("W3", "PATIENT ROOMS", 9, 14, 17, 19, W3, new Door('S', 13, "W2")),
                 Room("W4", "SHOWER ROOM", 19, 14, 25, 20, W4, new Door('S', 22, "W2")),
                 Room("W5", "SOUTH CORRIDOR", 0, -9, 3, 11, W5, new Door('N', 1.5f, "W2", fire: true), new Door('W', 5, "W6"), new Door('E', 1.5f, "W7", fire: true), new Door('E', -6, "W9", fire: true, jamFlag: CodeSilver, leverRoom: "W9")),
-                Room("W6", "STAFF LOCKERS", -7, 2, 0, 8, W6, new Door('E', 5, "W5")),
+                Room("W6", "STAFF LOCKERS", -7, 2, 0, 9, W6, new Door('E', 5, "W5"), DemoV2.ShortcutS3("W14")), // 1 m longer (2026-11-14): its north wall is the south wall of W14, the shortcut S3
                 Room("W7", "THERAPY GYM", 3, -2, 11, 5, W7, new Door('W', 1.5f, "W5", fire: true), new Door('E', 1.5f, "W8")),
                 Room("W8", "INDUCTION SUITE", 11, -2, 17, 5, W8, new Door('W', 1.5f, "W7"), new Door('S', 14, "W9")),
                 Room("W9", "NURSES' STATION", 3, -10, 17, -2, W9, new Door('N', 14, "W8"), new Door('W', -6, "W5", fire: true, jamFlag: CodeSilver, leverRoom: "W9"), new Door('E', -7, "W10"), new Door('S', 8, "W11"), new Door('S', 15, "W12"),
@@ -151,12 +151,12 @@ namespace GlorifiedBody.Editor.Demo
         /// <summary>W6: the lockers and the guard uniform, the card L3, a save machine (beat 10), the poster.</summary>
         private static void W6(DemoRoom r)
         {
-            r.Locker("Locker_Uniform", new Vector3(-4f, 0f, 7.7f));
+            r.Locker("Locker_Uniform", new Vector3(-4f, 0f, 8.7f));
             for (int i = 0; i < 4; i++)
-                if (i != 1) r.Prop($"Locker_{i}", new Vector3(-6f + i * 1f, 0f, 7.7f), new Vector3(0.9f, 1.9f, 0.55f), 0.08f);
-            r.Item("L3_Card", DemoItems.L3(), new Vector3(-2.2f, 1.2f, 7.4f), new Vector3(0.2f, 0.28f, 0.02f));
+                if (i != 1) r.Prop($"Locker_{i}", new Vector3(-6f + i * 1f, 0f, 8.7f), new Vector3(0.9f, 1.9f, 0.55f), 0.08f);
+            r.Item("L3_Card", DemoItems.L3(), new Vector3(-3f, 1.2f, 8.4f), new Vector3(0.2f, 0.28f, 0.02f));
             SaveAssets.SavePoint("Save_W6", new Vector3(-6.4f, 0f, 3f), 90f).transform.SetParent(r.Props.transform, true);
-            r.Sign("Sign_Hard_Days", DemoPlan.Sign("W6, the staff lockers", "THANK YOU FOR THE HARD DAYS."), new Vector3(-3.5f, 2.35f, 7.83f), Vector3.back, new Vector2(2.4f, 0.4f));
+            r.Sign("Sign_Hard_Days", DemoPlan.Sign("W6, the staff lockers", "THANK YOU FOR THE HARD DAYS."), new Vector3(-3.5f, 2.35f, 8.83f), Vector3.back, new Vector2(2.4f, 0.4f));
             r.Prop("Bench", new Vector3(-3.5f, 0f, 5f), new Vector3(2f, 0.45f, 0.4f));
             r.Capsule("Capsule_W6", DrugType.NalconLift, new Vector3(-1f, 0.15f, 3f));
             r.Prop("Kettle", new Vector3(-6.6f, 0.9f, 5.2f), new Vector3(0.2f, 0.25f, 0.2f), 0.6f);

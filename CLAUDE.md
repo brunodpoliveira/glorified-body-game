@@ -652,6 +652,10 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   Christ raises `demo_g5_plinths`. THE LIFT (`Interaction/LiftRide`): its door on the north-west arc opens on that flag, the car
   holds two capsules and a delivery note (PLACEHOLDER), and it rides to a landing in W2 and back. The cameras of G5 look up from
   the floor at Modesty and the skylight (Bruno), G12's camera sits at the tabletop, G13b's near the floor. Open: the shortcut doors.
+- 2026-11-14, THE SHORTCUT DOORS (`devlog-notes/2026-11-14_shortcut_doors.md`, Bruno: "build them"): S1 G12 to G17
+  (`FireDoor_G12_G17`, the bar on the G17 side, it works only after the boxes burn: the horn still seals the server room)
+  and S3 W14 to W6 (`FireDoor_W6_W14`, the bolt on the W14 side; W6 is 1 m longer to the north). Fire doors, shut at the
+  start, no kick breaks them (`DemoV2.ShortcutS1`, `ShortcutS3`). S2 is the lift of the foyer.
 
 ## Rules
 

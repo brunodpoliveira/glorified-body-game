@@ -31,6 +31,22 @@ namespace GlorifiedBody.Editor.Demo
 
         // ── The specs ─────────────────────────────────────────────────
 
+        /// <summary>
+        /// The shortcut doors (rounds 147 and 148, his answer of 2026-11-14: "build them"). A steel door, shut at the start, with
+        /// a push bar on the far side only: she opens it after the puzzle and the way back is short. No kick breaks it. Both rooms
+        /// list it (the first builds it). PROPOSED places.
+        /// S1, G12 to G17 (on x 38): the bar on the G17 side, and it works only after the boxes burn (HalonSystem.burnedFlag):
+        /// during the horn the server room stays sealed.
+        /// </summary>
+        public const string ShortcutS1Flag = "demo_g17_burned";
+        public static Door ShortcutS1(string to) =>
+            new Door(to == "G17" ? 'E' : 'W', -20.4f, to, fire: true, jammed: true, leverRoom: "G17", unbreakable: true, leverFlag: ShortcutS1Flag);
+
+        /// <summary>S3, W14 to W6 (on z 9): the bolt on the W14 side, from the code on the TV to the terminal of W13 by the lockers. The leaf slides west, behind the
+        /// lockers, and the bolt stands east of the doorway (at x -1 it stood past the corner, in W5).</summary>
+        public static Door ShortcutS3(string to) =>
+            new Door(to == "W14" ? 'N' : 'S', -1.6f, to, fire: true, jammed: true, leverRoom: "W14", unbreakable: true, pocket: -1);
+
         /// <summary>The five new rooms of the ward, in plan metres (x east, z north), beside the rooms of DemoWard.</summary>
         public static List<RoomSpec> WardRooms() => new List<RoomSpec>
         {
@@ -38,7 +54,7 @@ namespace GlorifiedBody.Editor.Demo
             // W8 north of W9, so the loop's second door opens into W10 (the map says W8: an OPEN point for Bruno).
             Spec("W13", "WARD SECURITY POST", DemoItems.Floor2, DemoWard.Music, 17, -14, 23, -10, 3f, W13, new Door('W', -12, "W12"), new Door('N', 20, "W10")),
             // The map: off W2's north wall at its west end. W1B and W3 fill that wall, so the room opens off W2's west end.
-            Spec("W14", "CHILDREN'S DAY ROOM", DemoItems.Floor2, DemoWard.Music, -10, 9, 0, 14, 3f, W14, new Door('E', 12.75f, "W2")),
+            Spec("W14", "CHILDREN'S DAY ROOM", DemoItems.Floor2, DemoWard.Music, -10, 9, 0, 14, 3f, W14, new Door('E', 12.75f, "W2"), ShortcutS3("W6")),
             // The map: off the north end of W5, which in the built ward is the junction with W2: the room opens off W2's east end.
             Spec("W15", "STAFF BREAK ROOM", DemoItems.Floor2, DemoWard.Music, 24, 9, 34, 14, 3f, W15, new Door('W', 12.75f, "W2")),
             Spec("W16", "COLD ROOM", DemoItems.Floor2, DemoWard.Music, 3, -23, 8, -18, 3f, W16, new Door('N', 5.25f, "W11")),
@@ -52,7 +68,7 @@ namespace GlorifiedBody.Editor.Demo
             // Two doors: off the concourse and off the hall (a second way into G5, §12).
             Spec("G10", "CAFETERIA", DemoItems.Floor1, DemoPublic.Music, 28, -5, 38, 0, 4f, G10, new Door('N', 30, "G2"), new Door('W', -3.5f, "G5")),
             Spec("G11", "STAFF BREAK ROOM", DemoItems.Floor1, DemoPublic.Music, -2, -22, 6, -16, 3f, G11, new Door('E', -19, "G8"), new Door('S', 2, "G15")),
-            Spec("G12", "CONFERENCE ROOM", DemoItems.Floor1, DemoPublic.Music, 26, -22, 38, -16, 3.5f, G12, new Door('N', 27, "G5")),
+            Spec("G12", "CONFERENCE ROOM", DemoItems.Floor1, DemoPublic.Music, 26, -22, 38, -16, 3.5f, G12, new Door('N', 27, "G5"), ShortcutS1("G17")),
             // Two doors: off the concourse and off the family rooms (a second way into G5 through G7, §12).
             Spec("G13", "ADMISSIONS OFFICE", DemoItems.Floor1, DemoPublic.Music, 4, -9, 12, 0, 3.5f, G13, new Door('N', 8, "G2"), new Door('S', 8, "G7"),
                 new Door('E', -4, "G5"), new Door('W', -1.5f, "G13b")), // a spoke of the foyer, and the way to the main entrance (2026-11-14)
@@ -313,7 +329,7 @@ namespace GlorifiedBody.Editor.Demo
             r.Prop("Projector", new Vector3(29.7f, 0.75f, -19f), new Vector3(0.3f, 0.12f, 0.25f), 0.35f);
             Piece(r.Props, "Projector_Lens", new Vector3(29.53f, 0.81f, -19f), new Vector3(0.04f, 0.04f, 0.04f), DemoRoom.Grey(0.9f), false);
             r.Prop("Water_Jug", new Vector3(33f, 0.75f, -19.35f), new Vector3(0.1f, 0.2f, 0.1f), 0.8f);
-            r.Prop("Flip_Chart", new Vector3(37.4f, 0f, -21.5f), new Vector3(0.7f, 1.8f, 0.06f), 0.85f);
+            r.Prop("Flip_Chart", new Vector3(37.4f, 0f, -16.4f), new Vector3(0.7f, 1.8f, 0.06f), 0.85f); // the north-east corner: the shortcut S1 is in the east wall
             // The homage to Network (Bruno, 2026-11-14: "the conference room has this dramatic angle"): green banker's lamps in a row
             // down the table, and a low camera from the head of the table that looks down its length to the slide.
             Material brass = DemoRoom.Colour("brass", new Color(0.72f, 0.6f, 0.32f)), green = DemoRoom.Colour("banker_green", new Color(0.1f, 0.48f, 0.3f));

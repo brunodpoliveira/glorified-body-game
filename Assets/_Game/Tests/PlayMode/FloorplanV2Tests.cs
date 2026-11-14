@@ -52,7 +52,7 @@ namespace GlorifiedBody.Tests.PlayMode
         /// <summary>The rooms behind the doors of each room, as the map draws them. W13's second door is W10 (the built ward has no wall of W8 by W12).</summary>
         private static readonly (string id, string[] doors)[] Map =
         {
-            ("W13", new[] { "W12", "W10" }), ("W14", new[] { "W2" }), ("W15", new[] { "W2" }), ("W16", new[] { "W11" }), ("W17", new[] { "W11" }),
+            ("W13", new[] { "W12", "W10" }), ("W14", new[] { "W2", "W6" }), ("W15", new[] { "W2" }), ("W16", new[] { "W11" }), ("W17", new[] { "W11" }),
             ("G9b", new[] { "G9", "G19" }), // G19's service exit opens into G9b: G9 has no free wall (2026-11-10, the Dining Hall) ("G10", new[] { "G2", "G5" }), ("G11", new[] { "G8", "G15" }), ("G12", new[] { "G5" }), ("G13", new[] { "G2", "G7" }),
             ("G14", new[] { "U1" }), ("G15", new[] { "G11" }), ("G6", new[] { "G5" }), ("G8", new[] { "G5", "G11" }),
         };

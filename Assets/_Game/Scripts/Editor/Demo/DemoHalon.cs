@@ -24,7 +24,7 @@ namespace GlorifiedBody.Editor.Demo
         public static List<RoomSpec> Rooms() => new List<RoomSpec>
         {
             Spec("G17b", "FACILITIES", 38, -16, 44, -12, 3f, G17b, new Door('N', 43, "G19"), HalonDoor("G17")),
-            Spec("G17", "SERVER ROOM", 38, -24, 46, -16, 3f, G17, HalonDoor("G17b")),
+            Spec("G17", "SERVER ROOM", 38, -24, 46, -16, 3f, G17, HalonDoor("G17b"), DemoV2.ShortcutS1("G12")),
         };
 
         /// <summary>The door of the server room: a steel fire door with no lever (the horn seals it, HalonSystem opens it), and no kick breaks it.</summary>

@@ -143,13 +143,13 @@ namespace GlorifiedBody.Tests.PlayMode
             // Bruno, 2026-11-03: fire doors "in selected chokepoints"; his pick: W2 to W5, W5 to W7, G2 to G5.
             yield return LoadWorld();
             var names = GlorifiedBody.Interaction.FireDoor.All.Select(d => d.name).OrderBy(n => n).ToArray();
-            CollectionAssert.AreEqual(new[] { "FireDoor_G17b_G17", "FireDoor_G2_G5", "FireDoor_G9b_G19", "FireDoor_H2_H3", "FireDoor_H7_H8", "FireDoor_H8_H9", "FireDoor_W2_W5", "FireDoor_W5_W7", "FireDoor_W5_W9" }, names, "the fire doors (the Hold: H2 to H3 the guard post opens it, H7 to H8, H8 to H9 the hidden door; W5 to W9: the route switch, §10.5; G19 to G9b: the service exit; G17: the halon door, §10.4)");
+            CollectionAssert.AreEqual(new[] { "FireDoor_G12_G17", "FireDoor_G17b_G17", "FireDoor_G2_G5", "FireDoor_G9b_G19", "FireDoor_H2_H3", "FireDoor_H7_H8", "FireDoor_H8_H9", "FireDoor_W2_W5", "FireDoor_W5_W7", "FireDoor_W5_W9", "FireDoor_W6_W14" }, names, "the fire doors (the Hold: H2 to H3 the guard post opens it, H7 to H8, H8 to H9 the hidden door; W5 to W9: the route switch, §10.5; G19 to G9b: the service exit; G17: the halon door, §10.4; the shortcuts S1 G17 to G12 and S3 W14 to W6)");
             var failures = new List<string>();
             int solid = LayerMask.GetMask("Default");
             foreach (GlorifiedBody.Interaction.FireDoor door in GlorifiedBody.Interaction.FireDoor.All)
             {
                 // Shut at the start: the door of H2 to H3 (the guard post holds it), the hidden door H8 to H9, the service exit. The others stand open.
-                if (door.name == "FireDoor_H2_H3" || door.name == "FireDoor_H8_H9" || door.name == "FireDoor_G9b_G19") door.Open("test", instant: true);
+                if (door.name == "FireDoor_H2_H3" || door.name == "FireDoor_H8_H9" || door.name == "FireDoor_G9b_G19" || door.name == "FireDoor_G12_G17" || door.name == "FireDoor_W6_W14") door.Open("test", instant: true);
                 if (door.Current != GlorifiedBody.Interaction.FireDoor.State.Open) failures.Add(door.name + ": not open at the start");
                 var rooms = new HashSet<string>();
                 foreach (GlorifiedBody.Interaction.DoorLever lever in door.GetComponentsInChildren<GlorifiedBody.Interaction.DoorLever>())
@@ -160,7 +160,7 @@ namespace GlorifiedBody.Tests.PlayMode
                     else rooms.Add(room.id);
                     if (Physics.Linecast(front, lever.transform.position + lever.transform.forward * 0.05f, solid, QueryTriggerInteraction.Ignore)) failures.Add($"{door.name}/{lever.name}: buried");
                 }
-                int sides = door.name == "FireDoor_G17b_G17" || door.name == "FireDoor_H2_H3" ? 0 : door.name == "FireDoor_W5_W9" || door.name == "FireDoor_G9b_G19" || door.name == "FireDoor_H8_H9" ? 1 : 2; // one lever: the route switch (W9 side), the service exit (G19 side), the hidden door (H8 side); none: the halon door, the guard post's door
+                int sides = door.name == "FireDoor_G17b_G17" || door.name == "FireDoor_H2_H3" ? 0 : door.name == "FireDoor_W5_W9" || door.name == "FireDoor_G9b_G19" || door.name == "FireDoor_H8_H9" || door.name == "FireDoor_G12_G17" || door.name == "FireDoor_W6_W14" ? 1 : 2; // one lever: the route switch (W9 side), the service exit (G19 side), the hidden door (H8 side), the shortcuts (G17 side, W14 side); none: the halon door, the guard post's door
                 if (rooms.Count != sides) failures.Add($"{door.name}: its levers in {rooms.Count} rooms ({string.Join(",", rooms)})");
                 // The open leaf lies in its wall pocket: a line to it from each side meets the wall.
                 Vector3 leafCentre = door.leaf.position + Vector3.up * 1.1f;
@@ -169,6 +169,43 @@ namespace GlorifiedBody.Tests.PlayMode
                         failures.Add($"{door.name}: the open leaf shows on the {(side > 0 ? "outer" : "inner")} side");
             }
             Assert.IsEmpty(failures, string.Join("; ", failures));
+        }
+
+        // ── The shortcut doors (2026-11-14, rounds 147 and 148; Bruno: "build them") ──
+
+        [UnityTest]
+        public IEnumerator TheShortcuts_S1AndS3_ShutAtTheStart_OpenOnlyFromTheFarSide_AndNoKickBreaksThem()
+        {
+            yield return LoadWorld();
+            Interactor hands = GameObject.FindGameObjectWithTag("Player").GetComponent<Interactor>();
+            foreach ((string name, string a, string b, string barRoom, string flag) in new[]
+            {
+                ("FireDoor_G12_G17", "G12", "G17", "G17", "demo_g17_burned"), // S1: after the halon room, a bar on the G17 side
+                ("FireDoor_W6_W14", "W6", "W14", "W14", ""),                   // S3: from the code of the W14 TV to the lockers
+            })
+            {
+                GlorifiedBody.Rooms.Room ra = GlorifiedBody.Rooms.Room.Of(a), rb = GlorifiedBody.Rooms.Room.Of(b);
+                Assert.IsTrue(ra.exits.Any(e => e.to == b) && rb.exits.Any(e => e.to == a), $"{name}: a doorway between {a} and {b}");
+                var door = GlorifiedBody.Interaction.FireDoor.All.FirstOrDefault(d => d.name == name);
+                Assert.IsNotNull(door, name);
+                Assert.AreEqual(GlorifiedBody.Interaction.FireDoor.State.Jammed, door.Current, $"{name}: shut at the start");
+                Assert.IsFalse(door.canBreak, $"{name}: no kick breaks it");
+                var levers = door.GetComponentsInChildren<GlorifiedBody.Interaction.DoorLever>();
+                Assert.AreEqual(1, levers.Length, $"{name}: one bar");
+                Vector3 front = levers[0].transform.position + levers[0].transform.forward * 0.3f;
+                Assert.AreEqual(barRoom, GlorifiedBody.Rooms.Room.At(new Vector3(front.x, ra.BaseY + 0.1f, front.z))?.id, $"{name}: the bar is on the {barRoom} side");
+                if (flag != "")
+                {
+                    Assert.IsFalse(levers[0].Available, $"{name}: the bar does nothing before {flag} (the horn seals the server room)");
+                    StoryFlags.Raise(flag);
+                }
+                Assert.IsTrue(levers[0].Available, $"{name}: the bar works");
+                Assert.AreEqual("opened:" + name, levers[0].Confirm(hands));
+                yield return new WaitForSeconds(door.slideSeconds + 0.2f);
+                Assert.AreEqual(GlorifiedBody.Interaction.FireDoor.State.Open, door.Current, $"{name}: open");
+                Vector3 mid = door.transform.position + Vector3.up * 1.1f;
+                Assert.IsFalse(Physics.Linecast(mid - door.outward * 1f, mid + door.outward * 1f, LayerMask.GetMask("Default"), QueryTriggerInteraction.Ignore), $"{name}: the way through is clear");
+            }
         }
 
         // ── The halon room (2026-11-10: DEMO_PLAN §10.4, CANON round 39; Bruno: "create the halon room now") ──
