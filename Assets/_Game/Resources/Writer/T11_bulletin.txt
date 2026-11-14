@@ -1,0 +1,76 @@
+# T11: the police bulletin (round 38: the card before the coda, cutscene 11; the same words are the sheet on the till, L12)
+
+Status: CANON (round 138, 2026-11-13): the rewrite v2 on the RFab scene engine, in the version of round 137. The pick:
+`dialogue/takes/rewrite_v2/T11_bulletin.md`, take 2 of the round-137 run, whole
+(`dialogue/takes/t11_the_bulletin/202611132202_take_2.md`). The other take: `202611132202_take_1.md`.
+CANON (round 137): no description says "bare-faced". A description says how she looks, what she wears (the bare suit
+or the guard uniform), her last known direction of travel, and that she has likely changed her clothes and covered
+her face. A text card after cutscene 10, before the coda. White monospace on black, like a teleprinter, one line at a
+time. The game picks the wording from the number of people Lucy killed (round 107). The thresholds are PROPOSED: the
+game agent counts the kills the map forces (about 8) and sets the bands from it.
+
+## Low (only the kills the map forces, plus a few)
+
+MSG 1231-0547   0547 31 DEC
+FROM: STATE COMMUNICATIONS CENTER
+TO: ALL UNITS. ALL GUARD CHECKPOINTS, CITY AND COUNTY.
+SUBJECT: WANTED FOR QUESTIONING. INCIDENT AT WINWOOD READE MEMORIAL, NIGHT OF 30-31 DEC.
+DESCRIPTION: FEMALE. APPROX 20. APPROX 5 FT 7. SLIM BUILD. VERY PALE SKIN. LONG CURLY LIGHT BLONDE HAIR.
+MARKINGS: GOLD COLOR LINES ON SKIN, THIN AND BRANCHING, AT NECK, ELBOWS, WRISTS, KNEES. TATTOO OR PAINT UNK.
+CLOTHING: SEEN IN WHITE ONE PIECE BODYSUIT. ALSO SEEN IN HOSPITAL SECURITY UNIFORM, SLATE GRAY BLUE, GRAY VEST WITH WHITE REFLECTIVE BANDS. WHICH WORN AT DEPARTURE UNK.
+LAST SEEN: LEAVING WINWOOD READE MEMORIAL BY PARKING LOT TOWARD THE RIVER ROAD.
+NOTE: HAS LIKELY CHANGED CLOTHING AND COVERED FACE.
+CAUTION: LOCATE AND HOLD. NOTIFY CENTER.
+
+## Middle
+
+MSG 1231-0547-A   0552 31 DEC
+FROM: STATE COMMUNICATIONS CENTER
+TO: ALL UNITS. ALL GUARD CHECKPOINTS, CITY AND COUNTY.
+SUBJECT: ARMED AND DANGEROUS. SOUGHT IN CONNECTION WITH [N] DEATHS AT WINWOOD READE MEMORIAL, NIGHT OF 30-31 DEC.
+DESCRIPTION: FEMALE. APPROX 20. APPROX 5 FT 7. SLIM BUILD. VERY PALE SKIN. LONG CURLY LIGHT BLONDE HAIR.
+MARKINGS: GOLD COLOR LINES ON SKIN, THIN AND BRANCHING, AT NECK, ELBOWS, WRISTS, KNEES. TATTOO OR PAINT UNK.
+CLOTHING: SEEN IN WHITE ONE PIECE BODYSUIT. ALSO SEEN IN HOSPITAL SECURITY UNIFORM, SLATE GRAY BLUE, GRAY VEST WITH WHITE REFLECTIVE BANDS. WHICH WORN AT DEPARTURE UNK.
+LAST SEEN: LEAVING WINWOOD READE MEMORIAL BY PARKING LOT TOWARD THE RIVER ROAD.
+NOTE: HAS LIKELY CHANGED CLOTHING AND COVERED FACE.
+CAUTION: DO NOT APPROACH. REPORT ANY SIGHTING TO CENTER.
+
+## High (most of the people on the map)
+
+MSG 1231-0547-B   0558 31 DEC
+FROM: STATE COMMUNICATIONS CENTER
+TO: ALL UNITS. ALL GUARD CHECKPOINTS, CITY AND COUNTY.
+SUBJECT: SOUGHT IN CONNECTION WITH [N] DEATHS AT WINWOOD READE MEMORIAL, NIGHT OF 30-31 DEC.
+NO WEAPON RECOVERED.
+DESCRIPTION: FEMALE. APPROX 20. APPROX 5 FT 7. SLIM BUILD. VERY PALE SKIN. LONG CURLY LIGHT BLONDE HAIR.
+MARKINGS: GOLD COLOR LINES ON SKIN, THIN AND BRANCHING, AT NECK, ELBOWS, WRISTS, KNEES. TATTOO OR PAINT UNK.
+CLOTHING: SEEN IN WHITE ONE PIECE BODYSUIT. ALSO SEEN IN HOSPITAL SECURITY UNIFORM, SLATE GRAY BLUE, GRAY VEST WITH WHITE REFLECTIVE BANDS. WHICH WORN AT DEPARTURE UNK.
+LAST SEEN: LEAVING WINWOOD READE MEMORIAL BY PARKING LOT TOWARD THE RIVER ROAD.
+NOTE: HAS LIKELY CHANGED CLOTHING AND COVERED FACE.
+CAUTION: DO NOT APPROACH. DO NOT MAKE EYE CONTACT. REPORT ANY SIGHTING TO CENTER.
+
+## Notes
+
+1. The three messages are one bulletin and two follow-ups (1231-0547, -A, -B), five and six minutes apart. The
+   bulletin gets worse as the count comes in.
+2. "No weapon recovered" is the grunt test turned around: the active shooter alert had no gun.
+3. "Do not make eye contact" and "covered face as anyone in public" are the face taboo, said by the police as a plain
+   fact. Nobody explains it.
+4. "MARKINGS: ... TATTOO OR PAINT UNK." The police saw the gold seams on the cameras and cannot explain them. The
+   attendant in the coda can check it against her neck.
+5. "WHITE ONE PIECE BODYSUIT" is how a witness or a camera reads the bare doll body. It is the police reading, not
+   the truth: her skin is pale with gold seams (`LORE.md` §4.2).
+6. Round 25: no wording mentions the car or how she travels. Nobody saw it leave. The plate HUMAN is for act 2. All
+   three bands say "toward the river road".
+7. Round 107: the police are on a full strike. PROPOSED: the state police put the bulletin on the wire, and the Guard
+   reads it. The TV in R1 says the same thing in its own words, by the same body count (`N1_news.md`, N1b).
+8. No real agency, no real place but the Memorial, the city not named. The same words go on the sheet on the till (L12).
+9. OPEN (Bruno): the description names facts that are not CANON. "LIGHT BLONDE" follows `LORE.md` §4.2, where the
+   colour is PROPOSED (a warm honey blonde); long and curly are CANON (rounds 64 to 66). "APPROX 5 FT 7" and "SLIM
+   BUILD" are new and PROPOSED. "THIN AND BRANCHING" lines differ from LORE's "wide gold seams" (rounds 14 and 24). Her
+   hair is inside the Crown: only a camera that saw her feed without it could give the hair.
+10. CLOSED (round 143): the note ends at "COVERED FACE".
+11. OPEN (the game agent): the CLOTHING line is about 150 characters. On a teleprinter card it wraps to two or three
+    lines. Check the card width.
+12. CLOSED (round 143): the sheet on the till (L12) carries a photo of her, an archive photo or the photo of her legal ID. The stills see the sheet from behind, so no face shows. The teleprinter card has no photo.
+13. CLOSED (round 143): the TV news N1b gives the description in the anchor's words (`game/lines/N1_news.md`).

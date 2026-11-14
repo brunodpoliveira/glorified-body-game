@@ -104,7 +104,7 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.AreEqual(LockedDoor.RotatedText, interactor.Text);
             Assert.IsFalse(door.IsOpen);
             yield return WaitUntil(() => Subtitles.SubtitleService.Said > said, 3f);
-            Assert.IsTrue(Subtitles.SubtitleService.Lines.Any(l => l.Text.Contains("Re-enrol your card")), "the PA says it");
+            Assert.IsTrue(Subtitles.SubtitleService.Lines.Any(l => l.Text.Contains("Site codes rotate")), "the PA says it (call 1C, round 138)");
         }
 
         [UnityTest]
@@ -124,7 +124,11 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.IsTrue(StoryFlags.Has(Rotated), "two doors: the codes rotate");
             yield return WaitUntil(() => Subtitles.SubtitleService.Said > said, 3f);
             Assert.Greater(Subtitles.SubtitleService.Said, said, "the PA says it");
-            Assert.IsTrue(Subtitles.SubtitleService.Lines.Any(l => l.Text.Contains("Re-enrol your card")), "the words of call 1B on screen");
+            Assert.IsTrue(Subtitles.SubtitleService.Lines.Any(l => l.Text.Contains("Site codes rotate")), "the words of call 1C on screen");
+            yield return WaitUntil(() => rotation.PaSaid >= 2, 12f);
+            Assert.AreEqual(2, rotation.PaSaid, "both lines of call 1C (T5_pa.md)");
+            yield return WaitUntil(() => Subtitles.SubtitleService.Lines.Any(l => l.Text.Contains("re-enrolled")), 8f);
+            Assert.IsTrue(Subtitles.SubtitleService.Lines.Any(l => l.Text.Contains("Re-enroll at a security station")), "the round-138 words: re-enroll");
 
             yield return FaceDoor();
             yield return Press(InputManager.GameAction.Interact);

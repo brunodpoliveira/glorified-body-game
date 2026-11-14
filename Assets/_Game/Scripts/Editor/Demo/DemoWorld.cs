@@ -41,6 +41,7 @@ namespace GlorifiedBody.Editor.Demo
         {
             Directory.CreateDirectory(DemoRoom.Folder);
             BarkBookSetup.Build(); // the writer's barks into Resources (the figures read them in play)
+            BulletinSetup.Build(); // the writer's police bulletin (T11) into Resources (round 138)
             GlorifiedBody.Editor.Destruction.BreakableAssets.EnsureAll();
             Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             CharacterCatalog catalog = MenuLoopSetup.LoadCatalog();

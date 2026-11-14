@@ -216,7 +216,7 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.AreEqual("THEATRE CONTROL. AUTHORISED STAFF ONLY. DOOR RELEASES ON FIRE ALARM.", door.lockedText, "the sign of DEMO_PLAN §7");
             Assert.AreEqual(2, alarm.paLines.Length, "call F of T5_pa.md");
             yield return WaitUntil(() => alarm.PaSaid >= 1 && GlorifiedBody.Subtitles.SubtitleService.Lines.Any(l => l.Speaker == "PA"), 4f);
-            Assert.IsTrue(GlorifiedBody.Subtitles.SubtitleService.Lines.Any(l => l.Speaker == "PA" && l.Text.StartsWith("Fire alarm")), "the PA call under the bell");
+            Assert.IsTrue(GlorifiedBody.Subtitles.SubtitleService.Lines.Any(l => l.Speaker == "PA" && l.Text.Contains("Fire alarm")), "the PA call under the bell (round 138: \"Attention all personnel. Fire alarm in this area.\")");
             // The nurse is a hider in the booth; she answers when asked for the card.
             AskTalk nurse = UnityEngine.Object.FindObjectsByType<AskTalk>(FindObjectsSortMode.None).FirstOrDefault(a => a.name == "Nurse_Booth");
             Assert.IsNotNull(nurse, "the nurse can be asked");
@@ -366,7 +366,7 @@ namespace GlorifiedBody.Tests.PlayMode
             var heard = new System.Collections.Generic.HashSet<string>();
             yield return WaitUntil(() => { Listen(heard); return StoryFlags.Has(DemoFlags.VoiceFed); }, 25f);
             Debug.Log("[HoldTests] the voice, fed: " + string.Join(" | ", heard));
-            Assert.IsTrue(heard.Contains("KNIGHT: You've eaten. Good."), "the other line plays");
+            Assert.IsTrue(heard.Any(l => l.StartsWith("KNIGHT: You did fine back there")), "the other line plays (round 138)");
             Assert.IsFalse(heard.Any(h => h.Contains("Eat.") && !h.Contains("eaten")), "no urge");
             Assert.IsFalse(StoryFlags.Has(FirstFeed.DoneFlag), "no cutscene 02b");
             Assert.AreNotEqual("02b_the_chart", CutscenePlayer.Current);

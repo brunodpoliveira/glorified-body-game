@@ -113,7 +113,15 @@ namespace GlorifiedBody.Editor.Demo
             r.Prop("Wall_Phone", new Vector3(0.05f, 1.3f, 8.5f), new Vector3(0.1f, 0.25f, 0.18f), 0.6f);
             r.Sign("Sign_Fire_Door", "FIRE DOOR. KEEP CLEAR.", new Vector3(2.83f, 2.45f, -6f), Vector3.left, new Vector2(1.4f, 0.3f), 40);
             var silver = new List<ScriptStep> { ScriptStep.Wait(1.5f) };
-            silver.AddRange(DemoScripts.Steps("cutscenes/03_code_silver.md", "cs03", 5));
+            // Round 138: the guard counts the CPR under the PA (GUARD), and his lines drop when both guards are dead.
+            List<(string speaker, string text)> silverLines = DemoScripts.Lines("cutscenes/03_code_silver.md");
+            for (int i = 0; i < silverLines.Count; i++)
+            {
+                (string speaker, string text) = silverLines[i];
+                string id = $"cs03_{i:00}";
+                bool nextIsGuard = i + 1 < silverLines.Count && silverLines[i + 1].speaker == "GUARD";
+                silver.Add(speaker == "GUARD" ? ScriptStep.Aside(r.Figures, id, text, wait: nextIsGuard) : ScriptStep.Radio(speaker, id, text));
+            }
             silver.Add(ScriptStep.Raise(CodeSilver)); // the fire door to W9 shuts: the way on is through the gym
             r.Beat("W5_Code_Silver", "demo_w5_code_silver", new Vector3(1.5f, 1f, 7.5f), new Vector3(3f, 2f, 2f), silver.ToArray());
         }
@@ -256,7 +264,8 @@ namespace GlorifiedBody.Editor.Demo
             rotation.cardItemId = DemoItems.StairCard().itemId;
             rotation.rotatedFlag = CodesRotated;
             rotation.opensBeforeRotation = 2;
-            rotation.paLine = "Site codes rotate at this time. Re-enrol your card at a security station."; // the writer's call 1B (T5_pa.md)
+            rotation.paLine = "Site codes rotate at this time. Re-enrol your card at a security station."; // the fallback with no writer file
+            rotation.paLines = DemoScripts.Lines("lines/T5_pa.md", "Call 1C", "*").ConvertAll(l => l.text).ToArray(); // round 138: "re-enroll"
             EditorUtility.SetDirty(rotation);
             r.Scan("Scan_Stair_Door", new Vector3(15f, 1.2f, -13.7f), "demo_c3_door", "PLACEHOLDER (C3): a white card on a lanyard, against red scrubs.");
             r.Prop("Stairs_Down", new Vector3(13.8f, 0f, -11f), new Vector3(1.2f, 0.4f, 1.8f), 0.3f);

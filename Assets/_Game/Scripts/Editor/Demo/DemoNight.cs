@@ -285,6 +285,44 @@ namespace GlorifiedBody.Editor.Demo
         // ── R1, the TV behind the till (N1b) ──────────────────────────
 
         /// <summary>
+        /// The lines of N1b in the writer's file: the report before "Low", the item of each band (low, middle, high), and the
+        /// lines of "Every band" (the last is cut off). The picture is the last [bracket] of a line; her ID photo is a
+        /// PLACEHOLDER until the picture exists (round 145). False when the file has no N1b.
+        /// </summary>
+        public static bool N1b(out List<Broadcast.Line> opening, out Broadcast.Line[] bands, out List<Broadcast.Line> every)
+        {
+            opening = new List<Broadcast.Line>();
+            bands = new Broadcast.Line[3];
+            every = new List<Broadcast.Line>();
+            string path = System.IO.Path.Combine(DemoScripts.WriterGame, "lines/N1_news.md");
+            if (!System.IO.File.Exists(path)) return false;
+            bool inPart = false;
+            int part = -1; // -1 the report, 0..2 the bands, 3 every band
+            int n = 0;
+            foreach (string raw in System.IO.File.ReadAllLines(path))
+            {
+                if (raw.StartsWith("## ")) { inPart = raw.StartsWith("## N1b"); continue; }
+                if (!inPart) continue;
+                if (raw.StartsWith("Low")) part = 0;
+                else if (raw.StartsWith("Middle")) part = 1;
+                else if (raw.StartsWith("High")) part = 2;
+                else if (raw.StartsWith("Every band")) part = 3;
+                if (!raw.StartsWith("TV: ")) continue;
+                string text = raw.Substring(4);
+                string picture = "";
+                var bracket = System.Text.RegularExpressions.Regex.Match(text, @"\[([^\[\]]+)\]\s*$");
+                if (bracket.Success) { picture = bracket.Groups[1].Value; text = text.Substring(0, bracket.Index); }
+                text = System.Text.RegularExpressions.Regex.Replace(text, @"\s*\([^()]*\)\s*$", "").Trim();
+                if (picture.Contains("ID photo")) picture = "PLACEHOLDER: " + picture; // the first adult face of Lucy: production work
+                Broadcast.Line line = Line("TV", $"n1b_{n++:00}", text, picture);
+                if (part < 0) opening.Add(line);
+                else if (part < 3) bands[part] = line;
+                else every.Add(line);
+            }
+            return opening.Count > 0 && bands[0] != null && bands[1] != null && bands[2] != null && every.Count > 0;
+        }
+
+        /// <summary>
         /// The bulletin of the morning, low under the organ, mid-sentence when she steps in. The last line follows the body
         /// count, then it is cut off and the attendant switches to music. The poster beat waits for that (NewsDone).
         /// The Interact key on the TV shows the picture of the line (first pass: the picture as text).
@@ -315,6 +353,14 @@ namespace GlorifiedBody.Editor.Demo
                 Line("TV", "n1b_high", "Also overnight: [N] people are dead after a shooter attacked the Winwood Reade Memorial. The motive is unknown, and no group has claimed it.", "the gates of the Memorial at dawn, tape, a line of ambulances"),
             };
             news.closing = new[] { Line("TV", "n1b_cut", "Police are asking citizens to be on the lookout for -") };
+            // The writer's N1b (game/lines/N1_news.md, CANON rounds 143 and 145): the report, one item by the band, then the
+            // description and her ID photo (the photo is production work: a placeholder picture until it exists).
+            if (N1b(out var opening, out var bands, out var every))
+            {
+                news.lines = opening.ToArray();
+                news.byBand = bands;
+                news.closing = every.ToArray();
+            }
             news.doneFlag = NewsDone;
             news.loop = Loop("tv_music_loop");
             news.loopVolume = 0.2f;

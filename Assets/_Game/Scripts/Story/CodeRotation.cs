@@ -26,6 +26,8 @@ namespace GlorifiedBody.Story
         [Min(0f)] public float delaySeconds = 2f;
         public string paId = "pa_1b_rotate";
         [TextArea] public string paLine = "Site codes rotate at this time. Re-enrol your card at a security station.";
+        [Tooltip("The writer's call 1C (T5_pa.md, round 138), one PA line after another. Empty: paLine.")]
+        public string[] paLines = new string[0];
 
         private List<LockedDoor> doors;
         private float dueAt = -1f;
@@ -63,12 +65,28 @@ namespace GlorifiedBody.Story
             StoryFlags.Raise(rotatedFlag);
         }
 
+        /// <summary>The lines of the call, one after another (the calls of FireAlarm do the same).</summary>
+        private System.Collections.IEnumerator Call()
+        {
+            for (int i = 0; i < paLines.Length; i++)
+            {
+                string id = $"{paId}_{i:00}";
+                Voice.PA(id, paLines[i]);
+                PaSaid++;
+                yield return new WaitForSeconds(Voice.PaDelay + ScriptedSequence.LineSeconds(id, paLines[i]) + ScriptedSequence.LineGap);
+            }
+        }
+
+        /// <summary>The PA lines said (the tests).</summary>
+        public int PaSaid { get; private set; }
+
         /// <summary>The PA call and the flag (the tests, and the count).</summary>
         public void Rotate()
         {
             if (Rotated) return;
             StoryFlags.Raise(rotatedFlag);
-            if (!string.IsNullOrEmpty(paLine)) Voice.PA(paId, paLine);
+            if (paLines != null && paLines.Length > 0) StartCoroutine(Call());
+            else if (!string.IsNullOrEmpty(paLine)) Voice.PA(paId, paLine);
             RunTelemetry.Event("codes_rotate", $"{cardItemId} after {Opened}");
         }
     }

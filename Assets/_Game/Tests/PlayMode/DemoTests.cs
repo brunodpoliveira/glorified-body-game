@@ -842,7 +842,7 @@ namespace GlorifiedBody.Tests.PlayMode
             StoryFlags.Raise("demo_car_door");
             yield return WaitUntil(() => Bulletin.IsShowing, 15f);
             Assert.IsTrue(Bulletin.IsShowing, "the bulletin");
-            yield return WaitUntil(() => GlorifiedBody.Rooms.RoomTracker.CurrentId == "R1", 25f);
+            yield return WaitUntil(() => GlorifiedBody.Rooms.RoomTracker.CurrentId == "R1", 60f);
             Assert.AreEqual("R1", GlorifiedBody.Rooms.RoomTracker.CurrentId, "the service station");
         }
 
@@ -1058,6 +1058,8 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.IsTrue(news.Done, "the report ends");
             Assert.AreEqual("low", news.Band, "no kill in this test: the low band");
             StringAssert.StartsWith("Police are asking citizens", news.LastText, "cut off");
+            Assert.IsTrue(news.closing.Any(l => l.picture.StartsWith("PLACEHOLDER") && l.picture.Contains("ID photo")), "round 145: her ID photo on the TV (a placeholder until the picture exists)");
+            Assert.IsTrue(news.lines.Length >= 6 && news.closing.Length >= 4, "the writer's N1b: the report, then the description");
             // The choice (round 137): the mk_edgar key takes him (branch A).
             yield return WaitUntil(() => ChoicePrompt().Contains("take his mind"), 60f);
             Assert.IsFalse(PsychicPowers.EdgarUnlocked, "no mk_edgar before the choice");
@@ -1899,7 +1901,7 @@ namespace GlorifiedBody.Tests.PlayMode
             yield return WaitUntil(() => Bulletin.IsShowing, 15f);
             Assert.IsTrue(Bulletin.IsShowing);
             float t0 = Time.realtimeSinceStartup;
-            yield return WaitUntil(() => !Bulletin.IsShowing, 30f);
+            yield return WaitUntil(() => !Bulletin.IsShowing, 60f); // round 138: about 18 s of typing, then 12 s
             Debug.Log($"[DemoTests] the card closes {Time.realtimeSinceStartup - t0:0.0} s after it shows");
             Assert.IsFalse(Bulletin.IsShowing, "it closes by itself");
         }

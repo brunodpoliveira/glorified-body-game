@@ -17,31 +17,50 @@ namespace GlorifiedBody.Story
     public sealed class Bulletin : MonoBehaviour
     {
         public const int LowMax = 10, MiddleMax = 20; // PROPOSED: up to 10 low, up to 20 middle, more high
-        public const float CharSeconds = 0.03f, LineGap = 0.35f;
+        public const float CharSeconds = 0.012f, LineGap = 0.25f; // round 138: about 1300 characters, about 18 s
         public const float AutoCloseSeconds = 12f; // PROPOSED: the demo ends by itself (Bruno, 2026-11-05: "it needs to exit after the demo is complete")
 
-        public static readonly string[] Low =
+        /// <summary>
+        /// The writer's T11 (game/lines/T11_bulletin.md, CANON round 138), copied to Resources by BulletinSetup.Build: the lines
+        /// under "## Low", "## Middle" and "## High". Round 137: no description says "bare-faced".
+        /// </summary>
+        public const string ResourcePath = "Writer/T11_bulletin";
+        private static readonly string[] Fallback = { "BE ON THE LOOKOUT." };
+        private static string[] low, middle, high;
+
+        public static string[] Low { get { Load(); return low; } }
+        public static string[] Middle { get { Load(); return middle; } }
+        public static string[] High { get { Load(); return high; } }
+
+        private static void Load()
         {
-            "BE ON THE LOOKOUT.",
-            "FEMALE, APPROXIMATELY 20. BARE-FACED.",
-            "WANTED FOR QUESTIONING IN CONNECTION WITH AN INCIDENT AT THE WINWOOD READE MEMORIAL.",
-            "LAST SEEN ON FOOT, HEADING TOWARD THE RIVER.",
-        };
-        public static readonly string[] Middle =
+            if (low != null) return;
+            TextAsset file = Resources.Load<TextAsset>(ResourcePath);
+            if (file == null) Debug.LogWarning("[Bulletin] no Resources/" + ResourcePath + ": run BulletinSetup.Build");
+            Parse(file != null ? file.text : "", out low, out middle, out high);
+        }
+
+        /// <summary>The three bands of the writer's file: the lines under each "## " heading, up to the next one.</summary>
+        public static void Parse(string text, out string[] lowLines, out string[] middleLines, out string[] highLines)
         {
-            "BE ON THE LOOKOUT.",
-            "FEMALE, APPROXIMATELY 20. BARE-FACED.",
-            "ARMED AND DANGEROUS. SOUGHT IN CONNECTION WITH [N] DEATHS AT THE WINWOOD READE MEMORIAL.",
-            "LAST SEEN ON FOOT, HEADING TOWARD THE RIVER. DO NOT APPROACH.",
-        };
-        public static readonly string[] High =
-        {
-            "BE ON THE LOOKOUT.",
-            "FEMALE, APPROXIMATELY 20. BARE-FACED.",
-            "SOUGHT IN CONNECTION WITH [N] DEATHS. NO WEAPON RECOVERED.",
-            "DO NOT APPROACH. DO NOT MAKE EYE CONTACT.",
-            "LAST SEEN ON FOOT, HEADING TOWARD THE CITY.",
-        };
+            var parts = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<string>>();
+            System.Collections.Generic.List<string> current = null;
+            foreach (string raw in text.Replace("\r", "").Split('\n'))
+            {
+                if (raw.StartsWith("## "))
+                {
+                    string name = raw.Substring(3).Trim().Split(' ')[0];
+                    current = new System.Collections.Generic.List<string>();
+                    parts[name] = current;
+                    continue;
+                }
+                if (current != null && raw.Trim().Length > 0) current.Add(raw.Trim());
+            }
+            string[] Band(string name) => parts.TryGetValue(name, out var lines) && lines.Count > 0 ? lines.ToArray() : Fallback;
+            lowLines = Band("Low");
+            middleLines = Band("Middle");
+            highLines = Band("High");
+        }
 
         private static Bulletin instance;
         public static bool IsShowing { get; private set; }
@@ -51,6 +70,8 @@ namespace GlorifiedBody.Story
         /// <summary>The key's hint shows: the card has typed all its lines (tests).</summary>
         public static bool HintShown => instance != null && instance.hint != null && instance.hint.enabled;
         public static Canvas Card => instance != null ? instance.canvas : null;
+        /// <summary>The whole text fits the card (round 138: the CLOTHING line is about 150 characters).</summary>
+        public static bool Fits => instance != null && instance.text != null && instance.text.preferredHeight <= instance.text.rectTransform.rect.height;
 
         private Canvas canvas;
         private Text text;
@@ -141,12 +162,14 @@ namespace GlorifiedBody.Story
             textObj.transform.SetParent(transform, false);
             RectTransform rect = textObj.GetComponent<RectTransform>();
             rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
-            rect.sizeDelta = new Vector2(1500f, 600f);
+            rect.sizeDelta = new Vector2(1720f, 960f);
             text = textObj.AddComponent<Text>();
-            Font mono = Font.CreateDynamicFontFromOSFont(new[] { "DejaVu Sans Mono", "Liberation Mono", "Courier New", "Consolas" }, 30);
+            Font mono = Font.CreateDynamicFontFromOSFont(new[] { "DejaVu Sans Mono", "Liberation Mono", "Courier New", "Consolas" }, 24);
             text.font = mono != null ? mono : Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            text.fontSize = 30;
-            text.lineSpacing = 1.3f;
+            text.fontSize = 24;
+            text.lineSpacing = 1.2f;
+            text.horizontalOverflow = HorizontalWrapMode.Wrap;
+            text.verticalOverflow = VerticalWrapMode.Overflow;
             text.color = new Color(0.93f, 0.93f, 0.93f);
             text.alignment = TextAnchor.MiddleLeft;
             var hintObj = new GameObject("Hint", typeof(RectTransform));
@@ -167,6 +190,7 @@ namespace GlorifiedBody.Story
         private static void ResetOnLoad()
         {
             instance = null;
+            low = middle = high = null;
             IsShowing = false;
             Band = "";
         }

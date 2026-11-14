@@ -118,7 +118,8 @@ namespace GlorifiedBody.Editor.Demo
             rotation.cardItemId = CardId;
             rotation.rotatedFlag = Rotated;
             rotation.opensBeforeRotation = OpensBeforeRotation;
-            rotation.paLine = "Site codes rotate at this time. Re-enrol your card at a security station."; // the writer's call 1B (T5_pa.md)
+            rotation.paLine = "Site codes rotate at this time. Re-enrol your card at a security station."; // the fallback with no writer file
+            rotation.paLines = DemoScripts.Lines("lines/T5_pa.md", "Call 1C", "*").ConvertAll(l => l.text).ToArray(); // round 138: "re-enroll"
             EditorUtility.SetDirty(rotation);
             r.Sign("Sign_Rules", "THE CARD OPENS TWO DOORS. THEN THE CODES ROTATE", new Vector3(5f, 2.6f, 7.84f), Vector3.back, new Vector2(4.4f, 0.32f), 40);
             r.Sign("Sign_WayOn", "THE WAY ON", new Vector3(8f, 2.3f, 0.16f), Vector3.forward, new Vector2(1.6f, 0.35f), 40);

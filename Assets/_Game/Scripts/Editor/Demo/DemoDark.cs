@@ -42,7 +42,10 @@ namespace GlorifiedBody.Editor.Demo
             bank.monitorLights = Enumerable.Range(0, 5).Select(i => office.Props.transform.Find("Monitor_Light_" + i).GetComponent<Light>()).ToArray();
             bank.monitorGap = 0.3f;
             bank.restoreOwnLook = true; // her face on the wall again
-            bank.recLine = "PLACEHOLDER: the recorder plays the last thing it played, the intake tape of cutscene 08.";
+            // The recorder plays the last thing it played: the intake tape of cutscene 08 (its lines are under "## The tape (S4)", round 138).
+            var tape = DemoScripts.Lines("cutscenes/08_the_security_office.md", "The tape", "*");
+            bank.recLine = tape.Count > 0 ? string.Join("  ", tape.GetRange(0, Mathf.Min(2, tape.Count)).ConvertAll(l => l.speaker + ": " + l.text))
+                : "PLACEHOLDER: the recorder plays the last thing it played, the intake tape of cutscene 08.";
             EditorUtility.SetDirty(bank);
         }
 

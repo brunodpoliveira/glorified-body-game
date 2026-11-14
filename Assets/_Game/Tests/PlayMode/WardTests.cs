@@ -291,6 +291,11 @@ namespace GlorifiedBody.Tests.PlayMode
             string[] high = GlorifiedBody.Story.Bulletin.WordingFor(30, out band);
             Assert.AreEqual("high", band);
             StringAssert.Contains("NO WEAPON RECOVERED", string.Join(" ", high));
+            // Round 137 and 138: the writer's T11 (Resources copy), three bands, and no "bare-faced".
+            Assert.Greater(low.Length, 8, "the writer's lines, not the fallback");
+            foreach (string[] wording in new[] { low, middle, high })
+                Assert.IsFalse(string.Join(" ", wording).Contains("BARE-FACED"), "no description says bare-faced (round 137)");
+            StringAssert.Contains("CLOTHING:", string.Join(" ", low));
 
             bool closed = false;
             Assert.IsTrue(GlorifiedBody.Story.Bulletin.Show(15, () => closed = true));
@@ -301,6 +306,8 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.Less(partial.Length, string.Join("\n", middle).Length, "one character at a time, like a teleprinter");
             yield return Press(InputManager.GameAction.Interact); // skips the typing
             StringAssert.Contains("15 DEATHS", GlorifiedBody.Story.Bulletin.Shown, "the whole card");
+            yield return null;
+            Assert.IsTrue(GlorifiedBody.Story.Bulletin.Fits, "the whole text fits the card (the long CLOTHING line wraps)");
             Assert.IsTrue(GlorifiedBody.Story.Bulletin.IsShowing);
             yield return Press(InputManager.GameAction.Interact); // closes it
             Assert.IsTrue(closed, "the card is closed");
