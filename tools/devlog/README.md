@@ -22,6 +22,7 @@ episode: 0
 kind: long            long = 1920x1080. short = 1080x1920, the title on top, the section text as a caption.
 title: Why the series became a game
 voice: me             a name in ~/MEGA/glorified/renders/devlog/voices.json (RFab voice ids, private)
+speed: 1.3            optional. The narration plays at this speed (0.5 to 2). Default 1.3 (Bruno, 2026-11-13).
 ---
 
 ## 1. Cold open
@@ -46,7 +47,7 @@ The words the voice reads. Several lines are fine. A section is one idea, 20 to 
 |---|---|
 | `catalog.py` | Lists the stills, clips and frame sequences the writer can name. `--copy <dir>` puts `VISUALS.md` in the writers' folder. |
 | `script.js` | Parses the script format. `node script.js file.md` prints the JSON. |
-| `narrate.js` | One WAV for each section through RFab Voice Scenes (`POST /api/audio/dialogue`), with the clone. The cache `devlog/<ep>/audio_cache/` is keyed by the voice and the text, so an unchanged section is never billed again, in any version or position. Writes `timing.json`. |
+| `narrate.js` | One WAV for each section through RFab Voice Scenes (`POST /api/audio/dialogue`), with the clone. The cache `devlog/<ep>/audio_cache/` is keyed by the voice and the text, so an unchanged section is never billed again, in any version or position. The cache keeps the 1.0 take and a sped-up copy (`<hash>.x1.3.wav`, ffmpeg `atempo`, same pitch) for the video, so a new speed costs no tokens. Writes `timing.json`. |
 | `assemble.py` | `timing.json` + the visuals -> `final.mp4`, `contact_sheet.png`, `REVIEW.md`, `NOTES.md`. |
 | `night.sh` | The whole night: optional bot video, catalog, narration, assembly, the packet `README.md`. |
 | `rfab_client.js` | The backend client. `BASE` (default the local backend, production `https://api.rfab.ai`) and `RFAB_TOKEN`. Prints no secret. |

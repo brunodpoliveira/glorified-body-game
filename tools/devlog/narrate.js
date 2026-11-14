@@ -1,9 +1,13 @@
 // Narration for a devlog script: one WAV for each section, read by the voice named in the script's front
 // matter (voices.json maps names to RFab voice ids). The audio cache is keyed by the voice and the text, so
 // an unchanged section is never rendered again, in any version, at any position, in the long or the short.
+// The video uses a sped-up copy: `speed:` in the front matter, default 1.3 (Bruno, 2026-11-13: the clone at 1.0
+// is too slow, 1.3 sounds best of 1.3 and 1.5). The cache keeps the 1.0 take, so a new speed costs no tokens.
 //
 // Run: node narrate.js --script <script.md> --out <dir> [--cache <dir>] [--voices <voices.json>] [--dry]
-// Out: <cache>/<hash>.wav (+ .txt), <dir>/timing.json (sections, seconds, visuals, text, the file of each)
+// Out: <cache>/<hash>.wav (+ .txt), <cache>/<hash>.x<speed>.wav, <dir>/timing.json (sections, seconds, visuals,
+//      text, the file of each)
+const { execFileSync } = require('child_process');
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
@@ -21,6 +25,8 @@ const script = parse(fs.readFileSync(args.script, 'utf8'));
 const voiceName = script.meta.voice || 'me';
 const voice = VOICES[voiceName];
 if (!voice) { console.error(`no voice named "${voiceName}" in voices.json`); process.exit(2); }
+const speed = parseFloat(script.meta.speed || '1.3');
+if (!(speed >= 0.5 && speed <= 2)) { console.error(`speed ${script.meta.speed} is outside 0.5 to 2`); process.exit(2); }
 const CACHE = args.cache || path.join(args.out, 'audio');
 fs.mkdirSync(CACHE, { recursive: true });
 fs.mkdirSync(args.out, { recursive: true });
@@ -35,7 +41,7 @@ function wavSeconds(file) {
 (async () => {
   const c = args.dry ? null : require('./rfab_client');
   const before = c ? await c.balance() : 0;
-  const timing = { meta: script.meta, voice: voiceName, cache: CACHE, sections: [] };
+  const timing = { meta: script.meta, voice: voiceName, speed, cache: CACHE, sections: [] };
   let rendered = 0;
   for (const s of script.sections) {
     const nn = String(s.index).padStart(2, '0');
@@ -56,7 +62,14 @@ function wavSeconds(file) {
     } else {
       console.log(`${nn} ${s.name}: ${fs.existsSync(wav) ? 'cached' : 'dry'}`);
     }
-    if (fs.existsSync(wav)) entry.seconds = Math.round(wavSeconds(wav) * 100) / 100;
+    if (fs.existsSync(wav) && speed !== 1) {
+      const fast = path.join(CACHE, `${key}.x${speed}.wav`);
+      // atempo keeps the pitch. bitexact + no metadata keeps the plain 44-byte header that wavSeconds reads.
+      if (!fs.existsSync(fast)) execFileSync('ffmpeg', ['-loglevel', 'error', '-y', '-i', wav, '-filter:a', `atempo=${speed}`,
+        '-map_metadata', '-1', '-fflags', '+bitexact', '-flags:a', '+bitexact', fast]);
+      entry.file = fast;
+    }
+    if (fs.existsSync(entry.file || '')) entry.seconds = Math.round(wavSeconds(entry.file) * 100) / 100;
     timing.sections.push(entry);
   }
   timing.totalSeconds = Math.round(timing.sections.reduce((a, s) => a + s.seconds, 0) * 10) / 10;
