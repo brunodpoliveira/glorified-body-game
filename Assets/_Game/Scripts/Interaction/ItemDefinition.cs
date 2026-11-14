@@ -28,6 +28,8 @@ namespace GlorifiedBody.Interaction
         public float at;
         public string speaker;
         [TextArea(1, 3)] public string text;
+        [Tooltip("The line does not show while this story flag is up (the gear log's own beat, round 145). Empty: always.")]
+        public string skipIfFlag;
     }
 
     /// <summary>

@@ -1,0 +1,51 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 202cb6532a4a7f80682b508098ca96f0, type: 3}
+  m_Name: item_log_n2_things_to_come
+  m_EditorClassIdentifier: Assembly-CSharp::GlorifiedBody.Interaction.ItemDefinition
+  itemId: log_n2_things_to_come
+  displayName: THINGS TO COME
+  kind: 6
+  drugType: 0
+  colour: {r: 0.95, g: 0.55, b: 0.2, a: 1}
+  description: Her own voice, about the cartoon on the day room TV.
+  logText: 
+  readFlag: 
+  mapFloor: 
+  audioClip: {fileID: 0}
+  tapeLines:
+  - at: 0.4
+    speaker: LUCY
+    text: Aw, man.
+    skipIfFlag: 
+  - at: 2.04
+    speaker: LUCY
+    text: I tuned in right at the end!
+    skipIfFlag: 
+  - at: 4.7799997
+    speaker: LUCY
+    text: Things to Come is the best cartoon I've ever seen.
+    skipIfFlag: 
+  - at: 8.73
+    speaker: LUCY
+    text: Like Starship Troopers, you can watch it for the pew-pew space lasers,
+      or as a meditation on progress and technology.
+    skipIfFlag: 
+  - at: 15.929999
+    speaker: LUCY
+    text: And this one is clearly on the side of the man in the arena, as Roosevelt
+      said.
+    skipIfFlag: 
+  - at: 21.474998
+    speaker: LUCY
+    text: Well, I can ask a nurse to put in the Blu-ray so I can catch up later.
+    skipIfFlag: 

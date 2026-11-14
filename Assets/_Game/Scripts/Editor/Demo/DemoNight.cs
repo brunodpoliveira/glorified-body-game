@@ -243,6 +243,28 @@ namespace GlorifiedBody.Editor.Demo
         public const string LucyOnTheTv = "Aw, man. I tuned in right at the end! Things to Come is the best cartoon I've ever seen. Like Starship Troopers, you can watch it for the pew-pew space lasers, or as a meditation on progress and technology. And this one is clearly on the side of the man in the arena, as Roosevelt said. Well, I can ask a nurse to put in the Blu-ray so I can catch up later.";
 
         /// <summary>
+        /// Her text after the anime (N2 of game/lines/N1_news.md, CANON round 146): an audio log in her voice, like the art logs.
+        /// One subtitle line a sentence, under LUCY, at reading pace. No line in the file: her copied text.
+        /// </summary>
+        public static ItemDefinition N2Log()
+        {
+            var said = DemoScripts.Lines("lines/N1_news.md", "N2", "*").FindAll(l => l.speaker == "LUCY");
+            string text = said.Count > 0 ? string.Join(" ", said.ConvertAll(l => l.text)) : LucyOnTheTv;
+            ItemDefinition item = ItemAssets.Item("log_n2_things_to_come", "THINGS TO COME", ItemKind.AudioLog, ItemAssets.TapeColour,
+                "Her own voice, about the cartoon on the day room TV.", "", GlorifiedBody.Player.DrugType.Nalcon);
+            item.audioClip = null;
+            item.tapeLines = new List<TapeLine>();
+            float at = 0.4f;
+            foreach (string sentence in DemoArt.Sentences(text))
+            {
+                item.tapeLines.Add(new TapeLine { at = at, speaker = "LUCY", text = sentence });
+                at += SubtitleService.ReadSeconds(sentence) + 0.2f;
+            }
+            EditorUtility.SetDirty(item);
+            return item;
+        }
+
+        /// <summary>
         /// The W14 TV plays the end of the episode when she walks in (round 108: "with no input from the player"). Interact
         /// watches the rest full screen from where she stands, and her text shows at the end of the show (Bruno, 2026-11-11).
         /// </summary>
@@ -256,6 +278,7 @@ namespace GlorifiedBody.Editor.Demo
             screen.watchStill = DemoV2.Still("n2_speech");
             screen.creditsStill = DemoV2.Still("n2_credits");
             screen.endComment = LucyOnTheTv;
+            screen.endLog = N2Log(); // round 146: an audio log in her voice
             EditorUtility.SetDirty(screen);
         }
 

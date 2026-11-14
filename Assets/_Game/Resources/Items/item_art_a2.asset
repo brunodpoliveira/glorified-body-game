@@ -1,0 +1,61 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 202cb6532a4a7f80682b508098ca96f0, type: 3}
+  m_Name: item_art_a2
+  m_EditorClassIdentifier: Assembly-CSharp::GlorifiedBody.Interaction.ItemDefinition
+  itemId: art_a2
+  displayName: THE TREE
+  kind: 6
+  drugType: 0
+  colour: {r: 0.95, g: 0.55, b: 0.2, a: 1}
+  description: Her own voice, about the thing in front of her. She does not know
+    how she knows it.
+  logText: 
+  readFlag: 
+  mapFloor: 
+  audioClip: {fileID: 0}
+  tapeLines:
+  - at: 0.4
+    speaker: LUCY
+    text: Stand back and the palms are blossoms and the whole wall is a cherry tree,
+      trained small, a bonsai shape on a surface this size.
+    skipIfFlag: 
+  - at: 7.6
+    speaker: LUCY
+    text: Sakura.
+    skipIfFlag: 
+  - at: 9.184999
+    speaker: LUCY
+    text: 'In Japan it stands for a short life, the reason being that it falls at
+      its best: the whole bloom comes down at once and never withers on the branch.'
+    skipIfFlag: 
+  - at: 16.385
+    speaker: LUCY
+    text: That was the appeal.
+    skipIfFlag: 
+  - at: 18.685
+    speaker: LUCY
+    text: The pilots in 1945, the ones who weren't meant to come back, painted it
+      on their planes,
+    skipIfFlag: 
+  - at: 24.725
+    speaker: LUCY
+    text: and some of them carried a branch into the cockpit with them.
+    skipIfFlag: 
+  - at: 29.28
+    speaker: LUCY
+    text: The piloted rocket bomb they flew had a name, and the name was Ohka.
+    skipIfFlag: 
+  - at: 34.22
+    speaker: LUCY
+    text: Cherry blossom.
+    skipIfFlag: 

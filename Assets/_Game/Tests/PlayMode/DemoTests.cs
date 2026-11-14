@@ -474,14 +474,21 @@ namespace GlorifiedBody.Tests.PlayMode
             yield return WaitUntil(() => !tv.IsPlaying, 6f);
             Assert.AreEqual(1, tv.Ends, "the show ends with the cutscene");
             Assert.AreEqual(1, tv.EndComments, "her text at the end");
-            Assert.AreEqual(Interactor.State.Message, hands.Current);
-            StringAssert.StartsWith("Aw, man. I tuned in right at the end!", hands.Text);
-            Assert.Greater(tv.EndCommentSeconds, 15f, "long enough to read");
+            // Round 146: her text is an audio log in her voice, like the art logs: it goes into her logs and plays.
+            GlorifiedBody.Audio.TapePlayer player = GlorifiedBody.Audio.TapePlayer.Instance;
+            Assert.AreEqual(1, tv.EndLogPlays, "the audio log plays at the end");
+            Assert.IsTrue(player.IsPlaying && player.Tape == tv.endLog, "on the tape player");
+            Assert.IsTrue(hands.GetComponent<ItemInventory>().Has(tv.endLog.itemId), "in her logs");
+            StringAssert.StartsWith("Aw, man.", tv.endLog.tapeLines[0].text, "her words from N1_news.md (N2)");
+            Assert.AreEqual(Interactor.State.Free, hands.Current, "she walks while it plays");
 
-            // After the end the key on the TV shows it again.
+            // After the end the key on the TV plays it again.
+            player.Pause(GlorifiedBody.Audio.TapePlayer.PausedByPlayer);
             Assert.IsTrue(tv.Available);
-            Assert.AreEqual(InteractKind.Message, tv.KindFor(hands));
-            StringAssert.StartsWith("Aw, man.", tv.TextFor(hands));
+            Assert.AreEqual(InteractKind.Act, tv.KindFor(hands));
+            Assert.AreEqual("screen_log:TV", tv.Confirm(hands));
+            Assert.AreEqual(2, tv.EndLogPlays);
+            Assert.IsTrue(player.IsPlaying, "it plays again");
         }
 
         [UnityTest]
@@ -919,6 +926,65 @@ namespace GlorifiedBody.Tests.PlayMode
             return door;
         }
 
+        [UnityTest]
+        public IEnumerator TheArtTexts_AreAudioLogs_TheFirstGivesTheBeat_AFightCutsOneOff_AndItPlaysAgain()
+        {
+            // Round 138: Lucy's art texts (T13, A1 to A5) are audio logs: the Interact key plays one and it goes into her logs.
+            yield return Coda("G3");
+            GameObject lucy = GameObject.FindGameObjectWithTag("Player");
+            TankController tank = lucy.GetComponent<TankController>();
+            ItemInventory items = lucy.GetComponent<ItemInventory>();
+            GlorifiedBody.Audio.TapePlayer player = GlorifiedBody.Audio.TapePlayer.Instance;
+            ArtLog palms = GameObject.Find("Art_Palms").GetComponent<ArtLog>(), tree = GameObject.Find("Art_Tree").GetComponent<ArtLog>();
+            Assert.IsNotNull(GameObject.Find("Art_Verse"), "A3 in G4");
+            Assert.IsNotNull(GameObject.Find("Art_Concourse"), "A4 in G2");
+            Assert.IsNotNull(GameObject.Find("Art_Gear_G1"), "A5 in G1");
+            tank.Teleport(palms.transform.position + Vector3.back * 1.1f - Vector3.up * palms.transform.position.y + Vector3.up * lucy.transform.position.y, 0f);
+            yield return new WaitForSeconds(0.3f);
+            var pad = new VirtualPad();
+            GameInput.SetBotSource(pad);
+            var driver = new GameObject("[Pad]").AddComponent<PadDriver>();
+            driver.pad = pad;
+            try
+            {
+                pad.Tap(InputManager.GameAction.Interact);
+                yield return WaitUntil(() => palms.Plays > 0, 2f);
+                Assert.AreEqual(1, palms.Plays, "the Interact key on the palms plays A1 (no question)");
+                Assert.IsTrue(items.Has("art_a1"), "the log goes into her logs");
+                Assert.IsTrue(player.IsPlaying && player.Tape.itemId == "art_a1", "it plays at once");
+                Assert.Greater(player.Length, 25f, "the whole text at reading pace");
+                yield return new WaitForSeconds(1f);
+                // A fight cuts it off; the tape key plays it again from where it stopped.
+                float at = player.Position;
+                player.Pause(GlorifiedBody.Audio.TapePlayer.PausedByCombat);
+                Assert.IsFalse(player.IsPlaying);
+                player.Play(player.Tape);
+                Assert.IsTrue(player.IsPlaying, "it plays again");
+                Assert.AreEqual(at, player.Position, 0.1f, "from where the fight cut it off");
+                // The end: the beat, once.
+                player.Seek(player.Length - 0.05f);
+                yield return WaitUntil(() => !player.IsPlaying, 2f);
+                Assert.AreEqual(1, ArtLog.Beats, "the beat after the first log");
+                Assert.IsTrue(StoryFlags.Has(ArtLog.FirstHeardFlag));
+                tank.Teleport(tree.transform.position + Vector3.back * 1.1f - Vector3.up * tree.transform.position.y + Vector3.up * lucy.transform.position.y, 0f);
+                yield return new WaitForSeconds(0.3f);
+                pad.Tap(InputManager.GameAction.Interact);
+                yield return WaitUntil(() => tree.Plays > 0, 2f);
+                Assert.IsTrue(player.IsPlaying && player.Tape.itemId == "art_a2", "the tree plays A2");
+                player.Seek(player.Length - 0.05f);
+                yield return WaitUntil(() => !player.IsPlaying, 2f);
+                Assert.AreEqual(1, ArtLog.Beats, "no second beat");
+                Assert.IsTrue(items.Has("art_a1") && items.Has("art_a2"), "both in her logs");
+            }
+            finally
+            {
+                GameInput.ClearBotSource(pad);
+                UnityEngine.Object.Destroy(driver.gameObject);
+                StoryFlags.Drop(ArtLog.FirstHeardFlag);
+            }
+        }
+
+        /// <summary>The R1 beat up to the choice of round 137 (the news, the attendant's four lines, the prompt).</summary>
         private static string ChoicePrompt()
         {
             var line = GlorifiedBody.Subtitles.SubtitleService.Lines.FirstOrDefault(l => l.Owner == ScriptedSequence.ChoiceOwner);

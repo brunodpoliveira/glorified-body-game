@@ -1,0 +1,64 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 202cb6532a4a7f80682b508098ca96f0, type: 3}
+  m_Name: item_art_a5
+  m_EditorClassIdentifier: Assembly-CSharp::GlorifiedBody.Interaction.ItemDefinition
+  itemId: art_a5
+  displayName: THE GEAR
+  kind: 6
+  drugType: 0
+  colour: {r: 0.95, g: 0.55, b: 0.2, a: 1}
+  description: Her own voice, about the thing in front of her. She does not know
+    how she knows it.
+  logText: 
+  readFlag: 
+  mapFloor: 
+  audioClip: {fileID: 0}
+  tapeLines:
+  - at: 0.4
+    speaker: LUCY
+    text: It's on every panel, the same gear, and the oldest geared machine we have
+      came out of a shipwreck off Antikythera, which is a Greek island,
+    skipIfFlag: 
+  - at: 7.6
+    speaker: LUCY
+    text: sponge divers brought it up in 1901.
+    skipIfFlag: 
+  - at: 10.78
+    speaker: LUCY
+    text: I'm sure of the year and I don't know why I'm sure.
+    skipIfFlag: art_gear_first
+  - at: 14.785
+    speaker: LUCY
+    text: About two thousand years old.
+    skipIfFlag: 
+  - at: 17.58
+    speaker: LUCY
+    text: A wooden box of bronze gearwheels, around thirty of them left,
+    skipIfFlag: 
+  - at: 22.19
+    speaker: LUCY
+    text: and the wheels tracked the sun and the moon and told you when the next
+      eclipse was coming.
+    skipIfFlag: 
+  - at: 28.34
+    speaker: LUCY
+    text: Nothing that fine turns up again for more than a thousand years.
+    skipIfFlag: 
+  - at: 33.06
+    speaker: LUCY
+    text: Somebody built it, and somebody put it on a ship.
+    skipIfFlag: 
+  - at: 36.955
+    speaker: LUCY
+    text: Nobody knows who made it, or for whom.
+    skipIfFlag: 

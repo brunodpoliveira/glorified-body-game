@@ -1,0 +1,62 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 202cb6532a4a7f80682b508098ca96f0, type: 3}
+  m_Name: item_art_a4
+  m_EditorClassIdentifier: Assembly-CSharp::GlorifiedBody.Interaction.ItemDefinition
+  itemId: art_a4
+  displayName: THE ARCHITECTURE
+  kind: 6
+  drugType: 0
+  colour: {r: 0.95, g: 0.55, b: 0.2, a: 1}
+  description: Her own voice, about the thing in front of her. She does not know
+    how she knows it.
+  logText: 
+  readFlag: 
+  mapFloor: 
+  audioClip: {fileID: 0}
+  tapeLines:
+  - at: 0.4
+    speaker: LUCY
+    text: Granite, dark red going to black, brass studs, fluted chrome.
+    skipIfFlag: 
+  - at: 4.955
+    speaker: LUCY
+    text: This is the lobby of around 1930, the corporate kind, built to tell you
+      the company would still be standing when you weren't.
+    skipIfFlag: 
+  - at: 12.155
+    speaker: LUCY
+    text: The trees in the square planters are pruned into clouds, a Japanese garden
+      practice, you take a young tree and cut it until it looks old.
+    skipIfFlag: 
+  - at: 19.355
+    speaker: LUCY
+    text: After the war a group of Japanese architects, the Metabolists, wanted buildings
+      with a metabolism,
+    skipIfFlag: 
+  - at: 25.945
+    speaker: LUCY
+    text: buildings that grow and replace their own parts, and in 1972 they put up
+      a tower in Tokyo made of capsules,
+    skipIfFlag: 
+  - at: 33.03
+    speaker: LUCY
+    text: each one meant to be swapped out about every twenty-five years.
+    skipIfFlag: 
+  - at: 37.695
+    speaker: LUCY
+    text: Not one capsule was ever replaced.
+    skipIfFlag: 
+  - at: 40.765
+    speaker: LUCY
+    text: They tore it down in 2022.
+    skipIfFlag: 

@@ -29,6 +29,8 @@ namespace GlorifiedBody.Audio
 
         public static TapePlayer Instance { get; private set; }
         public static event Action<ItemDefinition> OnStarted;
+        /// <summary>A tape played to its end (the art logs: the beat after the first one, round 138).</summary>
+        public static event Action<ItemDefinition> OnEnded;
 
         private AudioSource source;
         private ItemDefinition tape;
@@ -219,6 +221,7 @@ namespace GlorifiedBody.Audio
                 UpdateLabel();
                 RunTelemetry.Event("tape_end", tape.itemId);
                 ItemDefinition.MarkRead(tape); // its flag at its end (L19 unlocks the feed, round 44)
+                OnEnded?.Invoke(tape);
                 return;
             }
             ShowLine();
@@ -241,6 +244,7 @@ namespace GlorifiedBody.Audio
             shownLine = index;
             if (index < 0) { SubtitleService.Hide(SubtitleOwner); return; }
             TapeLine l = tape.tapeLines[index];
+            if (!string.IsNullOrEmpty(l.skipIfFlag) && Saving.StoryFlags.Has(l.skipIfFlag)) { SubtitleService.Hide(SubtitleOwner); return; } // round 145
             SubtitleService.Show(SubtitleOwner, string.IsNullOrEmpty(l.speaker) ? "TAPE" : l.speaker, l.text);
         }
 

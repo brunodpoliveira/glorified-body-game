@@ -1,0 +1,61 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 202cb6532a4a7f80682b508098ca96f0, type: 3}
+  m_Name: item_art_a3
+  m_EditorClassIdentifier: Assembly-CSharp::GlorifiedBody.Interaction.ItemDefinition
+  itemId: art_a3
+  displayName: THE VERSE UNDER THE GEAR
+  kind: 6
+  drugType: 0
+  colour: {r: 0.95, g: 0.55, b: 0.2, a: 1}
+  description: Her own voice, about the thing in front of her. She does not know
+    how she knows it.
+  logText: 
+  readFlag: 
+  mapFloor: 
+  audioClip: {fileID: 0}
+  tapeLines:
+  - at: 0.4
+    speaker: LUCY
+    text: IT IS SOWN IN WEAKNESS.
+    skipIfFlag: 
+  - at: 2.865
+    speaker: LUCY
+    text: IT IS RAISED IN POWER.
+    skipIfFlag: 
+  - at: 5.275
+    speaker: LUCY
+    text: That's Paul, first letter to the church at Corinth, chapter fifteen, the
+      part about the resurrection of the body,
+    skipIfFlag: 
+  - at: 12.475
+    speaker: LUCY
+    text: what is sown perishable is raised imperishable, I could go on in it for
+      a while and I'm not going to.
+    skipIfFlag: 
+  - at: 19.23
+    speaker: LUCY
+    text: Corinth had a sanctuary of Asklepios, the god of healing, and if you were
+      cured there you left a clay model of the part that got fixed,
+    skipIfFlag: 
+  - at: 26.43
+    speaker: LUCY
+    text: and the museum at Corinth still has them out where you can look.
+    skipIfFlag: 
+  - at: 31.15
+    speaker: LUCY
+    text: Paul's readers lived down the road from that temple.
+    skipIfFlag: 
+  - at: 35.21
+    speaker: LUCY
+    text: Hands, feet, arms, legs, eyes, ears.
+    skipIfFlag: 

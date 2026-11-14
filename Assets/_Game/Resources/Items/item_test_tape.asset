@@ -26,15 +26,20 @@ MonoBehaviour:
   - at: 0.6
     speaker: TAPE
     text: This is a placeholder tape.
+    skipIfFlag: 
   - at: 4.5
     speaker: TAPE
     text: It stands in for the audio logs of the demo.
+    skipIfFlag: 
   - at: 9.5
     speaker: TAPE
     text: The writer gives the words. The voices come later.
+    skipIfFlag: 
   - at: 14.5
     speaker: TAPE
     text: Walk while it plays. A fight pauses it.
+    skipIfFlag: 
   - at: 19
     speaker: TAPE
     text: The tape key or the inventory plays it again.
+    skipIfFlag: 

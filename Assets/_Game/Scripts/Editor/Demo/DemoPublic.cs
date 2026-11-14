@@ -67,6 +67,7 @@ namespace GlorifiedBody.Editor.Demo
             SaveAssets.SavePoint("Save_G1", new Vector3(0.6f, 0f, 1f), 90f).transform.SetParent(r.Props.transform, true);
             r.Prop("Planter", new Vector3(4.2f, 0f, 4.2f), new Vector3(0.8f, 0.8f, 0.8f), 0.2f);
             r.Box(r.Props, "Gear_Panel", new Vector3(2.5f, 1.8f, 0.17f), new Vector3(1f, 1f, 0.04f), DemoRoom.Grey(0.85f)); // 0.17 off the line: the wall is 0.3 m thick on it (2026-11-05)
+            DemoArt.Place(r, "Art_Gear_G1", "A5", new Vector3(2.5f, 1.4f, 0.5f), "the gear"); // round 138: the art texts are audio logs
         }
 
         /// <summary>G2: the concourse, two soldier pairs in the second half, the planters as cover, the mission statement.</summary>
@@ -93,6 +94,7 @@ namespace GlorifiedBody.Editor.Demo
             r.Figure("Reinforcement_D", "soldier_shield", new Vector3(24.5f, 0f, 4f), 270f, parent: after);
             // The mission statement (the plan names the company: it waits for the name check, so only the motto for now).
             DemoDining.GlassDoors(r); // the words over the glass doors of the Dining Hall
+            DemoArt.Place(r, "Art_Concourse", "A4", new Vector3(18f, 1.4f, 5.4f), "the concourse"); // under the motto, by the granite
             r.Sign("Sign_Mission", "SO THAT HUMANITY ENDURES.", new Vector3(20f, 4.2f, 5.83f), Vector3.back, new Vector2(6f, 0.8f), 72);
             r.Sign("Sign_Directory", "THE WARD  -  2ND FLOOR\nTHE CHAPEL\nRECEPTION\nSECURITY", new Vector3(5.17f, 1.6f, 4.6f), Vector3.right, new Vector2(1.2f, 1.2f), 36);
         }
@@ -102,6 +104,8 @@ namespace GlorifiedBody.Editor.Demo
         {
             r.Box(r.Props, "Donor_Wall", new Vector3(12f, 1.75f, 11.83f), new Vector3(7.6f, 3.5f, 0.04f), DemoRoom.Colour("donor_wall", new Color(0.55f, 0.32f, 0.36f)));
             r.Sign("Sign_Plaque", "FOR THOSE WHO GAVE THE BODY.", new Vector3(12f, 1.2f, 11.79f), Vector3.back, new Vector2(2.2f, 0.35f), 40);
+            DemoArt.Place(r, "Art_Palms", "A1", new Vector3(10f, 1.4f, 11.4f), "the palms");
+            DemoArt.Place(r, "Art_Tree", "A2", new Vector3(14.2f, 1.4f, 11.4f), "the tree");
             r.Prop("Bench", new Vector3(12f, 0f, 8f), new Vector3(2f, 0.45f, 0.45f));
             r.Capsule("Capsule_G3", DrugType.Nalcon, new Vector3(9f, 0.15f, 7f));
             r.Scan("Scan_Donor_Wall", new Vector3(12f, 1.4f, 11.6f), "demo_c6_donor_wall", "PLACEHOLDER (C6): a hand pressed into wet paint, a larger hand on top of it.");
@@ -116,6 +120,7 @@ namespace GlorifiedBody.Editor.Demo
             r.Capsule("Capsule_G4", DrugType.NalconLift, new Vector3(25f, 0.15f, 13.2f));
             r.Box(r.Props, "Gear", new Vector3(28f, 2.6f, 13.83f), new Vector3(1.2f, 1.2f, 0.04f), DemoRoom.Grey(0.9f));
             r.Sign("Sign_Verse", "IT IS SOWN IN WEAKNESS. IT IS RAISED IN POWER.", new Vector3(28f, 1.7f, 13.83f), Vector3.back, new Vector2(3.4f, 0.4f), 40);
+            DemoArt.Place(r, "Art_Verse", "A3", new Vector3(28f, 1.4f, 13.4f), "the verse");
             EnemySpawn nurse = r.Figure("Praying_Nurse", "nurse", new Vector3(29.8f, 0f, 11.4f), 0f, variant: 0);
             nurse.hides = true;
             nurse.foundAt = 0f; // she prays on, found or not

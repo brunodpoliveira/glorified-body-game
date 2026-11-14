@@ -54,6 +54,10 @@ namespace GlorifiedBody.Interaction
         public Texture2D creditsStill;
         [Tooltip("Her text at the end of the show, when she is in its room. Interact after the end shows it again.")]
         [TextArea] public string endComment = "";
+        [Tooltip("Her text at the end as an audio log (round 146): it goes into her logs and plays; Interact plays it again. Empty: endComment as a message.")]
+        public ItemDefinition endLog;
+        /// <summary>The times her end log played (the tests).</summary>
+        public int EndLogPlays { get; private set; }
 
         private static readonly List<InWorldScreen> playing = new List<InWorldScreen>();
         /// <summary>A screen that lowers the music plays now (MusicDirector).</summary>
@@ -229,11 +233,23 @@ namespace GlorifiedBody.Interaction
 
         private void SayEndComment()
         {
-            if (string.IsNullOrEmpty(endComment)) return;
+            if (string.IsNullOrEmpty(endComment) && endLog == null) return;
             if (lucy == null) FindLucy();
             if (lucy == null || !GlorifiedBody.Rooms.Room.Same(lucy.position, SoundPoint)) return;
+            if (endLog != null) { PlayEndLog(lucy.gameObject); return; }
             Interactor hands = lucy.GetComponent<Interactor>();
             if (hands != null && hands.ShowMessage(endComment, EndCommentSeconds, "screen_comment:" + name)) EndComments++;
+        }
+
+        /// <summary>Her end text as an audio log: into her logs (no slot), and it plays now.</summary>
+        private void PlayEndLog(GameObject her)
+        {
+            ItemInventory items = her != null ? her.GetComponent<ItemInventory>() : null;
+            if (items != null && !items.Has(endLog.itemId)) items.TryAdd(endLog);
+            GlorifiedBody.Audio.TapePlayer.Instance?.Play(endLog);
+            EndLogPlays++;
+            EndComments++;
+            RunTelemetry.Event("screen_end_log", endLog.itemId);
         }
 
         /// <summary>Time to read her text at the end (no cap: Interact closes it sooner).</summary>
@@ -376,11 +392,11 @@ namespace GlorifiedBody.Interaction
 
         // A watchable screen: Interact watches it while it plays, and shows her text again after the end.
         private bool CanWatch => watchable && on && !watching;
-        private bool AfterEnd => !interactive && !on && Ends > 0 && !string.IsNullOrEmpty(endComment);
+        private bool AfterEnd => !interactive && !on && Ends > 0 && (!string.IsNullOrEmpty(endComment) || endLog != null);
 
         public override bool Available => (interactive || CanWatch || AfterEnd) && base.Available;
         public override string Hint => CanWatch ? "watch " + thing : AfterEnd ? "look at " + thing : (on ? "turn off " : "turn on ") + thing;
-        public override InteractKind KindFor(Interactor who) => AfterEnd ? InteractKind.Message : InteractKind.Act;
+        public override InteractKind KindFor(Interactor who) => AfterEnd && endLog == null ? InteractKind.Message : InteractKind.Act;
         public override string TextFor(Interactor who) => AfterEnd ? endComment : "";
         public override float MessageTime => AfterEnd ? EndCommentSeconds : base.MessageTime;
         public override string Shown(Interactor who) => "screen_comment:" + name;
@@ -388,6 +404,7 @@ namespace GlorifiedBody.Interaction
         public override string Confirm(Interactor who)
         {
             if (CanWatch) return Watch() ? "screen_watch:" + name : "screen_busy:" + name;
+            if (AfterEnd && endLog != null) { PlayEndLog(who != null ? who.gameObject : null); return "screen_log:" + name; }
             if (on) { Stop(); return "screen_off:" + name; }
             Play();
             return "screen_on:" + name;

@@ -1,0 +1,59 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 202cb6532a4a7f80682b508098ca96f0, type: 3}
+  m_Name: item_art_a1
+  m_EditorClassIdentifier: Assembly-CSharp::GlorifiedBody.Interaction.ItemDefinition
+  itemId: art_a1
+  displayName: THE PALMS
+  kind: 6
+  drugType: 0
+  colour: {r: 0.95, g: 0.55, b: 0.2, a: 1}
+  description: Her own voice, about the thing in front of her. She does not know
+    how she knows it.
+  logText: 
+  readFlag: 
+  mapFloor: 
+  audioClip: {fileID: 0}
+  tapeLines:
+  - at: 0.4
+    speaker: LUCY
+    text: Hand stencils are among the oldest dated pictures, hand flat on the rock,
+      ochre or charcoal sprayed around it, blown,
+    skipIfFlag: 
+  - at: 7.6
+    speaker: LUCY
+    text: from the mouth or through a hollow bone, and when the hand comes away the
+      outline stays.
+    skipIfFlag: 
+  - at: 13.64
+    speaker: LUCY
+    text: Chauvet, Pech Merle, tens of thousands of years old.
+    skipIfFlag: 
+  - at: 17.7
+    speaker: LUCY
+    text: Patagonia has a Cave of the Hands, hundreds, about nine thousand years,
+      mostly left, the right held the pipe.
+    skipIfFlag: 
+  - at: 24.895
+    speaker: LUCY
+    text: Gargas in the Pyrenees has more than two hundred, many missing fingers,
+      or folded down, nobody agrees whether that's loss or a sign.
+    skipIfFlag: 
+  - at: 32.095
+    speaker: LUCY
+    text: In 2013 somebody measured finger lengths in French and Spanish caves, I
+      won't get into the method, and read about three in four as women's.
+    skipIfFlag: 
+  - at: 39.295002
+    speaker: LUCY
+    text: Most of them were women's hands.
+    skipIfFlag: 
