@@ -1,0 +1,62 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 202cb6532a4a7f80682b508098ca96f0, type: 3}
+  m_Name: item_art_a9
+  m_EditorClassIdentifier: Assembly-CSharp::GlorifiedBody.Interaction.ItemDefinition
+  itemId: art_a9
+  displayName: THE VEILED CHRIST
+  kind: 6
+  drugType: 0
+  colour: {r: 0.95, g: 0.55, b: 0.2, a: 1}
+  description: Her own voice, about the thing in front of her. She does not know
+    how she knows it.
+  logText: 
+  readFlag: 
+  mapFloor: 
+  audioClip: {fileID: 0}
+  tapeLines:
+  - at: 0.4
+    speaker: LUCY
+    text: The Veiled Christ, 1753, and this one isn't Corradini, this is Sanmartino,
+      Giuseppe Sanmartino, a Neapolitan, same chapel, Sansevero,
+    skipIfFlag: 
+  - at: 7.6
+    speaker: LUCY
+    text: the year after.
+    skipIfFlag: 
+  - at: 9.625
+    speaker: LUCY
+    text: Corradini was meant to make it, it was his to make, and he died in Naples
+      in 1752 before he got to it, so the next man got it instead,
+    skipIfFlag: 
+  - at: 16.825
+    speaker: LUCY
+    text: the next year.
+    skipIfFlag: 
+  - at: 18.795
+    speaker: LUCY
+    text: The dead Christ laid out under the veil, and at the feet the crown of thorns,
+      the pincers, the nails, all of it carved.
+    skipIfFlag: 
+  - at: 25.995
+    speaker: LUCY
+    text: For a long time people said the prince had turned a real cloth to stone
+      by alchemy,
+    skipIfFlag: 
+  - at: 31.76
+    speaker: LUCY
+    text: which is what you say when you can't account for a thing.
+    skipIfFlag: 
+  - at: 36.095
+    speaker: LUCY
+    text: The veil and the man under it, one block.
+    skipIfFlag: 

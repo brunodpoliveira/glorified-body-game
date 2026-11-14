@@ -1,0 +1,63 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 202cb6532a4a7f80682b508098ca96f0, type: 3}
+  m_Name: item_art_a6
+  m_EditorClassIdentifier: Assembly-CSharp::GlorifiedBody.Interaction.ItemDefinition
+  itemId: art_a6
+  displayName: PURITAS
+  kind: 6
+  drugType: 0
+  colour: {r: 0.95, g: 0.55, b: 0.2, a: 1}
+  description: Her own voice, about the thing in front of her. She does not know
+    how she knows it.
+  logText: 
+  readFlag: 
+  mapFloor: 
+  audioClip: {fileID: 0}
+  tapeLines:
+  - at: 0.4
+    speaker: LUCY
+    text: This one's a bust, just the head and shoulders, a woman under a veil, and
+      the man who cut it was Antonio Corradini, Venetian,
+    skipIfFlag: 
+  - at: 7.6
+    speaker: LUCY
+    text: and veils are the whole reason anyone remembers him, the marble shaved
+      down until the face comes up through it.
+    skipIfFlag: 
+  - at: 14.8
+    speaker: LUCY
+    text: The real one is in Venice, at Ca' Rezzonico, a palace on the Grand Canal
+      that got turned into a museum of eighteenth-century Venice,
+    skipIfFlag: 
+  - at: 22
+    speaker: LUCY
+    text: one century, that's the collection.
+    skipIfFlag: 
+  - at: 25.125
+    speaker: LUCY
+    text: It's the oldest of the four.
+    skipIfFlag: 
+  - at: 27.865
+    speaker: LUCY
+    text: Around 1720, the honest answer is between 1717 and 1725, and that's as
+      close as anyone gets.
+    skipIfFlag: 
+  - at: 34.125
+    speaker: LUCY
+    text: He called it Puritas, which is Latin, purity, an allegory, so she isn't
+      anyone.
+    skipIfFlag: 
+  - at: 39.67
+    speaker: LUCY
+    text: Nobody is sure of the year.
+    skipIfFlag: 

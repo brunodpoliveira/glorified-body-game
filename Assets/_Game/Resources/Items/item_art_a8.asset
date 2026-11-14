@@ -1,0 +1,55 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 202cb6532a4a7f80682b508098ca96f0, type: 3}
+  m_Name: item_art_a8
+  m_EditorClassIdentifier: Assembly-CSharp::GlorifiedBody.Interaction.ItemDefinition
+  itemId: art_a8
+  displayName: MODESTY
+  kind: 6
+  drugType: 0
+  colour: {r: 0.95, g: 0.55, b: 0.2, a: 1}
+  description: Her own voice, about the thing in front of her. She does not know
+    how she knows it.
+  logText: 
+  readFlag: 
+  mapFloor: 
+  audioClip: {fileID: 0}
+  tapeLines:
+  - at: 0.4
+    speaker: LUCY
+    text: Modesty, La Pudicizia, and this is 1752, Naples now, the Sansevero chapel,
+      which is the family chapel of the princes of Sansevero,
+    skipIfFlag: 
+  - at: 7.6
+    speaker: LUCY
+    text: and it's a tomb, that's the thing to hold onto, it's the monument over
+      the prince's mother, who died young, and the figure is for her.
+    skipIfFlag: 
+  - at: 14.8
+    speaker: LUCY
+    text: Veiled head to foot, the stone running from the crown down to the plinth,
+      and cut thin, thinner than I'd have said was possible,
+    skipIfFlag: 
+  - at: 22
+    speaker: LUCY
+    text: and I'd have been wrong, because the face is right there under it, every
+      line of it, through the marble.
+    skipIfFlag: 
+  - at: 28.92
+    speaker: LUCY
+    text: This copy's bigger than the real one, somebody wanted it to fill a round
+      room. 1752, Naples, Corradini.
+    skipIfFlag: 
+  - at: 35.785
+    speaker: LUCY
+    text: He died in Naples that same year.
+    skipIfFlag: 

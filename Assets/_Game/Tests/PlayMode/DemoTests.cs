@@ -984,6 +984,132 @@ namespace GlorifiedBody.Tests.PlayMode
             }
         }
 
+        // ── The round foyer, the art puzzle, the lift (rounds 147 and 148; Bruno, 2026-11-14) ─────────
+
+        /// <summary>The spoke doors of the foyer from its centre (G2, G13, G7, G10, G6, G9, G8, U1, G12; DemoPublic.FoyerSpokes).</summary>
+        private static readonly Vector2[] Spokes =
+        {
+            new Vector2(0f, 8f), new Vector2(-8f, 4f), new Vector2(-8f, -4f), new Vector2(8f, 4.5f), new Vector2(8f, 1f),
+            new Vector2(8f, -4f), new Vector2(-7f, -8f), new Vector2(0f, -8f), new Vector2(7f, -8f),
+        };
+
+        [UnityTest]
+        public IEnumerator TheFoyer_IsRound_EverySpokeReachesModesty_AndTheEntranceIsShut()
+        {
+            yield return Coda("G5");
+            GlorifiedBody.Rooms.Room g5 = GlorifiedBody.Rooms.Room.Of("G5");
+            Vector3 c = g5.Centre;
+            Assert.AreEqual("THE FOYER", g5.title);
+            Assert.IsNotNull(GameObject.Find("Modesty_Plinth"), "Modesty in the centre");
+            Assert.Greater(UnityEngine.Object.FindObjectsByType<Transform>(FindObjectsSortMode.None).Count(t => t.name.StartsWith("Foyer_Fill_")), 10, "the corners are solid");
+            UnityEngine.AI.NavMesh.SamplePosition(c + new Vector3(0f, 0f, 2.2f), out UnityEngine.AI.NavMeshHit centre, 1f, UnityEngine.AI.NavMesh.AllAreas);
+            Assert.IsTrue(centre.hit, "the floor in front of Modesty");
+            var blocked = new List<string>();
+            foreach (Vector2 sp in Spokes)
+            {
+                Vector3 door = c + new Vector3(sp.x, 0f, sp.y);
+                Vector3 inside = door + (c - door).normalized * 0.7f;
+                var path = new UnityEngine.AI.NavMeshPath();
+                bool sampled = UnityEngine.AI.NavMesh.SamplePosition(inside, out UnityEngine.AI.NavMeshHit from, 1f, UnityEngine.AI.NavMesh.AllAreas);
+                if (!sampled || !UnityEngine.AI.NavMesh.CalculatePath(from.position, centre.position, UnityEngine.AI.NavMesh.AllAreas, path) || path.status != UnityEngine.AI.NavMeshPathStatus.PathComplete)
+                    blocked.Add($"({sp.x}, {sp.y})");
+            }
+            Debug.Log($"[DemoTests] the foyer: {blocked.Count} spokes blocked: {string.Join(" ", blocked)}");
+            Assert.IsEmpty(blocked, "every spoke door has a way to Modesty");
+            Assert.IsNotNull(GlorifiedBody.Rooms.Room.Of("G13b"), "the main entrance");
+            Assert.IsNotNull(GameObject.Find("Sign_Lockdown"), "its shutters are down");
+        }
+
+        [UnityTest]
+        public IEnumerator TheArtPuzzle_TheCarryMovesACopy_TheRightOrderOpensTheLift_ThatRidesUpAndBack()
+        {
+            yield return Coda("G5");
+            GameObject lucy = GameObject.FindGameObjectWithTag("Player");
+            TankController tank = lucy.GetComponent<TankController>();
+            PsychicPowers powers = lucy.GetComponent<PsychicPowers>();
+            lucy.GetComponent<PsychicStats>().RefillAll();
+            PlinthPuzzle puzzle = UnityEngine.Object.FindFirstObjectByType<PlinthPuzzle>();
+            Assert.IsNotNull(puzzle, "the art puzzle in the foyer");
+            Assert.AreEqual(4, puzzle.copies.Length);
+            Assert.IsFalse(puzzle.Solved);
+            LiftRide down = GameObject.Find("Lift_Button_G5").GetComponent<LiftRide>();
+            Interactor hands = lucy.GetComponent<Interactor>();
+            Assert.AreEqual(InteractKind.Message, down.KindFor(hands), "the lift is locked before the puzzle");
+            Assert.IsTrue(GameObject.Find("Lift_Door") != null && GameObject.Find("Lift_Door").activeInHierarchy, "the lift door is shut");
+            Vector3 c = GlorifiedBody.Rooms.Room.Of("G5").Centre;
+
+            // The fight of the foyer first: with an enemy locked, the defend key makes the floor shield, not the carry.
+            // The figures of the foyer and of the rooms beside it (a soldier of G2 can be locked through the north doorway).
+            foreach (Health h in UnityEngine.Object.FindObjectsByType<Health>(FindObjectsSortMode.None))
+                if (h.gameObject != lucy && !h.transform.IsChildOf(lucy.transform) && Vector3.Distance(h.transform.position, c) < 20f) h.Kill();
+            yield return new WaitForSeconds(1.5f);
+            // The carry (mk_orzabal and the defend key, as the planters): Puritas leaves base III.
+            GameObject puritas = puzzle.copies[0].gameObject;
+            Vector3 start = puritas.transform.position;
+            Vector3 stand = start + new Vector3(c.x - start.x, 0f, c.z - start.z).normalized * 2.2f;
+            tank.Teleport(stand, Quaternion.LookRotation(new Vector3(start.x - stand.x, 0f, start.z - stand.z)).eulerAngles.y);
+            yield return new WaitForSeconds(0.3f);
+            var pad = new VirtualPad();
+            GameInput.SetBotSource(pad);
+            var driver = new GameObject("[Pad]").AddComponent<PadDriver>();
+            driver.pad = pad;
+            try
+            {
+                powers.Select(PowerKind.Telekinesis);
+                lucy.GetComponent<PsychicStats>().ResetShort(); // the Hold's beat fills SHORT to 90: a full bar makes the press a short
+                pad.SetHeld(InputManager.GameAction.Defend, true);
+                yield return WaitUntil(() => powers.Carrying, 2f);
+                LockOnController locks = lucy.GetComponent<LockOnController>();
+                Debug.Log($"[DemoTests] the carry: result '{powers.LastResult}', locked '{(locks != null && locks.CurrentTarget != null ? locks.CurrentTarget.name : "none")}', power {powers.Selected.kind}, MK {lucy.GetComponent<PsychicStats>().Mk(PowerKind.Telekinesis):0}, the copy {Vector3.Distance(lucy.transform.position, puritas.transform.position):0.0} m away, she at {lucy.transform.position}, facing {lucy.transform.eulerAngles.y:0}");
+                Assert.IsTrue(powers.Carrying, "the defend key lifts the copy");
+                Assert.AreEqual(puritas, powers.HeldLift.gameObject, "the copy in front of her");
+                yield return new WaitForSeconds(PsychicPowers.CarryRise + 0.1f);
+                pad.Look = new Vector2(1f, 0f);
+                yield return new WaitForSeconds(0.8f);
+                pad.Look = Vector2.zero;
+                pad.SetHeld(InputManager.GameAction.Defend, false);
+                yield return WaitUntil(() => !powers.Carrying, 2f);
+                yield return new WaitForSeconds(1.5f);
+                Vector3 moved = puritas.transform.position - start;
+                moved.y = 0f;
+                Debug.Log($"[DemoTests] the carry moved Puritas {moved.magnitude:0.00} m, it rests at {puritas.transform.position.y - GlorifiedBody.Rooms.Room.Of("G5").BaseY:0.00} m");
+                Assert.Greater(moved.magnitude, 0.6f, "the carry moved the copy");
+            }
+            finally
+            {
+                pad.ReleaseAll();
+                GameInput.ClearBotSource(pad);
+                UnityEngine.Object.Destroy(driver.gameObject);
+            }
+
+            // A wrong order opens nothing.
+            Vector3 Rest(Transform baseT) => baseT.position + Vector3.up * (puzzle.restHeight - 0.015f);
+            IEnumerator PlaceAll(int[] order)
+            {
+                for (int i = 0; i < 4; i++) puzzle.copies[i].GetComponent<MovableProp>().Place(c + new Vector3(-4.5f + i * 3f, 0.9f, 3.6f), Quaternion.identity);
+                yield return new WaitForSeconds(0.3f);
+                for (int i = 0; i < 4; i++) puzzle.copies[order[i]].GetComponent<MovableProp>().Place(Rest(puzzle.bases[i]), Quaternion.identity);
+                yield return new WaitForSeconds(1.2f);
+            }
+            yield return PlaceAll(new[] { 1, 0, 2, 3 });
+            Assert.IsFalse(puzzle.Solved, "Tuccia before Puritas: no");
+            yield return PlaceAll(new[] { 0, 1, 2, 3 });
+            Debug.Log($"[DemoTests] the plinths: {puzzle.Placed} of 4 in place");
+            Assert.IsTrue(puzzle.Solved, "the oldest first: Puritas, Tuccia, Modesty, the Veiled Christ");
+            Assert.IsFalse(GameObject.Find("Lift_Door") != null && GameObject.Find("Lift_Door").activeInHierarchy, "the lift door opens");
+
+            // The lift rides up to the ward and back down.
+            Assert.AreEqual(InteractKind.Act, down.KindFor(hands));
+            Assert.AreEqual("lift:Lift_Button_G5", down.Confirm(hands));
+            yield return WaitUntil(() => GlorifiedBody.Rooms.RoomTracker.CurrentId == "W2", 3f);
+            Assert.AreEqual("W2", GlorifiedBody.Rooms.RoomTracker.CurrentId, "up to the ward");
+            LiftRide up = GameObject.Find("Lift_Button_W2").GetComponent<LiftRide>();
+            Assert.AreEqual("lift:Lift_Button_W2", up.Confirm(hands));
+            yield return WaitUntil(() => GlorifiedBody.Rooms.RoomTracker.CurrentId == "G5", 3f);
+            Assert.AreEqual("G5", GlorifiedBody.Rooms.RoomTracker.CurrentId, "and back down to the foyer");
+            StoryFlags.Drop("demo_g5_plinths");
+        }
+
         /// <summary>The R1 beat up to the choice of round 137 (the news, the attendant's four lines, the prompt).</summary>
         private static string ChoicePrompt()
         {

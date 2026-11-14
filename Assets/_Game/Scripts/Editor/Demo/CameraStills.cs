@@ -31,7 +31,7 @@ namespace GlorifiedBody.Editor.Demo
             // G3, the donor wall: straight on and level, the wall alone in the frame (the cherry tree of hands when it is drawn).
             Shot("cam_g3_donor_wall_alone.png", new Vector3(24.5f, -2.35f, -24.55f), new Vector3(24.5f, -2.3f, -19.17f), 50f);
             // The built cameras of 2026-11-14: the foyer's entry view, the main entrance down its axis, the conference table (Network).
-            foreach (string name in new[] { "Cam_G5_entry", "Cam_G13b_axis", "Cam_G12_table" })
+            foreach (string name in new[] { "Cam_G5_low_north", "Cam_G5_low_south", "Cam_G5_lift", "Cam_G13b_axis", "Cam_G12_table", "Cam_G12_side", "Cam_W14_low", "Cam_G3_wall", "Cam_W9_lamp", "Cam_G4_candles", "Cam_G10_cake", "Cam_G18_candelabrum" })
             {
                 GameObject built = GameObject.Find(name);
                 if (built == null) { Debug.LogWarning("[CameraStills] no camera " + name + ": run DemoWorld.BuildAll"); continue; }

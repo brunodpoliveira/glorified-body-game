@@ -323,8 +323,12 @@ namespace GlorifiedBody.Editor.Demo
                 Piece(r.Props, $"Lamp_Base_{x:0.0}", new Vector3(x, 0.765f, -19f), new Vector3(0.14f, 0.03f, 0.14f), brass, false);
                 Piece(r.Props, $"Lamp_Shade_{x:0.0}", new Vector3(x, 1.12f, -19f), new Vector3(0.3f, 0.09f, 0.15f), green, false);
             }
-            // 0.4 m north of the lamp row, at 1.3 m: the lamps recede down one side of the frame to the slide.
-            r.ExtraCamera("table", new Vector3(37.7f, 1.3f, -18.6f), new Vector3(26.2f, 1.0f, -19.2f), 52f, new Vector3(29.5f, 1.5f, -19f), new Vector3(7f, 3f, 5.6f));
+            // At the table (Bruno, 2026-11-14: "the camera should be at the table"): the lens just over the top at the head end, beside
+            // the lamp row, the shades above it, the slide at the end. Its zone starts at x 28.5: the floor in front of the door to G5
+            // (x 27) keeps a camera that shows that door.
+            r.ExtraCamera("table", new Vector3(36.2f, 0.95f, -19.25f), new Vector3(26.5f, 1.25f, -19f), 52f, new Vector3(30.25f, 1.5f, -19f), new Vector3(3.5f, 3f, 5.6f));
+            // A second angle at table height, from the north-west corner back down the room to the head of the table.
+            r.ExtraCamera("side", new Vector3(27.2f, 1.0f, -17f), new Vector3(36f, 1.0f, -19.5f), 52f, new Vector3(35.25f, 1.5f, -19f), new Vector3(4.5f, 3f, 5.4f));
             // The last slide: the white gear on black (a plain square for now), FAMILY OBSERVATION. V3. THANK YOU.
             r.Sign("Screen_Slide", "FAMILY OBSERVATION. V3. THANK YOU.", new Vector3(26.17f, 1.75f, -19f), Vector3.right, new Vector2(2.4f, 1.3f), 52);
             Piece(r.Props, "Slide_Gear", new Vector3(26.19f, 2.12f, -19f), new Vector3(0.02f, 0.5f, 0.5f), DemoRoom.Grey(0.92f), false);

@@ -57,12 +57,34 @@ namespace GlorifiedBody.Editor.Demo
         // ── The rooms ─────────────────────────────────────────────────
 
         /// <summary>W2: a quiet corridor (round 119: the three armed scientists moved to the gallery H7 of the Hold, and the feed unlocks in the Hold).</summary>
+        /// <summary>
+        /// The upper landing of the foyer's lift (rounds 147 and 148: the shortcut that the art puzzle opens), in W2's south wall:
+        /// the doors, the arrival point and the button down. Before the plinths are in order the button shows the lockdown.
+        /// </summary>
+        private static void LiftLanding(DemoRoom r)
+        {
+            Material chrome = DemoRoom.Colour("chrome", new Color(0.78f, 0.8f, 0.84f));
+            r.Box(r.Props, "Lift_Landing_Door", new Vector3(18f, DemoRoom.DoorHeight * 0.5f, 11.2f), new Vector3(1.6f, DemoRoom.DoorHeight, 0.08f), chrome);
+            r.Sign("Sign_Lift_W2", "LIFT", new Vector3(18f, DemoRoom.DoorHeight + 0.3f, 11.17f), Vector3.forward, new Vector2(0.8f, 0.24f), 30);
+            GameObject arrive = MenuLoopSetup.EnsureChild(r.Story, DemoPublic.LiftLandingName);
+            arrive.transform.SetPositionAndRotation(new Vector3(18f, 0.05f, 11.9f), Quaternion.identity);
+            GameObject button = MenuLoopSetup.EnsureChild(r.Props, "Lift_Button_W2");
+            button.transform.position = new Vector3(18.95f, 1.2f, 11.25f);
+            LiftRide ride = MenuLoopSetup.EnsureComponent<LiftRide>(button);
+            ride.destination = DemoPublic.LiftCarName;
+            ride.requiredFlag = DemoPublic.PlinthsFlag;
+            ride.thing = "the lift down";
+            ride.range = 1.6f;
+            EditorUtility.SetDirty(ride);
+        }
+
         private static void W2(DemoRoom r)
         {
             CardDoor(r, "W3", new Vector3(14.3f, 1.2f, 13.82f), Vector3.back); // the code rotation: W3 opens with the card
             r.Sign("Sign_Pain", DemoPlan.Sign("W2, W5, the ward corridors", "YOUR PAIN IS SEEN. ASK FOR RELIEF."), new Vector3(18f, 1.9f, 13.83f), Vector3.back, new Vector2(2.6f, 0.5f));
             r.Prop("Bench_A", new Vector3(16f, 0f, 11.4f), new Vector3(1.6f, 0.45f, 0.45f));
             r.Prop("Cart", new Vector3(20f, 0f, 11.5f), new Vector3(0.9f, 0.9f, 0.5f), 0.45f);
+            LiftLanding(r); // the shortcut of the art puzzle: the lift of the foyer comes up here (2026-11-14)
             PropAssets.Crate("Extinguisher", new Vector3(23f, 0f, 11.5f), 0f, 0.4f); // a throw for telekinesis
         }
 

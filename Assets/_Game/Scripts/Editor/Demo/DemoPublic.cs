@@ -139,11 +139,15 @@ namespace GlorifiedBody.Editor.Demo
         public static readonly Vector3 FoyerCentre = new Vector3(20f, 0f, -8f);
         public const float FoyerRadius = 7.5f, FoyerCorridor = 0.9f;
 
-        /// <summary>The spoke doors of the foyer on G5's walls (plan metres): G2, G13, G7, G10, G6, G9, G8, U1, G12.</summary>
+        /// <summary>The lift car in the north-west corner of the square, behind the ring (the art puzzle's locked place).</summary>
+        public static readonly Vector3 LiftCar = new Vector3(13f, 0f, -2.34f);
+        public const string PlinthsFlag = "demo_g5_plinths", LiftCarName = "Lift_Car_G5", LiftLandingName = "Lift_Landing_W2";
+
+        /// <summary>The spoke doors of the foyer on G5's walls (plan metres): G2, G13, G7, G10, G6, G9, G8, U1, G12, and the lift car.</summary>
         public static readonly Vector3[] FoyerSpokes =
         {
             new Vector3(20f, 0f, 0f), new Vector3(12f, 0f, -4f), new Vector3(12f, 0f, -12f), new Vector3(28f, 0f, -3.5f), new Vector3(28f, 0f, -7f),
-            new Vector3(28f, 0f, -12f), new Vector3(13f, 0f, -16f), new Vector3(20f, 0f, -16f), new Vector3(27f, 0f, -16f),
+            new Vector3(28f, 0f, -12f), new Vector3(13f, 0f, -16f), new Vector3(20f, 0f, -16f), new Vector3(27f, 0f, -16f), LiftCar,
         };
 
         /// <summary>
@@ -211,11 +215,12 @@ namespace GlorifiedBody.Editor.Demo
             r.Box(r.Props, "Modesty_Head", c + new Vector3(0f, 3.35f, 0.04f), new Vector3(0.4f, 0.48f, 0.42f), marble);
             r.Sign("Sign_Modesty", "MODESTY. AFTER ANTONIO CORRADINI, 1752.", c + new Vector3(0f, 0.55f, -0.72f), Vector3.back, new Vector2(1.2f, 0.18f), 18);
             DemoArt.Place(r, "Art_Modesty", "A8", c + new Vector3(0f, 1.4f, -0.9f), "the statue"); // round 148: her art log on Modesty
-            // The reception desk in the north-west arc, the waiting chairs in the free arcs.
-            r.Prop("Reception_Desk", new Vector3(17.6f, 0f, -4.6f), new Vector3(2.4f, 1.1f, 0.8f), 0.1f);
+            // Two rows of waiting chairs on the south side (the bases of the art puzzle take the room of the old desk).
             int n = 0;
-            foreach (Vector3 at in new[] { new Vector3(22.6f, 0f, -4.3f), new Vector3(21.6f, 0f, -12.4f), new Vector3(18.4f, 0f, -12.4f), new Vector3(16.2f, 0f, -8.3f) })
+            foreach (Vector3 at in new[] { new Vector3(21.6f, 0f, -12.4f), new Vector3(18.4f, 0f, -12.4f) })
                 r.Prop($"Waiting_Chairs_{n++}", at, new Vector3(1.4f, 0.5f, 0.5f), 0.3f);
+            ArtPuzzle(r);
+            Lift(r);
             r.Figure("Soldier_A", "soldier_rifle", new Vector3(22f, 0f, -12f), 0f);
             r.Figure("Soldier_B", "soldier_pistol", new Vector3(17f, 0f, -13f), 20f);
             r.Figure("Lab_Pistol_A", "labworker_pistol", new Vector3(24f, 0f, -7f), 300f);
@@ -230,9 +235,154 @@ namespace GlorifiedBody.Editor.Demo
             r.Box(sheet, "Sheeting", new Vector3(20f, 1.2f, -16.1f), new Vector3(1.8f, 2.4f, 0.1f), DemoRoom.Colour("sheeting", new Color(0.7f, 0.72f, 0.7f)));
             r.Sign("Sign_Sector_C", DemoPlan.Sign("U1, the sheeted door", "SECTOR C. CONSTRUCTION. ACCESS: SECURITY OFFICE."), new Vector3(20f, 2.7f, -15.83f), Vector3.forward, new Vector2(2.6f, 0.35f), 32);
             r.Capsule("Capsule_G5", DrugType.Nalcon, new Vector3(17.3f, 0.15f, -3.2f));
-            // The entry view: high over the spoke of G2, Modesty under the skylight (the picture of round 147). Its zone lies in front
-            // of the camera, where its frame reaches the floor (2.0 m on from the camera and more).
-            r.ExtraCamera("entry", new Vector3(20f, 4.6f, -0.8f), new Vector3(20f, 0.8f, -7.5f), 70f, new Vector3(20f, 1.5f, -4.75f), new Vector3(2.8f, 3f, 3.5f));
+            // The cameras of the foyer (Bruno, 2026-11-14: "at ground level looking up, at least one angle to better emphasize both the
+            // statue at the center + the skylight on top"). Two on the floor, on the spokes of G2 and U1, looking up at Modesty with the
+            // skylight behind her; one from the east side of the ring on the lift and base I. Each zone lies in front of its camera.
+            r.ExtraCamera("low_north", c + new Vector3(0f, 0.3f, 5.2f), c + Vector3.up * 4.2f, 70f, c + new Vector3(0f, 1.5f, 3f), new Vector3(2f, 3f, 2.6f));
+            r.ExtraCamera("low_south", c + new Vector3(0f, 0.25f, -5f), c + Vector3.up * 4.2f, 70f, c + new Vector3(0f, 1.5f, -3f), new Vector3(2f, 3f, 2.6f));
+            // Its zone: the floor between the camera and base I (the copy on base I hides what lies behind it).
+            r.ExtraCamera("lift", c + new Vector3(4.5f, 1.6f, 2f), c + new Vector3(-5.8f, 1.2f, 4.7f), 60f, c + new Vector3(-2.3f, 1.5f, 3f), new Vector3(1.2f, 3f, 2.4f));
+        }
+
+        // ── The art puzzle and the lift (rounds 147 and 148; Bruno, 2026-11-14: "build the art puzzle and the lift too") ──
+
+        /// <summary>The bases I to IV around Modesty, clockwise from the north-west.</summary>
+        public static readonly Vector3[] PlinthBases =
+        {
+            new Vector3(16.8f, 0f, -4.8f), new Vector3(23.2f, 0f, -4.8f), new Vector3(23.2f, 0f, -11.2f), new Vector3(16.8f, 0f, -11.2f),
+        };
+
+        /// <summary>
+        /// The four copies, oldest first (Puritas, Tuccia, Modesty, the Veiled Christ; T13, A6 to A9), each a prop on a wheeled
+        /// plinth that mk_orzabal carries, as the planters. They start on the wrong bases. A PlinthPuzzle raises PlinthsFlag when
+        /// each stands on its base.
+        /// </summary>
+        private static void ArtPuzzle(DemoRoom r)
+        {
+            Material brass = DemoRoom.Colour("brass", new Color(0.72f, 0.6f, 0.32f));
+            var bases = new Transform[4];
+            string[] numerals = { "I", "II", "III", "IV" };
+            for (int i = 0; i < 4; i++)
+            {
+                GameObject plate = r.Box(r.Props, "Plinth_Base_" + numerals[i], PlinthBases[i] + Vector3.up * 0.015f, new Vector3(0.9f, 0.03f, 0.9f), brass);
+                Object.DestroyImmediate(plate.GetComponent<Collider>());
+                bases[i] = plate.transform;
+                Vector3 toCentre = (FoyerCentre - PlinthBases[i]).normalized;
+                r.Sign("Sign_Base_" + numerals[i], numerals[i], PlinthBases[i] - toCentre * 0.62f + Vector3.up * 0.18f, -toCentre, new Vector2(0.3f, 0.16f), 20);
+            }
+            // The right order, and where each copy starts (out of order).
+            var copies = new Transform[4];
+            copies[0] = StatueCopy(r, "Copy_Puritas", "A6", PlinthBases[2], CopyShape.Bust).transform;
+            copies[1] = StatueCopy(r, "Copy_Tuccia", "A7", PlinthBases[3], CopyShape.Sieve).transform;
+            copies[2] = StatueCopy(r, "Copy_Modesty", "A8", PlinthBases[1], CopyShape.Standing).transform;
+            copies[3] = StatueCopy(r, "Copy_Veiled_Christ", "A9", PlinthBases[0], CopyShape.Lying).transform;
+            GameObject holder = MenuLoopSetup.EnsureChild(r.Story, "Plinth_Puzzle");
+            holder.transform.position = FoyerCentre;
+            PlinthPuzzle puzzle = MenuLoopSetup.EnsureComponent<PlinthPuzzle>(holder);
+            puzzle.flag = PlinthsFlag;
+            puzzle.bases = bases;
+            puzzle.copies = copies;
+            EditorUtility.SetDirty(puzzle);
+        }
+
+        private enum CopyShape { Bust, Sieve, Standing, Lying }
+
+        /// <summary>A copy on a wheeled plinth: one prop (1.8 m, its centre at 0.9 m) that mk_orzabal carries, and her art log on it.</summary>
+        private static GameObject StatueCopy(DemoRoom r, string name, string logId, Vector3 floorPoint, CopyShape shape)
+        {
+            GameObject root = MenuLoopSetup.EnsureChild(r.Props, name);
+            root.transform.SetPositionAndRotation(floorPoint + Vector3.up * 0.9f, Quaternion.identity);
+            BoxCollider box = MenuLoopSetup.EnsureComponent<BoxCollider>(root);
+            box.center = Vector3.zero;
+            box.size = new Vector3(0.7f, 1.8f, 0.7f);
+            Material marble = DemoRoom.Colour("marble", new Color(0.92f, 0.9f, 0.86f)), wood = DemoRoom.Grey(0.22f);
+            void Look(PrimitiveType type, string part, Vector3 local, Vector3 scale, Material m, Vector3 euler)
+            {
+                GameObject g = MenuLoopSetup.EnsureChildPrimitive(root, part, type, local, scale);
+                g.transform.rotation = Quaternion.Euler(euler);
+                Object.DestroyImmediate(g.GetComponent<Collider>());
+                g.GetComponent<Renderer>().sharedMaterial = m;
+            }
+            Look(PrimitiveType.Cube, "Plinth", new Vector3(0f, -0.6f, 0f), new Vector3(0.7f, 0.6f, 0.7f), wood, Vector3.zero);
+            switch (shape)
+            {
+                case CopyShape.Bust: // Puritas: a veiled bust
+                    Look(PrimitiveType.Capsule, "Shoulders", new Vector3(0f, -0.05f, 0f), new Vector3(0.55f, 0.25f, 0.35f), marble, Vector3.zero);
+                    Look(PrimitiveType.Sphere, "Head", new Vector3(0f, 0.35f, 0f), new Vector3(0.3f, 0.38f, 0.32f), marble, Vector3.zero);
+                    break;
+                case CopyShape.Sieve: // Tuccia: standing, the sieve held up
+                    Look(PrimitiveType.Capsule, "Body", new Vector3(0f, 0.2f, 0f), new Vector3(0.36f, 0.5f, 0.3f), marble, Vector3.zero);
+                    Look(PrimitiveType.Sphere, "Head", new Vector3(0f, 0.78f, 0f), new Vector3(0.18f, 0.22f, 0.19f), marble, Vector3.zero);
+                    Look(PrimitiveType.Cylinder, "Sieve", new Vector3(0.22f, 0.5f, 0.1f), new Vector3(0.26f, 0.02f, 0.26f), marble, new Vector3(70f, 0f, 0f));
+                    break;
+                case CopyShape.Standing: // Modesty: standing, the veil to the feet
+                    Look(PrimitiveType.Capsule, "Body", new Vector3(0f, 0.2f, 0f), new Vector3(0.38f, 0.52f, 0.32f), marble, Vector3.zero);
+                    Look(PrimitiveType.Sphere, "Head", new Vector3(0f, 0.8f, 0f), new Vector3(0.19f, 0.23f, 0.2f), marble, Vector3.zero);
+                    break;
+                case CopyShape.Lying: // the Veiled Christ: lying on a bier, the head on a cushion
+                    Look(PrimitiveType.Capsule, "Body", new Vector3(0f, -0.12f, 0f), new Vector3(0.3f, 0.32f, 0.25f), marble, new Vector3(0f, 0f, 90f));
+                    Look(PrimitiveType.Cube, "Cushion", new Vector3(-0.28f, -0.2f, 0f), new Vector3(0.16f, 0.08f, 0.26f), marble, Vector3.zero);
+                    break;
+            }
+            var target = MenuLoopSetup.EnsureComponent<GlorifiedBody.Combat.LockOnTargetable>(root);
+            var so = new SerializedObject(target);
+            so.FindProperty("fallbackHeight").floatValue = 0f; // the lock point is the centre
+            so.FindProperty("isProp").boolValue = true;
+            so.FindProperty("heavy").boolValue = false;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            Rigidbody body = MenuLoopSetup.EnsureComponent<Rigidbody>(root);
+            body.mass = 60f;
+            body.interpolation = RigidbodyInterpolation.Interpolate;
+            body.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
+            body.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ; // on its wheels, upright
+            UnityEngine.AI.NavMeshObstacle obstacle = MenuLoopSetup.EnsureComponent<UnityEngine.AI.NavMeshObstacle>(root);
+            obstacle.shape = UnityEngine.AI.NavMeshObstacleShape.Box;
+            obstacle.size = box.size;
+            obstacle.carving = true;
+            obstacle.carveOnlyStationary = true;
+            MenuLoopSetup.EnsureComponent<MovableProp>(root);
+            ArtLog art = DemoArt.Place(r, "Art_" + name, logId, root.transform.position + Vector3.up * 0.2f, "the copy");
+            if (art != null) art.transform.SetParent(root.transform, true);
+            return root;
+        }
+
+        /// <summary>
+        /// The lift on the north-west arc of the ring: a gate that stays shut until the plinths are in order (FlagGate), the car
+        /// behind it with the reward (two capsules and a delivery note, PLACEHOLDER words), and the ride up to the landing in W2
+        /// (LiftRide; DemoWard builds the landing).
+        /// </summary>
+        private static void Lift(DemoRoom r)
+        {
+            Vector3 c = FoyerCentre;
+            Vector3 dir = LiftCar - c;
+            dir.y = 0f;
+            dir.Normalize();
+            Vector3 mouth = c + dir * FoyerRadius;
+            Material chrome = DemoRoom.Colour("chrome", new Color(0.78f, 0.8f, 0.84f));
+            GameObject gateObj = MenuLoopSetup.EnsureChild(r.Story, "Gate_Lift");
+            FlagGate gate = MenuLoopSetup.EnsureComponent<FlagGate>(gateObj);
+            gate.flag = PlinthsFlag;
+            gate.showWhenRaised = false;
+            GameObject leaf = r.Box(gateObj, "Lift_Door", mouth + Vector3.up * DemoRoom.DoorHeight * 0.5f, new Vector3(1.8f, DemoRoom.DoorHeight, 0.12f), chrome);
+            leaf.transform.rotation = Quaternion.LookRotation(-dir, Vector3.up);
+            DemoRoom.Carve(leaf);
+            r.Sign("Sign_Lift", "LIFT", mouth - dir * 0.08f + Vector3.up * (DemoRoom.DoorHeight + 0.35f), -dir, new Vector2(0.8f, 0.24f), 30);
+            // The car: the arrival point (facing the foyer), the reward, the button.
+            GameObject arrive = MenuLoopSetup.EnsureChild(r.Story, LiftCarName);
+            arrive.transform.SetPositionAndRotation(LiftCar + Vector3.up * 0.05f, Quaternion.LookRotation(-dir, Vector3.up));
+            r.Capsule("Capsule_Lift_Edgar", DrugType.NalconMind, LiftCar + new Vector3(-0.4f, 0.15f, 0.3f));
+            r.Capsule("Capsule_Lift_Warspite", DrugType.Nalcon, LiftCar + new Vector3(-0.1f, 0.15f, 0.5f));
+            r.Item("Lift_Delivery_Note", DemoItems.Log("l38_the_copies", "A DELIVERY NOTE",
+                "PLACEHOLDER (the writer): the delivery note of the four copies for the foyer, signed for at the front desk."),
+                LiftCar + new Vector3(0.35f, 0.9f, 0.45f), new Vector3(0.2f, 0.02f, 0.28f));
+            GameObject button = MenuLoopSetup.EnsureChild(r.Props, "Lift_Button_G5");
+            button.transform.position = LiftCar + dir * 0.6f + Vector3.up * 1.2f;
+            LiftRide ride = MenuLoopSetup.EnsureComponent<LiftRide>(button);
+            ride.destination = LiftLandingName;
+            ride.requiredFlag = PlinthsFlag;
+            ride.thing = "the lift up";
+            ride.range = 1.6f;
+            EditorUtility.SetDirty(ride);
         }
 
         /// <summary>A spoke of the foyer within this many degrees (0 is north, the angle turns east).</summary>
@@ -308,7 +458,8 @@ namespace GlorifiedBody.Editor.Demo
             r.Prop("Trolley", new Vector3(x1 - 1.4f, 0f, z0 + 0.6f), new Vector3(1.2f, 0.9f, 0.6f), 0.4f);
             // Its zone: the passage from 2.6 m in front of the camera (where the frame reaches the floor) to the shutters.
             float near = x1 - 3.1f;
-            r.ExtraCamera("axis", new Vector3(x1 - 0.5f, 1.75f, mid), new Vector3(x0, 1.5f, mid), 64f, new Vector3((x0 + near) * 0.5f, 1.5f, mid), new Vector3(near - x0, 3f, z1 - z0));
+            // Low, near the floor (Bruno, 2026-11-14: "lower closer to the ground"): the glass roof fills the top of the frame.
+            r.ExtraCamera("axis", new Vector3(x1 - 0.5f, 0.4f, mid), new Vector3(x0, 1.9f, mid), 64f, new Vector3((x0 + near) * 0.5f, 1.5f, mid), new Vector3(near - x0, 3f, z1 - z0));
         }
 
         /// <summary>G6: the public bathrooms, a clerk who hides in a stall ("Occupied."). Since v2 at x 28..36, z -9..-5, east of the hall. A toilet that flushes (the hider answers it once), a faucet.</summary>

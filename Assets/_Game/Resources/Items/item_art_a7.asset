@@ -1,0 +1,54 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 202cb6532a4a7f80682b508098ca96f0, type: 3}
+  m_Name: item_art_a7
+  m_EditorClassIdentifier: Assembly-CSharp::GlorifiedBody.Interaction.ItemDefinition
+  itemId: art_a7
+  displayName: THE VESTAL TUCCIA
+  kind: 6
+  drugType: 0
+  colour: {r: 0.95, g: 0.55, b: 0.2, a: 1}
+  description: Her own voice, about the thing in front of her. She does not know
+    how she knows it.
+  logText: 
+  readFlag: 
+  mapFloor: 
+  audioClip: {fileID: 0}
+  tapeLines:
+  - at: 0.4
+    speaker: LUCY
+    text: Tuccia, the Vestal, and this one's 1743, Corradini still, carved in Rome,
+      and the real one's in Rome, at Palazzo Barberini.
+    skipIfFlag: 
+  - at: 7.6
+    speaker: LUCY
+    text: The veil again, the same thinness, or thinner, you can see the brow through
+      it, that was his whole trade by then.
+    skipIfFlag: 
+  - at: 14.8
+    speaker: LUCY
+    text: A Vestal is a priestess of Vesta, sworn to chastity, and the story goes
+      that she was accused, somebody said she'd broken the vow,
+    skipIfFlag: 
+  - at: 22
+    speaker: LUCY
+    text: and there's no proving you didn't, not in the ordinary way, so she went
+      down to the Tiber with a sieve, and filled it with river water,
+    skipIfFlag: 
+  - at: 29.2
+    speaker: LUCY
+    text: and carried it all the way back, and the water stayed in.
+    skipIfFlag: 
+  - at: 33.535
+    speaker: LUCY
+    text: The sieve held.
+    skipIfFlag: 

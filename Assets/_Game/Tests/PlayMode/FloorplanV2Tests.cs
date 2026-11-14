@@ -113,7 +113,7 @@ namespace GlorifiedBody.Tests.PlayMode
                 ("G5", new Vector4(12, -16, 28, 0)), ("G9", new Vector4(28, -16, 34, -9)), ("U1", new Vector4(14, -28, 26, -16)),
             })
                 Assert.AreEqual(rect, Room.Of(id).rect, id + " stands where it stood");
-            Assert.AreEqual(55, Room.All.Count, "the Hold (H1 to H9 and the tube HT, map v3, 2026-11-13) in place of W1 and W1B, 38 more rooms, the stair, the brain sector B1 with its door B2 (2026-11-09), the Dining Hall G18 and its kitchen G19, the halon room G17 and G17b (2026-11-10)");
+            Assert.AreEqual(56, Room.All.Count, "the main entrance G13b (2026-11-14), the Hold (H1 to H9 and the tube HT, map v3, 2026-11-13) in place of W1 and W1B, 38 more rooms, the stair, the brain sector B1 with its door B2 (2026-11-09), the Dining Hall G18 and its kitchen G19, the halon room G17 and G17b (2026-11-10)");
         }
 
         [UnityTest]
