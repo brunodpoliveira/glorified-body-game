@@ -18,14 +18,51 @@ MonoBehaviour:
   drugType: 0
   colour: {r: 0.96, g: 0.95, b: 0.88, a: 1}
   description: a printed email.
-  logText: 'FROM: ROSA (WARD 2). TO: ALL STAFF, FLOORS 1 AND 2. RE: GENE''S BIRTHDAY!!!
-    Handbook, section 9: birthdays may be celebrated in staff areas. Gene''s birthday
-    is 25 December this year. Cafeteria, 8 pm, between the shifts. Bring a dish.
-    All decorations are birthday decorations.
+  logText: 'FROM: Rosa, RN, Ward 2
+
+    TO: All Staff, Floors 1 and 2
+
+    DATE:
+    Tuesday, December 22, 6:14 PM
+
+    SUBJECT: RE: RE: GENE''S BIRTHDAY!!!!! DEC
+    25!!!!!
+
+    Not this year, Gene.
 
 
-    FROM: GENE. My birthday is in
-    July.
+    FROM: Gene, Orderly
+
+    TO: Rosa, RN,
+    Ward 2; All Staff, Floors 1 and 2
+
+    DATE: Tuesday, December 22, 6:09 PM
+
+    SUBJECT:
+    RE: GENE''S BIRTHDAY!!!!! DEC 25!!!!!
+
+    My birthday is in July.
+
+
+    FROM:
+    Rosa, RN, Ward 2
+
+    TO: All Staff, Floors 1 and 2
+
+    DATE: Tuesday, December
+    22, 5:51 PM
+
+    SUBJECT: GENE''S BIRTHDAY!!!!! DEC 25!!!!!
+
+    Everybody!!!
+    Per the Staff Handbook, Section 9: "Birthdays may be celebrated in staff areas."
+    So. Gene''s birthday is December 25 this year!!! Cafeteria, 8 PM, between shifts.
+    Bring a dish. Denise is doing the lights, there''s a little tree (a BIRTHDAY
+    tree), and the kitchen may or may not have a bird for us, I did not say that.
+    All decorations are birthday decorations. Wear something festive. For Gene.
+
+    RosaFROM:
+    GENE. My birthday is in July.
 
 
     FROM: ROSA. Not this year, Gene.'

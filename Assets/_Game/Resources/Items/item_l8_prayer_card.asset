@@ -19,7 +19,7 @@ MonoBehaviour:
   colour: {r: 0.96, g: 0.95, b: 0.88, a: 1}
   description: a prayer card.
   logText: Tonight we pray for the candidates in surgery, for the children of the
-    programme, and for all who give the body so that humanity endures.
+    program, and for all who give the body so that humanity thrives.
   readFlag: 
   mapFloor: 
   audioClip: {fileID: 0}

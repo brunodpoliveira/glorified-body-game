@@ -55,28 +55,36 @@ MonoBehaviour:
   - at: 0.6
     speaker: REVIEWER
     text: Incident review. V4 series, unit two. Recorded for the file.
+    skipIfFlag: 
   - at: 4.9
     speaker: REVIEWER
     text: Summary. The unit was held at the standard interval for PCDH-Y. The replacement
       batch did not arrive on the day.
+    skipIfFlag: 
   - at: 13.1
     speaker: REVIEWER
     text: Logistics reports a hold at the hub. Six days.
+    skipIfFlag: 
   - at: 17.1
     speaker: REVIEWER
     text: On day six the nursing team entered to administer the replacement. The
       unit was in deficit. It did not wait for the injection.
+    skipIfFlag: 
   - at: 26.4
     speaker: REVIEWER
     text: The unit fed on a member of staff.
+    skipIfFlag: 
   - at: 31.5
     speaker: REVIEWER
     text: The team withdrew. The unit did not pursue.
+    skipIfFlag: 
   - at: 35.1
     speaker: REVIEWER
     text: Exams on day seven. Levels within the normal range. Accelerated healing
       of every wound the unit sustained in the incident, confirmed on imaging. The
       unit is calm.
+    skipIfFlag: 
   - at: 46
     speaker: REVIEWER
     text: Recommendation. Do not hold a batch. Never enter alone. End of review.
+    skipIfFlag: 

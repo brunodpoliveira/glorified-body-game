@@ -18,17 +18,9 @@ MonoBehaviour:
   drugType: 0
   colour: {r: 0.96, g: 0.95, b: 0.88, a: 1}
   description: the stock ledger.
-  logText: 'RESERVE CAGE. COUNT.
-
-    WARSPITE 2. EREBUS 2. ORZABAL 2.
-
-    EDGAR
-    1 (TRAY EMPTY. NO SIGNATURE).
-
-    SECOND WIND 1.
-
-    NOTE: V3 TINCTURE, DOSE
-    CHANGE DAY 0, AUTH. DR. COLTON. RECOUNT DUE.'
+  logText: 'RESERVE CAGE. COUNT. WARSPITE 1. EREBUS 1. ORZABAL 1. EDGAR 1 (TRAY EMPTY.
+    NO SIGNATURE). SECOND WIND 1. NOTE: V3 TINCTURE, DOSE CHANGE DAY 0, AUTH. DR.
+    COLTON. RECOUNT DUE.'
   readFlag: 
   mapFloor: 
   audioClip: {fileID: 0}

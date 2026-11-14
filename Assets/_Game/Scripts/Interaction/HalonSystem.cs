@@ -13,8 +13,8 @@ namespace GlorifiedBody.Interaction
     /// The halon room G17 (DEMO_PLAN §10.4, CANON round 39: the fire, the gas, the pass-out; the rest PROPOSED). A strapped
     /// wall of archive boxes hides the reserve cage. mk_erebus at a full circle lights it:
     ///   - LOCKOUT turned first (the cabinet in the room beside): the boxes burn, no horn, the cage shows.
-    ///   - Else the horn sounds and the door seals. 30 s, then the halon. ABORT on the panel inside stops it: the door
-    ///     opens and the boxes burn. With no ABORT the halon comes: the fire goes out, and she passes out in it (game over,
+    ///   - Else the horn sounds and the door seals. 30 s, then the halon. EMERGENCY STOP on the panel inside stops it (round 142): the door
+    ///     opens and the boxes burn. With no EMERGENCY STOP the halon comes: the fire goes out, and she passes out in it (game over,
     ///     killer "halon", an exception to rule 2 by Bruno). The bottles are empty after it: a later fire burns with no horn.
     /// A part circle only flashes on the boxes (the rule of mk_erebus). The boxes are heavy: no lift.
     /// </summary>
@@ -103,7 +103,7 @@ namespace GlorifiedBody.Interaction
             Show();
         }
 
-        /// <summary>ABORT on the panel: the horn stops, the door opens, the boxes burn.</summary>
+        /// <summary>The EMERGENCY STOP on the panel: the horn stops, the door opens, the boxes burn.</summary>
         public bool Abort()
         {
             if (Current != State.Horn) return false;

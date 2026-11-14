@@ -95,7 +95,7 @@ namespace GlorifiedBody.Editor.Demo
             // The mission statement (the plan names the company: it waits for the name check, so only the motto for now).
             DemoDining.GlassDoors(r); // the words over the glass doors of the Dining Hall
             DemoArt.Place(r, "Art_Concourse", "A4", new Vector3(18f, 1.4f, 5.4f), "the concourse"); // under the motto, by the granite
-            r.Sign("Sign_Mission", "SO THAT HUMANITY ENDURES.", new Vector3(20f, 4.2f, 5.83f), Vector3.back, new Vector2(6f, 0.8f), 72);
+            r.Sign("Sign_Mission", DemoPlan.Sign("G2, the concourse", "SO THAT HUMANITY ENDURES."), new Vector3(20f, 4.2f, 5.83f), Vector3.back, new Vector2(6f, 0.8f), 72);
             r.Sign("Sign_Directory", "THE WARD  -  2ND FLOOR\nTHE CHAPEL\nRECEPTION\nSECURITY", new Vector3(5.17f, 1.6f, 4.6f), Vector3.right, new Vector2(1.2f, 1.2f), 36);
         }
 
@@ -103,12 +103,12 @@ namespace GlorifiedBody.Editor.Demo
         private static void G3(DemoRoom r)
         {
             r.Box(r.Props, "Donor_Wall", new Vector3(12f, 1.75f, 11.83f), new Vector3(7.6f, 3.5f, 0.04f), DemoRoom.Colour("donor_wall", new Color(0.55f, 0.32f, 0.36f)));
-            r.Sign("Sign_Plaque", "FOR THOSE WHO GAVE THE BODY.", new Vector3(12f, 1.2f, 11.79f), Vector3.back, new Vector2(2.2f, 0.35f), 40);
+            r.Sign("Sign_Plaque", DemoPlan.Sign("G3, the donor wall", "FOR THOSE WHO GAVE THE BODY."), new Vector3(12f, 1.2f, 11.79f), Vector3.back, new Vector2(2.2f, 0.35f), 40);
             DemoArt.Place(r, "Art_Palms", "A1", new Vector3(10f, 1.4f, 11.4f), "the palms");
             DemoArt.Place(r, "Art_Tree", "A2", new Vector3(14.2f, 1.4f, 11.4f), "the tree");
             r.Prop("Bench", new Vector3(12f, 0f, 8f), new Vector3(2f, 0.45f, 0.45f));
             r.Capsule("Capsule_G3", DrugType.Nalcon, new Vector3(9f, 0.15f, 7f));
-            r.Scan("Scan_Donor_Wall", new Vector3(12f, 1.4f, 11.6f), "demo_c6_donor_wall", "PLACEHOLDER (C6): a hand pressed into wet paint, a larger hand on top of it.");
+            r.Scan("Scan_Donor_Wall", new Vector3(12f, 1.4f, 11.6f), "demo_c6_donor_wall", DemoPlan.ScanCard("C6", "PLACEHOLDER (C6): a hand pressed into wet paint, a larger hand on top of it."));
         }
 
         /// <summary>G4: the chapel, a nurse who prays and does not stop (a hider never found), the prayer card L8, the verse (beat 19).</summary>
@@ -119,7 +119,7 @@ namespace GlorifiedBody.Editor.Demo
             r.Prop("Lectern", new Vector3(28f, 0f, 12.6f), new Vector3(0.6f, 1.1f, 0.5f), 0.15f);
             r.Capsule("Capsule_G4", DrugType.NalconLift, new Vector3(25f, 0.15f, 13.2f));
             r.Box(r.Props, "Gear", new Vector3(28f, 2.6f, 13.83f), new Vector3(1.2f, 1.2f, 0.04f), DemoRoom.Grey(0.9f));
-            r.Sign("Sign_Verse", "IT IS SOWN IN WEAKNESS. IT IS RAISED IN POWER.", new Vector3(28f, 1.7f, 13.83f), Vector3.back, new Vector2(3.4f, 0.4f), 40);
+            r.Sign("Sign_Verse", DemoPlan.Sign("G4, the chapel, under the gear", "IT IS SOWN IN WEAKNESS. IT IS RAISED IN POWER."), new Vector3(28f, 1.7f, 13.83f), Vector3.back, new Vector2(3.4f, 0.4f), 40);
             DemoArt.Place(r, "Art_Verse", "A3", new Vector3(28f, 1.4f, 13.4f), "the verse");
             EnemySpawn nurse = r.Figure("Praying_Nurse", "nurse", new Vector3(29.8f, 0f, 11.4f), 0f, variant: 0);
             nurse.hides = true;
@@ -147,7 +147,7 @@ namespace GlorifiedBody.Editor.Demo
             gate.flag = Released;
             gate.showWhenRaised = false;
             r.Box(sheet, "Sheeting", new Vector3(20f, 1.2f, -16.1f), new Vector3(1.8f, 2.4f, 0.1f), DemoRoom.Colour("sheeting", new Color(0.7f, 0.72f, 0.7f)));
-            r.Sign("Sign_Sector_C", "SECTOR C. CONSTRUCTION. ACCESS: SECURITY OFFICE.", new Vector3(20f, 2.7f, -15.83f), Vector3.forward, new Vector2(3.2f, 0.4f), 36);
+            r.Sign("Sign_Sector_C", DemoPlan.Sign("U1, the sheeted door", "SECTOR C. CONSTRUCTION. ACCESS: SECURITY OFFICE."), new Vector3(20f, 2.7f, -15.83f), Vector3.forward, new Vector2(3.2f, 0.4f), 36);
             r.Capsule("Capsule_G5", DrugType.Nalcon, new Vector3(13f, 0.15f, -1.2f));
         }
 
@@ -232,7 +232,7 @@ namespace GlorifiedBody.Editor.Demo
                 l.renderingLayerMask = (int)GlorifiedBody.Rendering.Darkness.DarkLayer; // they light only the dark
             }
             GameObject chair = r.Prop("Security_Chair", new Vector3(31f, 0f, -13.4f), new Vector3(0.6f, 1f, 0.6f), 0.15f);
-            r.Scan("Scan_Security_Chair", chair.transform.position + Vector3.up * 0.4f, "demo_c7_chair", "PLACEHOLDER (C7): a man's hands on a row of switches. A wedding ring. A cold coffee.");
+            r.Scan("Scan_Security_Chair", chair.transform.position + Vector3.up * 0.4f, "demo_c7_chair", DemoPlan.ScanCard("C7", "PLACEHOLDER (C7): a man's hands on a row of switches. A wedding ring. A cold coffee."));
             r.Item("L5_Logbook", DemoItems.L5(), new Vector3(29.6f, 0.78f, -14.8f), new Vector3(0.24f, 0.03f, 0.32f));
             DemoNight.G9Roster(r); // L29
             FlagSwitch release = r.Switch("Release_Switch", new Vector3(33.6f, 1.2f, -12.5f), Released, "Release the sector C door?", "release the sector C door",
@@ -242,7 +242,7 @@ namespace GlorifiedBody.Editor.Demo
             DemoDining.Release(r, release); // and the duty key (beat 23, round 60)
             UnityEditor.EditorUtility.SetDirty(release);
             SaveAssets.SavePoint("Save_G9", new Vector3(33.4f, 0f, -10f), 270f).transform.SetParent(r.Props.transform, true);
-            r.Sign("Sign_Comms", "COMMS. AUTHORISED PERSONNEL.", new Vector3(33.83f, 2f, -13f), Vector3.left, new Vector2(1.6f, 0.3f), 36); // the door to G9b (v2)
+            r.Sign("Sign_Comms", DemoPlan.Sign("G9, the door to G9b", "COMMS. AUTHORIZED PERSONNEL."), new Vector3(33.83f, 2f, -13f), Vector3.left, new Vector2(1.6f, 0.3f), 36); // the door to G9b (v2)
         }
 
         /// <summary>

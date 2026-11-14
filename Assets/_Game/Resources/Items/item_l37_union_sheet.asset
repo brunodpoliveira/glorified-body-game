@@ -18,22 +18,20 @@ MonoBehaviour:
   drugType: 0
   colour: {r: 0.96, g: 0.95, b: 0.88, a: 1}
   description: a sign-up sheet.
-  logText: 'Pinned over it: A MESSAGE FROM THE EXECUTIVE OFFICE. WE VALUE DIRECT
-    CONVERSATION WITH EVERY MEMBER OF OUR FAMILY. OUR DOOR IS OPEN. NO THIRD PARTY
-    KNOWS YOUR WORK AS WE DO.
-
-
-    Under it: STAFF OF THE MEMORIAL. YOU HAVE THE
-    RIGHT TO ASK FOR A VOTE. SIGN HERE. Thirty-one names. Four are crossed out.
-
-
-    By
-    hand: Christmas was the last straw.
-
-    A union won''t get you Christmas. Talk
-    to HR, they listened about the parking.
-
-    HR works for them.'
+  logText: "STAFF OF THE MEMORIAL \u2014\nYou have the right to ask for a union vote.\nThat's
+    all this is. A vote. Sign here if you want one.\n[31 signatures, 4 crossed out]\nChristmas
+    was the last straw for me. 12 hr nights, no family, \"winter menu.\" done.\na
+    union won't get you Christmas. talk to HR, they listened about the parking, didn't
+    they?\nHR works for them.\n\nFROM THE EXECUTIVE OFFICE\nTo every member of our
+    family at the Memorial:\nWe've heard that some of you are talking about representation.
+    We want you to know that our door is open, today and every day. We value direct
+    conversation with each of you, and we always have. No third party knows your
+    work, your patients or your hours as we do.\nIf something is wrong, tell us first.
+    We will listen.\nWith gratitude,\nThe Executive OfficeUnder it: STAFF OF THE
+    MEMORIAL. YOU HAVE THE RIGHT TO ASK FOR A VOTE. SIGN HERE. Thirty-one names.
+    Four are crossed out.\n\nBy hand: Christmas was the last straw.\nA union won't
+    get you Christmas. Talk to HR, they listened about the parking.\nHR works for
+    them."
   readFlag: 
   mapFloor: 
   audioClip: {fileID: 0}

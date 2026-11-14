@@ -18,12 +18,42 @@ MonoBehaviour:
   drugType: 0
   colour: {r: 0.96, g: 0.95, b: 0.88, a: 1}
   description: a union letter.
-  logText: 'Commissioner: My members did not sign up to carry grenade launchers.
-    You bought them after the tower fire, when the ladders stopped at the ninth floor
-    and nobody could get up the stairs. Fine. It worked that night. Since then the
-    papers call us the army, the police ask to borrow them, and a probationer put
-    a canister through a window with a family behind it. No other department in the
-    country does this. Take them back. The union.'
+  logText: 'To the Fire Commissioner
+
+    From the Executive Board
+
+
+    Commissioner,
+
+
+    My
+    members did not sign up to carry grenade launchers. I have said it in your office
+    and I am saying it on paper so nobody can say later that we didn''t.
+
+
+    You
+    bought them after the tower fire, when the ladders stopped at the ninth floor
+    and nobody could get up the stairs. Fine. It worked that night. I was there,
+    I will not pretend it didn''t.
+
+
+    Since then the papers call us the army.
+    The police department has asked three times to borrow them, and I would love
+    to know for what. And a probationer, a kid in his first year who did exactly
+    what the card on the case told him to do, put a canister through a window with
+    a family behind it. He will carry that for the rest of his life. He should never
+    have been carrying the other thing.
+
+
+    No other department in the country
+    does this. There is a reason for that, and it is not that we are braver.
+
+
+    Take
+    them back.
+
+
+    The Executive Board'
   readFlag: 
   mapFloor: 
   audioClip: {fileID: 0}

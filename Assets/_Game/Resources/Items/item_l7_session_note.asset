@@ -18,8 +18,12 @@ MonoBehaviour:
   drugType: 0
   colour: {r: 0.96, g: 0.95, b: 0.88, a: 1}
   description: a session note.
-  logText: SESSION 4,211. V3 HELD THE CUP FOR NINE SECONDS WITHOUT HELP. THE WHOLE
-    TEAM CRIED. SHE SMILED, WE THINK. THIS IS WHY WE DO IT.
+  logText: "RESEARCH RECORDS \u2014 SESSION NOTE\nSESSION: 4,211\nSUBJECT: V3\nUNIT:
+    Treatment Ward\nTYPE: OT \u2014 graded reach / grasp / hold\nDURATION: 40 min\nSTATUS:
+    Complete\nCOMMENTS:\nV3 held the cup for nine seconds without assist. Nine. Counted
+    it twice on playback. We think she smiled. The whole team cried, I'm not going
+    to pretend otherwise, sorry, I know this is a research record. Writing it down
+    so it's somewhere. Long shift. This is why we do it."
   readFlag: 
   mapFloor: 
   audioClip: {fileID: 0}

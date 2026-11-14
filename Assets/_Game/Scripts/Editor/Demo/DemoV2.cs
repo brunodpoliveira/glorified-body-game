@@ -107,7 +107,7 @@ namespace GlorifiedBody.Editor.Demo
             }
             r.Capsule("Capsule_G16_A", DrugType.Nalcon, new Vector3(23f, 0.15f, 7.2f));
             r.Capsule("Capsule_G16_B", DrugType.NalconFire, new Vector3(23f, 0.15f, 10.8f));
-            r.Sign("Sign_Riser", "RISER WORKS. FLOOR OPEN. USE THE BRIDGE BOARD.\nWho took the board? Stop walking on the crates.", new Vector3(16.17f, 1.9f, cz), Vector3.right, new Vector2(3.4f, 0.8f), 36);
+            r.Sign("Sign_Riser", DemoPlan.Sign("G16, the riser room", "RISER WORKS. FLOOR OPEN. USE THE BRIDGE BOARD.\nWho took the board? Stop walking on the crates."), new Vector3(16.17f, 1.9f, cz), Vector3.right, new Vector2(3.4f, 0.8f), 36);
         }
 
         // ── The ward ──────────────────────────────────────────────────
@@ -172,7 +172,7 @@ namespace GlorifiedBody.Editor.Demo
             foreach ((string tag, float x, float z) in new[] { ("A", 28.4f, 10.2f), ("B", 29.6f, 10.2f), ("C", 28.4f, 11.8f), ("D", 29.6f, 11.8f) })
                 r.Prop("Chair_" + tag, new Vector3(x, 0f, z), new Vector3(0.4f, 0.45f, 0.4f), 0.2f);
             r.Prop("Bin", new Vector3(25f, 0f, 13.5f), new Vector3(0.4f, 0.6f, 0.4f), 0.35f);
-            r.Sign("Sign_Wash", "WASH YOUR CUP.", new Vector3(27f, 1.7f, 13.83f), Vector3.back, new Vector2(1f, 0.22f), 36);
+            r.Sign("Sign_Wash", DemoPlan.Sign("W15, over the sink", "WASH YOUR CUP."), new Vector3(27f, 1.7f, 13.83f), Vector3.back, new Vector2(1f, 0.22f), 36);
             Label(r, "STAFF ROOM", new Vector3(24.17f, 2f, 10.8f), Vector3.right, 1f);
         }
 

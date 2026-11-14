@@ -17,30 +17,48 @@ MonoBehaviour:
   - still: {fileID: 2800000, guid: ac9c33c1e928167c79fe8e580e38f6ef, type: 3}
     video: {fileID: 0}
     sound: {fileID: 0}
-    seconds: 3.895
+    seconds: 4.94
     panFrom: {x: 0, y: 0, z: 1}
     panTo: {x: 0, y: 0, z: 1}
     speaker: TAPE
     lineId: l36_00
-    text: INCIDENT 0612. SUBJECT V3. WARD ROOM 4. CAMERA 2.
+    text: INCIDENT 0612. SUBJECT V3. WARD ROOM 2E-14. CAMERA 07. REC 06:02:10.
   - still: {fileID: 2800000, guid: ac9c33c1e928167c79fe8e580e38f6ef, type: 3}
     video: {fileID: 0}
     sound: {fileID: 0}
-    seconds: 2.41
+    seconds: 4.06
     panFrom: {x: 0, y: 0, z: 1}
     panTo: {x: 0, y: 0, z: 1}
     speaker: ORDERLY
     lineId: l36_01
-    text: Morning. It's only me.
+    text: Morning. It's the oatmeal again, I asked, I did ask.
   - still: {fileID: 2800000, guid: ac9c33c1e928167c79fe8e580e38f6ef, type: 3}
     video: {fileID: 0}
     sound: {fileID: 0}
-    seconds: 5.435
+    seconds: 2.4650002
+    panFrom: {x: 0, y: 0, z: 1}
+    panTo: {x: 0, y: 0, z: 1}
+    speaker: ORDERLY
+    lineId: l36_02
+    text: Okay. See you tomorrow.
+  - still: {fileID: 2800000, guid: ac9c33c1e928167c79fe8e580e38f6ef, type: 3}
+    video: {fileID: 0}
+    sound: {fileID: 0}
+    seconds: 4.225
     panFrom: {x: 0, y: 0, z: 1}
     panTo: {x: 0, y: 0, z: 1}
     speaker: TAPE
-    lineId: l36_02
-    text: SUBJECT RESTRAINED 06:41. TRANSFER TO THE HOLD AUTHORISED. NEVER ENTER
-      ALONE.
+    lineId: l36_03
+    text: SEGMENT 06:03:52 TO 06:04:40 WITHHELD. SEE FILE 0612-A.
+  - still: {fileID: 2800000, guid: ac9c33c1e928167c79fe8e580e38f6ef, type: 3}
+    video: {fileID: 0}
+    sound: {fileID: 0}
+    seconds: 6
+    panFrom: {x: 0, y: 0, z: 1}
+    panTo: {x: 0, y: 0, z: 1}
+    speaker: TAPE
+    lineId: l36_04
+    text: 'SUBJECT RESTRAINED 06:41. TRANSFER TO THE HOLD AUTHORIZED 06:55. STAFF
+      DIRECTIVE 0612-1, EFFECTIVE IMMEDIATELY: NEVER ENTER ALONE.'
   music: {fileID: 0}
   doneFlag: 

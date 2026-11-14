@@ -68,7 +68,7 @@ namespace GlorifiedBody.Editor
         private static readonly Dictionary<string, string> DemoTitles = new Dictionary<string, string>
         {
             // The Hold, map v3 (2026-11-13): H1 to H9 and the tube replace W1 and W1B.
-            { "H1", "THE CELL" }, { "H2", "TREATMENT" }, { "H3", "GUARD POST" }, { "H4", "THE THEATRE" }, { "H5", "AIRLOCK" },
+            { "H1", "THE CELL" }, { "H2", "TREATMENT" }, { "H3", "GUARD POST" }, { "H4", "THE THEATER" }, { "H5", "AIRLOCK" },
             { "HT", "THE TUBE" }, { "H6", "LANDING" }, { "H7", "THE GALLERY" }, { "H8", "SAVE ROOM" }, { "H9", "COLTON'S OFFICE" },
             { "W2", "NORTH CORRIDOR" }, { "W3", "PATIENTS" }, { "W4", "SHOWERS" }, { "W5", "SOUTH CORRIDOR" },
             { "W6", "LOCKERS" }, { "W7", "THERAPY GYM" }, { "W8", "INDUCTION" }, { "W9", "NURSES' STATION" }, { "W10", "RESEARCH" },

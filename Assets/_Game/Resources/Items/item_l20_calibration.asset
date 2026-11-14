@@ -40,15 +40,20 @@ MonoBehaviour:
   - at: 0.6
     speaker: TECHNICIAN
     text: Mapping. Day eleven. For the file.
+    skipIfFlag: 
   - at: 3.4
     speaker: TECHNICIAN
     text: Presentation stable. Separation holds under load.
+    skipIfFlag: 
   - at: 6.2
     speaker: TECHNICIAN
     text: Recommendation. Retain for v4 transfer.
+    skipIfFlag: 
   - at: 8.6
     speaker: TECHNICIAN
     text: Note. Affect flatter than day one.
+    skipIfFlag: 
   - at: 12.9
     speaker: TECHNICIAN
     text: Acceptable. End of note.
+    skipIfFlag: 

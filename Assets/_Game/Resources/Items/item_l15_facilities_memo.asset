@@ -18,11 +18,18 @@ MonoBehaviour:
   drugType: 0
   colour: {r: 0.96, g: 0.95, b: 0.88, a: 1}
   description: a facilities memo.
-  logText: 'FACILITIES. SERVER ROOM, HALON 1301. NEW PRODUCTION ENDED IN 1994 (MONTREAL
-    PROTOCOL). WE ARE NOT REQUIRED TO REMOVE THE SYSTEM. RECYCLED AGENT ONLY. NO
-    TEST DISCHARGE. SWITCHOVER QUOTE: NEW PIPE, NEW NOZZLES, MORE CYLINDERS THAN
-    WE HAVE FLOOR FOR, NINE DAYS WITH BUILDING SYSTEMS DOWN. BUILDING SYSTEMS CANNOT
-    GO DOWN. DEFERRED. FOURTH YEAR.'
+  logText: "MEMORANDUM\nTO: Administration / File\nFROM: Facilities Manager\nRE:
+    Server room fire suppression (halon 1301) \u2014 status\nDATE: 12/02\n\nAsked
+    again. Answer unchanged from last year, restated for the file.\n\nThe server
+    room is protected by a halon 1301 total flood system. New production of halon
+    ended in 1994 under the Montreal Protocol. We are not required to remove the
+    system. Recharge is recycled agent only. There is no test discharge; the cylinders
+    are weighed annually in place.\n\nSwitchover to a clean agent was quoted: new
+    pipe, new nozzles, more cylinders than there is floor for, and nine days with
+    building systems down. Building systems cannot go down. Heat, air, lights and
+    doors for this facility run on those servers. There is no nine days.\n\nDeferred.
+    This is the fourth year. Please attach this to the prior three rather than ask
+    for a fourth."
   readFlag: 
   mapFloor: 
   audioClip: {fileID: 0}

@@ -142,7 +142,7 @@ namespace GlorifiedBody.Editor.Demo
             const float rail = 22.5f;
             r.Box(r.Room, "Rail", new Vector3(72f, 0.5f, rail), new Vector3(8f, 1f, 0.3f), DemoRoom.Grey(0.3f));
             r.Prop("Car_On_Lift", new Vector3(71f, 0.8f, 19.4f), new Vector3(1.8f, 1.2f, 1.6f), 0.25f);
-            r.Sign("Sign_Rail", "SHUTTER CONTROL. ASK A MEMBER OF STAFF.", new Vector3(72f, 0.75f, rail - 0.17f), Vector3.back, new Vector2(3.2f, 0.3f), 30);
+            r.Sign("Sign_Rail", DemoPlan.Sign("R2, the rail", "SHUTTER CONTROL. ASK A MEMBER OF STAFF."), new Vector3(72f, 0.75f, rail - 0.17f), Vector3.back, new Vector2(3.2f, 0.3f), 30);
             Shutter(r);
             Sent(r, "Switch_Shutter", new Vector3(74.5f, 0f, 25.5f), ShutterFlag);
             GameObject figures = r.Figures;
@@ -169,7 +169,7 @@ namespace GlorifiedBody.Editor.Demo
             const float rail = 22.5f;
             r.Box(r.Room, "Rail", new Vector3(81f, 0.5f, rail), new Vector3(10f, 1f, 0.3f), DemoRoom.Grey(0.3f));
             r.Prop("Booth", new Vector3(84.6f, 0f, 25.3f), new Vector3(1.8f, 2.4f, 1.2f), 0.35f);
-            r.Sign("Sign_Booth", "BARRIER OPERATED BY SECURITY ONLY.", new Vector3(84.6f, 1.9f, 24.68f), Vector3.back, new Vector2(1.7f, 0.3f), 24);
+            r.Sign("Sign_Booth", DemoPlan.Sign("R3, the booth", "BARRIER OPERATED BY SECURITY ONLY."), new Vector3(84.6f, 1.9f, 24.68f), Vector3.back, new Vector2(1.7f, 0.3f), 24);
             Sent(r, "Switch_Barrier", new Vector3(83f, 0f, 25.5f), BarrierFlag);
             r.Capsule("Capsule_R3_A", DrugType.Nalcon, new Vector3(76.8f, 0.15f, 18.6f));
             r.Capsule("Capsule_R3_B", DrugType.NalconMind, new Vector3(77.6f, 0.15f, 18.6f));

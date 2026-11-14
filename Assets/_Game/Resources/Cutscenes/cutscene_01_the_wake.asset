@@ -26,21 +26,15 @@ MonoBehaviour:
   - still: {fileID: 2800000, guid: ac9c33c1e928167c79fe8e580e38f6ef, type: 3}
     video: {fileID: 0}
     sound: {fileID: 0}
-    seconds: 2
+    seconds: 6
     panFrom: {x: 0, y: 0, z: 1}
     panTo: {x: 0, y: 0, z: 1}
     speaker: STEVENS
     lineId: cs01_00
-    text: Lucy.
-  - still: {fileID: 2800000, guid: ac9c33c1e928167c79fe8e580e38f6ef, type: 3}
-    video: {fileID: 0}
-    sound: {fileID: 0}
-    seconds: 2.19
-    panFrom: {x: 0, y: 0, z: 1}
-    panTo: {x: 0, y: 0, z: 1}
-    speaker: STEVENS
-    lineId: cs01_01
-    text: Your name is Lucy.
+    text: "Lucy. Lucy, don't\u2014 you don't have to do anything yet. You're not
+      gonna know where you are, the room's gonna tip on you, that's normal, they
+      changed your\u2014 no. Doesn't matter. I can't fix that part. We don't have
+      long, either of us."
   - still: {fileID: 2800000, guid: ac9c33c1e928167c79fe8e580e38f6ef, type: 3}
     video: {fileID: 0}
     sound: {fileID: 0}
@@ -48,44 +42,8 @@ MonoBehaviour:
     panFrom: {x: 0, y: 0, z: 1}
     panTo: {x: 0, y: 0, z: 1}
     speaker: STEVENS
-    lineId: cs01_02
-    text: You're confused. You're dizzy. That's normal, and I can't fix it.
-  - still: {fileID: 2800000, guid: ac9c33c1e928167c79fe8e580e38f6ef, type: 3}
-    video: {fileID: 0}
-    sound: {fileID: 0}
-    seconds: 2.74
-    panFrom: {x: 0, y: 0, z: 1}
-    panTo: {x: 0, y: 0, z: 1}
-    speaker: STEVENS
-    lineId: cs01_03
-    text: Neither of us has much time.
-  - still: {fileID: 2800000, guid: ac9c33c1e928167c79fe8e580e38f6ef, type: 3}
-    video: {fileID: 0}
-    sound: {fileID: 0}
-    seconds: 4.225
-    panFrom: {x: 0, y: 0, z: 1}
-    panTo: {x: 0, y: 0, z: 1}
-    speaker: STEVENS
-    lineId: cs01_04
-    text: I can't open that frame from here. Nobody can, tonight.
-  - still: {fileID: 2800000, guid: ac9c33c1e928167c79fe8e580e38f6ef, type: 3}
-    video: {fileID: 0}
-    sound: {fileID: 0}
-    seconds: 2
-    panFrom: {x: 0, y: 0, z: 1}
-    panTo: {x: 0, y: 0, z: 1}
-    speaker: STEVENS
-    lineId: cs01_05
-    text: You can.
-  - still: {fileID: 2800000, guid: ac9c33c1e928167c79fe8e580e38f6ef, type: 3}
-    video: {fileID: 0}
-    sound: {fileID: 0}
-    seconds: 5.05
-    panFrom: {x: 0, y: 0, z: 1}
-    panTo: {x: 0, y: 0, z: 1}
-    speaker: STEVENS
-    lineId: cs01_06
-    text: When you're out, there's an office. There's a printer. Take the sheet.
+    lineId: cs01_01
+    text: I can't open it. Not from here, nobody can, not tonight. You can.
   - still: {fileID: 2800000, guid: ac9c33c1e928167c79fe8e580e38f6ef, type: 3}
     video: {fileID: 0}
     sound: {fileID: 0}
@@ -93,17 +51,19 @@ MonoBehaviour:
     panFrom: {x: 0, y: 0, z: 1}
     panTo: {x: 0, y: 0, z: 1}
     speaker: STEVENS
-    lineId: cs01_07
-    text: The part in red. Nobody's finished it. There are no cameras in there. I'll
-      make sure it's empty.
+    lineId: cs01_02
+    text: "When you're out there's an office, there's a printer, one sheet on it,
+      you take it. The red on it, that's the wing they never finished, no cameras
+      in there, I'll make sure it's empty. I can't walk you there, Lucy. You find
+      it, you have to\u2014"
   - still: {fileID: 2800000, guid: ac9c33c1e928167c79fe8e580e38f6ef, type: 3}
     video: {fileID: 0}
     sound: {fileID: 0}
-    seconds: 4.335
+    seconds: 2
     panFrom: {x: 0, y: 0, z: 1}
     panTo: {x: 0, y: 0, z: 1}
     speaker: STEVENS
-    lineId: cs01_08
-    text: I can't walk you there. You'll have to find your own way.
+    lineId: cs01_03
+    text: I gotta go.
   music: {fileID: 0}
   doneFlag: 

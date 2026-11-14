@@ -60,7 +60,7 @@ namespace GlorifiedBody.Editor.Demo
         private static void W2(DemoRoom r)
         {
             CardDoor(r, "W3", new Vector3(14.3f, 1.2f, 13.82f), Vector3.back); // the code rotation: W3 opens with the card
-            r.Sign("Sign_Pain", "YOUR PAIN IS SEEN. ASK FOR RELIEF.", new Vector3(18f, 1.9f, 13.83f), Vector3.back, new Vector2(2.6f, 0.5f));
+            r.Sign("Sign_Pain", DemoPlan.Sign("W2, W5, the ward corridors", "YOUR PAIN IS SEEN. ASK FOR RELIEF."), new Vector3(18f, 1.9f, 13.83f), Vector3.back, new Vector2(2.6f, 0.5f));
             r.Prop("Bench_A", new Vector3(16f, 0f, 11.4f), new Vector3(1.6f, 0.45f, 0.45f));
             r.Prop("Cart", new Vector3(20f, 0f, 11.5f), new Vector3(0.9f, 0.9f, 0.5f), 0.45f);
             PropAssets.Crate("Extinguisher", new Vector3(23f, 0f, 11.5f), 0f, 0.4f); // a throw for telekinesis
@@ -73,7 +73,7 @@ namespace GlorifiedBody.Editor.Demo
             EnemySpawn patient = r.Figure("Patient", "patient", new Vector3(13.8f, 0.55f, 17.8f), 90f);
             patient.line = "Is mine done?";
             patient.scanImage = TutorialSetup.EnsureScanImage();
-            patient.scanCaption = "PLACEHOLDER (C8): a hand signs a form. A gloved hand holds the page flat.";
+            patient.scanCaption = DemoPlan.ScanCard("C8", "PLACEHOLDER (C8): a hand signs a form. A gloved hand holds the page flat.");
             EditorUtility.SetDirty(patient);
             r.Item("L2_Chart", DemoItems.L2(), new Vector3(16.1f, 0.6f, 17.8f), new Vector3(0.24f, 0.03f, 0.32f));
             r.Prop("Curtain_Rail", new Vector3(12.6f, 2.2f, 17.8f), new Vector3(0.05f, 0.05f, 2.4f), 0.6f);
@@ -107,7 +107,7 @@ namespace GlorifiedBody.Editor.Demo
             r.Figure("Guard_A", "guard_pistol", new Vector3(1.6f, 0f, -1.5f), 0f);
             EnemySpawn second = r.Figure("Guard_B", "guard_pistol", new Vector3(1.2f, 0f, -3.5f), 0f);
             second.scanImage = TutorialSetup.EnsureScanImage();
-            second.scanCaption = "PLACEHOLDER (C5): \"Don't let her touch you.\"";
+            second.scanCaption = DemoPlan.ScanCard("C5", "PLACEHOLDER (C5): \"Don't let her touch you.\"");
             EditorUtility.SetDirty(second);
             r.Prop("Gurney", new Vector3(2.4f, 0f, 7f), new Vector3(0.7f, 0.8f, 1.9f), 0.5f);
             r.Prop("Wall_Phone", new Vector3(0.05f, 1.3f, 8.5f), new Vector3(0.1f, 0.25f, 0.18f), 0.6f);
@@ -134,7 +134,7 @@ namespace GlorifiedBody.Editor.Demo
                 if (i != 1) r.Prop($"Locker_{i}", new Vector3(-6f + i * 1f, 0f, 7.7f), new Vector3(0.9f, 1.9f, 0.55f), 0.08f);
             r.Item("L3_Card", DemoItems.L3(), new Vector3(-2.2f, 1.2f, 7.4f), new Vector3(0.2f, 0.28f, 0.02f));
             SaveAssets.SavePoint("Save_W6", new Vector3(-6.4f, 0f, 3f), 90f).transform.SetParent(r.Props.transform, true);
-            r.Sign("Sign_Hard_Days", "THANK YOU FOR THE HARD DAYS.", new Vector3(-3.5f, 2.35f, 7.83f), Vector3.back, new Vector2(2.4f, 0.4f));
+            r.Sign("Sign_Hard_Days", DemoPlan.Sign("W6, the staff lockers", "THANK YOU FOR THE HARD DAYS."), new Vector3(-3.5f, 2.35f, 7.83f), Vector3.back, new Vector2(2.4f, 0.4f));
             r.Prop("Bench", new Vector3(-3.5f, 0f, 5f), new Vector3(2f, 0.45f, 0.4f));
             r.Capsule("Capsule_W6", DrugType.NalconLift, new Vector3(-1f, 0.15f, 3f));
             r.Prop("Kettle", new Vector3(-6.6f, 0.9f, 5.2f), new Vector3(0.2f, 0.25f, 0.2f), 0.6f);
@@ -162,7 +162,7 @@ namespace GlorifiedBody.Editor.Demo
             r.Prop("Bars_Rail_B", new Vector3(7f, 0.9f, 0.2f), new Vector3(3.2f, 0.05f, 0.05f), 0.7f);
             r.Prop("Dummy_Rack", new Vector3(10.4f, 0f, 3.8f), new Vector3(0.5f, 1.8f, 1.6f), 0.35f);
             GameObject dummy = r.Prop("Padded_Dummy", new Vector3(9.5f, 0f, -1.2f), new Vector3(0.5f, 1.7f, 0.4f), 0.55f);
-            r.Scan("Scan_Dummy", dummy.transform.position + Vector3.up * 1.2f, "demo_c1_dummy", "PLACEHOLDER (C1): the same dummy on a rack in a store room, with a price tag.");
+            r.Scan("Scan_Dummy", dummy.transform.position + Vector3.up * 1.2f, "demo_c1_dummy", DemoPlan.ScanCard("C1", "PLACEHOLDER (C1): the same dummy on a rack in a store room, with a price tag."));
             r.Prop("Camera_Tripod", new Vector3(3.6f, 0f, -1.5f), new Vector3(0.3f, 1.5f, 0.3f), 0.3f);
         }
 
@@ -183,8 +183,8 @@ namespace GlorifiedBody.Editor.Demo
             tech.foundLine = "Please. I only ran the pain.";
             EditorUtility.SetDirty(tech);
             r.Prop("Monitor_Cart", new Vector3(12f, 0f, 3.8f), new Vector3(0.6f, 1.2f, 0.5f), 0.35f);
-            r.Sign("Sign_Induction", "INDUCTION SUITE 2. PAIN MANAGEMENT PROTOCOL IN EFFECT.\nTHE PATIENT MAY NOT REMEMBER THE SESSION. THIS IS NORMAL.", new Vector3(14f, 2.3f, 4.83f), Vector3.back, new Vector2(3.6f, 0.6f), 32);
-            r.Scan("Scan_Chair", new Vector3(14f, 1f, 2.2f), "demo_c9_chair", "PLACEHOLDER (C9): \"You're doing so well.\"");
+            r.Sign("Sign_Induction", DemoPlan.Sign("W8, the treatment room", "INDUCTION SUITE 2. PAIN MANAGEMENT PROTOCOL IN EFFECT.\nTHE PATIENT MAY NOT REMEMBER THE SESSION. THIS IS NORMAL."), new Vector3(14f, 2.3f, 4.83f), Vector3.back, new Vector2(3.6f, 0.6f), 32);
+            r.Scan("Scan_Chair", new Vector3(14f, 1f, 2.2f), "demo_c9_chair", DemoPlan.ScanCard("C9", "PLACEHOLDER (C9): \"You're doing so well.\""));
         }
 
         /// <summary>W9: Marta (beat 13, her scan C2, her fate), the window (14), the shut fire door.</summary>
@@ -200,7 +200,7 @@ namespace GlorifiedBody.Editor.Demo
             EnemySpawn marta = r.Figure("Marta", "nurse", new Vector3(4f, 0f, -8.6f), 45f, variant: 1);
             marta.fate = "marta";
             marta.scanImage = TutorialSetup.EnsureScanImage();
-            marta.scanCaption = "PLACEHOLDER (C2): small hands on the armrests; gloved hands hold the wrists down. \"Again.\"";
+            marta.scanCaption = DemoPlan.ScanCard("C2", "PLACEHOLDER (C2): small hands on the armrests; gloved hands hold the wrists down. \"Again.\"");
             EditorUtility.SetDirty(marta);
             var talk = new List<ScriptStep>();
             talk.AddRange(DemoScripts.Steps("cutscenes/05_marta.md", "cs05"));
@@ -227,7 +227,7 @@ namespace GlorifiedBody.Editor.Demo
             r.Item("L4_Whiteboard", DemoItems.L4(), new Vector3(3.22f, 1.1f, -13.5f), new Vector3(0.05f, 0.2f, 0.3f));
             r.Prop("Bench", new Vector3(11.4f, 0f, -10.65f), new Vector3(2f, 0.9f, 0.6f), 0.3f); // the mapping bench (L20)
             r.Item("L20_Recorder", DemoItems.L20(), new Vector3(11.4f, 0.93f, -10.65f), new Vector3(0.14f, 0.05f, 0.1f)); // the calibration note (round 49)
-            r.Scan("Scan_Small_Chair", new Vector3(6f, 0.8f, -16.2f), "demo_c4_chair", "PLACEHOLDER (C4): \"Imagine your hand.\"");
+            r.Scan("Scan_Small_Chair", new Vector3(6f, 0.8f, -16.2f), "demo_c4_chair", DemoPlan.ScanCard("C4", "PLACEHOLDER (C4): \"Imagine your hand.\""));
             // The ward sister carries the stairwell card (ItemCarrier): a hidden pickup she drops at her death.
             ItemPickup card = r.Item("Stair_Card", DemoItems.StairCard(), new Vector3(11f, 0.05f, -13f), new Vector3(0.1f, 0.02f, 0.15f));
             card.gameObject.SetActive(false);
@@ -267,7 +267,7 @@ namespace GlorifiedBody.Editor.Demo
             rotation.paLine = "Site codes rotate at this time. Re-enrol your card at a security station."; // the fallback with no writer file
             rotation.paLines = DemoScripts.Lines("lines/T5_pa.md", "Call 1C", "*").ConvertAll(l => l.text).ToArray(); // round 138: "re-enroll"
             EditorUtility.SetDirty(rotation);
-            r.Scan("Scan_Stair_Door", new Vector3(15f, 1.2f, -13.7f), "demo_c3_door", "PLACEHOLDER (C3): a white card on a lanyard, against red scrubs.");
+            r.Scan("Scan_Stair_Door", new Vector3(15f, 1.2f, -13.7f), "demo_c3_door", DemoPlan.ScanCard("C3", "PLACEHOLDER (C3): a white card on a lanyard, against red scrubs."));
             r.Prop("Stairs_Down", new Vector3(13.8f, 0f, -11f), new Vector3(1.2f, 0.4f, 1.8f), 0.3f);
             r.Prop("Handrail", new Vector3(13.1f, 0.9f, -12f), new Vector3(0.05f, 0.05f, 3f), 0.7f); // the west wall: the east wall opens to W13 (v2)
         }

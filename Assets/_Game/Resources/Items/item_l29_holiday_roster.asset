@@ -20,14 +20,12 @@ MonoBehaviour:
   description: a roster.
   logText: 'SECURITY. HOLIDAY ROSTER, 23 DEC TO 2 JAN. NIGHTS: HOLIDAY MINIMUM, 4
     ON SITE. RESPONSE TEAM: ON CALL, OFF SITE. NIGHT SUPERVISOR, ALL NIGHTS: STEVENS
-    (BY REQUEST).
+    (BY REQUEST). By hand: Pat you''re a saint. Another hand under it: He just hates
+    his in-laws.By hand: Pat you''re a saint.
 
 
-    By hand: Pat you''re a saint.
-
-
-    Another hand under it:
-    He just hates his in-laws.'
+    Another hand under it: He just
+    hates his in-laws.'
   readFlag: 
   mapFloor: 
   audioClip: {fileID: 0}

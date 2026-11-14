@@ -18,10 +18,12 @@ MonoBehaviour:
   drugType: 0
   colour: {r: 0.96, g: 0.95, b: 0.88, a: 1}
   description: a guest comment card.
-  logText: GUEST COMMENTS. ROOM 11. Thank you for the lodge. We drove an hour each
-    way for nine days before you had a room for us. But no Christmas dinner? Our
-    son spent Christmas upstairs, and we spent it down here with "the winter menu".
-    The roast was very good.
+  logText: "GUEST COMMENT CARD \u2014 The Dining Hall\nRoom: Lodge 11\nThank you
+    for the lodge room. Truly. We drove an hour each way for nine days before a room
+    came free, and my husband was falling asleep at the wheel on the way home.\nBut
+    I have to ask. No Christmas dinner? Our son spent Christmas upstairs and we spent
+    it down here with \"the winter menu.\" I understand it's not your holiday. It
+    was ours.\nThe roast was very good. Please tell the kitchen.\n\u2014 Lodge 11"
   readFlag: 
   mapFloor: 
   audioClip: {fileID: 0}

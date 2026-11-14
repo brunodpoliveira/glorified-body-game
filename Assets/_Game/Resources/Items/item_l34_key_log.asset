@@ -18,17 +18,9 @@ MonoBehaviour:
   drugType: 0
   colour: {r: 0.96, g: 0.95, b: 0.88, a: 1}
   description: the key log.
-  logText: 'DUTY KEY.
-
-    27 DEC: OUT 18:00, IN 06:00.
-
-    28 DEC: OUT 18:00, IN
-    06:00.
-
-    29 DEC: OUT 18:00. 02:10 SHOWN TO SECURITY ON REQUEST (STEVENS).
-    02:14 BACK ON THE HOOK. IN 06:00.
-
-    30 DEC: OUT 18:00. IN: (empty)'
+  logText: 'DUTY KEY. 27 DEC: OUT 18:00, IN 06:00. 28 DEC: OUT 18:00, IN 06:00. 29
+    DEC: OUT 18:00. 02:10 SHOWN TO SECURITY ON REQUEST (STEVENS). 02:14 BACK ON THE
+    HOOK. IN 06:00. 30 DEC: OUT 18:00. IN: (empty)'
   readFlag: 
   mapFloor: 
   audioClip: {fileID: 0}

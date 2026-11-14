@@ -45,7 +45,7 @@ namespace GlorifiedBody.Editor.Demo
         public const string OfficeShut = "hold_h9_shut";
         public const string Music = DemoWard.Music;
 
-        public const string BoothSign = "THEATRE CONTROL. AUTHORISED STAFF ONLY. DOOR RELEASES ON FIRE ALARM."; // DEMO_PLAN §7 (the writer, round 125)
+        public static string BoothSign => DemoPlan.Sign("H4, the booth door", "THEATER CONTROL. AUTHORIZED STAFF ONLY. DOOR RELEASES ON FIRE ALARM."); // DEMO_PLAN §7 (rounds 138 and 142)
         public static readonly string[] Ids = { "H1", "H2", "H3", "H4", "H5", "HT", "H6", "H7", "H8", "H9" };
 
         // The places (metres, the ward's frame: x east, z north). The writer's drawing, H6 and the box 5 m north.
@@ -59,7 +59,7 @@ namespace GlorifiedBody.Editor.Demo
                 new Door('W', DoorZ, "H3", fire: true, jammed: true, leverRoom: "none", unbreakable: true)),
             Spec("H3", "GUARD POST", 9, BoxZ0, 15, BoxZ1, H3, new Door('E', DoorZ, "H2", fire: true, jammed: true, leverRoom: "none", unbreakable: true),
                 new Door('W', DoorZ, "H5"), new Door('N', 12, "H4")),
-            Spec("H4", "THE THEATRE", 9, BoxZ1, 15, 43, H4, new Door('S', 12, "H3")),
+            Spec("H4", "THE THEATER", 9, BoxZ1, 15, 43, H4, new Door('S', 12, "H3")),
             Spec("H5", "AIRLOCK", 4, BoxZ0, 9, BoxZ1, H5, new Door('E', DoorZ, "H3"), new Door('W', DoorZ, "HT", width: TubeWidth, height: TubeHeight)),
             Spec("HT", "THE TUBE", -2, TubeZ0, 4, TubeZ1, HT, new Door('E', DoorZ, "H5", width: TubeWidth, height: TubeHeight),
                 new Door('W', DoorZ, "H6", width: TubeWidth, height: TubeHeight)),
@@ -455,7 +455,7 @@ namespace GlorifiedBody.Editor.Demo
             r.Switch("Extend_Button", new Vector3(-2.35f, 1.2f, 33.6f), TubeOut, "Extend the tube?", "extend the tube", "");
             r.LockedLeaf(r.DoorTo("H7"), DemoItems.AirlockCard().itemId, "the airlock card");
             r.Scan("Scan_C11", new Vector3(-3.3f, 1.2f, 29.2f), "c11_card_reader",
-                "PLACEHOLDER (C11): a gloved hand in a light blue cuff clips a white card to a lanyard. Behind it, out of focus, the glass of the box and the steel of a treatment bench.",
+                DemoPlan.ScanCard("C11", "PLACEHOLDER (C11): a gloved hand in a light blue cuff clips a white card to a lanyard. Behind it, out of focus, the glass of the box and the steel of a treatment bench."),
                 CardScanned);
         }
 

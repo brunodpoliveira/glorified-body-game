@@ -18,15 +18,23 @@ MonoBehaviour:
   drugType: 0
   colour: {r: 0.96, g: 0.95, b: 0.88, a: 1}
   description: the incident tape.
-  logText: 'TAPE: INCIDENT 0612. SUBJECT V3. WARD ROOM 4. CAMERA 2.
+  logText: 'TAPE: INCIDENT 0612. SUBJECT V3. WARD ROOM 2E-14. CAMERA 07. REC 06:02:10.
 
 
     ORDERLY:
-    Morning. It''s only me.
+    Morning. It''s the oatmeal again, I asked, I did ask.
 
 
-    TAPE: SUBJECT RESTRAINED 06:41. TRANSFER TO THE
-    HOLD AUTHORISED. NEVER ENTER ALONE.'
+    ORDERLY: Okay. See
+    you tomorrow.
+
+
+    TAPE: SEGMENT 06:03:52 TO 06:04:40 WITHHELD. SEE FILE 0612-A.
+
+
+    TAPE:
+    SUBJECT RESTRAINED 06:41. TRANSFER TO THE HOLD AUTHORIZED 06:55. STAFF DIRECTIVE
+    0612-1, EFFECTIVE IMMEDIATELY: NEVER ENTER ALONE.'
   readFlag: 
   mapFloor: 
   audioClip: {fileID: 0}

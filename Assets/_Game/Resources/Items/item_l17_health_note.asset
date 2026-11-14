@@ -18,12 +18,17 @@ MonoBehaviour:
   drugType: 0
   colour: {r: 0.96, g: 0.95, b: 0.88, a: 1}
   description: an occupational health note.
-  logText: OCCUPATIONAL HEALTH, TO FACILITIES. Below 10 percent, halon 1301 feels
-    like being drunk. At 15 to 20 percent, people lose consciousness. In a fire it
-    also breaks down into hydrogen fluoride and hydrogen bromide. This room was designed
-    for about 6 percent. The partition took two thirds of the room, and nobody changed
-    the cylinders. My number is now 18. The door seals on the horn to hold the agent
-    in. ABORT is the only way out. You will not know you are going under.
+  logText: "OCCUPATIONAL HEALTH\nTo: Facilities\nRe: Halon 1301, server room \u2014
+    read before working in this room\n\nI am leaving this on the clipboard because
+    this is where it needs to be read.\n\nBelow 10 percent, halon 1301 feels like
+    being drunk. At 15 to 20 percent, people lose consciousness. In a fire it also
+    breaks down into hydrogen fluoride and hydrogen bromide, which you cannot breathe
+    at any level.\n\nThis room was designed for about 6 percent. The partition took
+    two thirds of the room and nobody changed the cylinders. By facilities' own numbers
+    a discharge in here now gives about 18 percent.\n\nWhen the horn sounds, the
+    door seals to hold the agent in. The discharge follows 30 seconds later. The
+    EMERGENCY STOP button on this panel is the only way to stop it. Not the door.
+    The door is part of the system.\n\nYou will not know you are going under."
   readFlag: 
   mapFloor: 
   audioClip: {fileID: 0}

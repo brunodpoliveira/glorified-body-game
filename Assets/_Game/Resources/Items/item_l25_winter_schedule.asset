@@ -18,15 +18,38 @@ MonoBehaviour:
   drugType: 0
   colour: {r: 0.96, g: 0.95, b: 0.88, a: 1}
   description: a memo.
-  logText: 'STAFF OFFICE. THE WINTER SCHEDULE. The Memorial keeps its normal schedule
-    on 25 December and 1 January. Our feast is Future Day, in February, and on that
-    day all staff rest with full pay. On 31 December the chapel is open all night.
-    If you keep a private holiday in December, you may request leave, subject to
-    cover. We know this season matters to many of you. Thank you for the hard days.
+  logText: 'MEMORANDUM
 
+    FROM: The Staff Office
 
-    By
-    hand under it: Subject to cover. There is no cover. That''s the point.'
+    TO: All Staff, Winwood Reade
+    Memorial
+
+    RE: Winter Schedule
+
+    The Memorial will keep its normal schedule
+    on December 25 and January 1. Our patients do not get better on a calendar, and
+    we are grateful to everyone who will be with them on those days.
+
+    Our feast
+    is Future Day, in February. On that day every member of staff rests, with full
+    pay, because rest is part of the work.
+
+    On December 31 the chapel will be
+    open all night for anyone who wants it.
+
+    If you keep a private holiday in
+    December, you may request leave through your supervisor, subject to cover.
+
+    We
+    know this season matters to many of you, and that asking is not nothing. We do
+    not ask lightly.
+
+    Thank you for the hard days.
+
+    "subject to cover." there
+    IS no cover. that''s the point.By hand under it: Subject to cover. There is no
+    cover. That''s the point.'
   readFlag: 
   mapFloor: 
   audioClip: {fileID: 0}

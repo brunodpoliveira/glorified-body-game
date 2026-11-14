@@ -18,58 +18,65 @@ MonoBehaviour:
   drugType: 0
   colour: {r: 0.95, g: 0.55, b: 0.2, a: 1}
   description: A recording. It plays while she walks. A fight pauses it.
-  logText: 'Upright restraint. Protocol for the Hold. Listen to this before your
-    first shift.
+  logText: 'Okay. Frame protocol, the upright restraint in the Hold. Listen to this
+    before your first shift, not after.
 
 
-    The line stays in. The filter takes the tincture out of her
-    blood, and while it runs she can''t do anything. Nothing. She''s a patient.
+    One. The line stays in. It feeds the
+    filter, the filter takes the tincture out of her blood, and while that''s running
+    she can''t do anything, and I mean anything, she''s a patient while it runs,
+    that''s all she is.
 
 
-    The
-    cage stays on the Crown. If you find it off, it goes back on before you do anything
-    else.
+    Two. The cage stays on the Crown, grounded to the frame.
+    You find it off, it goes back on before you do one other thing.
 
 
-    Never enter alone. Two in the box, two in the post, at all times.
+    Three.
+    Never alone. Two in the box, two in the guard post, I don''t care if it''s Christmas.
 
 
-    If
-    the line comes out, you don''t put it back in. The Hold seals by itself. You
-    get behind a door, and you wait for the tube.
-
-
-    It''s for her as much as
+    Four.
+    The line comes out, you don''t put it back. The Hold seals itself, the tube pulls
+    away, the doors lock, and you get behind a door and you wait for it to come back
     for you.
 
 
-    Nobody''s ever had to. Listen to it anyway.'
+    That''s for her as much as it''s for you. Nobody''s ever had to
+    do that last part. Listen to it anyway.'
   readFlag: 
   mapFloor: 
   audioClip: {fileID: 8300000, guid: f007568d0bd9c11a980403374c8bc39a, type: 3}
   tapeLines:
   - at: 0.6
     speaker: TECHNICIAN
-    text: Upright restraint. Protocol for the Hold. Listen to this before your first
-      shift.
-  - at: 6.1
+    text: Okay. Frame protocol, the upright restraint in the Hold. Listen to this
+      before your first shift, not after.
+    skipIfFlag: 
+  - at: 8.023077
     speaker: TECHNICIAN
-    text: The line stays in. The filter takes the tincture out of her blood, and
-      while it runs she can't do anything. Nothing. She's a patient.
-  - at: 16.215385
+    text: One. The line stays in. It feeds the filter, the filter takes the tincture
+      out of her blood, and while that's running she can't do anything, and I mean
+      anything, she's a patient while it runs, that's all she is.
+    skipIfFlag: 
+  - at: 23.907692
     speaker: TECHNICIAN
-    text: The cage stays on the Crown. If you find it off, it goes back on before
-      you do anything else.
-  - at: 24.407694
+    text: Two. The cage stays on the Crown, grounded to the frame. You find it off,
+      it goes back on before you do one other thing.
+    skipIfFlag: 
+  - at: 34.02308
     speaker: TECHNICIAN
-    text: Never enter alone. Two in the box, two in the post, at all times.
-  - at: 30.292309
+    text: Three. Never alone. Two in the box, two in the guard post, I don't care
+      if it's Christmas.
+    skipIfFlag: 
+  - at: 41.446156
     speaker: TECHNICIAN
-    text: If the line comes out, you don't put it back in. The Hold seals by itself.
-      You get behind a door, and you wait for the tube.
-  - at: 41.176926
+    text: Four. The line comes out, you don't put it back. The Hold seals itself,
+      the tube pulls away, the doors lock, and you get behind a door and you wait
+      for it to come back for you.
+    skipIfFlag: 
+  - at: 56.176926
     speaker: TECHNICIAN
-    text: It's for her as much as for you.
-  - at: 44.75385
-    speaker: TECHNICIAN
-    text: Nobody's ever had to. Listen to it anyway.
+    text: That's for her as much as it's for you. Nobody's ever had to do that last
+      part. Listen to it anyway.
+    skipIfFlag: 

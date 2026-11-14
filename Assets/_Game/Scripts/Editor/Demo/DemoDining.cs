@@ -55,7 +55,7 @@ namespace GlorifiedBody.Editor.Demo
             r.Item("L31_Reservation_Book", L31(), new Vector3(36.55f, 1.11f, 4.9f), new Vector3(0.3f, 0.03f, 0.22f));
             r.Item("L32_Comment_Card", L32(), new Vector3(36.8f, 1.11f, 4.75f), new Vector3(0.1f, 0.01f, 0.14f));
             r.Prop("Menu_Stand", new Vector3(37.4f, 0f, 1.2f), new Vector3(0.1f, 1.2f, 0.5f), 0.7f);
-            r.Sign("Sign_Winter_Menu", "TONIGHT: THE WINTER MENU.", new Vector3(37.34f, 1f, 1.2f), Vector3.left, new Vector2(0.45f, 0.25f), 20);
+            r.Sign("Sign_Winter_Menu", DemoPlan.Sign("G18, a brass stand", "TONIGHT: THE WINTER MENU."), new Vector3(37.34f, 1f, 1.2f), Vector3.left, new Vector2(0.45f, 0.25f), 20);
 
             // The hall: round columns, banquettes, the bar at the east wall, the tables on their sides (the soldiers' cover).
             foreach ((string tag, float x, float z) in new[] { ("A", 39.5f, 3.2f), ("B", 39.5f, 7.2f), ("C", 43.2f, 3.2f), ("D", 43.2f, 7.2f) })
@@ -68,8 +68,8 @@ namespace GlorifiedBody.Editor.Demo
 
             // The lodge door, locked tonight (off the map), and its words.
             r.Box(r.Props, "Lodge_Door", new Vector3(44f, 1.2f, 9.9f), new Vector3(2f, 2.4f, 0.1f), DemoRoom.Grey(0.2f));
-            r.Sign("Sign_Lodge", "THE LODGE. FOR THE FAMILIES OF OUR PATIENTS, AND FOR OUR GUESTS. THE CITY IS AN HOUR AWAY. STAY CLOSE TO THEM.", new Vector3(44f, 2.85f, 9.83f), Vector3.back, new Vector2(2.6f, 0.4f), 22);
-            r.Sign("Sign_Lodge_Closed", "LODGE CLOSED. GUESTS: STAY IN YOUR ROOMS. A MEMBER OF STAFF WILL COME TO YOU.", new Vector3(44f, 1.5f, 9.8f), Vector3.back, new Vector2(0.8f, 0.35f), 16);
+            r.Sign("Sign_Lodge", DemoPlan.Sign("G18, the lodge door, engraved", "THE LODGE. FOR THE FAMILIES OF OUR PATIENTS, AND FOR OUR GUESTS. THE CITY IS AN HOUR AWAY. STAY CLOSE TO THEM."), new Vector3(44f, 2.85f, 9.83f), Vector3.back, new Vector2(2.6f, 0.4f), 22);
+            r.Sign("Sign_Lodge_Closed", DemoPlan.Sign("G18, the lodge door, a printed notice", "LODGE CLOSED. GUESTS: STAY IN YOUR ROOMS. A MEMBER OF STAFF WILL COME TO YOU."), new Vector3(44f, 1.5f, 9.8f), Vector3.back, new Vector2(0.8f, 0.35f), 16);
 
             // The second squad (rounds 62 and 122, CANON): six soldiers, two sets of a shield, a grenadier and a shotgunner, at
             // their forward post, the lodge door behind them. Ortiz, Brandt and four more (the names PROPOSED).
@@ -116,7 +116,7 @@ namespace GlorifiedBody.Editor.Demo
 
         /// <summary>The words over the glass doors, on the G2 face of the wall (§7).</summary>
         public static void GlassDoors(DemoRoom g2) =>
-            g2.Sign("Sign_Dining_Hall", "THE DINING HALL. FOR OUR FAMILIES AND OUR GUESTS.", new Vector3(34.83f, 2.9f, 3f), Vector3.left, new Vector2(2.6f, 0.35f), 28);
+            g2.Sign("Sign_Dining_Hall", DemoPlan.Sign("G18, over the glass doors", "THE DINING HALL. FOR OUR FAMILIES AND OUR GUESTS."), new Vector3(34.83f, 2.9f, 3f), Vector3.left, new Vector2(2.6f, 0.35f), 28);
 
         // ── G19 ───────────────────────────────────────────────────────
 
@@ -150,7 +150,7 @@ namespace GlorifiedBody.Editor.Demo
             foreach ((string tag, float x, Vector3 facing) in new[] { ("G19", 38.17f, Vector3.right), ("G10", 37.83f, Vector3.left) })
             {
                 r.Box(r.Props, "Hatch_Shutter_" + tag, new Vector3(x + facing.x * 0.01f, 1.35f, -2.5f), new Vector3(0.03f, 0.6f, 1.2f), DemoRoom.Grey(0.55f));
-                r.Sign("Sign_Servery_" + tag, "SERVERY CLOSED.", new Vector3(x + facing.x * 0.03f, 1.35f, -2.5f), facing, new Vector2(0.9f, 0.2f), 20);
+                r.Sign("Sign_Servery_" + tag, DemoPlan.Sign("G19, the shutter", "KITCHEN CLOSED"), new Vector3(x + facing.x * 0.03f, 1.35f, -2.5f), facing, new Vector2(0.9f, 0.2f), 20);
             }
         }
 
@@ -169,19 +169,19 @@ namespace GlorifiedBody.Editor.Demo
         // ── The logs (§8, L30 to L34) ─────────────────────────────────
 
         public static ItemDefinition L30() => DemoItems.Log("l30_release_card", "A FACILITIES CARD",
-            "FACILITIES. SECTOR C RELEASE. TWO PEOPLE, TWO KEYS: THE SECURITY OFFICE AND THE DUTY KEY. AFTER HOURS THE DUTY KEY IS WITH THE NIGHT MANAGER OF THE LODGE, IN THE KITCHEN OFFICE OF THE DINING HALL. NEVER LEAVE THE DUTY KEY IN THE CONSOLE.");
+            DemoPlan.Log("L30", "FACILITIES. SECTOR C RELEASE. TWO PEOPLE, TWO KEYS: THE SECURITY OFFICE AND THE DUTY KEY. AFTER HOURS THE DUTY KEY IS WITH THE NIGHT MANAGER OF THE LODGE, IN THE KITCHEN OFFICE OF THE DINING HALL. NEVER LEAVE THE DUTY KEY IN THE CONSOLE."));
 
         public static ItemDefinition L31() => DemoItems.Log("l31_reservation_book", "THE BOOK OF TONIGHT",
-            "THE DINING HALL. 30 DECEMBER.\n19:00 LODGE 4, 2.\n19:30 LODGE 11, 3.\n20:00 LODGE 7, 2.\n21:30 THE PRIVATE ROOM, ALTERIUS, 6, BEFORE THE MEETING. TASTING MENU.\n21:30 DE HOMEM-CRISTO, 1, THE PRIVATE ROOM. CANCELLED BY THE GUEST. HER DRIVER WAITED IN THE CAR.");
+            DemoPlan.Log("L31", "THE DINING HALL. 30 DECEMBER.\n19:00 LODGE 4, 2.\n19:30 LODGE 11, 3.\n20:00 LODGE 7, 2.\n21:30 THE PRIVATE ROOM, ALTERIUS, 6, BEFORE THE MEETING. TASTING MENU.\n21:30 DE HOMEM-CRISTO, 1, THE PRIVATE ROOM. CANCELLED BY THE GUEST. HER DRIVER WAITED IN THE CAR."));
 
         public static ItemDefinition L32() => DemoItems.Log("l32_comment_card", "A GUEST COMMENT CARD",
-            "GUEST COMMENTS. ROOM 11. Thank you for the lodge. We drove an hour each way for nine days before you had a room for us. But no Christmas dinner? Our son spent Christmas upstairs, and we spent it down here with \"the winter menu\". The roast was very good.");
+            DemoPlan.Log("L32", "GUEST COMMENTS. ROOM 11. Thank you for the lodge. We drove an hour each way for nine days before you had a room for us. But no Christmas dinner? Our son spent Christmas upstairs, and we spent it down here with \"the winter menu\". The roast was very good."));
 
         public static ItemDefinition L33() => DemoItems.Log("l33_chef_note", "A NOTE FROM THE CHEF",
-            "FROM THE CHEF. If a guest asks for a Christmas menu, offer the winter menu. Do not say no, and do not say Christmas. Future Day is in February, and it is the best night of our year. The private room gets the tasting menu, no substitutions.\n\nBy hand under it: Turkey for the caf is in walk-in 2. It is for GENE'S BIRTHDAY. Nobody touch it.");
+            DemoPlan.Log("L33", "FROM THE CHEF. If a guest asks for a Christmas menu, offer the winter menu. Do not say no, and do not say Christmas. Future Day is in February, and it is the best night of our year. The private room gets the tasting menu, no substitutions.\n\nBy hand under it: Turkey for the caf is in walk-in 2. It is for GENE'S BIRTHDAY. Nobody touch it."));
 
         public static ItemDefinition L34() => DemoItems.Log("l34_key_log", "THE KEY LOG",
-            "DUTY KEY.\n27 DEC: OUT 18:00, IN 06:00.\n28 DEC: OUT 18:00, IN 06:00.\n29 DEC: OUT 18:00. 02:10 SHOWN TO SECURITY ON REQUEST (STEVENS). 02:14 BACK ON THE HOOK. IN 06:00.\n30 DEC: OUT 18:00. IN: (empty)");
+            DemoPlan.Log("L34", "DUTY KEY.\n27 DEC: OUT 18:00, IN 06:00.\n28 DEC: OUT 18:00, IN 06:00.\n29 DEC: OUT 18:00. 02:10 SHOWN TO SECURITY ON REQUEST (STEVENS). 02:14 BACK ON THE HOOK. IN 06:00.\n30 DEC: OUT 18:00. IN: (empty)"));
     }
 }
 #endif

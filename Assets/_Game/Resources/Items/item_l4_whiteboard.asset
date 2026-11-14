@@ -18,15 +18,11 @@ MonoBehaviour:
   drugType: 0
   colour: {r: 0.96, g: 0.95, b: 0.88, a: 1}
   description: the whiteboard.
-  logText: 'V3 SHOWCASE. RETIRE AFTER V4 TRANSFER. SCHEDULED.
-
-
-    DE HOMEM-CRISTO,
-    LUCIA. NEXT OF KIN: DE HOMEM-CRISTO, H. (MOTHER. CONSENT ON FILE.)
-
-
-    FOURTH
-    FACULTY: NOT FOR SHOWCASE.'
+  logText: 'V3 SHOWCASE. RETIRE AFTER V4 TRANSFER. SCHEDULED. Under it: DE HOMEM-CRISTO,
+    LUCIA. NEXT OF KIN: DE HOMEM-CRISTO, H. (MOTHER. CONSENT ON FILE.) At the bottom:
+    FOURTH FACULTY: NOT FOR SHOWCASE. Beside it, a column: CORES: GHOST. KNIGHT.
+    WITCH. FOURTH: NOT YET NAMED. The last line is CANON (round 37). The column is
+    CANON (round 123), its place PROPOSED'
   readFlag: 
   mapFloor: 
   audioClip: {fileID: 0}

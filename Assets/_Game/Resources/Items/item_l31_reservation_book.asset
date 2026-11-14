@@ -18,20 +18,12 @@ MonoBehaviour:
   drugType: 0
   colour: {r: 0.96, g: 0.95, b: 0.88, a: 1}
   description: the book of tonight.
-  logText: 'THE DINING HALL. 30 DECEMBER.
-
-    19:00 LODGE 4, 2.
-
-    19:30 LODGE
-    11, 3.
-
-    20:00 LODGE 7, 2.
-
-    21:30 THE PRIVATE ROOM, ALTERIUS, 6, BEFORE
-    THE MEETING. TASTING MENU.
-
-    21:30 DE HOMEM-CRISTO, 1, THE PRIVATE ROOM. CANCELLED
-    BY THE GUEST. HER DRIVER WAITED IN THE CAR.'
+  logText: "DEC 30\n7:00 \u2014 Lodge 4 \u2014 2 cov \u2014 window\n7:30 \u2014 Lodge
+    11 \u2014 3 cov \u2014 booth, wheelchair\n8:00 \u2014 Lodge 7 \u2014 2 cov \u2014
+    quiet table pls\n9:30 \u2014 PRIVATE RM \u2014 Alterius \u2014 6 cov \u2014 tasting,
+    before their mtg \u2014 NO SUBS\n9:30 \u2014 de Homem-Cristo \u2014 1 \u2014
+    PRIVATE RM \u2014 CXL by guest. driver waited in car.\nprivate rm reset for 6
+    only. water down by 9:15. chef wants a heads up when they're seated."
   readFlag: 
   mapFloor: 
   audioClip: {fileID: 0}

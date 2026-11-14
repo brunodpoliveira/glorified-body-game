@@ -18,11 +18,15 @@ MonoBehaviour:
   drugType: 0
   colour: {r: 0.96, g: 0.95, b: 0.88, a: 1}
   description: a note from counsel.
-  logText: OFFICE OF COUNSEL. PRIVILEGED. You asked if the halon exposes us. Having
-    it does not. 1994 stopped the making of it, not the keeping of it, and recycled
-    agent is lawful with the paperwork. What exposes us is a person hurt in a room
-    we knew was wrong, or a release we could have prevented. Please do not use the
-    word "knew" in your reply.
+  logText: "PRIVILEGED AND CONFIDENTIAL \u2014 ATTORNEY-CLIENT COMMUNICATION\nTo:
+    Administration\nFrom: Office of General Counsel\nRe: Your question regarding
+    the server room suppression system\n\nYou asked whether the halon exposes us.
+    Having it does not. The 1994 action stopped the making of it, not the keeping
+    of it, and a recycled agent is lawful provided the paperwork is in order. We
+    have reviewed the paperwork.\n\nWhat exposes us is narrower and more serious:
+    a person hurt in a room we knew was wrong, or a release we could have prevented.
+    Either would be litigated on what the file shows we understood, and when.\n\nPlease
+    do not use the word \"knew\" in your reply."
   readFlag: 
   mapFloor: 
   audioClip: {fileID: 0}

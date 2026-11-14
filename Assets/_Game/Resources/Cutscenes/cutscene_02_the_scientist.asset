@@ -36,12 +36,13 @@ MonoBehaviour:
   - still: {fileID: 2800000, guid: ac9c33c1e928167c79fe8e580e38f6ef, type: 3}
     video: {fileID: 0}
     sound: {fileID: 0}
-    seconds: 3.785
+    seconds: 5.325
     panFrom: {x: 0, y: 0, z: 1}
     panTo: {x: 0, y: 0, z: 1}
     speaker: SCIENTIST
     lineId: cs02_02
-    text: Lie down on the ground. Hands behind your back.
+    text: "Ma'am? Lie down on the ground, please, hands behind your\u2014 behind
+      your back."
   - still: {fileID: 2800000, guid: ac9c33c1e928167c79fe8e580e38f6ef, type: 3}
     video: {fileID: 0}
     sound: {fileID: 0}
@@ -64,12 +65,12 @@ MonoBehaviour:
   - still: {fileID: 2800000, guid: ac9c33c1e928167c79fe8e580e38f6ef, type: 3}
     video: {fileID: 0}
     sound: {fileID: 0}
-    seconds: 3.8400002
+    seconds: 4.17
     panFrom: {x: 0, y: 0, z: 1}
     panTo: {x: 0, y: 0, z: 1}
     speaker: SCIENTIST
     lineId: cs02_05
-    text: Lie down. On the ground. Hands behind your back.
+    text: I said lie down on the ground, hands behind your back.
   - still: {fileID: 2800000, guid: ac9c33c1e928167c79fe8e580e38f6ef, type: 3}
     video: {fileID: 0}
     sound: {fileID: 0}

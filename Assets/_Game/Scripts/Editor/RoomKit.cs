@@ -130,6 +130,10 @@ namespace GlorifiedBody.Editor
             text.text = words;
             text.horizontalOverflow = HorizontalWrapMode.Wrap;
             text.verticalOverflow = VerticalWrapMode.Truncate;
+            // Round 138: the plan's signs are longer (the ward's letter, the halon door): the words shrink to fit the plate.
+            text.resizeTextForBestFit = true;
+            text.resizeTextMinSize = 8;
+            text.resizeTextMaxSize = fontSize;
             return sign;
         }
 

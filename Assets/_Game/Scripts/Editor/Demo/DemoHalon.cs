@@ -46,13 +46,13 @@ namespace GlorifiedBody.Editor.Demo
             r.Prop("Filing_Cabinet", new Vector3(38.5f, 0f, -14.9f), new Vector3(0.6f, 1.3f, 0.5f), 0.4f);
             // The lockout cabinet by the door of the server room (§7): turned before the fire, the horn stays quiet.
             r.Prop("Lockout_Cabinet", new Vector3(42.6f, 0f, -15.6f), new Vector3(0.6f, 1.6f, 0.4f), 0.55f);
-            r.Sign("Sign_Lockout", "HALON LOCKOUT. SERVICE ONLY. TURN BEFORE ANY HOT WORK IN THIS ROOM.", new Vector3(42.6f, 1.45f, -15.39f), Vector3.forward, new Vector2(0.55f, 0.3f), 14);
+            r.Sign("Sign_Lockout", DemoPlan.Sign("The room beside G17, a cabinet", "HALON LOCKOUT. SERVICE ONLY. TURN BEFORE ANY HOT WORK IN THIS ROOM."), new Vector3(42.6f, 1.45f, -15.39f), Vector3.forward, new Vector2(0.55f, 0.3f), 14);
             r.Switch("Halon_Lockout", new Vector3(42.6f, 1.05f, -15.36f), LockoutFlag, "Turn the halon lockout?", "turn the halon lockout",
                 "The key turns. A lamp on the cabinet goes dark.");
             // The words on the door of the server room (§7).
-            r.Sign("Sign_Halon_Danger", "DANGER. HALON 1301 IN THIS ROOM. ON THE HORN THE DOOR SEALS. 30 SECONDS, THEN DISCHARGE. PRESS ABORT ON THE PANEL. THE AGENT CAN MAKE YOU LOSE CONSCIOUSNESS.",
+            r.Sign("Sign_Halon_Danger", DemoPlan.Sign("G17 door, outside", "DANGER. HALON 1301 IN THIS ROOM. ON THE HORN THE DOOR SEALS. 30 SECONDS, THEN DISCHARGE. PRESS EMERGENCY STOP ON THE PANEL. THE AGENT CAN MAKE YOU LOSE CONSCIOUSNESS."),
                 new Vector3(41f, 2.65f, -15.83f), Vector3.forward, new Vector2(1.9f, 0.5f), 14);
-            r.Sign("Sign_Halon_Hand", "Since the partition: do NOT wait to see if it's a false alarm.", new Vector3(39.8f, 1.5f, -15.83f), Vector3.forward, new Vector2(0.6f, 0.3f), 14);
+            r.Sign("Sign_Halon_Hand", DemoPlan.Sign("G17 door, under it", "Since the partition: do NOT wait to see if it's a false alarm."), new Vector3(39.8f, 1.5f, -15.83f), Vector3.forward, new Vector2(0.6f, 0.3f), 14);
         }
 
         // ── G17, the server room ─────────────────────────────────────
@@ -73,10 +73,10 @@ namespace GlorifiedBody.Editor.Demo
                 cylinder.GetComponent<Renderer>().sharedMaterial = red;
             }
 
-            // The panel inside by the door: ABORT, its display, its words, and the health note (L17).
+            // The panel inside by the door: the EMERGENCY STOP (round 142), its display, its words, and the health note (L17).
             GameObject panelBox = r.Box(r.Props, "Halon_Panel", new Vector3(42.5f, 1.35f, -16.2f), new Vector3(0.45f, 0.55f, 0.08f), DemoRoom.Grey(0.75f));
             GameObject display = r.Sign("Halon_Display", "ARMED", new Vector3(42.5f, 1.52f, -16.25f), Vector3.back, new Vector2(0.38f, 0.1f), 22);
-            r.Sign("Sign_Halon_Abort", "HALON ABORT. PRESS TO STOP DISCHARGE.", new Vector3(42.5f, 1.9f, -16.18f), Vector3.back, new Vector2(0.7f, 0.2f), 16);
+            r.Sign("Sign_Halon_Abort", DemoPlan.Sign("G17, the panel inside", "HALON EMERGENCY STOP. PRESS TO STOP DISCHARGE."), new Vector3(42.5f, 1.9f, -16.18f), Vector3.back, new Vector2(0.7f, 0.2f), 16);
             GameObject button = r.Box(r.Props, "Halon_Abort", new Vector3(42.5f, 1.25f, -16.27f), new Vector3(0.16f, 0.16f, 0.05f), DemoRoom.Colour("abort_red", new Color(0.9f, 0.1f, 0.08f)));
             r.Item("L17_Health_Note", L17(), new Vector3(43.2f, 1.3f, -16.16f), new Vector3(0.21f, 0.28f, 0.02f));
 
@@ -183,16 +183,16 @@ namespace GlorifiedBody.Editor.Demo
         // ── The logs (§8, L15 to L18) ────────────────────────────────
 
         public static ItemDefinition L15() => DemoItems.Log("l15_facilities_memo", "A FACILITIES MEMO",
-            "FACILITIES. SERVER ROOM, HALON 1301. NEW PRODUCTION ENDED IN 1994 (MONTREAL PROTOCOL). WE ARE NOT REQUIRED TO REMOVE THE SYSTEM. RECYCLED AGENT ONLY. NO TEST DISCHARGE. SWITCHOVER QUOTE: NEW PIPE, NEW NOZZLES, MORE CYLINDERS THAN WE HAVE FLOOR FOR, NINE DAYS WITH BUILDING SYSTEMS DOWN. BUILDING SYSTEMS CANNOT GO DOWN. DEFERRED. FOURTH YEAR.");
+            DemoPlan.Log("L15", "FACILITIES. SERVER ROOM, HALON 1301. NEW PRODUCTION ENDED IN 1994 (MONTREAL PROTOCOL). WE ARE NOT REQUIRED TO REMOVE THE SYSTEM. RECYCLED AGENT ONLY. NO TEST DISCHARGE. SWITCHOVER QUOTE: NEW PIPE, NEW NOZZLES, MORE CYLINDERS THAN WE HAVE FLOOR FOR, NINE DAYS WITH BUILDING SYSTEMS DOWN. BUILDING SYSTEMS CANNOT GO DOWN. DEFERRED. FOURTH YEAR."));
 
         public static ItemDefinition L16() => DemoItems.Log("l16_counsel_note", "A NOTE FROM COUNSEL",
-            "OFFICE OF COUNSEL. PRIVILEGED. You asked if the halon exposes us. Having it does not. 1994 stopped the making of it, not the keeping of it, and recycled agent is lawful with the paperwork. What exposes us is a person hurt in a room we knew was wrong, or a release we could have prevented. Please do not use the word \"knew\" in your reply.");
+            DemoPlan.Log("L16", "OFFICE OF COUNSEL. PRIVILEGED. You asked if the halon exposes us. Having it does not. 1994 stopped the making of it, not the keeping of it, and recycled agent is lawful with the paperwork. What exposes us is a person hurt in a room we knew was wrong, or a release we could have prevented. Please do not use the word \"knew\" in your reply."));
 
         public static ItemDefinition L17() => DemoItems.Log("l17_health_note", "AN OCCUPATIONAL HEALTH NOTE",
-            "OCCUPATIONAL HEALTH, TO FACILITIES. Below 10 percent, halon 1301 feels like being drunk. At 15 to 20 percent, people lose consciousness. In a fire it also breaks down into hydrogen fluoride and hydrogen bromide. This room was designed for about 6 percent. The partition took two thirds of the room, and nobody changed the cylinders. My number is now 18. The door seals on the horn to hold the agent in. ABORT is the only way out. You will not know you are going under.");
+            DemoPlan.Log("L17", "OCCUPATIONAL HEALTH, TO FACILITIES. Below 10 percent, halon 1301 feels like being drunk. At 15 to 20 percent, people lose consciousness. In a fire it also breaks down into hydrogen fluoride and hydrogen bromide. This room was designed for about 6 percent. The partition took two thirds of the room, and nobody changed the cylinders. My number is now 18. The door seals on the horn to hold the agent in. ABORT is the only way out. You will not know you are going under."));
 
         public static ItemDefinition L18() => DemoItems.Log("l18_stock_ledger", "THE STOCK LEDGER",
-            "RESERVE CAGE. COUNT.\nWARSPITE 2. EREBUS 2. ORZABAL 2.\nEDGAR 1 (TRAY EMPTY. NO SIGNATURE).\nSECOND WIND 1.\nNOTE: V3 TINCTURE, DOSE CHANGE DAY 0, AUTH. DR. COLTON. RECOUNT DUE.");
+            DemoPlan.Log("L18", "RESERVE CAGE. COUNT.\nWARSPITE 2. EREBUS 2. ORZABAL 2.\nEDGAR 1 (TRAY EMPTY. NO SIGNATURE).\nSECOND WIND 1.\nNOTE: V3 TINCTURE, DOSE CHANGE DAY 0, AUTH. DR. COLTON. RECOUNT DUE."));
     }
 }
 #endif

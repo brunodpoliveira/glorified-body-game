@@ -18,7 +18,8 @@ MonoBehaviour:
   drugType: 0
   colour: {r: 0.96, g: 0.95, b: 0.88, a: 1}
   description: the security logbook.
-  logText: '01:52 SECTOR C CAMERAS OFF FOR MAINTENANCE. AUTH: STEVENS.'
+  logText: '01:52 SECTOR C CAMERAS OFF FOR MAINTENANCE. AUTH: STEVENS. Nothing after
+    it.'
   readFlag: 
   mapFloor: 
   audioClip: {fileID: 0}

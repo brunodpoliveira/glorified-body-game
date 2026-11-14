@@ -55,7 +55,7 @@ namespace GlorifiedBody.Editor.Demo
             r.Prop("Fridge", new Vector3(33.05f, 0f, -4.6f), new Vector3(0.8f, 1.8f, 0.7f), 0.6f);
             r.Prop("Pizza_Boxes", new Vector3(33.05f, 1.8f, -4.6f), new Vector3(0.45f, 0.12f, 0.45f), 0.55f);
             r.Prop("Foil_Tray", new Vector3(33.05f, 1.92f, -4.6f), new Vector3(0.4f, 0.06f, 0.3f), 0.8f);
-            r.Sign("Sign_Leftovers", "SINCE THE 25TH. EAT IT OR BIN IT.\nIt's Gene's birthday turkey. Have some respect.", new Vector3(33.05f, 1.55f, -4.24f), Vector3.forward, new Vector2(0.7f, 0.2f), 20);
+            r.Sign("Sign_Leftovers", DemoPlan.Sign("G10, taped to the pizza boxes", "SINCE THE 25TH. EAT IT OR BIN IT.\nIt's Gene's birthday turkey. Have some respect."), new Vector3(33.05f, 1.55f, -4.24f), Vector3.forward, new Vector2(0.7f, 0.2f), 20);
 
             // The corkboard by the fridge: the winter schedule (L25).
             r.Box(r.Props, "Corkboard", new Vector3(34.3f, 1.5f, -4.83f), new Vector3(0.9f, 0.6f, 0.03f), DemoRoom.Colour("cork", new Color(0.55f, 0.4f, 0.26f)));
@@ -79,9 +79,9 @@ namespace GlorifiedBody.Editor.Demo
             Blink blink = MenuLoopSetup.EnsureComponent<Blink>(string_);
             blink.lights = lights.ToArray();
             EditorUtility.SetDirty(blink);
-            r.Sign("Sign_Banner", "HAPPY BIRTHDAY GENE!!!", new Vector3(34.3f, 2.1f, -0.17f), Vector3.back, new Vector2(2.2f, 0.4f), 48);
+            r.Sign("Sign_Banner", DemoPlan.Sign("G10, over the tree", "HAPPY BIRTHDAY GENE!!!"), new Vector3(34.3f, 2.1f, -0.17f), Vector3.back, new Vector2(2.2f, 0.4f), 48);
             r.Item("L26_Birthday_Email", L26(), new Vector3(35.6f, 1.4f, -0.14f), new Vector3(0.21f, 0.28f, 0.02f));
-            r.Sign("Sign_Handbook", "STAFF AREAS. PERSONAL CELEBRATIONS (A BIRTHDAY, A RETIREMENT, A NEW BABY) ARE WELCOME HERE. PLEASE CLEAN UP AFTER. RELIGIOUS OBSERVANCE HAS ITS PLACE IN THE CHAPEL.",
+            r.Sign("Sign_Handbook", DemoPlan.Sign("G10, by the door, a laminated page", "STAFF AREAS. PERSONAL CELEBRATIONS (A BIRTHDAY, A RETIREMENT, A NEW BABY) ARE WELCOME HERE. PLEASE CLEAN UP AFTER. RELIGIOUS OBSERVANCE HAS ITS PLACE IN THE CHAPEL."),
                 new Vector3(31.6f, 1.5f, -0.17f), Vector3.back, new Vector2(0.9f, 0.5f), 16);
 
             // The scan C10 on the tree: the one scan that plays a cutscene (07c).
@@ -152,23 +152,23 @@ namespace GlorifiedBody.Editor.Demo
             "AUTO-REPLY: Dr. Colton is out of the office until 4 January, with his family. For urgent ward matters, contact the duty physician.");
 
         public static ItemDefinition L25() => DemoItems.Log("l25_winter_schedule", "A MEMO",
-            "STAFF OFFICE. THE WINTER SCHEDULE. The Memorial keeps its normal schedule on 25 December and 1 January. Our feast is Future Day, in February, and on that day all staff rest with full pay. On 31 December the chapel is open all night. If you keep a private holiday in December, you may request leave, subject to cover. We know this season matters to many of you. Thank you for the hard days.\n\n" +
+            DemoPlan.Log("L25", "STAFF OFFICE. THE WINTER SCHEDULE. The Memorial keeps its normal schedule on 25 December and 1 January. Our feast is Future Day, in February, and on that day all staff rest with full pay. On 31 December the chapel is open all night. If you keep a private holiday in December, you may request leave, subject to cover. We know this season matters to many of you. Thank you for the hard days.\n\n") +
             "By hand under it: Subject to cover. There is no cover. That's the point.");
 
         public static ItemDefinition L26() => DemoItems.Log("l26_gene_birthday", "A PRINTED EMAIL",
-            "FROM: ROSA (WARD 2). TO: ALL STAFF, FLOORS 1 AND 2. RE: GENE'S BIRTHDAY!!! Handbook, section 9: birthdays may be celebrated in staff areas. Gene's birthday is 25 December this year. Cafeteria, 8 pm, between the shifts. Bring a dish. All decorations are birthday decorations.\n\n" +
+            DemoPlan.Log("L26", "FROM: ROSA (WARD 2). TO: ALL STAFF, FLOORS 1 AND 2. RE: GENE'S BIRTHDAY!!! Handbook, section 9: birthdays may be celebrated in staff areas. Gene's birthday is 25 December this year. Cafeteria, 8 pm, between the shifts. Bring a dish. All decorations are birthday decorations.\n\n") +
             "FROM: GENE. My birthday is in July.\n\nFROM: ROSA. Not this year, Gene.");
 
         public static ItemDefinition L27() => DemoItems.Log("l27_the_25th", "A REPLY-ALL THREAD",
-            "FROM: DENISE (WARD 2, NIGHTS). RE: RE: RE: the 25th. Third year in a row my kids open their presents on a screen, because of the boss's weird-ass religion or cult or whatever.\n\n" +
+            DemoPlan.Log("L27", "FROM: DENISE (WARD 2, NIGHTS). RE: RE: RE: the 25th. Third year in a row my kids open their presents on a screen, because of the boss's weird-ass religion or cult or whatever.\n\n") +
             "FROM: WARD SISTER. Denise. This is the work account.\n\nFROM: DENISE. I know what account it is.");
 
         public static ItemDefinition L28() => DemoItems.Log("l28_law_flyer", "A LAW OFFICE'S FLYER",
-            "Printed: MADE TO WORK ON YOUR RELIGIOUS HOLIDAY? RELIGIOUS DISCRIMINATION IS AGAINST THE LAW. FREE CONSULTATION.\n\n" +
+            DemoPlan.Log("L28", "Printed: MADE TO WORK ON YOUR RELIGIOUS HOLIDAY? RELIGIOUS DISCRIMINATION IS AGAINST THE LAW. FREE CONSULTATION.\n\n") +
             "By hand: Who do we even sue? The church? The foundation? Alterius?\n\nAlterius signs the checks. The church signs Alterius's.\n\nRead your contract. Page 40. Arbitration.");
 
         public static ItemDefinition L29() => DemoItems.Log("l29_holiday_roster", "A ROSTER",
-            "SECURITY. HOLIDAY ROSTER, 23 DEC TO 2 JAN. NIGHTS: HOLIDAY MINIMUM, 4 ON SITE. RESPONSE TEAM: ON CALL, OFF SITE. NIGHT SUPERVISOR, ALL NIGHTS: STEVENS (BY REQUEST).\n\n" +
+            DemoPlan.Log("L29", "SECURITY. HOLIDAY ROSTER, 23 DEC TO 2 JAN. NIGHTS: HOLIDAY MINIMUM, 4 ON SITE. RESPONSE TEAM: ON CALL, OFF SITE. NIGHT SUPERVISOR, ALL NIGHTS: STEVENS (BY REQUEST).\n\n") +
             "By hand: Pat you're a saint.\n\nAnother hand under it: He just hates his in-laws.");
 
         /// <summary>L24 on the station monitor of W9: an email open on the screen.</summary>
@@ -179,14 +179,14 @@ namespace GlorifiedBody.Editor.Demo
 
         /// <summary>L14, the union letter (DEMO_PLAN §8): on the fridge of G11, a copy a guard kept. The plan's words, PROPOSED.</summary>
         public static ItemDefinition L14() => DemoItems.Log("l14_union_letter", "A UNION LETTER",
-            "Commissioner: My members did not sign up to carry grenade launchers. You bought them after the tower fire, when the ladders stopped at the ninth floor and nobody could get up the stairs. Fine. It worked that night. Since then the papers call us the army, the police ask to borrow them, and a probationer put a canister through a window with a family behind it. No other department in the country does this. Take them back. The union.");
+            DemoPlan.Log("L14", "Commissioner: My members did not sign up to carry grenade launchers. You bought them after the tower fire, when the ladders stopped at the ninth floor and nobody could get up the stairs. Fine. It worked that night. Since then the papers call us the army, the police ask to borrow them, and a probationer put a canister through a window with a family behind it. No other department in the country does this. Take them back. The union."));
 
         /// <summary>
         /// L37, the union sign-up sheet (round 119, CANON: the union angle; DEMO_PLAN §8, the words PROPOSED): on the
         /// corkboard of G11 by the union letter L14, the executive notice pinned over it.
         /// </summary>
         public static ItemDefinition L37() => DemoItems.Log("l37_union_sheet", "A SIGN-UP SHEET",
-            "Pinned over it: A MESSAGE FROM THE EXECUTIVE OFFICE. WE VALUE DIRECT CONVERSATION WITH EVERY MEMBER OF OUR FAMILY. OUR DOOR IS OPEN. NO THIRD PARTY KNOWS YOUR WORK AS WE DO.\n\n" +
+            DemoPlan.Log("L37", "Pinned over it: A MESSAGE FROM THE EXECUTIVE OFFICE. WE VALUE DIRECT CONVERSATION WITH EVERY MEMBER OF OUR FAMILY. OUR DOOR IS OPEN. NO THIRD PARTY KNOWS YOUR WORK AS WE DO.\n\n") +
             "Under it: STAFF OF THE MEMORIAL. YOU HAVE THE RIGHT TO ASK FOR A VOTE. SIGN HERE. Thirty-one names. Four are crossed out.\n\n" +
             "By hand: Christmas was the last straw.\nA union won't get you Christmas. Talk to HR, they listened about the parking.\nHR works for them.");
 

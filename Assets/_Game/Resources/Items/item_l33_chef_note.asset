@@ -18,14 +18,13 @@ MonoBehaviour:
   drugType: 0
   colour: {r: 0.96, g: 0.95, b: 0.88, a: 1}
   description: a note from the chef.
-  logText: 'FROM THE CHEF. If a guest asks for a Christmas menu, offer the winter
-    menu. Do not say no, and do not say Christmas. Future Day is in February, and
-    it is the best night of our year. The private room gets the tasting menu, no
-    substitutions.
-
-
-    By hand under it: Turkey for the caf is in walk-in 2. It
-    is for GENE''S BIRTHDAY. Nobody touch it.'
+  logText: "TO THE LINE \u2014 READ IT\nSOMEBODY ASKS FOR A CHRISTMAS MENU, THEY
+    GET THE WINTER MENU. YOU DO NOT SAY NO. YOU DO NOT SAY THE WORD. \"WINTER MENU,
+    FOLKS, BEST ROAST IN THE COUNTY.\" THAT'S IT. MOVE ON.\nFUTURE DAY IS IN FEBRUARY.
+    BEST NIGHT OF OUR YEAR, EVERY YEAR, AND I MEAN THAT. SAVE IT FOR THEN. YOU'LL
+    SEE.\nPRIVATE RM GETS THE TASTING. NO SUBS. NOT ONE. I DON'T CARE WHO'S SITTING
+    THERE.\nHANDS. CLEAN. ALWAYS.\n\u2014 CHEF\nturkey for the staff caf is in walk-in
+    2 behind the stock. it is for GENE'S BIRTHDAY. NOBODY TOUCH IT. I mean it."
   readFlag: 
   mapFloor: 
   audioClip: {fileID: 0}

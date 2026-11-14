@@ -630,7 +630,18 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   code now. NOT WIRED: `reloads` (no reload), `armour_call` (cut in round 135).
   THE BATON (Bruno: "he strikes"): an overconfident guard with a pistol walks at her with the baton (`SoldierBrain.BatonOut`,
   `EnemyGun.SetBaton`, `DummyShooter.MeleeOnly`) and strikes in reach, runs after her when she runs, and draws the gun when she
-  attacks (a hurt, a lift, a power hit he hears, a death in his sight). `BatonTests` (4). Numbers PROPOSED.
+  attacks (a hurt, a lift, a power hit he hears, a death in his sight). `BatonTests` (4). In batch runs the baton stays off
+  (`SoldierBrain.BatonEnabled`). Numbers PROPOSED.
+- 2026-11-13, night, rounds 137 to 146 (`devlog-notes/2026-11-13_rounds_137_138.md`): THE CODA CHOICE (`StepKind.Choice`,
+  `SkipUnlessFlag`, `DemoScripts.ScriptPart`): the mk_edgar key takes the attendant (branch A), a walk to the back door leaves him
+  (branch B, `coda_attendant_called`, saved for act 2); in branch B Queen's first line and the flashback play at her first take in R2
+  (`Domination.FirstTakeFlag`). THE ART LOGS (`Interaction/ArtLog`, `Editor/Demo/DemoArt`): A1 to A5 are audio logs, the beat after the
+  first, the gear's own line only when the gear is not first (`TapeLine.skipIfFlag`); the W14 text is an audio log
+  (`InWorldScreen.endLog`). THE WRITER'S STRINGS read from the files: call 1C, the bulletin (`BulletinSetup.Build`, Resources/Writer),
+  cutscene 03's GUARD under the PA (`StepKind.Aside`), the R1 TV (`DemoNight.N1b`, her ID photo a PLACEHOLDER). THE DEATH LINES by the
+  killer's personality (`DeathMenuUI.SetKiller`, `PickLine`). THE PLAN'S TEXT (`Editor/Demo/DemoPlan`): 25 signs, 23 logs and 10 scan
+  cards from `DEMO_PLAN.md` §7 to §9, the EMERGENCY STOP and THEATER of round 142, signs shrink to fit. AFTER THE WRITER CHANGES A FILE
+  THE GAME READS: run `DemoWorld.BuildAll` (it copies the barks and the bulletin too), then `MapAtlasSetup.BuildAtlas`.
 
 ## Rules
 
