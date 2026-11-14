@@ -206,7 +206,7 @@ namespace GlorifiedBody.Enemy
             float distance = Flat(p.transform.position, centre);
             if (distance > radius) return;
             float amount = GlorifiedBody.Systems.DifficultyManager.EnemyDamage(DamageAt(distance));
-            DeathMenuUI.LastKillerId = killerId;
+            DeathMenuUI.SetKiller(killerId, attacker);
             health.TakeDamage(amount);
             HitEventBus.Raise(new HitInfo
             {

@@ -91,7 +91,7 @@ namespace GlorifiedBody.Editor
             // The writer's death lines (game/death_lines.csv: enemy, when, line, direction): every line of an id with a row. The
             // speaker is the row's (the part of voice_line before the colon). The "when" rule is not read yet (§3.6).
             string lines = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(WriterCsv), "death_lines.csv"));
-            foreach (DeathScreenContent.Entry e in content.entries) e.moreLines.Clear();
+            foreach (DeathScreenContent.Entry e in content.entries) { e.moreLines.Clear(); e.linePersonalities.Clear(); }
             if (File.Exists(lines))
             {
                 List<string[]> table = ReadCsv(File.ReadAllText(lines));
@@ -104,12 +104,28 @@ namespace GlorifiedBody.Editor
                     int colon = e.voiceText.IndexOf(':');
                     string speaker = colon > 0 ? e.voiceText.Substring(0, colon) : "";
                     string line = string.IsNullOrEmpty(speaker) ? r[2].Trim() : speaker + ": " + r[2].Trim();
-                    if (line != e.voiceText && !e.moreLines.Contains(line)) e.moreLines.Add(line);
+                    if (line != e.voiceText && !e.moreLines.Contains(line))
+                    {
+                        e.moreLines.Add(line);
+                        e.linePersonalities.Add(PersonalityOf(r.Length > 3 ? r[3] : ""));
+                    }
                 }
             }
             content.fallback.hint = "PLACEHOLDER HINT: watch the red line and the ring. Step out before it closes.";
             content.fallback.pictureNote = "PLACEHOLDER: the room from the floor";
             return rows;
+        }
+
+        /// <summary>
+        /// The personality of a death line (round 138): the first word of its direction ("overconfident; too loud; ..."),
+        /// when it is a personality of the bark book; else "" (the PA, the presenter, the ward sister).
+        /// </summary>
+        public static string PersonalityOf(string direction)
+        {
+            string first = (direction ?? "").Split(';')[0].Trim().ToLowerInvariant();
+            foreach (string enemy in new[] { "guard", "soldier", "armour", "nurse", "labworker" })
+                if (System.Array.IndexOf(GlorifiedBody.Enemy.BarkBook.PersonalitiesOf(enemy), first) >= 0) return first;
+            return "";
         }
 
         private static DeathScreenContent.Entry Upsert(DeathScreenContent content, string id)

@@ -601,7 +601,7 @@ namespace GlorifiedBody.Enemy
                 {
                     hit = true;
                     MeleeHits++;
-                    GlorifiedBody.UI.DeathMenuUI.LastKillerId = enemyId;
+                    GlorifiedBody.UI.DeathMenuUI.SetKiller(string.IsNullOrEmpty(MeleeKillerId) ? enemyId : MeleeKillerId, gameObject);
                     playerHealth.TakeDamage(GlorifiedBody.Systems.DifficultyManager.EnemyDamage(meleeDamage));
                     HitEventBus.Raise(new HitInfo
                     {

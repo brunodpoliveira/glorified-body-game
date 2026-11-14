@@ -122,6 +122,39 @@ namespace GlorifiedBody.Tests.EditMode
         }
 
         [Test]
+        public void TheDeathLines_FollowTheKillersPersonality_AndTheFontHasEveryCharacter()
+        {
+            // Round 138: game/death_lines.csv, the personality is the first word of the direction.
+            Assert.AreEqual("overconfident", DeathScreenSetup.PersonalityOf("overconfident; too loud; CANON (round 138)"));
+            Assert.AreEqual("", DeathScreenSetup.PersonalityOf("the PA; CANON"), "a hazard has no personality");
+            var content = ScriptableObject.CreateInstance<DeathScreenContent>();
+            DeathScreenSetup.Fill(content);
+            DeathScreenContent.Entry guard = content.Find("guard_pistol");
+            if (guard.moreLines.Count == 0) Assert.Ignore("no writer file");
+            Assert.AreEqual(guard.moreLines.Count, guard.linePersonalities.Count, "one personality for each line");
+            int overconfident = guard.linePersonalities.FindAll(p => p == "overconfident").Count;
+            Debug.Log($"[DeathScreenCsv] guard: {guard.moreLines.Count} lines, {overconfident} overconfident");
+            Assert.GreaterOrEqual(overconfident, 3, "three or more for each personality (round 138)");
+            for (int i = 0; i < 20; i++)
+            {
+                string line = DeathMenuUI.PickLine(guard, "overconfident");
+                int at = guard.moreLines.IndexOf(line);
+                Assert.IsTrue(at >= 0 && guard.linePersonalities[at] == "overconfident", "an overconfident killer says his own lines: " + line);
+            }
+            Assert.IsNotEmpty(DeathMenuUI.PickLine(guard, "nobody"), "no line of that personality: any line");
+            // 23 lines use an em dash: the subtitle and caption font (LegacyRuntime.ttf) must have every character.
+            Font font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            var missing = new HashSet<char>();
+            foreach (DeathScreenContent.Entry e in content.entries)
+                foreach (string line in e.moreLines)
+                    foreach (char c in line)
+                        if (!font.HasCharacter(c)) missing.Add(c);
+            Assert.IsEmpty(missing, "characters the font does not have: " + string.Join(" ", missing));
+            Assert.IsTrue(font.HasCharacter('\u2014'), "the em dash");
+            Object.DestroyImmediate(content);
+        }
+
+        [Test]
         public void TheBuiltContent_HasAnEntry_ForEveryKillerOfTheTestRooms()
         {
             var content = ScriptableObject.CreateInstance<DeathScreenContent>();

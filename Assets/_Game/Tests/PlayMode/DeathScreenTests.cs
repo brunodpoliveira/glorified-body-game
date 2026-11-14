@@ -54,9 +54,13 @@ namespace GlorifiedBody.Tests.PlayMode
             string voice = !string.IsNullOrEmpty(screen.Shown.voiceText) ? screen.Shown.voiceText : ClassEntry("soldier")?.voiceText;
             if (voice != null) Assert.AreEqual(voice, screen.CaptionShown, "its voice line as the caption");
             // The voice line shows as a subtitle with its speaker (Bruno, 2026-10-25).
-            if (!string.IsNullOrEmpty(screen.Shown.voiceText))
+            // Round 138: the line is the one PickLine chose, of the killer's personality when the entry has lines of it.
+            if (!string.IsNullOrEmpty(screen.ShownLine))
             {
-                (string speaker, string words) = GlorifiedBody.Subtitles.SubtitleService.Split(screen.Shown.voiceText, GlorifiedBody.Subtitles.SubtitleService.UnknownSpeaker);
+                int at = screen.Shown.moreLines.IndexOf(screen.ShownLine);
+                if (!string.IsNullOrEmpty(DeathMenuUI.LastKillerPersonality) && screen.Shown.linePersonalities.Contains(DeathMenuUI.LastKillerPersonality))
+                    Assert.AreEqual(DeathMenuUI.LastKillerPersonality, at >= 0 ? screen.Shown.linePersonalities[at] : "", "the killer's personality: " + screen.ShownLine);
+                (string speaker, string words) = GlorifiedBody.Subtitles.SubtitleService.Split(screen.ShownLine, GlorifiedBody.Subtitles.SubtitleService.UnknownSpeaker);
                 yield return null;
                 var shown = GlorifiedBody.Subtitles.SubtitleUI.Instance.Shown.ToList();
                 Debug.Log($"[DeathScreenTests] subtitle: {string.Join(" | ", shown)}");

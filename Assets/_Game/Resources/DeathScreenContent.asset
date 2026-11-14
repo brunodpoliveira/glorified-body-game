@@ -21,6 +21,7 @@ MonoBehaviour:
     voiceLine: {fileID: 0}
     voiceText: 
     moreLines: []
+    linePersonalities: []
   entries:
   - killerId: dummy_shooter
     picture: {fileID: 0}
@@ -29,9 +30,16 @@ MonoBehaviour:
     hint: Step out of the red line before the ring closes, then charge. The dummy
       cannot aim twice in a row.
     voiceLine: {fileID: 0}
-    voiceText: 'PRESENTER: And that is why we step out of the circle. Again, from
-      the top.'
-    moreLines: []
+    voiceText: 'PRESENTER: Watch the red line, that''s the whole trick, step out
+      before the ring closes on her. On the subject.'
+    moreLines:
+    - "PRESENTER: And\u2014 okay. Okay. Let's not count that one. The subject just
+      needs to see the ring before it closes."
+    - 'PRESENTER: Nobody panic, that''s the point of the dummy. We''ll run it again.
+      Subject, back to the mark when you''re ready.'
+    linePersonalities:
+    - 
+    - 
   - killerId: guard
     picture: {fileID: 0}
     pictureNote: the guard lowering the pistol, the goggles and the respirator filling
@@ -39,12 +47,55 @@ MonoBehaviour:
     hint: The red line is where the shot goes. Step out of it before the ring closes.
       Once he has aimed, he cannot aim again.
     voiceLine: {fileID: 0}
-    voiceText: 'GUARD: It''s all right. It''s all right. You''re going back to bed.'
+    voiceText: 'GUARD: Ma''am, stay on the floor, do not get up, we''re going to
+      get you back to bed.'
     moreLines:
-    - 'GUARD: Dispatch, she''s down. Send the chair.'
-    - 'GUARD: Gloves. Gloves first. Don''t touch her hands.'
-    - 'GUARD: Ma''am, I did ask.'
-    - "GUARD: She just stopped. Is she \u2014 Danny, is she breathing?"
+    - 'GUARD: Told you, Dispatch, no weapon, she''s down, that''s all she is, that''s
+      all she ever was.'
+    - 'GUARD: Dispatch, yeah, we got her, she''s down. No, I''m good, I had it the
+      whole time.'
+    - 'GUARD: See that? See that? One swing, that''s it, somebody get a gurney up
+      here before she wakes up.'
+    - 'GUARD: Ha, hit her so hard the lights went, Dispatch, you write that down,
+      patient''s down, I got her.'
+    - 'GUARD: Merry Christmas to me. Time and a half and I get to go home with all
+      my fingers.'
+    - 'GUARD: Nineteen bucks an hour, they said. Nights are quiet, they said. Somebody''s
+      getting a strongly worded email.'
+    - 'GUARD: Dispatch, she''s down, and I''d like it noted I was supposed to be
+      home three hours ago.'
+    - 'GUARD: Great, now the lights. Whole building''s on one breaker with the vending
+      machine, I swear.'
+    - 'GUARD: Dispatch, patient is down, patient is down, she''s breathing, stay
+      back, stay back, I''ve got her.'
+    - 'GUARD: Give her room. Dispatch, patient restrained, I need a nurse down here,
+      not, not a team.'
+    - 'GUARD: Dispatch, patient is down, lights are out, she''s, she''s twitching,
+      pulse is there, I don''t, stand by.'
+    - "GUARD: Stay down, please, please stay down, I didn't mean the \u2014 Dispatch,
+      I got her, somebody come, please."
+    - 'GUARD: I said I''d handle it, I said it in the break room, oh God, I said
+      that.'
+    - 'GUARD: Don''t get up, don''t you get up, I said easy, I said easy on the radio,
+      please stay down.'
+    - 'GUARD: I didn''t do that, Dispatch, she just went down, the lights went and
+      she went, why''d she stop.'
+    linePersonalities:
+    - overconfident
+    - overconfident
+    - overconfident
+    - overconfident
+    - sarcastic
+    - sarcastic
+    - sarcastic
+    - sarcastic
+    - professional
+    - professional
+    - professional
+    - broken
+    - broken
+    - broken
+    - broken
   - killerId: scientist
     picture: {fileID: 0}
     pictureNote: the blue hood from below, the knife, the collar piece with its green
@@ -54,6 +105,7 @@ MonoBehaviour:
     voiceLine: {fileID: 0}
     voiceText: 'COMPUTER: Subject contained. Return the tray to the dispensary.'
     moreLines: []
+    linePersonalities: []
   - killerId: scientist_group
     picture: {fileID: 0}
     pictureNote: four blue suits around her on the tiles, the ampoules on the floor
@@ -62,6 +114,7 @@ MonoBehaviour:
     voiceLine: {fileID: 0}
     voiceText: 'COMPUTER: Subject contained. Four personnel to the infirmary.'
     moreLines: []
+    linePersonalities: []
   - killerId: soldier
     picture: {fileID: 0}
     pictureNote: the shield from the floor, the gas mask above it, the SMG resting
@@ -70,12 +123,30 @@ MonoBehaviour:
       his aim with a blast, then fire. Two aim at once on normal: dodge the first
       ring, blast the second.'
     voiceLine: {fileID: 0}
-    voiceText: 'SOLDIER: Target down. Clear. (then, quieter) Was that a kid?'
+    voiceText: "SOLDIER: Control, contact's down. Hold your fire, hold it, she's\u2014
+      target is down. Count off."
     moreLines:
-    - 'SOLDIER: Target down. Reyes, check Okafor.'
-    - "SOLDIER: Control, target is down. \u2014 Say again? \u2014 Say again, Control."
-    - 'SOLDIER: Masks stay on. Nobody looks.'
-    - "SOLDIER: She's not moving. \u2014 Shoot her anyway."
+    - 'SOLDIER: Four hours for that. Somebody tell Control before they send another
+      sixty guys.'
+    - 'SOLDIER: No, no, get up, come on, you had more than that, I know you did.'
+    - "SOLDIER: Contact down, fireteam intact, four up. Control, we're all\u2014
+      we're all four. Copy, we're four."
+    - 'SOLDIER: Four on one and she still made you duck. Pick up your brass, we''re
+      leaving.'
+    - 'SOLDIER: Hey. Hey, which one of us got you? Tell me it was me.'
+    - "SOLDIER: Control, contact down. She was\u2014 confirm she was already down.
+      No. Confirm contact neutralized. Moving."
+    - 'SOLDIER: Lights were going out anyway. Saved her the trouble. You''re welcome.'
+    - 'SOLDIER: Aw, you were going anyway? No, no. That one''s mine. I''m not sharing.'
+    linePersonalities:
+    - callous
+    - sadistic
+    - professional
+    - callous
+    - sadistic
+    - professional
+    - callous
+    - sadistic
   - killerId: soldier_pair
     picture: {fileID: 0}
     pictureNote: two shields, two masks, the lobby, the gear on the wall behind them
@@ -84,17 +155,23 @@ MonoBehaviour:
     voiceLine: {fileID: 0}
     voiceText: 'SOLDIER: Target down. Both of you, check Miller.'
     moreLines: []
+    linePersonalities: []
   - killerId: fire
     picture: {fileID: 0}
     pictureNote: the records room burning, her own hand in the flame
     hint: 'Fire spreads. Start it, leave the room, and come back when it is out.
       The firemen fire CO2 canisters at the fire: do not stand in it.'
     voiceLine: {fileID: 0}
-    voiceText: 'PA: Fire, records. Fire doors are closing. Please remain where you
-      are.'
+    voiceText: 'PA: Smoke venting on this floor is suspended. Staff are responding.
+      Take all the time you need.'
     moreLines:
-    - 'PA: Smoke on the ground floor. Ventilation closed.'
-    - 'PA: Fire crew to records. One patient. Take all the time you need.'
+    - 'PA: Fire alarm active on this floor. Fire doors are closed. There is no need
+      to hurry.'
+    - 'PA: Fire alarm in progress. This floor is sealed. Patients, please stay in
+      your rooms. A member of staff will come to you.'
+    linePersonalities:
+    - 
+    - 
   - killerId: short
     picture: {fileID: 0}
     pictureNote: 'through the slit: her gold-seamed hands open on the black tile,
@@ -104,11 +181,16 @@ MonoBehaviour:
       wind you live, and the short goes on and takes no more HP. A SHORT capsule
       ends it. Every power you use fills the SHORT bar.'
     voiceLine: {fileID: 0}
-    voiceText: 'PA: Electrical fault, this floor. A member of staff will come to
-      you.'
+    voiceText: 'PA: Power to this floor is isolated. Patients, please stay in your
+      rooms. A member of staff will come to you.'
     moreLines:
-    - 'PA: Power fault on this floor. Please remain where you are.'
-    - 'PA: The fault has cleared. There is no need to hurry.'
+    - 'PA: An electrical fault has been detected on this floor. Floor breakers have
+      tripped. There is no need to hurry.'
+    - 'PA: Breakers on this floor have tripped. The fault is contained. Elevators
+      are holding.'
+    linePersonalities:
+    - 
+    - 
   - killerId: soldier_rifle
     picture: {fileID: 0}
     pictureNote: the rifle's muzzle from the floor, the laser line across her, the
@@ -116,9 +198,16 @@ MonoBehaviour:
     hint: Three rounds follow the laser, a tenth of a second apart. One dodge to
       the side clears the burst. He cannot fire again until he aims again.
     voiceLine: {fileID: 0}
-    voiceText: 'SOLDIER: Three rounds, centre mass. She''s down. Control, she''s
-      down.'
-    moreLines: []
+    voiceText: 'SOLDIER: Three rounds, center mass, she dropped. Control, target
+      is down, I say again, down.'
+    moreLines:
+    - 'SOLDIER: Three rounds. All night and it took three. Somebody tell Control
+      to bill her.'
+    - 'SOLDIER: One more, come on, I got twenty-seven left and I want to use every
+      one of them.'
+    linePersonalities:
+    - callous
+    - sadistic
   - killerId: soldier_gas
     picture: {fileID: 0}
     pictureNote: 'from the floor: a white cloud, boots in it, a gas mask with round
@@ -126,8 +215,15 @@ MonoBehaviour:
     hint: The ring shows where it lands. Leave it before the grenade lands, stay
       out of the white cloud, or catch the grenade with mk_orzabal.
     voiceLine: {fileID: 0}
-    voiceText: 'SOLDIER: Knock-out''s working. She''s out. Control, she''s out.'
-    moreLines: []
+    voiceText: 'SOLDIER: Control, target''s down, she''s breathing, repeat, breathing.
+      Cuffs up front, don''t touch the helmet.'
+    moreLines:
+    - 'SOLDIER: Breathing. So now we carry her. Nobody mentioned carrying in the
+      briefing.'
+    - 'SOLDIER: Sleeping? That''s it? I come all this way and you take a nap on me.'
+    linePersonalities:
+    - callous
+    - sadistic
   - killerId: soldier_grenades
     picture: {fileID: 0}
     pictureNote: the red ring on the floor, her feet in it, the grenade rolling to
@@ -135,8 +231,16 @@ MonoBehaviour:
     hint: A red ring is a grenade. Leave the ring before it closes, or catch the
       grenade with mk_orzabal and send it back.
     voiceLine: {fileID: 0}
-    voiceText: 'SOLDIER: Frag out. (the blast) Clear. Nobody go in there yet.'
-    moreLines: []
+    voiceText: "SOLDIER: Frag out, contact down, no\u2014 check yourselves, check
+      for frag. Control, we need the hall swept."
+    moreLines:
+    - 'SOLDIER: Well, that''s the wall gone too. Hope she wasn''t holding anything
+      they wanted back.'
+    - 'SOLDIER: Didn''t even run. I threw it and you just stood there. Where''d the
+      fun go, huh?'
+    linePersonalities:
+    - callous
+    - sadistic
   - killerId: power_armour
     picture: {fileID: 0}
     pictureNote: the power armour from the floor, its lenses looking down, the tubes
@@ -144,8 +248,22 @@ MonoBehaviour:
     hint: It is too heavy to lift and too armoured to shock. Break its aim with mk_warspite,
       then burn it with mk_erebus. Up close, its launcher will not fire.
     voiceLine: {fileID: 0}
-    voiceText: 'POWER ARMOUR: Subject neutralised. Requesting the recovery team.'
-    moreLines: []
+    voiceText: 'POWER ARMOUR: Contact down. Back off the suit, I''m lifting. Watch
+      your feet. Control, you can stand them down.'
+    moreLines:
+    - 'POWER ARMOUR: Control, suit one, target''s down under me. Pull my guys back,
+      I''m not lifting off yet.'
+    - 'POWER ARMOUR: There, see? Told you all to stand behind me. That''s what the
+      big guy''s for.'
+    - 'POWER ARMOUR: That''s all she had? Okay. Come on out, fellas, she''s not getting
+      up from that.'
+    - 'POWER ARMOUR: Rockets, guns, whole menu, and it''s the parking brake that
+      does it. Huh. Should''ve led with that.'
+    linePersonalities:
+    - professional
+    - confident
+    - confident
+    - cocky
   - killerId: power_armour_launchers
     picture: {fileID: 0}
     pictureNote: the trail of the rocket from the floor, the armour behind it, the
@@ -153,8 +271,15 @@ MonoBehaviour:
     hint: A rocket follows the laser. Dodge to the side, or catch it with mk_orzabal
       and send it back.
     voiceLine: {fileID: 0}
-    voiceText: 'POWER ARMOUR: Direct hit. Hold fire. Hold fire, she''s down.'
-    moreLines: []
+    voiceText: 'POWER ARMOUR: Rocket away, contact down. Nobody through that smoke
+      till it clears. Control, structure''s holding.'
+    moreLines:
+    - 'POWER ARMOUR: One. Took one. Told you to stay behind me. Everybody good?'
+    - 'POWER ARMOUR: That one''s on the highlight reel. Hey, fellas, you can come
+      out from behind the trash can now.'
+    linePersonalities:
+    - confident
+    - cocky
   - killerId: labworker_pistol
     picture: {fileID: 0}
     pictureNote: the lab worker's pistol from the floor, both hands shaking, the
@@ -162,16 +287,32 @@ MonoBehaviour:
     hint: 'His aim shakes and he can miss. Do not stand still in the circle: one
       step is enough. Close the distance and he drops the aim.'
     voiceLine: {fileID: 0}
-    voiceText: 'LAB WORKER: I hit her. Computer, I hit her. What do I do now?'
-    moreLines: []
+    voiceText: "LAB WORKER: It's in her. It's in her. Now what, what do I\u2014nobody
+      told me the part after."
+    moreLines:
+    - "LAB WORKER: That was a drill round, right? They said \u2014 I'm Specimen Processing,
+      I don't do this floor."
+    - "LAB WORKER: Oh, Ghost. Ghost, I didn't\u2014look at me, don't go in the back,
+      stay out front, stay with me."
+    linePersonalities:
+    - confused
+    - bargaining
   - killerId: labworker_knife
     picture: {fileID: 0}
     pictureNote: the knife over her, the lab coat behind it, the scalpel light
     hint: The knife runs at you and comes in from the side. Dodge when he raises
       it, then strike. At a distance he is nothing.
     voiceLine: {fileID: 0}
-    voiceText: 'LAB WORKER: Hold still. Hold still, it''s quicker if you hold still.'
-    moreLines: []
+    voiceText: "LAB WORKER: I'm lab, I pipette, I don't\u2014there's a lot of it,
+      towels, I need towels, there's a lot."
+    moreLines:
+    - "LAB WORKER: It's a sample knife, it's for the sample bags, I was just \u2014
+      okay, where's the sharps bin."
+    - "LAB WORKER: Lucy. Look at me, Lucy, not \u2014 okay. Okay, Ghost. You can
+      have her, then. You keep her."
+    linePersonalities:
+    - confused
+    - bargaining
   - killerId: labworker
     picture: {fileID: 0}
     pictureNote: the blue hood from below, the scalpel, the collar piece with its
@@ -180,24 +321,65 @@ MonoBehaviour:
       to you. Against a group, strike first, from a distance: every hit on you fills
       the SHORT bar.'
     voiceLine: {fileID: 0}
-    voiceText: 'LAB WORKER: Hold her head. I need the jugular.'
+    voiceText: 'LAB WORKER: I got the vein, I got it, Lord, I got it, don''t let
+      go of her, don''t you let go.'
     moreLines:
-    - 'LAB WORKER: Shh. It''s only the dose. It''s only the dose.'
-    - 'LAB WORKER: Log it. Dose, time, who. She''ll ask.'
-    - 'LAB WORKER: Who''s hurt? Then get up. Somebody get the tray.'
-    - 'LAB WORKER: That''s the short. Trolley, before it passes.'
+    - 'LAB WORKER: Is there an incident form for this? There''s an incident form
+      for everything, there has to be one.'
+    - 'LAB WORKER: Okay, that''s in, that''s held. Somebody run up to four and pull
+      her chart, she''s not ours.'
+    - "LAB WORKER: Four of us for one patient, that's \u2014 hold on, who's got the
+      chart, she needs a wristband."
+    - "LAB WORKER: She just went down on her own, we didn't \u2014 write that down,
+      nobody touched her, she just went."
+    - "LAB WORKER: Our Father who \u2014 it's in, it's in, stay down, please just
+      stay down, please, please stay down."
+    - "LAB WORKER: Three of us bleeding and I'm not, I'm not, why am I not\u2014okay,
+      okay, pressure, somebody."
+    - "LAB WORKER: She lit up and went down and we just\u2014we held on, that's all,
+      we just held on."
+    - 'LAB WORKER: Good. Good, that''s it, Ghost, you''re done for tonight. Lucy,
+      honey, if you''re in there, it''s okay now.'
+    - "LAB WORKER: Nobody wanted it this way, you know that, it was always \u2014
+      it was for something, Ghost, it mattered."
+    - 'LAB WORKER: Easy, Ghost, easy, four of us, you did fine. Nobody''s mad. Somebody
+      get the warm blanket.'
+    - 'LAB WORKER: You burned yourself out, sweetheart, I told you, I always told
+      you to pace it. Breathe for me.'
+    linePersonalities:
+    - confused
+    - confused
+    - confused
+    - confused
+    - afraid
+    - afraid
+    - afraid
+    - bargaining
+    - bargaining
+    - bargaining
+    - bargaining
   - killerId: ward_sister
     picture: {fileID: 0}
     pictureNote: red scrubs, the white hood, the pistol held wrong, the card swinging
       on its lanyard
     hint: She fires wide and slowly. Come at her from the side. The card is on her.
     voiceLine: {fileID: 0}
-    voiceText: 'WARD SISTER: I was aiming at the floor. I was aiming at the floor.'
+    voiceText: "WARD SISTER: I was aiming at the floor. Lucy, I swear, the floor
+      \u2014 hands on it, press, press down."
     moreLines:
-    - 'WARD SISTER: (shaking) Somebody call it in. Somebody, please.'
-    - "WARD SISTER: Lucy? Lucy, look at me. Look at \u2014 oh. Oh, no."
-    - 'WARD SISTER: Don''t let Marta in. Don''t let Marta see.'
-    - 'WARD SISTER: I thought she was getting up. I thought she was getting up.'
+    - 'WARD SISTER: Don''t let Marta down here. Somebody stop Marta at the doors,
+      she can''t see this, not this.'
+    - "WARD SISTER: Stay with me, stay with \u2014 somebody take this thing out of
+      my hand, I need both hands."
+    - "WARD SISTER: Where'd it go in, where\u2014hands off, let me, I've got her,
+      I've had her for years."
+    - "WARD SISTER: You were already going down, I saw you going down and my hand
+      just \u2014 oh, Lucy."
+    linePersonalities:
+    - 
+    - 
+    - 
+    - 
   - killerId: brain
     picture: {fileID: 0}
     pictureNote: the corridor from high above, the brain's eye, Lucy small and bare-headed
@@ -211,18 +393,30 @@ MonoBehaviour:
     moreLines:
     - 'BRAIN: Brain beats brawn... as you well know.'
     - 'BRAIN: Only human.'
+    linePersonalities:
+    - 
+    - 
   - killerId: halon
     picture: {fileID: 0}
     pictureNote: 'through the slit: server racks in a thin white fog, the red strobe
       of the horn, her hand on the floor one metre short of the panel'
-    hint: The horn gives you 30 seconds, and the door seals. Press ABORT on the panel,
-      or turn the lockout outside before you light anything. Read the sign.
+    hint: The horn gives you 30 seconds, and the door seals. Press the EMERGENCY
+      STOP on the panel, or turn the lockout outside before you light anything. Read
+      the sign.
     voiceLine: {fileID: 0}
-    voiceText: 'PA: Fire suppression complete, server room. A member of staff will
-      come to you.'
+    voiceText: 'PA: Server room suppression is complete. The emergency stop was not
+      used. There is no need to hurry.'
     moreLines:
-    - 'PA: Suppression successful. The room is secure.'
-    - 'PA: Do not re-enter until the all clear. There is no need to hurry.'
+    - 'PA: Server room suppression is complete. The abort panel was not used. There
+      is no need to hurry.'
+    - 'PA: Suppression worked as designed. The server room is sealed. Do not re-enter
+      until cleared.'
+    - 'PA: Suppression has discharged in the server room. The fire is out. There
+      is no need to hurry.'
+    linePersonalities:
+    - 
+    - 
+    - 
   - killerId: fireman_gas
     picture: {fileID: 0}
     pictureNote: 'from the floor: a white cloud, a fireman''s mask over her, a gloved
@@ -230,8 +424,16 @@ MonoBehaviour:
     hint: They fire at the fire. Leave the ring before the canister lands, stay out
       of the white cloud, or catch it with mk_orzabal.
     voiceLine: {fileID: 0}
-    voiceText: 'FIREMAN: I got one breathing! Get a mask on her, get a mask on her!'
-    moreLines: []
+    voiceText: 'FIREMAN: I got her, I got her, she''s down in the hall, get me the
+      bag, somebody get the bag!'
+    moreLines:
+    - 'FIREMAN: Ma''am? Ma''am, can you hear me? Okay, stay with me, we''re walking
+      you out, you''re okay.'
+    - "FIREMAN: She's not fighting me, I got no \u2014 hold on, hold on, let me get
+      her head up."
+    linePersonalities:
+    - 
+    - 
   - killerId: power_armour_guns
     picture: {fileID: 0}
     pictureNote: the floor of the Dining Hall from low down, the white linen torn,
@@ -239,10 +441,16 @@ MonoBehaviour:
     hint: The guns follow the sweep of the laser. Get behind a column before the
       ring fills. Up close, mk_warspite breaks its aim.
     voiceLine: {fileID: 0}
-    voiceText: 'POWER ARMOUR: Target down. Cease fire. Cease fire.'
+    voiceText: 'POWER ARMOUR: Cease fire. Check the lodge door for pass-through.
+      Control, I need a count on the families.'
     moreLines:
-    - 'POWER ARMOUR: That''s it. That''s it. Get the families back from the door.'
-    - 'POWER ARMOUR: Clear. Somebody tell Control the heavy did its job.'
+    - 'POWER ARMOUR: Easy, done. Somebody tell them in there it''s okay to breathe.
+      She''s not coming back.'
+    - 'POWER ARMOUR: That''s a full belt in a dining room. Tell Control the wall''s
+      mine too, I''ll sign for it.'
+    linePersonalities:
+    - confident
+    - cocky
   - killerId: soldier_shotgun
     picture: {fileID: 0}
     pictureNote: the tiles of the floor close up, the spent shells beside her hand,
@@ -250,9 +458,13 @@ MonoBehaviour:
     hint: The red wedge is short. Step out of it, or stay out of its reach and make
       him come to you.
     voiceLine: {fileID: 0}
-    voiceText: 'SOLDIER: Down. She''s down. Stay back from her, it''s not over till
-      the medic says.'
+    voiceText: 'SOLDIER: Target down, Dining Hall. Keep that door shut, keep them
+      inside, they don''t need to see this.'
     moreLines:
-    - 'SOLDIER: Close enough. Close enough. Somebody check her.'
-    - "SOLDIER: Control, she came right at us. \u2014 I know. \u2014 I know, I'm
-      fine."
+    - 'SOLDIER: Tablecloths. Pull ''em over her before they open that door, I''m
+      not explaining it.'
+    - 'SOLDIER: Had to walk right up for that one. That''s how close. That''s how
+      close.'
+    linePersonalities:
+    - callous
+    - sadistic

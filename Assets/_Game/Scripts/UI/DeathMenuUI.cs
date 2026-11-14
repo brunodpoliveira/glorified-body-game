@@ -16,6 +16,16 @@ namespace GlorifiedBody.UI
 
         /// <summary>Set by whoever deals the lethal hit (an enemy type id, a hazard id). Empty = fallback.</summary>
         public static string LastKillerId { get; set; } = "";
+        /// <summary>The personality of the person who dealt the lethal hit (BarkVoice), or "" (a hazard, a gas cloud).</summary>
+        public static string LastKillerPersonality { get; set; } = "";
+
+        /// <summary>The killer id and the person who dealt the hit: the death line follows his personality (round 138).</summary>
+        public static void SetKiller(string killerId, GameObject who)
+        {
+            LastKillerId = killerId;
+            GlorifiedBody.Enemy.BarkVoice voice = who != null ? GlorifiedBody.Enemy.BarkVoice.Of(who) : null;
+            LastKillerPersonality = voice != null ? voice.Personality : "";
+        }
         public const string SubtitleKey = "death_screen";
 
         // A new room starts with no killer: an id from the last run must not name the next death.
@@ -26,7 +36,11 @@ namespace GlorifiedBody.UI
             UnityEngine.SceneManagement.SceneManager.sceneLoaded += OnSceneLoaded;
         }
 
-        private static void OnSceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode) => LastKillerId = "";
+        private static void OnSceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
+        {
+            LastKillerId = "";
+            LastKillerPersonality = "";
+        }
 
         /// <summary>The entry the screen shows now (for the tests).</summary>
         public DeathScreenContent.Entry Shown { get; private set; }
@@ -36,13 +50,25 @@ namespace GlorifiedBody.UI
         public string ShownLine { get; private set; } = "";
         private static string lastLine = "";
 
-        /// <summary>The row's line, or one of the writer's death lines at random, not the line of the last screen.</summary>
-        public static string PickLine(DeathScreenContent.Entry entry)
+        /// <summary>
+        /// The row's line, or one of the writer's death lines at random, not the line of the last screen. With a personality
+        /// (round 138: the killer's, LastKillerPersonality), only the lines of that personality when the entry has some.
+        /// </summary>
+        public static string PickLine(DeathScreenContent.Entry entry) => PickLine(entry, LastKillerPersonality);
+
+        public static string PickLine(DeathScreenContent.Entry entry, string personality)
         {
             if (entry == null) return "";
             var pool = new System.Collections.Generic.List<string>();
-            if (!string.IsNullOrEmpty(entry.voiceText)) pool.Add(entry.voiceText);
-            foreach (string l in entry.moreLines) if (!string.IsNullOrEmpty(l) && !pool.Contains(l)) pool.Add(l);
+            if (!string.IsNullOrEmpty(personality))
+                for (int i = 0; i < entry.moreLines.Count; i++)
+                    if (i < entry.linePersonalities.Count && entry.linePersonalities[i] == personality && !string.IsNullOrEmpty(entry.moreLines[i]) && !pool.Contains(entry.moreLines[i]))
+                        pool.Add(entry.moreLines[i]);
+            if (pool.Count == 0)
+            {
+                if (!string.IsNullOrEmpty(entry.voiceText)) pool.Add(entry.voiceText);
+                foreach (string l in entry.moreLines) if (!string.IsNullOrEmpty(l) && !pool.Contains(l)) pool.Add(l);
+            }
             if (pool.Count == 0) return "";
             if (pool.Count > 1) pool.Remove(lastLine);
             lastLine = pool[Random.Range(0, pool.Count)];

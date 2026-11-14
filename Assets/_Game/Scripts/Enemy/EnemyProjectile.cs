@@ -181,7 +181,7 @@ namespace GlorifiedBody.Enemy
             // An invulnerable Lucy (a dodge, the second wind) takes no hit: no flinch, and the floater stays (as the melee strike).
             if (health != null && !health.IsDead && !health.IsInvulnerable)
             {
-                DeathMenuUI.LastKillerId = killerId;
+                DeathMenuUI.SetKiller(killerId, attacker);
                 health.TakeDamage(GlorifiedBody.Systems.DifficultyManager.EnemyDamage(damage));
                 HitEventBus.Raise(new HitInfo
                 {
@@ -296,7 +296,7 @@ namespace GlorifiedBody.Enemy
                 Health health = hit.transform.GetComponentInParent<Health>() ?? root.GetComponentInChildren<Health>();
                 if (health != null && !health.IsDead)
                 {
-                    DeathMenuUI.LastKillerId = killerId;
+                    DeathMenuUI.SetKiller(killerId, attacker);
                     health.TakeDamage(GlorifiedBody.Systems.DifficultyManager.EnemyDamage(damage));
                     HitEventBus.Raise(new HitInfo
                     {
