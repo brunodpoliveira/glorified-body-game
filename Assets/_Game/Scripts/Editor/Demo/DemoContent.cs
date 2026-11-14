@@ -84,6 +84,41 @@ namespace GlorifiedBody.Editor.Demo
             return asset;
         }
 
+        /// <summary>
+        /// The lines of one part of "## The script" (cutscene 11 since round 138): "" is the shared part before the first "### "
+        /// heading, else the "### " heading that starts with part ("Branch A", "Branch B", "After both branches").
+        /// </summary>
+        public static List<(string speaker, string text)> ScriptPart(string file, string part)
+        {
+            var lines = new List<(string, string)>();
+            string path = Path.Combine(WriterGame, file);
+            if (!File.Exists(path)) { Debug.LogWarning("[DemoScripts] no file " + path); return lines; }
+            bool inScript = false;
+            string current = "";
+            foreach (string raw in File.ReadAllLines(path))
+            {
+                if (raw.StartsWith("## ")) { inScript = raw.StartsWith("## The script"); current = ""; continue; }
+                if (raw.StartsWith("### ")) { current = raw.Substring(4).Trim(); continue; }
+                if (!inScript || (part == "" ? current != "" : !current.StartsWith(part))) continue;
+                Match m = LineRx.Match(raw);
+                if (!m.Success) continue;
+                string text = m.Groups[2].Value.Trim().Trim('"');
+                if (text == "..." || text.Length == 0) continue;
+                lines.Add((m.Groups[1].Value.Trim(), text));
+            }
+            return lines;
+        }
+
+        /// <summary>The lines of one part of "## The script" as subtitle steps (ScriptPart).</summary>
+        public static List<ScriptStep> PartSteps(string file, string part, string idPrefix)
+        {
+            var steps = new List<ScriptStep>();
+            int n = 0;
+            foreach ((string speaker, string text) in ScriptPart(file, part))
+                steps.Add(ScriptStep.Radio(speaker, $"{idPrefix}_{n++:00}", text));
+            return steps;
+        }
+
         public static List<(string speaker, string text)> Lines(string file)
         {
             var lines = new List<(string, string)>();

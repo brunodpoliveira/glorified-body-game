@@ -65,6 +65,11 @@ namespace GlorifiedBody.Enemy
             return tough ? health.CurrentHealth > health.MaxHealth * TakeHpShare : health.CurrentHealth >= health.MaxHealth - 0.01f;
         }
 
+        /// <summary>Up after her first mind control (saved). The coda's branch B plays Queen's first line and the flashback at it (round 140).</summary>
+        public const string FirstTakeFlag = "mk_edgar_first_take";
+        /// <summary>The coda's branch B (round 140, CANON name): the attendant called the police. Act 2 reads it.</summary>
+        public const string AttendantCalledFlag = "coda_attendant_called";
+
         public static void Take(IDominable mind, GameObject her)
         {
             if (Current != null) Current.LetGo(); // Unity's null: a figure of the last room is gone
@@ -72,6 +77,7 @@ namespace GlorifiedBody.Enemy
             Dominated dominated = figure.gameObject.AddComponent<Dominated>();
             dominated.Bind(mind, her);
             Current = dominated;
+            GlorifiedBody.Saving.StoryFlags.Raise(FirstTakeFlag);
             RunTelemetry.Event("dom_taken", figure.name);
         }
 
@@ -173,7 +179,9 @@ namespace GlorifiedBody.Enemy
             }
             mind.TakeMind(this);
             Mark();
-            SayCore(CoreTakeLines); // the core first, through her mouth
+            // The core first, through her mouth. Branch B of the coda gives Queen's first line at her first take (round 140).
+            bool queenFirst = GlorifiedBody.Saving.StoryFlags.Has(Domination.AttendantCalledFlag) && !GlorifiedBody.Saving.StoryFlags.Has(Domination.FirstTakeFlag);
+            if (!queenFirst) SayCore(CoreTakeLines);
             BarkBook.SayAs(gameObject, "any", BarkSituation.EdgarTaken, 2f);
         }
 

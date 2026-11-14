@@ -919,6 +919,60 @@ namespace GlorifiedBody.Tests.PlayMode
             return door;
         }
 
+        private static string ChoicePrompt()
+        {
+            var line = GlorifiedBody.Subtitles.SubtitleService.Lines.FirstOrDefault(l => l.Owner == ScriptedSequence.ChoiceOwner);
+            return line != null ? line.Text : "";
+        }
+
+        private IEnumerator ToTheChoice()
+        {
+            yield return Coda("R1", "demo_crown_gone", "demo_readout_on");
+            GameObject lucy = GameObject.FindGameObjectWithTag("Player");
+            Assert.IsFalse(PsychicPowers.EdgarUnlocked, "before the beat");
+            lucy.GetComponent<TankController>().Teleport(GameObject.Find("Entry_R1").transform.position + Vector3.forward * 1.6f, 0f);
+            yield return WaitUntil(() => StoryFlags.Has("demo_r1_news_done"), 200f);
+            yield return WaitUntil(() => ChoicePrompt() != "", 60f);
+            Debug.Log("[DemoTests] the coda prompt: " + ChoicePrompt());
+            StringAssert.Contains("take his mind", ChoicePrompt(), "the mk_edgar tutorial prompt");
+            StringAssert.Contains("back door", ChoicePrompt(), "the other choice");
+            Assert.IsFalse(lucy.GetComponent<TankController>().MovementLocked, "she walks while the prompt waits");
+            Assert.IsFalse(PsychicPowers.EdgarUnlocked, "no mk_edgar before the choice");
+        }
+
+        [UnityTest]
+        public IEnumerator R1_BranchB_SheLeaves_HeCalls_TheFlagGoesUp_AndMkEdgarStillUnlocks()
+        {
+            yield return ToTheChoice();
+            GameObject lucy = GameObject.FindGameObjectWithTag("Player");
+            lucy.GetComponent<TankController>().Teleport(new Vector3(67.4f, 0f, 21f), 90f); // the back door
+            yield return WaitUntil(() => StoryFlags.Has("demo_r1_leave"), 3f);
+            Assert.IsTrue(StoryFlags.Has("demo_r1_leave"), "her walk to the back door picks branch B");
+            yield return null; // the sequence takes the prompt away on its next frame
+            yield return null;
+            Assert.AreEqual("", ChoicePrompt(), "the prompt goes after the choice");
+            yield return WaitUntil(() => StoryFlags.Has("demo_r1_poster"), 60f);
+            Assert.IsFalse(CutscenePlayer.IsPlaying, "no flashback in branch B (OPEN for Bruno)");
+            Assert.IsTrue(StoryFlags.Has("coda_attendant_called"), "he called the police");
+            Assert.IsTrue(PsychicPowers.EdgarUnlocked, "mk_edgar in both branches: R2 and R3 need it");
+            Assert.IsFalse(GameObject.Find("Attendant").GetComponent<IDominable>().IsDominated, "she did not take him");
+            Assert.IsFalse(lucy.GetComponent<TankController>().MovementLocked, "she walks");
+            // Round 140: her first mind control, in R2, gives Queen's first line and the flashback.
+            GameObject mechanic = GameObject.Find("Mechanic");
+            lucy.GetComponent<TankController>().Teleport(mechanic.transform.position + Vector3.back * 3.4f, 0f);
+            yield return WaitUntil(() => GlorifiedBody.Rooms.RoomTracker.CurrentId == "R2", 3f);
+            Domination.Take(mechanic.GetComponent<IDominable>(), lucy);
+            Assert.IsTrue(StoryFlags.Has(Domination.FirstTakeFlag), "her first take");
+            yield return WaitUntil(() => GlorifiedBody.Subtitles.SubtitleService.Lines.Any(l => l.Speaker == "QUEEN"), 5f);
+            Assert.IsTrue(GlorifiedBody.Subtitles.SubtitleService.Lines.Any(l => l.Speaker == "QUEEN" && l.Text.Contains("You will obey")), "Queen's first line at the first take");
+            yield return WaitUntil(() => CutscenePlayer.IsPlaying, 8f);
+            Assert.IsTrue(CutscenePlayer.IsPlaying, "the flashback at the first take");
+            CutscenePlayer.Skip();
+            StoryFlags.Drop(PsychicPowers.EdgarFlag);
+            StoryFlags.Drop("coda_attendant_called");
+            StoryFlags.Drop(Domination.FirstTakeFlag);
+        }
+
         [UnityTest]
         public IEnumerator R1_ThePosterBeat_TheFlashback_UnlocksMkEdgar_AndTheAttendantFollows()
         {
@@ -934,10 +988,14 @@ namespace GlorifiedBody.Tests.PlayMode
             yield return new WaitForSeconds(3f);
             Assert.IsFalse(CutscenePlayer.IsPlaying, "the poster beat waits for the news");
             Assert.IsFalse(lucy.GetComponent<TankController>().MovementLocked, "she walks while it plays");
-            yield return WaitUntil(() => StoryFlags.Has("demo_r1_news_done"), 120f);
+            yield return WaitUntil(() => StoryFlags.Has("demo_r1_news_done"), 200f);
             Assert.IsTrue(news.Done, "the report ends");
             Assert.AreEqual("low", news.Band, "no kill in this test: the low band");
             StringAssert.StartsWith("Police are asking citizens", news.LastText, "cut off");
+            // The choice (round 137): the mk_edgar key takes him (branch A).
+            yield return WaitUntil(() => ChoicePrompt().Contains("take his mind"), 60f);
+            Assert.IsFalse(PsychicPowers.EdgarUnlocked, "no mk_edgar before the choice");
+            StoryFlags.Raise("demo_r1_take");
             yield return WaitUntil(() => CutscenePlayer.IsPlaying, 40f);
             Assert.IsTrue(CutscenePlayer.IsPlaying, "the flashback");
             yield return WaitUntil(() => !CutscenePlayer.IsPlaying, 25f);
@@ -950,7 +1008,9 @@ namespace GlorifiedBody.Tests.PlayMode
             yield return WaitUntil(() => StoryFlags.Has("demo_r1_poster"), 20f);
             Assert.IsFalse(lucy.GetComponent<TankController>().MovementLocked, "she walks");
             Assert.AreEqual("EDGAR CAPSULE", Resources.Load<ItemDefinition>("Items/item_nalconmind").ShownName);
+            Assert.IsFalse(StoryFlags.Has("coda_attendant_called"), "branch A: no call");
             StoryFlags.Drop(PsychicPowers.EdgarFlag);
+            StoryFlags.Drop(Domination.FirstTakeFlag);
         }
 
         [UnityTest]

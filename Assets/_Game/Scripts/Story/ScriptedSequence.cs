@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using GlorifiedBody.Audio;
 using GlorifiedBody.Core;
@@ -8,6 +9,7 @@ using GlorifiedBody.DebugTools;
 using GlorifiedBody.Enemy;
 using GlorifiedBody.Player;
 using GlorifiedBody.Saving;
+using GlorifiedBody.Systems;
 
 namespace GlorifiedBody.Story
 {
@@ -44,6 +46,9 @@ namespace GlorifiedBody.Story
         StopUnlessFlag, // the sequence ends here when the flag (id) is NOT up (a branch: the other sequence plays its content)
         WaitRoom,    // until she stands in the room (id)
         Feast,       // her first feed (cutscene 02b, round 118): she kneels at the nearest dead body, the cutscene plays, she heals to full, the feed unlocks
+        Choice,      // the prompt (text) stays until she picks: the mk_edgar key raises id, a walk within seconds m of point raises otherFlag (the coda, round 137)
+        SkipUnlessFlag, // the next (seconds) steps run only when the flag (id) is up (a branch inside one sequence)
+        Aside,       // the first living figure under target speaks (World), under the next line: no living one, no line (cutscene 03, round 138)
     }
 
     /// <summary>One step of a sequence: what it does and its data (the room builder fills them in code).</summary>
@@ -58,6 +63,7 @@ namespace GlorifiedBody.Story
         public GameObject target;
         public CutsceneAsset cutscene;
         public Vector3 point;
+        public string otherFlag = "";
 
         public static ScriptStep Wait(float s) => new ScriptStep { kind = StepKind.Wait, seconds = s };
         public static ScriptStep Say(GameObject who, string id, string text) => new ScriptStep { kind = StepKind.Say, target = who, id = id, text = text };
@@ -92,6 +98,13 @@ namespace GlorifiedBody.Story
         public static ScriptStep Restraint(GameObject restraint) => new ScriptStep { kind = StepKind.Restraint, target = restraint };
         public static ScriptStep StopUnlessFlag(string flag) => new ScriptStep { kind = StepKind.StopUnlessFlag, id = flag };
         public static ScriptStep WaitRoom(string room) => new ScriptStep { kind = StepKind.WaitRoom, id = room };
+        /// <summary>A choice: the prompt stays until the mk_edgar key (A: flag a) or her walk to the point (B: flag b). A test raises a flag.</summary>
+        public static ScriptStep Choice(string prompt, string a, string b, Vector3 point, float radius)
+            => new ScriptStep { kind = StepKind.Choice, text = prompt, id = a, otherFlag = b, point = point, seconds = radius };
+        /// <summary>A line of a figure under the group, under the lines around it (wait: the next line waits for it).</summary>
+        public static ScriptStep Aside(GameObject group, string id, string text, bool wait)
+            => new ScriptStep { kind = StepKind.Aside, target = group, id = id, text = text, seconds = wait ? 1f : 0f };
+        public static ScriptStep SkipUnlessFlag(string flag, int count) => new ScriptStep { kind = StepKind.SkipUnlessFlag, id = flag, seconds = count };
         public static ScriptStep Feast(CutsceneAsset asset) => new ScriptStep { kind = StepKind.Feast, cutscene = asset };
     }
 
@@ -169,6 +182,11 @@ namespace GlorifiedBody.Story
                 if (step == null) continue;
                 if (step.kind == StepKind.StopIfFlag && StoryFlags.Has(step.id)) break;
                 if (step.kind == StepKind.StopUnlessFlag && !StoryFlags.Has(step.id)) break;
+                if (step.kind == StepKind.SkipUnlessFlag)
+                {
+                    if (!StoryFlags.Has(step.id)) StepIndex += Mathf.RoundToInt(step.seconds);
+                    continue;
+                }
                 yield return Do(step);
             }
             ClearCover();
@@ -267,6 +285,42 @@ namespace GlorifiedBody.Story
                     if (figure != null) figure.GetComponent<IDominable>()?.BeginKneel();
                     break;
                 }
+                case StepKind.Aside:
+                {
+                    GameObject speaker = null;
+                    if (step.target != null)
+                        foreach (SoldierBrain brain in step.target.GetComponentsInChildren<SoldierBrain>())
+                            if (!brain.IsDeadFigure) { speaker = brain.gameObject; break; }
+                    if (speaker == null) { RunTelemetry.Event("aside_dropped", step.id); break; } // both guards dead: the line drops
+                    float seconds = LineSeconds(step.id, step.text);
+                    Voice.Say(speaker, step.id, step.text, VoiceMode.World, seconds);
+                    if (step.seconds > 0f) yield return new WaitForSeconds(seconds + LineGap);
+                    break;
+                }
+                case StepKind.Choice:
+                {
+                    // The prompt words are the game's (round 137, "Needs from production" 1): the bound key. A held subtitle, not
+                    // the message box: the message box stops her feet, and her walk to the back door is one of the answers.
+                    KeyCode key = InputManager.Instance != null ? InputManager.Instance.GetKey(InputManager.GameAction.PowerDomination) : KeyCode.None;
+                    string prompt = step.text.Replace("{key}", key == KeyCode.None ? "4" : InputManager.GetKeyDisplayName(key).ToUpperInvariant());
+                    RunTelemetry.Event("choice_open", step.id + "|" + step.otherFlag);
+                    while (!StoryFlags.Has(step.id) && !StoryFlags.Has(step.otherFlag))
+                    {
+                        if (!GlorifiedBody.Subtitles.SubtitleService.Lines.Any(l => l.Owner == ChoiceOwner)) GlorifiedBody.Subtitles.SubtitleService.Show(ChoiceOwner, ChoiceSpeaker, prompt);
+                        if (InputManager.Instance != null && GameManager.Instance != null && GameManager.Instance.IsPlaying
+                            && InputManager.Instance.GetActionDown(InputManager.GameAction.PowerDomination)) StoryFlags.Raise(step.id);
+                        else if (Lucy() != null && step.seconds > 0f)
+                        {
+                            Vector3 at = Lucy().transform.position - step.point;
+                            at.y = 0f;
+                            if (at.magnitude <= step.seconds) StoryFlags.Raise(step.otherFlag);
+                        }
+                        yield return null;
+                    }
+                    GlorifiedBody.Subtitles.SubtitleService.Hide(ChoiceOwner);
+                    RunTelemetry.Event("choice_made", StoryFlags.Has(step.id) ? step.id : step.otherFlag);
+                    break;
+                }
                 case StepKind.TakeMind:
                 {
                     GameObject figure = GameObject.Find(step.id);
@@ -335,6 +389,9 @@ namespace GlorifiedBody.Story
         }
 
         private static GameObject Lucy() => GameObject.FindWithTag("Player");
+
+        /// <summary>The subtitle of a choice prompt (StepKind.Choice), PROPOSED.</summary>
+        public const string ChoiceOwner = "choice", ChoiceSpeaker = "HINT";
 
         private static void SetLock(bool locked)
         {

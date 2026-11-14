@@ -21,6 +21,13 @@ namespace GlorifiedBody.Editor.Demo
         public const string CarDoor = "demo_car_door", ShutterFlag = "demo_r2_shutter", BarrierFlag = "demo_r3_barrier", SunglassesId = "sunglasses";
         public const string EntryX1 = "Entry_X1", EntryR1 = "Entry_R1";
         private const string File = "cutscenes/11_the_coda.md";
+        /// <summary>The choice of the coda (round 137): A, the mk_edgar key; B, her walk to the back door.</summary>
+        public const string TakeFlag = "demo_r1_take", LeaveFlag = "demo_r1_leave";
+        /// <summary>Branch B: he called the police (PROPOSED name, round 138). The demo does not read it (round 137).</summary>
+        public const string CalledFlag = Domination.AttendantCalledFlag; // CANON name since round 140
+        /// <summary>The words of the tutorial prompt are the game's (round 137, "Needs from production" 1). PROPOSED.</summary>
+        public const string ChoicePrompt = "Press {key} to take his mind. Walk to the back door to leave him.";
+        private static readonly Vector3 BackDoor = new Vector3(67.6f, 0f, 21f);
 
         public static List<RoomSpec> Rooms() => new List<RoomSpec>
         {
@@ -88,19 +95,42 @@ namespace GlorifiedBody.Editor.Demo
             EditorUtility.SetDirty(attendant);
 
             DemoNight.R1Tv(r); // the news on the TV behind the till (N1b): the poster beat waits for its end (round 108)
-            List<ScriptStep> lines = DemoScripts.Steps(File, "cs11");
-            ScriptStep Line(int i) => i < lines.Count ? lines[i] : ScriptStep.Wait(0.1f);
+            // Round 137: the coda is the mk_edgar tutorial. The shared part, the choice, one branch, the part after both (round 138).
+            List<ScriptStep> shared = DemoScripts.PartSteps(File, "", "cs11");
+            List<ScriptStep> takeLines = DemoScripts.PartSteps(File, "Branch A", "cs11a");
+            List<ScriptStep> leaveLines = DemoScripts.PartSteps(File, "Branch B", "cs11b");
+            List<ScriptStep> after = DemoScripts.PartSteps(File, "After both branches", "cs11z");
             var beat = new List<ScriptStep> { ScriptStep.WaitFlag(DemoNight.NewsDone), ScriptStep.LockHer() };
-            for (int i = 1; i <= 6; i++) beat.Add(Line(i));
-            beat.Add(ScriptStep.Kneel("Attendant"));
-            beat.Add(Line(7));
-            beat.Add(ScriptStep.Play(Flashback()));
-            beat.Add(Line(8));
+            beat.AddRange(shared.GetRange(1, Mathf.Max(0, shared.Count - 1))); // [0] is the readout of X1
+            beat.Add(ScriptStep.FreeHer());
+            beat.Add(ScriptStep.Choice(ChoicePrompt, TakeFlag, LeaveFlag, BackDoor, 1.1f));
+
+            // Branch A: she takes him. The core's line, his last words, the kneel, the flashback, "Get up.", his first order.
+            var branchA = new List<ScriptStep> { ScriptStep.LockHer() };
+            foreach (ScriptStep line in takeLines)
+            {
+                if (line.speaker == "LUCY")
+                {
+                    branchA.Add(ScriptStep.Play(Flashback()));
+                }
+                branchA.Add(line);
+                if (line.speaker == "ATTENDANT" && branchA.FindAll(x => x.speaker == "ATTENDANT").Count == 1) branchA.Add(ScriptStep.Kneel("Attendant"));
+            }
+            branchA.Add(ScriptStep.Raise(PsychicPowers.EdgarFlag));
+            branchA.Add(ScriptStep.TakeMind("Attendant"));
+            beat.Add(ScriptStep.SkipUnlessFlag(TakeFlag, branchA.Count));
+            beat.AddRange(branchA);
+
+            // Branch B: she does not. She takes the mask and leaves by the back door while he calls the police.
+            var branchB = new List<ScriptStep> { ScriptStep.LockHer() };
+            branchB.AddRange(leaveLines);
+            branchB.Add(ScriptStep.Raise(CalledFlag));
+            beat.Add(ScriptStep.SkipUnlessFlag(LeaveFlag, branchB.Count));
+            beat.AddRange(branchB);
+
+            // After both: the readout, mk_edgar (R2 and R3 need it in both branches), the key.
+            beat.AddRange(after);
             beat.Add(ScriptStep.Raise(PsychicPowers.EdgarFlag));
-            beat.Add(ScriptStep.TakeMind("Attendant"));
-            beat.Add(Line(9));
-            beat.Add(Line(10));
-            beat.Add(Line(11));
             beat.Add(ScriptStep.Radio("", "cs11_hint_key", "Key 4: mk_edgar. A full circle takes a mind. It costs most of the bar."));
             beat.Add(ScriptStep.FreeHer());
             r.Beat("R1_Poster", "demo_r1_poster", new Vector3(64f, 1f, 22.4f), new Vector3(8f, 2f, 1f), beat.ToArray());
@@ -123,6 +153,12 @@ namespace GlorifiedBody.Editor.Demo
             EditorUtility.SetDirty(mechanic);
             Spare(r, "Mechanic", "labworker", new Vector3(69f, 0f, 25.3f), ShutterFlag, true);
             SaveAssets.SavePoint("Save_R2", new Vector3(68.6f, 0f, 19f), 90f).transform.SetParent(r.Props.transform, true);
+            // Round 140: in branch B the flashback and Queen's first line play at her first mind control, here.
+            ScriptStep queen = DemoScripts.PartSteps(File, "Branch A", "cs11a").Find(l => l.speaker == "QUEEN");
+            var firstTake = new List<ScriptStep> { ScriptStep.WaitFlag(Domination.FirstTakeFlag), ScriptStep.StopUnlessFlag(CalledFlag) };
+            if (queen != null) firstTake.Add(queen);
+            firstTake.Add(ScriptStep.Play(Flashback()));
+            r.Beat("R2_First_Take", "demo_r2_first_take", Vector3.zero, Vector3.zero, firstTake.ToArray());
             r.Beat("R2_Hint", "demo_r2_hint", new Vector3(70f, 1f, 21f), new Vector3(1f, 2f, 3f),
                 ScriptStep.Radio("", "cs11_hint_send", "The defend key sends the one you hold to a switch."));
         }
