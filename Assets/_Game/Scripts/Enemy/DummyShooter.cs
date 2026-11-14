@@ -133,6 +133,10 @@ namespace GlorifiedBody.Enemy
         public Attack CurrentAttack { get; private set; } = Attack.None;
         public Weapon WeaponKind { get => weapon; set => weapon = value; }
         public bool CanMelee { get => canMelee; set => canMelee = value; }
+        /// <summary>Strikes only, no ranged attack (the overconfident guard's baton, round 134; SoldierBrain.BatonOut).</summary>
+        public bool MeleeOnly { get; set; }
+        /// <summary>The killer id of a strike when it is not the gun's (the baton: "guard_baton"; the death screen falls back to the class).</summary>
+        public string MeleeKillerId { get; set; }
         public float MeleeRange => meleeRange;
         /// <summary>She stands in melee reach now, by the gun's own measure (the brain asks this: 2026-11-03, the brain and
         /// the gun measured 1.80 m two ways, the brain stopped to strike, the gun chose nothing, twelve times).</summary>
@@ -347,7 +351,7 @@ namespace GlorifiedBody.Enemy
         {
             Attack attack = RangedAttackOf(weapon);
             float reach = Vector3.Distance(transform.position, place);
-            if (attack == Attack.None || reach > range || ((IsLobbed(attack) || attack == Attack.Rocket) && reach < grenadeMinDistance) || !Sees(place)) return false;
+            if (MeleeOnly || attack == Attack.None || reach > range || ((IsLobbed(attack) || attack == Attack.Rocket) && reach < grenadeMinDistance) || !Sees(place)) return false;
             CurrentAttack = attack;
             Suppressing = true;
             SuppressShots++;
@@ -365,7 +369,7 @@ namespace GlorifiedBody.Enemy
         private Attack ChooseAttack(float distance)
         {
             if (canMelee && distance <= meleeRange) return Attack.Melee;
-            if (distance > range) return Attack.None;
+            if (MeleeOnly || distance > range) return Attack.None;
             Attack ranged = RangedAttackOf(weapon);
             if (ranged == Attack.None) return Attack.None;
             if (weapon == Weapon.ArmourLaunchers && nextIsRocket) ranged = Attack.Rocket;

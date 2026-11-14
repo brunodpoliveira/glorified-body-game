@@ -245,6 +245,57 @@ namespace GlorifiedBody.Enemy
             if (animator != null && hasShotId) animator.SetFloat(ShotId, shotId);
         }
 
+        // ── The baton (the overconfident guard, round 134) ────────────
+
+        /// <summary>The baton in his hand now, the gun out of sight (SoldierBrain.BatonOut).</summary>
+        public bool BatonShown => baton != null && baton.parent == gun;
+        public Transform Baton => baton;
+        private Transform baton;
+        private Renderer[] gunRenderers;
+        private const float BatonLength = 0.56f, BatonThickness = 0.035f; // metres, a placeholder stick, PROPOSED
+
+        /// <summary>
+        /// The baton comes out: the gun hides, a stick lies along the gun's line in his hand, so the aim, the wind-up and the
+        /// strike move it. Off: the baton falls to the floor and the gun shows again (he draws it).
+        /// </summary>
+        public void SetBaton(bool on)
+        {
+            if (gun == null || Dropped) return;
+            if (gunRenderers == null) gunRenderers = gun.GetComponentsInChildren<Renderer>(true);
+            if (on)
+            {
+                if (BatonShown) return;
+                foreach (Renderer r in gunRenderers) if (r != null) r.enabled = false;
+                if (flashLight != null) flashLight.enabled = false;
+                GameObject stick = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                stick.name = "Baton";
+                Object.Destroy(stick.GetComponent<Collider>());
+                Vector3 along = muzzle != null && (muzzle.position - gun.position).sqrMagnitude > 0.0001f ? (muzzle.position - gun.position).normalized : gun.forward;
+                stick.transform.SetPositionAndRotation(gun.position + along * (BatonLength * 0.5f - 0.06f), Quaternion.FromToRotation(Vector3.up, along));
+                stick.transform.localScale = new Vector3(BatonThickness, BatonLength * 0.5f, BatonThickness);
+                stick.transform.SetParent(gun, true);
+                stick.layer = gun.gameObject.layer;
+                var paint = new MaterialPropertyBlock();
+                paint.SetColor("_BaseColor", new Color(0.05f, 0.05f, 0.055f));
+                paint.SetColor("_Color", new Color(0.05f, 0.05f, 0.055f));
+                stick.GetComponent<Renderer>().SetPropertyBlock(paint);
+                baton = stick.transform;
+                RunTelemetry.Event("baton_out", name);
+                return;
+            }
+            if (!BatonShown) return;
+            foreach (Renderer r in gunRenderers) if (r != null) r.enabled = true;
+            baton.SetParent(null, true);
+            var box = baton.gameObject.AddComponent<CapsuleCollider>();
+            box.direction = 1;
+            var fall = baton.gameObject.AddComponent<Rigidbody>();
+            fall.mass = 0.6f;
+            fall.AddForce((transform.right + Vector3.up * 0.4f) * 0.8f, ForceMode.VelocityChange);
+            int debris = GlorifiedBody.Destruction.Breakables.DebrisLayer;
+            if (debris >= 0) baton.gameObject.layer = debris; // a dropped baton blocks no one
+            RunTelemetry.Event("baton_dropped", name);
+        }
+
         /// <summary>He gave up (Bruno, 2026-11-05: "cowering figure drop its weapon"): the weapon falls and stays on the floor, his hands are free.</summary>
         public bool Dropped { get; private set; }
 

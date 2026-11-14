@@ -139,6 +139,40 @@ namespace GlorifiedBody.Enemy
         public IEnemyBody Body => body;
         /// <summary>A knife: it runs at her and strikes, it never stops at a firing spot.</summary>
         public bool Rusher => gun != null && gun.WeaponKind == DummyShooter.Weapon.Knife;
+        /// <summary>It closes in to strike (the knife, or the baton): no firing spot, no cover.</summary>
+        private bool Closer => Rusher || BatonOut;
+
+        // ── The baton (the overconfident guard, round 134; Bruno, 2026-11-13: "he strikes") ──
+        // GAME_NOTES.md: "He does not aim at a patient with no gun. He walks at her slowly with the baton raised, and chases her if
+        // she runs. When she attacks, the baton goes and he draws his gun, then he aims and fires." She attacks: a hurt on him, a
+        // lift on him, or a hit of her powers that he hears (hearPowerRadius, his room or next door), PROPOSED.
+        /// <summary>The baton is out: he walks at her and strikes, the gun stays in the holster.</summary>
+        public bool BatonOut { get; private set; }
+        /// <summary>He runs after her: she ran from him with the baton out.</summary>
+        public bool Chasing { get; private set; }
+        public int Chases { get; private set; }
+        /// <summary>Why the gun came out ("" while the baton is out, or when he never had one).</summary>
+        public string DrewReason { get; private set; } = "";
+        public const string BatonPersonality = "overconfident";
+        /// <summary>
+        /// The baton can come out. Off in batch runs (the tests and the bots): the personality at the spawn is random, and a
+        /// test or a bot that needs a guard's gun must not get a baton by chance (as batch runs ignore the saved difficulty).
+        /// BatonTests turns it on.
+        /// </summary>
+        public static bool BatonEnabled = true;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetBaton() => BatonEnabled = !Application.isBatchMode;
+        private const float ChaseHerSpeed = 2.6f;    // m/s: she runs (walk 1.6, run 3.6), PROPOSED
+        private const float ChaseEndSeconds = 1.5f;  // s she walks or stands before he walks again, PROPOSED
+        private const float ChaseLineGap = 6f;       // s, PROPOSED
+        private const float BatonLineGap = 9f;       // s, PROPOSED
+        private const float BatonFirstLine = 3f;     // s after the alert (after "spots Lucy"), PROPOSED
+        private const float BatonRepathSeconds = 0.6f;
+        private Vector3 herLast;
+        private float herSpeed;
+        private float slowFor;
+        private float batonLineAt;
         public DummyShooter Gun => gun;
         public bool Alerted { get; private set; }
         public int ShockCount { get; private set; }
@@ -257,6 +291,11 @@ namespace GlorifiedBody.Enemy
             Alerted = true;
             AlertReason = reason;
             if (reason == "sight") BarkBook.Say(gameObject, BarkSituation.SpotsLucy, 2.2f); // the first sight of her (barks.csv, "spots Lucy")
+            if (TakesBaton())
+            {
+                if (SheAttacked(reason)) DrawGun(reason, say: true); // she attacked first: no baton
+                else TakeBaton();
+            }
             if (RankOf == EnemyMorale.Rank.Soldier) Team = FireTeam.Join(this, player.position);
             body.Track(player);
             RunTelemetry.Event("soldier_alerted", $"{name}:{reason}");
@@ -385,6 +424,7 @@ namespace GlorifiedBody.Enemy
         {
             if (health.IsDead) return;
             BarkVoice.Of(gameObject)?.SayNow(BarkSituation.Hit, HitLineGap);
+            DrawGun("hurt", say: true);
             Alert("hurt", callOthers: true);
             Team?.Heard(player != null ? player.position : transform.position); // she did this: he knows where she is
         }
@@ -402,6 +442,7 @@ namespace GlorifiedBody.Enemy
             if (Flat(transform.position, hit.HitPoint) > hearPowerRadius || !GlorifiedBody.Rooms.Room.Hear(transform.position, hit.HitPoint)) return;
             if (!Alerted) Alert("power", callOthers: true);
             else Team?.Heard(hit.Attacker.transform.position); // a power is loud: it gives her away
+            DrawGun("power", say: true);
         }
 
         private void OnDestroy()
@@ -412,6 +453,7 @@ namespace GlorifiedBody.Enemy
 
         private void OnDeath()
         {
+            DrawGun("death", say: false);
             Current = Phase.Dead;
             ReleaseCover();
             ClearSuppression();
@@ -472,6 +514,7 @@ namespace GlorifiedBody.Enemy
 
         public void TakeMind(Dominated mind)
         {
+            DrawGun("dominated", say: false);
             EndKneel();
             Mind = mind;
             if (Current == Phase.Care) GetComponent<CorpseCare>()?.Stop("dominated");
@@ -564,6 +607,7 @@ namespace GlorifiedBody.Enemy
                 if (!suspendedByLift)
                 {
                     suspendedByLift = true;
+                    if (lift != null && lift.IsLifted) DrawGun("lift", say: false); // the line when he lands
                     body.Suspend(true);
                     gun.HoldFire = true;
                     if (Current == Phase.Care) GetComponent<CorpseCare>()?.Stop("down");
@@ -596,6 +640,12 @@ namespace GlorifiedBody.Enemy
                 return;
             }
             if (!Alerted && body.CanSeeTarget) Alert("sight", callOthers: true);
+            if (BatonOut) WatchHerRun(dt);
+            else if (pendingDrawLine && !suspendedByLift && Current != Phase.Dead)
+            {
+                pendingDrawLine = false;
+                BarkBook.Say(gameObject, BarkSituation.DrawsGun);
+            }
             // An armed civilian is no fighter: its hands shake while it hunts her, and it shakes hard when it cowers.
             if (tremble != null && IsArmedCivilian) tremble.Amount = Current == Phase.Cower ? 1f : Alerted ? ArmedCivilianNerves : 0f;
 
@@ -713,6 +763,7 @@ namespace GlorifiedBody.Enemy
         {
             if (Current == Phase.Dead || Retreating || IsDominated) return;
             ShockCount++;
+            DrawGun("shock", say: false); // the shock line plays
             if (Current == Phase.Care) GetComponent<CorpseCare>()?.Stop("shock");
             gun.Stagger(seconds); // the aim breaks; OnStaggered holds the body for the seconds
             Hold(seconds);
@@ -729,6 +780,7 @@ namespace GlorifiedBody.Enemy
             if (Current == Phase.Dead || Retreating || IsDominated) return;
             if (Current == Phase.Care) GetComponent<CorpseCare>()?.Stop("retreat");
             RetreatReason = reason;
+            DrawGun("retreat", say: false); // the baton falls, the gun shows, and the cower drops it
             FlankBoard.Release(this);
             gun.HoldFire = true;
             if (gun.HoldsSlot) gun.Stagger(0.1f); // drop the aim
@@ -810,7 +862,8 @@ namespace GlorifiedBody.Enemy
                     else if ((timer <= 0f && (HeldCover == null || Time.time - moveStarted >= CoverWalkSeconds)) || arrived)
                     {
                         // From cover the line counts from where he stands to fire: his gun still hangs low behind the thing.
-                        if (HeldCover != null ? CoverStillHolds() : ClearLine() && Distance() <= gun.Range) StartShoot();
+                        if (BatonOut) StartMove(); // the baton: only a strike in reach
+                        else if (HeldCover != null ? CoverStillHolds() : ClearLine() && Distance() <= gun.Range) StartShoot();
                         else StartMove();
                     }
                     break;
@@ -822,7 +875,7 @@ namespace GlorifiedBody.Enemy
                     UpdateSuppression();
                     timer -= dt;
                     bool fired = gun.ShotsFired > shotsAtShootStart && !gun.HoldsSlot;
-                    bool gotAway = Rusher && !gun.HoldsSlot && !gun.HerInReach; // a knife does not wait for her
+                    bool gotAway = Closer && !gun.HoldsSlot && !gun.HerInReach; // a knife or a baton does not wait for her
                     if (boundCalled && !gun.HoldsSlot) GoOnTheBound();
                     else if (fired || gotAway || (timer <= 0f && !gun.HoldsSlot))
                     {
@@ -987,6 +1040,18 @@ namespace GlorifiedBody.Enemy
             gun.FromCover = false;
             Vector3 spot = PickSpot();
             bool sprint = (spot - transform.position).magnitude > sprintOver;
+            if (BatonOut)
+            {
+                // The baton: a slow walk at her, a run only after her (round 134).
+                Spot = Go(spot, Chasing ? MoveSpeed.Run : MoveSpeed.Walk);
+                if (!Chasing && Time.time >= batonLineAt) BarkVoice.Of(gameObject)?.SayNow(BarkSituation.Baton, BatonLineGap);
+                timer = BatonRepathSeconds;
+                moveStarted = Time.time;
+                Current = Phase.Move;
+                Moves++;
+                RunTelemetry.Event("soldier_move", $"{name}:{spot.x:0.0},{spot.z:0.0} {(Chasing ? "chase" : "baton")}");
+                return;
+            }
             Spot = Go(spot, sprint ? MoveSpeed.Sprint : MoveSpeed.Run);
             timer = Rusher ? RushRepathSeconds : Random.Range(moveSeconds.x, moveSeconds.y);
             moveStarted = Time.time;
@@ -1003,6 +1068,7 @@ namespace GlorifiedBody.Enemy
         {
             Vector3 target = TargetPosition;
             if (Rusher) return RushSpot(target);
+            if (BatonOut) return NavMesh.SamplePosition(target, out NavMeshHit at, 1.5f, NavMesh.AllAreas) ? at.position : target; // straight at her
             Vector3 chest = target + Vector3.up * GlorifiedBody.Characters.Body.ChestHeight;
             Approach style = Style;
             Vector3? side = style == Approach.Flank ? FlankBoard.Claim(this, target) : (Vector3?)null;
@@ -1109,6 +1175,98 @@ namespace GlorifiedBody.Enemy
             line.y = to.y = 0f;
             LastSpotOffLine = line.sqrMagnitude > 0.01f && to.sqrMagnitude > 0.01f ? Vector3.Angle(line, to) : 0f;
             return spot;
+        }
+
+        /// <summary>An overconfident guard with a pistol takes the baton at his alert (round 134).</summary>
+        private bool TakesBaton()
+        {
+            if (!BatonEnabled || DrewReason != "" || BatonOut || IsDominated || RankOf != EnemyMorale.Rank.Guard || gun.WeaponKind != DummyShooter.Weapon.Pistol) return false;
+            BarkVoice voice = BarkVoice.Of(gameObject);
+            return voice != null && voice.Personality == BatonPersonality && TryGetComponent(out EnemyGun _);
+        }
+
+        /// <summary>The alert came from her attack: a hurt, a power he heard, a block of his shield.</summary>
+        private static bool SheAttacked(string reason) => reason == "hurt" || reason == "power" || reason == "blocked" || reason == "heard power";
+
+        private void TakeBaton()
+        {
+            BatonOut = true;
+            Chasing = false;
+            slowFor = 0f;
+            herLast = player != null ? player.position : transform.position;
+            herSpeed = 0f;
+            meleeBefore = gun.CanMelee;
+            gun.CanMelee = true;
+            gun.MeleeOnly = true;
+            gun.MeleeKillerId = "guard_baton";
+            if (TryGetComponent(out EnemyGun weapon)) weapon.SetBaton(true);
+            batonLineAt = Time.time + BatonFirstLine;
+            if (Current == Phase.Move || Current == Phase.Shoot || Current == Phase.Duck) Current = Phase.Idle;
+            RunTelemetry.Event("soldier_baton", name);
+        }
+
+        private bool meleeBefore = true;
+        private bool pendingDrawLine;
+
+        /// <summary>
+        /// She attacked: the baton falls and the gun comes out (round 134), then he fights as a guard does. The line now, or,
+        /// in the air, when he lands. A guard who never had the baton out only notes the reason.
+        /// </summary>
+        public void DrawGun(string reason, bool say)
+        {
+            if (!BatonOut)
+            {
+                if (DrewReason == "" && (SheAttacked(reason) || reason == "shock") && TakesBaton())
+                {
+                    // Not alerted yet, and she attacked: the baton never comes out, the line still plays.
+                    DrewReason = reason;
+                    if (say) BarkBook.Say(gameObject, BarkSituation.DrawsGun);
+                }
+                return;
+            }
+            BatonOut = false;
+            Chasing = false;
+            DrewReason = reason;
+            gun.MeleeOnly = false;
+            gun.CanMelee = meleeBefore;
+            gun.MeleeKillerId = null;
+            if (TryGetComponent(out EnemyGun weapon)) weapon.SetBaton(false);
+            if (say) BarkBook.Say(gameObject, BarkSituation.DrawsGun);
+            else pendingDrawLine = reason == "lift";
+            if (Current == Phase.Move) Current = Phase.Idle; // a new spot, at his range
+            RunTelemetry.Event("soldier_draws", $"{name}:{reason}");
+        }
+
+        /// <summary>She runs from him: he runs after her. She walks or stands for a moment: he walks again.</summary>
+        private void WatchHerRun(float dt)
+        {
+            if (player == null || !Alerted) return;
+            Vector3 now = player.position;
+            Vector3 step = now - herLast;
+            step.y = 0f;
+            herLast = now;
+            herSpeed = Mathf.Lerp(herSpeed, step.magnitude / dt, 1f - Mathf.Exp(-8f * dt));
+            Vector3 away = now - transform.position;
+            away.y = 0f;
+            bool runsAway = herSpeed > ChaseHerSpeed && Vector3.Dot(step, away) > 0f && away.magnitude > gun.MeleeRange;
+            if (!Chasing && runsAway && Current != Phase.Hold && !Retreating)
+            {
+                Chasing = true;
+                Chases++;
+                slowFor = 0f;
+                BarkVoice.Of(gameObject)?.SayNow(BarkSituation.Chases, ChaseLineGap);
+                if (Current == Phase.Move) timer = 0f; // the run starts at the next step
+                RunTelemetry.Event("soldier_chase", name);
+            }
+            else if (Chasing)
+            {
+                slowFor = herSpeed > ChaseHerSpeed ? 0f : slowFor + dt;
+                if (slowFor >= ChaseEndSeconds)
+                {
+                    Chasing = false;
+                    if (Current == Phase.Move) timer = 0f;
+                }
+            }
         }
 
         /// <summary>

@@ -25,7 +25,7 @@ namespace GlorifiedBody.Enemy
         public const string TooHeavy = "too heavy";
         public const string ArmourEnter = "armour_enter";
         public const string HearsLucy = "hears Lucy";
-        // The overconfident guard (round 134). NOT ASKED YET: the baton behaviour waits for Bruno.
+        // The overconfident guard (round 134; Bruno, 2026-11-13: he strikes with the baton). SoldierBrain.BatonOut.
         public const string Baton = "approaches with the baton";
         public const string Chases = "chases her";
         public const string DrawsGun = "draws the gun";
@@ -104,7 +104,9 @@ namespace GlorifiedBody.Enemy
 
         /// <summary>The personalities the code asks the situation for: "talks to Ghost" only for one who bargains (round 133).</summary>
         public static string[] PersonalitiesAsked(string enemy, string situation)
-            => situation == BarkSituation.TalksToGhost ? new[] { "bargaining" } : PersonalitiesOf(enemy);
+            => situation == BarkSituation.TalksToGhost ? new[] { "bargaining" }
+             : situation == BarkSituation.Baton || situation == BarkSituation.Chases || situation == BarkSituation.DrawsGun ? new[] { SoldierBrain.BatonPersonality }
+             : PersonalitiesOf(enemy);
 
         /// <summary>
         /// Every pair (enemy, situation) the code asks for. Edit it with the call sites: BarkBook.Say plays nothing for a pair
@@ -116,6 +118,7 @@ namespace GlorifiedBody.Enemy
             ("guard", BarkSituation.SpotsLucy), ("guard", BarkSituation.Fires), ("guard", BarkSituation.Hit), ("guard", BarkSituation.Shock),
             ("guard", BarkSituation.PartnerDown), ("guard", BarkSituation.SeesFeed), ("guard", BarkSituation.Retreats), ("guard", BarkSituation.Cower),
             ("guard", BarkSituation.StartsCare), ("guard", BarkSituation.Drags), ("guard", BarkSituation.Cpr),
+            ("guard", BarkSituation.Baton), ("guard", BarkSituation.Chases), ("guard", BarkSituation.DrawsGun), // overconfident only
             // The soldier (SoldierBrain, CorpseCare, EnemyMorale, FireTeam, TeamReinforcement).
             ("soldier", BarkSituation.SpotsLucy), ("soldier", BarkSituation.Shock), ("soldier", BarkSituation.PartnerDown), ("soldier", BarkSituation.SeesFeed),
             ("soldier", BarkSituation.StartsCare), ("soldier", BarkSituation.Drags), ("soldier", BarkSituation.Cpr),

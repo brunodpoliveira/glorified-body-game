@@ -627,7 +627,10 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   person's enemy and personality (given at the spawn, PROPOSED weights and confused curve): a guard who panics is broken, the staff turn
   afraid when she kills or hurts someone in their sight. One deck a situation: "plays first" first, no repeat, a PLACE row only in its room.
   `BarkBook.Asked` lists every pair the code asks for; `BarkBookTests` checks each has rows for every personality. No copied lines in the
-  code now. NOT WIRED: the overconfident guard's baton (a question for Bruno), `reloads` (no reload), `armour_call` (cut in round 135).
+  code now. NOT WIRED: `reloads` (no reload), `armour_call` (cut in round 135).
+  THE BATON (Bruno: "he strikes"): an overconfident guard with a pistol walks at her with the baton (`SoldierBrain.BatonOut`,
+  `EnemyGun.SetBaton`, `DummyShooter.MeleeOnly`) and strikes in reach, runs after her when she runs, and draws the gun when she
+  attacks (a hurt, a lift, a power hit he hears, a death in his sight). `BatonTests` (4). Numbers PROPOSED.
 
 ## Rules
 
