@@ -401,6 +401,7 @@ namespace GlorifiedBody.Editor.Demo
                     var cam = new Vector3(x, camY, z);
                     if (Mathf.Abs(x - cell.center.x) < 0.5f && Mathf.Abs(z - cell.center.y) < 0.5f) continue; // the middle sees nothing behind it
                     if (Physics.CheckSphere(cam, 0.2f, solid, QueryTriggerInteraction.Ignore)) continue;     // inside a column or a lintel
+                    if (OverATallThing(cam, solid)) continue; // the H1 frame under Cam_H1_04 hid the filter box and her (Bruno, 2026-11-14)
                     Vector3 away = new Vector3(middle.x - x, 0f, middle.z - z);
                     var aims = new List<Vector3> { middle, middle + away.normalized * Mathf.Min(cell.width, cell.height) * 0.25f };
                     foreach (Door d in exits) aims.Add(Vector3.Lerp(middle, Mouth(d) + Vector3.up, 0.5f));
@@ -421,6 +422,19 @@ namespace GlorifiedBody.Editor.Demo
             float missed = exitsSeen < exits.Count ? 1f : points.Count == 0 ? 0f : 1f - (float)pointsSeen / points.Count;
             return (best.cam, best.look, best.fov, missed);
         }
+
+        /// <summary>
+        /// A thing taller than TallThing stands under the camera. A camera over it looks down along it, and it hides what is
+        /// next to it (Bruno, 2026-11-14: the filter box of the H1 frame "dissapears depending on view").
+        /// </summary>
+        public static bool OverATallThing(Vector3 cam, int solid)
+        {
+            if (cam.y <= TallThing) return false;
+            var half = new Vector3(0.15f, (cam.y - TallThing) * 0.5f, 0.15f); // 0.15 m: clear of a wall 0.35 m away
+            return Physics.CheckBox(new Vector3(cam.x, (cam.y + TallThing) * 0.5f, cam.z), half, Quaternion.identity, solid, QueryTriggerInteraction.Ignore);
+        }
+
+        public const float TallThing = 1.4f;
 
         /// <summary>Camera places along one axis of a cell: its two edges, its middle, and 2 m past each edge, all inside the room's walls.</summary>
         private static float[] Places(float a, float b, float room0, float room1)

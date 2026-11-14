@@ -2149,6 +2149,33 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator NoCellCamera_HangsOverATallThing()
+        {
+            // Bruno, 2026-11-14: the filter box of the H1 frame "dissapears depending on view". Cam_H1_04 hung 0.7 m over the
+            // 2 m frame and looked down along it: the frame hid the box and her. The same rule as DemoRoom.OverATallThing
+            // (editor code): nothing taller than 1.4 m within 0.15 m under a cell camera. The extra cameras (a beat, a
+            // foreground) are placed by hand and stay out of the rule.
+            yield return LoadWorld();
+            const float TallThing = 1.4f;
+            int solid = 1 << LayerMask.NameToLayer("Default");
+            var cell = new System.Text.RegularExpressions.Regex(@"^Cam_[A-Za-z0-9]+_\d\d$");
+            var failures = new List<string>();
+            int cameras = 0;
+            foreach (FixedCamera cam in UnityEngine.Object.FindObjectsByType<FixedCamera>(FindObjectsSortMode.None).OrderBy(c => c.name))
+            {
+                if (cam.GetComponentInParent<GlorifiedBody.Rooms.Room>() == null || !cell.IsMatch(cam.name)) continue;
+                cameras++;
+                Vector3 p = cam.transform.position;
+                if (p.y <= TallThing) continue;
+                Collider[] under = Physics.OverlapBox(new Vector3(p.x, (p.y + TallThing) * 0.5f, p.z), new Vector3(0.15f, (p.y - TallThing) * 0.5f, 0.15f), Quaternion.identity, solid, QueryTriggerInteraction.Ignore);
+                if (under.Length > 0) failures.Add($"{cam.name} at {p}: over {string.Join(", ", under.Select(c => c.name))}");
+            }
+            Debug.Log($"[DemoTests] cell cameras {cameras}, over a tall thing {failures.Count}: {string.Join("; ", failures)}");
+            Assert.Greater(cameras, 50, "the cell cameras of the demo");
+            Assert.IsEmpty(failures, "a cell camera over a tall thing hides what stands next to it");
+        }
+
+        [UnityTest]
         public IEnumerator NoCamera_SeesAnotherRoom_ExceptThroughADoorway()
         {
             // Bruno, 2026-11-07: "in some areas the walls are not fully built, so i can see through scenarion; ... auto build

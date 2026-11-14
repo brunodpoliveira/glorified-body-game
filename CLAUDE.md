@@ -656,6 +656,9 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   (`FireDoor_G12_G17`, the bar on the G17 side, it works only after the boxes burn: the horn still seals the server room)
   and S3 W14 to W6 (`FireDoor_W6_W14`, the bolt on the W14 side; W6 is 1 m longer to the north). Fire doors, shut at the
   start, no kick breaks them (`DemoV2.ShortcutS1`, `ShortcutS3`). S2 is the lift of the foyer.
+- 2026-11-14, NO CELL CAMERA OVER A TALL THING (`devlog-notes/2026-11-14_camera_over_tall_things.md`, Bruno: the H1 filter box
+  "dissapears depending on view"): `Cam_H1_04` hung over the 2 m frame and the frame hid the box. `DemoRoom.OverATallThing`
+  (nothing over 1.4 m within 0.15 m under a cell camera); seven cameras moved; `DemoTests.NoCellCamera_HangsOverATallThing`.
 
 ## Rules
 
