@@ -12,13 +12,13 @@ puzzle, and the way back is short. No kick breaks it. The enemies never open it.
 | Id | Door | Bar | Rule |
 |---|---|---|---|
 | S1 | `FireDoor_G12_G17`, in the wall at x 38, z -20.4 | G17 side | The bar works only after the boxes burn (`demo_g17_burned`). During the horn the server room stays sealed, so the halon trap stays a trap. |
-| S3 | `FireDoor_W6_W14`, in the wall at z 9, x -1.6 | W14 side | No flag. From the code on the W14 TV to the lockers, then W5, W9 and the terminal of W13. |
+| S3 | `FireDoor_W6_W14`, in the wall at z 9, x -1.5 | W14 side | No flag. From the code on the W14 TV to the lockers, then W5, W9 and the terminal of W13. |
 
 Changes for the places:
 
 1. W6 is 1 m longer to the north (z 2 to 9). Its north wall is now the south wall of W14 (a 1 m gap was between them).
    The lockers, the uniform locker, the L3 card and the sign moved 1 m north with the wall.
-2. The leaf of S3 slides west, behind the lockers (to the east it showed in W5). The bolt stands east of the doorway, at x -0.45 (with the doorway at x -1 it stood past the corner, in W5). The L3 card hangs on the front of the last locker.
+2. The leaf of S3 slides west, behind the lockers (to the east it showed in W5). The bolt stands east of the doorway, at x -0.35 (with the doorway at x -1 it stood past the corner, in W5). At x -1.6 the jam bar ended 3 cm inside the last locker (the stills), so the doorway is at x -1.5. The L3 card hangs on the front of the last locker.
 3. The flip chart of G12 moved to the north-east corner. It stood in front of S1.
 
 All places are PROPOSED.

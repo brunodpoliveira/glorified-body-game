@@ -160,9 +160,21 @@ namespace GlorifiedBody.Automation
             float wait = BotClock.Now;
             while (cover.Pieces.Any(p => !p.Settled) && BotClock.Now - wait < 8f) yield return null;
             CloseShot(cover.transform.position + Vector3.up * 0.2f, Quaternion.Euler(0f, 70f, 0f) * -side, Path.Combine(shots, "cover_07_barricade_pieces.png"), 3.2f, 1.6f);
+            // His own cover can stand on her line behind the first one (2026-11-14: he stood at the end of Barricade_1).
+            List<string> more = new List<string>();
+            Breakable next;
+            while ((next = Breakables.CoverOnLine(lucy.transform.position + Vector3.up * 1.2f, target.GetLockPoint(), out _)) != null && blasts < 12)
+            {
+                if (!more.Contains(next.Id)) more.Add(next.Id);
+                powers.FireAt(powers.Selected, 1f, target, 1f);
+                blasts++;
+                yield return BotClock.Wait(0.4f);
+            }
+            float more0 = BotClock.Now;
+            while (Breakable.All.Any(b => more.Contains(b.Id) && b.Pieces.Any(p => !p.Settled)) && BotClock.Now - more0 < 8f) yield return null;
             powers.FireAt(powers.Selected, 1f, target, 1f);
             Record("barricade_breaks", cover.IsBroken && cover.Pieces.All(p => p.Settled) && hp.CurrentHealth < before,
-                $"{cover.Id} broken after {blasts} blasts (every barricade on her line takes them), pieces settled={cover.Pieces.Count(p => p.Settled)}/{cover.Pieces.Count}, then hp {hp.CurrentHealth:0}");
+                $"{cover.Id} broken after {blasts} blasts (every barricade on her line takes them){(more.Count > 0 ? ", then " + string.Join(", ", more) : "")}, pieces settled={cover.Pieces.Count(p => p.Settled)}/{cover.Pieces.Count}, result {powers.LastResult}, then hp {hp.CurrentHealth:0}");
 
             // A full blast with the MK boost beside a table: it breaks and the items fly.
             SoldierBrain other = soldiers.First(s => s != covered);

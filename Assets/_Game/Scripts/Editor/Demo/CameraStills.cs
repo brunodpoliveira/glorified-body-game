@@ -50,6 +50,31 @@ namespace GlorifiedBody.Editor.Demo
             Debug.Log("[CameraStills] the stills in " + Folder);
         }
 
+        /// <summary>The shortcut doors (2026-11-14): each door from both sides, shut (as at the start), then open. World metres (floor 1 at DemoWorld.Floor1Offset).</summary>
+        public static void Shortcuts()
+        {
+            Directory.CreateDirectory(Folder);
+            EditorSceneManager.OpenScene("Assets/_Game/Scenes/Demo/Demo.unity", OpenSceneMode.Single);
+            Vector3 f1 = DemoWorld.Floor1Offset;
+            Vector3 s1 = new Vector3(38f, 1.1f, -20.4f) + f1, s3 = new Vector3(-1.5f, 1.1f, 9f);
+            var views = new (string file, Vector3 at, Vector3 look)[]
+            {
+                ("s1_from_g12", new Vector3(33.2f, 1.7f, -17.4f) + f1, s1),
+                ("s1_from_g17", new Vector3(43.5f, 1.7f, -18.2f) + f1, s1),
+                ("s3_from_w14", new Vector3(-3.6f, 1.7f, 12.8f), s3),
+                ("s3_from_w6", new Vector3(-4.8f, 1.7f, 4.2f), s3),
+            };
+            foreach ((string file, Vector3 at, Vector3 look) in views) Shot("shortcut_" + file + "_shut.png", at, look, 60f);
+            foreach (GlorifiedBody.Interaction.FireDoor door in Object.FindObjectsByType<GlorifiedBody.Interaction.FireDoor>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                if ((door.name == "FireDoor_G12_G17" || door.name == "FireDoor_W6_W14") && door.leaf != null)
+                {
+                    door.leaf.position += door.openOffset; // the open place, for the picture only (the scene is not saved)
+                    foreach (GameObject bar in door.bars) if (bar != null) bar.SetActive(false);
+                }
+            foreach ((string file, Vector3 at, Vector3 look) in views) Shot("shortcut_" + file + "_open.png", at, look, 60f);
+            Debug.Log("[CameraStills] the shortcut stills in " + Folder);
+        }
+
         private static void Shot(string file, Vector3 at, Vector3 lookAt, float fov)
         {
             var go = new GameObject("[StillCamera]");

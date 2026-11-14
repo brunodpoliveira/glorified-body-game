@@ -669,7 +669,7 @@ MonoBehaviour:
       position: {x: 0, y: 5}
       targetScene: W5
     - path: W6/W14
-      position: {x: -1.6, y: 9}
+      position: {x: -1.5, y: 9}
       targetScene: W14
     marks:
     - kind: 2
@@ -880,7 +880,7 @@ MonoBehaviour:
       position: {x: 0, y: 12.75}
       targetScene: W2
     - path: W14/W6
-      position: {x: -1.6, y: 9}
+      position: {x: -1.5, y: 9}
       targetScene: W6
     marks: []
   - scene: W15

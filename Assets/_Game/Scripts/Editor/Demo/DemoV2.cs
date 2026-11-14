@@ -45,7 +45,7 @@ namespace GlorifiedBody.Editor.Demo
         /// <summary>S3, W14 to W6 (on z 9): the bolt on the W14 side, from the code on the TV to the terminal of W13 by the lockers. The leaf slides west, behind the
         /// lockers, and the bolt stands east of the doorway (at x -1 it stood past the corner, in W5).</summary>
         public static Door ShortcutS3(string to) =>
-            new Door(to == "W14" ? 'N' : 'S', -1.6f, to, fire: true, jammed: true, leverRoom: "W14", unbreakable: true, pocket: -1);
+            new Door(to == "W14" ? 'N' : 'S', -1.5f, to, fire: true, jammed: true, leverRoom: "W14", unbreakable: true, pocket: -1);
 
         /// <summary>The five new rooms of the ward, in plan metres (x east, z north), beside the rooms of DemoWard.</summary>
         public static List<RoomSpec> WardRooms() => new List<RoomSpec>
