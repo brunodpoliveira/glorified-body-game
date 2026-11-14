@@ -642,6 +642,12 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   killer's personality (`DeathMenuUI.SetKiller`, `PickLine`). THE PLAN'S TEXT (`Editor/Demo/DemoPlan`): 25 signs, 23 logs and 10 scan
   cards from `DEMO_PLAN.md` §7 to §9, the EMERGENCY STOP and THEATER of round 142, signs shrink to fit. AFTER THE WRITER CHANGES A FILE
   THE GAME READS: run `DemoWorld.BuildAll` (it copies the barks and the bulletin too), then `MapAtlasSetup.BuildAtlas`.
+- 2026-11-14, rounds 147 and 148, Bruno's picks (`devlog-notes/2026-11-14_proposals_147_148.md`), NOT TESTED (no batch runs, rule 10):
+  G5 is THE FOYER, round (a ring of panels in the old square, solid corners with a corridor from each of the nine spoke doors,
+  `DemoPublic.FoyerSolid`), Modesty in the centre with her art log A8, a new spoke door into G13, an entry camera. G13b, THE MAIN
+  ENTRANCE: a passage under a triangular glass roof, the shutters down (LOCKDOWN), a camera down its axis. G12: green banker's
+  lamps and a low camera down the table (the homage to Network). `DemoForeground`: cameras with a thing in the foreground in
+  W14, G3, W9, G4, G10, G18. Open: the art puzzle, the lift, the shortcut doors.
 
 ## Rules
 
@@ -667,7 +673,10 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
 9. The game is RFab's dogfood (Bruno, 2026-10-22). Every RFab bug, limit or missing piece found while building
    goes the same day as one row in `/home/pc/MEGA/glorified/production/RFAB_GAPS.md`,
    with the evidence file. The RFab agent works that list.
-10. Test cadence (Bruno, 2026-11-06): during a round, run only the test classes of the changed code and the bots of that feature. Run the whole PlayMode suite and all the bots once, before a push or overnight (about 50 minutes). Only the tutorial bot walks the whole tutorial, so it runs before every push.
+10. NO BATCH RUNS (Bruno, 2026-11-14: "compiling is not needed, ever; i'll only ever test it on unity software itself"),
+   until the demo is published on itch.io and Steam: no `tools/unity.sh` compile, test, play, exec or build. Write the edits,
+   read them twice, and tell Bruno which editor menu items to run. He tests all the new ideas at once in the editor.
+   The old cadence, for after the publish: Test cadence (Bruno, 2026-11-06): during a round, run only the test classes of the changed code and the bots of that feature. Run the whole PlayMode suite and all the bots once, before a push or overnight (about 50 minutes). Only the tutorial bot walks the whole tutorial, so it runs before every push.
 
 - 2026-11-06, day, MK AS AMMUNITION (`devlog-notes/2026-11-06_mk_ammo_short_death_search.md`, Bruno: "that basically makes mk an ammo counter and the pills clips"): one MK bar for each power
   (`PsychicStats.Mk(kind)`; `Nalcon` reads the selected bar; only that bar shows on the HUD), no recharge, one capsule for each power (`DrugType.Nalcon`, `NalconFire`, `NalconLift`). Every point of MK spent fills

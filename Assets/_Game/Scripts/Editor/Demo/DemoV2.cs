@@ -27,7 +27,7 @@ namespace GlorifiedBody.Editor.Demo
         public const float ShortGain = 10f; // PROPOSED: a tenth of the SHORT bar after the flashback (the writer)
 
         public static readonly string[] WardIds = { "W13", "W14", "W15", "W16", "W17" };
-        public static readonly string[] PublicIds = { "G9b", "G10", "G11", "G12", "G13", "G14", "G15" };
+        public static readonly string[] PublicIds = { "G9b", "G10", "G11", "G12", "G13", "G13b", "G14", "G15" };
 
         // ── The specs ─────────────────────────────────────────────────
 
@@ -54,7 +54,10 @@ namespace GlorifiedBody.Editor.Demo
             Spec("G11", "STAFF BREAK ROOM", DemoItems.Floor1, DemoPublic.Music, -2, -22, 6, -16, 3f, G11, new Door('E', -19, "G8"), new Door('S', 2, "G15")),
             Spec("G12", "CONFERENCE ROOM", DemoItems.Floor1, DemoPublic.Music, 26, -22, 38, -16, 3.5f, G12, new Door('N', 27, "G5")),
             // Two doors: off the concourse and off the family rooms (a second way into G5 through G7, §12).
-            Spec("G13", "ADMISSIONS OFFICE", DemoItems.Floor1, DemoPublic.Music, 4, -9, 12, 0, 3.5f, G13, new Door('N', 8, "G2"), new Door('S', 8, "G7")),
+            Spec("G13", "ADMISSIONS OFFICE", DemoItems.Floor1, DemoPublic.Music, 4, -9, 12, 0, 3.5f, G13, new Door('N', 8, "G2"), new Door('S', 8, "G7"),
+                new Door('E', -4, "G5"), new Door('W', -1.5f, "G13b")), // a spoke of the foyer, and the way to the main entrance (2026-11-14)
+            // The main entrance (2026-11-14): a passage under a triangular glass roof, the shutters down at its end (the lockdown).
+            Spec("G13b", "THE MAIN ENTRANCE", DemoItems.Floor1, DemoPublic.Music, -4, -3, 4, 0, 4.8f, DemoPublic.G13b, new Door('E', -1.5f, "G13")),
             Spec("G14", "BUILDERS' STORAGE", DemoItems.Floor1, DemoPublic.Music, 26, -28, 32, -22, 4f, G14, new Door('W', -23, "U1")),
             Spec("G15", "STAFF TOILETS", DemoItems.Floor1, DemoPublic.Music, -2, -27, 6, -22, 3f, G15, new Door('N', 2, "G11")),
             // The gap (Bruno, 2026-11-06), a side puzzle off the concourse, PROPOSED.
@@ -133,6 +136,7 @@ namespace GlorifiedBody.Editor.Demo
         /// </summary>
         private static void W14(DemoRoom r)
         {
+            DemoForeground.W14(r); // the low camera (2026-11-14)
             GameObject tv = r.Crt("TV", new Vector3(-9.2f, 0f, 10.2f), 45f, DemoNight.ThingsToCome(), interactive: false, loop: false);
             DemoNight.W14Tv(r, tv); // the anime of the church (N2, round 108)
             r.Prop("Low_Table", new Vector3(-6.5f, 0f, 12.3f), new Vector3(1.2f, 0.5f, 0.8f), 0.45f);
@@ -231,6 +235,7 @@ namespace GlorifiedBody.Editor.Demo
         /// </summary>
         private static void G10(DemoRoom r)
         {
+            DemoForeground.G10(r); // the cake in the foreground (2026-11-14)
             r.Prop("Hot_Counter", new Vector3(37.3f, 0f, -2.5f), new Vector3(1.2f, 1f, 4f), 0.55f);
             for (int i = 0; i < 4; i++) r.Prop($"Tray_{i}", new Vector3(37.3f, 1f, -4f + i), new Vector3(0.4f, 0.03f, 0.3f), 0.65f);
             // One row of two tables in the middle: the aisles around them are 1.2 m or more (the NavMesh agent is 0.5 m).
@@ -309,6 +314,17 @@ namespace GlorifiedBody.Editor.Demo
             Piece(r.Props, "Projector_Lens", new Vector3(29.53f, 0.81f, -19f), new Vector3(0.04f, 0.04f, 0.04f), DemoRoom.Grey(0.9f), false);
             r.Prop("Water_Jug", new Vector3(33f, 0.75f, -19.35f), new Vector3(0.1f, 0.2f, 0.1f), 0.8f);
             r.Prop("Flip_Chart", new Vector3(37.4f, 0f, -21.5f), new Vector3(0.7f, 1.8f, 0.06f), 0.85f);
+            // The homage to Network (Bruno, 2026-11-14: "the conference room has this dramatic angle"): green banker's lamps in a row
+            // down the table, and a low camera from the head of the table that looks down its length to the slide.
+            Material brass = DemoRoom.Colour("brass", new Color(0.72f, 0.6f, 0.32f)), green = DemoRoom.Colour("banker_green", new Color(0.1f, 0.48f, 0.3f));
+            foreach (float x in new[] { 30.7f, 32.1f, 33.6f, 34.9f })
+            {
+                Piece(r.Props, $"Lamp_Post_{x:0.0}", new Vector3(x, 0.93f, -19f), new Vector3(0.03f, 0.36f, 0.03f), brass, false);
+                Piece(r.Props, $"Lamp_Base_{x:0.0}", new Vector3(x, 0.765f, -19f), new Vector3(0.14f, 0.03f, 0.14f), brass, false);
+                Piece(r.Props, $"Lamp_Shade_{x:0.0}", new Vector3(x, 1.12f, -19f), new Vector3(0.3f, 0.09f, 0.15f), green, false);
+            }
+            // 0.4 m north of the lamp row, at 1.3 m: the lamps recede down one side of the frame to the slide.
+            r.ExtraCamera("table", new Vector3(37.7f, 1.3f, -18.6f), new Vector3(26.2f, 1.0f, -19.2f), 52f, new Vector3(29.5f, 1.5f, -19f), new Vector3(7f, 3f, 5.6f));
             // The last slide: the white gear on black (a plain square for now), FAMILY OBSERVATION. V3. THANK YOU.
             r.Sign("Screen_Slide", "FAMILY OBSERVATION. V3. THANK YOU.", new Vector3(26.17f, 1.75f, -19f), Vector3.right, new Vector2(2.4f, 1.3f), 52);
             Piece(r.Props, "Slide_Gear", new Vector3(26.19f, 2.12f, -19f), new Vector3(0.02f, 0.5f, 0.5f), DemoRoom.Grey(0.92f), false);
@@ -326,7 +342,7 @@ namespace GlorifiedBody.Editor.Demo
             r.Prop("Tape_B", new Vector3(6.5f, 0.9f, -2.7f), new Vector3(1.4f, 0.02f, 0.02f), 0.7f);
             int n = 0;
             foreach (float z in new[] { -4f, -6f, -8f })
-                foreach (float x in new[] { 5.2f, 10.6f })
+                foreach (float x in new[] { 5.2f, 9.2f }) // 9.2: the spoke door to the foyer stands in the east wall (2026-11-14)
                 {
                     r.Prop($"Desk_{n}", new Vector3(x, 0f, z), new Vector3(1.4f, 0.75f, 0.7f), 0.25f);
                     r.Prop($"Monitor_{n}", new Vector3(x, 0.75f, z + 0.2f), new Vector3(0.4f, 0.33f, 0.08f), 0.1f);

@@ -190,6 +190,7 @@ namespace GlorifiedBody.Editor.Demo
         /// <summary>W9: Marta (beat 13, her scan C2, her fate), the window (14), the shut fire door.</summary>
         private static void W9(DemoRoom r)
         {
+            DemoForeground.W9(r); // the desk lamp in the foreground (2026-11-14)
             CardDoor(r, "W10", new Vector3(16.82f, 1.2f, -5.7f), Vector3.left); // the code rotation: W10 opens with the card
             r.Prop("Counter", new Vector3(11f, 0f, -6f), new Vector3(3f, 1.05f, 1.6f), 0.1f);
             DemoDark.HubUnits(r); // a source of the order of the dark room (§10.1)

@@ -30,6 +30,15 @@ namespace GlorifiedBody.Editor.Demo
             Shot("cam_w14_today_corner.png", new Vector3(-9.6f, 2.7f, 9.3f), new Vector3(-3f, 0.6f, 12.5f), 60f);
             // G3, the donor wall: straight on and level, the wall alone in the frame (the cherry tree of hands when it is drawn).
             Shot("cam_g3_donor_wall_alone.png", new Vector3(24.5f, -2.35f, -24.55f), new Vector3(24.5f, -2.3f, -19.17f), 50f);
+            // The built cameras of 2026-11-14: the foyer's entry view, the main entrance down its axis, the conference table (Network).
+            foreach (string name in new[] { "Cam_G5_entry", "Cam_G13b_axis", "Cam_G12_table" })
+            {
+                GameObject built = GameObject.Find(name);
+                if (built == null) { Debug.LogWarning("[CameraStills] no camera " + name + ": run DemoWorld.BuildAll"); continue; }
+                var fixedCam = built.GetComponent<GlorifiedBody.Cameras.FixedCamera>();
+                float fov = fixedCam != null ? fixedCam.fieldOfView : 60f;
+                Shot("built_" + name.ToLowerInvariant() + ".png", built.transform.position, built.transform.position + built.transform.forward * 10f, fov);
+            }
             // The foyer, a greybox in an empty scene.
             EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             Foyer();

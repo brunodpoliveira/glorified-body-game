@@ -33,8 +33,10 @@ namespace GlorifiedBody.Editor.Demo
                 Room("G4", "THE CHAPEL", 24, 6, 32, 14, 4f, G4, new Door('S', 28, "G2")),
                 // The floorplan v2 (2026-11-05) moved two side rooms off G5's walls: G13 takes G6's old place (it needs G2 and G7), G10
                 // takes G8's (it needs G2 and G5). G6 is east of the hall under the cafeteria now, G8 south-west of the hall beside U1.
-                Room("G5", "RECEPTION HALL", 12, -16, 28, 0, 5f, G5, new Door('N', 20, "G2", fire: true), new Door('W', -12, "G7"), new Door('E', -12, "G9"), new Door('S', 20, "U1", flag: Released),
-                    new Door('E', -3.5f, "G10"), new Door('E', -7, "G6"), new Door('S', 13, "G8"), new Door('S', 27, "G12")),
+                // The round foyer (rounds 147 and 148; Bruno, 2026-11-14: "the foyer should be in the middle of the map ... the other rooms
+                // connected to it like spokes on a wheel"; "yes, i like the round foyer in g5"). The reception hall is round now.
+                Room("G5", "THE FOYER", 12, -16, 28, 0, 5f, G5, new Door('N', 20, "G2", fire: true), new Door('W', -12, "G7"), new Door('E', -12, "G9"), new Door('S', 20, "U1", flag: Released),
+                    new Door('E', -3.5f, "G10"), new Door('E', -7, "G6"), new Door('S', 13, "G8"), new Door('S', 27, "G12"), new Door('W', -4, "G13")),
                 Room("G6", "PUBLIC BATHROOMS", 28, -9, 36, -5, 3f, G6, new Door('W', -7, "G5")),
                 Room("G7", "FAMILY ROOMS", 4, -16, 12, -9, 3f, G7, new Door('E', -12, "G5"), new Door('N', 8, "G13")),
                 Room("G8", "OFFICES AND RECORDS", 6, -22, 14, -16, 3f, G8, new Door('N', 13, "G5"), new Door('W', -19, "G11")),
@@ -102,6 +104,7 @@ namespace GlorifiedBody.Editor.Demo
         /// <summary>G3: the donor wall, the plaque, the scan C6 (beat 18). A safe room.</summary>
         private static void G3(DemoRoom r)
         {
+            DemoForeground.G3(r); // the wall alone in the frame (2026-11-14)
             r.Box(r.Props, "Donor_Wall", new Vector3(12f, 1.75f, 11.83f), new Vector3(7.6f, 3.5f, 0.04f), DemoRoom.Colour("donor_wall", new Color(0.55f, 0.32f, 0.36f)));
             r.Sign("Sign_Plaque", DemoPlan.Sign("G3, the donor wall", "FOR THOSE WHO GAVE THE BODY."), new Vector3(12f, 1.2f, 11.79f), Vector3.back, new Vector2(2.2f, 0.35f), 40);
             DemoArt.Place(r, "Art_Palms", "A1", new Vector3(10f, 1.4f, 11.4f), "the palms");
@@ -114,6 +117,7 @@ namespace GlorifiedBody.Editor.Demo
         /// <summary>G4: the chapel, a nurse who prays and does not stop (a hider never found), the prayer card L8, the verse (beat 19).</summary>
         private static void G4(DemoRoom r)
         {
+            DemoForeground.G4(r); // the candle stand in the foreground (2026-11-14)
             for (int i = 0; i < 6; i++)
                 r.Prop($"Pew_{i}", new Vector3(i % 2 == 0 ? 26.2f : 29.8f, 0f, 8f + (i / 2) * 1.6f), new Vector3(2.6f, 0.5f, 0.5f), 0.1f);
             r.Prop("Lectern", new Vector3(28f, 0f, 12.6f), new Vector3(0.6f, 1.1f, 0.5f), 0.15f);
@@ -130,25 +134,181 @@ namespace GlorifiedBody.Editor.Demo
         }
 
         /// <summary>G5: the reception hall, the fight, the sheeted door to sector C (a gate the security office opens, beat 20).</summary>
+        // ── G5, the round foyer (rounds 147 and 148; Bruno, 2026-11-14) ─────────────────────────────
+
+        public static readonly Vector3 FoyerCentre = new Vector3(20f, 0f, -8f);
+        public const float FoyerRadius = 7.5f, FoyerCorridor = 0.9f;
+
+        /// <summary>The spoke doors of the foyer on G5's walls (plan metres): G2, G13, G7, G10, G6, G9, G8, U1, G12.</summary>
+        public static readonly Vector3[] FoyerSpokes =
+        {
+            new Vector3(20f, 0f, 0f), new Vector3(12f, 0f, -4f), new Vector3(12f, 0f, -12f), new Vector3(28f, 0f, -3.5f), new Vector3(28f, 0f, -7f),
+            new Vector3(28f, 0f, -12f), new Vector3(13f, 0f, -16f), new Vector3(20f, 0f, -16f), new Vector3(27f, 0f, -16f),
+        };
+
+        /// <summary>
+        /// G5, the foyer: the hub of floor 1, round (the picture of round 147: a circular lift lobby, curved frosted panels, chrome
+        /// columns lit from below, a lit skylight with a cross grid, a dark round floor). The ring stands in the square of the old
+        /// reception hall. The corners behind it are solid, with a short corridor from each of the nine spoke doors to the ring
+        /// (the camera coverage skips a floor point under a solid thing). Modesty stands in the centre under the skylight, larger
+        /// than life, with her art log (A8). The fight of the hall and the sheeted door of sector C stay.
+        /// </summary>
         private static void G5(DemoRoom r)
         {
-            r.Prop("Reception_Desk", new Vector3(20f, 0f, -4f), new Vector3(6f, 1.1f, 1f), 0.1f);
-            for (int i = 0; i < 4; i++) r.Prop($"Column_{i}", new Vector3(i < 2 ? 15f : 25f, 0f, i % 2 == 0 ? -4.5f : -11.5f), new Vector3(0.6f, 5f, 0.6f), 0.6f);
-            for (int i = 0; i < 4; i++) r.Prop($"Waiting_Chairs_{i}", new Vector3(16f + i * 2.6f, 0f, -9f), new Vector3(1.6f, 0.5f, 0.5f), 0.3f);
+            Vector3 c = FoyerCentre;
+            float h = r.Spec.Height;
+            Material panel = DemoRoom.Grey(0.62f), fill = DemoRoom.Grey(0.2f), chrome = DemoRoom.Colour("chrome", new Color(0.78f, 0.8f, 0.84f));
+            // The corners: solid cells of 0.5 m outside the ring, except the corridors of the spokes; one box for each run of cells.
+            const float cell = 0.5f;
+            for (float z = r.Spec.Z0 + cell * 0.5f; z < r.Spec.Z1; z += cell)
+            {
+                float runStart = float.NaN;
+                for (float x = r.Spec.X0 + cell * 0.5f; x < r.Spec.X1 + cell; x += cell)
+                {
+                    bool solid = x < r.Spec.X1 && FoyerSolid(new Vector3(x, 0f, z));
+                    if (solid && float.IsNaN(runStart)) runStart = x;
+                    if (!solid && !float.IsNaN(runStart))
+                    {
+                        float x0 = runStart - cell * 0.5f, x1 = x - cell * 0.5f;
+                        r.Box(r.Room, $"Foyer_Fill_{z:0.0}_{x0:0.0}", new Vector3((x0 + x1) * 0.5f, h * 0.5f, z), new Vector3(x1 - x0, h, cell), fill);
+                        runStart = float.NaN;
+                    }
+                }
+            }
+            // The ring of frosted panels, open at the spokes.
+            for (int i = 0; i < 48; i++)
+            {
+                float deg = i * 7.5f;
+                if (SpokeNear(deg, 8.5f)) continue;
+                Vector3 dir = Quaternion.Euler(0f, deg, 0f) * Vector3.forward;
+                GameObject piece = r.Box(r.Room, $"Foyer_Panel_{i:00}", c + dir * FoyerRadius + Vector3.up * h * 0.5f, new Vector3(1.0f, h, 0.12f), panel);
+                piece.transform.rotation = Quaternion.LookRotation(-dir, Vector3.up);
+            }
+            // Eight chrome columns in the free arcs between the spokes.
+            foreach (float deg in new[] { 20f, 40f, 100f, 160f, 200f, 270f, 322f, 340f }) // the free arcs (0 north, 90 east)
+            {
+                Vector3 dir = Quaternion.Euler(0f, deg, 0f) * Vector3.forward;
+                if (SpokeNear(deg, 7f)) continue;
+                r.Box(r.Props, $"Foyer_Column_{deg:000}", c + dir * 5.8f + Vector3.up * h * 0.5f, new Vector3(0.36f, h, 0.36f), chrome);
+            }
+            // The skylight: a lit disc under the ceiling with a cross grid.
+            GameObject sky = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            sky.name = "Foyer_Skylight";
+            sky.transform.SetParent(r.Room.transform, false);
+            sky.transform.position = c + Vector3.up * (h - 0.06f);
+            sky.transform.localScale = new Vector3(5f, 0.02f, 5f);
+            Object.DestroyImmediate(sky.GetComponent<Collider>());
+            sky.GetComponent<Renderer>().sharedMaterial = DemoRoom.Colour("skylight", new Color(1f, 0.97f, 0.88f));
+            for (int g = -2; g <= 2; g++)
+            {
+                Object.DestroyImmediate(r.Box(r.Room, $"Foyer_Grid_X{g}", c + new Vector3(g * 0.95f, h - 0.1f, 0f), new Vector3(0.06f, 0.05f, 5f), fill).GetComponent<Collider>());
+                Object.DestroyImmediate(r.Box(r.Room, $"Foyer_Grid_Z{g}", c + new Vector3(0f, h - 0.1f, g * 0.95f), new Vector3(5f, 0.05f, 0.06f), fill).GetComponent<Collider>());
+            }
+            // Modesty (A8), larger than life, PLACEHOLDER: the plinth, the body under the veil, the head, the veil's fall.
+            Material marble = DemoRoom.Colour("marble", new Color(0.92f, 0.9f, 0.86f));
+            r.Box(r.Props, "Modesty_Plinth", c + Vector3.up * 0.5f, new Vector3(1.4f, 1f, 1.4f), marble);
+            r.Box(r.Props, "Modesty_Body", c + Vector3.up * 2.05f, new Vector3(0.75f, 2.1f, 0.6f), marble);
+            r.Box(r.Props, "Modesty_Head", c + new Vector3(0f, 3.35f, 0.04f), new Vector3(0.4f, 0.48f, 0.42f), marble);
+            r.Sign("Sign_Modesty", "MODESTY. AFTER ANTONIO CORRADINI, 1752.", c + new Vector3(0f, 0.55f, -0.72f), Vector3.back, new Vector2(1.2f, 0.18f), 18);
+            DemoArt.Place(r, "Art_Modesty", "A8", c + new Vector3(0f, 1.4f, -0.9f), "the statue"); // round 148: her art log on Modesty
+            // The reception desk in the north-west arc, the waiting chairs in the free arcs.
+            r.Prop("Reception_Desk", new Vector3(17.6f, 0f, -4.6f), new Vector3(2.4f, 1.1f, 0.8f), 0.1f);
+            int n = 0;
+            foreach (Vector3 at in new[] { new Vector3(22.6f, 0f, -4.3f), new Vector3(21.6f, 0f, -12.4f), new Vector3(18.4f, 0f, -12.4f), new Vector3(16.2f, 0f, -8.3f) })
+                r.Prop($"Waiting_Chairs_{n++}", at, new Vector3(1.4f, 0.5f, 0.5f), 0.3f);
             r.Figure("Soldier_A", "soldier_rifle", new Vector3(22f, 0f, -12f), 0f);
             r.Figure("Soldier_B", "soldier_pistol", new Vector3(17f, 0f, -13f), 20f);
             r.Figure("Lab_Pistol_A", "labworker_pistol", new Vector3(24f, 0f, -7f), 300f);
             r.Figure("Lab_Pistol_B", "labworker_pistol", new Vector3(14f, 0f, -7f), 60f);
-            r.Figure("Civilian_A", "labworker", new Vector3(26.5f, 0f, -1.5f), 200f, variant: 0);
-            r.Figure("Civilian_B", "nurse", new Vector3(15.5f, 0f, -14.5f), 30f, variant: 3); // 2 m east since v2: the door to G8 is at x 13
+            r.Figure("Civilian_A", "labworker", new Vector3(20.9f, 0f, -4.6f), 200f, variant: 0); // inside the ring since the foyer
+            r.Figure("Civilian_B", "nurse", new Vector3(18.6f, 0f, -11.2f), 30f, variant: 3);
             // The sheeted door: plastic in the doorway until the security office releases sector C.
             GameObject sheet = MenuLoopSetup.EnsureChild(r.Story, "Gate_Sheeting");
             FlagGate gate = MenuLoopSetup.EnsureComponent<FlagGate>(sheet);
             gate.flag = Released;
             gate.showWhenRaised = false;
             r.Box(sheet, "Sheeting", new Vector3(20f, 1.2f, -16.1f), new Vector3(1.8f, 2.4f, 0.1f), DemoRoom.Colour("sheeting", new Color(0.7f, 0.72f, 0.7f)));
-            r.Sign("Sign_Sector_C", DemoPlan.Sign("U1, the sheeted door", "SECTOR C. CONSTRUCTION. ACCESS: SECURITY OFFICE."), new Vector3(20f, 2.7f, -15.83f), Vector3.forward, new Vector2(3.2f, 0.4f), 36);
-            r.Capsule("Capsule_G5", DrugType.Nalcon, new Vector3(13f, 0.15f, -1.2f));
+            r.Sign("Sign_Sector_C", DemoPlan.Sign("U1, the sheeted door", "SECTOR C. CONSTRUCTION. ACCESS: SECURITY OFFICE."), new Vector3(20f, 2.7f, -15.83f), Vector3.forward, new Vector2(2.6f, 0.35f), 32);
+            r.Capsule("Capsule_G5", DrugType.Nalcon, new Vector3(17.3f, 0.15f, -3.2f));
+            // The entry view: high over the spoke of G2, Modesty under the skylight (the picture of round 147). Its zone lies in front
+            // of the camera, where its frame reaches the floor (2.0 m on from the camera and more).
+            r.ExtraCamera("entry", new Vector3(20f, 4.6f, -0.8f), new Vector3(20f, 0.8f, -7.5f), 70f, new Vector3(20f, 1.5f, -4.75f), new Vector3(2.8f, 3f, 3.5f));
+        }
+
+        /// <summary>A spoke of the foyer within this many degrees (0 is north, the angle turns east).</summary>
+        private static bool SpokeNear(float deg, float within)
+        {
+            foreach (Vector3 s in FoyerSpokes)
+            {
+                Vector3 d = s - FoyerCentre;
+                float a = Mathf.Atan2(d.x, d.z) * Mathf.Rad2Deg;
+                if (Mathf.Abs(Mathf.DeltaAngle(a, deg)) < within) return true;
+            }
+            return false;
+        }
+
+        /// <summary>A point of G5 outside the ring and away from every spoke corridor (the corners are solid).</summary>
+        public static bool FoyerSolid(Vector3 p)
+        {
+            Vector3 d = p - FoyerCentre;
+            d.y = 0f;
+            if (d.magnitude <= FoyerRadius + 0.1f) return false;
+            foreach (Vector3 s in FoyerSpokes)
+            {
+                Vector3 a = s, b = FoyerCentre;
+                Vector3 ab = b - a, ap = p - a;
+                ab.y = ap.y = 0f;
+                float t = Mathf.Clamp01(Vector3.Dot(ap, ab) / ab.sqrMagnitude);
+                Vector3 nearest = a + ab * t;
+                nearest.y = p.y;
+                if (Vector3.Distance(nearest, p) < FoyerCorridor + 0.25f) return false;
+            }
+            return true;
+        }
+
+        // ── G13b, the main entrance (2026-11-14) ─────────────────────────────
+
+        /// <summary>
+        /// G13b: the main entrance of the Memorial, off the admissions office. A passage 8 m long under a triangular roof of glass
+        /// blocks on concrete A-frames (Bruno's pictures of 2026-11-14), the steel shutters down at its west end (the lockdown of code
+        /// silver), daylight through the slots. Its camera looks down the passage from the admissions end, a trolley in the
+        /// foreground. It never opens in the demo.
+        /// </summary>
+        public static void G13b(DemoRoom r)
+        {
+            float x0 = r.Spec.X0, x1 = r.Spec.X1, z0 = r.Spec.Z0, z1 = r.Spec.Z1, mid = (z0 + z1) * 0.5f;
+            const float eave = 2.9f, ridge = 4.6f;
+            Material glass = DemoRoom.Colour("glass_block", new Color(0.72f, 0.8f, 0.84f)), concrete = DemoRoom.Grey(0.36f), steel = DemoRoom.Grey(0.16f);
+            float half = (z1 - z0) * 0.5f, slope = Mathf.Atan2(ridge - eave, half) * Mathf.Rad2Deg, side = Mathf.Sqrt(half * half + (ridge - eave) * (ridge - eave));
+            // The glass roof: two slopes from the eaves to the ridge, a grid of mullions on them.
+            foreach (float s in new[] { -1f, 1f })
+            {
+                GameObject slopeObj = r.Box(r.Room, s < 0 ? "Roof_Glass_South" : "Roof_Glass_North", new Vector3((x0 + x1) * 0.5f, (eave + ridge) * 0.5f, mid + s * half * 0.5f), new Vector3(x1 - x0, 0.06f, side), glass);
+                slopeObj.transform.rotation = Quaternion.Euler(s * slope, 0f, 0f);
+                Object.DestroyImmediate(slopeObj.GetComponent<Collider>());
+            }
+            // The concrete A-frames every 2 m, and the walls up to the eaves in glass block.
+            for (float x = x0 + 1f; x < x1; x += 2f)
+                foreach (float s in new[] { -1f, 1f })
+                {
+                    GameObject leg = r.Box(r.Props, $"Frame_{x:0.0}_{(s < 0 ? "S" : "N")}", new Vector3(x, (eave + ridge) * 0.5f - 0.05f, mid + s * half * 0.5f), new Vector3(0.22f, 0.22f, side), concrete);
+                    leg.transform.rotation = Quaternion.Euler(s * slope, 0f, 0f);
+                    Object.DestroyImmediate(leg.GetComponent<Collider>());
+                    r.Box(r.Props, $"Frame_Post_{x:0.0}_{(s < 0 ? "S" : "N")}", new Vector3(x, eave * 0.5f, mid + s * (half - 0.16f)), new Vector3(0.22f, eave, 0.22f), concrete);
+                }
+            foreach (float s in new[] { -1f, 1f })
+                Object.DestroyImmediate(r.Box(r.Room, s < 0 ? "Glass_Wall_South" : "Glass_Wall_North", new Vector3((x0 + x1) * 0.5f, eave * 0.5f + 0.4f, mid + s * (half - 0.04f)), new Vector3(x1 - x0 - 0.4f, eave - 0.8f, 0.04f), glass).GetComponent<Collider>());
+            // The shutters at the west end, down: steel slats and the daylight in the slots.
+            for (int i = 0; i < 12; i++)
+                r.Box(r.Props, $"Shutter_Slat_{i:00}", new Vector3(x0 + 0.2f, 0.12f + i * 0.24f, mid), new Vector3(0.1f, 0.2f, z1 - z0 - 0.6f), steel);
+            for (int i = 0; i < 11; i++)
+                Object.DestroyImmediate(r.Box(r.Room, $"Shutter_Light_{i:00}", new Vector3(x0 + 0.14f, 0.24f + i * 0.24f, mid), new Vector3(0.02f, 0.04f, z1 - z0 - 0.7f), DemoRoom.Colour("daylight", new Color(1f, 0.98f, 0.9f))).GetComponent<Collider>());
+            r.Sign("Sign_Lockdown", "LOCKDOWN. SHELTER IN PLACE.", new Vector3(x0 + 0.3f, 3.2f, mid), Vector3.right, new Vector2(2.2f, 0.36f), 36);
+            // The trolley in the foreground of the camera, and the camera down the passage.
+            r.Prop("Trolley", new Vector3(x1 - 1.4f, 0f, z0 + 0.6f), new Vector3(1.2f, 0.9f, 0.6f), 0.4f);
+            // Its zone: the passage from 2.6 m in front of the camera (where the frame reaches the floor) to the shutters.
+            float near = x1 - 3.1f;
+            r.ExtraCamera("axis", new Vector3(x1 - 0.5f, 1.75f, mid), new Vector3(x0, 1.5f, mid), 64f, new Vector3((x0 + near) * 0.5f, 1.5f, mid), new Vector3(near - x0, 3f, z1 - z0));
         }
 
         /// <summary>G6: the public bathrooms, a clerk who hides in a stall ("Occupied."). Since v2 at x 28..36, z -9..-5, east of the hall. A toilet that flushes (the hider answers it once), a faucet.</summary>

@@ -47,7 +47,7 @@ namespace GlorifiedBody.Tests.PlayMode
         }
         private const string World = "Demo";
         private static readonly string[] Rooms = { "H1", "H2", "H3", "H4", "H5", "HT", "H6", "H7", "H8", "H9", "W2", "W3", "W4", "W5", "W6", "W7", "W8", "W9", "W10", "W11", "W12", "W13", "W14", "W15", "W16", "W17", "S1",
-            "G1", "G2", "G3", "G4", "G5", "G6", "G7", "G8", "G9", "G9b", "G10", "G11", "G12", "G13", "G14", "G15", "G16", "X1", "R1", "R2", "R3", "U1", "B1", "B2", "G18", "G19", "G17b", "G17" }; // the floorplan v2 (2026-11-05), the brain sector (2026-11-09), the Dining Hall and the halon room (2026-11-10)
+            "G1", "G2", "G3", "G4", "G5", "G6", "G7", "G8", "G9", "G9b", "G10", "G11", "G12", "G13", "G13b", "G14", "G15", "G16", "X1", "R1", "R2", "R3", "U1", "B1", "B2", "G18", "G19", "G17b", "G17" }; // the floorplan v2 (2026-11-05), the brain sector (2026-11-09), the Dining Hall and the halon room (2026-11-10)
         private static readonly string[] MainWay = { "H1", "H2", "H3", "H5", "HT", "H6", "H7", "H8", "H9", "W2", "W5", "W7", "W8", "W9", "W11", "W9", "W12", "S1", "G1", "G2", "G5", "G9", "G5", "U1" };
 
         [UnitySetUp]

@@ -50,6 +50,7 @@ namespace GlorifiedBody.Editor.Demo
 
         private static void G18(DemoRoom r)
         {
+            DemoForeground.G18(r); // the candelabrum in the foreground (2026-11-14)
             // The host stand by the glass doors: the book of tonight (L31) and a comment card (L32).
             r.Prop("Host_Stand", new Vector3(36.6f, 0f, 4.9f), new Vector3(0.6f, 1.1f, 0.5f), 0.15f);
             r.Item("L31_Reservation_Book", L31(), new Vector3(36.55f, 1.11f, 4.9f), new Vector3(0.3f, 0.03f, 0.22f));

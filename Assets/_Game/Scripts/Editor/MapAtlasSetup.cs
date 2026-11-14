@@ -73,11 +73,11 @@ namespace GlorifiedBody.Editor
             { "W2", "NORTH CORRIDOR" }, { "W3", "PATIENTS" }, { "W4", "SHOWERS" }, { "W5", "SOUTH CORRIDOR" },
             { "W6", "LOCKERS" }, { "W7", "THERAPY GYM" }, { "W8", "INDUCTION" }, { "W9", "NURSES' STATION" }, { "W10", "RESEARCH" },
             { "W11", "MAPPING LAB" }, { "W12", "STAIRWELL" }, { Demo.DemoWorld.Stair, "STAIRS" },
-            { "G1", "LANDING" }, { "G2", "CONCOURSE" }, { "G3", "DONOR WALL" }, { "G4", "CHAPEL" }, { "G5", "RECEPTION" },
+            { "G1", "LANDING" }, { "G2", "CONCOURSE" }, { "G3", "DONOR WALL" }, { "G4", "CHAPEL" }, { "G5", "THE FOYER" },
             { "G6", "BATHROOMS" }, { "G7", "FAMILY ROOMS" }, { "G8", "OFFICES" }, { "G9", "SECURITY" }, { "U1", "SECTOR C" },
             // The floorplan v2 (2026-11-05).
             { "W13", "SECURITY POST" }, { "W14", "DAY ROOM" }, { "W15", "BREAK ROOM" }, { "W16", "COLD ROOM" }, { "W17", "STORAGE" },
-            { "G9b", "COMMS" }, { "G10", "CAFETERIA" }, { "G11", "BREAK ROOM" }, { "G12", "CONFERENCE" }, { "G13", "ADMISSIONS" },
+            { "G9b", "COMMS" }, { "G10", "CAFETERIA" }, { "G11", "BREAK ROOM" }, { "G12", "CONFERENCE" }, { "G13", "ADMISSIONS" }, { "G13b", "MAIN ENTRANCE" },
             { "G14", "BUILDERS' STORE" }, { "G15", "STAFF TOILETS" }, { "G16", "RISER ROOM" },
             { "X1", "CAR PARK" }, { "R1", "THE SHOP" }, { "R2", "SERVICE BAY" }, { "R3", "TOLL YARD" },
             { "B1", "THE BRAIN" }, { "B2", "BUILDERS' DOOR" }, // 2026-11-09
