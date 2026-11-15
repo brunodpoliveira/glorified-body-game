@@ -726,6 +726,13 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   guards open it again. `FireDoor.openFlag`/`jamFlag` take flags with commas. `GlorifiedBody > Scene View > Hide Roofs` (Scene view only)
   and no MIS banner (`Editor/SceneViewTools.cs`). Room names PLACEHOLDER. Numbers PROPOSED.
 
+- 2026-11-15, MOVABLE THINGS OUT OF THE BAKE, THE DINING HALL AT 24 X 13 M (`devlog-notes/2026-11-15_navmesh_movables_dining_hall.md`, Bruno:
+  "physic objects on the ground are interpreted by the autopath creator for ai as a permanent obstacle"): `PropAssets.OutOfTheBake` (a
+  `NavMeshModifier` out of the bake, a carve where it rests) on the crate, the box, the planter and the statue copy. The cover map keeps a
+  point only on the live NavMesh (`CoverMap.LiveTolerance`: the triangulation does not show the carves). A leashed soldier holds his place
+  when the move point is outside his room (`SoldierBrain.Go`). G18 is x 35 to 59, z 0 to 13, 6 m high, the lodge door at x 50
+  (`DemoDining.LodgeDoor`). OPEN: `DiningHallTests.TheShotgun_...` fails (the gunner comes into her reach and strikes). Numbers PROPOSED.
+
 ## Rules
 
 1. Unity 6000.3.15f1 (installed at `/home/pc/Unity/Hub/Editor/6000.3.15f1`). Start it only through `tools/unity.sh`

@@ -335,11 +335,7 @@ namespace GlorifiedBody.Editor.Demo
             body.interpolation = RigidbodyInterpolation.Interpolate;
             body.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
             body.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ; // on its wheels, upright
-            UnityEngine.AI.NavMeshObstacle obstacle = MenuLoopSetup.EnsureComponent<UnityEngine.AI.NavMeshObstacle>(root);
-            obstacle.shape = UnityEngine.AI.NavMeshObstacleShape.Box;
-            obstacle.size = box.size;
-            obstacle.carving = true;
-            obstacle.carveOnlyStationary = true;
+            PropAssets.OutOfTheBake(root, Vector3.zero, box.size); // a moved copy leaves no hole behind
             MenuLoopSetup.EnsureComponent<MovableProp>(root);
             ArtLog art = DemoArt.Place(r, "Art_" + name, logId, root.transform.position + Vector3.up * 0.2f, "the copy");
             if (art != null) art.transform.SetParent(root.transform, true);

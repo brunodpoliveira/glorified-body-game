@@ -1584,8 +1584,8 @@ MonoBehaviour:
     - serializedVersion: 2
       x: 47.5
       y: -31
-      width: 12
-      height: 10
+      width: 24
+      height: 13
     exits:
     - path: G18/G2
       position: {x: 47.5, y: -28}

@@ -39,6 +39,7 @@ namespace GlorifiedBody.Enemy
         private const float Grid = 0.5f;
         private const float HipRay = 0.7f;      // m: a thing lower than this covers no one (a bench, a bed)
         private const float OverRay = 1.35f;    // m: clear here, and the muzzle at 1.3 m fires over it
+        private const float LiveTolerance = 0.1f; // m: a mesh point this near the live NavMesh stands on it
         private const float Reach = 1.2f;       // m from the point to the thing (the NavMesh ends 0.5 m from it, the grid adds up to 0.5 m)
         private const float BodyHalf = 0.3f;    // m each side: the thing must cover his width
         private const float StepOut = 0.9f;     // m to the side, to fire past a corner
@@ -119,7 +120,12 @@ namespace GlorifiedBody.Enemy
                     {
                         var flat = new Vector2(ix * Grid, iz * Grid);
                         if (!OnTriangle(flat, a, b, c, out float y)) continue;
-                        if (seen.Add((ix, iz, Mathf.RoundToInt(y)))) Scan(new Vector3(flat.x, y, flat.y), solid);
+                        if (!seen.Add((ix, iz, Mathf.RoundToInt(y)))) continue;
+                        Vector3 p = new Vector3(flat.x, y, flat.y);
+                        // The triangulation does not show the live carves (a crate, a planter: out of the bake since 2026-11-15):
+                        // a point in a carved hole is no place to stand.
+                        if (!NavMesh.SamplePosition(p, out NavMeshHit live, 0.3f, NavMesh.AllAreas) || (live.position - p).sqrMagnitude > LiveTolerance * LiveTolerance) continue;
+                        Scan(p, solid);
                     }
             }
             clock.Stop();

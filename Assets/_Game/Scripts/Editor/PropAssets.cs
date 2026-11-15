@@ -36,7 +36,25 @@ namespace GlorifiedBody.Editor
             so.FindProperty("isProp").boolValue = true;
             so.FindProperty("heavy").boolValue = false;
             so.ApplyModifiedPropertiesWithoutUndo();
+            OutOfTheBake(obj, Vector3.zero, Vector3.one); // a thrown or pushed crate leaves no hole behind (2026-11-15)
             return obj;
+        }
+
+        /// <summary>
+        /// A thing that moves (a crate, a box, a planter, a statue copy) stays out of the NavMesh bake, and it carves its hole
+        /// where it rests (Bruno, 2026-11-15: "physic objects on the ground are interpreted by the autopath creator for ai as a
+        /// permanent obstacle"). The bake took every collider on the Default layer, so a moved thing left its first hole
+        /// behind. Centre and size are local to the object.
+        /// </summary>
+        public static void OutOfTheBake(GameObject obj, Vector3 centre, Vector3 size)
+        {
+            MenuLoopSetup.EnsureComponent<Unity.AI.Navigation.NavMeshModifier>(obj).ignoreFromBuild = true;
+            UnityEngine.AI.NavMeshObstacle obstacle = MenuLoopSetup.EnsureComponent<UnityEngine.AI.NavMeshObstacle>(obj);
+            obstacle.shape = UnityEngine.AI.NavMeshObstacleShape.Box;
+            obstacle.center = centre;
+            obstacle.size = size;
+            obstacle.carving = true;
+            obstacle.carveOnlyStationary = true;
         }
 
         /// <summary>
@@ -50,11 +68,6 @@ namespace GlorifiedBody.Editor
             body.mass = mass;
             body.interpolation = RigidbodyInterpolation.Interpolate;
             body.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative; // ContinuousDynamic stops all motion at a contact: a box against a rail could not rise along it
-            UnityEngine.AI.NavMeshObstacle obstacle = MenuLoopSetup.EnsureComponent<UnityEngine.AI.NavMeshObstacle>(obj);
-            obstacle.shape = UnityEngine.AI.NavMeshObstacleShape.Box;
-            obstacle.size = Vector3.one;
-            obstacle.carving = true;
-            obstacle.carveOnlyStationary = true;
             Rideable ride = MenuLoopSetup.EnsureComponent<Rideable>(obj); // she climbs on and surfs it with mk_orzabal (2026-11-14)
             ride.range = 1.3f;
             return obj;

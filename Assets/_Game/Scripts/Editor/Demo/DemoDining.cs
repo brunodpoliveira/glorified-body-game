@@ -25,10 +25,15 @@ namespace GlorifiedBody.Editor.Demo
         public const string DutyKeyTaken = "demo_duty_key_taken";
         public const string TeamGroup = "Hall_Team";
         public const string ArmourFlag = "demo_g18_armour";
+        /// <summary>The lodge door in the north wall of G18, on the floor (the armour steps out of it).</summary>
+        public static readonly Vector3 LodgeDoor = new Vector3(50f, 0f, 12.9f);
 
         public static List<RoomSpec> Rooms() => new List<RoomSpec>
         {
-            Spec("G18", "THE DINING HALL", 35, 0, 47, 10, 5f, G18, new Door('W', 3, "G2", width: 2.4f), new Door('S', 41, "G19")),
+            // Bruno, 2026-11-15: "the dining hall needs to be a lot larger; it is meant to be this opulent place, and it needs to be large
+            // enough for flanking opportunities both for the player and the enemies": 24 x 13 m (12 x 10 before), 6 m high. East is free;
+            // the yard's backdrop of the ward stands 1 m north of z 13.
+            Spec("G18", "THE DINING HALL", 35, 0, 59, 13, 6f, G18, new Door('W', 3, "G2", width: 2.4f), new Door('S', 41, "G19")),
             Spec("G19", "THE KITCHEN", 38, -12, 44, 0, 3.5f, G19, new Door('N', 41, "G18"), ServiceExit("G9b"), new Door('S', 43, "G17b")), // G17b, facilities, and the halon room (2026-11-10)
         };
 
@@ -58,31 +63,47 @@ namespace GlorifiedBody.Editor.Demo
             r.Prop("Menu_Stand", new Vector3(37.4f, 0f, 1.2f), new Vector3(0.1f, 1.2f, 0.5f), 0.7f);
             r.Sign("Sign_Winter_Menu", DemoPlan.Sign("G18, a brass stand", "TONIGHT: THE WINTER MENU."), new Vector3(37.34f, 1f, 1.2f), Vector3.left, new Vector2(0.45f, 0.25f), 20);
 
-            // The hall: round columns, banquettes, the bar at the east wall, the tables on their sides (the soldiers' cover).
-            foreach ((string tag, float x, float z) in new[] { ("A", 39.5f, 3.2f), ("B", 39.5f, 7.2f), ("C", 43.2f, 3.2f), ("D", 43.2f, 7.2f) })
-                r.Prop("Column_" + tag, new Vector3(x, 0f, z), new Vector3(0.6f, 5f, 0.6f), 0.08f);
-            r.Prop("Banquette_N", new Vector3(37.6f, 0f, 9.45f), new Vector3(2.6f, 0.9f, 0.6f), 0.35f);
-            r.Prop("Banquette_S", new Vector3(41f, 0f, 0.55f), new Vector3(2.6f, 0.9f, 0.6f), 0.35f);
-            r.Prop("Bar", new Vector3(46.2f, 0f, 5f), new Vector3(0.8f, 1.1f, 5f), 0.1f);
-            foreach ((string tag, float x, float z, bool across) in new[] { ("A", 41.2f, 5.2f, true), ("B", 44.4f, 2.4f, false), ("C", 44.4f, 8.2f, false), ("D", 38.6f, 5.2f, true) })
+            // The hall: two rows of round columns, banquettes on the long walls, the bar at the east wall, the chandeliers, and the
+            // tables on their sides (the soldiers' cover) in islands with lanes between them and along both walls: each side has a
+            // way round the other (flanking, DEMO_PLAN §13.1). Lanes 1.2 m or wider (the NavMesh rule of 2026-11-05).
+            foreach (float x in new[] { 41f, 47f, 53f })
+                foreach ((string row, float z) in new[] { ("S", 3.8f), ("N", 9.2f) })
+                    r.Prop($"Column_{row}_{x:0}", new Vector3(x, 0f, z), new Vector3(0.7f, 6f, 0.7f), 0.08f);
+            foreach ((string tag, float x, float z) in new[] { ("NW", 38.5f, 12.45f), ("N", 44f, 12.45f), ("S", 48f, 0.55f), ("SE", 54f, 0.55f) })
+                r.Prop("Banquette_" + tag, new Vector3(x, 0f, z), new Vector3(2.6f, 0.9f, 0.6f), 0.35f);
+            r.Prop("Bar", new Vector3(58.2f, 0f, 6.5f), new Vector3(0.8f, 1.1f, 7f), 0.1f);
+            foreach ((string tag, float x, float z, bool across) in new[]
+            {
+                ("A", 43.5f, 7.0f, true), ("B", 45f, 1.8f, false), ("C", 45f, 11.2f, false), ("D", 49.5f, 6.5f, true),
+                ("E", 51f, 2.2f, false), ("F", 51f, 10.8f, false), ("G", 55.5f, 4.5f, true), ("H", 55.5f, 8.5f, true),
+            })
                 r.Prop("Table_Side_" + tag, new Vector3(x, 0f, z), across ? new Vector3(0.12f, 0.9f, 1.4f) : new Vector3(1.4f, 0.9f, 0.12f), 0.85f);
+            foreach ((string tag, float x, float z) in new[] { ("W", 38.5f, 10f), ("E", 53f, 6.5f) })
+                r.Prop("Dining_Table_" + tag, new Vector3(x, 0f, z), new Vector3(1.1f, 0.75f, 1.1f), 0.9f); // still laid: the white cloths
+            foreach (float x in new[] { 44f, 50f, 56f })
+            {
+                GameObject chandelier = r.Box(r.Props, $"Chandelier_{x:0}", new Vector3(x, 5.1f, 6.5f), new Vector3(1.6f, 0.5f, 1.6f), DemoRoom.Colour("chandelier_gold", new Color(0.85f, 0.7f, 0.35f)));
+                Object.DestroyImmediate(chandelier.GetComponent<Collider>());
+                chandelier.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            }
 
             // The lodge door, locked tonight (off the map), and its words.
-            r.Box(r.Props, "Lodge_Door", new Vector3(44f, 1.2f, 9.9f), new Vector3(2f, 2.4f, 0.1f), DemoRoom.Grey(0.2f));
-            r.Sign("Sign_Lodge", DemoPlan.Sign("G18, the lodge door, engraved", "THE LODGE. FOR THE FAMILIES OF OUR PATIENTS, AND FOR OUR GUESTS. THE CITY IS AN HOUR AWAY. STAY CLOSE TO THEM."), new Vector3(44f, 2.85f, 9.83f), Vector3.back, new Vector2(2.6f, 0.4f), 22);
-            r.Sign("Sign_Lodge_Closed", DemoPlan.Sign("G18, the lodge door, a printed notice", "LODGE CLOSED. GUESTS: STAY IN YOUR ROOMS. A MEMBER OF STAFF WILL COME TO YOU."), new Vector3(44f, 1.5f, 9.8f), Vector3.back, new Vector2(0.8f, 0.35f), 16);
+            r.Box(r.Props, "Lodge_Door", LodgeDoor + new Vector3(0f, 1.2f, 0f), new Vector3(2f, 2.4f, 0.1f), DemoRoom.Grey(0.2f));
+            r.Sign("Sign_Lodge", DemoPlan.Sign("G18, the lodge door, engraved", "THE LODGE. FOR THE FAMILIES OF OUR PATIENTS, AND FOR OUR GUESTS. THE CITY IS AN HOUR AWAY. STAY CLOSE TO THEM."), LodgeDoor + new Vector3(0f, 2.85f, -0.07f), Vector3.back, new Vector2(2.6f, 0.4f), 22);
+            r.Sign("Sign_Lodge_Closed", DemoPlan.Sign("G18, the lodge door, a printed notice", "LODGE CLOSED. GUESTS: STAY IN YOUR ROOMS. A MEMBER OF STAFF WILL COME TO YOU."), LodgeDoor + new Vector3(0f, 1.5f, -0.1f), Vector3.back, new Vector2(0.8f, 0.35f), 16);
 
             // The second squad (rounds 62 and 122, CANON): six soldiers, two sets of a shield, a grenadier and a shotgunner, at
-            // their forward post, the lodge door behind them. Ortiz, Brandt and four more (the names PROPOSED).
+            // their forward post, the lodge door behind them. Ortiz, Brandt and four more (the names PROPOSED). The shields hold
+            // the front, the shotguns the middle islands, the grenadiers the back corners.
             GameObject team = MenuLoopSetup.EnsureChild(r.Figures, TeamGroup);
             foreach ((string name, string kind, Vector3 at) in new[]
             {
-                ("Ortiz", "soldier_shield", new Vector3(40.4f, 0f, 2.2f)),
-                ("Hall_Grenadier_A", "soldier_grenades", new Vector3(45.3f, 0f, 1.4f)),
-                ("Hall_Shotgun_A", "soldier_shotgun", new Vector3(42.6f, 0f, 3.4f)),
-                ("Brandt", "soldier_shield", new Vector3(40.6f, 0f, 8.3f)),
-                ("Hall_Grenadier_B", "soldier_grenades", new Vector3(46.2f, 0f, 9.1f)),
-                ("Hall_Shotgun_B", "soldier_shotgun", new Vector3(42.6f, 0f, 7.0f)),
+                ("Ortiz", "soldier_shield", new Vector3(46.5f, 0f, 2.8f)),
+                ("Hall_Grenadier_A", "soldier_grenades", new Vector3(56.5f, 0f, 2.2f)),
+                ("Hall_Shotgun_A", "soldier_shotgun", new Vector3(50.5f, 0f, 4.6f)),
+                ("Brandt", "soldier_shield", new Vector3(46.5f, 0f, 10.2f)),
+                ("Hall_Grenadier_B", "soldier_grenades", new Vector3(56.5f, 0f, 11.0f)),
+                ("Hall_Shotgun_B", "soldier_shotgun", new Vector3(50.5f, 0f, 8.4f)),
             })
             {
                 EnemySpawn s = r.Figure(name, kind, at, 270f, parent: team);
@@ -97,7 +118,7 @@ namespace GlorifiedBody.Editor.Demo
             gate.flag = ArmourFlag;
             gate.showWhenRaised = true;
             gate.waitUnseen = false; // it steps out in her view
-            r.Figure("Hall_Power_Armour", "power_armour_guns", new Vector3(43.0f, 0f, 9.0f), 180f, parent: heavy);
+            r.Figure("Hall_Power_Armour", "power_armour_guns", LodgeDoor + new Vector3(0f, 0f, -0.9f), 180f, parent: heavy);
             HeavyArrival arrival = MenuLoopSetup.EnsureComponent<HeavyArrival>(MenuLoopSetup.EnsureChild(r.Story, "Armour_Arrival"));
             arrival.squad = team.transform;
             arrival.armourGroup = heavy;

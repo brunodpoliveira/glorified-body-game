@@ -381,9 +381,18 @@ namespace GlorifiedBody.Enemy
         private string leashFlag = "";
         public const float LeashMargin = 0.8f; // m inside the room's walls
 
-        /// <summary>Every move of the fight goes here: on a leash, a point outside the room becomes the nearest point inside it.</summary>
+        /// <summary>
+        /// Every move of the fight goes here. On a leash, a point outside the room keeps him where he stands (2026-11-15: in the
+        /// 24 m Dining Hall all six took the one nearest point at the door and pushed one out into G2); when he stands outside
+        /// it, the nearest point inside it.
+        /// </summary>
         private Vector3 Go(Vector3 point, MoveSpeed speed)
         {
+            if (Leashed && !leashRoom.Contains(point, -LeashMargin) && leashRoom.Contains(transform.position, -LeashMargin))
+            {
+                body.Stop();
+                return transform.position;
+            }
             if (Leashed && !leashRoom.Contains(point, -LeashMargin))
             {
                 Vector3 local = point - leashRoom.transform.position;

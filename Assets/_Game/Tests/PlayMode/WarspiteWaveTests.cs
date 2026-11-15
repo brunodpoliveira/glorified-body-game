@@ -101,6 +101,28 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.Greater(blast, 0.5f, "an explosion pushes the crate near it");
         }
 
+        [UnityTest]
+        public IEnumerator AMovedCrate_LeavesNoHoleBehind_AndCarvesOneWhereItRests()
+        {
+            // Bruno, 2026-11-15: "physic objects on the ground are interpreted by the autopath creator for ai as a permanent
+            // obstacle". The crate stays out of the bake and carves its hole where it rests.
+            GameObject crate = GameObject.Find("Crate_K1");
+            Vector3 from = crate.transform.position;
+            Vector3 floorFrom = new Vector3(from.x, 0f, from.z);
+            yield return new WaitForSeconds(1f); // the carve of a resting thing
+            bool holeAtStart = !UnityEngine.AI.NavMesh.SamplePosition(floorFrom, out UnityEngine.AI.NavMeshHit h0, 0.1f, UnityEngine.AI.NavMesh.AllAreas);
+            Vector3 to = from + new Vector3(0f, 0f, 2.5f);
+            crate.transform.position = to;
+            Physics.SyncTransforms();
+            yield return new WaitForSeconds(1.5f);
+            bool holeLeft = !UnityEngine.AI.NavMesh.SamplePosition(floorFrom, out UnityEngine.AI.NavMeshHit h1, 0.1f, UnityEngine.AI.NavMesh.AllAreas);
+            bool holeNew = !UnityEngine.AI.NavMesh.SamplePosition(new Vector3(to.x, 0f, to.z), out UnityEngine.AI.NavMeshHit h2, 0.1f, UnityEngine.AI.NavMesh.AllAreas);
+            Debug.Log($"[WarspiteWaveTests] the crate's NavMesh: a hole at the start {holeAtStart}, after the move: at the old place {holeLeft}, at the new place {holeNew}");
+            Assert.IsTrue(holeAtStart, "the crate carves its hole where it rests");
+            Assert.IsFalse(holeLeft, "no hole where it stood");
+            Assert.IsTrue(holeNew, "a hole where it rests now");
+        }
+
         private static IEnumerator WaitUntil(Func<bool> condition, float timeoutSeconds)
         {
             float t0 = Time.realtimeSinceStartup;

@@ -69,7 +69,7 @@ namespace GlorifiedBody.Tests.PlayMode
             DummyShooter guns = armour.GetComponent<DummyShooter>();
             Assert.AreEqual(DummyShooter.Weapon.ArmourGuns, guns.WeaponKind, "the autofire archetype, no grenades and no rockets");
             Assert.AreEqual("power_armour_guns", guns.EnemyId, "its killer id: the death screen power_armour_guns");
-            Vector3 door = new Vector3(44f, 0f, 9.9f);
+            Vector3 door = new Vector3(50f, 0f, 12.9f); // the lodge door (DemoDining.LodgeDoor; the hall is 24 x 13 m since 2026-11-15)
             float fromDoor = Vector3.Distance(Flat(armour.transform.position), Flat(Room.Of("G18").transform.position + door));
             Assert.Less(fromDoor, 2.5f, "it steps out of the lodge door");
             bool called = six.Skip(3).Any(s => Bark.CountOf(s.gameObject) > 0 && s.GetComponent<Bark>().Shown.StartsWith("We're at half"));
@@ -97,15 +97,35 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.AreEqual(DummyShooter.Weapon.Shotgun, gun.WeaponKind);
             Assert.LessOrEqual(gun.Range, 6.01f, "close range only");
             GameObject lucy = GameObject.FindGameObjectWithTag("Player");
-            lucy.GetComponent<TankController>().Teleport(gunner.transform.position + new Vector3(-3.5f, 0f, 0f), 90f);
+            // The five deaths and the armour's around him set him running or knock him down (2026-11-15, the 24 m hall: put 3.5 m in
+            // front of him then, she was in his reach 0.5 s later, and he struck instead of firing). She comes when he stands still
+            // and is out of his stagger (Phase.Hold).
+            UnityEngine.AI.NavMeshAgent agent = gunner.GetComponent<UnityEngine.AI.NavMeshAgent>();
+            float speedBefore = agent != null ? agent.velocity.magnitude : 0f;
+            SoldierBrain.Phase phaseBefore = gunner.Current;
+            yield return WaitUntil(() => gunner.Current != SoldierBrain.Phase.Hold && (agent == null || agent.velocity.magnitude < 0.2f), 10f);
+            Debug.Log($"[DiningHallTests] the gunner before she comes: {speedBefore:0.0} m/s, {phaseBefore}, then {(agent != null ? agent.velocity.magnitude : 0f):0.0} m/s, {gunner.Current}");
+            lucy.GetComponent<TankController>().Teleport(gunner.transform.position + new Vector3(-3.5f, 0f, 1.5f), 90f); // open floor between the column rows (the 24 m hall, 2026-11-15)
             gunner.Alert("test", callOthers: false);
             bool cone = false, line = false;
+            var attacks = new System.Collections.Generic.List<string>();
+            DummyShooter.State last = gun.Current;
+            float nextNote = 0f;
+            var trail = new System.Collections.Generic.List<string>();
             yield return WaitUntil(() =>
             {
+                if (Time.time >= nextNote && trail.Count < 12)
+                {
+                    nextNote = Time.time + 0.5f;
+                    trail.Add($"{gunner.Current} at {Flat(gunner.transform.position - lucy.transform.position).magnitude:0.0} m, spot {Flat(gunner.Spot - lucy.transform.position).magnitude:0.0} m, team {(gunner.Team != null ? gunner.Team.Alive + (gunner.Team.FallingBack ? " back" : "") : "none")}, cover {(gunner.HeldCover != null)}");
+                }
+                if (gun.Current != last && gun.Current == DummyShooter.State.Aiming)
+                    attacks.Add($"{gun.CurrentAttack} at {Vector3.Distance(Flat(gunner.transform.position), Flat(lucy.transform.position)):0.0} m, {gunner.Current}");
+                last = gun.Current;
                 if (gun.Current == DummyShooter.State.Telegraph) { cone |= gun.ConeShown; line |= gun.GetComponentsInChildren<LineRenderer>().Any(l => l.name == "Laser" && l.enabled); }
                 return gun.RoundsFired >= DummyShooter.Pellets;
             }, 25f);
-            Debug.Log($"[DiningHallTests] the shotgun: cone shown {cone}, laser line shown {line}, pellets {gun.RoundsFired}, attacks {gun.ShotsFired}");
+            Debug.Log($"[DiningHallTests] the shotgun: cone shown {cone}, laser line shown {line}, pellets {gun.RoundsFired}, attacks {gun.ShotsFired}: " + string.Join("; ", attacks) + $"; her at {lucy.transform.position}, he at {gunner.transform.position}; trail: " + string.Join(" | ", trail));
             Assert.IsTrue(cone, "the telegraph is a cone");
             Assert.IsFalse(line, "no laser line for the shotgun");
             Assert.GreaterOrEqual(gun.RoundsFired, DummyShooter.Pellets, "seven pellets in one shot");

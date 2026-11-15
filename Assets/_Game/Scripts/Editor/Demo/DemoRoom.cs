@@ -491,11 +491,7 @@ namespace GlorifiedBody.Editor.Demo
             body.mass = mass;
             body.interpolation = RigidbodyInterpolation.Interpolate;
             body.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
-            UnityEngine.AI.NavMeshObstacle obstacle = MenuLoopSetup.EnsureComponent<UnityEngine.AI.NavMeshObstacle>(obj);
-            obstacle.shape = UnityEngine.AI.NavMeshObstacleShape.Box;
-            obstacle.size = Vector3.one;
-            obstacle.carving = true;
-            obstacle.carveOnlyStationary = true;
+            PropAssets.OutOfTheBake(obj, Vector3.zero, Vector3.one); // a moved planter leaves no hole behind
             MenuLoopSetup.EnsureComponent<MovableProp>(obj);
             MenuLoopSetup.EnsureComponent<DoorStop>(obj);
             Examine(obj, name, size);
