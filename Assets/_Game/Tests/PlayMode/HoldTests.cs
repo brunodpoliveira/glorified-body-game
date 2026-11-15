@@ -473,8 +473,8 @@ namespace GlorifiedBody.Tests.PlayMode
                 int sample = music.CurrentSample;
                 float t0 = Time.unscaledTime;
                 GlorifiedBody.Audio.MusicDirector.Hold(state);
-                yield return null;
-                yield return null;
+                // The new state starts on the DSP clock, ScheduleLead ahead (2026-11-14): read it once it sounds.
+                yield return new WaitForSecondsRealtime((float)GlorifiedBody.Audio.MusicDirector.ScheduleLead + 0.1f);
                 float expected = sample + (Time.unscaledTime - t0) * before.frequency;
                 float off = (music.CurrentSample - expected) / before.frequency;
                 report.Add($"{before.name}->{music.CurrentClip.name} off {off * 1000f:0} ms");

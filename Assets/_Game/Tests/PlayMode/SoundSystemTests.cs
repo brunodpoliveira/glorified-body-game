@@ -202,8 +202,9 @@ namespace GlorifiedBody.Tests.PlayMode
             shooter.enabled = true;
             yield return WaitUntil(() => music.State == MusicState.Combat, 8f);
             Assert.AreEqual(MusicState.Combat, music.State, "an aim at her starts the combat music");
-            Assert.IsTrue(music.CurrentIsPlaceholder, "no combat track for the room: the placeholder");
-            Assert.AreEqual("combat", music.CurrentClip.name);
+            // 2026-11-14: a room with no combat track takes the demo's piece (the T43 theme), before the placeholder.
+            Assert.IsFalse(music.CurrentIsPlaceholder, "no combat track for the room: the demo's piece");
+            Assert.AreEqual("combat", music.CurrentClip.name, "the T43 theme");
 
             foreach (DummyShooter s in UnityEngine.Object.FindObjectsByType<DummyShooter>(FindObjectsSortMode.None)) s.enabled = false;
             yield return WaitUntil(() => music.State == MusicState.Ambient, MusicDirector.CombatHoldSeconds + 8f);

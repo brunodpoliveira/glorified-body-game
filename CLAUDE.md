@@ -659,6 +659,13 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
 - 2026-11-14, NO CELL CAMERA OVER A TALL THING (`devlog-notes/2026-11-14_camera_over_tall_things.md`, Bruno: the H1 filter box
   "dissapears depending on view"): `Cam_H1_04` hung over the 2 m frame and the frame hid the box. `DemoRoom.OverATallThing`
   (nothing over 1.4 m within 0.15 m under a cell camera); seven cameras moved; `DemoTests.NoCellCamera_HangsOverATallThing`.
+- 2026-11-14, THE COMBAT MUSIC KIT (`devlog-notes/2026-11-14_combat_music_kit.md`, Bruno: "v4, drum break"): the demo's piece is
+  `Resources/Audio/Music/_demo/` (WAV, `tools/music_kit_import.sh`, import settings `Editor/MusicImport.cs`): the T41 states for
+  exploration and search, the T43 theme for combat, the drum break and the payoff. The director looks in the room's folder, then
+  `_demo`, then `_placeholder`. Every track starts on the DSP clock (`PlayScheduled`), so the bar lines are known (84 BPM). After
+  12 bars of combat (`ArcAfterBars`, PROPOSED) or `MusicDirector.StartArc()`: the break on the next bar line, the payoff 4 bars
+  later, the theme from its bar 1 after 14 more. `SamePiece` accepts 2 samples of difference. Tests: `MusicKitTests` (EditMode, 3),
+  `MusicArcTests` (PlayMode, 4, about 2 minutes of real-time music; they need the audio clock).
 
 ## Rules
 
