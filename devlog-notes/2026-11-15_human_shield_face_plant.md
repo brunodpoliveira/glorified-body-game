@@ -74,3 +74,28 @@ over the head (it asks for 1.0). Frames: `~/MEGA/glorified/renders/game/round162
 | Check | Result |
 |---|---|
 | `HumanShieldTests` (3) | 3 of 3 |
+
+## Any live person, 1 m around the line (Bruno, the same night)
+
+His second shot held `Guard_K3`, and a soldier fired past the guard. As built, round 162 covered only "a live civilian",
+so a held guard was no shield: WORKS AS DESIGNED, but not as he wants it. His picks:
+
+```text
+Any live person (Recommended)
+Within 1 m of the line (Recommended)
+```
+
+1. `HumanShield.Held` takes any live person she holds low: a civilian, a guard or a soldier.
+2. `HumanShield.Blocks` is a top-down rule: the held person stands between the gun and her, within 1 m of the line of
+   fire (`HumanShield.Zone`). A guard or a soldier does not aim, and does not fire, past it.
+3. The body's middle is its chest bone. The first try took the middle of every renderer under the figure, and a held
+   guard's dropped shield lies on the floor under him: the middle left the line, and the soldier fired 4 times.
+4. A held civilian makes the soldier say a `civilians present` line. A held colleague makes him say nothing: the
+   writer's rows speak of staff ("I've got staff behind her"). FOR THE WRITER: rows for a soldier or a guard who will
+   not fire past a held colleague.
+
+| Check | Result |
+|---|---|
+| `HumanShieldTests.AHeldGuard_IsAShieldToo` (new) | pass: the soldier's line passes about 0.5 m beside the held guard, he holds 2 times and fires 0 |
+| `HumanShieldTests.WithTheirBrainsOn_NoShotGoesThroughTheHostage` | pass: 34 aims held, 6 shots, none within 1 m of the hostage |
+| `HumanShieldTests` (4) | 4 of 4 |

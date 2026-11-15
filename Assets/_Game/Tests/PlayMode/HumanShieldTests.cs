@@ -101,7 +101,7 @@ namespace GlorifiedBody.Tests.PlayMode
             for (int i = 0; i < 20 && held.HeightOverFloor > 0.4f; i++) { held.SteerBy(Vector3.zero, -0.5f, 10f); yield return null; }
             yield return new WaitForSeconds(0.6f);
             Debug.Log($"[HumanShieldTests] the civilian hangs {held.HeightOverFloor:0.00} m over the floor");
-            Assert.AreSame(lab.GetComponent<CivilianBrain>(), HumanShield.Held(), "held low: a human shield");
+            Assert.AreSame(lab, HumanShield.Held(), "held low: a human shield");
 
             // The soldier on the far side of the civilian, his brain off: only his gun runs, on the line.
             GameObject soldier = GameObject.Find("Soldier_K2");
@@ -167,8 +167,8 @@ namespace GlorifiedBody.Tests.PlayMode
                 {
                     shots++;
                     Vector3 chest = lucy.transform.position + Vector3.up * 1.2f;
-                    CivilianBrain hostage = HumanShield.Held();
-                    bool blocks = HumanShield.Blocks(origin, origin + dir * Vector3.Distance(origin, chest), lab.GetComponent<CivilianBrain>());
+                    GameObject hostage = HumanShield.Held();
+                    bool blocks = HumanShield.Blocks(origin, chest, lab);
                     if (blocks) through++;
                     // Top down: how far the hostage's middle stands from the shot's line, and where along it (0 the gun, 1 her).
                     Vector2 a2 = new Vector2(origin.x, origin.z), b2 = new Vector2(chest.x, chest.z);
@@ -177,9 +177,9 @@ namespace GlorifiedBody.Tests.PlayMode
                     Vector2 h2 = new Vector2(body.center.x, body.center.z);
                     float along = Vector2.Dot(h2 - a2, b2 - a2) / Mathf.Max(0.0001f, (b2 - a2).sqrMagnitude);
                     float side = Vector2.Distance(h2, a2 + Mathf.Clamp01(along) * (b2 - a2));
-                    if (side < 0.45f && along > 0.05f && along < 0.98f) between++;
+                    if (side <= HumanShield.Zone && along > 0f && along <= 1.05f) between++; // the rule itself, measured apart
                     float lineY = Mathf.Lerp(origin.y, chest.y, Mathf.Clamp01(along));
-                    lines.Add($"{who} {gun.CurrentAttack} held={(hostage != null)} h={held.HeightOverFloor:0.00} 3d={blocks} side={side:0.00} along={along:0.00} lineY={lineY:0.00} body top={body.max.y:0.00}");
+                    lines.Add($"{who} {gun.CurrentAttack} held={(hostage != null)} h={held.HeightOverFloor:0.00} blocks={blocks} side={side:0.00} along={along:0.00} lineY={lineY:0.00} body top={body.max.y:0.00}");
                 };
             }
             foreach (SoldierBrain b in UnityEngine.Object.FindObjectsByType<SoldierBrain>(FindObjectsSortMode.None)) b.Alert("test", false);
@@ -190,9 +190,39 @@ namespace GlorifiedBody.Tests.PlayMode
                 yield return null;
             }
             foreach (GameObject f in new[] { k1, k2, k3 }) heldFire += f.GetComponent<DummyShooter>().HeldForShield;
-            Debug.Log($"[HumanShieldTests] the fight: {shots} shots, {through} through the hostage (3D), {between} with the hostage between them top down, {heldFire} held, she held it {Time.time - t0:0.0} s\n" + string.Join("\n", lines));
-            Assert.AreEqual(0, through, "no shot through the hostage");
-            Assert.AreEqual(0, between, "no shot past the hostage, seen from above (Bruno sees it from a fixed camera)");
+            Debug.Log($"[HumanShieldTests] the fight: {shots} shots, {through} past the hostage (the rule), {between} within 1 m of the line top down, {heldFire} held, she held it {Time.time - t0:0.0} s\n" + string.Join("\n", lines));
+            Assert.AreEqual(0, through, "no shot past the hostage within 1 m of the line (Bruno, 2026-11-15)");
+        }
+
+        [UnityTest]
+        public IEnumerator AHeldGuard_IsAShieldToo()
+        {
+            // Bruno, 2026-11-15, after he held Guard_K3 and a soldier fired past him: "any live person", within 1 m of the line.
+            GameObject guard = GameObject.Find("Guard_K3");
+            lucy.GetComponent<TankController>().Teleport(guard.transform.position + new Vector3(-2.2f, 0f, 0f), 90f);
+            yield return null;
+            yield return Lift(guard);
+            TelekinesisLift held = powers.HeldLift;
+            for (int i = 0; i < 20 && held.HeightOverFloor > 0.4f; i++) { held.SteerBy(Vector3.zero, -0.5f, 10f); yield return null; }
+            yield return new WaitForSeconds(0.6f);
+            Assert.AreSame(guard, HumanShield.Held(), "a held guard, low: a shield");
+            GameObject soldier = GameObject.Find("Soldier_K2");
+            soldier.GetComponent<SoldierBrain>().enabled = false;
+            Vector3 away = Vector3.ProjectOnPlane(HumanShield.Middle(guard) - lucy.transform.position, Vector3.up).normalized;
+            // The soldier 1.6 m off the straight line: the line passes about 0.5 m beside the guard, inside the 1 m zone, outside the body.
+            Vector3 side = Vector3.Cross(Vector3.up, away) * 0.8f;
+            Assert.IsTrue(NavMesh.SamplePosition(HumanShield.Middle(guard) + away * 4.5f + side * 2f, out NavMeshHit onMesh, 1.5f, NavMesh.AllAreas));
+            soldier.GetComponent<NavMeshAgent>().Warp(onMesh.position);
+            soldier.transform.rotation = Quaternion.LookRotation(-away);
+            soldier.GetComponent<SoldierBrain>().Body.Suspend(true);
+            DummyShooter gun = soldier.GetComponent<DummyShooter>();
+            gun.RequireLineOfSight = false;
+            gun.HoldFire = false;
+            int shots = gun.ShotsFired;
+            yield return WaitUntil(() => gun.HeldForShield >= 2, 12f);
+            Debug.Log($"[HumanShieldTests] the held guard: held {gun.HeldForShield}, fired {gun.ShotsFired - shots}, still held low {HumanShield.Held() == guard} at {held.HeightOverFloor:0.00} m, his middle {HumanShield.Middle(guard)}");
+            Assert.GreaterOrEqual(gun.HeldForShield, 2, "he holds his fire for a held colleague");
+            Assert.AreEqual(shots, gun.ShotsFired, "no shot past him");
         }
 
         [UnityTest]

@@ -183,7 +183,9 @@ namespace GlorifiedBody.Enemy
         {
             if (attack == Attack.None || attack == Attack.Melee || IsLobbed(attack)) return false;
             if (shieldRank < 0) shieldRank = HumanShield.HoldsFireFor(gameObject) ? 1 : 0;
-            return shieldRank == 1 && HumanShield.Blocks(Muzzle, target);
+            if (shieldRank != 1) return false;
+            GameObject held = HumanShield.Held();
+            return held != null && held != gameObject && HumanShield.Blocks(Muzzle, target, held);
         }
 
         private float nextShieldNote, nextShieldBark;
@@ -207,14 +209,17 @@ namespace GlorifiedBody.Enemy
         {
             nextShieldNote = Time.time + 1f;
             HeldForShield++;
-            CivilianBrain held = HumanShield.Held();
+            GameObject held = HumanShield.Held();
             RunTelemetry.Event("enemy_held_fire", $"{enemyId}:{(held != null ? held.name : "?")}");
+            // A held colleague: no line yet. The writer's rows speak of staff; a guard or a soldier needs rows of its own.
+            CivilianBrain civilian = held != null ? held.GetComponent<CivilianBrain>() : null;
+            if (civilian == null) return;
             // "Hold fire, hold, I've got staff behind her, nobody shoots through that." (barks.csv, civilians present, round 162).
             // Forced: the one sign of a mechanic the game does not teach, and an answer to what she does. Its own gap: the
             // escort's scan says "civilians present" half the time and starts a 25 s gap even when it says nothing.
             if (Time.time < nextShieldBark) return;
             nextShieldBark = Time.time + 6f;
-            BarkBook.Say(gameObject, BarkSituation.CiviliansPresent, 2.4f, held != null ? held.CivKind : "", forced: true);
+            BarkBook.Say(gameObject, BarkSituation.CiviliansPresent, 2.4f, civilian.CivKind, forced: true);
         }
         public string EnemyId => enemyId;
 
