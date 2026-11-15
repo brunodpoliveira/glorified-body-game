@@ -79,6 +79,9 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.IsTrue(Bark.SayForced(soldierB, "Get down!", 2f));
             Assert.AreEqual(2, Bark.Speaking);
             Assert.IsFalse(Bark.CanSpeak(soldierA), "the soldiers' place is taken");
+            // A story line keeps its speaker until it ends: his own gated line does not cover it (the call for the armour).
+            Assert.IsFalse(Bark.Say(soldierB, "Moving up.", 1f), "not over his own forced line");
+            Assert.AreEqual("Get down!", soldierB.GetComponent<Bark>().Shown);
         }
 
         private static IEnumerator WaitUntil(System.Func<bool> condition, float seconds)

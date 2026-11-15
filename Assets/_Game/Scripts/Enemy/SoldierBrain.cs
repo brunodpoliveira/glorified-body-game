@@ -248,6 +248,16 @@ namespace GlorifiedBody.Enemy
             gun.RequireLineOfSight = true;
             gun.OnStaggered += Hold;
             tremble = GetComponent<Tremble>();
+            // The escort of a living civilian (round 160): only the soldiers do it.
+            EnemyMorale morale = GetComponent<EnemyMorale>();
+            if (morale != null && morale.RankOf == EnemyMorale.Rank.Soldier && GetComponent<CivilianEscort>() == null) gameObject.AddComponent<CivilianEscort>();
+        }
+
+        /// <summary>Ends a care of either kind: a body (CorpseCare) or a living civilian (CivilianEscort).</summary>
+        private void StopCare(string why)
+        {
+            if (TryGetComponent(out CorpseCare care)) care.Stop(why); // no ?. on a component: a missing one is a fake null in the editor
+            if (TryGetComponent(out CivilianEscort escort)) escort.Stop(why);
         }
 
         private void OnEnable()
@@ -471,7 +481,7 @@ namespace GlorifiedBody.Enemy
                 gun.HoldFire = true;
                 return; // a frightened one does not come back to the fight
             }
-            if (Current == Phase.Care) GetComponent<CorpseCare>()?.Stop("held");
+            if (Current == Phase.Care) StopCare("held");
             Current = Phase.Hold;
             timer = Mathf.Max(timer, seconds);
             gun.HoldFire = true;
@@ -493,7 +503,7 @@ namespace GlorifiedBody.Enemy
             if (Current == Phase.Dead) return;
             kneeling = true;
             if (ducked) StandUp();
-            if (Current == Phase.Care) GetComponent<CorpseCare>()?.Stop("kneel");
+            if (Current == Phase.Care) StopCare("kneel");
             if (gun.HoldsSlot) gun.Stagger(0.1f);
             gun.HoldFire = true;
             body.Stop();
@@ -517,7 +527,7 @@ namespace GlorifiedBody.Enemy
             DrawGun("dominated", say: false);
             EndKneel();
             Mind = mind;
-            if (Current == Phase.Care) GetComponent<CorpseCare>()?.Stop("dominated");
+            if (Current == Phase.Care) StopCare("dominated");
             FlankBoard.Release(this);
             ReleaseCover();
             ClearSuppression();
@@ -610,7 +620,7 @@ namespace GlorifiedBody.Enemy
                     if (lift != null && lift.IsLifted) DrawGun("lift", say: false); // the line when he lands
                     body.Suspend(true);
                     gun.HoldFire = true;
-                    if (Current == Phase.Care) GetComponent<CorpseCare>()?.Stop("down");
+                    if (Current == Phase.Care) StopCare("down");
                     if (!Retreating) Current = Phase.Hold; // a frightened one stays frightened after the fall
                     RunTelemetry.Event(lift != null && lift.IsLifted ? "soldier_lifted" : "soldier_down", name);
                 }
@@ -738,7 +748,7 @@ namespace GlorifiedBody.Enemy
             if (doorWait <= 0f)
             {
                 if (gun.HoldsSlot) gun.Stagger(0.1f); // no aim through a door
-                if (Current == Phase.Care) GetComponent<CorpseCare>()?.Stop("door");
+                if (Current == Phase.Care) StopCare("door");
             }
             doorWait = Mathf.Max(doorWait, seconds);
         }
@@ -764,7 +774,7 @@ namespace GlorifiedBody.Enemy
             if (Current == Phase.Dead || Retreating || IsDominated) return;
             ShockCount++;
             DrawGun("shock", say: false); // the shock line plays
-            if (Current == Phase.Care) GetComponent<CorpseCare>()?.Stop("shock");
+            if (Current == Phase.Care) StopCare("shock");
             gun.Stagger(seconds); // the aim breaks; OnStaggered holds the body for the seconds
             Hold(seconds);
             body?.Flinch(transform.position + transform.forward, false);
@@ -778,7 +788,7 @@ namespace GlorifiedBody.Enemy
         public void Retreat(string reason)
         {
             if (Current == Phase.Dead || Retreating || IsDominated) return;
-            if (Current == Phase.Care) GetComponent<CorpseCare>()?.Stop("retreat");
+            if (Current == Phase.Care) StopCare("retreat");
             RetreatReason = reason;
             DrawGun("retreat", say: false); // the baton falls, the gun shows, and the cower drops it
             FlankBoard.Release(this);

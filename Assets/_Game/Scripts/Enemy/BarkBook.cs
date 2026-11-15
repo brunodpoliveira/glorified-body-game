@@ -368,12 +368,13 @@ namespace GlorifiedBody.Enemy
         // ── Say ───────────────────────────────────────────────────────
 
         /// <summary>The person says a line of the situation (no repeat, "plays first" first). False when it has none.</summary>
-        public static bool Say(GameObject who, string situation, float seconds = 1.6f, string civ = "")
+        public static bool Say(GameObject who, string situation, float seconds = 1.6f, string civ = "", bool forced = false)
         {
-            if (!Bark.CanSpeak(who)) return false; // the two-voice rule: the deck keeps its line
+            if (!forced && !Bark.CanSpeak(who)) return false; // the two-voice rule: the deck keeps its line
             string line = Line(who, situation, civ);
             if (string.IsNullOrEmpty(line)) return false;
-            Bark.Say(who, line, seconds);
+            if (forced) Bark.SayForced(who, line, seconds);
+            else Bark.Say(who, line, seconds);
             return true;
         }
 

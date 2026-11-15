@@ -687,6 +687,12 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   the `civilians present` barks), `EnemyRagdoll.EndHoldFacePlant` (a full slam goes limp at the top and lands head first), the `CIV:` tag
   (`BarkRow.civ`, `BarkVoice.Next(situation, civ)`, `CivilianBrain.CivKind`). Tests: `HumanShieldTests` (KIT TEST). Numbers PROPOSED.
 
+- 2026-11-15, THE ESCORT (`devlog-notes/2026-11-15_escort.md`, round 160): `Enemy/CivilianEscort` on every soldier (`SoldierBrain.Awake`): in a
+  fight, with a teammate near, he leads a living civilian near her to a spot away from her, walking backward behind it, facing her, the rifle
+  raised, his left hand on its back (`EnemyGun.FreeHandTo`). Both brains use their care phase; `SoldierBrain.StopCare` ends a corpse care or an
+  escort. The barks `escorts a civilian` and `civilians present` (CIV tag). A speaker on a forced line cannot start a gated one. Tests:
+  `CivilianEscortTests` (KIT TEST). Numbers PROPOSED.
+
 ## Rules
 
 1. Unity 6000.3.15f1 (installed at `/home/pc/Unity/Hub/Editor/6000.3.15f1`). Start it only through `tools/unity.sh`

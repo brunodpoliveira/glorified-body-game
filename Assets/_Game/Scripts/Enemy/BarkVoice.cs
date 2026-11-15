@@ -215,12 +215,12 @@ namespace GlorifiedBody.Enemy
         }
 
         /// <summary>Says a line of the situation, but not again within the gap (a hit, a shot), and only with the chance.</summary>
-        public bool SayNow(string situation, float gap, float chance = 1f, float seconds = 1.6f, string civ = "")
+        public bool SayNow(string situation, float gap, float chance = 1f, float seconds = 1.6f, string civ = "", bool forced = false)
         {
             if (nextAt.TryGetValue(situation, out float at) && Time.time < at) return false;
             nextAt[situation] = Time.time + gap;
             if (Random.value > chance) return false;
-            return BarkBook.Say(gameObject, situation, seconds, civ);
+            return BarkBook.Say(gameObject, situation, seconds, civ, forced);
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]

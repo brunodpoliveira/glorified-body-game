@@ -209,8 +209,9 @@ namespace GlorifiedBody.Enemy
             HeldForShield++;
             CivilianBrain held = HumanShield.Held();
             RunTelemetry.Event("enemy_held_fire", $"{enemyId}:{(held != null ? held.name : "?")}");
-            // "Hold fire, hold, I've got staff behind her, nobody shoots through that." (barks.csv, civilians present, round 162)
-            BarkVoice.Of(gameObject)?.SayNow(BarkSituation.CiviliansPresent, 6f, 1f, 2.4f, held != null ? held.CivKind : "");
+            // "Hold fire, hold, I've got staff behind her, nobody shoots through that." (barks.csv, civilians present, round 162).
+            // Forced: the one sign of a mechanic the game does not teach, and an answer to what she does.
+            BarkVoice.Of(gameObject)?.SayNow(BarkSituation.CiviliansPresent, 6f, 1f, 2.4f, held != null ? held.CivKind : "", forced: true);
         }
         public string EnemyId => enemyId;
 

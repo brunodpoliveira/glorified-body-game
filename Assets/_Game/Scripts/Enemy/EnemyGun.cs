@@ -77,6 +77,8 @@ namespace GlorifiedBody.Enemy
         public Transform Muzzle => muzzle;
         public Transform Model => gun;
         public bool TwoHanded => twoHanded;
+        /// <summary>The escort (round 160): the left hand leaves the gun for this point (the civilian's shoulder). Null: the hand on the gun.</summary>
+        public Vector3? FreeHandTo { get; set; }
         public float ShakeDegrees => shakeDegrees;
         /// <summary>The gun's tremble in the last frame, in degrees (0 when still). For the tests.</summary>
         public float LastShake { get; private set; }
@@ -220,7 +222,10 @@ namespace GlorifiedBody.Enemy
 
         // The fire panic (HitReactions.Writhing): the hands leave the gun to beat at the flames, the gun stays in the right hand.
         private bool HandsFree => (ragdoll != null && ragdoll.IsRagdolled) || (health != null && health.IsDead)
-            || (brain != null && brain.Current == SoldierBrain.Phase.Care) || (reactions != null && reactions.Writhing);
+            || (brain != null && brain.Current == SoldierBrain.Phase.Care && !Escorting) || (reactions != null && reactions.Writhing);
+
+        /// <summary>He leads a civilian (CivilianEscort): the gun stays in his right hand, the left hand on the civilian.</summary>
+        private bool Escorting => TryGetComponent(out CivilianEscort escort) && escort.Active;
 
         private void OnEnable()
         {
@@ -330,7 +335,7 @@ namespace GlorifiedBody.Enemy
             if (flashLight != null && flashLight.enabled && Time.time >= lightOffAt) flashLight.enabled = false;
             if (hand == null) return;
             // The care (CPR, the drag): the gun hangs on him, out of his hands (Bruno, 2026-10-24: it floated in the CPR).
-            if (brain != null && brain.Current == SoldierBrain.Phase.Care && !(health != null && health.IsDead) && Sling()) return;
+            if (brain != null && brain.Current == SoldierBrain.Phase.Care && !Escorting && !(health != null && health.IsDead) && Sling()) return; // the escort keeps the gun in his hand
 
             Vector3 aim;
             Vector3 flatForward = transform.forward;
@@ -352,11 +357,13 @@ namespace GlorifiedBody.Enemy
             else if (shouldered && !HandsFree)
             {
                 Shoulder(flatForward);
+                FreeHand();
                 return;
             }
             else if (pistolHeld && !HandsFree)
             {
                 PistolHold(flatForward);
+                FreeHand();
                 return;
             }
             else if (shooter.HoldsSlot && shooter.CurrentAttack != DummyShooter.Attack.Melee && !(health != null && health.IsDead))
@@ -373,6 +380,14 @@ namespace GlorifiedBody.Enemy
             LastAim = aim.normalized;
             gun.position = upperBodyId == 1 ? Palm : hand.position + aim.normalized * gripForward;
             if (leftGrip != null && !HandsFree) Reach(leftUpper, leftLower, leftHand, null, leftGrip.position, -transform.up - transform.right * 0.3f, Vector3.zero);
+            FreeHand();
+        }
+
+        /// <summary>The escort's free hand: on the civilian's shoulder, over the gun's left hand.</summary>
+        private void FreeHand()
+        {
+            if (FreeHandTo == null || HandsFree || leftUpper == null) return;
+            Reach(leftUpper, leftLower, leftHand, null, FreeHandTo.Value, -Vector3.up - transform.right * 0.5f, Vector3.zero);
         }
 
         /// <summary>The middle of the palm: the pistol's grip (the gun's root) sits there, in the closed fist.</summary>
@@ -444,6 +459,7 @@ namespace GlorifiedBody.Enemy
             Vector3 right = Vector3.Cross(Vector3.up, flatForward);
             Vector3 pocket = rightUpper.position - right * PocketIn + flatForward * PocketForward - Vector3.up * PocketDown;
             Vector3 aim = shooter.HoldsSlot ? shooter.AimPoint - pocket
+                : Escorting ? flatForward // the escort (round 160): "gun raised", level, to her (he faces her)
                 : Quaternion.AngleAxis(-LowReadyIn, Vector3.up) * Quaternion.AngleAxis(LowReadyDown, right) * flatForward;
             if (aim.sqrMagnitude < 0.0001f) aim = flatForward;
             // The gun rises to the aim and drops to the low ready in about a fifth of a second, not in one frame.

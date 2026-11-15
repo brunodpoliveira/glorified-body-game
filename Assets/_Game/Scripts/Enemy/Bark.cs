@@ -15,7 +15,7 @@ namespace GlorifiedBody.Enemy
     /// voices"; "two people of two different archetypes, to maximize information ... never two nurses, two soldiers etc
     /// at the same time"). A bark plays only when fewer than MaxVoices others speak and none of them is of its archetype
     /// (BarkVoice.Enemy: guard, soldier, armour, nurse, labworker, patient). Else it drops. A speaker who talks already may
-    /// go on. A line the player asked for, or a line of a story beat, is forced (SayForced): it always plays, and it
+    /// go on, but not over a forced line of his own. A line the player asked for, or a line of a story beat, is forced (SayForced): it always plays, and it
     /// cuts the oldest voice when the two places are taken. A line nobody hears (two rooms away) takes no place.
     /// </summary>
     public sealed class Bark : MonoBehaviour
@@ -41,6 +41,7 @@ namespace GlorifiedBody.Enemy
             public float until;
             public AudioSource source;
             public AudioClip clip;
+            public bool forced;
         }
 
         private static readonly List<Voicing> speaking = new List<Voicing>();
@@ -63,7 +64,8 @@ namespace GlorifiedBody.Enemy
         {
             if (who == null) return false;
             Prune();
-            if (Find(who) >= 0) return true;
+            int own = Find(who);
+            if (own >= 0) return !speaking[own].forced; // a story line keeps its speaker until it ends (the call for the armour)
             if (speaking.Count >= MaxVoices) return false;
             string archetype = ArchetypeOf(who);
             foreach (Voicing v in speaking)
@@ -113,6 +115,7 @@ namespace GlorifiedBody.Enemy
                 until = Time.time + Mathf.Max(seconds, SubtitleService.ReadSeconds(line), clip),
                 source = source,
                 clip = source != null ? source.clip : null,
+                forced = forced,
             });
             return true;
         }
