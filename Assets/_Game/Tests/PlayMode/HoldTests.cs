@@ -238,17 +238,23 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator TheRide_TheGurneyCarriesHerOverTheGap_ItCosts40Mk_ItDoesNotLandOnTheGap_AFallReturnsHer()
+        public IEnumerator TheRide_SheClimbsOnTheGurney_TheDefendKeyLiftsIt_ItCosts40Mk_ItDoesNotLandOnTheGap_AFallReturnsHer()
         {
             yield return Freed();
             GameObject lucy = Her();
             TankController tank = lucy.GetComponent<TankController>();
             PsychicStats stats = lucy.GetComponent<PsychicStats>();
+            PsychicPowers powers = lucy.GetComponent<PsychicPowers>();
             Interactor hand = lucy.GetComponent<Interactor>();
-            GurneyRide gurney = UnityEngine.Object.FindFirstObjectByType<GurneyRide>();
+            Rideable gurney = GameObject.Find("Steel_Gurney").GetComponent<Rideable>(); // the crates of G16 ride too
             Assert.AreEqual("H5", Room.At(gurney.transform.position + Vector3.up * 0.1f).id, "the gurney stands in the airlock");
             Assert.IsNull(gurney.GetComponent<LockOnTargetable>(), "no lock point: nothing breaks it, no throw takes it");
             Assert.IsNull(gurney.GetComponent<GlorifiedBody.Destruction.Breakable>(), "it cannot break");
+            // 2026-11-14 (Bruno: "the gurney is invisible"): every piece draws at the gurney, not 36 m away.
+            Renderer[] pieces = gurney.GetComponentsInChildren<Renderer>(true);
+            Assert.GreaterOrEqual(pieces.Length, 8, "a deck, four legs, wheels, rails, a push bar");
+            foreach (Renderer piece in pieces)
+                Assert.Less(Vector3.Distance(piece.bounds.center, gurney.transform.position), 1.5f, piece.name + " draws at the gurney");
             // A fall into the gap: she is back in the airlock.
             PitReturn pit = GameObject.Find("Pit_Return").GetComponent<PitReturn>(); // the gap of the tube (G16 has one too)
             tank.Teleport(new Vector3(1f, 0.05f, 35.5f), 270f);
@@ -258,47 +264,97 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.AreEqual(1, pit.Returns, "the gap: she falls and is back in the airlock");
             yield return null;
             Assert.AreEqual("H5", Room.At(lucy.transform.position + Vector3.up * 0.1f).id);
-            // An empty bar: the gurney does not rise.
-            tank.Teleport(gurney.transform.position + gurney.transform.right * 0.9f, 270f);
+            // She climbs on: the Interact key, no question, no cost.
+            tank.Teleport(gurney.transform.position + gurney.transform.right * 0.9f, gurney.transform.eulerAngles.y - 90f);
             yield return null;
-            Assert.AreEqual(InteractKind.Message, gurney.KindFor(hand), "an empty mk_orzabal bar: no ride");
-            Assert.IsFalse(gurney.Mount());
-            stats.FillMk(PowerKind.Telekinesis);
-            Assert.AreEqual(InteractKind.Ask, gurney.KindFor(hand));
-            Assert.AreEqual("gurney:on", gurney.Confirm(hand));
-            Assert.AreEqual(GurneyRide.Cost, gurney.LastCost, 0.5f, "a ride costs 40 MK (PROPOSED: a full bar crosses twice)");
-            Assert.IsTrue(tank.MovementLocked, "her feet stop: the walk keys steer the gurney");
-            // The real keys: forward until she is on the landing.
+            Assert.AreSame(gurney, hand.FindFocus(), "the Interact key reaches the gurney");
+            Assert.AreEqual(InteractKind.Act, gurney.KindFor(hand), "no question");
+            Assert.AreEqual("ride:up", gurney.Confirm(hand));
+            yield return null;
+            Assert.IsTrue(gurney.OnTop(lucy.transform), "she stands on the deck");
+            Assert.AreEqual(0f, Mathf.DeltaAngle(lucy.transform.eulerAngles.y, gurney.transform.eulerAngles.y), 1f, "she faces along it");
             var pad = new VirtualPad();
             GameInput.SetBotSource(pad);
             var driver = new GameObject("[Pad]").AddComponent<PadDriver>();
             driver.pad = pad;
+            powers.Select(PowerKind.Telekinesis);
+            // An empty bar: the gurney does not rise.
+            pad.SetHeld(InputManager.GameAction.Defend, true);
+            yield return new WaitForSeconds(0.5f);
+            Assert.IsNull(powers.Riding, "an empty mk_orzabal bar: no ride");
+            Assert.AreEqual("The gurney does not rise. The mk_orzabal bar is empty.", hand.Text);
+            pad.SetHeld(InputManager.GameAction.Defend, false);
+            yield return new WaitForSeconds(0.2f);
+            stats.FillMk(PowerKind.Telekinesis);
+            pad.SetHeld(InputManager.GameAction.Defend, true);
+            yield return WaitUntil(() => powers.Riding != null, 2f);
+            Assert.AreSame(gurney, powers.Riding, "the defend key held on the deck lifts the gurney with her");
+            Assert.AreEqual(40f, gurney.LastCost, 0.5f, "a ride costs 40 MK (PROPOSED: a full bar crosses twice)");
+            Assert.IsTrue(tank.MovementLocked, "her feet stop: the walk keys steer the gurney");
+            // The real keys: forward until she is on the landing. A release over the gap does not land it.
             pad.SetHeld(InputManager.GameAction.Forward, true);
             float t0 = Time.time;
             bool gapRefused = false;
             float lowest = 9f;
-            while (Time.time - t0 < 10f && gurney.transform.position.x > -3.6f)
+            while (Time.time - t0 < 12f && gurney.transform.position.x > -3.6f)
             {
                 yield return null;
                 lowest = Mathf.Min(lowest, lucy.transform.position.y);
                 if (!gapRefused && Mathf.Abs(gurney.transform.position.x - 1f) < 0.3f)
                 {
-                    gapRefused = gurney.KindFor(hand) == InteractKind.Message && !gurney.StepOff();
+                    pad.SetHeld(InputManager.GameAction.Defend, false);
+                    yield return null;
+                    yield return null;
+                    gapRefused = powers.Riding == gurney && gurney.Riding;
+                    pad.SetHeld(InputManager.GameAction.Defend, true);
                 }
             }
             pad.SetHeld(InputManager.GameAction.Forward, false);
-            GameInput.ClearBotSource(pad);
-            UnityEngine.Object.Destroy(driver.gameObject);
             float crossing = Time.time - t0;
-            Assert.IsTrue(gapRefused, "over the gap it does not land");
+            Assert.IsTrue(gapRefused, "over the gap the release does not land it: the ride goes on");
             Assert.AreEqual("H6", RoomTracker.CurrentId, "she rides into the landing");
             Assert.Greater(lowest, 0.5f, "she stays on the deck all the way");
-            Assert.AreEqual("gurney:off", gurney.Confirm(hand), "over the landing she steps off");
+            pad.SetHeld(InputManager.GameAction.Defend, false);
+            yield return WaitUntil(() => powers.Riding == null, 1f);
+            Assert.IsFalse(gurney.Riding, "over the landing the release sets it down");
+            Assert.IsFalse(tank.MovementLocked, "she can walk");
+            Assert.IsTrue(gurney.OnTop(lucy.transform), "she still stands on the deck");
+            Assert.AreEqual("ride:down", gurney.Confirm(hand), "the Interact key climbs her down");
+            GameInput.ClearBotSource(pad);
+            UnityEngine.Object.Destroy(driver.gameObject);
             yield return new WaitForSeconds(0.5f);
             Debug.Log($"[HoldTests] the ride: {gurney.Travelled:0.0} m in {crossing:0.0} s, cost {gurney.LastCost:0} MK, bar left {stats.Mk(PowerKind.Telekinesis):0}, lowest foot {lowest:0.00} m, falls before {pit.Returns}");
             Assert.AreEqual(0f, lucy.transform.position.y, 0.15f, "she stands on the floor of the landing");
-            Assert.IsFalse(tank.MovementLocked, "she walks");
+            Assert.AreEqual("H6", RoomTracker.CurrentId);
             Assert.AreEqual(1, pit.Returns, "no fall on the ride");
+        }
+
+        [UnityTest]
+        public IEnumerator TheBooth_HerCameraInFrontOfTheGlass_ShowsTheNurseThroughIt()
+        {
+            yield return Freed();
+            GameObject lucy = Her();
+            lucy.GetComponent<TankController>().Teleport(new Vector3(11f, 0f, 40.6f), 0f);
+            yield return WaitUntil(() => RoomTracker.CurrentId == "H4", 3f);
+            yield return new WaitForSeconds(1f);
+            var director = GlorifiedBody.Cameras.FixedCameraDirector.Instance;
+            Assert.AreEqual("Cam_H4_booth", director.Current.name, "in front of the glass, the camera looks into the booth");
+            GameObject nurse = GameObject.Find("Nurse_Booth");
+            Assert.IsNotNull(nurse, "the nurse is in the booth");
+            Camera cam = Camera.main;
+            Vector3 chest = nurse.transform.position + Vector3.up * 1.2f;
+            Vector3 v = cam.WorldToViewportPoint(chest);
+            Debug.Log($"[HoldTests] the booth: the nurse at {nurse.transform.position}, in the frame at {v}");
+            Assert.IsTrue(v.z > 0f && v.x > 0.05f && v.x < 0.95f && v.y > 0.05f && v.y < 0.95f, "the nurse is in the frame");
+            foreach (RaycastHit hit in Physics.RaycastAll(cam.transform.position, (chest - cam.transform.position).normalized, Vector3.Distance(cam.transform.position, chest), ~0, QueryTriggerInteraction.Ignore))
+            {
+                if (hit.collider.transform.IsChildOf(nurse.transform)) continue;
+                Renderer r = hit.collider.GetComponent<Renderer>();
+                Assert.IsTrue(r == null || !r.enabled || r.sharedMaterial.renderQueue >= (int)UnityEngine.Rendering.RenderQueue.Transparent,
+                    $"{hit.collider.name} hides her: it must be glass");
+            }
+            foreach (string pane in new[] { "Booth_Glass_W", "Booth_Glass_E", "Booth_Door" })
+                Assert.GreaterOrEqual(GameObject.Find(pane).GetComponent<Renderer>().sharedMaterial.renderQueue, (int)UnityEngine.Rendering.RenderQueue.Transparent, pane + " is see-through");
         }
 
         [UnityTest]

@@ -248,11 +248,13 @@ namespace GlorifiedBody.Editor.Demo
             Color glass = new Color(0.62f, 0.74f, 0.8f);
             foreach ((string n, float a, float b) in new[] { ("Booth_Glass_W", 9f, doorX - doorW * 0.5f), ("Booth_Glass_E", doorX + doorW * 0.5f, 15f) })
             {
-                GameObject pane = r.Box(r.Room, n, new Vector3((a + b) * 0.5f, 1.5f, front), new Vector3(b - a, 3f, 0.08f), DemoRoom.Colour("booth_glass", glass));
+                GameObject pane = r.Box(r.Room, n, new Vector3((a + b) * 0.5f, 1.5f, front), new Vector3(b - a, 3f, 0.08f), DemoRoom.Glass("booth_pane", glass, 0.22f)); // she sees the nurse through it (2026-11-14)
+                pane.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                 pane.layer = 2; // Ignore Raycast: her powers and her lock go through the glass (the speaking grille); her body does not
                 DemoRoom.Carve(pane); // the NavMesh bakes the Default layer only: the pane carves its own hole
             }
-            GameObject door = r.Box(r.Props, "Booth_Door", new Vector3(doorX, 1.15f, front), new Vector3(doorW, 2.3f, 0.06f), DemoRoom.Colour("booth_door", new Color(0.7f, 0.8f, 0.86f)));
+            GameObject door = r.Box(r.Props, "Booth_Door", new Vector3(doorX, 1.15f, front), new Vector3(doorW, 2.3f, 0.06f), DemoRoom.Glass("booth_door_glass", new Color(0.7f, 0.8f, 0.86f), 0.35f));
+            door.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             door.isStatic = false;
             DemoRoom.Carve(door);
             Target(door);
@@ -284,6 +286,9 @@ namespace GlorifiedBody.Editor.Demo
             nurse.askItemId = DemoItems.AirlockCard().itemId;
             nurse.askItemName = "the airlock card";
             EditorUtility.SetDirty(nurse);
+            // In front of the glass, a camera from the south-east corner looks into the booth at the nurse (2026-11-14, Bruno:
+            // "i don't see a nurse behind the theater control room"): the cell camera of that floor looked south, away from her.
+            r.ExtraCamera("booth", new Vector3(14.5f, 2.5f, 38.55f), new Vector3(10.6f, 0.9f, 42.3f), 65f, new Vector3(11.05f, 1.5f, 40.6f), new Vector3(4.1f, 3f, 1.1f));
 
             r.Prop("Booth_Console", new Vector3(12.6f, 0f, 42.65f), new Vector3(1.6f, 0.85f, 0.5f), 0.25f);
             r.Prop("Booth_Monitors", new Vector3(12.6f, 0.85f, 42.85f), new Vector3(1.6f, 0.5f, 0.12f), 0.08f);
@@ -341,7 +346,7 @@ namespace GlorifiedBody.Editor.Demo
         // ── H5, the airlock ───────────────────────────────────────────
 
         /// <summary>
-        /// The airlock (beats 5 and 5c): the outer door opens on the gap; the steel gurney that cannot break (GurneyRide);
+        /// The airlock (beats 5 and 5c): the outer door opens on the gap; the steel gurney that cannot break (Rideable);
         /// the red lamps of the lockdown; a spare ORZABAL capsule (PROPOSED: so the ride cannot be lost to a spent bar);
         /// the voice when she stands here with the card (KNIGHT, round 123): the urge and cutscene 02b with the feed
         /// locked, the other line with the feed unlocked. Once.
@@ -355,17 +360,24 @@ namespace GlorifiedBody.Editor.Demo
             BoxCollider body = gurney.AddComponent<BoxCollider>();
             body.center = new Vector3(0f, 0.375f, 0f);
             body.size = new Vector3(0.75f, 0.75f, 2.0f);
+            // The pieces: local places under the gurney (RoomKit.Box takes a local position; 2026-11-14 the deck stood 36 m away
+            // and the four legs were one, so the gurney was only its collider), a deck, four legs on wheels, two low side
+            // rails, a push bar at the foot.
             Material steel = DemoRoom.Colour("gurney_steel", new Color(0.78f, 0.8f, 0.84f));
-            GameObject deck = RoomKit.Box(gurney, "Deck", gurney.transform.position + Vector3.up * 0.7f, new Vector3(0.75f, 0.1f, 2.0f));
-            deck.transform.rotation = gurney.transform.rotation;
-            deck.GetComponent<Renderer>().sharedMaterial = steel;
-            NoCollider(deck);
+            Material dark = DemoRoom.Colour("gurney_wheel", new Color(0.12f, 0.12f, 0.13f));
+            void Piece(string n, Vector3 at, Vector3 size, Material m) => NoCollider(RoomKit.Box(gurney, n, at, size)).GetComponent<Renderer>().sharedMaterial = m;
+            Piece("Deck", new Vector3(0f, 0.7f, 0f), new Vector3(0.75f, 0.1f, 2.0f), steel);
+            int legs = 0;
             foreach (Vector3 leg in new[] { new Vector3(-0.3f, 0f, -0.9f), new Vector3(0.3f, 0f, -0.9f), new Vector3(-0.3f, 0f, 0.9f), new Vector3(0.3f, 0f, 0.9f) })
             {
-                GameObject l = RoomKit.Box(gurney, "Leg", gurney.transform.TransformPoint(leg + Vector3.up * 0.33f), new Vector3(0.05f, 0.66f, 0.05f));
-                l.GetComponent<Renderer>().sharedMaterial = steel;
-                NoCollider(l);
+                Piece("Leg_" + legs, leg + Vector3.up * 0.4f, new Vector3(0.05f, 0.6f, 0.05f), steel);
+                Piece("Wheel_" + legs++, leg + Vector3.up * 0.05f, new Vector3(0.06f, 0.1f, 0.1f), dark);
             }
+            Piece("Rail_L", new Vector3(-0.36f, 0.85f, 0f), new Vector3(0.03f, 0.04f, 1.8f), steel);
+            Piece("Rail_R", new Vector3(0.36f, 0.85f, 0f), new Vector3(0.03f, 0.04f, 1.8f), steel);
+            Piece("Push_Bar", new Vector3(0f, 1.0f, -1.0f), new Vector3(0.7f, 0.04f, 0.04f), steel);
+            Piece("Push_Post_L", new Vector3(-0.33f, 0.88f, -1.0f), new Vector3(0.03f, 0.25f, 0.03f), steel);
+            Piece("Push_Post_R", new Vector3(0.33f, 0.88f, -1.0f), new Vector3(0.03f, 0.25f, 0.03f), steel);
             foreach (Transform t in gurney.GetComponentsInChildren<Transform>()) { t.gameObject.isStatic = false; t.gameObject.layer = 2; }
             MenuLoopSetup.EnsureComponent<Unity.AI.Navigation.NavMeshModifier>(gurney).ignoreFromBuild = true;
             UnityEngine.AI.NavMeshObstacle carve = gurney.AddComponent<UnityEngine.AI.NavMeshObstacle>();
@@ -373,8 +385,9 @@ namespace GlorifiedBody.Editor.Demo
             carve.center = body.center;
             carve.size = body.size;
             carve.carving = true;
-            GurneyRide ride = gurney.AddComponent<GurneyRide>();
-            ride.deck = 0.75f;
+            Rideable ride = gurney.AddComponent<Rideable>();
+            ride.cost = 40f; // PROPOSED: a full bar crosses twice
+            ride.emptyText = "The gurney does not rise. The mk_orzabal bar is empty.";
             ride.range = 1.7f;
             EditorUtility.SetDirty(ride);
 

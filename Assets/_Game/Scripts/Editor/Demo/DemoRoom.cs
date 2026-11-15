@@ -651,6 +651,24 @@ namespace GlorifiedBody.Editor.Demo
 
         public static Material Colour(string id, Color c) => ItemAssets.UnlitMaterial("demo_" + id, c);
 
+        /// <summary>A pane she sees through (2026-11-14: the booth of H4 was an opaque colour, so nobody saw the nurse in it):
+        /// the unlit colour with an alpha, blended, no depth write.</summary>
+        public static Material Glass(string id, Color c, float alpha)
+        {
+            c.a = alpha;
+            Material m = ItemAssets.UnlitMaterial("demo_" + id, c);
+            m.SetFloat("_Surface", 1f);
+            m.SetFloat("_Blend", 0f);
+            m.SetFloat("_SrcBlend", (float)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            m.SetFloat("_DstBlend", (float)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            m.SetFloat("_ZWrite", 0f);
+            m.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+            m.SetOverrideTag("RenderType", "Transparent");
+            m.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+            EditorUtility.SetDirty(m);
+            return m;
+        }
+
         public static Vector3 Abs(Vector3 v) => new Vector3(Mathf.Abs(v.x), Mathf.Abs(v.y), Mathf.Abs(v.z));
 
         /// <summary>A figure (an EnemySpawn marker) under [Figures], or under a parent (a group that a flag shows).</summary>

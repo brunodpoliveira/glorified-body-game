@@ -2,6 +2,7 @@
 using UnityEditor;
 using UnityEngine;
 using GlorifiedBody.Combat;
+using GlorifiedBody.Interaction;
 
 namespace GlorifiedBody.Editor
 {
@@ -54,6 +55,8 @@ namespace GlorifiedBody.Editor
             obstacle.size = Vector3.one;
             obstacle.carving = true;
             obstacle.carveOnlyStationary = true;
+            Rideable ride = MenuLoopSetup.EnsureComponent<Rideable>(obj); // she climbs on and surfs it with mk_orzabal (2026-11-14)
+            ride.range = 1.3f;
             return obj;
         }
 

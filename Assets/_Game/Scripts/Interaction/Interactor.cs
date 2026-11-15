@@ -182,10 +182,11 @@ namespace GlorifiedBody.Interaction
             Result("closed:" + id);
         }
 
-        /// <summary>Shows her words in the message box with no key (the end of the W14 show, 2026-11-11). False while the box is busy.</summary>
+        /// <summary>Shows her words in the message box with no key (the end of the W14 show, 2026-11-11). A new message replaces the one
+        /// on screen (the ride's hint, then "the bar is empty"). False while a question or a page is open.</summary>
         public bool ShowMessage(string text, float seconds, string what)
         {
-            if (Current != State.Free || string.IsNullOrEmpty(text)) return false;
+            if ((Current != State.Free && Current != State.Message) || string.IsNullOrEmpty(text)) return false;
             Text = text;
             messageUntil = Time.time + seconds;
             SetState(State.Message);

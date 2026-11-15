@@ -667,6 +667,14 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   later, the theme from its bar 1 after 14 more. `SamePiece` accepts 2 samples of difference. Tests: `MusicKitTests` (EditMode, 3),
   `MusicArcTests` (PlayMode, 4, about 2 minutes of real-time music; they need the audio clock).
 
+- 2026-11-14, THE BOOTH, THE GURNEY, THE SURF (`devlog-notes/2026-11-14_booth_gurney_surf.md`, Bruno: "i don't see a nurse behind the
+  theather control room", "the gurney is invisible", "the player needs to ride the gurney themselves"): the H4 booth panes and door are glass
+  (`DemoRoom.Glass`), and `Cam_H4_booth` looks in at the nurse. The gurney's pieces stood 36 m away (`RoomKit.Box` takes a local position).
+  `Interaction/Rideable` replaces `GurneyRide`: the Interact key climbs her on and down, the defend key held with mk_orzabal lifts the thing
+  under her feet with her on it (`PsychicPowers.TryRide`), the walk keys steer it, the release sets it down (not over a gap). The gurney and
+  every `PropAssets.Box` ride. A message of the Interactor locks her feet: put a hint for a free walk in the hint line. FOR LATER: a bigger gap
+  in the Hold. Numbers PROPOSED.
+
 ## Rules
 
 1. Unity 6000.3.15f1 (installed at `/home/pc/Unity/Hub/Editor/6000.3.15f1`). Start it only through `tools/unity.sh`

@@ -404,7 +404,19 @@ namespace GlorifiedBody.Player
         private void UpdateShield(float dt)
         {
             bool held = GameInput.GetAction(InputManager.GameAction.Defend, KeyCode.Mouse1);
-            bool can = held && !defendAfterCancel && Selected.kind == PowerKind.Telekinesis && activeLift == null
+            if (riding != null)
+            {
+                // The ride ends at the release, or when she changes the power; over a gap it goes on until a floor is under it.
+                if ((!held || Selected.kind != PowerKind.Telekinesis || stats.Health.IsDead) && riding.EndRide())
+                {
+                    riding = null;
+                    defendAfterCancel = held;
+                    LastResult = "ride_off";
+                    OnChanged?.Invoke();
+                }
+                return;
+            }
+            bool can =held && !defendAfterCancel && Selected.kind == PowerKind.Telekinesis && activeLift == null
                        && !IsCharging && !(shortController != null && shortController.IsActive) && !stats.Health.IsDead;
             if (!can)
             {
@@ -413,6 +425,11 @@ namespace GlorifiedBody.Player
             }
             defendHeldFor += dt;
             if (defendHeldFor < ShieldHoldDelay) return;
+            if (TryRide())
+            {
+                defendHeldFor = 0f;
+                return;
+            }
             if (TryCarry(Selected))
             {
                 defendHeldFor = 0f;
@@ -493,6 +510,34 @@ namespace GlorifiedBody.Player
             LastResult = "carry";
             LastResultTime = Time.time;
             RunTelemetry.Event("tk_carry", prop.name);
+            OnChanged?.Invoke();
+            return true;
+        }
+
+        private GlorifiedBody.Interaction.Rideable riding;
+
+        /// <summary>The thing she rides now (the gurney, a box), or null.</summary>
+        public GlorifiedBody.Interaction.Rideable Riding => riding;
+
+        /// <summary>
+        /// The surf (Bruno, 2026-11-14: "the player needs to ride the gurney themselves"): she stands on a rideable thing,
+        /// and the defend key held with mk_orzabal lifts it with her on it. The walk keys steer it (Rideable), the release
+        /// sets it down. It comes before the carry and the shield: on a box, the key means the box under her feet.
+        /// </summary>
+        private bool TryRide()
+        {
+            GlorifiedBody.Interaction.Rideable under = GlorifiedBody.Interaction.Rideable.Under(transform);
+            if (under == null) return false;
+            EndShieldCharge();
+            if (!under.StartRide(stats))
+            {
+                Result("no_nalcon", 0f);
+                defendAfterCancel = true;
+                return true;
+            }
+            riding = under;
+            LastResult = "ride";
+            LastResultTime = Time.time;
             OnChanged?.Invoke();
             return true;
         }

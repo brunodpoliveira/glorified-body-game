@@ -225,6 +225,48 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator TheSurf_SheClimbsOnABox_TheHeldKeyLiftsItWithHer_TheWalkKeysMoveIt_TheReleaseSetsItDown()
+        {
+            // Bruno, 2026-11-14: "i need to test if it's possible to manipulate objects to get her to surf on them".
+            stats.DebugSet(100f, 0f);
+            Rideable ride = boxA.GetComponent<Rideable>();
+            Assert.IsNotNull(ride, "every puzzle box is rideable");
+            Interactor hand = lucy.GetComponent<Interactor>();
+            Vector3 start = boxA.transform.position;
+            tank.Teleport(new Vector3(start.x, 0f, start.z - 0.9f), 0f);
+            yield return null;
+            Assert.AreSame(ride, hand.FindFocus(), "the Interact key reaches the box");
+            Assert.AreEqual("ride:up", ride.Confirm(hand), "she climbs on, no question");
+            yield return new WaitForSeconds(0.3f);
+            Assert.IsTrue(ride.OnTop(lucy.transform), "she stands on the box");
+            float mk = stats.Mk(PowerKind.Telekinesis);
+            pad.SetHeld(InputManager.GameAction.Defend, true);
+            yield return WaitUntil(() => powers.Riding != null, 1f);
+            Assert.AreSame(ride, powers.Riding, "the held key lifts the box under her feet");
+            Assert.IsFalse(powers.Carrying, "a ride, no carry");
+            Assert.AreEqual(PsychicPowers.LiftCost, mk - stats.Mk(PowerKind.Telekinesis), 0.5f, "a box costs a lift");
+            pad.SetHeld(InputManager.GameAction.Forward, true);
+            yield return new WaitForSeconds(1f);
+            pad.SetHeld(InputManager.GameAction.Forward, false);
+            Vector3 moved = Vector3.ProjectOnPlane(boxA.transform.position - start, Vector3.up);
+            Debug.Log($"[PhysicsTests] the surf: the box moved {moved.magnitude:0.00} m, her feet {lucy.transform.position.y:0.00} m, the box top {boxA.GetComponent<Collider>().bounds.max.y:0.00} m");
+            Assert.Greater(moved.magnitude, 1.2f, "the walk keys move the box with her");
+            Assert.Greater(Vector3.Dot(moved, Vector3.forward), 1.2f, "along her facing");
+            Assert.IsTrue(ride.OnTop(lucy.transform), "she rides on it");
+            pad.SetHeld(InputManager.GameAction.Defend, false);
+            yield return WaitUntil(() => powers.Riding == null, 1f);
+            yield return new WaitForSeconds(0.5f);
+            Assert.IsNull(powers.Riding, "the release sets it down");
+            Assert.AreEqual(start.y, boxA.transform.position.y, 0.06f, "on the floor");
+            Assert.IsFalse(boxA.GetComponent<Rigidbody>().isKinematic, "a box again: it falls and rests");
+            Assert.IsTrue(ride.OnTop(lucy.transform), "she still stands on it");
+            Assert.AreEqual("ride:down", ride.Confirm(hand), "the Interact key climbs her down");
+            yield return new WaitForSeconds(0.3f);
+            Assert.Less(lucy.transform.position.y, 0.2f, "she stands on the floor");
+            Assert.IsFalse(tank.MovementLocked);
+        }
+
+        [UnityTest]
         public IEnumerator AThrow_FromTheCarry_CostsByItsCharge_AndWithNoMkTheBoxStaysHeld()
         {
             stats.DebugSet(100f, 0f);
