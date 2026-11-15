@@ -36,6 +36,8 @@ namespace GlorifiedBody.Enemy
         public float foundAt = 2f;
         [Tooltip("It waits, unaware, until this story flag goes up, or the script or a hit wakes it (a figure at its work before a talk).")]
         public string heldUntilFlag = "";
+        [Tooltip("A guard with a pistol who always takes the baton at his alert, whatever his personality (Bruno, 2026-11-15: the guards early in the act carry a baton and a pistol, the later ones the pistol only).")]
+        public bool baton;
 
         [Tooltip("A test room with its AI off: it stands still whatever she does to it, until this story flag goes up or mk_edgar takes it.")]
         public string passiveUntilFlag = "";
@@ -105,6 +107,7 @@ namespace GlorifiedBody.Enemy
             if (!string.IsNullOrEmpty(line) && figure.TryGetComponent(out PatientBrain patient)) patient.Line = line;
             if (hides && figure.TryGetComponent(out CivilianBrain hider)) hider.SetHider(hideLine, foundLine, foundAt);
             if (!string.IsNullOrEmpty(heldUntilFlag) && figure.TryGetComponent(out SoldierBrain held)) held.ScriptHoldUntil(heldUntilFlag);
+            if (baton && figure.TryGetComponent(out SoldierBrain withBaton)) withBaton.AlwaysBaton = true;
             if (!string.IsNullOrEmpty(leashUntilFlag) && figure.TryGetComponent(out SoldierBrain post))
                 post.LeashUntil(GetComponentInParent<GlorifiedBody.Rooms.Room>(), leashUntilFlag);
             if (!string.IsNullOrEmpty(passiveUntilFlag))

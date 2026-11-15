@@ -715,6 +715,10 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   push crates, boxes and debris too (`Breakables.Push`, `Breakables.Blast`). FOR LATER: a laser weapon on the wave's logic that burns, and she
   can only deflect it. The demo's breakable lamps come last (memory `gb-breakable-lamps-last`). Numbers PROPOSED.
 
+- 2026-11-15, THE HOLD'S GUARDS (`devlog-notes/2026-11-15_hold_guards_baton.md`, Bruno: "the guards in the hold all have shields, which is too
+  quick of an escalation"): the H3 guards and the W5 guards carry a baton and a pistol (`EnemySpawn.baton`, `SoldierBrain.AlwaysBaton`), the H7
+  arena guard keeps his shield, the coda's guard has the pistol only. NOT TESTED (Bruno tests by hand).
+
 ## Rules
 
 1. Unity 6000.3.15f1 (installed at `/home/pc/Unity/Hub/Editor/6000.3.15f1`). Start it only through `tools/unity.sh`

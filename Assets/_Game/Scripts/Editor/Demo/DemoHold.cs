@@ -225,7 +225,10 @@ namespace GlorifiedBody.Editor.Demo
             GameObject guards = MenuLoopSetup.EnsureChild(r.Figures, "Group_Guards");
             foreach ((string n, Vector3 at) in new[] { ("Guard_H3_A", new Vector3(12.6f, 0f, 34.4f)), ("Guard_H3_B", new Vector3(12.2f, 0f, 36.7f)) })
             {
-                EnemySpawn g = r.Figure(n, "guard_shield", at, 90f, parent: guards);
+                // A baton and a pistol, no shield (Bruno, 2026-11-15: "the guards in the hold all have shields, which is too quick of an
+                // escalation so soon, especially in a tight space like the hold"). The arena guard of H7 keeps his shield.
+                EnemySpawn g = r.Figure(n, "guard_pistol", at, 90f, parent: guards);
+                g.baton = true;
                 g.heldUntilFlag = GuardsOpen;
                 g.askLine = Bark("h3_deny_card");
                 g.askItemId = DemoItems.AirlockCard().itemId;

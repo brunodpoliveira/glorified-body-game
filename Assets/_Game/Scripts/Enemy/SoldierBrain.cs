@@ -1196,12 +1196,15 @@ namespace GlorifiedBody.Enemy
             return spot;
         }
 
-        /// <summary>An overconfident guard with a pistol takes the baton at his alert (round 134).</summary>
+        /// <summary>A guard of the early act takes the baton whatever his personality (EnemySpawn.baton; Bruno, 2026-11-15).</summary>
+        public bool AlwaysBaton { get; set; }
+
+        /// <summary>An overconfident guard with a pistol takes the baton at his alert (round 134), and so does a guard set to AlwaysBaton.</summary>
         private bool TakesBaton()
         {
             if (!BatonEnabled || DrewReason != "" || BatonOut || IsDominated || RankOf != EnemyMorale.Rank.Guard || gun.WeaponKind != DummyShooter.Weapon.Pistol) return false;
             BarkVoice voice = BarkVoice.Of(gameObject);
-            return voice != null && voice.Personality == BatonPersonality && TryGetComponent(out EnemyGun _);
+            return voice != null && (AlwaysBaton || voice.Personality == BatonPersonality) && TryGetComponent(out EnemyGun _);
         }
 
         /// <summary>The alert came from her attack: a hurt, a power he heard, a block of his shield.</summary>

@@ -126,8 +126,9 @@ namespace GlorifiedBody.Editor.Demo
         /// <summary>W5: two guards (beat 8), code silver and the fire door (9), the scan C5 on a guard.</summary>
         private static void W5(DemoRoom r)
         {
-            r.Figure("Guard_A", "guard_pistol", new Vector3(1.6f, 0f, -1.5f), 0f);
+            r.Figure("Guard_A", "guard_pistol", new Vector3(1.6f, 0f, -1.5f), 0f).baton = true; // early in the act: a baton and a pistol (Bruno, 2026-11-15)
             EnemySpawn second = r.Figure("Guard_B", "guard_pistol", new Vector3(1.2f, 0f, -3.5f), 0f);
+            second.baton = true;
             second.scanImage = TutorialSetup.EnsureScanImage();
             second.scanCaption = DemoPlan.ScanCard("C5", "PLACEHOLDER (C5): \"Don't let her touch you.\"");
             EditorUtility.SetDirty(second);
