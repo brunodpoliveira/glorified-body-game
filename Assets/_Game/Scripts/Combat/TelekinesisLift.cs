@@ -50,6 +50,8 @@ namespace GlorifiedBody.Combat
         private static int DebrisMask => Breakables.DebrisLayer >= 0 ? 1 << Breakables.DebrisLayer : 0;
 
         public bool IsLifted { get; private set; }
+        /// <summary>The height of the root over the floor it lay on (the human shield: a civilian held low).</summary>
+        public float HeightOverFloor => transform.position.y - floor.y;
         /// <summary>True while it rises or hangs: a throw, a slam or a release is possible.</summary>
         public bool CanLaunch => IsLifted && !launched && !slamming && !released;
         /// <summary>How it ended: "throw", "slam", "released", or "" while it hangs.</summary>
@@ -282,14 +284,23 @@ namespace GlorifiedBody.Combat
                 Vector3 from = transform.position;
                 t = 0f;
                 const float slamSeconds = 0.15f;
-                while (t < slamSeconds)
+                if (ragdoll != null)
                 {
-                    t += Time.deltaTime;
-                    transform.position = Vector3.Lerp(from, floor, t / slamSeconds);
-                    yield return null;
+                    // A full slam lands a body head first, the legs over, away from her (round 162, the face plant): it goes
+                    // limp at the top of the slam and falls by physics, so the legs have the height to go over.
+                    ragdoll.EndHoldFacePlant(attacker != null ? transform.position - attacker.transform.position : transform.forward, SlamDownSeconds);
+                    yield return new WaitForSeconds(0.2f);
                 }
-                transform.position = floor;
-                ragdoll?.EndHold(Vector3.down * 4f, SlamDownSeconds);
+                else
+                {
+                    while (t < slamSeconds)
+                    {
+                        t += Time.deltaTime;
+                        transform.position = Vector3.Lerp(from, floor, t / slamSeconds);
+                        yield return null;
+                    }
+                    transform.position = floor;
+                }
                 Hit(GetComponent<Health>() ?? GetComponentInParent<Health>(), slamDamage, floor, Vector3.up);
                 Breakables.Splash(floor, SlamSplashRadius, slamDamage, DamageType.PsychicTelekinesis);
             }

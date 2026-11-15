@@ -20,6 +20,8 @@ namespace GlorifiedBody.Combat
         bool BeginHold();
         /// <summary>The lift ends (a throw, a slam, a release): all of it falls with this velocity.</summary>
         void EndHold(Vector3 velocity, float seconds);
+        /// <summary>A full slam ends the lift (round 162): it lands head first, the legs flipped up over the body, away along forward.</summary>
+        void EndHoldFacePlant(Vector3 forward, float seconds);
         /// <summary>A cut limb (the gore): the bones from this one down lose their colliders and hang on, unseen.</summary>
         void Sever(Transform bone);
     }

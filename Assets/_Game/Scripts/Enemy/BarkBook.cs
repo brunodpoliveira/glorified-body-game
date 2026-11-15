@@ -29,6 +29,9 @@ namespace GlorifiedBody.Enemy
         public const string Baton = "approaches with the baton";
         public const string Chases = "chases her";
         public const string DrawsGun = "draws the gun";
+        // The soldiers and the civilians (rounds 161 and 162): a "CIV:" direction plays only to a matching civilian.
+        public const string CiviliansPresent = "civilians present";
+        public const string EscortsCivilian = "escorts a civilian";
         // The fire team (FireTeam, TeamReinforcement).
         public const string TeamContact = "team: contact";
         public const string TeamMoving = "team: moving";
@@ -62,6 +65,8 @@ namespace GlorifiedBody.Enemy
         public bool first;
         /// <summary>The things of a "PLACE:" direction. The row plays only in a room that has one of them. Empty: any room.</summary>
         public string[] places = new string[0];
+        /// <summary>The civilian of a "CIV:" direction (round 162): "woman", "man" or "group". Empty: any civilian, or none.</summary>
+        public string civ = "";
         /// <summary>The place of the row among the rows of its enemy and situation (0 first), for the scripted lines.</summary>
         public int index;
     }
@@ -126,6 +131,7 @@ namespace GlorifiedBody.Enemy
             ("soldier", BarkSituation.TeamSuppressing), ("soldier", BarkSituation.TeamManDown), ("soldier", BarkSituation.TeamTwoLeft),
             ("soldier", BarkSituation.TeamOneLeft), ("soldier", BarkSituation.TeamLostHer), ("soldier", BarkSituation.TeamSearchMoving),
             ("soldier", BarkSituation.TeamSearchCovering), ("soldier", BarkSituation.TeamSearchClear), ("soldier", BarkSituation.TeamSecond),
+            ("soldier", BarkSituation.CiviliansPresent), ("soldier", BarkSituation.EscortsCivilian), // HumanShield, CivilianEscort (rounds 161, 162)
             // The power armour (SoldierBrain, EnemyMorale, HeavyArrival, PsychicPowers, FireTeam: he joins the calls of a team in his room).
             ("armour", BarkSituation.SpotsLucy), ("armour", BarkSituation.Fires), ("armour", BarkSituation.Hit), ("armour", BarkSituation.Shock),
             ("armour", BarkSituation.SeesFeed), ("armour", BarkSituation.TooHeavy), ("armour", BarkSituation.ArmourEnter),
@@ -238,9 +244,20 @@ namespace GlorifiedBody.Enemy
                 if (string.IsNullOrEmpty(row.line)) continue;
                 row.first = row.direction.Contains("plays first");
                 row.places = PlacesOf(row.direction);
+                row.civ = CivOf(row.direction);
                 list.Add(row);
             }
             return list;
+        }
+
+        /// <summary>"PLACE: desk; CIV: woman; take c2.30" gives "woman".</summary>
+        private static string CivOf(string direction)
+        {
+            int at = direction.IndexOf("CIV:", System.StringComparison.Ordinal);
+            if (at < 0) return "";
+            string rest = direction.Substring(at + 4);
+            int end = rest.IndexOf(';');
+            return Simple(end >= 0 ? rest.Substring(0, end) : rest);
         }
 
         /// <summary>"PLACE: linen, cart; take t2.21" gives { "linen", "cart" }.</summary>
@@ -351,20 +368,20 @@ namespace GlorifiedBody.Enemy
         // ── Say ───────────────────────────────────────────────────────
 
         /// <summary>The person says a line of the situation (no repeat, "plays first" first). False when it has none.</summary>
-        public static bool Say(GameObject who, string situation, float seconds = 1.6f)
+        public static bool Say(GameObject who, string situation, float seconds = 1.6f, string civ = "")
         {
             if (!Bark.CanSpeak(who)) return false; // the two-voice rule: the deck keeps its line
-            string line = Line(who, situation);
+            string line = Line(who, situation, civ);
             if (string.IsNullOrEmpty(line)) return false;
             Bark.Say(who, line, seconds);
             return true;
         }
 
         /// <summary>The next line of the situation for the person, or null.</summary>
-        public static string Line(GameObject who, string situation)
+        public static string Line(GameObject who, string situation, string civ = "")
         {
             BarkVoice voice = BarkVoice.Of(who);
-            return voice != null ? voice.Next(situation) : null;
+            return voice != null ? voice.Next(situation, civ) : null;
         }
 
         /// <summary>The person has a line for the situation (for the choice of a speaker).</summary>

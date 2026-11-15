@@ -140,18 +140,25 @@ namespace GlorifiedBody.Enemy
         // ── The decks ─────────────────────────────────────────────────
 
         /// <summary>The next line of the situation, or null (a pair the code does not ask for, or no row).</summary>
-        public string Next(string situation)
+        public string Next(string situation) => Next(situation, "");
+
+        /// <summary>The next line, spoken to a civilian of this kind (round 162: "woman", "man", "group"; "" for none). A "CIV:" row fits only its kind.</summary>
+        public string Next(string situation, string civ)
         {
             Ready();
             if (!BarkBook.IsAsked(enemy, situation)) return null;
-            return NextOf(enemy, personality, situation);
+            civFor = civ ?? "";
+            try { return NextOf(enemy, personality, situation); }
+            finally { civFor = ""; }
         }
+
+        private string civFor = "";
 
         /// <summary>The next line of any enemy and situation for this person (mk_edgar's groups).</summary>
         public string NextOf(string group, string withPersonality, string situation)
         {
             Ready();
-            string key = group + "|" + withPersonality + "|" + situation;
+            string key = group + "|" + withPersonality + "|" + situation + "|" + civFor;
             List<BarkRow> all = BarkBook.RowsFor(group, withPersonality, situation);
             if (all.Count == 0) return null;
             List<BarkRow> fit = all.FindAll(Fits);
@@ -184,6 +191,7 @@ namespace GlorifiedBody.Enemy
         /// <summary>A row with no PLACE fits anywhere; a row with one fits in a room that has the thing.</summary>
         private bool Fits(BarkRow row)
         {
+            if (row.civ.Length > 0 && row.civ != civFor) return false;
             if (row.places.Length == 0) return true;
             if (!GlorifiedBody.Rooms.Room.Any) return false;
             GlorifiedBody.Rooms.Room room = GlorifiedBody.Rooms.Room.At(transform.position);
@@ -207,12 +215,12 @@ namespace GlorifiedBody.Enemy
         }
 
         /// <summary>Says a line of the situation, but not again within the gap (a hit, a shot), and only with the chance.</summary>
-        public bool SayNow(string situation, float gap, float chance = 1f, float seconds = 1.6f)
+        public bool SayNow(string situation, float gap, float chance = 1f, float seconds = 1.6f, string civ = "")
         {
             if (nextAt.TryGetValue(situation, out float at) && Time.time < at) return false;
             nextAt[situation] = Time.time + gap;
             if (Random.value > chance) return false;
-            return BarkBook.Say(gameObject, situation, seconds);
+            return BarkBook.Say(gameObject, situation, seconds, civ);
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]

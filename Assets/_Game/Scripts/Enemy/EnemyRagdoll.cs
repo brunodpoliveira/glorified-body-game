@@ -237,6 +237,42 @@ namespace GlorifiedBody.Enemy
             RunTelemetry.Event("ragdoll_dropped", $"{name}:{seconds:0.0}s");
         }
 
+        // The face plant (round 162, CANON: "when orzabal slams at full speed, have them face plant"; the reference
+        // reference/generic/other/orzabal_slam_face_plant.webp): the head and the chest go down first, the legs go up and
+        // over, away from her. Numbers PROPOSED.
+        private const float PlantHeadDown = 7f, PlantHeadForward = 1f, PlantLegsUp = 6f, PlantLegsForward = 3.5f, PlantSpin = 9f;
+
+        /// <summary>The largest height of a foot over the head since the last face plant (a test reads it).</summary>
+        public float FacePlantFlip { get; private set; }
+        private float plantWatchUntil;
+
+        public void EndHoldFacePlant(Vector3 forward, float seconds)
+        {
+            if (Current != State.Held) return;
+            SetBones(limp: true, hipsHeld: false);
+            Vector3 fwd = Vector3.ProjectOnPlane(forward, Vector3.up);
+            fwd = fwd.sqrMagnitude > 0.0001f ? fwd.normalized : transform.forward;
+            Vector3 pitch = Vector3.Cross(Vector3.up, fwd); // the turn that brings the head down and forward, the feet up and over
+            float hipsY = hips != null ? hips.position.y : transform.position.y;
+            foreach (Rigidbody part in parts)
+            {
+                if (part == null || part.isKinematic) continue;
+                bool legs = part.worldCenterOfMass.y < hipsY - 0.05f;
+                part.linearVelocity = legs ? Vector3.up * PlantLegsUp + fwd * PlantLegsForward : Vector3.down * PlantHeadDown + fwd * PlantHeadForward;
+                part.angularVelocity = pitch * PlantSpin;
+            }
+            FacePlantFlip = float.NegativeInfinity;
+            plantWatchUntil = Time.time + 1.5f;
+            EnterDown(seconds);
+            RunTelemetry.Event("ragdoll_face_plant", $"{name}:{seconds:0.0}s");
+        }
+
+        private void WatchFacePlant()
+        {
+            if (Time.time > plantWatchUntil || head == null || leftFoot == null || rightFoot == null) return;
+            FacePlantFlip = Mathf.Max(FacePlantFlip, Mathf.Max(leftFoot.position.y, rightFoot.position.y) - head.position.y);
+        }
+
         public void Sever(Transform bone)
         {
             if (bone == null) return;
@@ -395,6 +431,7 @@ namespace GlorifiedBody.Enemy
 
         private void LateUpdate()
         {
+            WatchFacePlant();
             // The death: in LateUpdate, so the muscles keep the pose the animator gave in this frame.
             if (deathPending)
             {

@@ -173,6 +173,45 @@ namespace GlorifiedBody.Enemy
 
         /// <summary>A grenade of either kind: it arcs to the floor, and it needs room.</summary>
         public static bool IsLobbed(Attack a) => a == Attack.Grenade || a == Attack.Gas;
+
+        // The human shield (round 162, HumanShield): a guard or a soldier does not fire through a live civilian she holds low.
+        private int shieldRank = -1; // -1: not read yet, 0: fires anyway, 1: holds
+        /// <summary>The shots this gun held for a human shield.</summary>
+        public int HeldForShield { get; private set; }
+
+        private bool ShieldStops(Attack attack, Vector3 target)
+        {
+            if (attack == Attack.None || attack == Attack.Melee || IsLobbed(attack)) return false;
+            if (shieldRank < 0) shieldRank = HumanShield.HoldsFireFor(gameObject) ? 1 : 0;
+            return shieldRank == 1 && HumanShield.Blocks(Muzzle, target);
+        }
+
+        private float nextShieldNote;
+
+        /// <summary>The aim does not start through a held civilian; once a second it counts and he says why.</summary>
+        private bool ShieldStopsAim(Attack attack, Vector3 target)
+        {
+            if (!ShieldStops(attack, target)) return false;
+            if (Time.time >= nextShieldNote) NoteShield();
+            return true;
+        }
+
+        /// <summary>A shot already aimed is not fired.</summary>
+        private void HoldForShield()
+        {
+            NoteShield();
+            CancelAim(State.Cooldown, 0.4f);
+        }
+
+        private void NoteShield()
+        {
+            nextShieldNote = Time.time + 1f;
+            HeldForShield++;
+            CivilianBrain held = HumanShield.Held();
+            RunTelemetry.Event("enemy_held_fire", $"{enemyId}:{(held != null ? held.name : "?")}");
+            // "Hold fire, hold, I've got staff behind her, nobody shoots through that." (barks.csv, civilians present, round 162)
+            BarkVoice.Of(gameObject)?.SayNow(BarkSituation.CiviliansPresent, 6f, 1f, 2.4f, held != null ? held.CivKind : "");
+        }
         public string EnemyId => enemyId;
 
         /// <summary>
@@ -290,7 +329,7 @@ namespace GlorifiedBody.Enemy
                 case State.Idle:
                     if (SuppressPoint.HasValue && !HoldFire && distance > meleeRange && PlayerAlive() && TrySuppress(SuppressPoint.Value)) break;
                     Attack next = ChooseAttack(distance);
-                    if (!HoldFire && next != Attack.None && PlayerAlive() && Sees(chest) && ShooterScheduler.TryAcquire(this))
+                    if (!HoldFire && next != Attack.None && PlayerAlive() && Sees(chest) && !ShieldStopsAim(next, chest) && ShooterScheduler.TryAcquire(this))
                     {
                         CurrentAttack = next;
                         SplitTiming(out float aim, out telegraphLength);
@@ -491,6 +530,7 @@ namespace GlorifiedBody.Enemy
 
         private void Fire()
         {
+            if (ShieldStops(CurrentAttack, aimPoint)) { HoldForShield(); return; }
             ShotsFired++;
             RunTelemetry.Event("enemy_fired", $"{enemyId}:{CurrentAttack}");
             switch (CurrentAttack)
@@ -540,6 +580,7 @@ namespace GlorifiedBody.Enemy
         /// <summary>One bullet of a shot or a burst, or the grenade.</summary>
         private void FireRound()
         {
+            if (ShieldStops(CurrentAttack, CurrentAttack == Attack.Sweep && player != null ? player.position + Vector3.up * Body.ChestHeight : aimPoint)) { HoldForShield(); return; }
             Vector3 origin = Muzzle;
             Vector3 direction = (aimPoint - origin).normalized;
             if (CurrentAttack == Attack.Grenade)

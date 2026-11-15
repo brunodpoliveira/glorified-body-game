@@ -682,6 +682,11 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   and the builders of L25 to L29 and L37 no longer repeat the cell's notes. `DeathScreenContent.Entry.moreHints` (a second CSV row of a
   killer adds one); the human shield hint is one of the shooting soldiers' hints (round 163).
 
+- 2026-11-15, THE HUMAN SHIELD, THE FACE PLANT, THE CIV TAG (`devlog-notes/2026-11-15_human_shield_face_plant.md`, rounds 161 and 162):
+  `Enemy/HumanShield` (a live civilian she holds 0.6 m or lower: guards and soldiers neither aim nor fire through it, `DummyShooter.HeldForShield`,
+  the `civilians present` barks), `EnemyRagdoll.EndHoldFacePlant` (a full slam goes limp at the top and lands head first), the `CIV:` tag
+  (`BarkRow.civ`, `BarkVoice.Next(situation, civ)`, `CivilianBrain.CivKind`). Tests: `HumanShieldTests` (KIT TEST). Numbers PROPOSED.
+
 ## Rules
 
 1. Unity 6000.3.15f1 (installed at `/home/pc/Unity/Hub/Editor/6000.3.15f1`). Start it only through `tools/unity.sh`

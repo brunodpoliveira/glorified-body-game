@@ -91,6 +91,8 @@ namespace GlorifiedBody.Enemy
         public string PanicReason { get; private set; } = "";
         public bool Retreating => Panicked && Current != Phase.Dead;
         public bool IsNurse => nurse;
+        /// <summary>The "CIV:" kind of the barks to it (round 162): the nurse model is a woman, the lab worker a man (PROPOSED).</summary>
+        public string CivKind => nurse ? "woman" : "man";
         public int Begs { get; private set; }
         public Vector3 Spot { get; private set; }
         public IEnemyBody Body => body;
