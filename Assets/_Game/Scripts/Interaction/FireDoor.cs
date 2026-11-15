@@ -39,9 +39,9 @@ namespace GlorifiedBody.Interaction
         public bool startsJammed;
         [Tooltip("Her levers do nothing until this story flag goes up (a script opens the door first). Empty: always.")]
         public string leverFlag = "";
-        [Tooltip("The door shuts and jams when this story flag goes up (the W5 to W9 door at code silver: DEMO_PLAN §10.5, the route switch). Empty: never.")]
+        [Tooltip("The door shuts and jams when this story flag goes up (the W5 to W9 door at code silver: DEMO_PLAN §10.5, the route switch). Several flags: commas. Empty: never.")]
         public string jamFlag = "";
-        [Tooltip("The door opens when this flag goes up (the guard post opens the door of H2, round 118). Empty: never.")]
+        [Tooltip("The door opens when this flag goes up (the guard post opens the door of H2, round 118). Several flags: commas (the runner's door of H2). Empty: never.")]
         public string openFlag = "";
         [Tooltip("The bars across the doorway, one on each face: shown while the door is jammed (Bruno: \"a horizontal bar to indicate that she is jamming the door\").")]
         public GameObject[] bars = new GameObject[0];
@@ -122,19 +122,27 @@ namespace GlorifiedBody.Interaction
         /// </summary>
         private void OnFlag(string flag)
         {
-            if (!string.IsNullOrEmpty(openFlag) && flag == openFlag && GlorifiedBody.Saving.StoryFlags.Has(openFlag) && Current == State.Jammed)
+            if (Names(openFlag, flag) && GlorifiedBody.Saving.StoryFlags.Has(flag) && Current == State.Jammed)
             {
-                Open("flag:" + openFlag);
+                Open("flag:" + flag);
                 return;
             }
-            if (string.IsNullOrEmpty(jamFlag) || flag != jamFlag || !GlorifiedBody.Saving.StoryFlags.Has(jamFlag)) return;
-            if (Current == State.Open && !Jam("flag:" + jamFlag) && isActiveAndEnabled) StartCoroutine(JamWhenClear());
+            if (!Names(jamFlag, flag) || !GlorifiedBody.Saving.StoryFlags.Has(flag)) return;
+            if (Current == State.Open && !Jam("flag:" + flag) && isActiveAndEnabled) StartCoroutine(JamWhenClear(flag));
+        }
+
+        /// <summary>The flag is one of the list (commas).</summary>
+        private static bool Names(string list, string flag)
+        {
+            if (string.IsNullOrEmpty(list) || string.IsNullOrEmpty(flag)) return false;
+            foreach (string f in list.Split(',')) if (f.Trim() == flag) return true;
+            return false;
         }
 
         /// <summary>A body in the doorway when the flag went up: the door shuts as soon as the way is clear.</summary>
-        private IEnumerator JamWhenClear()
+        private IEnumerator JamWhenClear(string flag)
         {
-            while (Current == State.Open && !Jam("flag:" + jamFlag)) yield return new WaitForSeconds(0.25f);
+            while (Current == State.Open && !Jam("flag:" + flag)) yield return new WaitForSeconds(0.25f);
         }
 
         /// <summary>A body, hers or another's, in the leaf's path.</summary>

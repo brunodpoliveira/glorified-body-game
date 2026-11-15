@@ -719,6 +719,13 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   quick of an escalation"): the H3 guards and the W5 guards carry a baton and a pistol (`EnemySpawn.baton`, `SoldierBrain.AlwaysBaton`), the H7
   arena guard keeps his shield, the coda's guard has the pistol only. NOT TESTED (Bruno tests by hand).
 
+- 2026-11-15, TWO ROOMS MORE IN THE HOLD (`devlog-notes/2026-11-15_hold_rooms_roofs.md`, Bruno: "the short lasts long enough to kill
+  the nurse"; "the short kills the scientist with the card every time"; his pick: "run out of reach"): H1 and H2 stand 4 m further east,
+  H2b STORES between H2 and H3, H3b SCRUB ROOM between H3 and the theater, H4 is 11 x 7 m (z 42 to 49). The card carrier's door opens at
+  the first scientist's death (`hold_h2_runner_out`), he cowers behind the linen shelf, it shuts behind him (`hold_h2_runner_shut`); the
+  guards open it again. `FireDoor.openFlag`/`jamFlag` take flags with commas. `GlorifiedBody > Scene View > Hide Roofs` (Scene view only)
+  and no MIS banner (`Editor/SceneViewTools.cs`). Room names PLACEHOLDER. Numbers PROPOSED.
+
 ## Rules
 
 1. Unity 6000.3.15f1 (installed at `/home/pc/Unity/Hub/Editor/6000.3.15f1`). Start it only through `tools/unity.sh`

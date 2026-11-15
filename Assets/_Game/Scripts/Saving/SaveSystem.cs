@@ -71,6 +71,16 @@ namespace GlorifiedBody.Saving
         /// <summary>The last load's state applied to the room (tests).</summary>
         public static SaveData LastApplied { get; private set; }
         public static event Action<string> OnToast;
+        /// <summary>The last toast (tests).</summary>
+        public static string LastToast { get; private set; } = "";
+
+        /// <summary>A short line at the corner of the screen that does not stop her (the save toast; 2026-11-15: "Stevens' note added to
+        /// the inventory" was a message, and a message locks her feet).</summary>
+        public static void Toast(string words)
+        {
+            LastToast = words;
+            OnToast?.Invoke(words);
+        }
 
         public static string PathOf(int slot) => Path.Combine(Folder, slot == CheckpointSlot ? "checkpoint.json" : $"slot_{slot}.json");
         public static bool Exists(int slot) => File.Exists(PathOf(slot));
@@ -134,7 +144,7 @@ namespace GlorifiedBody.Saving
             Saves++;
             RunTelemetry.Event("save", $"slot {slot} at {spot}");
             GlorifiedBody.Audio.Sfx.Ui(GlorifiedBody.Audio.Sfx.Save, 0.8f);
-            OnToast?.Invoke($"SAVED IN SLOT {slot}");
+            Toast($"SAVED IN SLOT {slot}");
             return true;
         }
 
@@ -148,7 +158,7 @@ namespace GlorifiedBody.Saving
             Saves++;
             RunTelemetry.Event("checkpoint", spot);
             GlorifiedBody.Audio.Sfx.Ui(GlorifiedBody.Audio.Sfx.Checkpoint, 0.7f);
-            OnToast?.Invoke("CHECKPOINT");
+            Toast("CHECKPOINT");
             return true;
         }
 
@@ -559,6 +569,7 @@ namespace GlorifiedBody.Saving
             Arrivals = 0;
             LastApplied = null;
             OnToast = null;
+            LastToast = "";
             baselineFigures.Clear();
             baselineItems.Clear();
             goneByLoad.Clear();

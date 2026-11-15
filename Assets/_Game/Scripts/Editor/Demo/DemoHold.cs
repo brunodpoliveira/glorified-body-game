@@ -45,26 +45,37 @@ namespace GlorifiedBody.Editor.Demo
         public const string OfficeShut = "hold_h9_shut";
         public const string TheaterLocked = "hold_h4_locked";   // the theater's door shuts behind her (Bruno, 2026-11-15)
         public const string TheaterRelease = "hold_h4_release"; // the fire alarm or the booth's button opens it
+        public const string RunnerOut = "hold_h2_runner_out";   // the card carrier's door opens when the first scientist dies (Bruno, 2026-11-15)
+        public const string RunnerShut = "hold_h2_runner_shut"; // and shuts behind him when he cowers in the stores
         public const string Music = DemoWard.Music;
 
         public static string BoothSign => DemoPlan.Sign("H4, the booth door", "THEATER CONTROL. AUTHORIZED STAFF ONLY. DOOR RELEASES ON FIRE ALARM."); // DEMO_PLAN §7 (rounds 138 and 142)
-        public static readonly string[] Ids = { "H1", "H2", "H3", "H4", "H5", "HT", "H6", "H7", "H8", "H9" };
+        public static readonly string[] Ids = { "H1", "H2", "H2b", "H3", "H3b", "H4", "H5", "HT", "H6", "H7", "H8", "H9" };
 
         // The places (metres, the ward's frame: x east, z north). The writer's drawing, H6 and the box 5 m north.
         public const float BoxZ0 = 33f, BoxZ1 = 38f, DoorZ = 35.5f, TubeZ0 = 34.3f, TubeZ1 = 36.7f, TubeWidth = 2.4f, TubeHeight = 2.9f; // 0.1 m of lintel under the 3 m ceiling: a camera of H6 saw over the doorway into the tube
         // The gap (Bruno, 2026-11-15: "extend the gap ... to be clear you can't jump over it"): 12 m from the airlock to the landing (6 m before).
         public const float TubeX0 = -8f, TubeX1 = 4f, LandingX0 = -12f, LandingX1 = -8f, LandingDoorX = -10f;
-        public static readonly Vector3 LucyStart = new Vector3(25.05f, 0f, 35.5f);
+        public static readonly Vector3 LucyStart = new Vector3(29.05f, 0f, 35.5f);
+        // The theater (Bruno, 2026-11-15: "bigger to accommodate gurney and surgical bed"): 11 x 7 m, the booth on its north strip.
+        public const float TheaterX0 = 4f, TheaterZ0 = 42f, TheaterZ1 = 49f, BoothFront = 47.2f;
 
+        /// <summary>
+        /// Bruno, 2026-11-15: "the short lasts long enough to kill the nurse on the control room" and "the short kills the scientist
+        /// with the card every time". So two rooms more on the way: the stores H2b between treatment and the guard post (the card
+        /// carrier runs into it and its door shuts behind him: the short does not pass a wall), and the scrub room H3b between the
+        /// guard post and the theater. H1 and H2 stand 4 m further east for H2b.
+        /// </summary>
         public static List<RoomSpec> Rooms() => new List<RoomSpec>
         {
-            Spec("H1", "THE CELL", 21, BoxZ0, 27, BoxZ1, H1, new Door('W', DoorZ, "H2")),
-            Spec("H2", "TREATMENT", 15, BoxZ0, 21, BoxZ1, H2, new Door('E', DoorZ, "H1"),
-                new Door('W', DoorZ, "H3", fire: true, jammed: true, leverRoom: "none", unbreakable: true)),
+            Spec("H1", "THE CELL", 25, BoxZ0, 31, BoxZ1, H1, new Door('W', DoorZ, "H2")),
+            Spec("H2", "TREATMENT", 19, BoxZ0, 25, BoxZ1, H2, new Door('E', DoorZ, "H1"), RunnerDoor("H2b")),
+            Spec("H2b", "STORES", 15, BoxZ0, 19, BoxZ1, H2b, RunnerDoor("H2"), new Door('W', DoorZ, "H3", fire: true, jammed: true, leverRoom: "none", unbreakable: true)),
             // The gurney's way out of the theater to the gap (Bruno, 2026-11-15) has tall doorways: she rides it standing.
-            Spec("H3", "GUARD POST", 9, BoxZ0, 15, BoxZ1, H3, new Door('E', DoorZ, "H2", fire: true, jammed: true, leverRoom: "none", unbreakable: true),
-                new Door('W', DoorZ, "H5", height: TubeHeight), TheaterDoor("H4")),
-            Spec("H4", "THE THEATER", 9, BoxZ1, 15, 43, H4, TheaterDoor("H3")),
+            Spec("H3", "GUARD POST", 9, BoxZ0, 15, BoxZ1, H3, new Door('E', DoorZ, "H2b", fire: true, jammed: true, leverRoom: "none", unbreakable: true),
+                new Door('W', DoorZ, "H5", height: TubeHeight), new Door('N', 12, "H3b", height: TubeHeight)),
+            Spec("H3b", "SCRUB ROOM", 9, BoxZ1, 15, TheaterZ0, H3b, new Door('S', 12, "H3", height: TubeHeight), TheaterDoor("H4")),
+            Spec("H4", "THE THEATER", TheaterX0, TheaterZ0, 15, TheaterZ1, H4, TheaterDoor("H3b")),
             Spec("H5", "AIRLOCK", 4, BoxZ0, 9, BoxZ1, H5, new Door('E', DoorZ, "H3", height: TubeHeight), new Door('W', DoorZ, "HT", width: TubeWidth, height: TubeHeight)),
             Spec("HT", "THE TUBE", TubeX0, TubeZ0, TubeX1, TubeZ1, HT, new Door('E', DoorZ, "H5", width: TubeWidth, height: TubeHeight),
                 new Door('W', DoorZ, "H6", width: TubeWidth, height: TubeHeight)),
@@ -82,6 +93,13 @@ namespace GlorifiedBody.Editor.Demo
         /// booth's button opens it (TheaterRelease, Wire). Tall, for the gurney.
         /// </summary>
         private static Door TheaterDoor(string to) => new Door(to == "H4" ? 'N' : 'S', 12, to, fire: true, height: TubeHeight, leverRoom: "none", unbreakable: true, jamFlag: TheaterLocked);
+
+        /// <summary>
+        /// The card carrier's door, H2 to the stores (Bruno, 2026-11-15, "run out of reach"): shut at the start; it opens when the
+        /// first scientist dies (RunnerOut), he runs through, and it shuts and jams behind him when he cowers (RunnerShut). The
+        /// guards open it again on their way (GuardsOpen). No lever, nothing breaks it. Wire sets the open flags.
+        /// </summary>
+        private static Door RunnerDoor(string to) => new Door(to == "H2b" ? 'W' : 'E', DoorZ, to, fire: true, jammed: true, leverRoom: "none", unbreakable: true, jamFlag: RunnerShut);
 
         private static RoomSpec Spec(string id, string title, float x0, float z0, float x1, float z1, System.Action<DemoRoom> dress, params Door[] doors)
         {
@@ -136,9 +154,9 @@ namespace GlorifiedBody.Editor.Demo
             foreach (Transform t in frame.GetComponentsInChildren<Transform>()) t.gameObject.isStatic = false;
             EditorUtility.SetDirty(restraint);
 
-            r.Prop("Steel_Tray", new Vector3(23.6f, 0f, 37.2f), new Vector3(0.6f, 0.85f, 0.45f), 0.7f);
-            r.Capsule("Capsule_H1", DrugType.Nalcon, new Vector3(23.6f, 1.0f, 37.2f)); // the morning dose: the first power back
-            r.Prop("Drain_Cart", new Vector3(26.3f, 0f, 37.3f), new Vector3(0.6f, 1.0f, 0.5f), 0.45f);
+            r.Prop("Steel_Tray", new Vector3(27.6f, 0f, 37.2f), new Vector3(0.6f, 0.85f, 0.45f), 0.7f);
+            r.Capsule("Capsule_H1", DrugType.Nalcon, new Vector3(27.6f, 1.0f, 37.2f)); // the morning dose: the first power back
+            r.Prop("Drain_Cart", new Vector3(30.3f, 0f, 37.3f), new Vector3(0.6f, 1.0f, 0.5f), 0.45f);
             r.PlaceLucy(f, 270f);
 
             var wake = new List<ScriptStep>
@@ -153,7 +171,7 @@ namespace GlorifiedBody.Editor.Demo
             };
             r.Beat("H1_Wake", WakeDone, Vector3.zero, Vector3.zero, wake.ToArray()).startsBlack = true;
             // The frame's camera: in front of her, a little low, the frame and the door to H2 in view.
-            r.ExtraCamera("frame", new Vector3(22.0f, 1.05f, 34.2f), f + new Vector3(0f, 1.2f, 0f), 60f, f + new Vector3(-0.2f, 1.5f, 0f), new Vector3(1.4f, 3f, 1.4f));
+            r.ExtraCamera("frame", new Vector3(26.0f, 1.05f, 34.2f), f + new Vector3(0f, 1.2f, 0f), 60f, f + new Vector3(-0.2f, 1.5f, 0f), new Vector3(1.4f, 3f, 1.4f));
         }
 
         // ── H2, treatment ─────────────────────────────────────────────
@@ -161,29 +179,30 @@ namespace GlorifiedBody.Editor.Demo
         /// <summary>
         /// Two scientists (beat 2, cutscene 02 staging 3). The first works at the bed behind the privacy screen, walks out
         /// and talks when she stops a step past the doorway, then attacks with the scalpel. The second stands at the bench
-        /// by the door to H3; when the first dies he runs to that door, it does not open (the Hold is sealed), and he
-        /// cowers there (CivilianBrain.SetEscape). He carries the airlock card: asked before the scan C11 he denies it,
-        /// after it he gives it. The capsules of the tray fall in the talk. The recorder L35 on the bench.
+        /// by the door to the stores; when the first dies that door opens, he runs through it, cowers behind the linen shelf,
+        /// and the door shuts behind him (Bruno, 2026-11-15, "run out of reach": the short killed him every time). He carries
+        /// the airlock card: asked before the scan C11 he denies it, after it he gives it. The capsules of the tray fall in
+        /// the talk. The recorder L35 on the bench.
         /// </summary>
         private static void H2(DemoRoom r)
         {
-            r.Prop("Treatment_Bed", new Vector3(16.3f, 0f, 37.1f), new Vector3(2f, 0.6f, 1f), 0.55f);
-            r.Prop("Sleeper_Under_Sheet", new Vector3(16.3f, 0.6f, 37.1f), new Vector3(1.7f, 0.22f, 0.6f), 0.75f);
-            r.Prop("Dressing_Cart", new Vector3(17.2f, 0f, 37.6f), new Vector3(0.5f, 0.9f, 0.4f), 0.45f);
-            r.Prop("Privacy_Screen", new Vector3(17.9f, 0f, 36.9f), new Vector3(0.06f, 1.8f, 2.1f), 0.65f);
-            r.Prop("Bench", new Vector3(16.5f, 0f, 33.45f), new Vector3(2.4f, 0.9f, 0.5f), 0.4f);
-            r.Item("L35_Recorder", DemoItems.L35(), new Vector3(17.2f, 0.95f, 33.45f), new Vector3(0.16f, 0.06f, 0.1f));
+            r.Prop("Treatment_Bed", new Vector3(20.3f, 0f, 37.1f), new Vector3(2f, 0.6f, 1f), 0.55f);
+            r.Prop("Sleeper_Under_Sheet", new Vector3(20.3f, 0.6f, 37.1f), new Vector3(1.7f, 0.22f, 0.6f), 0.75f);
+            r.Prop("Dressing_Cart", new Vector3(21.2f, 0f, 37.6f), new Vector3(0.5f, 0.9f, 0.4f), 0.45f);
+            r.Prop("Privacy_Screen", new Vector3(21.9f, 0f, 36.9f), new Vector3(0.06f, 1.8f, 2.1f), 0.65f);
+            r.Prop("Bench", new Vector3(20.5f, 0f, 33.45f), new Vector3(2.4f, 0.9f, 0.5f), 0.4f);
+            r.Item("L35_Recorder", DemoItems.L35(), new Vector3(21.2f, 0.95f, 33.45f), new Vector3(0.16f, 0.06f, 0.1f));
 
             GameObject scientist = MenuLoopSetup.EnsureChild(r.Figures, "Group_Scientist");
-            EnemySpawn knife = r.Figure("Scientist_Knife", "labworker_knife", new Vector3(16.9f, 0f, 36.2f), 90f, parent: scientist);
+            EnemySpawn knife = r.Figure("Scientist_Knife", "labworker_knife", new Vector3(20.9f, 0f, 36.2f), 90f, parent: scientist);
             knife.heldUntilFlag = MeetDone;
             EditorUtility.SetDirty(knife);
 
             // The second scientist and his card.
-            ItemPickup card = r.Item("Airlock_Card", DemoItems.AirlockCard(), new Vector3(15.9f, 0.05f, 34.1f), new Vector3(0.1f, 0.02f, 0.15f));
-            GameObject runTo = MenuLoopSetup.EnsureChild(r.Story, "Runner_Door");
-            runTo.transform.position = new Vector3(15.55f, 0f, 35.5f);
-            EnemySpawn runner = r.Figure("Scientist_Runner", "labworker", new Vector3(15.9f, 0f, 34.0f), 270f, variant: 0);
+            ItemPickup card = r.Item("Airlock_Card", DemoItems.AirlockCard(), new Vector3(19.9f, 0.05f, 34.1f), new Vector3(0.1f, 0.02f, 0.15f));
+            GameObject runTo = MenuLoopSetup.EnsureChild(r.Story, "Runner_Hide");
+            runTo.transform.position = RunnerHide; // in the stores, behind the linen shelf: no line from H2 through the doorway
+            EnemySpawn runner = r.Figure("Scientist_Runner", "labworker", new Vector3(20.1f, 0f, 34.0f), 270f, variant: 0);
             runner.drop = card;
             runner.escapeTo = runTo.transform;
             runner.escapeLines = new[] { Bark("h2_runner_1"), Bark("h2_runner_2") };
@@ -198,24 +217,45 @@ namespace GlorifiedBody.Editor.Demo
             FlagGate fallen = MenuLoopSetup.EnsureComponent<FlagGate>(tray);
             fallen.flag = CapsulesFall;
             fallen.showWhenRaised = true;
-            foreach (var capsule in new[] { ("Capsule_H2_Erebus", DrugType.NalconFire, new Vector3(18.6f, 0.15f, 35.0f)), ("Capsule_H2_Orzabal", DrugType.NalconLift, new Vector3(18.1f, 0.15f, 34.4f)) })
+            foreach (var capsule in new[] { ("Capsule_H2_Erebus", DrugType.NalconFire, new Vector3(22.6f, 0.15f, 35.0f)), ("Capsule_H2_Orzabal", DrugType.NalconLift, new Vector3(22.1f, 0.15f, 34.4f)) })
                 ItemAssets.Pickup(tray, capsule.Item1, ItemAssets.Drug(capsule.Item2), PrimitiveType.Capsule, capsule.Item3, Vector3.one * 0.3f, Quaternion.Euler(0f, 0f, 90f));
 
             var meet = new List<ScriptStep>
             {
                 ScriptStep.LockHer(),
-                ScriptStep.Approach(scientist, new Vector3(18.7f, 0f, 35.9f)),
+                ScriptStep.Approach(scientist, new Vector3(22.7f, 0f, 35.9f)),
                 ScriptStep.Wait(1.8f),
                 ScriptStep.Raise(CapsulesFall),
                 ScriptStep.Play(DemoScripts.Fmv("cutscenes/02_the_scientist.md", "02_the_scientist", "cs02")),
-                ScriptStep.Approach(scientist, new Vector3(19.1f, 0f, 35.7f)), // "he steps closer. Louder. Worse."
+                ScriptStep.Approach(scientist, new Vector3(23.1f, 0f, 35.7f)), // "he steps closer. Louder. Worse."
                 ScriptStep.Wait(0.5f),
                 ScriptStep.FreeHer(),
                 ScriptStep.AlertAlone(scientist),
             };
-            r.Beat("H2_Scientist", MeetDone, new Vector3(20.1f, 1f, 35.5f), new Vector3(0.6f, 2f, 5f), meet.ToArray()); // wall to wall
+            r.Beat("H2_Scientist", MeetDone, new Vector3(24.1f, 1f, 35.5f), new Vector3(0.6f, 2f, 5f), meet.ToArray()); // wall to wall
+            // The runner's door (RunnerDoor): open at the first scientist's death, shut when the runner cowers behind the shelf.
+            // Not when the guards opened it first: then it stays open (a door shut on her way is a lock with no key).
+            r.Beat("H2_Runner_Out", "demo_h2_runner", Vector3.zero, Vector3.zero,
+                ScriptStep.WaitDead(scientist), ScriptStep.Raise(RunnerOut), ScriptStep.WaitFlag(RunnerCowered), ScriptStep.StopIfFlag(GuardsOpen), ScriptStep.Raise(RunnerShut));
             // The talk's camera on the south wall, east of the screen: her in the doorway from H1 (the exit rule), him as he comes round the screen.
-            r.ExtraCamera("talk", new Vector3(19.2f, 2.8f, 33.3f), new Vector3(19.8f, 0.8f, 36.8f), 72f, new Vector3(19.75f, 1.5f, 36.1f), new Vector3(2.3f, 3f, 3.8f)); // the south strip by the camera: the cells
+            r.ExtraCamera("talk", new Vector3(23.2f, 2.8f, 33.3f), new Vector3(23.8f, 0.8f, 36.8f), 72f, new Vector3(23.75f, 1.5f, 36.1f), new Vector3(2.3f, 3f, 3.8f)); // the south strip by the camera: the cells
+        }
+
+        // ── H2b, the stores ───────────────────────────────────────────
+
+        /// <summary>Where the card carrier cowers: the north-west corner of the stores, behind the linen shelf.</summary>
+        public static readonly Vector3 RunnerHide = new Vector3(15.75f, 0f, 37.2f);
+
+        /// <summary>
+        /// The stores between treatment and the guard post (Bruno, 2026-11-15: "need a room between where she is and where the two
+        /// security guards are"). The linen shelf stands across every line from H2 through the doorway to the runner's corner,
+        /// so the short in H2 does not reach him (ShortController: no shock through a wall or a thing on the Default layer). The
+        /// way from door to door passes south of the shelf. The name is a PLACEHOLDER for the writer.
+        /// </summary>
+        private static void H2b(DemoRoom r)
+        {
+            r.Prop("Linen_Shelf", new Vector3(17.0f, 0f, 36.725f), new Vector3(0.4f, 1.9f, 2.25f), 0.55f);
+            r.Prop("Supply_Cart", new Vector3(18.3f, 0f, 37.4f), new Vector3(0.6f, 1.0f, 0.5f), 0.45f);
         }
 
         // ── H3, the guard post ────────────────────────────────────────
@@ -241,6 +281,19 @@ namespace GlorifiedBody.Editor.Demo
             r.Prop("Chair", new Vector3(10.4f, 0f, 36.4f), new Vector3(0.5f, 0.9f, 0.5f), 0.3f);
         }
 
+        // ── H3b, the scrub room ───────────────────────────────────────
+
+        /// <summary>
+        /// The scrub room between the guard post and the theater (Bruno, 2026-11-15: "the short lasts long enough to kill the nurse
+        /// on the control room"): 4 m more of walk. The sink and the gown rack stand by the side walls, so the gurney rides
+        /// straight through. The name is a PLACEHOLDER for the writer.
+        /// </summary>
+        private static void H3b(DemoRoom r)
+        {
+            r.Prop("Scrub_Sink", new Vector3(9.5f, 0f, 40.0f), new Vector3(0.6f, 0.9f, 1.8f), 0.6f);
+            r.Prop("Gown_Rack", new Vector3(14.55f, 0f, 40.0f), new Vector3(0.5f, 1.6f, 1.0f), 0.4f);
+        }
+
         // ── H4, the Theatre and its booth ─────────────────────────────
 
         /// <summary>
@@ -252,17 +305,17 @@ namespace GlorifiedBody.Editor.Demo
         /// </summary>
         private static void H4(DemoRoom r)
         {
-            r.Prop("Surgery_Table", new Vector3(10.6f, 0f, 39.7f), new Vector3(2.0f, 0.85f, 0.8f), 0.7f);
-            GameObject drapes = r.Box(r.Props, "Drapes", new Vector3(10.6f, 0.92f, 39.7f), new Vector3(2.1f, 0.12f, 0.95f), DemoRoom.Colour("drapes", new Color(0.5f, 0.68f, 0.62f)));
+            r.Prop("Surgery_Table", new Vector3(7.5f, 0f, 44.8f), new Vector3(2.0f, 0.85f, 0.8f), 0.7f);
+            GameObject drapes = r.Box(r.Props, "Drapes", new Vector3(7.5f, 0.92f, 44.8f), new Vector3(2.1f, 0.12f, 0.95f), DemoRoom.Colour("drapes", new Color(0.5f, 0.68f, 0.62f)));
             Target(drapes);
-            foreach ((string n, float x) in new[] { ("Font_Arm_A", 10.0f), ("Font_Arm_B", 11.2f) })
-                Visual(r, r.Props, n, new Vector3(x, 2.1f, 39.7f), new Vector3(0.12f, 1.2f, 0.12f), new Color(0.7f, 0.72f, 0.75f), "font_steel");
-            Visual(r, r.Props, "Font_Ring", new Vector3(10.6f, 2.75f, 39.7f), new Vector3(1.8f, 0.12f, 0.6f), new Color(0.7f, 0.72f, 0.75f), "font_steel");
+            foreach ((string n, float x) in new[] { ("Font_Arm_A", 6.9f), ("Font_Arm_B", 8.1f) })
+                Visual(r, r.Props, n, new Vector3(x, 2.1f, 44.8f), new Vector3(0.12f, 1.2f, 0.12f), new Color(0.7f, 0.72f, 0.75f), "font_steel");
+            Visual(r, r.Props, "Font_Ring", new Vector3(7.5f, 2.75f, 44.8f), new Vector3(1.8f, 0.12f, 0.6f), new Color(0.7f, 0.72f, 0.75f), "font_steel");
 
-            // The booth: the north strip, a glass front at z 41.2 with the door at x 13.6.
-            const float front = 41.2f, doorX = 13.6f, doorW = 1.0f;
+            // The booth: the north strip, a glass front with the door at x 13.6.
+            const float front = BoothFront, doorX = 13.6f, doorW = 1.0f;
             Color glass = new Color(0.62f, 0.74f, 0.8f);
-            foreach ((string n, float a, float b) in new[] { ("Booth_Glass_W", 9f, doorX - doorW * 0.5f), ("Booth_Glass_E", doorX + doorW * 0.5f, 15f) })
+            foreach ((string n, float a, float b) in new[] { ("Booth_Glass_W", TheaterX0, doorX - doorW * 0.5f), ("Booth_Glass_E", doorX + doorW * 0.5f, 15f) })
             {
                 GameObject pane = r.Box(r.Room, n, new Vector3((a + b) * 0.5f, 1.5f, front), new Vector3(b - a, 3f, 0.08f), DemoRoom.Glass("booth_pane", glass, 0.22f)); // she sees the nurse through it (2026-11-14)
                 pane.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
@@ -293,7 +346,7 @@ namespace GlorifiedBody.Editor.Demo
             gd.shards = shards;
             EditorUtility.SetDirty(gd);
 
-            EnemySpawn nurse = r.Figure("Nurse_Booth", "nurse", new Vector3(10.6f, 0f, 42.3f), 180f, variant: 1);
+            EnemySpawn nurse = r.Figure("Nurse_Booth", "nurse", new Vector3(6.0f, 0f, 48.3f), 180f, variant: 1);
             nurse.hides = true;
             nurse.hideLine = Bark("h4_booth_1");
             nurse.foundLine = Bark("h4_booth_2");
@@ -304,13 +357,13 @@ namespace GlorifiedBody.Editor.Demo
             EditorUtility.SetDirty(nurse);
             // In front of the glass, a camera from the south-east corner looks into the booth at the nurse (2026-11-14, Bruno:
             // "i don't see a nurse behind the theater control room"): the cell camera of that floor looked south, away from her.
-            r.ExtraCamera("booth", new Vector3(14.5f, 2.5f, 38.55f), new Vector3(10.6f, 0.9f, 42.3f), 65f, new Vector3(11.05f, 1.5f, 40.6f), new Vector3(4.1f, 3f, 1.1f));
+            r.ExtraCamera("booth", new Vector3(14.5f, 2.5f, 42.55f), new Vector3(6.0f, 0.9f, 48.3f), 65f, new Vector3(8.55f, 1.5f, front - 0.6f), new Vector3(9.1f, 3f, 1.1f));
 
-            r.Prop("Booth_Console", new Vector3(12.6f, 0f, 42.65f), new Vector3(1.6f, 0.85f, 0.5f), 0.25f);
-            r.Prop("Booth_Monitors", new Vector3(12.6f, 0.85f, 42.85f), new Vector3(1.6f, 0.5f, 0.12f), 0.08f);
-            r.Switch("Console_L36", new Vector3(12.6f, 0.95f, 42.5f), TapePlay, "Play the tape?", "play the tape", "").range = 1.0f; // not through the glass
-            r.Prop("Drug_Cabinet", new Vector3(14.4f, 0f, 42.7f), new Vector3(0.6f, 0.9f, 0.4f), 0.6f);
-            r.Capsule("Second_Wind_H4", DrugType.DFelon, new Vector3(14.4f, 1.05f, 42.7f));
+            r.Prop("Booth_Console", new Vector3(12.6f, 0f, 48.65f), new Vector3(1.6f, 0.85f, 0.5f), 0.25f);
+            r.Prop("Booth_Monitors", new Vector3(12.6f, 0.85f, 48.85f), new Vector3(1.6f, 0.5f, 0.12f), 0.08f);
+            r.Switch("Console_L36", new Vector3(12.6f, 0.95f, 48.5f), TapePlay, "Play the tape?", "play the tape", "").range = 1.0f; // not through the glass
+            r.Prop("Drug_Cabinet", new Vector3(14.4f, 0f, 48.7f), new Vector3(0.6f, 0.9f, 0.4f), 0.6f);
+            r.Capsule("Second_Wind_H4", DrugType.DFelon, new Vector3(14.4f, 1.05f, 48.7f));
             var tape = new List<ScriptStep>
             {
                 ScriptStep.WaitFlag(TapePlay),
@@ -325,19 +378,19 @@ namespace GlorifiedBody.Editor.Demo
 
             // The fire alarm of the room: red lamps, and the drapes burn when the fire was on them.
             GameObject alarmObj = MenuLoopSetup.EnsureChild(r.Story, "Fire_Alarm_H4");
-            alarmObj.transform.position = new Vector3(12f, 0f, 40.5f);
+            alarmObj.transform.position = new Vector3(9.5f, 0f, 45.5f);
             FireAlarm alarm = MenuLoopSetup.EnsureComponent<FireAlarm>(alarmObj);
             alarm.flag = Alarm;
-            alarm.size = new Vector3(6f, 3.5f, 5f);
+            alarm.size = new Vector3(11f, 3.5f, 7f);
             alarm.paLines = DemoScripts.Lines("lines/T5_pa.md", "Call F", "*").ConvertAll(l => l.text).ToArray(); // round 125: call F
             GameObject lamps = MenuLoopSetup.EnsureChild(r.Props, "Alarm_Lamps");
-            foreach (float x in new[] { 9.4f, 14.6f })
-                Visual(r, lamps, "Alarm_Lamp_" + x.ToString("0.0"), new Vector3(x, 2.7f, 38.25f), new Vector3(0.25f, 0.18f, 0.12f), new Color(1f, 0.1f, 0.05f), "alarm_red");
+            foreach (float x in new[] { TheaterX0 + 0.4f, 14.6f })
+                Visual(r, lamps, "Alarm_Lamp_" + x.ToString("0.0"), new Vector3(x, 2.7f, TheaterZ0 + 0.25f), new Vector3(0.25f, 0.18f, 0.12f), new Color(1f, 0.1f, 0.05f), "alarm_red");
             lamps.isStatic = false;
             alarm.lamps = lamps;
             GameObject flames = MenuLoopSetup.EnsureChild(r.Props, "Drape_Flames");
             for (int i = 0; i < 4; i++)
-                Visual(r, flames, "Flame_" + i, new Vector3(9.9f + i * 0.45f, 1.3f, 39.7f), new Vector3(0.3f, 0.7f, 0.05f), i % 2 == 0 ? new Color(1f, 0.45f, 0.08f) : new Color(1f, 0.8f, 0.2f), "flame_" + (i % 2));
+                Visual(r, flames, "Flame_" + i, new Vector3(6.8f + i * 0.45f, 1.3f, 44.8f), new Vector3(0.3f, 0.7f, 0.05f), i % 2 == 0 ? new Color(1f, 0.45f, 0.08f) : new Color(1f, 0.8f, 0.2f), "flame_" + (i % 2));
             flames.isStatic = false;
             alarm.flames = flames;
             EditorUtility.SetDirty(alarm);
@@ -346,9 +399,9 @@ namespace GlorifiedBody.Editor.Demo
             // shuts behind her and nothing breaks it; the nurse in the booth holds the way out. Fire on her (or on the drapes) rings
             // the alarm and opens both doors; or the glass door breaks (two blasts of mk_warspite, or the gurney thrown at it with
             // mk_orzabal), and the button in the booth opens the theater's door. Then the gurney goes with her to the gap.
-            Gurney(r, new Vector3(12.4f, 0f, 39.6f), 180f); // in front of the door, its foot to the door: the way out is straight (the table moved 0.8 m west for it)
-            r.Switch("Theater_Release", new Vector3(9.45f, 1.2f, 42.82f), TheaterRelease, "Release the theater door?", "release the door", "").range = 1.2f; // not through the glass
-            r.Beat("H4_Lock", "demo_h4_locked", new Vector3(12f, 1f, 39.9f), new Vector3(5.6f, 2f, 1.6f), ScriptStep.Raise(TheaterLocked));
+            Gurney(r, new Vector3(12.0f, 0f, 44.6f), 180f); // on the door's line, its foot 1.6 m from the door: the way out is straight, and she walks in past it
+            r.Switch("Theater_Release", new Vector3(TheaterX0 + 0.45f, 1.2f, TheaterZ1 - 0.18f), TheaterRelease, "Release the theater door?", "release the door", "").range = 1.2f; // not through the glass
+            r.Beat("H4_Lock", "demo_h4_locked", new Vector3(9.5f, 1f, 43.9f), new Vector3(10.6f, 2f, 1.6f), ScriptStep.Raise(TheaterLocked));
             r.Beat("H4_Alarm_Release", "demo_h4_alarm_release", Vector3.zero, Vector3.zero, ScriptStep.WaitFlag(Alarm), ScriptStep.Raise(TheaterRelease));
 
             // Her first feed after the tape is cutscene 02b (FirstFeed). One watcher for the whole game, here.
@@ -571,31 +624,28 @@ namespace GlorifiedBody.Editor.Demo
         // ── After all rooms ───────────────────────────────────────────
 
         /// <summary>
-        /// The wiring across rooms (after every room is built): the guards of H3 open the door of H2 when the first
-        /// scientist is dead and the second had time to run and cower (round 118: "when he cowers, the guards of H3 open
-        /// the door and come for her"), and the black hall around the box.
+        /// The wiring across rooms (after every room is built): the guards of H3 open the doors of the stores and of H2 when
+        /// the first scientist is dead and the second had time to run and cower (round 118: "when he cowers, the guards of
+        /// H3 open the door and come for her"), the theater's door opens on its release, and the black hall around the box.
         /// </summary>
         public static void Wire(Dictionary<string, DemoRoom> rooms)
         {
             foreach (FireDoor door in rooms["H2"].Root.transform.parent.GetComponentsInChildren<FireDoor>(true))
-                if (door.name == "FireDoor_H2_H3" || door.name == "FireDoor_H3_H2")
-                {
-                    door.openFlag = GuardsOpen;
-                    EditorUtility.SetDirty(door);
-                }
-            foreach (FireDoor door in rooms["H4"].Root.transform.parent.GetComponentsInChildren<FireDoor>(true))
-                if (door.name == "FireDoor_H3_H4" || door.name == "FireDoor_H4_H3")
-                {
-                    door.openFlag = TheaterRelease;
-                    EditorUtility.SetDirty(door);
-                }
+            {
+                string flag = Joins(door.name, "H2b", "H3") ? GuardsOpen        // the guards' way in
+                    : Joins(door.name, "H2", "H2b") ? RunnerOut + "," + GuardsOpen // the runner's way out, then the guards'
+                    : Joins(door.name, "H3b", "H4") ? TheaterRelease : null;
+                if (flag == null) continue;
+                door.openFlag = flag;
+                EditorUtility.SetDirty(door);
+            }
             GameObject scientist = rooms["H2"].Figures.transform.Find("Group_Scientist").gameObject;
             GameObject guards = rooms["H3"].Figures.transform.Find("Group_Guards").gameObject;
             GameObject first = guards.transform.GetChild(0).gameObject;
             var come = new List<ScriptStep>
             {
                 ScriptStep.WaitDead(scientist),
-                ScriptStep.Wait(6f), // he runs, he hits the door, he cowers
+                ScriptStep.Wait(8f), // the runner's door opens, he runs into the stores, he cowers, the door shuts behind him
                 ScriptStep.Raise(GuardsOpen),
                 ScriptStep.Wait(0.8f),
                 ScriptStep.Say(first, "h3_enter", Bark("h3_enter")),
@@ -605,12 +655,15 @@ namespace GlorifiedBody.Editor.Demo
             Hall(rooms["HT"]); // under the tube: drawn when the gap is in view
         }
 
+        /// <summary>The fire door between the two rooms, by its name (FireDoor_A_B, either order).</summary>
+        private static bool Joins(string name, string a, string b) => name == $"FireDoor_{a}_{b}" || name == $"FireDoor_{b}_{a}";
+
         /// <summary>The black hall of the Hold (§5.0): no window, about 12 m high, the box hangs in it. Visual only.</summary>
         private static void Hall(DemoRoom r)
         {
             GameObject hall = MenuLoopSetup.EnsureChild(r.Root, "[Hall]");
             Color black = new Color(0.02f, 0.02f, 0.025f);
-            const float x0 = LandingX0 - 0.3f, x1 = 28.3f, z0 = 29f, z1 = 44f, y0 = -9f, y1 = 9f;
+            const float x0 = LandingX0 - 0.3f, x1 = 32.3f, z0 = 29f, z1 = TheaterZ1 + 1f, y0 = -9f, y1 = 9f;
             Visual(r, hall, "Hall_Pit", new Vector3((x0 + x1) * 0.5f, y0, (z0 + z1) * 0.5f), new Vector3(x1 - x0, 0.2f, z1 - z0), black, "hall_black");
             Visual(r, hall, "Hall_North", new Vector3((x0 + x1) * 0.5f, 0f, z1), new Vector3(x1 - x0, y1 - y0, 0.2f), black, "hall_black");
             Visual(r, hall, "Hall_East", new Vector3(x1, 0f, (z0 + z1) * 0.5f), new Vector3(0.2f, y1 - y0, z1 - z0), black, "hall_black");
@@ -618,7 +671,7 @@ namespace GlorifiedBody.Editor.Demo
             Visual(r, hall, "Hall_Top", new Vector3((x0 + x1) * 0.5f, y1, (z0 + z1) * 0.5f), new Vector3(x1 - x0, 0.2f, z1 - z0), black, "hall_black");
             Visual(r, hall, "Hall_West", new Vector3(x0, 0f, (z0 + z1) * 0.5f), new Vector3(0.2f, y1 - y0, z1 - z0), black, "hall_black");
             foreach (float x in new[] { 5f, 25f })
-                foreach (float z in new[] { 33.2f, 42.8f })
+                foreach (float z in new[] { 33.2f, 48.8f })
                     Visual(r, hall, $"Cable_{x:0}_{z:0}", new Vector3(x, 6f, z), new Vector3(0.05f, 6f, 0.05f), new Color(0.4f, 0.4f, 0.42f), "hall_cable");
             foreach (Renderer rend in hall.GetComponentsInChildren<Renderer>()) rend.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
         }

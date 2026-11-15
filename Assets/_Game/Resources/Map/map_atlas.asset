@@ -313,18 +313,18 @@ MonoBehaviour:
     offset: {x: 0, y: 0}
     areas:
     - serializedVersion: 2
-      x: 21
+      x: 25
       y: 33
       width: 6
       height: 5
     exits:
     - path: H1/H2
-      position: {x: 21, y: 35.5}
+      position: {x: 25, y: 35.5}
       targetScene: H2
     marks:
     - kind: 1
       path: '[World]/[H1]/[Props]/Capsule_H1'
-      position: {x: 23.6, y: 37.2}
+      position: {x: 27.6, y: 37.2}
       label: WARSPITE CAPSULE
   - scene: H2
     world: Demo
@@ -333,34 +333,53 @@ MonoBehaviour:
     offset: {x: 0, y: 0}
     areas:
     - serializedVersion: 2
-      x: 15
+      x: 19
       y: 33
       width: 6
       height: 5
     exits:
     - path: H2/H1
-      position: {x: 21, y: 35.5}
+      position: {x: 25, y: 35.5}
       targetScene: H1
-    - path: H2/H3
-      position: {x: 15, y: 35.5}
-      targetScene: H3
+    - path: H2/H2b
+      position: {x: 19, y: 35.5}
+      targetScene: H2b
     marks:
     - kind: 2
       path: '[World]/[H2]/[Props]/L35_Recorder'
-      position: {x: 17.2, y: 33.45}
+      position: {x: 21.2, y: 33.45}
       label: A RECORDER
     - kind: 1
       path: '[World]/[H2]/[Props]/Airlock_Card'
-      position: {x: 15.9, y: 34.1}
+      position: {x: 19.9, y: 34.1}
       label: THE AIRLOCK CARD
     - kind: 1
       path: '[World]/[H2]/[Story]/Gate_Capsules/Capsule_H2_Erebus'
-      position: {x: 18.6, y: 35}
+      position: {x: 22.6, y: 35}
       label: EREBUS CAPSULE
     - kind: 1
       path: '[World]/[H2]/[Story]/Gate_Capsules/Capsule_H2_Orzabal'
-      position: {x: 18.1, y: 34.4}
+      position: {x: 22.1, y: 34.4}
       label: ORZABAL CAPSULE
+  - scene: H2b
+    world: Demo
+    floor: demo_2
+    title: STORES
+    offset: {x: 0, y: 0}
+    areas:
+    - serializedVersion: 2
+      x: 15
+      y: 33
+      width: 4
+      height: 5
+    exits:
+    - path: H2b/H2
+      position: {x: 19, y: 35.5}
+      targetScene: H2
+    - path: H2b/H3
+      position: {x: 15, y: 35.5}
+      targetScene: H3
+    marks: []
   - scene: H3
     world: Demo
     floor: demo_2
@@ -373,20 +392,39 @@ MonoBehaviour:
       width: 6
       height: 5
     exits:
-    - path: H3/H2
+    - path: H3/H2b
       position: {x: 15, y: 35.5}
-      targetScene: H2
+      targetScene: H2b
     - path: H3/H5
       position: {x: 9, y: 35.5}
       targetScene: H5
-    - path: H3/H4
+    - path: H3/H3b
       position: {x: 12, y: 38}
-      targetScene: H4
+      targetScene: H3b
     marks:
     - kind: 2
       path: '[World]/[H3]/[Props]/L9_Chart'
       position: {x: 10.2, y: 37.2}
       label: HER CARE CHART
+  - scene: H3b
+    world: Demo
+    floor: demo_2
+    title: SCRUB ROOM
+    offset: {x: 0, y: 0}
+    areas:
+    - serializedVersion: 2
+      x: 9
+      y: 38
+      width: 6
+      height: 4
+    exits:
+    - path: H3b/H3
+      position: {x: 12, y: 38}
+      targetScene: H3
+    - path: H3b/H4
+      position: {x: 12, y: 42}
+      targetScene: H4
+    marks: []
   - scene: H4
     world: Demo
     floor: demo_2
@@ -394,18 +432,18 @@ MonoBehaviour:
     offset: {x: 0, y: 0}
     areas:
     - serializedVersion: 2
-      x: 9
-      y: 38
-      width: 6
-      height: 5
+      x: 4
+      y: 42
+      width: 11
+      height: 7
     exits:
-    - path: H4/H3
-      position: {x: 12, y: 38}
-      targetScene: H3
+    - path: H4/H3b
+      position: {x: 12, y: 42}
+      targetScene: H3b
     marks:
     - kind: 1
       path: '[World]/[H4]/[Props]/Second_Wind_H4'
-      position: {x: 14.4, y: 42.7}
+      position: {x: 14.4, y: 48.7}
       label: SECOND WIND PILL
   - scene: H5
     world: Demo

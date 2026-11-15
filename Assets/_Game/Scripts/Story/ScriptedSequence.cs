@@ -241,7 +241,7 @@ namespace GlorifiedBody.Story
                     var items = her.GetComponent<GlorifiedBody.Interaction.ItemInventory>();
                     if (items != null && items.TryAdd(item)) Sfx.Ui(Sfx.Pickup, 0.8f);
                     else GlorifiedBody.Interaction.FloorItem.Place(item, her.transform.position + her.transform.forward * 0.6f, her.transform.eulerAngles.y);
-                    if (!string.IsNullOrEmpty(step.text)) her.GetComponent<GlorifiedBody.Interaction.Interactor>()?.ShowMessage(step.text, 2.5f, "give:" + step.id);
+                    if (!string.IsNullOrEmpty(step.text)) GlorifiedBody.Saving.SaveSystem.Toast(step.text); // a toast, not a message: a message locks her feet
                     RunTelemetry.Event("script_give", step.id);
                     break;
                 }

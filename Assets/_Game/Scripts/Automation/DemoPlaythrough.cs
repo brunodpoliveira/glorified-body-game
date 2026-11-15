@@ -29,7 +29,7 @@ namespace GlorifiedBody.Automation
         public const int ShotWidth = 1920, ShotHeight = 1080;
         public static readonly string[] Rooms =
         {
-            "H1", "H2", "H3", "H4", "H5", "HT", "H6", "H7", "H8", "H9", "W2", "W3", "W4", "W5", "W6", "W7", "W8", "W9", "W10", "W11", "W12", "W13", "W14", "W15", "W16", "W17", "S1",
+            "H1", "H2", "H2b", "H3", "H3b", "H4", "H5", "HT", "H6", "H7", "H8", "H9", "W2", "W3", "W4", "W5", "W6", "W7", "W8", "W9", "W10", "W11", "W12", "W13", "W14", "W15", "W16", "W17", "S1",
             "G1", "G2", "G3", "G4", "G5", "G6", "G7", "G8", "G9", "G9b", "G10", "G11", "G12", "G13", "G13b", "G14", "G15", "G16", "X1", "R1", "R2", "R3", "U1", "B1", "B2", "G18", "G19", "G17b", "G17",
         };
 
@@ -117,10 +117,10 @@ namespace GlorifiedBody.Automation
                 GlorifiedBody.Interaction.UprightRestraint.FreeAll();
                 yield return new WaitForSecondsRealtime(0.6f);
                 ShotRenderer.Render(Camera.main, Path.Combine(shotsDir, "demo_meet_0a_free.png"), ShotWidth, ShotHeight, useTargetTexture: true);
-                lucy.GetComponent<GlorifiedBody.Player.TankController>().Teleport(new Vector3(21.5f, 0f, 35.5f), 270f);
+                lucy.GetComponent<GlorifiedBody.Player.TankController>().Teleport(new Vector3(25.5f, 0f, 35.5f), 270f);
                 yield return new WaitForSecondsRealtime(0.4f);
                 ShotRenderer.Render(Camera.main, Path.Combine(shotsDir, "demo_meet_0b_the_doorway.png"), ShotWidth, ShotHeight, useTargetTexture: true);
-                lucy.GetComponent<GlorifiedBody.Player.TankController>().Teleport(new Vector3(20.1f, 0f, 35.5f), 270f);
+                lucy.GetComponent<GlorifiedBody.Player.TankController>().Teleport(new Vector3(24.1f, 0f, 35.5f), 270f);
                 yield return new WaitForSecondsRealtime(1.5f);
                 ShotRenderer.Render(Camera.main, Path.Combine(shotsDir, "demo_meet_1_he_comes.png"), ShotWidth, ShotHeight, useTargetTexture: true);
                 t2 = Time.realtimeSinceStartup;

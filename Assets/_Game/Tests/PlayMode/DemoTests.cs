@@ -46,9 +46,9 @@ namespace GlorifiedBody.Tests.PlayMode
             return GlorifiedBody.Saving.StoryFlags.Has("demo_h1_wake");
         }
         private const string World = "Demo";
-        private static readonly string[] Rooms = { "H1", "H2", "H3", "H4", "H5", "HT", "H6", "H7", "H8", "H9", "W2", "W3", "W4", "W5", "W6", "W7", "W8", "W9", "W10", "W11", "W12", "W13", "W14", "W15", "W16", "W17", "S1",
+        private static readonly string[] Rooms = { "H1", "H2", "H2b", "H3", "H3b", "H4", "H5", "HT", "H6", "H7", "H8", "H9", "W2", "W3", "W4", "W5", "W6", "W7", "W8", "W9", "W10", "W11", "W12", "W13", "W14", "W15", "W16", "W17", "S1",
             "G1", "G2", "G3", "G4", "G5", "G6", "G7", "G8", "G9", "G9b", "G10", "G11", "G12", "G13", "G13b", "G14", "G15", "G16", "X1", "R1", "R2", "R3", "U1", "B1", "B2", "G18", "G19", "G17b", "G17" }; // the floorplan v2 (2026-11-05), the brain sector (2026-11-09), the Dining Hall and the halon room (2026-11-10)
-        private static readonly string[] MainWay = { "H1", "H2", "H3", "H5", "HT", "H6", "H7", "H8", "H9", "W2", "W5", "W7", "W8", "W9", "W11", "W9", "W12", "S1", "G1", "G2", "G5", "G9", "G5", "U1" };
+        private static readonly string[] MainWay = { "H1", "H2", "H2b", "H3", "H5", "HT", "H6", "H7", "H8", "H9", "W2", "W5", "W7", "W8", "W9", "W11", "W9", "W12", "S1", "G1", "G2", "G5", "G9", "G5", "U1" };
 
         [UnitySetUp]
         public IEnumerator SetUp()
@@ -143,13 +143,13 @@ namespace GlorifiedBody.Tests.PlayMode
             // Bruno, 2026-11-03: fire doors "in selected chokepoints"; his pick: W2 to W5, W5 to W7, G2 to G5.
             yield return LoadWorld();
             var names = GlorifiedBody.Interaction.FireDoor.All.Select(d => d.name).OrderBy(n => n).ToArray();
-            CollectionAssert.AreEqual(new[] { "FireDoor_G12_G17", "FireDoor_G17b_G17", "FireDoor_G2_G5", "FireDoor_G9b_G19", "FireDoor_H2_H3", "FireDoor_H3_H4", "FireDoor_H7_H8", "FireDoor_H8_H9", "FireDoor_W2_W5", "FireDoor_W5_W7", "FireDoor_W5_W9", "FireDoor_W6_W14" }, names, "the fire doors (the Hold: H2 to H3 the guard post opens it, H3 to H4 the theater's door that shuts behind her, H7 to H8, H8 to H9 the hidden door; W5 to W9: the route switch, §10.5; G19 to G9b: the service exit; G17: the halon door, §10.4; the shortcuts S1 G17 to G12 and S3 W14 to W6)");
+            CollectionAssert.AreEqual(new[] { "FireDoor_G12_G17", "FireDoor_G17b_G17", "FireDoor_G2_G5", "FireDoor_G9b_G19", "FireDoor_H2_H2b", "FireDoor_H2b_H3", "FireDoor_H3b_H4", "FireDoor_H7_H8", "FireDoor_H8_H9", "FireDoor_W2_W5", "FireDoor_W5_W7", "FireDoor_W5_W9", "FireDoor_W6_W14" }, names, "the fire doors (the Hold: H2 to the stores the runner's door, the stores to H3 the guard post opens it, the scrub room to H4 the theater's door that shuts behind her, H7 to H8, H8 to H9 the hidden door; W5 to W9: the route switch, §10.5; G19 to G9b: the service exit; G17: the halon door, §10.4; the shortcuts S1 G17 to G12 and S3 W14 to W6)");
             var failures = new List<string>();
             int solid = LayerMask.GetMask("Default");
             foreach (GlorifiedBody.Interaction.FireDoor door in GlorifiedBody.Interaction.FireDoor.All)
             {
-                // Shut at the start: the door of H2 to H3 (the guard post holds it), the hidden door H8 to H9, the service exit. The others stand open.
-                if (door.name == "FireDoor_H2_H3" || door.name == "FireDoor_H8_H9" || door.name == "FireDoor_G9b_G19" || door.name == "FireDoor_G12_G17" || door.name == "FireDoor_W6_W14") door.Open("test", instant: true);
+                // Shut at the start: the runner's door and the guard post's door (H2, the stores, H3), the hidden door H8 to H9, the service exit. The others stand open.
+                if (door.name == "FireDoor_H2_H2b" || door.name == "FireDoor_H2b_H3" || door.name == "FireDoor_H8_H9" || door.name == "FireDoor_G9b_G19" || door.name == "FireDoor_G12_G17" || door.name == "FireDoor_W6_W14") door.Open("test", instant: true);
                 if (door.Current != GlorifiedBody.Interaction.FireDoor.State.Open) failures.Add(door.name + ": not open at the start");
                 var rooms = new HashSet<string>();
                 foreach (GlorifiedBody.Interaction.DoorLever lever in door.GetComponentsInChildren<GlorifiedBody.Interaction.DoorLever>())
@@ -160,7 +160,7 @@ namespace GlorifiedBody.Tests.PlayMode
                     else rooms.Add(room.id);
                     if (Physics.Linecast(front, lever.transform.position + lever.transform.forward * 0.05f, solid, QueryTriggerInteraction.Ignore)) failures.Add($"{door.name}/{lever.name}: buried");
                 }
-                int sides = door.name == "FireDoor_G17b_G17" || door.name == "FireDoor_H2_H3" || door.name == "FireDoor_H3_H4" ? 0 : door.name == "FireDoor_W5_W9" || door.name == "FireDoor_G9b_G19" || door.name == "FireDoor_H8_H9" || door.name == "FireDoor_G12_G17" || door.name == "FireDoor_W6_W14" ? 1 : 2; // one lever: the route switch (W9 side), the service exit (G19 side), the hidden door (H8 side), the shortcuts (G17 side, W14 side); none: the halon door, the guard post's door, the theater's door
+                int sides = door.name == "FireDoor_G17b_G17" || door.name == "FireDoor_H2_H2b" || door.name == "FireDoor_H2b_H3" || door.name == "FireDoor_H3b_H4" ? 0 : door.name == "FireDoor_W5_W9" || door.name == "FireDoor_G9b_G19" || door.name == "FireDoor_H8_H9" || door.name == "FireDoor_G12_G17" || door.name == "FireDoor_W6_W14" ? 1 : 2; // one lever: the route switch (W9 side), the service exit (G19 side), the hidden door (H8 side), the shortcuts (G17 side, W14 side); none: the halon door, the runner's door, the guard post's door, the theater's door
                 if (rooms.Count != sides) failures.Add($"{door.name}: its levers in {rooms.Count} rooms ({string.Join(",", rooms)})");
                 // The open leaf lies in its wall pocket: a line to it from each side meets the wall.
                 Vector3 leafCentre = door.leaf.position + Vector3.up * 1.1f;
@@ -1374,7 +1374,7 @@ namespace GlorifiedBody.Tests.PlayMode
             GameObject lucy = GameObject.FindGameObjectWithTag("Player");
             TankController tank = lucy.GetComponent<TankController>();
             Assert.AreEqual("H1", GlorifiedBody.Rooms.RoomTracker.CurrentId, "she wakes in H1");
-            float toDoor = lucy.transform.position.x - 21f;
+            float toDoor = lucy.transform.position.x - 25f;
             Debug.Log($"[DemoTests] from her start to the doorway: {toDoor:0.0} m");
             Assert.GreaterOrEqual(toDoor, 3.5f, "room to walk before the door (the cell is 6 m, the writer's map v3)");
 
@@ -1385,7 +1385,7 @@ namespace GlorifiedBody.Tests.PlayMode
             Vector3 hisChest = knife.transform.position + Vector3.up * GlorifiedBody.Characters.Body.ChestHeight;
             int checkedPoints = 0;
             var openLines = new List<string>();
-            for (float x = 21.5f; x < 27f; x += 0.5f)
+            for (float x = 25.5f; x < 31f; x += 0.5f)
                 for (float z = 33.5f; z < 38f; z += 0.5f)
                 {
                     Vector3 from = new Vector3(x, GlorifiedBody.Characters.Body.ChestHeight, z);
@@ -1394,7 +1394,7 @@ namespace GlorifiedBody.Tests.PlayMode
                 }
             Assert.IsEmpty(openLines, $"no line to him from {checkedPoints} points of H1: she cannot lock on or wake him from the quiet room");
 
-            foreach (Vector3 point in new[] { new Vector3(21.6f, 0f, 34f), new Vector3(21.6f, 0f, 37.4f), new Vector3(21.4f, 0f, 35.5f), new Vector3(24f, 0f, 33.6f), new Vector3(26.5f, 0f, 37.4f) })
+            foreach (Vector3 point in new[] { new Vector3(25.6f, 0f, 34f), new Vector3(25.6f, 0f, 37.4f), new Vector3(25.4f, 0f, 35.5f), new Vector3(28f, 0f, 33.6f), new Vector3(30.5f, 0f, 37.4f) })
             {
                 tank.Teleport(point, 270f);
                 yield return new WaitForSeconds(0.3f);
