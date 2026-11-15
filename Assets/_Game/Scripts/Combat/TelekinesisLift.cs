@@ -307,7 +307,7 @@ namespace GlorifiedBody.Combat
 
             IsLifted = false;
             LockOnTargetable prop = GetComponent<LockOnTargetable>();
-            if (prop != null && prop.IsProp && Ending != "released")
+            if (prop != null && prop.IsProp && !prop.IsUnbreakable && Ending != "released")
             {
                 Break();
                 yield break;

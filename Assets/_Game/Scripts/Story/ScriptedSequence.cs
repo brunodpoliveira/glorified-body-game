@@ -89,7 +89,8 @@ namespace GlorifiedBody.Story
         public static ScriptStep Outfit(string outfitId) => new ScriptStep { kind = StepKind.Outfit, id = outfitId };
         public static ScriptStep Screen(GameObject screen, bool wait = false) => new ScriptStep { kind = StepKind.Screen, target = screen, id = wait ? "wait" : "" };
         public static ScriptStep Approach(GameObject group, Vector3 point) => new ScriptStep { kind = StepKind.Approach, target = group, point = point };
-        public static ScriptStep Give(string itemId) => new ScriptStep { kind = StepKind.Give, id = itemId };
+        /// <summary>The item goes into her inventory; with a notice, the notice shows (2026-11-15: "Stevens' note added to the inventory").</summary>
+        public static ScriptStep Give(string itemId, string notice = "") => new ScriptStep { kind = StepKind.Give, id = itemId, text = notice };
         public static ScriptStep StopIfFlag(string flag) => new ScriptStep { kind = StepKind.StopIfFlag, id = flag };
         public static ScriptStep MoveHer(string objectName) => new ScriptStep { kind = StepKind.MoveHer, id = objectName };
         public static ScriptStep WaitItem(string itemId) => new ScriptStep { kind = StepKind.WaitItem, id = itemId };
@@ -240,6 +241,7 @@ namespace GlorifiedBody.Story
                     var items = her.GetComponent<GlorifiedBody.Interaction.ItemInventory>();
                     if (items != null && items.TryAdd(item)) Sfx.Ui(Sfx.Pickup, 0.8f);
                     else GlorifiedBody.Interaction.FloorItem.Place(item, her.transform.position + her.transform.forward * 0.6f, her.transform.eulerAngles.y);
+                    if (!string.IsNullOrEmpty(step.text)) her.GetComponent<GlorifiedBody.Interaction.Interactor>()?.ShowMessage(step.text, 2.5f, "give:" + step.id);
                     RunTelemetry.Event("script_give", step.id);
                     break;
                 }

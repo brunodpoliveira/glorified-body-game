@@ -1,13 +1,21 @@
 # T11: the police bulletin (round 38: the card before the coda, cutscene 11; the same words are the sheet on the till, L12)
 
-Status: CANON (round 138, 2026-11-13): the rewrite v2 on the RFab scene engine, in the version of round 137. The pick:
-`dialogue/takes/rewrite_v2/T11_bulletin.md`, take 2 of the round-137 run, whole
-(`dialogue/takes/t11_the_bulletin/202611132202_take_2.md`). The other take: `202611132202_take_1.md`.
-CANON (round 137): no description says "bare-faced". A description says how she looks, what she wears (the bare suit
-or the guard uniform), her last known direction of travel, and that she has likely changed her clothes and covered
-her face. A text card after cutscene 10, before the coda. White monospace on black, like a teleprinter, one line at a
-time. The game picks the wording from the number of people Lucy killed (round 107). The thresholds are PROPOSED: the
-game agent counts the kills the map forces (about 8) and sets the bands from it.
+Status: CANON (round 164, 2026-11-15): her name, her age, the tattoo, and the clothing line by what the player wore.
+The pick: take 2 of the round-164 run, whole (`dialogue/takes/t11_the_bulletin/202611150332_take_2.md`). The other
+take: `202611150333_take_1.md`. For the record only: `202611150331_take_1.md` and `202611150331_take_2.md` (they broke
+the fixed NOTE line of round 143). The version it replaces: take 2 of the round-137 run
+(`202611132202_take_2.md`, the rewrite v2 of round 138). CANON (round 165, 2026-11-15): the NAME line of the three
+bands is `NAME: DE HOMEM-CRISTO, L. AGE 20.` This is Bruno's own form for her name in a written document of the world,
+not a rewrite of the words of the engine. The rest of the take did not change.
+CANON (round 137): no description says "bare-faced". A description says how she looks, what she wears, her last known
+direction of travel, and that she has likely changed her clothes and covered her face. CANON (round 164): the police
+have identified her. The bulletin gives her name and her age (DE HOMEM-CRISTO, L. AGE 20, round 165), and it calls the gold
+lines a tattoo. The CLOTHING line follows what the player did. Each band below prints the UNIFORM WORN version: she
+wore the guard uniform at any time in the night (the flag `uniform_worn`, PROPOSED). If she never wore it, the line
+under "Never worn" replaces it. Round 20 stands: the uniform always tears off at U1, so the last look is always the
+white bodysuit. A text card after cutscene 10, before the coda. White monospace on black, like a teleprinter, one
+line at a time. The game picks the wording from the number of people Lucy killed (round 107). The thresholds are
+PROPOSED: the game agent counts the kills the map forces (about 8) and sets the bands from it.
 
 ## Low (only the kills the map forces, plus a few)
 
@@ -15,10 +23,11 @@ MSG 1231-0547   0547 31 DEC
 FROM: STATE COMMUNICATIONS CENTER
 TO: ALL UNITS. ALL GUARD CHECKPOINTS, CITY AND COUNTY.
 SUBJECT: WANTED FOR QUESTIONING. INCIDENT AT WINWOOD READE MEMORIAL, NIGHT OF 30-31 DEC.
-DESCRIPTION: FEMALE. APPROX 20. APPROX 5 FT 7. SLIM BUILD. VERY PALE SKIN. LONG CURLY LIGHT BLONDE HAIR.
-MARKINGS: GOLD COLOR LINES ON SKIN, THIN AND BRANCHING, AT NECK, ELBOWS, WRISTS, KNEES. TATTOO OR PAINT UNK.
-CLOTHING: SEEN IN WHITE ONE PIECE BODYSUIT. ALSO SEEN IN HOSPITAL SECURITY UNIFORM, SLATE GRAY BLUE, GRAY VEST WITH WHITE REFLECTIVE BANDS. WHICH WORN AT DEPARTURE UNK.
-LAST SEEN: LEAVING WINWOOD READE MEMORIAL BY PARKING LOT TOWARD THE RIVER ROAD.
+NAME: DE HOMEM-CRISTO, L. AGE 20.
+DESCRIPTION: FEMALE. APPROX 5 FT 7 IN. SLIM BUILD. VERY PALE SKIN. LONG CURLY LIGHT BLONDE HAIR.
+TATTOO: GOLD COLORED, THIN BRANCHING LINES. ON NECK, ELBOWS, WRISTS, KNEES.
+CLOTHING: EARLIER IN THE NIGHT IN HOSPITAL SECURITY UNIFORM, GRAY-BLUE, GRAY VEST WITH WHITE REFLECTIVE BANDS. LAST SEEN IN WHITE ONE-PIECE BODYSUIT.
+LAST KNOWN DIRECTION: OUT OF WINWOOD READE MEMORIAL BY THE PARKING LOT, TOWARD THE RIVER ROAD.
 NOTE: HAS LIKELY CHANGED CLOTHING AND COVERED FACE.
 CAUTION: LOCATE AND HOLD. NOTIFY CENTER.
 
@@ -28,10 +37,11 @@ MSG 1231-0547-A   0552 31 DEC
 FROM: STATE COMMUNICATIONS CENTER
 TO: ALL UNITS. ALL GUARD CHECKPOINTS, CITY AND COUNTY.
 SUBJECT: ARMED AND DANGEROUS. SOUGHT IN CONNECTION WITH [N] DEATHS AT WINWOOD READE MEMORIAL, NIGHT OF 30-31 DEC.
-DESCRIPTION: FEMALE. APPROX 20. APPROX 5 FT 7. SLIM BUILD. VERY PALE SKIN. LONG CURLY LIGHT BLONDE HAIR.
-MARKINGS: GOLD COLOR LINES ON SKIN, THIN AND BRANCHING, AT NECK, ELBOWS, WRISTS, KNEES. TATTOO OR PAINT UNK.
-CLOTHING: SEEN IN WHITE ONE PIECE BODYSUIT. ALSO SEEN IN HOSPITAL SECURITY UNIFORM, SLATE GRAY BLUE, GRAY VEST WITH WHITE REFLECTIVE BANDS. WHICH WORN AT DEPARTURE UNK.
-LAST SEEN: LEAVING WINWOOD READE MEMORIAL BY PARKING LOT TOWARD THE RIVER ROAD.
+NAME: DE HOMEM-CRISTO, L. AGE 20.
+DESCRIPTION: FEMALE. APPROX 5 FT 7 IN. SLIM BUILD. VERY PALE SKIN. LONG CURLY LIGHT BLONDE HAIR.
+TATTOO: GOLD COLORED, THIN BRANCHING LINES. ON NECK, ELBOWS, WRISTS, KNEES.
+CLOTHING: EARLIER IN THE NIGHT IN HOSPITAL SECURITY UNIFORM, GRAY-BLUE, GRAY VEST WITH WHITE REFLECTIVE BANDS. LAST SEEN IN WHITE ONE-PIECE BODYSUIT.
+LAST KNOWN DIRECTION: OUT OF WINWOOD READE MEMORIAL BY THE PARKING LOT, TOWARD THE RIVER ROAD.
 NOTE: HAS LIKELY CHANGED CLOTHING AND COVERED FACE.
 CAUTION: DO NOT APPROACH. REPORT ANY SIGHTING TO CENTER.
 
@@ -42,35 +52,52 @@ FROM: STATE COMMUNICATIONS CENTER
 TO: ALL UNITS. ALL GUARD CHECKPOINTS, CITY AND COUNTY.
 SUBJECT: SOUGHT IN CONNECTION WITH [N] DEATHS AT WINWOOD READE MEMORIAL, NIGHT OF 30-31 DEC.
 NO WEAPON RECOVERED.
-DESCRIPTION: FEMALE. APPROX 20. APPROX 5 FT 7. SLIM BUILD. VERY PALE SKIN. LONG CURLY LIGHT BLONDE HAIR.
-MARKINGS: GOLD COLOR LINES ON SKIN, THIN AND BRANCHING, AT NECK, ELBOWS, WRISTS, KNEES. TATTOO OR PAINT UNK.
-CLOTHING: SEEN IN WHITE ONE PIECE BODYSUIT. ALSO SEEN IN HOSPITAL SECURITY UNIFORM, SLATE GRAY BLUE, GRAY VEST WITH WHITE REFLECTIVE BANDS. WHICH WORN AT DEPARTURE UNK.
-LAST SEEN: LEAVING WINWOOD READE MEMORIAL BY PARKING LOT TOWARD THE RIVER ROAD.
+NAME: DE HOMEM-CRISTO, L. AGE 20.
+DESCRIPTION: FEMALE. APPROX 5 FT 7 IN. SLIM BUILD. VERY PALE SKIN. LONG CURLY LIGHT BLONDE HAIR.
+TATTOO: GOLD COLORED, THIN BRANCHING LINES. ON NECK, ELBOWS, WRISTS, KNEES.
+CLOTHING: EARLIER IN THE NIGHT IN HOSPITAL SECURITY UNIFORM, GRAY-BLUE, GRAY VEST WITH WHITE REFLECTIVE BANDS. LAST SEEN IN WHITE ONE-PIECE BODYSUIT.
+LAST KNOWN DIRECTION: OUT OF WINWOOD READE MEMORIAL BY THE PARKING LOT, TOWARD THE RIVER ROAD.
 NOTE: HAS LIKELY CHANGED CLOTHING AND COVERED FACE.
 CAUTION: DO NOT APPROACH. DO NOT MAKE EYE CONTACT. REPORT ANY SIGHTING TO CENTER.
+
+## Never worn (she never wore the guard uniform: this CLOTHING line replaces the one of the band)
+
+CLOTHING: LAST SEEN IN WHITE ONE-PIECE BODYSUIT.
 
 ## Notes
 
 1. The three messages are one bulletin and two follow-ups (1231-0547, -A, -B), five and six minutes apart. The
    bulletin gets worse as the count comes in.
 2. "No weapon recovered" is the grunt test turned around: the active shooter alert had no gun.
-3. "Do not make eye contact" and "covered face as anyone in public" are the face taboo, said by the police as a plain
-   fact. Nobody explains it.
-4. "MARKINGS: ... TATTOO OR PAINT UNK." The police saw the gold seams on the cameras and cannot explain them. The
-   attendant in the coda can check it against her neck.
-5. "WHITE ONE PIECE BODYSUIT" is how a witness or a camera reads the bare doll body. It is the police reading, not
-   the truth: her skin is pale with gold seams (`LORE.md` §4.2).
+3. "Do not make eye contact" and "covered face" are the face taboo, said by the police as a plain fact. Nobody
+   explains it.
+4. "TATTOO: GOLD COLORED, THIN BRANCHING LINES." The police saw the gold seams on the hospital cameras and read
+   them as a tattoo, plainly (CANON, round 164). It is the police reading, as "bodysuit" is, not the truth: the gold
+   veins are the reaction of her v3 shell (`LORE.md` §4.2). The reading is easy to make, because the street copies
+   the seams of a v3 as tattoos (`LORE.md` §7.2, round 151). The attendant in the coda checks the sheet against the
+   seams on her bare neck (cutscene 11, S3).
+5. "WHITE ONE-PIECE BODYSUIT" is how a witness or a camera reads the bare doll body. It is the police reading, not
+   the truth: her skin is pale with gold seams (`LORE.md` §4.2). "Earlier in the night in hospital security
+   uniform": the cameras saw her in the uniform before U1, where it tore off (round 20). The police no longer doubt
+   what she wore when she left (round 164).
 6. Round 25: no wording mentions the car or how she travels. Nobody saw it leave. The plate HUMAN is for act 2. All
    three bands say "toward the river road".
 7. Round 107: the police are on a full strike. PROPOSED: the state police put the bulletin on the wire, and the Guard
    reads it. The TV in R1 says the same thing in its own words, by the same body count (`N1_news.md`, N1b).
 8. No real agency, no real place but the Memorial, the city not named. The same words go on the sheet on the till (L12).
 9. OPEN (Bruno): the description names facts that are not CANON. "LIGHT BLONDE" follows `LORE.md` §4.2, where the
-   colour is PROPOSED (a warm honey blonde); long and curly are CANON (rounds 64 to 66). "APPROX 5 FT 7" and "SLIM
-   BUILD" are new and PROPOSED. "THIN AND BRANCHING" lines differ from LORE's "wide gold seams" (rounds 14 and 24). Her
+   colour is PROPOSED (a warm honey blonde); long and curly are CANON (rounds 64 to 66). "APPROX 5 FT 7 IN" and "SLIM
+   BUILD" are new and PROPOSED. "THIN BRANCHING LINES" differ from LORE's "wide gold seams" (rounds 14 and 24). Her
    hair is inside the Crown: only a camera that saw her feed without it could give the hair.
 10. CLOSED (round 143): the note ends at "COVERED FACE".
-11. OPEN (the game agent): the CLOTHING line is about 150 characters. On a teleprinter card it wraps to two or three
-    lines. Check the card width.
+11. OPEN (the game agent): the UNIFORM WORN CLOTHING line is 149 characters (the NEVER WORN line: 48). On a
+    teleprinter card it wraps to two or three lines. Check the card width.
 12. CLOSED (round 143): the sheet on the till (L12) carries a photo of her, an archive photo or the photo of her legal ID. The stills see the sheet from behind, so no face shows. The teleprinter card has no photo.
 13. CLOSED (round 143): the TV news N1b gives the description in the anchor's words (`game/lines/N1_news.md`).
+14. CLOSED (round 165): "GRAY-BLUE" stays. The police and the news use the simpler word. The canon colour of the
+    uniform does not change: slate grey-blue (round 16, `DEMO_PLAN.md` §3).
+15. "NAME: DE HOMEM-CRISTO, L." is the police form: last name first, then the initial only (CANON, round 165). In a
+    written document of the world her name always prints in this form: "de" and the hyphen stay. The whiteboard of
+    the lab uses the same form for her mother (L4: NEXT OF KIN: DE HOMEM-CRISTO, H.). The spelling is Homem-Cristo
+    (rounds 45 and 164). No year is printed, so no date of birth. The TV says the full name aloud (N1b): spoken, not
+    written.

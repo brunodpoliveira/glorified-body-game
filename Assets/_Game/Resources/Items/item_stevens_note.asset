@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 202cb6532a4a7f80682b508098ca96f0, type: 3}
+  m_Name: item_stevens_note
+  m_EditorClassIdentifier: Assembly-CSharp::GlorifiedBody.Interaction.ItemDefinition
+  itemId: stevens_note
+  displayName: STEVENS' NOTE
+  kind: 1
+  drugType: 0
+  colour: {r: 0.96, g: 0.95, b: 0.88, a: 1}
+  description: stevens' note.
+  logText: 'PLACEHOLDER (Stevens'' note, round 118): Lucy. That is your name. You
+    will be dizzy. There is no time.
+
+
+    The sheet with the way out is on the printer
+    in the office, past the save room. Take it.
+
+
+    S.'
+  readFlag: 
+  mapFloor: 
+  audioClip: {fileID: 0}
+  tapeLines: []

@@ -85,6 +85,28 @@ namespace GlorifiedBody.Interaction
             }
         }
 
+        // A thing thrown at it breaks it at once (Bruno, 2026-11-15: "the gurney can be used to smash the door"): any thing she
+        // throws with mk_orzabal that flies within ThrowReach of the leaf. Checked ten times a second.
+        public const float ThrowReach = 0.8f;
+        private float nextThrowCheck;
+
+        private void Update()
+        {
+            if (IsOpen || IsBroken || Time.time < nextThrowCheck) return;
+            nextThrowCheck = Time.time + 0.1f;
+            Vector3 middle = leaf != null ? leaf.position : transform.position;
+            foreach (TelekinesisLift lift in FindObjectsByType<TelekinesisLift>(FindObjectsSortMode.None))
+            {
+                if (lift == null || !lift.Launched) continue;
+                Collider c = lift.GetComponentInChildren<Collider>();
+                Vector3 near = c != null ? c.ClosestPoint(middle) : lift.transform.position;
+                if (Vector3.Distance(near, middle) > ThrowReach + 0.6f) continue; // the leaf is about 1 m wide: its middle to an edge
+                RunTelemetry.Event("glass_thrown", $"{name}:{lift.name}");
+                Shatter(quiet: false);
+                return;
+            }
+        }
+
         /// <summary>The fire alarm releases the lock: the leaf slides into the wall.</summary>
         public void Open(bool quiet)
         {

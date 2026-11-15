@@ -87,7 +87,7 @@ namespace GlorifiedBody.Interaction
             breakable = GetComponent<DoorLeaf>();
             if (breakable != null)
             {
-                breakable.Standing = () => Current == State.Jammed;
+                breakable.Standing = () => canBreak && Current == State.Jammed; // an unbreakable door takes no damage at all: no kick, no power (2026-11-15)
                 breakable.Broken = OnLeafBroken;
             }
             // The builder leaves the leaf shut in the doorway (DoorLeaf measures it there first): it opens into its pocket.

@@ -201,6 +201,23 @@ namespace GlorifiedBody.Enemy
         }
 
         /// <summary>A shot already aimed is not fired.</summary>
+        /// <summary>His rank holds its fire for a person on the line (the guards and the soldiers).</summary>
+        public bool HoldsFireForPeople
+        {
+            get
+            {
+                if (shieldRank < 0) shieldRank = HumanShield.HoldsFireFor(gameObject) ? 1 : 0;
+                return shieldRank == 1;
+            }
+        }
+
+        /// <summary>A person covers the line from his gun to the point, and he will not fire past it (the brain looks for another spot).</summary>
+        public bool LineCovered(Vector3 target)
+        {
+            Attack attack = RangedAttackOf(weapon);
+            return attack != Attack.None && !IsLobbed(attack) && HoldsFireForPeople && HumanShield.Covering(Muzzle, target, gameObject) != null;
+        }
+
         private void HoldForShield()
         {
             NoteShield();

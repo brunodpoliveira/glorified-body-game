@@ -109,7 +109,7 @@ namespace GlorifiedBody.Rooms
                         Transform t = room.transform.Find(part);
                         if (t == null) continue;
                         foreach (Renderer r in t.GetComponentsInChildren<Renderer>(true))
-                            if (!IsWall(r)) list.Add(r);
+                            if (!IsWall(r) && !Travels(r)) list.Add(r);
                     }
                     drawn[room] = list;
                 }
@@ -140,6 +140,12 @@ namespace GlorifiedBody.Rooms
         }
 
         private static bool IsWall(Renderer r) => r.name.StartsWith("Wall_") || r.name.StartsWith("Lintel_");
+
+        /// <summary>
+        /// A thing she rides goes from room to room (the gurney of the Hold, 2026-11-15: it stood in the theater's list, and
+        /// over the gap the cull hid it under her). It is always drawn.
+        /// </summary>
+        private static bool Travels(Renderer r) => r.GetComponentInParent<GlorifiedBody.Interaction.Rideable>(true) != null;
 
         /// <summary>
         /// Two rooms share a wall line and one of them builds the piece (WallLedger, 2026-11-05: culled with its builder only,

@@ -30,6 +30,8 @@ namespace GlorifiedBody.Combat
         [SerializeField] private bool isProp;
         [Tooltip("Too heavy to lift (the power armour, later): telekinesis refuses it, at no cost.")]
         [SerializeField] private bool heavy;
+        [Tooltip("A prop that a throw or a slam does not break (the steel gurney of the Hold, round 118).")]
+        [SerializeField] private bool unbreakable;
         [Tooltip("The short's shocks pass it by (the bosses, Bruno 2026-10-23).")]
         [SerializeField] private bool shockImmune;
         [Tooltip("An unarmed civilian: the auto-lock never picks it, the target switch does (a kill is her choice). PROPOSED.")]
@@ -49,6 +51,7 @@ namespace GlorifiedBody.Combat
         public bool IsAlly { get; private set; }
         public void SetAlly(bool value) => IsAlly = value;
         public bool IsHeavy => heavy;
+        public bool IsUnbreakable => unbreakable;
         public bool IsShockImmune => shockImmune;
         public bool IsCivilian => civilian;
         public bool IsPreferred => preferred;

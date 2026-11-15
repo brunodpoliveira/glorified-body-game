@@ -944,7 +944,15 @@ namespace GlorifiedBody.Enemy
         private float Distance() => Flat(transform.position, TargetPosition);
 
         /// <summary>A clear line from the gun to her chest now (the gun turns to her, so the field of view does not count).</summary>
+        // A person on the line (HumanShield) is no wall: he holds his place (a teammate passes), and his gun waits. When his
+        // time to shoot runs out with no shot, he walks on, and the spot search leaves out spots with a person on the line
+        // (2026-11-15: the rear guard of a corridor stood behind the front one and never fired). The check in this decision
+        // made the holding element of a fire team walk whenever the other crossed its line (both walked 60 % of the time).
         private bool ClearLine() => gun.Sees(TargetPosition + Vector3.up * GlorifiedBody.Characters.Body.ChestHeight);
+
+        /// <summary>A person covers the line from this spot to her chest, and his rank holds its fire for it (HumanShield).</summary>
+        private bool PersonOnLine(Vector3 spot, Vector3 chest) =>
+            gun.HoldsFireForPeople && HumanShield.Covering(spot + Vector3.up * GlorifiedBody.Characters.Body.MuzzleHeight, chest, gameObject) != null;
 
         private static float Flat(Vector3 a, Vector3 b)
         {
@@ -1141,6 +1149,7 @@ namespace GlorifiedBody.Enemy
                     float reach = Flat(hit.position, target);
                     if (reach < nearest || reach > gun.Range) continue;
                     if (Physics.Linecast(hit.position + Vector3.up * GlorifiedBody.Characters.Body.MuzzleHeight, chest, blockers, QueryTriggerInteraction.Ignore)) continue;
+                    if (PersonOnLine(hit.position, chest)) continue;
                     float cost = Flat(transform.position, hit.position) + (style == Approach.Free ? (i == 0 ? 0f : 0.5f) : Mathf.Abs(Mathf.DeltaAngle(0f, turns[i])) * 0.05f);
                     if (style == Approach.Flank && InHerView(hit.position, target)) cost += FrontCost;
                     if (cost < bestCost)
@@ -1335,6 +1344,7 @@ namespace GlorifiedBody.Enemy
                 if (!CoverMap.Free(option, this)) continue;
                 if (++tries > CoverTries) break;
                 if (Physics.Linecast(option.FirePoint + Vector3.up * GlorifiedBody.Characters.Body.MuzzleHeight, chest, blockers, QueryTriggerInteraction.Ignore)) continue;
+                if (PersonOnLine(option.FirePoint, chest)) continue;
                 float hideHeight = option.Low ? 0.7f : GlorifiedBody.Characters.Body.ChestHeight;
                 if (!Physics.Linecast(option.Position + Vector3.up * hideHeight, chest, blockers, QueryTriggerInteraction.Ignore)) continue;
                 var path = new NavMeshPath();

@@ -143,7 +143,7 @@ namespace GlorifiedBody.Tests.PlayMode
             // Bruno, 2026-11-03: fire doors "in selected chokepoints"; his pick: W2 to W5, W5 to W7, G2 to G5.
             yield return LoadWorld();
             var names = GlorifiedBody.Interaction.FireDoor.All.Select(d => d.name).OrderBy(n => n).ToArray();
-            CollectionAssert.AreEqual(new[] { "FireDoor_G12_G17", "FireDoor_G17b_G17", "FireDoor_G2_G5", "FireDoor_G9b_G19", "FireDoor_H2_H3", "FireDoor_H7_H8", "FireDoor_H8_H9", "FireDoor_W2_W5", "FireDoor_W5_W7", "FireDoor_W5_W9", "FireDoor_W6_W14" }, names, "the fire doors (the Hold: H2 to H3 the guard post opens it, H7 to H8, H8 to H9 the hidden door; W5 to W9: the route switch, §10.5; G19 to G9b: the service exit; G17: the halon door, §10.4; the shortcuts S1 G17 to G12 and S3 W14 to W6)");
+            CollectionAssert.AreEqual(new[] { "FireDoor_G12_G17", "FireDoor_G17b_G17", "FireDoor_G2_G5", "FireDoor_G9b_G19", "FireDoor_H2_H3", "FireDoor_H3_H4", "FireDoor_H7_H8", "FireDoor_H8_H9", "FireDoor_W2_W5", "FireDoor_W5_W7", "FireDoor_W5_W9", "FireDoor_W6_W14" }, names, "the fire doors (the Hold: H2 to H3 the guard post opens it, H3 to H4 the theater's door that shuts behind her, H7 to H8, H8 to H9 the hidden door; W5 to W9: the route switch, §10.5; G19 to G9b: the service exit; G17: the halon door, §10.4; the shortcuts S1 G17 to G12 and S3 W14 to W6)");
             var failures = new List<string>();
             int solid = LayerMask.GetMask("Default");
             foreach (GlorifiedBody.Interaction.FireDoor door in GlorifiedBody.Interaction.FireDoor.All)
@@ -160,7 +160,7 @@ namespace GlorifiedBody.Tests.PlayMode
                     else rooms.Add(room.id);
                     if (Physics.Linecast(front, lever.transform.position + lever.transform.forward * 0.05f, solid, QueryTriggerInteraction.Ignore)) failures.Add($"{door.name}/{lever.name}: buried");
                 }
-                int sides = door.name == "FireDoor_G17b_G17" || door.name == "FireDoor_H2_H3" ? 0 : door.name == "FireDoor_W5_W9" || door.name == "FireDoor_G9b_G19" || door.name == "FireDoor_H8_H9" || door.name == "FireDoor_G12_G17" || door.name == "FireDoor_W6_W14" ? 1 : 2; // one lever: the route switch (W9 side), the service exit (G19 side), the hidden door (H8 side), the shortcuts (G17 side, W14 side); none: the halon door, the guard post's door
+                int sides = door.name == "FireDoor_G17b_G17" || door.name == "FireDoor_H2_H3" || door.name == "FireDoor_H3_H4" ? 0 : door.name == "FireDoor_W5_W9" || door.name == "FireDoor_G9b_G19" || door.name == "FireDoor_H8_H9" || door.name == "FireDoor_G12_G17" || door.name == "FireDoor_W6_W14" ? 1 : 2; // one lever: the route switch (W9 side), the service exit (G19 side), the hidden door (H8 side), the shortcuts (G17 side, W14 side); none: the halon door, the guard post's door, the theater's door
                 if (rooms.Count != sides) failures.Add($"{door.name}: its levers in {rooms.Count} rooms ({string.Join(",", rooms)})");
                 // The open leaf lies in its wall pocket: a line to it from each side meets the wall.
                 Vector3 leafCentre = door.leaf.position + Vector3.up * 1.1f;
@@ -2042,6 +2042,7 @@ namespace GlorifiedBody.Tests.PlayMode
             for (int alive = team.Length - 1; alive >= 1; alive--)
             {
                 SoldierBrain victim = team.First(b => b.Current != SoldierBrain.Phase.Dead && !b.Retreating);
+                Bark.ResetVoices(); // the two-voice rule (2026-11-15) drops a soldier's call while another soldier speaks: this test counts the calls
                 int before = Lines();
                 victim.GetComponent<Health>().TakeDamage(9999f);
                 yield return new WaitForSeconds(0.5f);

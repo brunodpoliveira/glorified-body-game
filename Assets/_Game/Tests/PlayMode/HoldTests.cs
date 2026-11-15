@@ -150,7 +150,7 @@ namespace GlorifiedBody.Tests.PlayMode
             StringAssert.StartsWith("denied:", talk.Confirm(hand), "before the scan C11 he denies it");
             Assert.IsFalse(items.Has("airlock_card"));
             // The scan of the reader on the landing.
-            tank.Teleport(new Vector3(-3.3f, 0f, 30.2f), 180f);
+            tank.Teleport(new Vector3(-9.3f, 0f, 30.2f), 180f);
             yield return WaitUntil(() => RoomTracker.CurrentId == "H6", 3f);
             PsychicScanner scanner = lucy.GetComponent<PsychicScanner>();
             Assert.IsTrue(scanner.TryScan(), "the scan of the card reader");
@@ -238,6 +238,171 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator StevensNote_IsInHerInventory_WhenTheFrameLetsGo_AndOpensNoMap()
+        {
+            // Bruno, 2026-11-15: "the note starts in the inventory ... to signal that this game has inventory. like he instructs,
+            // the full instruction thing/map is on a printer in a room".
+            yield return Freed();
+            GameObject lucy = Her();
+            ItemInventory items = lucy.GetComponent<ItemInventory>();
+            yield return WaitUntil(() => items.Has("stevens_note"), 3f);
+            Interactor hand = lucy.GetComponent<Interactor>();
+            Debug.Log($"[HoldTests] Stevens' note: in the inventory {items.Has("stevens_note")}, the message '{hand.Text}', the printout {items.Has("demo_plan")}");
+            Assert.IsTrue(items.Has("stevens_note"), "the note is in her inventory");
+            StringAssert.Contains("inventory", hand.Text, "a message says so");
+            Assert.AreEqual(ItemKind.Log, ItemDefinition.Find("stevens_note").kind, "a log, no map");
+            Assert.IsFalse(items.Has("demo_plan"), "the printout is not hers yet");
+            Assert.IsFalse(GlorifiedBody.Map.MapKnowledge.HasPlan(items, "demo_2") || GlorifiedBody.Map.MapKnowledge.HasPlan(items, "demo_1"), "the map shows no floor from the note");
+            ItemPickup printout = GameObject.Find("L1_Printout").GetComponent<ItemPickup>();
+            Assert.AreEqual("H9", printout.GetComponentInParent<Room>().id, "the printout lies on the printer of H9");
+        }
+
+        // ── The theater (Bruno, 2026-11-15: "every power has its chance to shine") ──
+
+        private static FireDoor TheaterDoor() => UnityEngine.Object.FindObjectsByType<FireDoor>(FindObjectsSortMode.None)
+            .First(d => d.name == "FireDoor_H3_H4" || d.name == "FireDoor_H4_H3");
+
+        /// <summary>Into the theater past the lock line: the door shuts and jams behind her.</summary>
+        private static IEnumerator LockedInTheTheater()
+        {
+            yield return Freed();
+            Her().GetComponent<TankController>().Teleport(new Vector3(13.6f, 0f, 40.2f), 0f);
+            yield return WaitUntil(() => TheaterDoor().Current == FireDoor.State.Jammed, 4f);
+        }
+
+        [UnityTest]
+        public IEnumerator TheTheater_LocksBehindHer_NothingBreaksTheDoor_TheBoothButtonOpensIt()
+        {
+            yield return LockedInTheTheater();
+            FireDoor door = TheaterDoor();
+            Assert.AreEqual(FireDoor.State.Jammed, door.Current, "the door shuts and jams behind her");
+            Assert.IsTrue(StoryFlags.Has(DemoFlags.TheaterLocked));
+            Assert.IsFalse(door.canBreak, "an unbreakable door (\"an invincible one, shows that there are those\")");
+            GlorifiedBody.Destruction.DoorLeaf leaf = door.GetComponentInChildren<GlorifiedBody.Destruction.DoorLeaf>();
+            if (leaf != null) leaf.Damage(1000f, GlorifiedBody.Combat.DamageType.PsychicBlast, leaf.transform.position, Vector3.forward);
+            yield return null;
+            Assert.AreEqual(FireDoor.State.Jammed, door.Current, "her powers do not break it either");
+            Assert.AreEqual(0, UnityEngine.Object.FindObjectsByType<DoorLever>(FindObjectsSortMode.None).Count(l => l.name.Contains("H3_H4") || l.name.Contains("H4_H3")), "no lever");
+            // Two blasts break the booth's glass; the button in the booth opens the theater's door.
+            GameObject lucy = Her();
+            PsychicPowers powers = lucy.GetComponent<PsychicPowers>();
+            GlassDoor glass = UnityEngine.Object.FindFirstObjectByType<GlassDoor>();
+            powers.Select(PowerKind.Blast);
+            powers.FireAt(powers.Selected, 1f, glass.GetComponent<LockOnTargetable>());
+            string first = powers.LastResult;
+            yield return new WaitForSeconds(0.3f); // HitEventBus drops the same hit within one frame: a player never fires two blasts that close
+            powers.FireAt(powers.Selected, 1f, glass.GetComponent<LockOnTargetable>());
+            yield return null;
+            Debug.Log($"[HoldTests] the blasts on the glass: {first}, {powers.LastResult}, blasts {glass.Blasts}, broken {glass.IsBroken}");
+            Assert.IsTrue(glass.IsBroken, "two blasts break the glass");
+            lucy.GetComponent<TankController>().Teleport(new Vector3(9.9f, 0f, 42.1f), -30f);
+            yield return null;
+            FlagSwitch button = GameObject.Find("Theater_Release").GetComponent<FlagSwitch>();
+            button.Confirm(lucy.GetComponent<Interactor>());
+            yield return WaitUntil(() => door.Current == FireDoor.State.Open, 3f);
+            Debug.Log($"[HoldTests] the theater: locked, the glass broken, the button raised {StoryFlags.Has(DemoFlags.TheaterRelease)}, the door {door.Current}");
+            Assert.AreEqual(FireDoor.State.Open, door.Current, "the button in the booth opens the theater's door");
+        }
+
+        [UnityTest]
+        public IEnumerator TheTheater_FireOnTheNurse_RingsTheAlarm_AndOpensBothDoors()
+        {
+            yield return LockedInTheTheater();
+            GameObject lucy = Her();
+            PsychicPowers powers = lucy.GetComponent<PsychicPowers>();
+            powers.Select(PowerKind.Fire);
+            LockOnTargetable nurse = GameObject.Find("Nurse_Booth").GetComponentInChildren<LockOnTargetable>();
+            Assert.IsNotNull(nurse, "the nurse is a target through the glass");
+            powers.FireAt(powers.Selected, 1f, nurse);
+            yield return WaitUntil(() => TheaterDoor().Current == FireDoor.State.Open, 3f);
+            GlassDoor glass = UnityEngine.Object.FindFirstObjectByType<GlassDoor>();
+            Debug.Log($"[HoldTests] the nurse on fire: alarm {StoryFlags.Has(DemoFlags.Alarm)}, the booth open {glass.IsOpen}, the theater's door {TheaterDoor().Current}");
+            Assert.IsTrue(StoryFlags.Has(DemoFlags.Alarm), "she burns: the fire alarm");
+            Assert.IsTrue(glass.IsOpen, "the booth's door releases");
+            Assert.AreEqual(FireDoor.State.Open, TheaterDoor().Current, "the theater's door releases");
+        }
+
+        [UnityTest]
+        public IEnumerator TheGurney_ThrownAtTheGlass_BreaksIt_AndStaysWhole()
+        {
+            yield return LockedInTheTheater();
+            GameObject lucy = Her();
+            PsychicPowers powers = lucy.GetComponent<PsychicPowers>();
+            PsychicStats stats = lucy.GetComponent<PsychicStats>();
+            GameObject gurney = GameObject.Find("Steel_Gurney");
+            GlassDoor glass = UnityEngine.Object.FindFirstObjectByType<GlassDoor>();
+            lucy.GetComponent<TankController>().Teleport(new Vector3(13.8f, 0f, 39.0f), 270f);
+            stats.FillMk(PowerKind.Telekinesis);
+            powers.Select(PowerKind.Telekinesis);
+            LockOnController lockOn = lucy.GetComponent<LockOnController>();
+            lockOn.SetTarget(gurney.GetComponent<LockOnTargetable>());
+            yield return null;
+            var pad = new VirtualPad();
+            GameInput.SetBotSource(pad);
+            var driver = new GameObject("[Pad]").AddComponent<PadDriver>();
+            driver.pad = pad;
+            pad.SetHeld(InputManager.GameAction.Charge, true);
+            yield return WaitUntil(() => powers.HeldLift != null, 2f);
+            pad.SetHeld(InputManager.GameAction.Charge, false);
+            GameInput.ClearBotSource(pad);
+            UnityEngine.Object.Destroy(driver.gameObject);
+            Assert.IsNotNull(powers.HeldLift, "mk_orzabal lifts the gurney");
+            yield return new WaitForSeconds(0.5f);
+            Vector3 leaf = glass.leaf.position;
+            Assert.IsTrue(powers.HeldLift.Launch(leaf, null), "she throws it at the glass");
+            yield return WaitUntil(() => glass.IsBroken, 4f);
+            yield return new WaitForSeconds(1.5f);
+            Debug.Log($"[HoldTests] the thrown gurney: glass broken {glass.IsBroken}, the gurney at {gurney.transform.position}, active {gurney.activeInHierarchy}");
+            Assert.IsTrue(glass.IsBroken, "the gurney breaks the glass door");
+            Assert.IsTrue(StoryFlags.Has(DemoFlags.GlassBroken));
+            Assert.IsTrue(gurney != null && gurney.activeInHierarchy && gurney.GetComponentsInChildren<Renderer>().Length >= 8, "the gurney stays whole");
+            Assert.IsNotNull(gurney.GetComponent<Rideable>(), "and she can still ride it");
+        }
+
+        [UnityTest]
+        public IEnumerator TheGurney_RidesOutOfTheTheater_ThroughTheGuardPost_IntoTheAirlock()
+        {
+            yield return Freed();
+            StoryFlags.Raise("demo_h4_locked"); // the lock has a test of its own: here the door stays open
+            foreach (string guard in new[] { "Guard_H3_A", "Guard_H3_B" }) GameObject.Find(guard)?.SetActive(false); // the guards lie dead by now
+            GameObject lucy = Her();
+            TankController tank = lucy.GetComponent<TankController>();
+            PsychicStats stats = lucy.GetComponent<PsychicStats>();
+            Rideable gurney = GameObject.Find("Steel_Gurney").GetComponent<Rideable>();
+            tank.Teleport(gurney.transform.position + gurney.transform.right * 0.9f, gurney.transform.eulerAngles.y);
+            yield return null;
+            Assert.IsTrue(gurney.ClimbOn());
+            stats.FillMk(PowerKind.Telekinesis);
+            Assert.IsTrue(gurney.StartRide(stats));
+            yield return new WaitForSeconds(0.5f);
+            // South through the theater's door, west along the guard post, through the airlock to the tube's door.
+            foreach (Vector3 point in new[] { new Vector3(12.4f, 0f, 35.5f), new Vector3(8.0f, 0f, 35.5f), new Vector3(5.2f, 0f, 35.5f) })
+                yield return Drive(gurney, point, 14f);
+            Debug.Log($"[HoldTests] the way out: the gurney at {gurney.transform.position}, in {Room.At(gurney.transform.position + Vector3.up * 0.1f)?.id}, {gurney.Travelled:0.0} m");
+            Assert.AreEqual("H5", Room.At(gurney.transform.position + Vector3.up * 0.1f).id, "she rides it from the theater to the airlock");
+            Assert.IsTrue(gurney.OnTop(lucy.transform), "on it all the way");
+        }
+
+        /// <summary>Steers the ride to the point: the turn keys first, then forward (a test's driver, not the player).</summary>
+        private static IEnumerator Drive(Rideable ride, Vector3 point, float seconds)
+        {
+            GameObject lucy = Her();
+            float t0 = Time.time;
+            while (Time.time - t0 < seconds)
+            {
+                Vector3 to = point - ride.transform.position;
+                to.y = 0f;
+                if (to.magnitude < 0.3f) yield break;
+                float want = Quaternion.LookRotation(to).eulerAngles.y;
+                float delta = Mathf.DeltaAngle(lucy.transform.eulerAngles.y, want);
+                float turn = Mathf.Abs(delta) > 2f ? Mathf.Clamp(delta / 20f, -1f, 1f) : 0f;
+                float move = Mathf.Abs(delta) < 12f ? 1f : 0f;
+                ride.Steer(move, turn, Time.deltaTime);
+                yield return null;
+            }
+        }
+
+        [UnityTest]
         public IEnumerator TheRide_SheClimbsOnTheGurney_TheDefendKeyLiftsIt_ItCosts40Mk_ItDoesNotLandOnTheGap_AFallReturnsHer()
         {
             yield return Freed();
@@ -247,14 +412,19 @@ namespace GlorifiedBody.Tests.PlayMode
             PsychicPowers powers = lucy.GetComponent<PsychicPowers>();
             Interactor hand = lucy.GetComponent<Interactor>();
             Rideable gurney = GameObject.Find("Steel_Gurney").GetComponent<Rideable>(); // the crates of G16 ride too
-            Assert.AreEqual("H5", Room.At(gurney.transform.position + Vector3.up * 0.1f).id, "the gurney stands in the airlock");
-            Assert.IsNull(gurney.GetComponent<LockOnTargetable>(), "no lock point: nothing breaks it, no throw takes it");
+            Assert.AreEqual("H4", Room.At(gurney.transform.position + Vector3.up * 0.1f).id, "the gurney stands in the theater (Bruno, 2026-11-15)");
+            LockOnTargetable lockPoint = gurney.GetComponent<LockOnTargetable>();
+            Assert.IsTrue(lockPoint != null && lockPoint.IsProp && lockPoint.IsUnbreakable && !lockPoint.IsHeavy, "mk_orzabal lifts and throws it, and nothing breaks it");
             Assert.IsNull(gurney.GetComponent<GlorifiedBody.Destruction.Breakable>(), "it cannot break");
             // 2026-11-14 (Bruno: "the gurney is invisible"): every piece draws at the gurney, not 36 m away.
             Renderer[] pieces = gurney.GetComponentsInChildren<Renderer>(true);
             Assert.GreaterOrEqual(pieces.Length, 8, "a deck, four legs, wheels, rails, a push bar");
             foreach (Renderer piece in pieces)
                 Assert.Less(Vector3.Distance(piece.bounds.center, gurney.transform.position), 1.5f, piece.name + " draws at the gurney");
+            // For the gap, the gurney waits in the airlock (the way from the theater has a test of its own).
+            gurney.transform.SetPositionAndRotation(new Vector3(6.4f, 0f, 35.5f), Quaternion.Euler(0f, 270f, 0f));
+            Physics.SyncTransforms();
+            Assert.GreaterOrEqual(GameObject.Find("Pit_Return").GetComponent<PitReturn>().size.x, 12f, "the gap is 12 m (Bruno: \"you can't jump over it\")");
             // A fall into the gap: she is back in the airlock.
             PitReturn pit = GameObject.Find("Pit_Return").GetComponent<PitReturn>(); // the gap of the tube (G16 has one too)
             tank.Teleport(new Vector3(1f, 0.05f, 35.5f), 270f);
@@ -296,10 +466,13 @@ namespace GlorifiedBody.Tests.PlayMode
             float t0 = Time.time;
             bool gapRefused = false;
             float lowest = 9f;
-            while (Time.time - t0 < 12f && gurney.transform.position.x > -3.6f)
+            int hidden = 0;
+            while (Time.time - t0 < 16f && gurney.transform.position.x > -9.6f)
             {
                 yield return null;
                 lowest = Mathf.Min(lowest, lucy.transform.position.y);
+                if (gurney.transform.position.x < -2f && gurney.GetComponentsInChildren<Renderer>().Any(r => !r.enabled))
+                    hidden++; // 2026-11-15: the room cull hid the gurney under her over the gap
                 if (!gapRefused && Mathf.Abs(gurney.transform.position.x - 1f) < 0.3f)
                 {
                     pad.SetHeld(InputManager.GameAction.Defend, false);
@@ -312,6 +485,7 @@ namespace GlorifiedBody.Tests.PlayMode
             pad.SetHeld(InputManager.GameAction.Forward, false);
             float crossing = Time.time - t0;
             Assert.IsTrue(gapRefused, "over the gap the release does not land it: the ride goes on");
+            Assert.AreEqual(0, hidden, "the gurney is drawn all the way over the gap");
             Assert.AreEqual("H6", RoomTracker.CurrentId, "she rides into the landing");
             Assert.Greater(lowest, 0.5f, "she stays on the deck all the way");
             pad.SetHeld(InputManager.GameAction.Defend, false);
@@ -365,7 +539,7 @@ namespace GlorifiedBody.Tests.PlayMode
             TankController tank = lucy.GetComponent<TankController>();
             PitReturn pit = GameObject.Find("Pit_Return").GetComponent<PitReturn>(); // the gap of the tube (G16 has one too)
             Assert.IsNull(GameObject.Find("Tube_Floor"), "the tube is pulled back: no floor over the gap");
-            tank.Teleport(new Vector3(-2.9f, 0f, 33.6f), 90f);
+            tank.Teleport(new Vector3(-8.9f, 0f, 33.6f), 90f);
             yield return null;
             FlagSwitch extend = GameObject.Find("Extend_Button").GetComponent<FlagSwitch>();
             Assert.AreSame(extend, lucy.GetComponent<Interactor>().FindFocus(), "EXTEND in reach on the landing");
@@ -501,7 +675,7 @@ namespace GlorifiedBody.Tests.PlayMode
             ItemPickup l14 = GameObject.Find("L14_Union_Letter").GetComponent<ItemPickup>();
             Assert.AreEqual("G11", l37.GetComponentInParent<Room>().id);
             Assert.AreEqual("G11", l14.GetComponentInParent<Room>().id);
-            StringAssert.Contains("YOU HAVE THE RIGHT TO ASK FOR A VOTE", l37.item.logText);
+            StringAssert.Contains("You have the right to ask for a union vote.", l37.item.logText); // the plan's words (DEMO_PLAN §8)
             StringAssert.Contains("HR works for them.", l37.item.logText);
             Assert.AreEqual(ItemKind.Log, l37.item.kind);
             lucy.GetComponent<TankController>().Teleport(l37.transform.position + new Vector3(-0.5f, -1.4f, 0f), 90f);
@@ -558,6 +732,7 @@ namespace GlorifiedBody.Tests.PlayMode
             public const string Free = "hold_free", Lockdown = "hold_lockdown", MeetDone = "demo_h2_scientist", RunnerCowered = "hold_h2_cowered";
             public const string GuardsDone = "demo_h3_guards", Alarm = "hold_h4_alarm", GlassBroken = "hold_h4_glass_broken", TapeDone = "demo_h4_tape";
             public const string TubeOut = "hold_tube_out", CardScanned = "hold_c11", VoiceUrge = "demo_h5_voice_urge", VoiceFed = "demo_h5_voice_fed";
+            public const string TheaterLocked = "hold_h4_locked", TheaterRelease = "hold_h4_release";
         }
 
         /// <summary>The subtitle lines on screen now, as "SPEAKER: words", added to the set.</summary>

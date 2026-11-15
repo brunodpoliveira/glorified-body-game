@@ -244,6 +244,15 @@ namespace GlorifiedBody.Editor.Demo
             return item;
         }
 
+        /// <summary>
+        /// Stevens' note (Bruno, 2026-11-15: "the note starts in the inventory ... to signal that this game has inventory. like he
+        /// instructs, the full instruction thing/map is on a printer in a room"): a log, no map. It points to L1, the printout
+        /// on the printer of H9. The words: PLACEHOLDER for the writer, from round 118 only (her name, dizzy, no time, the sheet).
+        /// </summary>
+        public static ItemDefinition StevensNote() => Log("stevens_note", "STEVENS' NOTE",
+            "PLACEHOLDER (Stevens' note, round 118): Lucy. That is your name. You will be dizzy. There is no time.\n\n" +
+            "The sheet with the way out is on the printer in the office, past the save room. Take it.\n\nS.");
+
         public static ItemDefinition Log(string id, string name, string text, string readFlag = "")
         {
             ItemDefinition item = ItemAssets.Item(id, name, ItemKind.Log, ItemAssets.LogColour, name.ToLowerInvariant() + ".", text, DrugType.Nalcon);

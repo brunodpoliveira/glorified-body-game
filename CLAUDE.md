@@ -701,6 +701,14 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   escort. The barks `escorts a civilian` and `civilians present` (CIV tag). A speaker on a forced line cannot start a gated one. Tests:
   `CivilianEscortTests` (KIT TEST). Numbers PROPOSED.
 
+- 2026-11-15, THE THEATER REWORK AND THE 12 M GAP (`devlog-notes/2026-11-15_theater_rework_gap.md`, Bruno: "every power has its chance to
+  shine"): the gurney stands in H4 by the door (`DemoHold.Gurney`, a lock target that never breaks, `LockOnTargetable.unbreakable`); the H3-H4
+  fire door jams behind her (`hold_h4_locked`) and nothing breaks it (`FireDoor.canBreak` false stops her powers too); fire on the nurse or the
+  drapes opens both doors (`hold_h4_release`), two blasts or the thrown gurney break the glass (`GlassDoor`), the booth's button opens the door.
+  The gap is 12 m (`DemoHold.TubeX0/X1`; H6 and H7 6 m further west), a floor sign and `Cam_H5_gap`. Stevens' note goes into her inventory
+  when the frame lets go (`ScriptStep.Give` with a notice); the map stays on the printer of H9. A ridden thing is never culled
+  (`RoomTracker.Travels`). Soldiers skip firing spots with a person on the line (`SoldierBrain.PersonOnLine`). Numbers PROPOSED.
+
 ## Rules
 
 1. Unity 6000.3.15f1 (installed at `/home/pc/Unity/Hub/Editor/6000.3.15f1`). Start it only through `tools/unity.sh`
