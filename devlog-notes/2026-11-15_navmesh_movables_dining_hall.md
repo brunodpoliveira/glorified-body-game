@@ -57,15 +57,22 @@ Scenes built again: the demo, the training room, KIT TEST, the tutorial, DOOR TE
 2. **Six soldiers on one point.** On a leash, a move to a point outside his room went to the nearest point inside it.
    When she ran out of the hall, all six took the same point at the door, and the crowd pushed one of them into G2. Now
    a move to a point outside the room keeps him where he stands (`SoldierBrain.Go`).
-3. **OPEN: the shotgun test fails in the new hall.** `DiningHallTests.TheShotgun_...` kills the other five and the
-   armour around the gunner, puts her 3.5 m from him, and waits for his cone. In 4 of 5 runs he came into her reach and
-   struck with the butt instead of firing (melee within 1.8 m is the design). The logged trails show three ways in:
-   - He was still running from the deaths around him (4.4 m/s) when she came. The test now waits until he stands still.
-   - His route to a firing spot 3.8 m from her passed her at 1.6 m, and a move stops for a strike when she is in reach
-     (`Phase.Move`, `gun.HerInReach`). The flankers of 2026-11-03 did the same.
-   - He left the care of a body and ran at her, 4.0 m to 0.9 m in 1 s, while his spot stayed 5.4 m from her.
-   A rule that refused a spot with a route past her did not make the test pass, so it is not in this commit. The fault
-   is in the soldiers' moves, not in the hall. In the old hall the test passed. It needs a session of its own.
+3. **A walk past her.** `DiningHallTests.TheShotgun_...` kills the other five and the armour around the gunner, puts
+   her 3.5 m from him, and waits for his cone. In 4 of 5 runs he came into her reach and struck with the butt instead
+   of firing (melee within 1.8 m is the design, 2026-10-24). A log of his phase, spot and destination every 0.25 s
+   found two causes:
+   - The test put her down while he still ran from the deaths around him (4.4 to 5.0 m/s). The test now waits until
+     he stands still and is out of his stagger.
+   - A flanker circles her, and the straight walk between two points of the circle cuts inside it. In a pass: 3.8 m,
+     then 2.6 m, then 3.3 m at his spot. When the search looks all around her, the walk can pass through her, and a
+     move stops for a strike when she is in reach (`Phase.Move`, `gun.HerInReach`): 1.6 m, then the strikes. The
+     flankers of 2026-11-03 did the same.
+   The fix: the spot search refuses a spot when the walk to it passes nearer than 2.5 m to her (and nearer than he
+   stands now). It checks the straight line and the NavMesh path, because after a care the path query can fail
+   (`SoldierBrain.RoutePassesHer`, `PassClear`, PROPOSED). A first version checked only the path and did not stop the
+   strike after a care.
+   NOT RUN: the shotgun test and the fight classes with this fix. Bruno stopped the runs (the RAM is in use by other
+   apps) and tests by hand.
 
 KIT TEST shows 20 of 1002 floor points hidden from their camera (5 of 1034 this morning). The cause is the four
 ceiling lamps of this afternoon's commit, not the NavMesh: they stand on the lines from `Cam_WestHalf` to the points
@@ -86,6 +93,6 @@ near x -4, z ±5. The test room allows 5 %.
 | `DemoTests.TheForwardPost_HoldsTheHall_...` | failed (a man pushed into G2), passed after the leash fix |
 | `FloorplanV2Tests` | the H1 place and the room count (58) follow the Hold rework of today, then pass |
 | The fight classes (`FlankingTests`, `EnemyAiTests`, `KitTests`, `ArmedCivilianTests`, `HumanShieldTests`, `CivilianEscortTests`, `CoverTests`, the fire team tests, `DiningHallTests`) | 57 of 58 (that run had the route rule, since removed). The rerun without it: stopped by Bruno ("end the final check now") |
-| `DiningHallTests.TheShotgun_...` | FAILS: open, above |
+| `DiningHallTests.TheShotgun_...` | failed 4 of 5 before the fixes; with the fixes: NOT RUN |
 
 Not run: the whole PlayMode suite and the bots (Bruno tests by hand).

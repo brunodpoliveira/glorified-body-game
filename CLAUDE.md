@@ -731,7 +731,8 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   `NavMeshModifier` out of the bake, a carve where it rests) on the crate, the box, the planter and the statue copy. The cover map keeps a
   point only on the live NavMesh (`CoverMap.LiveTolerance`: the triangulation does not show the carves). A leashed soldier holds his place
   when the move point is outside his room (`SoldierBrain.Go`). G18 is x 35 to 59, z 0 to 13, 6 m high, the lodge door at x 50
-  (`DemoDining.LodgeDoor`). OPEN: `DiningHallTests.TheShotgun_...` fails (the gunner comes into her reach and strikes). Numbers PROPOSED.
+  (`DemoDining.LodgeDoor`). A soldier refuses a firing spot when the walk to it passes within 2.5 m of her (`SoldierBrain.RoutePassesHer`:
+  a flanker's walk cut through her and ended in a butt strike). NOT RUN: the shotgun test and the fight classes with it. Numbers PROPOSED.
 
 ## Rules
 

@@ -1161,7 +1161,7 @@ namespace GlorifiedBody.Enemy
                     if (PersonOnLine(hit.position, chest)) continue;
                     float cost = Flat(transform.position, hit.position) + (style == Approach.Free ? (i == 0 ? 0f : 0.5f) : Mathf.Abs(Mathf.DeltaAngle(0f, turns[i])) * 0.05f);
                     if (style == Approach.Flank && InHerView(hit.position, target)) cost += FrontCost;
-                    if (cost < bestCost)
+                    if (cost < bestCost && !RoutePassesHer(hit.position, target))
                     {
                         bestCost = cost;
                         best = hit.position;
@@ -1170,6 +1170,39 @@ namespace GlorifiedBody.Enemy
             }
             return bestCost < float.MaxValue;
         }
+
+        /// <summary>
+        /// The walk to the spot passes her nearer than PassClear (and nearer than he stands now). A move stops for a strike
+        /// when she is in his reach (Phase.Move, gun.HerInReach), so such a walk ends in a butt strike, not a shot. 2026-11-15:
+        /// a flanker circles her, and the straight walk between two points of the circle cuts inside it; when the search looks
+        /// all around her, the cut passes through her (the shotgun test in the 24 m hall: 3.8 m, then 2.6 m, then a strike at
+        /// 1.6 m in the runs that failed). The flankers of 2026-11-03 did the same. Both the straight line and the NavMesh path
+        /// count: after a care the path query can fail. Only the cheapest spot so far pays for the path.
+        /// </summary>
+        private bool RoutePassesHer(Vector3 spot, Vector3 her)
+        {
+            float limit = Mathf.Min(PassClear, Flat(transform.position, her) - 0.3f);
+            if (limit <= 0f) return false;
+            Vector2 h = new Vector2(her.x, her.z);
+            if (SegmentNear(transform.position, spot, h) < limit) return true;
+            routeProbe ??= new NavMeshPath(); // made on first use: Unity refuses a NavMeshPath in a field initializer
+            if (!NavMesh.CalculatePath(transform.position, spot, NavMesh.AllAreas, routeProbe) || routeProbe.status == NavMeshPathStatus.PathInvalid) return false;
+            Vector3[] corners = routeProbe.corners;
+            for (int i = 0; i + 1 < corners.Length; i++)
+                if (SegmentNear(corners[i], corners[i + 1], h) < limit) return true;
+            return false;
+        }
+
+        /// <summary>The nearest a straight walk from a to b comes to the point, top down.</summary>
+        private static float SegmentNear(Vector3 from, Vector3 to, Vector2 point)
+        {
+            Vector2 a = new Vector2(from.x, from.z), ab = new Vector2(to.x, to.z) - a;
+            float t = ab.sqrMagnitude > 0.0001f ? Mathf.Clamp01(Vector2.Dot(point - a, ab) / ab.sqrMagnitude) : 0f;
+            return (a + ab * t - point).magnitude;
+        }
+
+        private const float PassClear = 2.5f; // m: a walk to a firing spot keeps this far from her, PROPOSED
+        private NavMeshPath routeProbe;
 
         private float WantedRange => Team == null ? preferredRange : Team.FallingBack ? gun.Range : Mathf.Min(TeamRange, gun.Range);
 

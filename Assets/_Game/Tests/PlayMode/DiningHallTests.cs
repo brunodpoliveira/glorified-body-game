@@ -112,12 +112,14 @@ namespace GlorifiedBody.Tests.PlayMode
             DummyShooter.State last = gun.Current;
             float nextNote = 0f;
             var trail = new System.Collections.Generic.List<string>();
+            float t0 = Time.time;
             yield return WaitUntil(() =>
             {
-                if (Time.time >= nextNote && trail.Count < 12)
+                if (Time.time >= nextNote && trail.Count < 16)
                 {
-                    nextNote = Time.time + 0.5f;
-                    trail.Add($"{gunner.Current} at {Flat(gunner.transform.position - lucy.transform.position).magnitude:0.0} m, spot {Flat(gunner.Spot - lucy.transform.position).magnitude:0.0} m, team {(gunner.Team != null ? gunner.Team.Alive + (gunner.Team.FallingBack ? " back" : "") : "none")}, cover {(gunner.HeldCover != null)}");
+                    nextNote = Time.time + 0.25f;
+                    string heading = agent != null && agent.hasPath ? $"dest {Flat(agent.destination - lucy.transform.position).magnitude:0.0} m from her, {agent.velocity.magnitude:0.0} m/s" : "no path";
+                    trail.Add($"{Time.time - t0:0.00}s {gunner.Current} at {Flat(gunner.transform.position - lucy.transform.position).magnitude:0.0} m, spot {Flat(gunner.Spot - lucy.transform.position).magnitude:0.0} m, {heading}, reach {gun.HerInReach}");
                 }
                 if (gun.Current != last && gun.Current == DummyShooter.State.Aiming)
                     attacks.Add($"{gun.CurrentAttack} at {Vector3.Distance(Flat(gunner.transform.position), Flat(lucy.transform.position)):0.0} m, {gunner.Current}");
