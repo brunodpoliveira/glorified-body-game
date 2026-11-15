@@ -683,7 +683,7 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   killer adds one); the human shield hint is one of the shooting soldiers' hints (round 163).
 
 - 2026-11-15, THE HUMAN SHIELD, THE FACE PLANT, THE CIV TAG (`devlog-notes/2026-11-15_human_shield_face_plant.md`, rounds 161 and 162):
-  `Enemy/HumanShield` (any live person she holds 0.6 m or lower, Bruno's pick: guards and soldiers neither aim nor fire within 1 m of it, top down, `DummyShooter.HeldForShield`,
+  `Enemy/HumanShield.Covering` (a clear line of fire, Bruno's picks: guards and soldiers neither aim nor fire when a live person, standing or held, stands within 1 m of the line top down and the line passes between its feet and head; not within 1.5 m of the gun; `DummyShooter.HeldForShield`,
   the `civilians present` barks), `EnemyRagdoll.EndHoldFacePlant` (a full slam goes limp at the top and lands head first), the `CIV:` tag
   (`BarkRow.civ`, `BarkVoice.Next(situation, civ)`, `CivilianBrain.CivKind`). Tests: `HumanShieldTests` (KIT TEST). Numbers PROPOSED.
 

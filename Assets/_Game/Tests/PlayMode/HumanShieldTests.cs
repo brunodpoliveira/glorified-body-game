@@ -168,7 +168,7 @@ namespace GlorifiedBody.Tests.PlayMode
                     shots++;
                     Vector3 chest = lucy.transform.position + Vector3.up * 1.2f;
                     GameObject hostage = HumanShield.Held();
-                    bool blocks = HumanShield.Blocks(origin, chest, lab);
+                    bool blocks = HumanShield.Covers(origin, chest, lab);
                     if (blocks) through++;
                     // Top down: how far the hostage's middle stands from the shot's line, and where along it (0 the gun, 1 her).
                     Vector2 a2 = new Vector2(origin.x, origin.z), b2 = new Vector2(chest.x, chest.z);
@@ -223,6 +223,43 @@ namespace GlorifiedBody.Tests.PlayMode
             Debug.Log($"[HumanShieldTests] the held guard: held {gun.HeldForShield}, fired {gun.ShotsFired - shots}, still held low {HumanShield.Held() == guard} at {held.HeightOverFloor:0.00} m, his middle {HumanShield.Middle(guard)}");
             Assert.GreaterOrEqual(gun.HeldForShield, 2, "he holds his fire for a held colleague");
             Assert.AreEqual(shots, gun.ShotsFired, "no shot past him");
+        }
+
+        [UnityTest]
+        public IEnumerator AGuardOnHisFeet_InTheLine_StopsTheSoldiersFire()
+        {
+            // Bruno, 2026-11-15: "soldier always fire through guard, regardless of being lifted up or not". A guard who stands
+            // between the soldier and her, not lifted: the soldier holds his fire.
+            GameObject guard = GameObject.Find("Guard_K3");
+            GameObject soldier = GameObject.Find("Soldier_K2");
+            foreach (GameObject f in new[] { guard, soldier }) { f.GetComponent<SoldierBrain>().enabled = false; }
+            Vector3 her = lucy.transform.position;
+            Vector3 toSoldier = Vector3.ProjectOnPlane(soldier.transform.position - her, Vector3.up).normalized;
+            Assert.IsTrue(NavMesh.SamplePosition(her + toSoldier * 1.2f, out NavMeshHit g, 1.0f, NavMesh.AllAreas));
+            Assert.IsTrue(NavMesh.SamplePosition(her + toSoldier * 6f, out NavMeshHit s2, 1.5f, NavMesh.AllAreas));
+            guard.GetComponent<NavMeshAgent>().Warp(g.position);
+            soldier.GetComponent<NavMeshAgent>().Warp(s2.position);
+            soldier.transform.rotation = Quaternion.LookRotation(-toSoldier);
+            foreach (GameObject f in new[] { guard, soldier }) f.GetComponent<SoldierBrain>().Body.Suspend(true);
+            guard.GetComponent<DummyShooter>().HoldFire = true; // the guard does not shoot her in this test
+            yield return new WaitForSeconds(0.5f);
+            DummyShooter gun = soldier.GetComponent<DummyShooter>();
+            gun.RequireLineOfSight = false;
+            gun.HoldFire = false;
+            int shots = gun.ShotsFired;
+            yield return WaitUntil(() => gun.HeldForShield >= 2, 12f);
+            (float low, float high) = HumanShield.Span(guard);
+            Debug.Log($"[HumanShieldTests] the standing guard: held {gun.HeldForShield}, fired {gun.ShotsFired - shots}, his body {low:0.00} to {high:0.00} m");
+            Assert.GreaterOrEqual(gun.HeldForShield, 2, "he holds his fire for a colleague in his line");
+            Assert.AreEqual(shots, gun.ShotsFired, "no shot past him");
+            // The guard steps out of the line: the soldier fires.
+            Vector3 aside = Vector3.Cross(Vector3.up, toSoldier) * 3f;
+            Assert.IsTrue(NavMesh.SamplePosition(g.position + aside, out NavMeshHit out1, 1.5f, NavMesh.AllAreas));
+            guard.GetComponent<NavMeshAgent>().enabled = true;
+            guard.GetComponent<NavMeshAgent>().Warp(out1.position);
+            guard.GetComponent<NavMeshAgent>().enabled = false;
+            yield return WaitUntil(() => gun.ShotsFired > shots, 12f);
+            Assert.Greater(gun.ShotsFired, shots, "a clear line: he fires");
         }
 
         [UnityTest]

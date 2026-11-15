@@ -99,3 +99,31 @@ Within 1 m of the line (Recommended)
 | `HumanShieldTests.AHeldGuard_IsAShieldToo` (new) | pass: the soldier's line passes about 0.5 m beside the held guard, he holds 2 times and fires 0 |
 | `HumanShieldTests.WithTheirBrainsOn_NoShotGoesThroughTheHostage` | pass: 34 aims held, 6 shots, none within 1 m of the hostage |
 | `HumanShieldTests` (4) | 4 of 4 |
+
+## A clear line of fire (Bruno, the same night)
+
+```text
+soldier always fire through guard, regarless of being lifted up or not
+```
+
+CONFIRMED BUT DIFFERENT. Two gaps in the rule as built:
+1. A guard on his feet in the line: the rule looked only at the person she held, so a colleague who stood in the line
+   never stopped a shot.
+2. A guard held at about her head height: a held person counted only at 0.6 m or lower, even when its legs covered the
+   line.
+
+One rule now (`HumanShield.Covering`): a guard or a soldier does not aim, and does not fire, when the body of any live
+person covers his line to her.
+1. Seen from above, the person stands between him and her, within 1 m of the line (`Zone`).
+2. The line passes between the person's feet and head (`HumanShield.Span`, from the bones). A person held high hangs over
+   the line and does not cover it, so "keep it low" still holds. A crouched civilian is under the line.
+3. A body on the floor does not cover it, and neither does a teammate within 1.5 m of the gun (`NearGun`): two soldiers
+   side by side both fire.
+4. It counts standing people, held people, civilians, guards and soldiers. A civilian in the line makes him say a
+   `civilians present` line. A colleague makes him say nothing (the writer's rows are for staff).
+
+| Check | Result |
+|---|---|
+| `HumanShieldTests.AGuardOnHisFeet_InTheLine_StopsTheSoldiersFire` (new) | pass: held 2, fired 0, the guard's body from 0.01 m to 1.69 m; he fires when the guard steps aside |
+| `HumanShieldTests`, `KitTests`, `FlankingTests`, `DiningHallTests`, `EnemyAiTests`, `CivilianEscortTests` | 40 of 40 |
+| The bots `ai` and `team` | pass, 29 of 29 and 10 of 10 steps |

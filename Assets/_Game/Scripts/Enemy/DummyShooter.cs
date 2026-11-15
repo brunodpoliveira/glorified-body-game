@@ -174,7 +174,8 @@ namespace GlorifiedBody.Enemy
         /// <summary>A grenade of either kind: it arcs to the floor, and it needs room.</summary>
         public static bool IsLobbed(Attack a) => a == Attack.Grenade || a == Attack.Gas;
 
-        // The human shield (round 162, HumanShield): a guard or a soldier does not fire through a live civilian she holds low.
+        // The line of fire (round 162 and Bruno's picks, HumanShield): a guard or a soldier does not fire past a live person
+        // whose body covers his line to her, standing or held low.
         private int shieldRank = -1; // -1: not read yet, 0: fires anyway, 1: holds
         /// <summary>The shots this gun held for a human shield.</summary>
         public int HeldForShield { get; private set; }
@@ -184,11 +185,12 @@ namespace GlorifiedBody.Enemy
             if (attack == Attack.None || attack == Attack.Melee || IsLobbed(attack)) return false;
             if (shieldRank < 0) shieldRank = HumanShield.HoldsFireFor(gameObject) ? 1 : 0;
             if (shieldRank != 1) return false;
-            GameObject held = HumanShield.Held();
-            return held != null && held != gameObject && HumanShield.Blocks(Muzzle, target, held);
+            coveredBy = HumanShield.Covering(Muzzle, target, gameObject);
+            return coveredBy != null;
         }
 
         private float nextShieldNote, nextShieldBark;
+        private GameObject coveredBy; // the person on his line at the last check
 
         /// <summary>The aim does not start through a held civilian; once a second it counts and he says why.</summary>
         private bool ShieldStopsAim(Attack attack, Vector3 target)
@@ -209,9 +211,9 @@ namespace GlorifiedBody.Enemy
         {
             nextShieldNote = Time.time + 1f;
             HeldForShield++;
-            GameObject held = HumanShield.Held();
+            GameObject held = coveredBy;
             RunTelemetry.Event("enemy_held_fire", $"{enemyId}:{(held != null ? held.name : "?")}");
-            // A held colleague: no line yet. The writer's rows speak of staff; a guard or a soldier needs rows of its own.
+            // A colleague in the way: no line yet. The writer's rows speak of staff; a guard or a soldier needs rows of its own.
             CivilianBrain civilian = held != null ? held.GetComponent<CivilianBrain>() : null;
             if (civilian == null) return;
             // "Hold fire, hold, I've got staff behind her, nobody shoots through that." (barks.csv, civilians present, round 162).
