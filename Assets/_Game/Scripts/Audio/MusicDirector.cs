@@ -18,16 +18,16 @@ namespace GlorifiedBody.Audio
     ///   Tension while an armed enemy in her room or a room next door hunts her (alerted, alive, not in retreat). Else Ambient. Menu on
     ///   the main menu, Silent on the death screen (the sting plays) and for a cutscene (Hold).
     /// - The track: Resources/Audio/Music/&lt;room key&gt;/&lt;state&gt;, the room key from a RoomMusic in the scene (a
-    ///   sector name) or the scene name. Else the demo's piece, Resources/Audio/Music/_demo/&lt;state&gt; (the T43 kit,
+    ///   sector name) or the scene name. Else the demo's piece, Resources/Audio/Music/_demo/&lt;state&gt; (the T44 kit,
     ///   tools/music_kit_import.sh). A gap takes Resources/Audio/Music/_placeholder/&lt;state&gt; and logs once.
     /// - A change of track crossfades over FadeSeconds. The pause and the inventory duck the music.
     /// - Every track starts on the DSP clock (PlayScheduled), so the director knows where its bar lines are.
-    /// - The combat arc (Bruno, 2026-11-14, the T43 v4 kit): after ArcAfterBars of combat (or StartArc), the drum break
-    ///   starts on the next bar line of the theme, the payoff right after it, then the theme again from its bar 1. No
+    /// - The combat arc (Bruno, 2026-11-15, the T44 kit, "yes, hunted a works"): after ArcAfterBars of combat (or StartArc),
+    ///   the break (the song's own drop-out) starts on the next bar line of the theme, the payoff right after it, then the theme again from its bar 1. No
     ///   fade between the sections (the files have 5 ms at their ends). A fight that ends in the arc crossfades out of it.
     /// - The room tone (a hum, vents) loops under it on the SFX channel: &lt;room key&gt;/room_tone, else the placeholder.
     /// </summary>
-    public sealed class MusicDirector : MonoBehaviour
+    public sealed partial class MusicDirector : MonoBehaviour
     {
         public const string Folder = "Audio/Music/";
         public const string Placeholder = "_placeholder";
@@ -40,27 +40,35 @@ namespace GlorifiedBody.Audio
         public const float RoomToneLevel = 0.22f;
         private const float HuntCheckSeconds = 0.5f;
 
-        /// <summary>The demo's piece for every room with no track of its own (the T43 kit and the T41 states).</summary>
+        /// <summary>The demo's piece for every room with no track of its own (the T44 kit: the theme and its two states).</summary>
         public const string DemoKey = "_demo";
-        /// <summary>One composition at 84 BPM, 4/4 (round 126). One bar = 20/7 s = 137,142.86 samples at 48 kHz.</summary>
-        public const double Bpm = 84.0;
+        /// <summary>One composition, 4/4 (round 126). T44 "hunted a": 83.00 BPM. One bar = 2.8916 s = 138,795.18 samples at 48 kHz.</summary>
+        public const double Bpm = 83.0;
         public const int BeatsPerBar = 4;
         public const double BarSeconds = 60.0 * BeatsPerBar / Bpm;
         /// <summary>The arc starts after this much combat: one full theme, as in the v4 file Bruno picked. PROPOSED.</summary>
         public const int ArcAfterBars = 12;
         public const int BreakBars = 4;
-        public const int PayoffBars = 14;
+        public const int PayoffBars = 24;
         public const string BreakName = "combat_break";
         public const string PayoffName = "combat_payoff";
         /// <summary>A scheduled start is at least this far ahead of the DSP clock (a few audio buffers).</summary>
         public const double ScheduleLead = 0.1;
-        /// <summary>Two loops of one piece may differ by a rounding sample (the T43 theme is 1,645,715, the T41 states 1,645,714).</summary>
+        /// <summary>A start on a known bar line may be this close to the DSP clock (one or two audio buffers).</summary>
+        public const double MinLead = 0.03;
+        /// <summary>Two loops of one piece may differ by a rounding sample (the T43 theme was 1,645,715, the T41 states 1,645,714).</summary>
         public const int SamePieceSlack = 2;
-        private const int PoolSize = 5;
+        private const int PoolSize = 7;
 
         public static MusicDirector Instance { get; private set; }
 
         private readonly AudioSource[] pool = new AudioSource[PoolSize];
+        /// <summary>For each pool source: its scheduled start, the DSP time of its sample 0, its scheduled end.</summary>
+        private readonly double[] srcStart = new double[PoolSize];
+        private readonly double[] srcAnchor = new double[PoolSize];
+        private readonly double[] srcEnd = new double[PoolSize];
+        /// <summary>After a set piece: the next track starts on this bar line (the end of its last section), at full level.</summary>
+        private double resumeAt = -1;
         private AudioSource current;
         private AudioSource previous;
         /// <summary>The DSP time of the current clip's sample 0 (its bar 1). Every bar line is anchor + n bars.</summary>
@@ -95,7 +103,12 @@ namespace GlorifiedBody.Audio
         private void Awake()
         {
             Instance = this;
-            for (int i = 0; i < PoolSize; i++) pool[i] = MakeSource("Music" + (char)('A' + i));
+            for (int i = 0; i < PoolSize; i++)
+            {
+                pool[i] = MakeSource("Music" + (char)('A' + i));
+                srcStart[i] = -1;
+                srcEnd[i] = double.MaxValue;
+            }
             current = pool[0];
             roomTone = gameObject.AddComponent<AudioSource>();
             GameAudio.Configure(roomTone, SoundChannel.Sfx, RoomToneLevel, false);
@@ -132,7 +145,7 @@ namespace GlorifiedBody.Audio
         {
             if (Instance == null) return;
             Instance.hold = state;
-            if (state != MusicState.Score) { Instance.score = null; Instance.fightScore = false; }
+            if (state != MusicState.Score) { Instance.score = null; Instance.fightScore = false; Instance.spRequested = false; }
         }
 
         /// <summary>A cutscene's own track (Score) until Hold(null); a null clip holds the silence. fight: a boss's track,
@@ -140,6 +153,8 @@ namespace GlorifiedBody.Audio
         public static void Score(AudioClip clip, bool fight = false)
         {
             if (Instance == null) return;
+            Instance.spRequested = false;
+            if (Instance.setPiece != null) Instance.spAbort = true;
             Instance.score = clip;
             Instance.fightScore = clip != null && fight;
             Instance.hold = clip != null ? MusicState.Score : MusicState.Silent;
@@ -187,18 +202,21 @@ namespace GlorifiedBody.Audio
         {
             MusicState target = Decide();
             double dsp = AudioSettings.dspTime;
-            if (target != State)
+            SetState(target, dsp);
+            bool setPieceOwns = StepSetPiece(dsp);
+            if (!setPieceOwns && hold == null && State == MusicState.Score)
             {
-                RunTelemetry.Event("music", $"{State}->{target}");
-                if (target == MusicState.Combat) combatSince = dsp;
-                State = target;
+                // The set piece ended this frame: the room decides again.
+                target = Decide();
+                SetState(target, dsp);
             }
-            if (ArcActive)
+            if (setPieceOwns) { }
+            else if (ArcActive)
             {
                 if (target == MusicState.Combat) StepArc(dsp);
                 else CancelArc(dsp);
             }
-            if (!ArcActive)
+            if (!setPieceOwns && !ArcActive)
             {
                 bool placeholder = false;
                 AudioClip clip = target == MusicState.Silent ? null : target == MusicState.Score ? score : Resolve(target == MusicState.Menu ? MenuKey : RoomKey, target.ToString().ToLowerInvariant(), out placeholder);
@@ -212,7 +230,8 @@ namespace GlorifiedBody.Audio
             fade = Mathf.MoveTowards(fade, 1f, Time.unscaledDeltaTime / FadeSeconds);
             DuckFactor = Duck();
             float level = GameAudio.Volume(SoundChannel.Music) * DuckFactor;
-            if (ArcActive)
+            if (setPieceOwns) SetPieceVolumes(level);
+            else if (ArcActive)
             {
                 // The sections join with no fade: each one is at full level, a scheduled one is silent until its bar line.
                 arcTheme.volume = arcBreak.volume = arcPayoff.volume = arcReturn.volume = level;
@@ -227,6 +246,14 @@ namespace GlorifiedBody.Audio
                 }
             }
             roomTone.volume = RoomToneLevel * GameAudio.Volume(SoundChannel.Sfx);
+        }
+
+        private void SetState(MusicState target, double dsp)
+        {
+            if (target == State) return;
+            RunTelemetry.Event("music", $"{State}->{target}");
+            if (target == MusicState.Combat) combatSince = dsp;
+            State = target;
         }
 
         private float Duck()
@@ -327,14 +354,19 @@ namespace GlorifiedBody.Audio
         private void StartTrack(AudioClip clip, double dsp)
         {
             if (previous != null) Release(previous);
+            // After a set piece: on the bar line where its last section ends, at full level, from bar 1 (no lock, no fade).
+            bool onBar = resumeAt > 0;
+            double resume = resumeAt;
+            resumeAt = -1;
             AudioSource next = Free();
             next.Stop();
             next.clip = clip;
             next.volume = 0f;
-            bool locked = SamePiece(current.clip, clip) && current.isPlaying && State != MusicState.Score && State != MusicState.Menu;
+            bool locked = !onBar && SamePiece(current.clip, clip) && current.isPlaying && State != MusicState.Score && State != MusicState.Menu;
             if (clip != null)
             {
-                double at = dsp + ScheduleLead;
+                // The bar line of a hand-back while it is still ahead of the audio clock; else the usual lead.
+                double at = onBar && resume > dsp + MinLead ? resume : dsp + ScheduleLead;
                 int start = 0;
                 if (locked)
                 {
@@ -345,13 +377,23 @@ namespace GlorifiedBody.Audio
                 Schedule(next, clip, true, start, at);
                 anchor = at - (double)start / clip.frequency;
             }
+            if (onBar)
+            {
+                // The last section plays to its end at its own level; the new track takes over on that bar line.
+                if (clip != null) Cut(current, CurrentStartAtOf(next));
+                previous = null;
+                current = next;
+                fade = 1f;
+                Changes++;
+                return;
+            }
             previous = current;
             current = next;
             fade = 0f;
             Changes++;
         }
 
-        // ── The combat arc (T43 v4: theme, drum break, payoff, theme) ─────────────────────────
+        // ── The combat arc (T44: theme, break, payoff, theme) ──────────────────────────────
 
         /// <summary>A combat event asks for the arc now: the break starts on the next bar line (a scripted beat, a test).</summary>
         public static void StartArc()
@@ -448,27 +490,107 @@ namespace GlorifiedBody.Audio
             return clip != null ? clip : Resources.Load<AudioClip>(Folder + DemoKey + "/" + name);
         }
 
+        /// <summary>A source no one holds: first one that is silent, else one that plays out to its cut (not reached).</summary>
         private AudioSource Free()
         {
-            foreach (AudioSource s in pool)
-                if (s != current && s != previous && s != arcTheme && s != arcBreak && s != arcPayoff && s != arcReturn) return s;
-            return pool[0] == current ? pool[1] : pool[0]; // not reached: the pool holds every source the arc needs
+            for (int pass = 0; pass < 2; pass++)
+                foreach (AudioSource s in pool)
+                {
+                    if (s == current || s == previous || s == arcTheme || s == arcBreak || s == arcPayoff || s == arcReturn || HeldBySetPiece(s)) continue;
+                    if (pass == 0 && s.isPlaying) continue;
+                    return s;
+                }
+            return pool[0] == current ? pool[1] : pool[0];
         }
+
+        private int IndexOf(AudioSource source) => Array.IndexOf(pool, source);
 
         /// <summary>A source the director is done with: stopped, and no clip (a stale clip looked like the track).</summary>
-        private static void Release(AudioSource source)
+        private void Release(AudioSource source)
         {
+            if (source == null) return;
             source.Stop();
             source.clip = null;
+            int i = IndexOf(source);
+            if (i >= 0) { srcStart[i] = -1; srcEnd[i] = double.MaxValue; }
         }
 
-        private static void Schedule(AudioSource source, AudioClip clip, bool loop, int startSample, double at)
+        private void Schedule(AudioSource source, AudioClip clip, bool loop, int startSample, double at)
         {
             source.Stop();
             source.clip = clip;
             source.loop = loop;
             source.timeSamples = startSample;
             source.PlayScheduled(at);
+            int i = IndexOf(source);
+            if (i >= 0)
+            {
+                srcStart[i] = at;
+                srcAnchor[i] = at - (double)startSample / clip.frequency;
+                srcEnd[i] = double.MaxValue;
+            }
+        }
+
+        /// <summary>The source stops on a bar line (it plays at its level until then).</summary>
+        private void Cut(AudioSource source, double at)
+        {
+            if (source == null || source.clip == null) return;
+            source.SetScheduledEndTime(at);
+            int i = IndexOf(source);
+            if (i >= 0) srcEnd[i] = at;
+        }
+
+        /// <summary>Undo a cut: the source plays on.</summary>
+        private void Uncut(AudioSource source)
+        {
+            if (source == null || source.clip == null) return;
+            source.SetScheduledEndTime(AudioSettings.dspTime + 3600.0);
+            int i = IndexOf(source);
+            if (i >= 0) srcEnd[i] = double.MaxValue;
+        }
+
+        /// <summary>Every source that sounds or waits: a start at or after the bar line is dropped, the rest stop on it.</summary>
+        private void CutAll(double at)
+        {
+            double dsp = AudioSettings.dspTime;
+            for (int i = 0; i < PoolSize; i++)
+            {
+                AudioSource s = pool[i];
+                if (s.clip == null || (!s.isPlaying && srcStart[i] <= dsp)) continue;
+                if (srcStart[i] >= at - 1e-6) Release(s);
+                else Cut(s, at);
+            }
+        }
+
+        private double CurrentStartAtOf(AudioSource s) { int i = IndexOf(s); return i >= 0 ? srcStart[i] : AudioSettings.dspTime; }
+
+        /// <summary>The DSP time of the current source's scheduled start (tests).</summary>
+        public double CurrentStartAt { get { int i = IndexOf(current); return i >= 0 ? srcStart[i] : -1; } }
+
+        /// <summary>The next bar line of the music that sounds at the DSP time earliest (the combat grid, BarSeconds); with no
+        /// music, earliest itself.</summary>
+        private double NextMusicBarLine(double earliest)
+        {
+            int best = -1;
+            for (int i = 0; i < PoolSize; i++)
+            {
+                AudioSource s = pool[i];
+                if (s.clip == null || !s.isPlaying || srcStart[i] > earliest || srcEnd[i] <= earliest) continue;
+                if (!s.loop && srcAnchor[i] + (double)s.clip.samples / s.clip.frequency <= earliest) continue;
+                if (best < 0 || srcStart[i] > srcStart[best]) best = i;
+            }
+            if (best < 0) return earliest;
+            AudioClip c = pool[best].clip;
+            return pool[best].loop
+                ? NextBarLine(srcAnchor[best], earliest, c.samples, c.frequency, BarSeconds)
+                : NextBarLineOnce(srcAnchor[best], earliest, BarSeconds);
+        }
+
+        /// <summary>The first bar line at or after earliest, for a section that plays once from start.</summary>
+        public static double NextBarLineOnce(double start, double earliest, double barSeconds)
+        {
+            if (earliest <= start) return start;
+            return start + Math.Ceiling((earliest - start) / barSeconds - 1e-9) * barSeconds;
         }
 
         /// <summary>The sample a loop plays at DSP time t, when its sample 0 played at anchor.</summary>
@@ -484,15 +606,19 @@ namespace GlorifiedBody.Audio
         /// are at n bars into each pass of the loop; the end of a pass (the start of the next) is a bar line too. Bar math
         /// in DSP seconds, so a scheduled section starts on the sample of the grid.
         /// </summary>
-        public static double NextBarLine(double anchor, double earliest, int loopSamples, int frequency)
+        public static double NextBarLine(double anchor, double earliest, int loopSamples, int frequency) =>
+            NextBarLine(anchor, earliest, loopSamples, frequency, BarSeconds);
+
+        /// <summary>NextBarLine at another tempo (a set piece: 165 BPM).</summary>
+        public static double NextBarLine(double anchor, double earliest, int loopSamples, int frequency, double barSeconds)
         {
             double loopSec = (double)loopSamples / frequency;
-            int barsInLoop = Math.Max(1, (int)Math.Round(loopSec / BarSeconds));
+            int barsInLoop = Math.Max(1, (int)Math.Round(loopSec / barSeconds));
             double e = earliest - anchor;
             double pass = Math.Floor(e / loopSec);
             double inLoop = e - pass * loopSec;
-            int k = (int)Math.Ceiling(inLoop / BarSeconds - 1e-9);
-            double t = k >= barsInLoop ? loopSec : k * BarSeconds;
+            int k = (int)Math.Ceiling(inLoop / barSeconds - 1e-9);
+            double t = k >= barsInLoop ? loopSec : k * barSeconds;
             return anchor + pass * loopSec + t;
         }
     }

@@ -13,11 +13,11 @@ using UnityEngine.TestTools;
 namespace GlorifiedBody.Tests.PlayMode
 {
     /// <summary>
-    /// The combat arc (Bruno, 2026-11-14: the T43 v4 kit, "v4, drum break"), in the training room: the theme loops in
+    /// The combat arc (Bruno: the T43 v4 kit on 2026-11-14, the T44 "hunted a" kit since 2026-11-15), in the training room: the theme loops in
     /// combat; after ArcAfterBars of combat the drum break starts on the next bar line of the theme, the payoff right
-    /// after it, then the theme again from its bar 1. Every start is on the 84 BPM grid of the theme (DSP time), and
+    /// after it, then the theme again from its bar 1. Every start is on the bar grid of the theme (83 BPM) (DSP time), and
     /// each section really starts at its time. A fight that ends in the arc leaves it. The states still keep the beat.
-    /// The arc tests ride the music in real time (about 50 s each). Batch: tools/unity.sh test playmode MusicArcTests.
+    /// The arc tests ride the music in real time (about 50 and 90 s). Batch: tools/unity.sh test playmode MusicArcTests.
     /// </summary>
     public class MusicArcTests
     {
@@ -59,7 +59,7 @@ namespace GlorifiedBody.Tests.PlayMode
             MusicDirector.Hold(MusicState.Combat);
             yield return null;
             yield return null;
-            Assert.AreEqual("combat", music.CurrentClip.name, "the T43 theme loop is the combat state");
+            Assert.AreEqual("combat", music.CurrentClip.name, "the theme loop of the kit is the combat state");
             Assert.IsFalse(music.CurrentIsPlaceholder, "the kit, not the placeholder");
             Assert.AreEqual(locks + 1, music.Locks, "search to combat kept the beat (one piece)");
         }
@@ -83,7 +83,7 @@ namespace GlorifiedBody.Tests.PlayMode
             AssertOnTheGrid(music);
 
             yield return WaitUntilDsp(music.ArcBreakAt + 0.6);
-            Assert.AreEqual(MusicDirector.BreakName, music.CurrentClip.name, "the drum break sounds");
+            Assert.AreEqual(MusicDirector.BreakName, music.CurrentClip.name, "the break sounds");
             AssertPlaysFrom(music, music.ArcBreakAt, "the break");
             yield return WaitUntilDsp(music.ArcPayoffAt + 0.6);
             Assert.AreEqual(MusicDirector.PayoffName, music.CurrentClip.name, "the payoff sounds");
@@ -161,7 +161,7 @@ namespace GlorifiedBody.Tests.PlayMode
         private static IEnumerator WaitUntilDsp(double dsp)
         {
             float t0 = Time.realtimeSinceStartup;
-            while (AudioSettings.dspTime < dsp && Time.realtimeSinceStartup - t0 < 90f) yield return null;
+            while (AudioSettings.dspTime < dsp && Time.realtimeSinceStartup - t0 < 150f) yield return null;
         }
 
         private static IEnumerator WaitUntil(Func<bool> condition, float timeoutSeconds)

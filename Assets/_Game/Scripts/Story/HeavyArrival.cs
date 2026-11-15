@@ -47,6 +47,8 @@ namespace GlorifiedBody.Story
             RunTelemetry.Event("armour_call", $"{name}:{StandingAtCall}");
             yield return new WaitForSeconds(1.5f);
             StoryFlags.Raise(flag);
+            // The set piece music: the armour section on its next bar line (2026-11-15, rounds 124 and 125).
+            GlorifiedBody.Audio.MusicDirector.SetPieceCue(GlorifiedBody.Audio.SetPieceEvent.Armour);
             yield return null;
             yield return null;
             SoldierBrain armour = armourGroup != null ? armourGroup.GetComponentInChildren<SoldierBrain>() : null;

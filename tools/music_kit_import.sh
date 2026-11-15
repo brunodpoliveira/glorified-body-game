@@ -1,20 +1,22 @@
 #!/usr/bin/env bash
-# The demo music (Bruno, 2026-11-14: the T43 v4 kit, "v4, drum break"). One composition at 84 BPM in D minor
-# (round 126): the three states are 12-bar loops of the same audio, and combat has an arc (theme, a 4-bar drum
-# break, the payoff, the theme again) on the bar lines. WAV copies, no re-encode: Unity compresses them on import
-# (Editor/MusicImport.cs). The record: ~/MEGA/glorified/production/tests/T43_combat_kit/README.md.
+# The demo music. Since 2026-11-15 the T44 kit (Bruno: "yes, hunted a works", "yes, cut it"): one composition at
+# 83.00 BPM (round 126: the three states are 12-bar loops of the same audio). Combat has an arc on the bar lines: the
+# theme, the 4-bar break (the song's own drop-out), the 24-bar payoff, then the theme again. One gain for all files.
+# WAV copies, no re-encode: Unity compresses them on import (Editor/MusicImport.cs).
+# The record: ~/MEGA/glorified/production/tests/T44_music_structure/README.md.
+# The T43 v4 kit (84 BPM, commit b7e4ef7) stays in the git history.
 # exploration = ambient, search = tension, combat = combat (the theme loop). Usage: tools/music_kit_import.sh
 set -euo pipefail
-R="${HOME}/MEGA/glorified/renders"
+SRC="${HOME}/MEGA/glorified/renders/T44_music_structure/game"
 DST="$(git rev-parse --show-toplevel)/Assets/_Game/Resources/Audio/Music/_demo"
 mkdir -p "${DST}"
 for pair in \
-  "T41_music_layers/complex/state_explore_loop.wav:ambient" \
-  "T41_music_layers/complex/state_search_loop.wav:tension" \
-  "T43_combat_kit/game/combat_theme_loop.wav:combat" \
-  "T43_combat_kit/game/combat_drum_break.wav:combat_break" \
-  "T43_combat_kit/game/combat_payoff.wav:combat_payoff"; do
+  "combat_explore_loop:ambient" \
+  "combat_search_loop:tension" \
+  "combat_theme_loop:combat" \
+  "combat_break:combat_break" \
+  "combat_payoff:combat_payoff"; do
   src="${pair%%:*}"; dst="${pair##*:}"
-  cp -f "${R}/${src}" "${DST}/${dst}.wav"
-  echo "${dst}.wav <- ${src}"
+  cp -f "${SRC}/${src}.wav" "${DST}/${dst}.wav"
+  echo "${dst}.wav <- ${src}.wav"
 done

@@ -666,6 +666,14 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   12 bars of combat (`ArcAfterBars`, PROPOSED) or `MusicDirector.StartArc()`: the break on the next bar line, the payoff 4 bars
   later, the theme from its bar 1 after 14 more. `SamePiece` accepts 2 samples of difference. Tests: `MusicKitTests` (EditMode, 3),
   `MusicArcTests` (PlayMode, 4, about 2 minutes of real-time music; they need the audio clock).
+  2026-11-15, THE T44 TRACK replaces it (`devlog-notes/2026-11-15_combat_music_t44.md`, Bruno: "yes, hunted a works"): the same
+  director, the T44 files (the states are the theme low-passed and the theme with no drums), **83 BPM** (`MusicDirector.Bpm`), a
+  24-bar payoff (`PayoffBars`). The T43 kit stays in the history (`b7e4ef7`).
+  2026-11-15, THE DINING HALL SET PIECE (`devlog-notes/2026-11-15_dining_hall_setpiece_music.md`, Bruno: "Still B"): files by event in
+  `Resources/Audio/Music/_setpiece/G18/` (`tools/setpiece_import.sh`, 165 BPM). `RoomScore` plays them through
+  `MusicDirector.SetPiece` (`MusicDirector.SetPiece.cs`): the entry on the next combat bar line, the fight loop, the armour
+  (`HeavyArrival` calls `SetPieceCue(Armour)`), the end at the last kill, then the states on its last bar line. A room with no
+  files keeps the single track. Test: `SetPieceMusicTests` (PlayMode, 3, about 1 minute of real-time music).
 
 - 2026-11-14, THE BOOTH, THE GURNEY, THE SURF (`devlog-notes/2026-11-14_booth_gurney_surf.md`, Bruno: "i don't see a nurse behind the
   theather control room", "the gurney is invisible", "the player needs to ride the gurney themselves"): the H4 booth panes and door are glass

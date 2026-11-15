@@ -4,10 +4,10 @@ using UnityEngine;
 namespace GlorifiedBody.Editor
 {
     /// <summary>
-    /// The import settings of the music (2026-11-14, the T43 kit): every clip under Resources/Audio/Music/. The source
+    /// The import settings of the music (2026-11-14, the T43 kit; the T44 kit since 2026-11-15): every clip under Resources/Audio/Music/. The source
     /// stays a WAV (no MP3: an MP3 has padding at its start, a loop gets a gap). In the game: Vorbis in memory at high
     /// quality, loaded with the asset (a scheduled section must not wait for a load), the sample rate kept (48 kHz: one
-    /// bar at 84 BPM is 137,142.86 samples), stereo. The files come from tools/music_kit_import.sh.
+    /// bar at 83 BPM is 138,795.18 samples), stereo. The files come from tools/music_kit_import.sh.
     /// </summary>
     public sealed class MusicImport : AssetPostprocessor
     {
