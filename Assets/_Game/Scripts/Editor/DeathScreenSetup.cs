@@ -24,6 +24,9 @@ namespace GlorifiedBody.Editor
         /// <summary>The writer's file, from the project root (~/MEGA/code/glorified-body-game to ~/MEGA/glorified/game).</summary>
         public const string WriterCsv = "../../glorified/game/death_screens.csv";
 
+        /// <summary>The hint of the human shield (round 163, CANON, the words as written).</summary>
+        public const string HumanShieldHint = "They will not shoot through a living person. Lift one, and keep it low.";
+
         private static readonly (string id, string classId, string note, string hint)[] Placeholders =
         {
             ("dummy_shooter", "", "PLACEHOLDER: the padded dummy, the gun on its arm", "PLACEHOLDER HINT: step back when the circle closes, then charge."),
@@ -60,11 +63,19 @@ namespace GlorifiedBody.Editor
             if (File.Exists(path))
             {
                 List<string[]> table = ReadCsv(File.ReadAllText(path));
+                foreach (DeathScreenContent.Entry old in content.entries) old.moreHints.Clear();
+                var seen = new HashSet<string>();
                 for (int i = 1; i < table.Count; i++)
                 {
                     string[] r = table[i];
                     if (r.Length < 4 || string.IsNullOrWhiteSpace(r[0])) continue;
                     DeathScreenContent.Entry e = Upsert(content, r[0].Trim());
+                    if (!seen.Add(e.killerId))
+                    {
+                        // A second row of the same killer adds a hint (round 163: more than one hint for one archetype).
+                        if (!string.IsNullOrWhiteSpace(r[3]) && !e.moreHints.Contains(r[3].Trim())) e.moreHints.Add(r[3].Trim());
+                        continue;
+                    }
                     e.pictureNote = r[1].Trim();
                     e.voiceText = r[2].Trim();
                     e.hint = r[3].Trim();
@@ -87,6 +98,13 @@ namespace GlorifiedBody.Editor
                     hint = hint,
                     voiceText = parent != null ? parent.voiceText : ""
                 });
+            }
+            // The CANON hints that wait for a row of their own (round 163): the human shield is one of the soldier's hints, never
+            // the guard's. Every soldier that shoots gets it; a grenade or the gas does not stop for a held person.
+            foreach (DeathScreenContent.Entry e in content.entries)
+            {
+                bool shoots = e.killerId == "soldier" || (e.killerId.StartsWith("soldier_") && e.killerId != "soldier_gas" && e.killerId != "soldier_grenades");
+                if (shoots && e.hint != HumanShieldHint && !e.moreHints.Contains(HumanShieldHint)) e.moreHints.Add(HumanShieldHint);
             }
             // The writer's death lines (game/death_lines.csv: enemy, when, line, direction): every line of an id with a row. The
             // speaker is the row's (the part of voice_line before the colon). The "when" rule is not read yet (§3.6).

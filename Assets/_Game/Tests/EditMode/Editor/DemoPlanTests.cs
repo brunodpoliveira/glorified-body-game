@@ -62,6 +62,27 @@ namespace GlorifiedBody.Tests.EditMode
         }
 
         [Test]
+        public void AHandNote_ReadsAsOne_AndNoLogRepeatsAParagraph()
+        {
+            // 2026-11-15: the builder added its old hand notes after the plan's cell, which holds them already, so L25 to L29
+            // and L37 said their notes twice. The cell is the whole log now, and a plan "(by hand)" reads "By hand:".
+            NeedsPlan();
+            StringAssert.Contains("By hand: \"subject to cover.\"", DemoPlan.Log("L25", ""));
+            StringAssert.Contains("By hand: we have 26 of them booked before March", DemoPlan.Log("L38", ""), "round 154: L38");
+            StringAssert.Contains("By hand: it also knows when you fall asleep at the desk", DemoPlan.Log("L39", ""), "round 154: L39");
+            var twice = new List<string>();
+            foreach (string id in new[] { "l25_winter_schedule", "l26_gene_birthday", "l27_the_25th", "l28_law_flyer", "l29_holiday_roster", "l37_union_sheet", "l38_v1_end_of_support", "l39_occupancy_sensing" })
+            {
+                var item = Resources.Load<GlorifiedBody.Interaction.ItemDefinition>("Items/item_" + id);
+                Assert.IsNotNull(item, id + " is built (DemoWorld.BuildAll)");
+                string flat = Regex.Replace(item.logText.ToLowerInvariant(), @"[^a-z ]", "");
+                foreach (string sentence in item.logText.Split('.', '\n').Select(x => Regex.Replace(x.ToLowerInvariant(), @"[^a-z ]", "").Trim()).Where(x => x.Length > 24 && !Regex.IsMatch(x, @"^(from|to|date|subject|re)\b")).Distinct()) // an email thread repeats its headers
+                    if (Regex.Matches(flat, Regex.Escape(sentence)).Count > 1) twice.Add(id + ": " + sentence);
+            }
+            Assert.IsEmpty(twice, "a log says this twice:\n" + string.Join("\n", twice));
+        }
+
+        [Test]
         public void NoOldCopy_OfAChangedString_StaysInTheCode()
         {
             var old = new[] { "PRESS ABORT", "HALON ABORT.", "THEATRE CONTROL", "AUTHORISED", "press ABORT" };

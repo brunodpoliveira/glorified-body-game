@@ -54,11 +54,11 @@ namespace GlorifiedBody.Editor.Demo
         /// <summary>Forget the file (a test, or after the writer changes it).</summary>
         public static void Unload() => signs = logs = scans = null;
 
-        /// <summary>The words of a cell: new lines for "&lt;br&gt;", no "(by hand)", no last note in parentheses.</summary>
+        /// <summary>The words of a cell: new lines for "&lt;br&gt;", "By hand:" for "(by hand)" (2026-11-15: a note read as print), no last note in parentheses.</summary>
         public static string Words(string cell)
         {
             string s = Regex.Replace(cell, @"\s*\((?:[^()]*\b(?:CANON|PROPOSED|round|Corinthians|translation)\b[^()]*)\)\s*$", "");
-            s = Regex.Replace(s, @"\(by hand\)\s*", "");
+            s = Regex.Replace(s, @"\(by hand\)\s*", "By hand: ");
             s = Regex.Replace(s, @"\s*<br>\s*", "\n");
             return s.Trim();
         }

@@ -23,6 +23,8 @@ namespace GlorifiedBody.UI
             [Tooltip("What the picture shows (the writer's note), on the card until the picture exists.")]
             [TextArea(1, 3)] public string pictureNote = "";
             [TextArea(1, 3)] public string hint = "PLACEHOLDER HINT";
+            [Tooltip("More hints for this killer (round 163): the screen picks one of hint and these at random, never the same twice in a row.")]
+            public List<string> moreHints = new List<string>();
             public AudioClip voiceLine;
             [Tooltip("The words of the voice line, shown as a caption.")]
             [TextArea(1, 2)] public string voiceText = "";

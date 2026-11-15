@@ -36,16 +36,19 @@ namespace GlorifiedBody.Audio
         /// <summary>The id of a line by its speaker and its words.</summary>
         public static string IdFor(GameObject speaker, string text) => Slug(Speaker.NameOf(speaker), 4) + "." + Slug(text, 6);
 
+        /// <summary>The world scene (2026-11-02): a line two rooms away is not heard, and its subtitle does not show.</summary>
+        public static bool Heard(GameObject speaker)
+        {
+            if (speaker == null || !GlorifiedBody.Rooms.Room.Any) return true;
+            GameObject her = GameObject.FindWithTag("Player");
+            return her == null || GlorifiedBody.Rooms.Room.Hear(speaker.transform.position, her.transform.position);
+        }
+
         /// <summary>Says the line as the speaker. Returns the playing source, or null when the line has no clip.</summary>
         public static AudioSource Say(GameObject speaker, string id, string text, VoiceMode mode = VoiceMode.World, float minSeconds = 1.6f)
         {
             if (string.IsNullOrEmpty(text) && string.IsNullOrEmpty(id)) return null;
-            // The world scene (2026-11-02): a bark two rooms away is not heard, and its subtitle does not show.
-            if (speaker != null && mode == VoiceMode.World && GlorifiedBody.Rooms.Room.Any)
-            {
-                GameObject her = GameObject.FindWithTag("Player");
-                if (her != null && !GlorifiedBody.Rooms.Room.Hear(speaker.transform.position, her.transform.position)) return null;
-            }
+            if (mode == VoiceMode.World && !Heard(speaker)) return null;
             if (string.IsNullOrEmpty(id)) id = IdFor(speaker, text);
             AudioClip clip = Clip(id);
             float seconds = clip != null ? Mathf.Max(minSeconds, GameAudio.Length(clip, SubtitleService.ReadSeconds(text)) + 0.25f) : minSeconds;

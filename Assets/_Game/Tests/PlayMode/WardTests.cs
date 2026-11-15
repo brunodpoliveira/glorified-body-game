@@ -389,6 +389,7 @@ namespace GlorifiedBody.Tests.PlayMode
             hers.SetHealth(30f);
             FeedableBody lab = GameObject.Find(Lab).GetComponent<FeedableBody>();
             Teleport(Beside(lab), 0f);
+            Bark.ResetVoices(); // the two-voice rule (2026-11-15): the earlier lines of the ward must not hold both voices
             int barks = Bark.Count;
             Assert.AreEqual("feed:" + Lab, lab.Confirm(hands));
             yield return null;
@@ -397,7 +398,7 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.IsTrue(GameObject.Find(Marta).GetComponent<CivilianBrain>().Panicked, "a civilian runs from it");
             Assert.AreEqual(guardSaw + 1, guard.FeedsSeen, "the guard sees it");
             Assert.AreEqual(guardFear + 2, guard.Fear, "a feed is a gruesome sight: +2 fear");
-            Assert.GreaterOrEqual(Bark.Count - barks, 2, "each says a line");
+            Assert.GreaterOrEqual(Bark.Count - barks, 2, "each says a line: a civilian and a guard are two archetypes");
             yield return new WaitForSeconds(Feeding.BloodSeconds * 2f + 0.1f);
             if (GlorifiedBody.Gore.ThatIndividual.ThatIndividualGoreDriver.Instance != null)
                 Assert.GreaterOrEqual(feeding.BloodSprays, 2, "the body bleeds while she feeds");

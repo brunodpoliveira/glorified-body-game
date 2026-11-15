@@ -163,7 +163,7 @@ namespace GlorifiedBody.Interaction
                 if (!brain.Hides || !Room.Same(brain.transform.position, transform.position)) continue;
                 var health = brain.GetComponent<GlorifiedBody.Core.Health>();
                 if (health != null && health.IsDead) continue;
-                Bark.Say(brain.gameObject, answerLine, 2f);
+                Bark.SayForced(brain.gameObject, answerLine, 2f);
                 return;
             }
         }

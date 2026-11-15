@@ -54,7 +54,7 @@ namespace GlorifiedBody.Interaction
         public override string Confirm(Interactor who)
         {
             Asked++;
-            Bark.Say(gameObject, line, 2.4f);
+            Bark.SayForced(gameObject, line, 2.4f);
             RunTelemetry.Event("ask_denied", name);
             return "denied:" + itemId;
         }

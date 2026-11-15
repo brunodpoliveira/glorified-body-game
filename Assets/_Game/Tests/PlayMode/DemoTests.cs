@@ -2311,6 +2311,21 @@ namespace GlorifiedBody.Tests.PlayMode
             Debug.Log($"[FrameProfile] frame {withAll:0.0} ms with everything, {without:0.0} ms with {figures} figures off, {GlorifiedBody.Rooms.Room.All.Count} rooms");
         }
 
+        [UnityTest]
+        public IEnumerator TheLogsL38AndL39_LieInTheirRooms()
+        {
+            // Round 154, CANON: L38 in the in-tray of the scheduling desk of G13, L39 taped to the wall above the radio of W13.
+            yield return LoadWorld();
+            foreach ((string name, string room, string item) in new[] { ("L38_Supplier_Notice", "G13", "l38_v1_end_of_support"), ("L39_Facilities_Notice", "W13", "l39_occupancy_sensing") })
+            {
+                ItemPickup pickup = UnityEngine.Object.FindObjectsByType<ItemPickup>(FindObjectsInactive.Include, FindObjectsSortMode.None).FirstOrDefault(p => p.name == name);
+                Assert.IsNotNull(pickup, name);
+                Assert.AreEqual(room, GlorifiedBody.Rooms.Room.At(pickup.transform.position).id, name + " lies in " + room);
+                Assert.AreEqual(item, pickup.item.itemId);
+                Debug.Log($"[DemoTests] {name} at {pickup.transform.position} in {room}");
+            }
+        }
+
         private static IEnumerator LoadWorld()
         {
             GameManager.Instance.LoadLevel(World);

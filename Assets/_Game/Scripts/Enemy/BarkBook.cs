@@ -353,6 +353,7 @@ namespace GlorifiedBody.Enemy
         /// <summary>The person says a line of the situation (no repeat, "plays first" first). False when it has none.</summary>
         public static bool Say(GameObject who, string situation, float seconds = 1.6f)
         {
+            if (!Bark.CanSpeak(who)) return false; // the two-voice rule: the deck keeps its line
             string line = Line(who, situation);
             if (string.IsNullOrEmpty(line)) return false;
             Bark.Say(who, line, seconds);
@@ -382,7 +383,7 @@ namespace GlorifiedBody.Enemy
             if (voice == null) voice = who.AddComponent<BarkVoice>();
             string line = voice.NextOf(group, "", situation);
             if (string.IsNullOrEmpty(line)) return false;
-            Bark.Say(who, line, seconds);
+            Bark.SayForced(who, line, seconds); // her order to the one she holds: an answer to the player
             return true;
         }
 

@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 202cb6532a4a7f80682b508098ca96f0, type: 3}
+  m_Name: item_l38_v1_end_of_support
+  m_EditorClassIdentifier: Assembly-CSharp::GlorifiedBody.Interaction.ItemDefinition
+  itemId: l38_v1_end_of_support
+  displayName: A SUPPLIER NOTICE
+  kind: 1
+  drugType: 0
+  colour: {r: 0.96, g: 0.95, b: 0.88, a: 1}
+  description: a supplier notice.
+  logText: "ALTERIUS \u2014 PRODUCT SUPPORT NOTICE\nTO: All Service Sites \u2014
+    Admissions, Scheduling, Body Services\nRE: V1 Series \u2014 End of Support\nDATE:
+    09/02\n\nOn March 31, Alterius will end support for the V1 Series. After that
+    date we will no longer make, supply or fit replacement parts for V1 bodies, and
+    service sites may not book V1 service appointments.\n\nV1 bodies in use will
+    continue to function. Recipients will be informed by letter.\n\nParts from any
+    other source, including parts recovered from another body, are not approved.
+    Their use ends the recipient's service agreement.\n\nWe know what this means.
+    V1 recipients were the first to walk with us. They proved that the body can be
+    made new, and every series since stands on what they gave. Our resources must
+    now go where they can carry the most people forward. We are grateful to each
+    of them, and we are proud of them.\n\nThis notice does not affect support for
+    later series.\n\nBy hand: we have 26 of them booked before March. who's telling
+    them?"
+  readFlag: 
+  mapFloor: 
+  audioClip: {fileID: 0}
+  tapeLines: []

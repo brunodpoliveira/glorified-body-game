@@ -90,6 +90,39 @@ namespace GlorifiedBody.Tests.EditMode
         }
 
         [Test]
+        public void TheHumanShieldHint_IsOneOfTheSoldiersHints_NotTheGuards()
+        {
+            // Round 163, CANON: "They will not shoot through a living person. Lift one, and keep it low." One of the possible
+            // hints of the soldier's death screen; the guard does not get it; the screen picks a hint at random.
+            if (!System.IO.File.Exists(System.IO.Path.GetFullPath(DeathScreenSetup.WriterCsv))) Assert.Ignore("no writer file");
+            var content = ScriptableObject.CreateInstance<DeathScreenContent>();
+            DeathScreenSetup.Fill(content);
+            foreach (string id in new[] { "soldier", "soldier_rifle", "soldier_shotgun" })
+            {
+                DeathScreenContent.Entry e = content.Exact(id);
+                Assert.IsNotNull(e, id);
+                CollectionAssert.Contains(e.moreHints, DeathScreenSetup.HumanShieldHint, id + " can show the hint of the human shield");
+                Assert.AreNotEqual(DeathScreenSetup.HumanShieldHint, e.hint, id + " keeps its own hint");
+            }
+            foreach (string id in new[] { "guard", "soldier_grenades", "soldier_gas" })
+            {
+                DeathScreenContent.Entry e = content.Exact(id);
+                if (e != null) CollectionAssert.DoesNotContain(e.moreHints, DeathScreenSetup.HumanShieldHint, id + " does not hold fire for a held person");
+            }
+            DeathScreenContent.Entry soldier = content.Exact("soldier");
+            var seen = new System.Collections.Generic.HashSet<string>();
+            string last = "";
+            for (int i = 0; i < 40; i++)
+            {
+                string hint = DeathMenuUI.PickHint(soldier);
+                Assert.AreNotEqual(last, hint, "never the same hint twice in a row");
+                seen.Add(last = hint);
+            }
+            Assert.AreEqual(2, seen.Count, "both hints show");
+            Object.DestroyImmediate(content);
+        }
+
+        [Test]
         public void TheArmourGuns_HaveTheirOwnDeathScreen_FromTheWritersRow()
         {
             // Round 122 (PROPOSED by the writer: one new death screen for the guns of the armour, and three death lines).

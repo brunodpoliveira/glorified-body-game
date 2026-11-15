@@ -92,7 +92,7 @@ namespace GlorifiedBody.Enemy
             if (!Spoke && EnemyNav.Flat(transform.position, player.position) <= lineRange)
             {
                 Spoke = true;
-                Bark.Say(gameObject, string.IsNullOrEmpty(line) || line == OldDefaultLine ? DefaultLine : line, 3f);
+                Bark.SayForced(gameObject, string.IsNullOrEmpty(line) || line == OldDefaultLine ? DefaultLine : line, 3f);
                 RunTelemetry.Event("patient_line", name);
             }
         }

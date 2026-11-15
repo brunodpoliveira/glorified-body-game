@@ -143,6 +143,7 @@ namespace GlorifiedBody.Editor.Demo
             r.Prop("Radio_Antenna", new Vector3(18.72f, 0.93f, -13.5f), new Vector3(0.02f, 0.4f, 0.02f), 0.6f);
             r.Box(r.Props, "Key_Cabinet", new Vector3(17.2f, 1.5f, -10.6f), new Vector3(0.3f, 0.5f, 0.6f), DemoRoom.Grey(0.3f));
             Label(r, "WARD SECURITY", new Vector3(18.2f, 2f, -10.17f), Vector3.back, 1.4f);
+            DemoNight.W13Notice(r); // L39 (round 154)
         }
 
         /// <summary>
@@ -371,6 +372,7 @@ namespace GlorifiedBody.Editor.Demo
                 }
             Label(r, "ADMISSIONS", new Vector3(10.4f, 2.3f, -0.17f), Vector3.back, 1.4f);
             DemoNight.G13Email(r); // L27
+            DemoNight.G13Notice(r); // L38 (round 154)
         }
 
         /// <summary>G14: the builders' storage, raw block like U1. Cement bags on a pallet, a ladder, sheeting, a work light.</summary>

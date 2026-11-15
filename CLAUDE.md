@@ -675,6 +675,13 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   every `PropAssets.Box` ride. A message of the Interactor locks her feet: put a hint for a free walk in the hint line. FOR LATER: a bigger gap
   in the Hold. Numbers PROPOSED.
 
+- 2026-11-15, TWO VOICES AT MOST, L38 AND L39, MORE HINTS (`devlog-notes/2026-11-15_two_voices_logs_hints.md`, Bruno: "two people can bark
+  at a time, no more"; "never two nurses, two soldiers etc at the same time"): `Bark.Say` plays only when fewer than two others speak and
+  none of its archetype (`BarkVoice.Enemy`); `Bark.SayForced` (an answer to the player, a story beat) always plays and cuts the oldest
+  voice. A test that needs free voices calls `Bark.ResetVoices`. L38 in G13 and L39 in W13 (round 154); a plan "(by hand)" reads "By hand:",
+  and the builders of L25 to L29 and L37 no longer repeat the cell's notes. `DeathScreenContent.Entry.moreHints` (a second CSV row of a
+  killer adds one); the human shield hint is one of the shooting soldiers' hints (round 163).
+
 ## Rules
 
 1. Unity 6000.3.15f1 (installed at `/home/pc/Unity/Hub/Editor/6000.3.15f1`). Start it only through `tools/unity.sh`

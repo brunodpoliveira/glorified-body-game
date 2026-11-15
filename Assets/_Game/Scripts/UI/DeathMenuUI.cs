@@ -49,6 +49,20 @@ namespace GlorifiedBody.UI
         /// <summary>The killer's line on this screen ("SPEAKER: words").</summary>
         public string ShownLine { get; private set; } = "";
         private static string lastLine = "";
+        private static string lastHint = "";
+
+        /// <summary>The row's hint or one of its more hints (round 163: "one of the possible soldier game over hints"), at random, not the hint of the last screen.</summary>
+        public static string PickHint(DeathScreenContent.Entry entry)
+        {
+            if (entry == null) return "";
+            var pool = new System.Collections.Generic.List<string>();
+            if (!string.IsNullOrEmpty(entry.hint)) pool.Add(entry.hint);
+            foreach (string h in entry.moreHints) if (!string.IsNullOrEmpty(h) && !pool.Contains(h)) pool.Add(h);
+            if (pool.Count == 0) return "";
+            if (pool.Count > 1) pool.Remove(lastHint);
+            lastHint = pool[Random.Range(0, pool.Count)];
+            return lastHint;
+        }
 
         /// <summary>
         /// The row's line, or one of the writer's death lines at random, not the line of the last screen. With a personality
@@ -186,7 +200,8 @@ namespace GlorifiedBody.UI
 
             if (hint != null)
             {
-                hint.text = entry != null && !string.IsNullOrEmpty(entry.hint) ? entry.hint : "PLACEHOLDER HINT";
+                string picked = PickHint(entry);
+                hint.text = !string.IsNullOrEmpty(picked) ? picked : "PLACEHOLDER HINT";
             }
 
             if (voice != null && entry != null && entry.voiceLine != null)

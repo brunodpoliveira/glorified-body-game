@@ -864,6 +864,10 @@ MonoBehaviour:
       path: '[World]/[W13]/[Props]/Door_W10'
       position: {x: 20, y: -10}
       label: the ward sister's card
+    - kind: 2
+      path: '[World]/[W13]/[Props]/L39_Facilities_Notice'
+      position: {x: 18.6, y: -13.83}
+      label: A FACILITIES NOTICE
   - scene: W14
     world: Demo
     floor: demo_2
@@ -1336,6 +1340,10 @@ MonoBehaviour:
       path: '[World]/[G13]/[Props]/L27_Reply_All'
       position: {x: 23.1, y: -34.86}
       label: A REPLY-ALL THREAD
+    - kind: 2
+      path: '[World]/[G13]/[Props]/L38_Supplier_Notice'
+      position: {x: 17.35, y: -35.15}
+      label: A SUPPLIER NOTICE
   - scene: G13b
     world: Demo
     floor: demo_1

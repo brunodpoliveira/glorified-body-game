@@ -152,24 +152,44 @@ namespace GlorifiedBody.Editor.Demo
             "AUTO-REPLY: Dr. Colton is out of the office until 4 January, with his family. For urgent ward matters, contact the duty physician.");
 
         public static ItemDefinition L25() => DemoItems.Log("l25_winter_schedule", "A MEMO",
-            DemoPlan.Log("L25", "STAFF OFFICE. THE WINTER SCHEDULE. The Memorial keeps its normal schedule on 25 December and 1 January. Our feast is Future Day, in February, and on that day all staff rest with full pay. On 31 December the chapel is open all night. If you keep a private holiday in December, you may request leave, subject to cover. We know this season matters to many of you. Thank you for the hard days.\n\n") +
-            "By hand under it: Subject to cover. There is no cover. That's the point.");
+            DemoPlan.Log("L25", "STAFF OFFICE. THE WINTER SCHEDULE. The Memorial keeps its normal schedule on 25 December and 1 January. Our feast is Future Day, in February, and on that day all staff rest with full pay. On 31 December the chapel is open all night. If you keep a private holiday in December, you may request leave, subject to cover. We know this season matters to many of you. Thank you for the hard days.\n\n" + // the plan's cell holds the whole log (the notes too): this is only the fallback
+            "By hand under it: Subject to cover. There is no cover. That's the point."));
 
         public static ItemDefinition L26() => DemoItems.Log("l26_gene_birthday", "A PRINTED EMAIL",
-            DemoPlan.Log("L26", "FROM: ROSA (WARD 2). TO: ALL STAFF, FLOORS 1 AND 2. RE: GENE'S BIRTHDAY!!! Handbook, section 9: birthdays may be celebrated in staff areas. Gene's birthday is 25 December this year. Cafeteria, 8 pm, between the shifts. Bring a dish. All decorations are birthday decorations.\n\n") +
-            "FROM: GENE. My birthday is in July.\n\nFROM: ROSA. Not this year, Gene.");
+            DemoPlan.Log("L26", "FROM: ROSA (WARD 2). TO: ALL STAFF, FLOORS 1 AND 2. RE: GENE'S BIRTHDAY!!! Handbook, section 9: birthdays may be celebrated in staff areas. Gene's birthday is 25 December this year. Cafeteria, 8 pm, between the shifts. Bring a dish. All decorations are birthday decorations.\n\n" + // the plan's cell holds the whole log (the notes too): this is only the fallback
+            "FROM: GENE. My birthday is in July.\n\nFROM: ROSA. Not this year, Gene."));
 
         public static ItemDefinition L27() => DemoItems.Log("l27_the_25th", "A REPLY-ALL THREAD",
-            DemoPlan.Log("L27", "FROM: DENISE (WARD 2, NIGHTS). RE: RE: RE: the 25th. Third year in a row my kids open their presents on a screen, because of the boss's weird-ass religion or cult or whatever.\n\n") +
-            "FROM: WARD SISTER. Denise. This is the work account.\n\nFROM: DENISE. I know what account it is.");
+            DemoPlan.Log("L27", "FROM: DENISE (WARD 2, NIGHTS). RE: RE: RE: the 25th. Third year in a row my kids open their presents on a screen, because of the boss's weird-ass religion or cult or whatever.\n\n" + // the plan's cell holds the whole log (the notes too): this is only the fallback
+            "FROM: WARD SISTER. Denise. This is the work account.\n\nFROM: DENISE. I know what account it is."));
 
         public static ItemDefinition L28() => DemoItems.Log("l28_law_flyer", "A LAW OFFICE'S FLYER",
-            DemoPlan.Log("L28", "Printed: MADE TO WORK ON YOUR RELIGIOUS HOLIDAY? RELIGIOUS DISCRIMINATION IS AGAINST THE LAW. FREE CONSULTATION.\n\n") +
-            "By hand: Who do we even sue? The church? The foundation? Alterius?\n\nAlterius signs the checks. The church signs Alterius's.\n\nRead your contract. Page 40. Arbitration.");
+            DemoPlan.Log("L28", "Printed: MADE TO WORK ON YOUR RELIGIOUS HOLIDAY? RELIGIOUS DISCRIMINATION IS AGAINST THE LAW. FREE CONSULTATION.\n\n" + // the plan's cell holds the whole log (the notes too): this is only the fallback
+            "By hand: Who do we even sue? The church? The foundation? Alterius?\n\nAlterius signs the checks. The church signs Alterius's.\n\nRead your contract. Page 40. Arbitration."));
 
         public static ItemDefinition L29() => DemoItems.Log("l29_holiday_roster", "A ROSTER",
-            DemoPlan.Log("L29", "SECURITY. HOLIDAY ROSTER, 23 DEC TO 2 JAN. NIGHTS: HOLIDAY MINIMUM, 4 ON SITE. RESPONSE TEAM: ON CALL, OFF SITE. NIGHT SUPERVISOR, ALL NIGHTS: STEVENS (BY REQUEST).\n\n") +
-            "By hand: Pat you're a saint.\n\nAnother hand under it: He just hates his in-laws.");
+            DemoPlan.Log("L29", "SECURITY. HOLIDAY ROSTER, 23 DEC TO 2 JAN. NIGHTS: HOLIDAY MINIMUM, 4 ON SITE. RESPONSE TEAM: ON CALL, OFF SITE. NIGHT SUPERVISOR, ALL NIGHTS: STEVENS (BY REQUEST).\n\n" + // the plan's cell holds the whole log (the notes too): this is only the fallback
+            "By hand: Pat you're a saint.\n\nAnother hand under it: He just hates his in-laws."));
+
+        /// <summary>L38, the v1 end of support (round 154, CANON): a supplier notice from Alterius, in the in-tray of the scheduling desk of G13.</summary>
+        public static ItemDefinition L38() => DemoItems.Log("l38_v1_end_of_support", "A SUPPLIER NOTICE",
+            DemoPlan.Log("L38", "ALTERIUS. PRODUCT SUPPORT NOTICE. RE: V1 SERIES, END OF SUPPORT. On March 31, Alterius will end support for the V1 Series. " +
+            "Parts from any other source, including parts recovered from another body, are not approved.\n\nBy hand: we have 26 of them booked before March. who's telling them?"));
+
+        /// <summary>L39, occupancy sensing (round 154, CANON): a facilities notice taped to the wall above the radio of W13.</summary>
+        public static ItemDefinition L39() => DemoItems.Log("l39_occupancy_sensing", "A FACILITIES NOTICE",
+            DemoPlan.Log("L39", "FACILITIES OFFICE. NOTICE TO SECURITY POSTS, FLOORS 1 AND 2. RE: OCCUPANCY SENSING. The wireless access points in the ceilings " +
+            "now tell Azoth which rooms have people in them. This is not a camera.\n\nBy hand: it also knows when you fall asleep at the desk. ask Dale"));
+
+        /// <summary>L38 in a tray on the first desk of G13, the scheduling desk.</summary>
+        public static void G13Notice(DemoRoom r)
+        {
+            r.Prop("In_Tray", new Vector3(4.85f, 0.75f, -4.15f), new Vector3(0.34f, 0.06f, 0.26f), 0.35f);
+            r.Item("L38_Supplier_Notice", L38(), new Vector3(4.85f, 0.82f, -4.15f), new Vector3(0.21f, 0.01f, 0.28f));
+        }
+
+        /// <summary>L39 taped to the south wall of W13, over the radio.</summary>
+        public static void W13Notice(DemoRoom r) => r.Item("L39_Facilities_Notice", L39(), new Vector3(18.6f, 1.45f, -13.83f), new Vector3(0.21f, 0.28f, 0.01f));
 
         /// <summary>L24 on the station monitor of W9: an email open on the screen.</summary>
         public static void W9Email(DemoRoom r) => r.Item("L24_Station_Email", L24(), new Vector3(11.3f, 1.25f, -6.12f), new Vector3(0.3f, 0.22f, 0.01f));
@@ -186,9 +206,9 @@ namespace GlorifiedBody.Editor.Demo
         /// corkboard of G11 by the union letter L14, the executive notice pinned over it.
         /// </summary>
         public static ItemDefinition L37() => DemoItems.Log("l37_union_sheet", "A SIGN-UP SHEET",
-            DemoPlan.Log("L37", "Pinned over it: A MESSAGE FROM THE EXECUTIVE OFFICE. WE VALUE DIRECT CONVERSATION WITH EVERY MEMBER OF OUR FAMILY. OUR DOOR IS OPEN. NO THIRD PARTY KNOWS YOUR WORK AS WE DO.\n\n") +
+            DemoPlan.Log("L37", "Pinned over it: A MESSAGE FROM THE EXECUTIVE OFFICE. WE VALUE DIRECT CONVERSATION WITH EVERY MEMBER OF OUR FAMILY. OUR DOOR IS OPEN. NO THIRD PARTY KNOWS YOUR WORK AS WE DO.\n\n" + // the plan's cell holds the whole log (the notes too): this is only the fallback
             "Under it: STAFF OF THE MEMORIAL. YOU HAVE THE RIGHT TO ASK FOR A VOTE. SIGN HERE. Thirty-one names. Four are crossed out.\n\n" +
-            "By hand: Christmas was the last straw.\nA union won't get you Christmas. Talk to HR, they listened about the parking.\nHR works for them.");
+            "By hand: Christmas was the last straw.\nA union won't get you Christmas. Talk to HR, they listened about the parking.\nHR works for them."));
 
         /// <summary>L14 on the fridge, L37 on the corkboard of the east wall (round 119).</summary>
         public static void G11Union(DemoRoom r)

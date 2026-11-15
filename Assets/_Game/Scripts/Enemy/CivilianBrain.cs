@@ -148,7 +148,7 @@ namespace GlorifiedBody.Enemy
                 Beg("found");
                 if (!string.IsNullOrEmpty(foundLine))
                 {
-                    Bark.Say(gameObject, foundLine); // its own words first, then the plea
+                    Bark.SayForced(gameObject, foundLine); // its own words first, then the plea
                     nextBark = Time.time + begBarkSeconds * 2f;
                 }
                 RunTelemetry.Event("hider_found", name);
@@ -156,7 +156,7 @@ namespace GlorifiedBody.Enemy
             }
             if (gap <= whisperRange && !string.IsNullOrEmpty(hideLine) && Time.time >= nextBark && GlorifiedBody.Rooms.Room.Same(transform.position, player.position))
             {
-                Bark.Say(gameObject, hideLine);
+                Bark.SayForced(gameObject, hideLine);
                 Whispers++;
                 nextBark = Time.time + 7f;
             }
@@ -431,7 +431,7 @@ namespace GlorifiedBody.Enemy
                 body.Crouch(false);
                 body.MoveTo(Spot, MoveSpeed.Sprint);
                 timer = fleeSeconds + 4f;
-                if (escapeLines.Length > 0) Bark.Say(gameObject, escapeLines[0], 2.2f);
+                if (escapeLines.Length > 0) Bark.SayForced(gameObject, escapeLines[0], 2.2f);
                 panicLine = BarkSituation.Retreats;
                 RunTelemetry.Event("civilian_flee", $"{name} to the fixed spot {Spot.x:0.0},{Spot.z:0.0}");
                 return;
@@ -463,7 +463,7 @@ namespace GlorifiedBody.Enemy
             bool leaning = variant == 1 && TryLean();
             if (!leaning) SetPose(variant == 0 ? Pose.Crouch : variant == 3 ? Pose.Shake : Pose.Hug);
             body.Crouch(CurrentPose == Pose.Crouch);
-            if (escapeRun && escapeLines.Length > 1 && !escapeCowered) Bark.Say(gameObject, escapeLines[1], 2.4f);
+            if (escapeRun && escapeLines.Length > 1 && !escapeCowered) Bark.SayForced(gameObject, escapeLines[1], 2.4f);
             else BarkBook.Say(gameObject, BarkSituation.Cower);
             if (escapeRun && !escapeCowered && !string.IsNullOrEmpty(escapeCowerFlag)) GlorifiedBody.Saving.StoryFlags.Raise(escapeCowerFlag);
             if (escapeRun) escapeCowered = true;

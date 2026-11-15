@@ -43,7 +43,7 @@ namespace GlorifiedBody.Story
 
         private IEnumerator Arrive(SoldierBrain caller)
         {
-            if (caller != null && !string.IsNullOrEmpty(callLine)) Bark.Say(caller.gameObject, callLine, 2.6f);
+            if (caller != null && !string.IsNullOrEmpty(callLine)) Bark.SayForced(caller.gameObject, callLine, 2.6f);
             RunTelemetry.Event("armour_call", $"{name}:{StandingAtCall}");
             yield return new WaitForSeconds(1.5f);
             StoryFlags.Raise(flag);
@@ -54,7 +54,7 @@ namespace GlorifiedBody.Story
             {
                 // His own personality's "armour_enter" row (barks.csv, BarkBook), else the line the room gave.
                 if (!GlorifiedBody.Enemy.BarkBook.Say(armour.gameObject, GlorifiedBody.Enemy.BarkSituation.ArmourEnter, 2.6f) && !string.IsNullOrEmpty(enterLine))
-                    Bark.Say(armour.gameObject, enterLine, 2.6f);
+                    Bark.SayForced(armour.gameObject, enterLine, 2.6f);
                 armour.Alert("script", callOthers: false);
             }
             RunTelemetry.Event("armour_enter", armour != null ? armour.name : "none");

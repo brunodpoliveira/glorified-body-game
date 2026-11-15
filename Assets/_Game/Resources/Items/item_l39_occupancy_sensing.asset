@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 202cb6532a4a7f80682b508098ca96f0, type: 3}
+  m_Name: item_l39_occupancy_sensing
+  m_EditorClassIdentifier: Assembly-CSharp::GlorifiedBody.Interaction.ItemDefinition
+  itemId: l39_occupancy_sensing
+  displayName: A FACILITIES NOTICE
+  kind: 1
+  drugType: 0
+  colour: {r: 0.96, g: 0.95, b: 0.88, a: 1}
+  description: a facilities notice.
+  logText: "FACILITIES OFFICE \u2014 NOTICE TO SECURITY POSTS, FLOORS 1 AND 2\nRE:
+    Occupancy sensing\n\nThe wireless access points in the ceilings now do two jobs.
+    They carry the network, and they tell Azoth which rooms have people in them,
+    so the lights, heat and air run only where someone is. This is where most of
+    the energy saving comes from.\n\nIt works through walls and in the dark. It can
+    tell a still person from an empty room, so the lights will no longer go out on
+    you during a quiet shift.\n\nThis is not a camera. It records no picture. It
+    is not a security system, and its data is not available at this post or for incident
+    reports.\n\nBy hand: it also knows when you fall asleep at the desk. ask Dale"
+  readFlag: 
+  mapFloor: 
+  audioClip: {fileID: 0}
+  tapeLines: []

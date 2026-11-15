@@ -55,7 +55,7 @@ namespace GlorifiedBody.Interaction
             if (Denies)
             {
                 Denials++;
-                Bark.Say(gameObject, string.IsNullOrEmpty(denyLine) ? "I don't have anything." : denyLine, 2.4f);
+                Bark.SayForced(gameObject, string.IsNullOrEmpty(denyLine) ? "I don't have anything." : denyLine, 2.4f);
                 return "denied:" + pickup.item.itemId;
             }
             ItemInventory inventory = who != null ? who.Inventory : null;
@@ -64,7 +64,7 @@ namespace GlorifiedBody.Interaction
             pickup.MarkTaken();
             Destroy(pickup.gameObject);
             carrier.HideCarried();
-            Bark.Say(gameObject, string.IsNullOrEmpty(giveLine) ? LineGive : giveLine, 2.4f);
+            Bark.SayForced(gameObject, string.IsNullOrEmpty(giveLine) ? LineGive : giveLine, 2.4f);
             return "given:" + id;
         }
     }

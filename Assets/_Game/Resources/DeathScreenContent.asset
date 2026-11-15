@@ -18,6 +18,7 @@ MonoBehaviour:
     pictureNote: 'PLACEHOLDER: the room from the floor'
     hint: 'PLACEHOLDER HINT: watch the red line and the ring. Step out before it
       closes.'
+    moreHints: []
     voiceLine: {fileID: 0}
     voiceText: 
     moreLines: []
@@ -29,6 +30,7 @@ MonoBehaviour:
       behind it
     hint: Step out of the red line before the ring closes, then charge. The dummy
       cannot aim twice in a row.
+    moreHints: []
     voiceLine: {fileID: 0}
     voiceText: 'PRESENTER: Watch the red line, that''s the whole trick, step out
       before the ring closes on her. On the subject.'
@@ -46,6 +48,7 @@ MonoBehaviour:
       the frame, the laser line going dark
     hint: The red line is where the shot goes. Step out of it before the ring closes.
       Once he has aimed, he cannot aim again.
+    moreHints: []
     voiceLine: {fileID: 0}
     voiceText: 'GUARD: Ma''am, stay on the floor, do not get up, we''re going to
       get you back to bed.'
@@ -102,6 +105,7 @@ MonoBehaviour:
       light
     hint: He aims slowly and his hands shake. Close the distance, or make him come
       to you. The knife is only a knife.
+    moreHints: []
     voiceLine: {fileID: 0}
     voiceText: 'COMPUTER: Subject contained. Return the tray to the dispensary.'
     moreLines: []
@@ -111,6 +115,7 @@ MonoBehaviour:
     pictureNote: four blue suits around her on the tiles, the ampoules on the floor
     hint: The third light was full. One ampoule before the fight empties it. One
       ampoule during a short ends it.
+    moreHints: []
     voiceLine: {fileID: 0}
     voiceText: 'COMPUTER: Subject contained. Four personnel to the infirmary.'
     moreLines: []
@@ -122,6 +127,8 @@ MonoBehaviour:
     hint: 'Behind the shield he is safe. Lift the shield with telekinesis, or stagger
       his aim with a blast, then fire. Two aim at once on normal: dodge the first
       ring, blast the second.'
+    moreHints:
+    - They will not shoot through a living person. Lift one, and keep it low.
     voiceLine: {fileID: 0}
     voiceText: "SOLDIER: Control, contact's down. Hold your fire, hold it, she's\u2014
       target is down. Count off."
@@ -152,6 +159,8 @@ MonoBehaviour:
     pictureNote: two shields, two masks, the lobby, the gear on the wall behind them
     hint: Two aim at once on normal. Watch for two rings. Dodge the first. Blast
       the second before his ring closes.
+    moreHints:
+    - They will not shoot through a living person. Lift one, and keep it low.
     voiceLine: {fileID: 0}
     voiceText: 'SOLDIER: Target down. Both of you, check Miller.'
     moreLines: []
@@ -161,6 +170,7 @@ MonoBehaviour:
     pictureNote: the records room burning, her own hand in the flame
     hint: 'Fire spreads. Start it, leave the room, and come back when it is out.
       The firemen fire CO2 canisters at the fire: do not stand in it.'
+    moreHints: []
     voiceLine: {fileID: 0}
     voiceText: 'PA: Smoke venting on this floor is suspended. Staff are responding.
       Take all the time you need.'
@@ -180,6 +190,7 @@ MonoBehaviour:
     hint: 'A short takes about half your HP: below that, it kills you. With a second
       wind you live, and the short goes on and takes no more HP. A SHORT capsule
       ends it. Every power you use fills the SHORT bar.'
+    moreHints: []
     voiceLine: {fileID: 0}
     voiceText: 'PA: Power to this floor is isolated. Patients, please stay in your
       rooms. A member of staff will come to you.'
@@ -197,6 +208,8 @@ MonoBehaviour:
       gas mask above it
     hint: Three rounds follow the laser, a tenth of a second apart. One dodge to
       the side clears the burst. He cannot fire again until he aims again.
+    moreHints:
+    - They will not shoot through a living person. Lift one, and keep it low.
     voiceLine: {fileID: 0}
     voiceText: 'SOLDIER: Three rounds, center mass, she dropped. Control, target
       is down, I say again, down.'
@@ -214,6 +227,7 @@ MonoBehaviour:
       lenses looking down'
     hint: The ring shows where it lands. Leave it before the grenade lands, stay
       out of the white cloud, or catch the grenade with mk_orzabal.
+    moreHints: []
     voiceLine: {fileID: 0}
     voiceText: 'SOLDIER: Control, target''s down, she''s breathing, repeat, breathing.
       Cuffs up front, don''t touch the helmet.'
@@ -230,6 +244,7 @@ MonoBehaviour:
       a stop
     hint: A red ring is a grenade. Leave the ring before it closes, or catch the
       grenade with mk_orzabal and send it back.
+    moreHints: []
     voiceLine: {fileID: 0}
     voiceText: "SOLDIER: Frag out, contact down, no\u2014 check yourselves, check
       for frag. Control, we need the hall swept."
@@ -247,6 +262,7 @@ MonoBehaviour:
       of the launcher past its shoulder
     hint: It is too heavy to lift and too armoured to shock. Break its aim with mk_warspite,
       then burn it with mk_erebus. Up close, its launcher will not fire.
+    moreHints: []
     voiceLine: {fileID: 0}
     voiceText: 'POWER ARMOUR: Contact down. Back off the suit, I''m lifting. Watch
       your feet. Control, you can stand them down.'
@@ -270,6 +286,7 @@ MonoBehaviour:
       ceiling coming down
     hint: A rocket follows the laser. Dodge to the side, or catch it with mk_orzabal
       and send it back.
+    moreHints: []
     voiceLine: {fileID: 0}
     voiceText: 'POWER ARMOUR: Rocket away, contact down. Nobody through that smoke
       till it clears. Control, structure''s holding.'
@@ -286,6 +303,7 @@ MonoBehaviour:
       hood above them
     hint: 'His aim shakes and he can miss. Do not stand still in the circle: one
       step is enough. Close the distance and he drops the aim.'
+    moreHints: []
     voiceLine: {fileID: 0}
     voiceText: "LAB WORKER: It's in her. It's in her. Now what, what do I\u2014nobody
       told me the part after."
@@ -302,6 +320,7 @@ MonoBehaviour:
     pictureNote: the knife over her, the lab coat behind it, the scalpel light
     hint: The knife runs at you and comes in from the side. Dodge when he raises
       it, then strike. At a distance he is nothing.
+    moreHints: []
     voiceLine: {fileID: 0}
     voiceText: "LAB WORKER: I'm lab, I pipette, I don't\u2014there's a lot of it,
       towels, I need towels, there's a lot."
@@ -320,6 +339,7 @@ MonoBehaviour:
     hint: 'He aims slowly and his hands shake. Close the distance, or make him come
       to you. Against a group, strike first, from a distance: every hit on you fills
       the SHORT bar.'
+    moreHints: []
     voiceLine: {fileID: 0}
     voiceText: 'LAB WORKER: I got the vein, I got it, Lord, I got it, don''t let
       go of her, don''t you let go.'
@@ -363,6 +383,7 @@ MonoBehaviour:
     pictureNote: red scrubs, the white hood, the pistol held wrong, the card swinging
       on its lanyard
     hint: She fires wide and slowly. Come at her from the side. The card is on her.
+    moreHints: []
     voiceLine: {fileID: 0}
     voiceText: "WARD SISTER: I was aiming at the floor. Lucy, I swear, the floor
       \u2014 hands on it, press, press down."
@@ -387,6 +408,7 @@ MonoBehaviour:
     hint: 'Its ring is slower than your walk: keep moving. When it locks, hurt it
       before the charge fires, or leave the ring. A grabber swells before it lunges:
       step aside.'
+    moreHints: []
     voiceLine: {fileID: 0}
     voiceText: 'BRAIN: Your life has been full of suffering. But don''t worry. It''ll
       be over soon.'
@@ -403,6 +425,7 @@ MonoBehaviour:
     hint: The horn gives you 30 seconds, and the door seals. Press the EMERGENCY
       STOP on the panel, or turn the lockout outside before you light anything. Read
       the sign.
+    moreHints: []
     voiceLine: {fileID: 0}
     voiceText: 'PA: Server room suppression is complete. The emergency stop was not
       used. There is no need to hurry.'
@@ -423,6 +446,7 @@ MonoBehaviour:
       hand on her neck'
     hint: They fire at the fire. Leave the ring before the canister lands, stay out
       of the white cloud, or catch it with mk_orzabal.
+    moreHints: []
     voiceLine: {fileID: 0}
     voiceText: 'FIREMAN: I got her, I got her, she''s down in the hall, get me the
       bag, somebody get the bag!'
@@ -440,6 +464,7 @@ MonoBehaviour:
       the gun pod of the armour still smoking past its shoulder
     hint: The guns follow the sweep of the laser. Get behind a column before the
       ring fills. Up close, mk_warspite breaks its aim.
+    moreHints: []
     voiceLine: {fileID: 0}
     voiceText: 'POWER ARMOUR: Cease fire. Check the lodge door for pass-through.
       Control, I need a count on the families.'
@@ -457,6 +482,8 @@ MonoBehaviour:
       two boots and the short barrel above her
     hint: The red wedge is short. Step out of it, or stay out of its reach and make
       him come to you.
+    moreHints:
+    - They will not shoot through a living person. Lift one, and keep it low.
     voiceLine: {fileID: 0}
     voiceText: 'SOLDIER: Target down, Dining Hall. Keep that door shut, keep them
       inside, they don''t need to see this.'

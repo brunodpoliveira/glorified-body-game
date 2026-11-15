@@ -61,11 +61,7 @@ MonoBehaviour:
     tree), and the kitchen may or may not have a bird for us, I did not say that.
     All decorations are birthday decorations. Wear something festive. For Gene.
 
-    RosaFROM:
-    GENE. My birthday is in July.
-
-
-    FROM: ROSA. Not this year, Gene.'
+    Rosa'
   readFlag: 
   mapFloor: 
   audioClip: {fileID: 0}
