@@ -710,8 +710,8 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   (`RoomTracker.Travels`). Soldiers skip firing spots with a person on the line (`SoldierBrain.PersonOnLine`). Numbers PROPOSED.
 
 - 2026-11-15, THE SHORT'S TARGETS, THE WARSPITE WAVE (`devlog-notes/2026-11-15_short_targets_warspite_wave.md`): with no enemy in reach, a
-  shock breaks the nearest lamp, else knocks a table thing off (`ShortController.ShockAThing`); mk_warspite pushes every movable thing within
-  0.6 m of its line to the target or the cover (`PsychicPowers.PressureWave`). KIT TEST: 4 lamps, 3 tables, 2 crates. NOT TESTED (Bruno tests
+  shock breaks the nearest lamp, else knocks a table thing off (`ShortController.ShockAThing`); mk_warspite pushes every movable thing in a
+  corridor to the target or the cover, 0.75 m to each side, floor to 2.2 m (`PsychicPowers.PressureWave`, `WarspiteWaveTests`). KIT TEST: 4 lamps, 3 tables, 2 crates. NOT TESTED (Bruno tests
   by hand). The demo's breakable lamps come last (memory `gb-breakable-lamps-last`). Numbers PROPOSED.
 
 ## Rules

@@ -49,3 +49,22 @@ NOT TESTED: Bruno, "skip the tests; i'll do the manual testing right away". The 
 3. Put a crate between Lucy and a soldier, and fire mk_warspite at him. The crate flies forward and to the side, and the
    soldier takes the blast.
 4. Fire mk_warspite across a table at a target behind it. The things on the table fly.
+
+## Bruno's test, the same day
+
+```text
+kit test: 1: works
+2: no blast on the physics objects, including the grebles on the table and the crate
+```
+
+CONFIRMED, two causes in the first wave:
+1. It was a 0.6 m sphere along her chest line (1.2 m), so its bottom was at 0.6 m. A 0.5 m crate on the floor lay under it.
+2. A thing on a table rests with its colliders off (`Greeble`: they come on only when something knocks it), so no cast
+   found it.
+
+The wave is a corridor now: 0.75 m to each side of her line seen from above, from the floor to 2.2 m. The table things
+are found by where they are, the crates and the debris by a box along the corridor.
+
+| Check | Result |
+|---|---|
+| `WarspiteWaveTests.TheWave_PushesACrateOnTheFloor_AndTheThingsOnATable` (new, KIT TEST) | pass: the crate flies 6.1 m, 4 of the 4 things on the table fly |

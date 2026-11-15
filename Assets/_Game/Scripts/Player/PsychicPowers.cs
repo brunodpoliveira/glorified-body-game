@@ -846,7 +846,8 @@ namespace GlorifiedBody.Player
 
         // ── mk_warspite, the pressure wave (Bruno, 2026-11-15) ─────────
 
-        public const float WaveRadius = 0.6f;      // m around the line, PROPOSED
+        public const float WaveRadius = 0.75f;     // m to each side of her line, PROPOSED
+        public const float WaveHeight = 2.2f;      // m over her feet: the wave fills the corridor from the floor up
         public const float WaveSpeed = 5f;         // m/s at a part charge, PROPOSED
         public const float WaveSpeedFull = 10f;    // m/s at a full circle, PROPOSED
 
@@ -856,49 +857,70 @@ namespace GlorifiedBody.Player
         /// <summary>
         /// Bruno, 2026-11-15: "warspite should move those psychic objects when they're in the way: the idea is to create more
         /// chaos and destruction, and to show that warspite is kinda like a pressure wave that ends when the enemy/object the
-        /// player is aiming for is hit". The wave runs from her chest to the point it ends (the target, or the cover that took
-        /// it), and every thing her powers can move on the way goes flying: forward and away from the line. A thing on a table
-        /// jumps off (Greeble), a crate or a box flies (it takes a body if it had none), a piece of debris flies. People are
-        /// not pushed (the blast is for the target), nor the target itself, nor a heavy thing, nor a thing she rides.
+        /// player is aiming for is hit". The wave fills a corridor from her to the point where it ends (the target, or the cover
+        /// that took it): WaveRadius to each side of the line seen from above, from the floor to WaveHeight. Every thing her
+        /// powers can move in it flies, forward and away from the line: a thing on a table (Greeble), a crate or a box (it takes
+        /// a body if it had none), a piece of debris. People are not pushed (the blast is for the target), nor the target, nor
+        /// a heavy thing, nor a thing she rides. Bruno's test, the same day: "no blast on the physics objects" (the first wave
+        /// was a 0.6 m sphere along her chest line: a crate on the floor lay under it, and a table's things rest with no
+        /// collider, so no cast found them).
         /// </summary>
         private void PressureWave(Vector3 from, Vector3 to, GameObject target, float charge)
         {
-            Vector3 line = to - from;
-            float length = line.magnitude;
+            Vector3 flat = Vector3.ProjectOnPlane(to - from, Vector3.up);
+            float length = flat.magnitude;
             if (length < 0.5f) return;
-            Vector3 dir = line / length;
+            Vector3 dir = flat / length;
+            float floorY = transform.position.y;
             float speed = Mathf.Lerp(WaveSpeed, WaveSpeedFull, Mathf.Clamp01(charge));
-            var done = new System.Collections.Generic.HashSet<UnityEngine.Object>();
             int pushed = 0;
-            foreach (RaycastHit hit in Physics.SphereCastAll(from, WaveRadius, dir, Mathf.Max(0f, length - WaveRadius), ~LayerMask.GetMask("Player"), QueryTriggerInteraction.Ignore))
-            {
-                Collider c = hit.collider;
-                if (target != null && c.transform.IsChildOf(target.transform)) continue;
-                Vector3 at = c.bounds.center;
-                Vector3 onLine = from + dir * Mathf.Clamp(Vector3.Dot(at - from, dir), 0f, length);
-                Vector3 aside = Vector3.ProjectOnPlane(at - onLine, Vector3.up);
-                Vector3 push = (dir + (aside.sqrMagnitude > 0.0001f ? aside.normalized * 0.6f : Vector3.zero) + Vector3.up * 0.35f).normalized * speed;
 
-                Greeble thing = c.GetComponentInParent<Greeble>();
-                if (thing != null)
-                {
-                    if (done.Add(thing)) { thing.Disturb(at - push, speed); pushed++; }
-                    continue;
-                }
+            // The push for a thing at this point: along the wave, away from the line, up a little. Null: out of the corridor.
+            Vector3? PushAt(Vector3 at)
+            {
+                Vector3 rel = Vector3.ProjectOnPlane(at - from, Vector3.up);
+                float along = Vector3.Dot(rel, dir);
+                if (along < 0.3f || along > length) return null;
+                Vector3 aside = rel - dir * along;
+                if (aside.magnitude > WaveRadius || at.y < floorY - 0.2f || at.y > floorY + WaveHeight) return null;
+                return (dir + (aside.sqrMagnitude > 0.0001f ? aside.normalized * 0.6f : Vector3.zero) + Vector3.up * 0.35f).normalized * speed;
+            }
+
+            // The things on tables: they rest with no collider, so they are found by where they are.
+            foreach (Greeble thing in new System.Collections.Generic.List<Greeble>(Greeble.All))
+            {
+                if (thing == null || thing.Moving) continue;
+                Vector3? push = PushAt(thing.transform.position);
+                if (push == null) continue;
+                thing.Disturb(thing.transform.position - push.Value, speed);
+                pushed++;
+            }
+
+            // Crates, boxes, debris: the colliders in a box along the corridor.
+            Vector3 centre = from + dir * (length * 0.5f);
+            centre.y = floorY + WaveHeight * 0.5f;
+            var half = new Vector3(WaveRadius, WaveHeight * 0.5f, length * 0.5f);
+            var done = new System.Collections.Generic.HashSet<UnityEngine.Object>();
+            foreach (Collider c in Physics.OverlapBox(centre, half, Quaternion.LookRotation(dir), ~LayerMask.GetMask("Player"), QueryTriggerInteraction.Ignore))
+            {
+                if (target != null && c.transform.IsChildOf(target.transform)) continue;
+                if (c.GetComponentInParent<Greeble>() != null) continue; // done above
                 if (c.GetComponentInParent<Health>() != null || c.GetComponentInParent<IRagdollBody>() != null) continue; // a person: the blast is for the target
                 GlorifiedBody.Interaction.Rideable ride = c.GetComponentInParent<GlorifiedBody.Interaction.Rideable>();
                 if (ride != null && ride.Riding) continue;
                 LockOnTargetable prop = c.GetComponentInParent<LockOnTargetable>();
+                if (prop != null && (prop.IsHeavy || !prop.IsProp || prop.GetComponent<TelekinesisLift>() != null)) continue;
                 Rigidbody body = c.attachedRigidbody;
-                if (body == null && prop != null && prop.IsProp && !prop.IsHeavy && prop.GetComponent<TelekinesisLift>() == null)
+                if (body == null && prop != null)
                 {
                     EnsurePropBody(prop.gameObject);
                     body = prop.GetComponent<Rigidbody>();
                 }
                 if (body == null || body.isKinematic || !done.Add(body)) continue;
-                if (prop != null && prop.IsHeavy) continue;
+                Vector3? push = PushAt(c.bounds.center);
+                if (push == null) continue;
                 body.WakeUp();
-                body.linearVelocity = push;
+                body.linearVelocity = push.Value;
                 body.angularVelocity = UnityEngine.Random.insideUnitSphere * speed;
                 pushed++;
             }
