@@ -141,6 +141,61 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator WithTheirBrainsOn_NoShotGoesThroughTheHostage()
+        {
+            // Bruno, 2026-11-15: "still firing through the hostage" (KIT TEST, the lab worker held low). The fight as he
+            // plays it: every brain on, she holds the lab worker low on the line to the soldiers. A shot whose line passes
+            // through the held civilian at the moment it leaves the gun is the fault.
+            GameObject lab = GameObject.Find("Lab_K4");
+            GameObject k1 = GameObject.Find("Soldier_K1"), k2 = GameObject.Find("Soldier_K2"), k3 = GameObject.Find("Guard_K3");
+            Vector3 fighters = (k1.transform.position + k2.transform.position) * 0.5f;
+            Vector3 away = Vector3.ProjectOnPlane(lab.transform.position - fighters, Vector3.up).normalized;
+            Vector3 stand = lab.transform.position + away * 1.6f;
+            Assert.IsTrue(NavMesh.SamplePosition(stand, out NavMeshHit onMesh, 1.5f, NavMesh.AllAreas));
+            lucy.GetComponent<TankController>().Teleport(onMesh.position, Quaternion.LookRotation(-away).eulerAngles.y);
+            yield return null;
+            yield return Lift(lab);
+            TelekinesisLift held = powers.HeldLift;
+            for (int i = 0; i < 20 && held.HeightOverFloor > 0.4f; i++) { held.SteerBy(Vector3.zero, -0.5f, 10f); yield return null; }
+            int through = 0, shots = 0, heldFire = 0, between = 0;
+            var lines = new System.Collections.Generic.List<string>();
+            foreach (GameObject f in new[] { k1, k2, k3 })
+            {
+                DummyShooter gun = f.GetComponent<DummyShooter>();
+                string who = f.name;
+                gun.OnFired += (origin, dir) =>
+                {
+                    shots++;
+                    Vector3 chest = lucy.transform.position + Vector3.up * 1.2f;
+                    CivilianBrain hostage = HumanShield.Held();
+                    bool blocks = HumanShield.Blocks(origin, origin + dir * Vector3.Distance(origin, chest), lab.GetComponent<CivilianBrain>());
+                    if (blocks) through++;
+                    // Top down: how far the hostage's middle stands from the shot's line, and where along it (0 the gun, 1 her).
+                    Vector2 a2 = new Vector2(origin.x, origin.z), b2 = new Vector2(chest.x, chest.z);
+                    Bounds body = lab.GetComponentInChildren<Renderer>().bounds;
+                    foreach (Renderer r in lab.GetComponentsInChildren<Renderer>()) body.Encapsulate(r.bounds);
+                    Vector2 h2 = new Vector2(body.center.x, body.center.z);
+                    float along = Vector2.Dot(h2 - a2, b2 - a2) / Mathf.Max(0.0001f, (b2 - a2).sqrMagnitude);
+                    float side = Vector2.Distance(h2, a2 + Mathf.Clamp01(along) * (b2 - a2));
+                    if (side < 0.45f && along > 0.05f && along < 0.98f) between++;
+                    float lineY = Mathf.Lerp(origin.y, chest.y, Mathf.Clamp01(along));
+                    lines.Add($"{who} {gun.CurrentAttack} held={(hostage != null)} h={held.HeightOverFloor:0.00} 3d={blocks} side={side:0.00} along={along:0.00} lineY={lineY:0.00} body top={body.max.y:0.00}");
+                };
+            }
+            foreach (SoldierBrain b in UnityEngine.Object.FindObjectsByType<SoldierBrain>(FindObjectsSortMode.None)) b.Alert("test", false);
+            float t0 = Time.time;
+            while (Time.time - t0 < 20f && powers.HeldLift == held)
+            {
+                if (held.HeightOverFloor > 0.4f) held.SteerBy(Vector3.zero, -0.5f, 10f);
+                yield return null;
+            }
+            foreach (GameObject f in new[] { k1, k2, k3 }) heldFire += f.GetComponent<DummyShooter>().HeldForShield;
+            Debug.Log($"[HumanShieldTests] the fight: {shots} shots, {through} through the hostage (3D), {between} with the hostage between them top down, {heldFire} held, she held it {Time.time - t0:0.0} s\n" + string.Join("\n", lines));
+            Assert.AreEqual(0, through, "no shot through the hostage");
+            Assert.AreEqual(0, between, "no shot past the hostage, seen from above (Bruno sees it from a fixed camera)");
+        }
+
+        [UnityTest]
         public IEnumerator AFullSlam_LandsTheTarget_HeadFirst_TheLegsOver()
         {
             GameObject soldier = GameObject.Find("Soldier_K1");
@@ -153,8 +208,9 @@ namespace GlorifiedBody.Tests.PlayMode
             stats.FillMk(PowerKind.Telekinesis);
             Assert.IsTrue(powers.TrySlam(), "the full slam");
             yield return new WaitForSeconds(1.6f);
-            Debug.Log($"[HumanShieldTests] the face plant: the feet rose {ragdoll.FacePlantFlip:0.00} m over the head");
-            Assert.Greater(ragdoll.FacePlantFlip, 0.3f, "head first: the feet go up over the head");
+            Debug.Log($"[HumanShieldTests] the face plant: the feet rose {ragdoll.FacePlantFlip:0.00} m over the head, first on the floor: {ragdoll.FacePlantFirst}");
+            Assert.Greater(ragdoll.FacePlantFlip, 1.0f, "upside down: the feet high over the head (Bruno, 2026-11-15: \"not dramatic enough\")");
+            Assert.AreEqual("head", ragdoll.FacePlantFirst, "the head hits the floor first");
         }
 
         private static IEnumerator WaitUntil(Func<bool> condition, float timeoutSeconds)

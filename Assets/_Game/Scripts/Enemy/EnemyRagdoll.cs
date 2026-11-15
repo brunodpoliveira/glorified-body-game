@@ -237,31 +237,49 @@ namespace GlorifiedBody.Enemy
             RunTelemetry.Event("ragdoll_dropped", $"{name}:{seconds:0.0}s");
         }
 
-        // The face plant (round 162, CANON: "when orzabal slams at full speed, have them face plant"; the reference
-        // reference/generic/other/orzabal_slam_face_plant.webp): the head and the chest go down first, the legs go up and
-        // over, away from her. Numbers PROPOSED.
-        private const float PlantHeadDown = 7f, PlantHeadForward = 1f, PlantLegsUp = 6f, PlantLegsForward = 3.5f, PlantSpin = 9f;
+        // The face plant (round 162, CANON: "when orzabal slams at full speed, have them face plant like so"; the reference
+        // reference/generic/other/orzabal_slam_face_plant.webp). Bruno, 2026-11-15: "not dramatic enough: the person goes face
+        // first onto the ground and hits the ground head first". At the top of the slam the body turns upside down about the
+        // hips (the head to the floor, a little away from her), at least PlantDrop over the floor, and it drops straight down:
+        // the head hits first, then the legs go on over. Numbers PROPOSED.
+        private const float PlantFall = 9f, PlantForward = 0.8f, PlantSpin = 2.5f, PlantDrop = 1.0f, PlantTilt = 0.3f;
 
         /// <summary>The largest height of a foot over the head since the last face plant (a test reads it).</summary>
         public float FacePlantFlip { get; private set; }
-        private float plantWatchUntil;
+        /// <summary>The bone of the last face plant that came to the floor first: "head", "hips" or "feet" (a test reads it).</summary>
+        public string FacePlantFirst { get; private set; } = "";
+        private float plantWatchUntil, plantFloorY;
 
         public void EndHoldFacePlant(Vector3 forward, float seconds)
         {
             if (Current != State.Held) return;
-            SetBones(limp: true, hipsHeld: false);
             Vector3 fwd = Vector3.ProjectOnPlane(forward, Vector3.up);
             fwd = fwd.sqrMagnitude > 0.0001f ? fwd.normalized : transform.forward;
-            Vector3 pitch = Vector3.Cross(Vector3.up, fwd); // the turn that brings the head down and forward, the feet up and over
-            float hipsY = hips != null ? hips.position.y : transform.position.y;
+            Vector3 pitch = Vector3.Cross(Vector3.up, fwd); // the turn that carries the legs on over, away from her
+            plantFloorY = Physics.Raycast(hips.position + Vector3.up * 0.2f, Vector3.down, out RaycastHit floorHit, 8f, FloorMask, QueryTriggerInteraction.Ignore)
+                ? floorHit.point.y : transform.position.y;
+            if (head != null)
+            {
+                // Upside down: the body's line from the hips to the head turns to point at the floor.
+                Vector3 bodyUp = head.position - hips.position;
+                float length = bodyUp.magnitude;
+                Vector3 down = (Vector3.down + fwd * PlantTilt).normalized;
+                Quaternion turn = Quaternion.FromToRotation(bodyUp.normalized, down);
+                Vector3 at = hips.position;
+                float headY = at.y + down.y * length;
+                if (headY < plantFloorY + PlantDrop) at.y += plantFloorY + PlantDrop - headY;
+                hips.SetPositionAndRotation(at, turn * hips.rotation);
+                Physics.SyncTransforms();
+            }
+            SetBones(limp: true, hipsHeld: false);
             foreach (Rigidbody part in parts)
             {
                 if (part == null || part.isKinematic) continue;
-                bool legs = part.worldCenterOfMass.y < hipsY - 0.05f;
-                part.linearVelocity = legs ? Vector3.up * PlantLegsUp + fwd * PlantLegsForward : Vector3.down * PlantHeadDown + fwd * PlantHeadForward;
+                part.linearVelocity = Vector3.down * PlantFall + fwd * PlantForward;
                 part.angularVelocity = pitch * PlantSpin;
             }
             FacePlantFlip = float.NegativeInfinity;
+            FacePlantFirst = "";
             plantWatchUntil = Time.time + 1.5f;
             EnterDown(seconds);
             RunTelemetry.Event("ragdoll_face_plant", $"{name}:{seconds:0.0}s");
@@ -270,7 +288,13 @@ namespace GlorifiedBody.Enemy
         private void WatchFacePlant()
         {
             if (Time.time > plantWatchUntil || head == null || leftFoot == null || rightFoot == null) return;
+            float feet = Mathf.Min(leftFoot.position.y, rightFoot.position.y);
             FacePlantFlip = Mathf.Max(FacePlantFlip, Mathf.Max(leftFoot.position.y, rightFoot.position.y) - head.position.y);
+            if (FacePlantFirst != "") return;
+            const float touch = 0.25f;
+            if (head.position.y - plantFloorY < touch) FacePlantFirst = "head";
+            else if (hips.position.y - plantFloorY < touch) FacePlantFirst = "hips";
+            else if (feet - plantFloorY < touch) FacePlantFirst = "feet";
         }
 
         public void Sever(Transform bone)

@@ -43,3 +43,34 @@ reference: `reference/generic/other/orzabal_slam_face_plant.webp`. Numbers PROPO
 
 The first run found a gap in my code: a soldier who could not start an aim through the civilian did not count it or say
 why. Now a blocked aim counts and speaks, once a second at most.
+
+## Bruno's check, the same night
+
+```text
+still firing through the hostage
+face plant is not dramatic enough: the person goes face first onto the ground and hits the ground head first
+```
+
+### Firing through the hostage: NOT REPRODUCED, and a fault of my own found
+
+1. A new test plays the fight as Bruno did: every brain on, she holds the lab worker 0.10 m over the floor, and the
+   test checks every shot (`HumanShieldTests.WithTheirBrainsOn_NoShotGoesThroughTheHostage`).
+2. Result: 27 shots in 20 s. None went through the hostage, in 3D or seen from above. The soldiers and the guard
+   flanked, and every shot passed 0.66 m or more beside it (the body is about 0.5 m wide).
+3. The held civilian stands upright (the civilians have no ragdoll): its body reaches 1.80 m, so the line at her chest
+   height crosses it when it is in the way.
+4. The fault: the escort's scan says "civilians present" half the time and starts a 25 s gap even when it says nothing.
+   The gun's "hold fire" used the same gap, so it often said nothing. The soldier held his fire with no word, and from
+   a fixed camera a laser 0.7 m beside the hostage can look like a shot through it. The "hold fire" has its own 6 s gap
+   now (`DummyShooter.nextShieldBark`).
+
+### The face plant, more dramatic
+
+At the top of the slam the body turns upside down about the hips, the head to the floor and a little away from her, at
+least 1 m over the floor, and it drops at 9 m/s. The head hits the floor first, then the legs go on over
+(`EnemyRagdoll.EndHoldFacePlant`, `FacePlantFirst`). The test: the head is first on the floor, and the feet rise 1.38 m
+over the head (it asks for 1.0). Frames: `~/MEGA/glorified/renders/game/round162/face_plant_v2_sheet.png`.
+
+| Check | Result |
+|---|---|
+| `HumanShieldTests` (3) | 3 of 3 |
