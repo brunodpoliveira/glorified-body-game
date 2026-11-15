@@ -761,6 +761,7 @@ namespace GlorifiedBody.Player
                         cover.Damage(onCover, power.kind == PowerKind.Blast ? DamageType.PsychicBlast : DamageType.PsychicFire, coverPoint, along);
                         Breakables.Splash(coverPoint, CoverSplashRadius, onCover * 0.3f, power.kind == PowerKind.Blast ? DamageType.PsychicBlast : DamageType.PsychicFire, cover);
                     }
+                    if (power.kind == PowerKind.Blast) PressureWave(eye, coverPoint, victim, charge); // the wave ends at the cover
                     RunTelemetry.Event("cover_took", $"{power.kind}:{charge:0.00}:{cover.Id}:{cover.Health:0}");
                     Result("cover", charge);
                     return;
@@ -777,6 +778,7 @@ namespace GlorifiedBody.Player
             switch (power.kind)
             {
                 case PowerKind.Blast:
+                    PressureWave(transform.position + Vector3.up * Body.ChestHeight, point, victim, charge);
                     health?.TakeDamage(damage);
                     // The room around him takes it too: all the destruction is collateral (Bruno, 2026-10-24).
                     Breakables.Splash(point, BlastSplashRadius + BlastSplashPerCharge * charge, damage * BlastSplashShare, DamageType.PsychicBlast);
@@ -841,6 +843,69 @@ namespace GlorifiedBody.Player
         public const float BlastSplashPerCharge = 0.8f;  // m more at a full circle
         public const float BlastSplashShare = 0.6f;      // of the power's damage, at the centre
         public const float CoverSplashRadius = 0.8f;     // m around the point where the cover took it
+
+        // ── mk_warspite, the pressure wave (Bruno, 2026-11-15) ─────────
+
+        public const float WaveRadius = 0.6f;      // m around the line, PROPOSED
+        public const float WaveSpeed = 5f;         // m/s at a part charge, PROPOSED
+        public const float WaveSpeedFull = 10f;    // m/s at a full circle, PROPOSED
+
+        /// <summary>The things the last waves pushed (a test reads it).</summary>
+        public int WavePushed { get; private set; }
+
+        /// <summary>
+        /// Bruno, 2026-11-15: "warspite should move those psychic objects when they're in the way: the idea is to create more
+        /// chaos and destruction, and to show that warspite is kinda like a pressure wave that ends when the enemy/object the
+        /// player is aiming for is hit". The wave runs from her chest to the point it ends (the target, or the cover that took
+        /// it), and every thing her powers can move on the way goes flying: forward and away from the line. A thing on a table
+        /// jumps off (Greeble), a crate or a box flies (it takes a body if it had none), a piece of debris flies. People are
+        /// not pushed (the blast is for the target), nor the target itself, nor a heavy thing, nor a thing she rides.
+        /// </summary>
+        private void PressureWave(Vector3 from, Vector3 to, GameObject target, float charge)
+        {
+            Vector3 line = to - from;
+            float length = line.magnitude;
+            if (length < 0.5f) return;
+            Vector3 dir = line / length;
+            float speed = Mathf.Lerp(WaveSpeed, WaveSpeedFull, Mathf.Clamp01(charge));
+            var done = new System.Collections.Generic.HashSet<UnityEngine.Object>();
+            int pushed = 0;
+            foreach (RaycastHit hit in Physics.SphereCastAll(from, WaveRadius, dir, Mathf.Max(0f, length - WaveRadius), ~LayerMask.GetMask("Player"), QueryTriggerInteraction.Ignore))
+            {
+                Collider c = hit.collider;
+                if (target != null && c.transform.IsChildOf(target.transform)) continue;
+                Vector3 at = c.bounds.center;
+                Vector3 onLine = from + dir * Mathf.Clamp(Vector3.Dot(at - from, dir), 0f, length);
+                Vector3 aside = Vector3.ProjectOnPlane(at - onLine, Vector3.up);
+                Vector3 push = (dir + (aside.sqrMagnitude > 0.0001f ? aside.normalized * 0.6f : Vector3.zero) + Vector3.up * 0.35f).normalized * speed;
+
+                Greeble thing = c.GetComponentInParent<Greeble>();
+                if (thing != null)
+                {
+                    if (done.Add(thing)) { thing.Disturb(at - push, speed); pushed++; }
+                    continue;
+                }
+                if (c.GetComponentInParent<Health>() != null || c.GetComponentInParent<IRagdollBody>() != null) continue; // a person: the blast is for the target
+                GlorifiedBody.Interaction.Rideable ride = c.GetComponentInParent<GlorifiedBody.Interaction.Rideable>();
+                if (ride != null && ride.Riding) continue;
+                LockOnTargetable prop = c.GetComponentInParent<LockOnTargetable>();
+                Rigidbody body = c.attachedRigidbody;
+                if (body == null && prop != null && prop.IsProp && !prop.IsHeavy && prop.GetComponent<TelekinesisLift>() == null)
+                {
+                    EnsurePropBody(prop.gameObject);
+                    body = prop.GetComponent<Rigidbody>();
+                }
+                if (body == null || body.isKinematic || !done.Add(body)) continue;
+                if (prop != null && prop.IsHeavy) continue;
+                body.WakeUp();
+                body.linearVelocity = push;
+                body.angularVelocity = UnityEngine.Random.insideUnitSphere * speed;
+                pushed++;
+            }
+            if (pushed == 0) return;
+            WavePushed += pushed;
+            RunTelemetry.Event("warspite_wave", $"{pushed} things, {length:0.0} m");
+        }
 
         private void RaiseHit(GameObject victim, Health health, Vector3 point, Vector3 normal, float damage, DamageType type, float charge = 0f)
         {

@@ -63,6 +63,17 @@ namespace GlorifiedBody.Editor
             BreakableAssets.Barricade(breakables, "Barricade_K1", new Vector3(5f, 0f, 2.5f), 0f);
             BreakableAssets.Barricade(breakables, "Barricade_K2", new Vector3(-1f, 0f, 3f), 6f);
             BreakableAssets.Table(breakables, "Table_K1", new Vector3(-4f, 0f, -2.5f), 90f);
+            // Things to break and push (Bruno, 2026-11-15: the short's shocks go to lamps and table things with no enemy near;
+            // the warspite wave pushes what lies on its line): two more tables, four ceiling lamps, two crates in the middle.
+            BreakableAssets.Table(breakables, "Table_K2", new Vector3(-6f, 0f, 1.5f), 0f);
+            BreakableAssets.Table(breakables, "Table_K3", new Vector3(1.5f, 0f, -3.2f), 90f);
+            Color warm = new Color(1f, 0.95f, 0.85f);
+            int lamps = 0;
+            foreach (float x in new[] { -4.5f, 2.5f })
+                foreach (float z in new[] { -2.5f, 2.5f })
+                    BreakableAssets.Lamp(breakables, $"Lamp_K{++lamps}", new Vector3(x, Height, z), warm, 9f, 95f, 6f);
+            PropAssets.Crate("Crate_K1", new Vector3(-2.2f, 0f, -0.4f), 15f, 0.5f).transform.SetParent(breakables.transform, true);
+            PropAssets.Crate("Crate_K2", new Vector3(0.6f, 0f, 0.4f), 40f, 0.5f).transform.SetParent(breakables.transform, true);
 
             // The figures: three armed (rifle, pistol, shield), two civilians at the north wall.
             MenuLoopSetup.EnsureLucy(catalog, new Vector3(-7f, 0f, -4.5f), 45f);

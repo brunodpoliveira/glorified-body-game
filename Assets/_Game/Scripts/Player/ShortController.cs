@@ -199,6 +199,7 @@ namespace GlorifiedBody.Player
             Vector3 origin = transform.position;
             if (!CanShock(Victim, origin)) Victim = NearestVictim(origin);
             Health other = Victim;
+            if (other == null) ShockAThing(origin); // no one in reach: a lamp or a thing on a table (Bruno, 2026-11-15)
             if (other != null)
             {
                 other.TakeDamage(shockDamageToOthers);
@@ -264,6 +265,60 @@ namespace GlorifiedBody.Player
             if (other != null) Spark(other.transform.position + Vector3.up * 1.2f); // the spark on the victim shows who it hits
             RunTelemetry.Event("short_shock", $"{ShocksFired} hp={health.CurrentHealth:0} hit={(other != null ? other.name : "none")}");
         }
+
+        /// <summary>The shocks that went to a lamp or a table's thing (no enemy in reach).</summary>
+        public int ThingsShocked { get; private set; }
+        public const float ThingKick = 4f; // m/s: a shocked thing jumps off its table, PROPOSED
+
+        /// <summary>
+        /// Bruno, 2026-11-15: "short should aim and destroy those lights and greebles when no enemies present". With no live
+        /// enemy in the radius, the shock goes to the nearest intact lamp (it breaks), else to the nearest thing on a table (it
+        /// jumps off), in her room or in a line of sight. The arc, the zap and the spark show it, as on a person.
+        /// </summary>
+        private void ShockAThing(Vector3 origin)
+        {
+            Vector3 chest = origin + Vector3.up * GlorifiedBody.Characters.Body.ChestHeight;
+            Vector3? at = null;
+            float best = shockRadius * shockRadius;
+            BreakableLight lamp = null;
+            foreach (Breakable b in Breakable.All)
+            {
+                if (!(b is BreakableLight light) || b.IsBroken) continue;
+                Vector3 c = b.Bounds.center;
+                float d = (c - origin).sqrMagnitude;
+                if (d >= best || !Reaches(origin, c)) continue;
+                best = d;
+                lamp = light;
+                at = c;
+            }
+            Greeble thing = null;
+            if (lamp == null)
+            {
+                foreach (Greeble g in Greeble.All)
+                {
+                    if (g == null || g.Moving) continue;
+                    Vector3 c = g.transform.position;
+                    float d = (c - origin).sqrMagnitude;
+                    if (d >= best || !Reaches(origin, c)) continue;
+                    best = d;
+                    thing = g;
+                    at = c;
+                }
+            }
+            if (at == null) return;
+            if (lamp != null) lamp.Break(at.Value, Vector3.down);
+            else thing.Disturb(origin, ThingKick);
+            ThingsShocked++;
+            ShockArc.Show(chest, at.Value);
+            Arcs++;
+            if (PlayOnce(ref zap, ref zapLoaded, ZapPath, at.Value, UnityEngine.Random.Range(0.9f, 1.1f), GlorifiedBody.Audio.SoundChannel.Sfx)) Zaps++;
+            Spark(at.Value);
+            RunTelemetry.Event("short_shock_thing", lamp != null ? "lamp:" + lamp.Id : "thing:" + thing.Id);
+        }
+
+        /// <summary>A shock reaches a point: in her room, or with no wall between.</summary>
+        private static bool Reaches(Vector3 origin, Vector3 point) =>
+            GlorifiedBody.Rooms.Room.Same(origin, point) || !Physics.Linecast(origin + Vector3.up, point, LayerMask.GetMask("Default"), QueryTriggerInteraction.Ignore);
 
         /// <summary>A live enemy in the radius that the shocks can hurt.</summary>
         private bool CanShock(Health other, Vector3 origin)
