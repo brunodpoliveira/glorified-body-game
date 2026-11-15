@@ -59,8 +59,8 @@ kit test: 1: works
 
 CONFIRMED, two causes in the first wave:
 1. It was a 0.6 m sphere along her chest line (1.2 m), so its bottom was at 0.6 m. A 0.5 m crate on the floor lay under it.
-2. A thing on a table rests with its colliders off (`Greeble`: they come on only when something knocks it), so no cast
-   found it.
+2. The table things sat beside or under the sphere's reach. (A first read of the code said they rest with no collider:
+   wrong. Their colliders are on, on the Debris layer. The size and the height of the sphere explain both misses.)
 
 The wave is a corridor now: 0.75 m to each side of her line seen from above, from the floor to 2.2 m. The table things
 are found by where they are, the crates and the debris by a box along the corridor.
@@ -68,3 +68,33 @@ are found by where they are, the crates and the debris by a box along the corrid
 | Check | Result |
 |---|---|
 | `WarspiteWaveTests.TheWave_PushesACrateOnTheFloor_AndTheThingsOnATable` (new, KIT TEST) | pass: the crate flies 6.1 m, 4 of the 4 things on the table fly |
+
+## The enemy shots and blasts (Bruno, the same day)
+
+```text
+check if grenades and bullets (and lasers) can also interact with these physic objects as well. there will be book shelves etc so it can be plausible that bots will hit it.
+as for the laser, for later: they use the same logic of warspite, but to incinerate objects  near the wave, and reflecting (like bullets) it is not possible, only deflecting is
+```
+
+The check, before the change:
+
+| What hits | Table things | Breakables | Crates, boxes | Debris |
+|---|---|---|---|---|
+| Enemy bullets (and the armour's sweep rounds) | knocked, 3 m/s | damaged | no | no |
+| Grenades, rockets | knocked | damaged | no | no |
+| The armour's laser | only an aim line: its rounds are bullets | | | |
+
+The change (`Breakables.Push`, `Breakables.Blast`):
+1. A bullet pushes the crate, the box or the debris it hits, 4 m/s along the shot (2 m/s moved a crate 0.09 m: not seen).
+2. Every splash (a grenade, a rocket, the blast of her powers near a target, a thrown thing's landing) pushes the movable
+   things in its radius, away from the centre and up: 8 m/s near the centre, 3 m/s at the edge.
+3. Not pushed: a person, a thing in her hold, a heavy prop, a thing she rides.
+
+| Check | Result |
+|---|---|
+| `WarspiteWaveTests.AShot_AndAGrenade_PushTheThingsTheyHit` (new) | pass: a bullet moves the crate 0.86 m, a grenade 3.54 m |
+| `WarspiteWaveTests` (2) | 2 of 2 |
+| `CoverTests`, `PhysicsTests` | 10 of 10 |
+
+FOR LATER (Bruno, the Akira stills): the laser weapon. It uses the warspite wave's logic, but it burns the things near its
+line. She cannot reflect a laser as she returns a bullet; she can only deflect it.

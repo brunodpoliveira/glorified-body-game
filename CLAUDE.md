@@ -711,8 +711,9 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
 
 - 2026-11-15, THE SHORT'S TARGETS, THE WARSPITE WAVE (`devlog-notes/2026-11-15_short_targets_warspite_wave.md`): with no enemy in reach, a
   shock breaks the nearest lamp, else knocks a table thing off (`ShortController.ShockAThing`); mk_warspite pushes every movable thing in a
-  corridor to the target or the cover, 0.75 m to each side, floor to 2.2 m (`PsychicPowers.PressureWave`, `WarspiteWaveTests`). KIT TEST: 4 lamps, 3 tables, 2 crates. NOT TESTED (Bruno tests
-  by hand). The demo's breakable lamps come last (memory `gb-breakable-lamps-last`). Numbers PROPOSED.
+  corridor to the target or the cover, 0.75 m to each side, floor to 2.2 m (`PsychicPowers.PressureWave`, `WarspiteWaveTests`). KIT TEST: 4 lamps, 3 tables, 2 crates. Enemy shots and every splash
+  push crates, boxes and debris too (`Breakables.Push`, `Breakables.Blast`). FOR LATER: a laser weapon on the wave's logic that burns, and she
+  can only deflect it. The demo's breakable lamps come last (memory `gb-breakable-lamps-last`). Numbers PROPOSED.
 
 ## Rules
 

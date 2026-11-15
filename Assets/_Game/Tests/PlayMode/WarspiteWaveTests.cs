@@ -79,6 +79,28 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.Greater(Greeble.TotalDisturbed - before, 0, "the things on the table fly");
         }
 
+        [UnityTest]
+        public IEnumerator AShot_AndAGrenade_PushTheThingsTheyHit()
+        {
+            // Bruno, 2026-11-15: "check if grenades and bullets ... can also interact with these physic objects as well".
+            GameObject crate = GameObject.Find("Crate_K1");
+            Vector3 at = crate.transform.position;
+            Vector3 aim = crate.GetComponent<Collider>().bounds.center;
+            GlorifiedBody.Enemy.EnemyProjectile.Launch(aim + new Vector3(-4f, 0f, 0f), Vector3.right, 30f, 5f, null, "test_pistol");
+            yield return new WaitForSeconds(1f);
+            float shot = Vector3.Distance(crate.transform.position, at);
+            Debug.Log($"[WarspiteWaveTests] the shot: the crate moved {shot:0.00} m");
+            Assert.Greater(shot, 0.2f, "a bullet pushes the crate it hits");
+
+            GameObject other = GameObject.Find("Crate_K2");
+            Vector3 at2 = other.transform.position;
+            GlorifiedBody.Enemy.EnemyGrenade.Launch(at2 + new Vector3(0f, 1f, -2f), at2 + new Vector3(0f, 0f, -1f), 0.4f, 0.3f, 10f, 3f, null, "test_grenades");
+            yield return new WaitForSeconds(2f);
+            float blast = Vector3.Distance(other.transform.position, at2);
+            Debug.Log($"[WarspiteWaveTests] the grenade: the crate moved {blast:0.00} m");
+            Assert.Greater(blast, 0.5f, "an explosion pushes the crate near it");
+        }
+
         private static IEnumerator WaitUntil(Func<bool> condition, float timeoutSeconds)
         {
             float t0 = Time.realtimeSinceStartup;

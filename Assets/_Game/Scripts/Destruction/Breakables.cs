@@ -48,6 +48,7 @@ namespace GlorifiedBody.Destruction
                 float distance = Vector3.Distance(g.transform.position, centre);
                 if (distance <= radius * GreebleReach) g.Disturb(centre, Mathf.Lerp(5f, 2f, distance / (radius * GreebleReach)));
             }
+            Blast(centre, radius); // crates, boxes, debris fly too (2026-11-15)
             return broken;
         }
 
@@ -62,9 +63,57 @@ namespace GlorifiedBody.Destruction
                 return true;
             }
             Breakable piece = collider.GetComponentInParent<Breakable>();
-            if (piece == null || piece.IsBroken) return false;
+            if (piece == null || piece.IsBroken) return Push(collider, direction.normalized * ShotPush); // a crate, a box, a piece of debris
             piece.Damage(damage, type, point, direction);
             return true;
+        }
+
+        // Bruno, 2026-11-15: "check if grenades and bullets ... can also interact with these physic objects as well. there will
+        // be book shelves etc so it can be plausible that bots will hit it". A shot pushes the movable thing it hits, an
+        // explosion pushes every movable thing in its radius. Numbers PROPOSED.
+        public const float ShotPush = 4f;                          // m/s along the shot (2 moved a crate 0.09 m: not seen)
+        public const float BlastPushNear = 8f, BlastPushFar = 3f;  // m/s away from an explosion's centre
+
+        /// <summary>
+        /// Gives a movable thing this velocity: a body that is not kinematic, or a light prop with no body yet (it takes one, as
+        /// in a lift). Not a person, not a thing in her hold, not a heavy prop, not a thing she rides. False: nothing moved.
+        /// </summary>
+        public static bool Push(Collider collider, Vector3 velocity)
+        {
+            if (collider == null || collider.GetComponentInParent<GlorifiedBody.Core.Health>() != null || collider.GetComponentInParent<IRagdollBody>() != null) return false;
+            LockOnTargetable prop = collider.GetComponentInParent<LockOnTargetable>();
+            if (prop != null && (prop.IsHeavy || !prop.IsProp || prop.GetComponent<TelekinesisLift>() != null)) return false;
+            GlorifiedBody.Interaction.Rideable ride = collider.GetComponentInParent<GlorifiedBody.Interaction.Rideable>();
+            if (ride != null && ride.Riding) return false;
+            Rigidbody body = collider.attachedRigidbody;
+            if (body == null && prop != null)
+            {
+                body = prop.gameObject.AddComponent<Rigidbody>();
+                body.mass = 30f;
+            }
+            if (body == null || body.isKinematic) return false;
+            body.WakeUp();
+            body.linearVelocity += velocity;
+            return true;
+        }
+
+        /// <summary>An explosion pushes the movable things in its radius, away from the centre and up. Returns how many.</summary>
+        public static int Blast(Vector3 centre, float radius)
+        {
+            int pushed = 0;
+            var done = new HashSet<Rigidbody>();
+            foreach (Collider c in Physics.OverlapSphere(centre, radius, ~LayerMask.GetMask("Player"), QueryTriggerInteraction.Ignore))
+            {
+                if (c.GetComponentInParent<Greeble>() != null) continue; // the splash wakes them already
+                if (c.attachedRigidbody != null && !done.Add(c.attachedRigidbody)) continue;
+                Vector3 away = c.bounds.center - centre;
+                float distance = away.magnitude;
+                Vector3 dir = distance > 0.01f ? away / distance : Vector3.up;
+                float speed = Mathf.Lerp(BlastPushNear, BlastPushFar, Mathf.Clamp01(distance / radius));
+                if (Push(c, (dir + Vector3.up * 0.5f).normalized * speed)) pushed++;
+                if (c.attachedRigidbody != null) done.Add(c.attachedRigidbody);
+            }
+            return pushed;
         }
 
         /// <summary>
