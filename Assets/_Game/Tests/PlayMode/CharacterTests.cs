@@ -23,7 +23,7 @@ namespace GlorifiedBody.Tests.PlayMode
         private const string MainMenu = "Main_Menu";
         private const string Room = "TrainingRoom";
 
-        private static readonly string[] Classes = { "lucy_bare", "lucy_guard", "patient", "nurse", "labworker", "guard", "soldier", "fireman", "power_armour" };
+        private static readonly string[] Classes = { "lucy_bare", "lucy_guard", "patient", "nurse", "labworker", "guard", "soldier", "fireman", "power_armour", "lodge_staff", "toll_guard" };
 
         [DefaultExecutionOrder(-1000)]
         private sealed class PadDriver : MonoBehaviour

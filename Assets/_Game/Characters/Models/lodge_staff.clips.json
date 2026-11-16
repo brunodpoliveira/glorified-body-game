@@ -1,0 +1,39 @@
+{
+  "source": "lodge_staff_t49_game.glb",
+  "hips": "mixamorig:Hips",
+  "chain": [
+    "Armature",
+    "Root",
+    "mixamorig:Hips"
+  ],
+  "travelMin": 0.1,
+  "clips": [
+    {
+      "name": "idle",
+      "duration": 15.3333,
+      "keys": 369,
+      "travel": 0.0002,
+      "reach": 0.16,
+      "travels": false,
+      "ground": 0.0104
+    },
+    {
+      "name": "run",
+      "duration": 1.25,
+      "keys": 31,
+      "travel": 2.8592,
+      "reach": 2.8592,
+      "travels": true,
+      "ground": 2.0674
+    },
+    {
+      "name": "walk",
+      "duration": 2.3333,
+      "keys": 57,
+      "travel": 1.4914,
+      "reach": 1.4914,
+      "travels": true,
+      "ground": 0.6694
+    }
+  ]
+}

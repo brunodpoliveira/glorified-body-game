@@ -15,11 +15,11 @@ using GlorifiedBody.Systems;
 namespace GlorifiedBody.Automation
 {
     /// <summary>
-    /// The model check of Lucy and the round 178 figures (2026-11-16, the T49 models, rounds 175 and 178): in a level (default the Tutorial, a dressed
+    /// The model check of Lucy (bare and guard) and the figures of rounds 178 and 179 (2026-11-16, the T49 models): in a level (default the Tutorial, a dressed
     /// room) she stands, walks and runs at the play camera, and the bot measures what a model swap can break: her
     /// height (the baked mesh, the Crown included), the lowest vertex against the floor (feet in the floor or in the
     /// air), the facing (the toes against the forward of her root), and the slip of the planted foot while the
-    /// controller moves her (the clips play in place, the controller sets the speed). Shots:
+    /// controller moves her (the clips play in place at the pace of round 179, the controller sets the speed). Shots:
     /// shots/lucy_&lt;n&gt;_&lt;moment&gt;.png, at the play camera and at two close cameras (front, side).
     /// Active only when BotArgs.Bot == "lucy": tools/unity.sh play Tutorial Main_Menu lucy 300
     /// </summary>
@@ -27,6 +27,7 @@ namespace GlorifiedBody.Automation
     public class LucyModelPlaythrough : MonoBehaviour
     {
         public const int ShotWidth = 1920, ShotHeight = 1080;
+        private const int MinRunFrames = 60;
 
         [Serializable]
         private class Step
@@ -44,6 +45,7 @@ namespace GlorifiedBody.Automation
         private VirtualPad pad;
         private GameObject lucy;
         private SkinnedMeshRenderer skin;
+        private int slipFrames; // the stance frames of the last Slip
         private GameObject subject; // the figure Measure, Slip, FreeSide and CloseShot look at: Lucy, then each class
         private Mesh baked;
 
@@ -155,7 +157,7 @@ namespace GlorifiedBody.Automation
             Vector3 toCamera = main != null ? Vector3.ProjectOnPlane(main.transform.position - start, Vector3.up).normalized : -lucy.transform.forward;
             Vector3 walkDir = across;
             float bestFree = -1f;
-            foreach (Vector3 d in new[] { across, -across, toCamera })
+            foreach (Vector3 d in new[] { across, -across, toCamera, Quaternion.Euler(0f, 45f, 0f) * across, Quaternion.Euler(0f, -45f, 0f) * across, Quaternion.Euler(0f, 135f, 0f) * across, Quaternion.Euler(0f, -135f, 0f) * across, -toCamera })
             {
                 float free = FreeRun(start - d * 1.2f, d, 5f);
                 if (free > bestFree + 0.5f) { bestFree = free; walkDir = d; }
@@ -169,11 +171,12 @@ namespace GlorifiedBody.Automation
             yield return BotClock.Wait(0.6f);
             yield return Shot("walk_play_camera");
             float walkSlip = 0f;
-            yield return Slip(1.0f, v => walkSlip = v);
+            yield return Slip(1.4f, v => walkSlip = v, tank.WalkSpeed * 0.8f);
             yield return CloseShot("walk_close_side", FreeSide(), 2.6f);
             pad.SetHeld(InputManager.GameAction.Forward, false);
             float walked = Vector3.Distance(walkFrom, lucy.transform.position);
-            Record("walks", walked > 1f, $"{walked:0.00} m moved, planted foot slip {walkSlip:0.00} m/s (controller walk {tank.WalkSpeed:0.00} m/s)");
+            // The slip in play is for the record (it goes from 0.2 to 0.4 m/s between runs): the check of the pace is lucy_bare_walks.
+            Record("walks", walked > 1f && walkSlip >= 0f, $"{walked:0.00} m moved, planted foot slip {walkSlip:0.00} m/s (controller walk {tank.WalkSpeed:0.00} m/s; the pace check: lucy_bare_walks)");
             yield return BotClock.Wait(0.6f);
 
             // 3. She runs the same free line (a teleport past it once dropped her out of the Tutorial room).
@@ -184,8 +187,10 @@ namespace GlorifiedBody.Automation
             yield return BotClock.Wait(0.35f);
             yield return Shot("run_play_camera");
             float runSlip = 0f;
-            yield return Slip(0.6f, v => runSlip = v);
-            Record("runs", tank.IsRunning || runSlip >= 0f, $"planted foot slip {runSlip:0.00} m/s (controller run {tank.RunSpeed:0.00} m/s)");
+            yield return Slip(0.9f, v => runSlip = v, tank.RunSpeed * 0.8f);
+            Record("runs", slipFrames < MinRunFrames || runSlip >= 0f, slipFrames < MinRunFrames
+                ? $"{slipFrames} free stance frames only (the free line of this room is short): no measure here, the check lucy_bare_runs measures the clip"
+                : $"planted foot slip {runSlip:0.00} m/s (controller run {tank.RunSpeed:0.00} m/s; the pace check: lucy_bare_runs)");
             pad.SetHeld(InputManager.GameAction.Forward, false);
             pad.SetHeld(InputManager.GameAction.Run, false);
             yield return BotClock.Wait(0.6f);
@@ -227,15 +232,58 @@ namespace GlorifiedBody.Automation
             }
             else Record("pain_clip_plays", false, "no PoseClips.lucyPain");
 
-            // 5. The round 178 figures (the guard, the patient, the nurse): each from the catalog on the free spot, idle
-            // at the play camera, then the walk. Their walk clip travels, and the import gives the travel to the root
-            // motion (not applied), so the bot first reads the ground speed of the clip (the planted foot, the root
-            // still), then moves the root at that speed for the walk shots.
+            // 4b. Lucy in the guard uniform (lucy_guard, the T49 model of round 179): idle and walk, the slip again.
+            if (LucyModel.Wear(lucy, "lucy_guard"))
+            {
+                yield return null;
+                subject = lucy;
+                tank.Teleport(start, startYaw);
+                yield return BotClock.Wait(1.0f);
+                Measure(out float gh, out float gl, out float gf);
+                Record("lucy_guard_model", LucyModel.Current(lucy) == "lucy_guard" && gh > 1.6f && gh < 1.8f && Mathf.Abs(gl) < 0.03f && gf > 0.8f,
+                    $"height {gh:0.000} m, lowest vertex {gl * 100f:0.0} cm, facing {gf:0.00}, meshes {string.Join(", ", lucy.GetComponentsInChildren<SkinnedMeshRenderer>().Select(k => k.name))}");
+                yield return Shot("lucy_guard_idle_play_camera");
+                yield return CloseShot("lucy_guard_idle_close_front", 0f, 2.4f);
+                tank.Teleport(walkFrom, acrossYaw);
+                yield return BotClock.Wait(0.5f);
+                pad.SetHeld(InputManager.GameAction.Forward, true);
+                yield return BotClock.Wait(0.6f);
+                yield return Shot("lucy_guard_walk_play_camera");
+                float guardSlip = 0f;
+                yield return Slip(1.4f, v => guardSlip = v, tank.WalkSpeed * 0.8f);
+                yield return CloseShot("lucy_guard_walk_close_side", FreeSide(), 2.6f);
+                pad.SetHeld(InputManager.GameAction.Forward, false);
+                Record("lucy_guard_walks_in_play", guardSlip >= 0f, $"planted foot slip {guardSlip:0.00} m/s (controller walk {tank.WalkSpeed:0.00} m/s; the pace check: lucy_guard_walks)");
+                yield return BotClock.Wait(0.5f);
+                tank.Teleport(walkFrom, acrossYaw);
+                yield return BotClock.Wait(0.5f);
+                pad.SetHeld(InputManager.GameAction.Run, true);
+                pad.SetHeld(InputManager.GameAction.Forward, true);
+                yield return BotClock.Wait(0.35f);
+                float guardRunSlip = 0f;
+                yield return Slip(0.9f, v => guardRunSlip = v, tank.RunSpeed * 0.8f);
+                pad.SetHeld(InputManager.GameAction.Forward, false);
+                pad.SetHeld(InputManager.GameAction.Run, false);
+                Record("lucy_guard_runs_in_play", slipFrames < MinRunFrames || guardRunSlip >= 0f, slipFrames < MinRunFrames
+                    ? $"{slipFrames} free stance frames only (the free line of this room is short): no measure here, the check lucy_guard_runs measures the clip"
+                    : $"planted foot slip {guardRunSlip:0.00} m/s (controller run {tank.RunSpeed:0.00} m/s; the pace check: lucy_guard_runs)");
+                yield return BotClock.Wait(0.6f);
+                tank.Teleport(start, startYaw);
+                LucyModel.Wear(lucy, "lucy_bare");
+                yield return null;
+            }
+            else Record("lucy_guard_model", false, "LucyModel.Wear(lucy_guard) failed");
+
+            // 5. Every T49 class (rounds 175 to 181) on a treadmill: the catalog prefab on the free spot, idle at the play camera, then the walk
+            // and the run with the root moved by the bot at the game speed of the class (Lucy: the TankController; the
+            // figures: the Invector AI, ClassPace). The root is moved through walls, so the run is as long as it needs.
+            // The import gives a clip's travel to the root motion (not applied), so the body stays over the root.
             foreach (Renderer r in lucy.GetComponentsInChildren<Renderer>()) r.enabled = false;
             CharacterCatalog catalog = CharacterCatalog.Load();
             int enemyLayer = LayerMask.NameToLayer("Enemy");
-            foreach (string id in new[] { "guard", "patient", "nurse" })
+            foreach (string id in new[] { "lucy_bare", "lucy_guard", "guard", "patient", "nurse", "lodge_staff", "toll_guard", "labworker", "soldier", "fireman" })
             {
+                bool isLucy = id.StartsWith("lucy");
                 CharacterEntry entry = catalog != null ? catalog.Find(id) : null;
                 if (entry == null || entry.prefab == null) { Record($"{id}_in_the_level", false, "no catalog prefab"); continue; }
                 Vector3 toCam = main != null ? Vector3.ProjectOnPlane(main.transform.position - start, Vector3.up).normalized : Vector3.forward;
@@ -251,25 +299,58 @@ namespace GlorifiedBody.Automation
                 yield return Shot($"{id}_idle_play_camera");
                 yield return CloseShot($"{id}_idle_close_front", 0f, 2.6f);
 
-                figure.transform.SetPositionAndRotation(start - walkDir * 1.0f, Quaternion.LookRotation(walkDir));
+                // The walk: first the root still (the clip's ground speed, the planted foot over the floor), then the
+                // root moves at the AI walk speed (ClassPace) and the slip of the planted foot is measured: about 0
+                // when the pace of the clip fits (round 179: "Speed up the clips").
+                float walkSpeed = isLucy ? tank.WalkSpeed : ClassPace.FigureWalkSpeed, runSpeed = isLucy ? tank.RunSpeed : ClassPace.FigureRunSpeed;
+                string by = isLucy ? "the TankController" : "the AI";
+                figure.transform.SetPositionAndRotation(start - walkDir * 1.4f, Quaternion.LookRotation(walkDir));
                 fa.SetFloat("Speed", 0.5f);
                 yield return BotClock.Wait(0.6f);
                 float ground = 0f;
-                yield return Slip(1.2f, v => ground = v);
-                float walkStart = BotClock.Now;
-                bool shot = false;
-                while (BotClock.Now - walkStart < 1.4f)
+                yield return Slip(1.8f, v => ground = v);
+                float slipWalk = -1f;
+                IEnumerator Move(float speed, float seconds)
                 {
-                    figure.transform.position += walkDir * ground * Time.deltaTime;
-                    if (!shot && BotClock.Now - walkStart > 0.7f)
+                    float from = BotClock.Now;
+                    while (BotClock.Now - from < seconds)
                     {
-                        shot = true;
-                        yield return Shot($"{id}_walk_play_camera");
-                        yield return CloseShot($"{id}_walk_close_side", FreeSide(), 2.8f);
+                        figure.transform.position += walkDir * speed * Time.deltaTime;
+                        yield return null;
                     }
-                    yield return null;
                 }
-                Record($"{id}_walks", ground > 0.5f, $"the walk clip's ground speed {ground:0.00} m/s (the speed the root needs for no foot slide)");
+                // The check is the ground speed with the root still, within 10 % of the game speed. The slip with the
+                // root at that speed is for the record only: the toe rolls in the stance, so it does not go to 0 (about
+                // 0.2 to 0.4 m/s for a walk, 0.5 to 0.9 for a run, from one run to the next; at the old pace the walk
+                // feet of the figures were 0.8 m/s off).
+                // Move runs as its own coroutine beside Slip; the shots are taken while the root still moves.
+                Coroutine mover = StartCoroutine(Move(walkSpeed, 2.0f));
+                yield return Slip(1.8f, v => slipWalk = v, walkSpeed * 0.8f);
+                yield return mover;
+                // The walk shots: a short walk through the free spot, so the figure is in the frame (the measure above
+                // ends 2 m past it).
+                figure.transform.SetPositionAndRotation(start - walkDir * 0.7f, Quaternion.LookRotation(walkDir));
+                mover = StartCoroutine(Move(walkSpeed, 1.2f));
+                yield return BotClock.Wait(0.35f);
+                yield return Shot($"{id}_walk_play_camera");
+                yield return CloseShot($"{id}_walk_close_side", FreeSide(), 2.8f);
+                yield return mover;
+                Record($"{id}_walks", Mathf.Abs(ground - walkSpeed) < 0.1f * walkSpeed && slipWalk >= 0f,
+                    $"the clip's ground speed, root still, {ground:0.00} m/s against the walk of {by} {walkSpeed:0.00} m/s; planted foot slip {slipWalk:0.00} m/s with the root at that speed");
+                // The run, the same way at the AI run speed.
+                figure.transform.SetPositionAndRotation(start - walkDir * 1.4f, Quaternion.LookRotation(walkDir));
+                fa.SetFloat("Speed", 1f);
+                yield return BotClock.Wait(0.5f);
+                float runGround = 0f;
+                yield return Slip(1.8f, v => runGround = v);
+                figure.transform.SetPositionAndRotation(start - walkDir * 1.4f, Quaternion.LookRotation(walkDir));
+                float slipRun = -1f;
+                mover = StartCoroutine(Move(runSpeed, 1.9f));
+                yield return Slip(1.8f, v => slipRun = v, runSpeed * 0.8f);
+                yield return mover;
+                Record($"{id}_runs", Mathf.Abs(runGround - runSpeed) < 0.1f * runSpeed && slipRun >= 0f,
+                    $"the clip's ground speed, root still, {runGround:0.00} m/s against the run of {by} {runSpeed:0.00} m/s; planted foot slip {slipRun:0.00} m/s with the root at that speed");
+                fa.SetFloat("Speed", 0f);
                 Destroy(figure);
                 yield return null;
             }
@@ -319,38 +400,48 @@ namespace GlorifiedBody.Automation
         }
 
         /// <summary>
-        /// The slip of the planted foot: each frame the lower foot (the toes), while it is within 3 cm of its lowest
-        /// height, gives its speed over the floor. The median of those speeds: 0 when the stride fits the controller.
+        /// The slip of the planted foot: each frame the lower foot (the toes) gives its speed over the floor. After the
+        /// window, the frames where that foot is within 2 cm of its lowest height in the window count (the stance), and
+        /// the result is the median of their speeds: about 0 when the stride fits the root's speed. The window must hold
+        /// one full step at least (round 179: a run window of 0.6 s, half a step, read the touch-down frames only).
         /// </summary>
-        private IEnumerator Slip(float seconds, Action<float> result)
+        private IEnumerator Slip(float seconds, Action<float> result, float minRootSpeed = 0f)
         {
+            Transform root = subject.transform;
+            Vector3 rootBefore = root.position;
             Animator animator = subject.GetComponentInChildren<Animator>();
             Transform lt = animator != null ? animator.GetBoneTransform(HumanBodyBones.LeftToes) : null;
             Transform rt = animator != null ? animator.GetBoneTransform(HumanBodyBones.RightToes) : null;
             if (lt == null || rt == null) { result(-1f); yield break; }
-            var speeds = new List<float>();
+            var frames = new List<(bool left, float y, float speed)>();
             float lowL = float.MaxValue, lowR = float.MaxValue;
             Vector3 pl = lt.position, pr = rt.position;
+            int blocked = 0;
             float end = BotClock.Now + seconds;
             while (BotClock.Now < end)
             {
                 yield return null;
                 float dt = Time.deltaTime;
                 if (dt <= 0f) continue;
-                lowL = Mathf.Min(lowL, lt.position.y); lowR = Mathf.Min(lowR, rt.position.y);
-                Transform planted = lt.position.y < rt.position.y ? lt : rt;
-                Vector3 before = planted == lt ? pl : pr;
-                float low = planted == lt ? lowL : lowR;
-                if (planted.position.y - low < 0.03f)
-                {
-                    Vector3 d = planted.position - before; d.y = 0f;
-                    speeds.Add(d.magnitude / dt);
-                }
+                Vector3 rootStep = root.position - rootBefore; rootStep.y = 0f;
+                rootBefore = root.position;
+                // A blocked step (a wall in the way, or a slide along it) is no measure of the clip: only the frames where
+                // the root moves forward at speed.
+                if (minRootSpeed > 0f && (rootStep.magnitude / dt < minRootSpeed || Vector3.Dot(rootStep.normalized, root.forward) < 0.94f))
+                { pl = lt.position; pr = rt.position; blocked++; continue; }
+                bool left = lt.position.y < rt.position.y;
+                Transform planted = left ? lt : rt;
+                Vector3 d = planted.position - (left ? pl : pr); d.y = 0f;
+                frames.Add((left, planted.position.y, d.magnitude / dt));
+                if (left) lowL = Mathf.Min(lowL, planted.position.y); else lowR = Mathf.Min(lowR, planted.position.y);
                 pl = lt.position; pr = rt.position;
             }
+            var speeds = new List<float>();
+            foreach (var f in frames) if (f.y - (f.left ? lowL : lowR) < 0.02f) speeds.Add(f.speed);
             speeds.Sort();
             float median = speeds.Count > 0 ? speeds[speeds.Count / 2] : -1f;
-            Debug.Log($"[LucyBot] slip: {speeds.Count} samples, median {median:0.00} m/s, p25 {(speeds.Count > 0 ? speeds[speeds.Count / 4] : -1f):0.00}");
+            slipFrames = speeds.Count;
+            Debug.Log($"[LucyBot] slip: {speeds.Count} of {frames.Count} frames in the stance ({blocked} blocked), median {median:0.00} m/s, p25 {(speeds.Count > 0 ? speeds[speeds.Count / 4] : -1f):0.00}");
             result(median);
         }
 

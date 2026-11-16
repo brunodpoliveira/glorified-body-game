@@ -50,6 +50,9 @@ namespace GlorifiedBody.Editor.Characters
             new ClassDef("soldier", "SOLDIER", 1.80f, "", CharacterRole.Enemy),
             new ClassDef("fireman", "FIREMAN", 1.80f, "", CharacterRole.Civilian),
             new ClassDef("power_armour", "POWER ARMOUR", 2.60f, "", CharacterRole.Enemy),
+            // Round 179 (the T49 models; DEMO_PLAN §3.2): the night manager of the lodge in G19 and the navy guard of R3.
+            new ClassDef("lodge_staff", "NIGHT MANAGER", 1.75f, "", CharacterRole.Civilian),
+            new ClassDef("toll_guard", "TOLL GUARD", 1.82f, "", CharacterRole.Enemy),
         };
 
         public static IEnumerable<string> ClassIds { get { foreach (ClassDef c in Classes) yield return c.id; } }
@@ -108,7 +111,7 @@ namespace GlorifiedBody.Editor.Characters
                 string fbx = $"{ModelsFolder}/{c.id}.fbx";
                 if (!File.Exists(fbx)) continue;
                 Material material = BuildMaterial(c.id);
-                AnimatorController controller = BuildController(c.id, c.id, invector, lucy: c.role == CharacterRole.Player);
+                AnimatorController controller = BuildController(c.id, c.id, invector, lucy: c.role == CharacterRole.Player, height: c.height);
                 GameObject prefab = BuildPrefab(c, fbx, material, controller);
                 catalog.entries.Add(new CharacterEntry
                 {
@@ -247,6 +250,64 @@ namespace GlorifiedBody.Editor.Characters
             if (on) material.EnableKeyword(keyword); else material.DisableKeyword(keyword);
         }
 
+        /// <summary>
+        /// Bruno, round 179 ("Speed up the clips"): the walk and the run of every T49 class (a class with the map set)
+        /// play at the pace that fits the game's speed for the class, so the planted foot keeps its place on the floor.
+        /// The pace = the speed / (the clip's ground speed, clips.json "ground" from tools/characters_clips.py, x the
+        /// class height). Lucy: the TankController defaults (walk, run, back). The figures: the Invector AI walk and run
+        /// (ClassPace). The speeds stay as they are. A T19 class, or a clip without a measured ground speed, plays at 1.
+        /// </summary>
+        private static void ApplyPace(BlendTree tree, AnimatorState walkBack, string id, float height, bool lucy)
+        {
+            if (MapPath(id, "normal") == null) return; // a T19 class
+            ClipTravelFile measured = CharacterImportSettings.ReadClipTravel($"{ModelsFolder}/{id}.fbx");
+            float walkSpeed, runSpeed, backSpeed;
+            if (lucy)
+            {
+                var probe = new GameObject("[Pace]");
+                var tank = probe.AddComponent<GlorifiedBody.Player.TankController>();
+                var so = new SerializedObject(tank);
+                walkSpeed = so.FindProperty("walkSpeed").floatValue;
+                runSpeed = so.FindProperty("runSpeed").floatValue;
+                backSpeed = so.FindProperty("backSpeed").floatValue;
+                Object.DestroyImmediate(probe);
+            }
+            else
+            {
+                walkSpeed = ClassPace.FigureWalkSpeed;
+                runSpeed = ClassPace.FigureRunSpeed;
+                backSpeed = walkSpeed;
+            }
+            float Pace(string clip, float speed)
+            {
+                ClipTravel info = measured?.Find(clip);
+                return info != null && info.ground > 0.05f ? speed / (info.ground * height) : 1f;
+            }
+            float walkPace = Pace("walk", walkSpeed), runPace = Pace("run", runSpeed), backPace = Pace("walk", backSpeed);
+            ChildMotion[] children = tree.children;
+            for (int i = 0; i < children.Length; i++)
+            {
+                if (Mathf.Approximately(children[i].threshold, 0.5f)) children[i].timeScale = walkPace;
+                else if (Mathf.Approximately(children[i].threshold, 1f)) children[i].timeScale = runPace;
+            }
+            tree.children = children;
+            walkBack.speed = -backPace;
+            Debug.Log($"[CreateCharacterAssets] {id}: the pace of the clips (round 179): walk x{walkPace:0.00} ({walkSpeed} m/s), run x{runPace:0.00} ({runSpeed} m/s), back x{backPace:0.00} ({backSpeed} m/s)");
+        }
+
+        /// <summary>The pace of a clip in a class controller: the timeScale of its blend child (walk 0.5, run 1). 1 when absent.</summary>
+        public static float PaceOf(AnimatorController controller, float threshold)
+        {
+            foreach (ChildAnimatorState s in controller.layers[0].stateMachine.states)
+            {
+                if (s.state.motion is BlendTree tree)
+                {
+                    foreach (ChildMotion c in tree.children) if (Mathf.Approximately(c.threshold, threshold)) return c.timeScale;
+                }
+            }
+            return 1f;
+        }
+
         /// <summary>The clips inside an FBX of ours, by their names (idle, walk, run after the import settings).</summary>
         private static Dictionary<string, AnimationClip> ClipsOf(string fbxPath)
         {
@@ -288,7 +349,7 @@ namespace GlorifiedBody.Editor.Characters
         /// Locomotion (a 1D blend on Speed: idle 0, walk 0.5, run 1) plus the single-pose states. The clips idle,
         /// walk and run come from the class FBX; the poses from Invector (placeholders, PROPOSED).
         /// </summary>
-        private static AnimatorController BuildController(string name, string clipsFrom, Dictionary<string, AnimationClip> invector, bool lucy)
+        private static AnimatorController BuildController(string name, string clipsFrom, Dictionary<string, AnimationClip> invector, bool lucy, float height)
         {
             string path = $"{AnimFolder}/{name}.controller";
             if (File.Exists(path)) AssetDatabase.DeleteAsset(path);
@@ -323,6 +384,7 @@ namespace GlorifiedBody.Editor.Characters
             AnimatorState walkBack = sm.AddState("WalkBack");
             walkBack.motion = walk;
             walkBack.speed = -1f;
+            ApplyPace(tree, walkBack, clipsFrom, height, lucy);
             AnimatorState dodge = sm.AddState("Dodge");
             dodge.motion = Pick(invector, idle, "the dodge", "Roll");
             // The dash lasts 0.35 s. The roll clip plays at the pace that ends it in about half a second, so the

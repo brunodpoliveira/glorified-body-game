@@ -237,6 +237,41 @@ namespace GlorifiedBody.Editor.Demo
             Debug.Log($"[DemoWorld] sight: {cameras} cameras see {(cameras > 0 ? (float)total / cameras : 0f):0.0} of {all.Length} rooms on average");
         }
 
+        /// <summary>
+        /// The figure kinds of round 179 on the saved world, with no full build: the R3 guard and its spare become the
+        /// navy toll guard (DemoCoda.TollGuardKind), the G19 night manager the lodge staff (DemoDining.NightManagerKind).
+        /// The room builders set the same kinds, so a full build gives the same scene.
+        /// Batch: tools/unity.sh exec GlorifiedBody.Editor.Demo.DemoWorld.ApplyRound179Kinds
+        /// </summary>
+        public static void ApplyRound179Kinds()
+        {
+            Scene scene = EditorSceneManager.OpenScene(ScenePath);
+            var wanted = new Dictionary<string, string>
+            {
+                { "Guard_Booth", DemoCoda.TollGuardKind },
+                { "Spare_Guard_Booth", DemoCoda.TollGuardKind },
+                { "Night_Manager", DemoDining.NightManagerKind },
+            };
+            int changed = 0, found = 0;
+            foreach (GameObject root in scene.GetRootGameObjects())
+            {
+                foreach (GlorifiedBody.Enemy.EnemySpawn spawn in root.GetComponentsInChildren<GlorifiedBody.Enemy.EnemySpawn>(true))
+                {
+                    if (!wanted.TryGetValue(spawn.name, out string kind)) continue;
+                    found++;
+                    if (spawn.kind == kind) continue;
+                    Debug.Log($"[DemoWorld] {spawn.name}: {spawn.kind} -> {kind}");
+                    spawn.kind = kind;
+                    EditorUtility.SetDirty(spawn);
+                    changed++;
+                }
+            }
+            if (changed > 0) EditorSceneManager.MarkSceneDirty(scene);
+            EditorSceneManager.SaveScene(scene);
+            Debug.Log($"[DemoWorld] round 179 kinds: {found} of {wanted.Count} figures found, {changed} changed");
+            if (found != wanted.Count) Debug.LogError("[DemoWorld] round 179 kinds: a figure is missing");
+        }
+
         /// <summary>The sight lists again, on the saved world (after a change of walls or cameras, with no full build).</summary>
         public static void Resight()
         {

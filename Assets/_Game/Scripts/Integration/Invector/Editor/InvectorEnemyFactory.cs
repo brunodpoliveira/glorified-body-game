@@ -59,10 +59,12 @@ namespace GlorifiedBody.Integration.Invector.Build
         {
             switch (classId)
             {
-                case "guard": return new Spec { classId = classId, health = 60f, rank = EnemyMorale.Rank.Guard };
+                case "guard":
+                case "toll_guard": return new Spec { classId = classId, health = 60f, rank = EnemyMorale.Rank.Guard }; // round 179: the navy guard of R3
                 case "power_armour": return new Spec { classId = classId, health = 250f, heavy = true, range = 9f, rank = EnemyMorale.Rank.Heavy };
                 // The unarmed civilians (design §3.3): the lab workers and the nurses. PROPOSED health.
                 case "labworker":
+                case "lodge_staff": // round 179: the night manager of G19
                 case "nurse": return new Spec { classId = classId, health = 30f, canMelee = false, civilian = true, rank = EnemyMorale.Rank.UnarmedCivilian };
                 default: return new Spec { classId = classId };
             }
@@ -79,6 +81,7 @@ namespace GlorifiedBody.Integration.Invector.Build
             "soldier_pistol", "soldier_rifle", "soldier_gas", "soldier_shield", "guard_pistol", "guard_shield", "power_armour", "labworker", "nurse",
             "labworker_pistol", "labworker_knife", "patient",
             "soldier_shotgun", "soldier_grenades", "power_armour_guns", // the Dining Hall (rounds 121 and 122)
+            "toll_guard_pistol", "lodge_staff", // round 179: the R3 guard and the G19 night manager (T49 models)
         };
 
         /// <summary>The spec of a kind: the class's spec with the kind's weapon and shield.</summary>
@@ -95,6 +98,8 @@ namespace GlorifiedBody.Integration.Invector.Build
                 case "soldier_grenades": { Spec s = SpecFor("soldier"); s.weapon = DummyShooter.Weapon.GrenadeLauncher; return s; }
                 case "power_armour_guns": { Spec s = SpecFor("power_armour"); s.weapon = DummyShooter.Weapon.ArmourGuns; s.range = 12f; return s; }
                 case "guard_pistol": return SpecFor("guard");
+                case "toll_guard_pistol": return SpecFor("toll_guard");
+                case "lodge_staff": return SpecFor("lodge_staff");
                 case "guard_shield": { Spec s = SpecFor("guard"); s.shield = true; return s; }
                 case "power_armour": { Spec s = SpecFor("power_armour"); s.weapon = DummyShooter.Weapon.ArmourLaunchers; return s; }
                 case "labworker": return SpecFor("labworker");
@@ -131,7 +136,28 @@ namespace GlorifiedBody.Integration.Invector.Build
         /// Batch: tools/unity.sh exec GlorifiedBody.Integration.Invector.Build.InvectorEnemyFactory.BuildEnemyPrefabs
         /// </summary>
         [MenuItem("GlorifiedBody/Content/Build Enemy Prefabs (after a vendor import)", priority = 22)]
-        public static void BuildEnemyPrefabs()
+        public static void BuildEnemyPrefabs() => BuildEnemyPrefabs(Kinds);
+
+        /// <summary>
+        /// Only the kinds of the T49 classes (a class with the map set, tools/characters.sh --maps): after a T49 model
+        /// swap, the enemy prefabs of those classes are built again, and the others stay as they are. A prefab keeps
+        /// the mesh of the model it was built from, so an old prefab has no body after the swap.
+        /// Batch: tools/unity.sh exec GlorifiedBody.Integration.Invector.Build.InvectorEnemyFactory.BuildT49EnemyPrefabs
+        /// </summary>
+        [MenuItem("GlorifiedBody/Content/Build Enemy Prefabs of the T49 Classes", priority = 23)]
+        public static void BuildT49EnemyPrefabs()
+        {
+            var kinds = new List<string>();
+            foreach (string kind in Kinds)
+            {
+                string classId = SpecForKind(kind).classId;
+                if (System.IO.File.Exists($"{CreateCharacterAssets.ModelsFolder}/{classId}_normal.png")) kinds.Add(kind);
+            }
+            Debug.Log($"[InvectorEnemyFactory] the T49 kinds: {string.Join(", ", kinds)}");
+            BuildEnemyPrefabs(kinds.ToArray());
+        }
+
+        private static void BuildEnemyPrefabs(string[] kinds)
         {
             if (!AssetDatabase.IsValidFolder(PrefabFolder))
             {
@@ -143,7 +169,7 @@ namespace GlorifiedBody.Integration.Invector.Build
             vFSMBehaviour fsm = BuildSoldierFsm();
             CharacterCatalog catalog = AssetDatabase.LoadAssetAtPath<CharacterCatalog>(CreateCharacterAssets.CatalogPath);
             int built = 0;
-            foreach (string kind in Kinds)
+            foreach (string kind in kinds)
             {
                 GameObject figure = BuildSoldier(kind, SpecForKind(kind), Vector3.zero, 0f, catalog, fsm);
                 if (figure == null) continue;
@@ -154,7 +180,7 @@ namespace GlorifiedBody.Integration.Invector.Build
                 else Debug.LogError($"[InvectorEnemyFactory] the prefab {path} did not save.");
             }
             AssetDatabase.SaveAssets();
-            Debug.Log($"[InvectorEnemyFactory] built {built} of {Kinds.Length} enemy prefabs in {PrefabFolder}.");
+            Debug.Log($"[InvectorEnemyFactory] built {built} of {kinds.Length} enemy prefabs in {PrefabFolder}.");
         }
 
         // ── The FSM ───────────────────────────────────────────────────

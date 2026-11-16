@@ -179,6 +179,8 @@ namespace GlorifiedBody.Editor.Demo
 
         // ── G19 ───────────────────────────────────────────────────────
 
+        public const string NightManagerKind = "lodge_staff";
+
         private static void G19(DemoRoom r)
         {
             // The pass, the note of the chef over it (L33), the range, two walk-ins.
@@ -190,7 +192,7 @@ namespace GlorifiedBody.Editor.Demo
             r.Sign("Sign_Walk_In_1", "WALK-IN 1", new Vector3(42.33f, 1.9f, -5f), Vector3.left, new Vector2(0.6f, 0.18f), 18);
 
             // The night manager of the lodge by walk-in 1: he begs her to take the key.
-            EnemySpawn manager = r.Figure("Night_Manager", "labworker", new Vector3(41.9f, 0f, -6.4f), 90f, variant: 1);
+            EnemySpawn manager = r.Figure("Night_Manager", NightManagerKind, new Vector3(41.9f, 0f, -6.4f), 90f, variant: 1); // the lodge staff (T49, round 179)
             manager.hides = true;
             manager.hideLine = BarkBookSetup.Scripted("civilian", "G19, the night manager of the lodge, hides by walk-in 1, Lucy within 4.5 m (his hide line)", 0, "Kitchen's closed. Kitchen's closed. Kitchen's closed."); // the writer's (barks.csv, round 113, PROPOSED)
             manager.foundLine = BarkBookSetup.Scripted("civilian", "G19, the night manager of the lodge, found by walk-in 1, Lucy within 2 m (his found line)", 0, "Ma'am. The key's on the board, in the office. Take it. I'll sign it out. Just take it and go.");

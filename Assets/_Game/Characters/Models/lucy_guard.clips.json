@@ -1,5 +1,5 @@
 {
-  "source": "lucy_guard_animated.glb",
+  "source": "lucy_guard_t49_game.glb",
   "hips": "mixamorig:Hips",
   "chain": [
     "Armature",
@@ -11,26 +11,56 @@
     {
       "name": "idle",
       "duration": 15.3333,
-      "keys": 461,
+      "keys": 369,
       "travel": 0.0,
-      "reach": 0.1634,
-      "travels": false
+      "reach": 0.0004,
+      "travels": false,
+      "ground": 0.0119
+    },
+    {
+      "name": "idle.001",
+      "duration": 15.3333,
+      "keys": 369,
+      "travel": 0.0002,
+      "reach": 0.1701,
+      "travels": false,
+      "ground": 0.0112
     },
     {
       "name": "run",
-      "duration": 1.2333,
-      "keys": 38,
-      "travel": 2.9651,
-      "reach": 2.9651,
-      "travels": true
+      "duration": 1.2083,
+      "keys": 30,
+      "travel": 0.0011,
+      "reach": 0.0019,
+      "travels": false,
+      "ground": 2.1893
+    },
+    {
+      "name": "run.001",
+      "duration": 1.25,
+      "keys": 31,
+      "travel": 3.0385,
+      "reach": 3.0385,
+      "travels": true,
+      "ground": 2.2108
     },
     {
       "name": "walk",
       "duration": 2.3333,
-      "keys": 71,
-      "travel": 1.5422,
-      "reach": 1.5422,
-      "travels": true
+      "keys": 57,
+      "travel": 0.0003,
+      "reach": 0.0027,
+      "travels": false,
+      "ground": 0.7054
+    },
+    {
+      "name": "walk.001",
+      "duration": 2.3333,
+      "keys": 57,
+      "travel": 1.5849,
+      "reach": 1.5849,
+      "travels": true,
+      "ground": 0.7118
     }
   ]
 }

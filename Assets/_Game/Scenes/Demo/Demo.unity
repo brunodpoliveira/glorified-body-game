@@ -11871,7 +11871,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9ab2d557ca4b1aebc9be100da1beb9ab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GlorifiedBody.Enemy.EnemySpawn
-  kind: labworker
+  kind: lodge_staff
   variant: 1
   drop: {fileID: 0}
   line: 
@@ -77379,7 +77379,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9ab2d557ca4b1aebc9be100da1beb9ab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GlorifiedBody.Enemy.EnemySpawn
-  kind: guard_pistol
+  kind: toll_guard_pistol
   variant: -1
   drop: {fileID: 0}
   line: 
@@ -161561,7 +161561,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9ab2d557ca4b1aebc9be100da1beb9ab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GlorifiedBody.Enemy.EnemySpawn
-  kind: guard_pistol
+  kind: toll_guard_pistol
   variant: -1
   drop: {fileID: 0}
   line: 

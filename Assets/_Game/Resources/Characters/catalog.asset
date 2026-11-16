@@ -67,3 +67,15 @@ MonoBehaviour:
     height: 2.6
     outfitId: 
     role: 1
+  - id: lodge_staff
+    displayName: NIGHT MANAGER
+    prefab: {fileID: 4377753276151305513, guid: f1416922e58b05dbca385ec59ff79e1b, type: 3}
+    height: 1.75
+    outfitId: 
+    role: 2
+  - id: toll_guard
+    displayName: TOLL GUARD
+    prefab: {fileID: 3325369429173864850, guid: a8feb28bd77993621a294fae1e6d1235, type: 3}
+    height: 1.82
+    outfitId: 
+    role: 1

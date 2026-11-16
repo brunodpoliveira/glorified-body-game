@@ -14,7 +14,8 @@
       "keys": 369,
       "travel": 0.0,
       "reach": 0.0003,
-      "travels": false
+      "travels": false,
+      "ground": 0.0111
     },
     {
       "name": "run",
@@ -22,7 +23,8 @@
       "keys": 30,
       "travel": 0.0,
       "reach": 0.0,
-      "travels": false
+      "travels": false,
+      "ground": 2.0884
     },
     {
       "name": "walk",
@@ -30,7 +32,8 @@
       "keys": 57,
       "travel": 0.0003,
       "reach": 0.0019,
-      "travels": false
+      "travels": false,
+      "ground": 0.6826
     }
   ]
 }

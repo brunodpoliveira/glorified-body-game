@@ -12,6 +12,8 @@ decision comes from the data, not from the clip name.
 The hips position is evaluated through the node chain (the armature, the root bone, the hips) at every key
 time, in the glTF world (y up). travel = |P(last) - P(first)| on xz. reach = the largest |P(t) - P(first)|
 on xz. A clip travels when travel >= TRAVEL_MIN (source units: the T19 figures are 1 m tall).
+ground = the speed of the planted foot against the hips (ground_speed): CreateCharacterAssets plays Lucy's walk and
+run at her controller's speed over this (Bruno, round 179: "Speed up the clips").
 """
 import json
 import os
@@ -152,6 +154,51 @@ def world_position(doc, chain, tracks, t):
     return m[:3, 3]
 
 
+def chain_to(doc, parent, index):
+    chain = [index]
+    while chain[-1] in parent:
+        chain.append(parent[chain[-1]])
+    chain.reverse()
+    return chain
+
+
+def ground_speed(doc, blob, anim, parent, hips):
+    """The speed of the planted foot against the hips, on the floor (source units a second): the speed the figure
+    must move over the floor for its feet not to slide. Each sample (60 a second) takes the lower toe; it counts
+    while that toe is within 2 % of the figure's height (0.02 at 1 m) of its lowest point in the clip."""
+    names = [n.get('name', '') for n in doc['nodes']]
+    toes = [i for i, n in enumerate(names) if n.endswith('LeftToeBase') or n.endswith('RightToeBase')]
+    if len(toes) != 2:
+        return 0.0
+    chains = {i: chain_to(doc, parent, i) for i in toes + [hips]}
+    wanted = set(n for c in chains.values() for n in c)
+    tracks = {}
+    end = 0.0
+    for channel in anim['channels']:
+        target = channel['target']
+        node = target.get('node')
+        if node not in wanted or target['path'] not in ('translation', 'rotation', 'scale'):
+            continue
+        track = Track(doc, blob, anim['samplers'][channel['sampler']])
+        tracks.setdefault(node, {})[target['path']] = track
+        end = max(end, float(track.times[-1]))
+    if end <= 0:
+        return 0.0
+    ts = np.arange(0.0, end, 1.0 / 60.0)
+    pos = {i: np.array([world_position(doc, chains[i], tracks, t) for t in ts]) for i in chains}
+    rel = {i: pos[i] - pos[hips] for i in toes}
+    low = {i: pos[i][:, 1].min() for i in toes}
+    speeds = []
+    for k in range(1, len(ts)):
+        a, b = toes
+        planted = a if pos[a][k, 1] < pos[b][k, 1] else b
+        if pos[planted][k, 1] - low[planted] > 0.02:
+            continue
+        d = rel[planted][k, [0, 2]] - rel[planted][k - 1, [0, 2]]
+        speeds.append(float(np.linalg.norm(d)) * 60.0)
+    return round(float(np.median(speeds)), 4) if speeds else 0.0
+
+
 def measure(doc, blob):
     hips = find_hips(doc)
     parent = parents(doc)
@@ -175,7 +222,7 @@ def measure(doc, blob):
             times.update(float(x) for x in track.times)
         if not times:
             # No key on the chain: the clip cannot travel.
-            clips.append({'name': anim.get('name', f'anim{len(clips)}'), 'duration': 0.0, 'keys': 0, 'travel': 0.0, 'reach': 0.0, 'travels': False})
+            clips.append({'name': anim.get('name', f'anim{len(clips)}'), 'duration': 0.0, 'keys': 0, 'travel': 0.0, 'reach': 0.0, 'travels': False, 'ground': 0.0})
             continue
         ordered = sorted(times)
         positions = np.array([world_position(doc, chain, tracks, t) for t in ordered])
@@ -189,6 +236,7 @@ def measure(doc, blob):
             'travel': round(travel, 4),
             'reach': round(reach, 4),
             'travels': travel >= TRAVEL_MIN,
+            'ground': ground_speed(doc, blob, anim, parent, hips),
         })
     return names[hips], chain, clips
 
@@ -214,7 +262,7 @@ def main(argv):
         f.write('\n')
     for clip in clips:
         verdict = 'travels' if clip['travels'] else 'stays'
-        print(f"[characters_clips] {os.path.basename(source)} {clip['name']}: {clip['duration']:.2f} s, travel {clip['travel']:.3f}, reach {clip['reach']:.3f} -> {verdict}")
+        print(f"[characters_clips] {os.path.basename(source)} {clip['name']}: {clip['duration']:.2f} s, travel {clip['travel']:.3f}, reach {clip['reach']:.3f}, ground {clip['ground']:.3f}/s -> {verdict}")
     if not clips:
         print(f'[characters_clips] {os.path.basename(source)}: no animation in the file')
     return 0

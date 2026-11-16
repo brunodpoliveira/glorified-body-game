@@ -109,7 +109,141 @@ namespace GlorifiedBody.Tests.EditMode
             CheckT49Class(id, travels: true, new[] { (mesh, triangles) }, maxClothSmoothness: 0.3f, wantsMetal: false);
         }
 
-        private static void CheckT49Class(string id, bool travels, (string mesh, int triangles)[] meshes, float maxClothSmoothness, bool wantsMetal)
+        /// <summary>
+        /// The T49 Lucy guard (round 179): the body baked to 9,000 with the plain head cut off (8,349 triangles) and the
+        /// T27 Crown (2,800, its own material), 23 bones, the clips in place like Lucy bare, the 2048 map sets.
+        /// </summary>
+        [Test]
+        public void LucyGuard_IsTheT49Model_WithTheCrown_AndItsMaps()
+        {
+            CheckT49Class("lucy_guard", travels: false, new[] { ("lucy_guard_t49", 8349), ("crown_t27", 2800) },
+                maxClothSmoothness: 0.3f, wantsMetal: false);
+            Material crown = AssetDatabase.LoadAssetAtPath<Material>(CreateCharacterAssets.MaterialsFolder + "/lucy_guard_crown_t27.mat");
+            Assert.IsNotNull(crown, "the Crown has its own material");
+            Assert.IsNotNull(crown.GetTexture("_BumpMap"), "the Crown's normal map (the T27 wear maps)");
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(CreateCharacterAssets.PrefabsFolder + "/lucy_guard.prefab");
+            SkinnedMeshRenderer crownRenderer = null;
+            foreach (SkinnedMeshRenderer r in prefab.GetComponentsInChildren<SkinnedMeshRenderer>(true)) if (r.name == "crown_t27") crownRenderer = r;
+            Assert.IsNotNull(crownRenderer, "the Crown's renderer in the prefab");
+            Assert.AreEqual(crown, crownRenderer.sharedMaterial, "the Crown wears its own material");
+            // The Crown is skinned 100 % to the head (round 178, CANON 2).
+            Mesh mesh = crownRenderer.sharedMesh;
+            string head = null;
+            foreach (BoneWeight w in mesh.boneWeights)
+            {
+                Assert.GreaterOrEqual(w.weight0, 0.999f, "the Crown: one bone a vertex");
+                string bone = crownRenderer.bones[w.boneIndex0].name;
+                if (head == null) head = bone;
+                Assert.AreEqual(head, bone, "the Crown: every vertex on the same bone");
+            }
+            Assert.AreEqual("mixamorig:Head", head, "the Crown rides the head bone");
+        }
+
+        /// <summary>The T49 lodge staff and toll guard (round 179): 8,999 triangles, the walk and the run travel, the map set.</summary>
+        [TestCase("lodge_staff", "lodge_staff_t49", 8999)]
+        [TestCase("toll_guard", "toll_guard_t49", 8999)]
+        public void TheRound179Figures_AreT49Models_WithTheirMaps(string id, string mesh, int triangles)
+        {
+            CheckT49Class(id, travels: true, new[] { (mesh, triangles) }, maxClothSmoothness: 0.3f, wantsMetal: false);
+        }
+
+        /// <summary>The T49 soldier and fireman (round 181): 8,999 and 8,998 triangles, the walk and the run travel, the cloth matte.</summary>
+        [TestCase("soldier", "soldier_t49", 8999)]
+        [TestCase("fireman", "fireman_t49", 8998)]
+        public void TheRound181Classes_AreT49Models_WithTheirMaps(string id, string mesh, int triangles)
+        {
+            CheckT49Class(id, travels: true, new[] { (mesh, triangles) }, maxClothSmoothness: 0.3f, wantsMetal: false);
+        }
+
+        /// <summary>
+        /// The T49 lab worker (round 181): 8,999 triangles. The suit keeps its baked gloss with metal 0 (DEMO_PLAN §3.2
+        /// "glossy light blue", round 181 CANON 1): no cloth cap for this class, the gloss must stay.
+        /// </summary>
+        [Test]
+        public void TheLabWorker_IsTheT49Model_AndKeepsItsGlossySuit()
+        {
+            CheckT49Class("labworker", travels: true, new[] { ("labworker_t49", 8999) }, maxClothSmoothness: 1f, wantsMetal: false, minClothSmoothness: 0.6f);
+        }
+
+        /// <summary>
+        /// Round 179 ("Speed up the clips"): in every T49 class controller the walk and the run play at the game speed
+        /// over the clip's ground speed (clips.json) x the class height. Lucy: the TankController speeds (her walk about
+        /// x1.38). The figures: the Invector AI speeds (ClassPace). A T19 class plays at 1.
+        /// </summary>
+        [TestCase("lucy_bare", 1.70f, true)]
+        [TestCase("lucy_guard", 1.70f, true)]
+        [TestCase("guard", 1.80f, false)]
+        [TestCase("patient", 1.68f, false)]
+        [TestCase("nurse", 1.68f, false)]
+        [TestCase("lodge_staff", 1.75f, false)]
+        [TestCase("toll_guard", 1.82f, false)]
+        [TestCase("labworker", 1.78f, false)]
+        [TestCase("soldier", 1.80f, false)]
+        [TestCase("fireman", 1.80f, false)]
+        public void T49Clips_PlayAtTheGameSpeed(string id, float height, bool lucy)
+        {
+            ClipTravelFile measured = CharacterImportSettings.ReadClipTravel($"{CreateCharacterAssets.ModelsFolder}/{id}.fbx");
+            Assert.IsNotNull(measured, id + ".clips.json");
+            float walkGround = measured.Find("walk").ground, runGround = measured.Find("run").ground;
+            Assert.Greater(walkGround, 0.3f, id + ": the walk's ground speed is measured (tools/characters_clips.py)");
+            Assert.Greater(runGround, walkGround, id + ": the run's feet move faster than the walk's");
+            float walkSpeed = lucy ? 1.6f : ClassPace.FigureWalkSpeed, runSpeed = lucy ? 3.6f : ClassPace.FigureRunSpeed;
+            var controller = AssetDatabase.LoadAssetAtPath<UnityEditor.Animations.AnimatorController>($"Assets/_Game/Characters/Anim/{id}.controller");
+            Assert.IsNotNull(controller, id + ".controller");
+            float walkPace = CreateCharacterAssets.PaceOf(controller, 0.5f), runPace = CreateCharacterAssets.PaceOf(controller, 1f);
+            Debug.Log($"[CharacterImportTests] {id} pace: walk x{walkPace:0.00} (feet {walkGround * height:0.00} m/s at x1, game {walkSpeed:0.00}), run x{runPace:0.00} (feet {runGround * height:0.00} m/s at x1, game {runSpeed:0.00})");
+            Assert.AreEqual(walkSpeed, walkGround * height * walkPace, 0.02f, id + ": the walk's feet move at the game walk speed");
+            Assert.AreEqual(runSpeed, runGround * height * runPace, 0.02f, id + ": the run's feet move at the game run speed");
+            if (id == "lucy_bare") Assert.AreEqual(1.38f, walkPace, 0.02f, "Lucy's walk x1.38 (round 179)");
+        }
+
+        [Test]
+        public void T19Clips_PlayAtOne()
+        {
+            // The power armour is the last T19 class (round 181).
+            var controller = AssetDatabase.LoadAssetAtPath<UnityEditor.Animations.AnimatorController>("Assets/_Game/Characters/Anim/power_armour.controller");
+            Assert.IsNotNull(controller, "power_armour.controller");
+            Assert.AreEqual(1f, CreateCharacterAssets.PaceOf(controller, 0.5f), 1e-4f, "a T19 walk plays at 1");
+            Assert.AreEqual(1f, CreateCharacterAssets.PaceOf(controller, 1f), 1e-4f, "a T19 run plays at 1");
+        }
+
+        /// <summary>
+        /// The enemy prefabs of the T49 classes (Resources/Enemies, InvectorEnemyFactory) carry the current model: every
+        /// skinned mesh is a mesh of the class FBX on disk. A model swap under the same file name leaves the old mesh
+        /// reference in a prefab that was not built again, and the figure has no body in the game.
+        /// </summary>
+        [TestCase("guard_pistol", "guard")]
+        [TestCase("guard_shield", "guard")]
+        [TestCase("patient", "patient")]
+        [TestCase("nurse", "nurse")]
+        [TestCase("lodge_staff", "lodge_staff")]
+        [TestCase("toll_guard_pistol", "toll_guard")]
+        [TestCase("labworker", "labworker")]
+        [TestCase("labworker_pistol", "labworker")]
+        [TestCase("labworker_knife", "labworker")]
+        [TestCase("soldier_pistol", "soldier")]
+        [TestCase("soldier_rifle", "soldier")]
+        [TestCase("soldier_gas", "soldier")]
+        [TestCase("soldier_shield", "soldier")]
+        [TestCase("soldier_shotgun", "soldier")]
+        [TestCase("soldier_grenades", "soldier")]
+        public void T49EnemyPrefabs_WearTheCurrentModel(string kind, string classId)
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>($"Assets/_Game/Resources/Enemies/{kind}.prefab");
+            Assert.IsNotNull(prefab, kind + ".prefab (InvectorEnemyFactory.BuildEnemyPrefabs)");
+            string fbx = $"{CreateCharacterAssets.ModelsFolder}/{classId}.fbx";
+            var meshes = new System.Collections.Generic.HashSet<Mesh>();
+            foreach (UnityEngine.Object o in AssetDatabase.LoadAllAssetsAtPath(fbx)) if (o is Mesh m) meshes.Add(m);
+            SkinnedMeshRenderer[] skins = prefab.GetComponentsInChildren<SkinnedMeshRenderer>(true);
+            Assert.Greater(skins.Length, 0, kind + ": a skinned mesh");
+            foreach (SkinnedMeshRenderer skin in skins)
+            {
+                Assert.IsNotNull(skin.sharedMesh, $"{kind}/{skin.name}: a mesh");
+                Assert.IsTrue(meshes.Contains(skin.sharedMesh), $"{kind}/{skin.name}: the mesh {skin.sharedMesh.name} comes from {fbx}");
+            }
+        }
+
+        private static void CheckT49Class(string id, bool travels, (string mesh, int triangles)[] meshes, float maxClothSmoothness, bool wantsMetal, float minClothSmoothness = 0f)
         {
             string fbx = CharacterImportSettings.Folder + id + ".fbx";
             ClipTravelFile measured = CharacterImportSettings.ReadClipTravel(fbx);
@@ -174,6 +308,7 @@ namespace GlorifiedBody.Tests.EditMode
             float hardMedian = hard.Count > 0 ? hard[hard.Count / 2] : 0f;
             Debug.Log($"[CharacterImportTests] {id} gloss: not metal smoothness median {softMedian:0.00}, p90 {softP90:0.00}, glossy (> 0.5) {glossy * 100f / soft.Count:0.0} %; metal {hardShare * 100f:0.0} %, smoothness median {hardMedian:0.00}");
             Assert.LessOrEqual(softMedian, maxClothSmoothness, id + ": the skin and the cloth are matte (about 0.25)");
+            Assert.GreaterOrEqual(softMedian, minClothSmoothness, id + ": the baked gloss stays (no cap)");
             if (wantsMetal)
             {
                 Assert.LessOrEqual(softP90, 0.3f, id + ": the whole skin is matte, the neck band too (round 178)");

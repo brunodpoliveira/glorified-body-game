@@ -164,6 +164,8 @@ namespace GlorifiedBody.Editor.Demo
         }
 
         /// <summary>R3: the guard behind the rail, the barrier's switch in the booth behind him, two capsules by the door, then the title.</summary>
+        public const string TollGuardKind = "toll_guard_pistol";
+
         private static void R3(DemoRoom r)
         {
             const float rail = 22.5f;
@@ -173,8 +175,9 @@ namespace GlorifiedBody.Editor.Demo
             Sent(r, "Switch_Barrier", new Vector3(83f, 0f, 25.5f), BarrierFlag);
             r.Capsule("Capsule_R3_A", DrugType.Nalcon, new Vector3(76.8f, 0.15f, 18.6f));
             r.Capsule("Capsule_R3_B", DrugType.NalconMind, new Vector3(77.6f, 0.15f, 18.6f));
-            r.Figure("Guard_Booth", "guard_pistol", new Vector3(81f, 0f, 24.6f), 180f);
-            Spare(r, "Guard_Booth", "guard_pistol", new Vector3(77f, 0f, 25.3f), BarrierFlag, false);
+            // The navy toll guard, no vest (DEMO_PLAN §3.2, rounds 64, 66; the T49 model, round 179).
+            r.Figure("Guard_Booth", TollGuardKind, new Vector3(81f, 0f, 24.6f), 180f);
+            Spare(r, "Guard_Booth", TollGuardKind, new Vector3(77f, 0f, 25.3f), BarrierFlag, false);
             GameObject barrier = MenuLoopSetup.EnsureChild(r.Story, "Gate_Barrier");
             FlagGate gate = MenuLoopSetup.EnsureComponent<FlagGate>(barrier);
             gate.flag = BarrierFlag;

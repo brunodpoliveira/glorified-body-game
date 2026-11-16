@@ -1,5 +1,5 @@
 {
-  "source": "labworker_animated.glb",
+  "source": "labworker_t49_game.glb",
   "hips": "mixamorig:Hips",
   "chain": [
     "Armature",
@@ -11,26 +11,29 @@
     {
       "name": "idle",
       "duration": 15.3333,
-      "keys": 461,
-      "travel": 0.0,
-      "reach": 0.1632,
-      "travels": false
+      "keys": 369,
+      "travel": 0.0002,
+      "reach": 0.1603,
+      "travels": false,
+      "ground": 0.0122
     },
     {
       "name": "run",
-      "duration": 1.2333,
-      "keys": 38,
-      "travel": 2.9611,
-      "reach": 2.9611,
-      "travels": true
+      "duration": 1.25,
+      "keys": 31,
+      "travel": 2.8647,
+      "reach": 2.8647,
+      "travels": true,
+      "ground": 2.0469
     },
     {
       "name": "walk",
       "duration": 2.3333,
-      "keys": 71,
-      "travel": 1.5401,
-      "reach": 1.5401,
-      "travels": true
+      "keys": 57,
+      "travel": 1.4942,
+      "reach": 1.4942,
+      "travels": true,
+      "ground": 0.667
     }
   ]
 }

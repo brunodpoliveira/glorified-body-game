@@ -25,9 +25,15 @@ declare -A ONE_FILE=(
   [guard]="$T49/guard_v2/guard_t49_game.glb"             # round 178 (T26 full mesh + T27 bake)
   [patient]="$T49/patient_v2/patient_t49_game.glb"       # round 178
   [nurse]="$T49/nurse_v2/nurse_t49_game.glb"             # round 178
+  [lucy_guard]="$T49/lucy_guard_v2/lucy_guard_t49_game.glb"    # round 179: the body and the T27 Crown
+  [lodge_staff]="$T49/lodge_staff_v2/lodge_staff_t49_game.glb" # round 179: the night manager of G19
+  [toll_guard]="$T49/toll_guard_v2/toll_guard_t49_game.glb"    # round 179: the navy guard of R3, no vest
+  [labworker]="$T49/labworker_v2/labworker_t49_game.glb"       # round 181 (the suit keeps its baked gloss)
+  [soldier]="$T49/soldier_v2/soldier_t49_game.glb"             # round 181
+  [fireman]="$T49/fireman_v2/fireman_t49_game.glb"             # round 181
 )
 classes=("$@")
-[ ${#classes[@]} -eq 0 ] && classes=(lucy_bare lucy_guard patient nurse labworker guard soldier fireman power_armour)
+[ ${#classes[@]} -eq 0 ] && classes=(lucy_bare lucy_guard patient nurse labworker guard soldier fireman power_armour lodge_staff toll_guard)
 mkdir -p "$OUT"
 fail=0
 for c in "${classes[@]}"; do

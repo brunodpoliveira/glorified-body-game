@@ -18,6 +18,8 @@ namespace GlorifiedBody.Editor.Characters
         public float travel;
         public float reach;
         public bool travels;
+        /// <summary>The planted foot's speed against the hips, source units a second (0 in an older file).</summary>
+        public float ground;
     }
 
     /// <summary>The file next to an FBX, <c>&lt;class&gt;.clips.json</c>, written by tools/characters.sh.</summary>

@@ -1,0 +1,39 @@
+{
+  "source": "toll_guard_t49_game.glb",
+  "hips": "mixamorig:Hips",
+  "chain": [
+    "Armature",
+    "Root",
+    "mixamorig:Hips"
+  ],
+  "travelMin": 0.1,
+  "clips": [
+    {
+      "name": "idle",
+      "duration": 15.3333,
+      "keys": 369,
+      "travel": 0.0002,
+      "reach": 0.1644,
+      "travels": false,
+      "ground": 0.0108
+    },
+    {
+      "name": "run",
+      "duration": 1.25,
+      "keys": 31,
+      "travel": 2.9365,
+      "reach": 2.9365,
+      "travels": true,
+      "ground": 2.0983
+    },
+    {
+      "name": "walk",
+      "duration": 2.3333,
+      "keys": 57,
+      "travel": 1.5317,
+      "reach": 1.5317,
+      "travels": true,
+      "ground": 0.6861
+    }
+  ]
+}

@@ -248,6 +248,9 @@ namespace GlorifiedBody.Enemy
         /// </summary>
         public static string KillerIdFor(string classId, Weapon weapon)
         {
+            // The navy toll guard of R3 (round 179) is a guard: the guard's death screen row, until the writer gives
+            // it its own.
+            if (classId == "toll_guard") classId = "guard";
             string w = weapon switch
             {
                 Weapon.Rifle => "rifle",

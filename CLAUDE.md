@@ -872,8 +872,16 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   `CreateCharacterAssets`: a map set gives a material with the normal map and the smoothness from the map, a part gets its
   own material, every prefab carries its character layer (Player or Enemy: a new mesh node had no layer override in the
   scenes), `CharacterImportSettings.RefreshStaleAvatar` maps the Humanoid again after a model swap. Bot
-  `play Tutorial Main_Menu lucy 300` (`LucyModelPlaythrough`). OPEN for Bruno: Lucy's walk clip moves the feet at 1.16 m/s,
-  the controller at 1.60 (the feet slide); the figures' walk clips: guard 1.19, patient 1.15, nurse 1.00 m/s.
+  `play Tutorial Main_Menu lucy 300` (`LucyModelPlaythrough`). The foot slide: closed by round 179, see the next item.
+- 2026-11-16, T49 BATCHES 2 AND 3 AND THE CLIP PACE (`devlog-notes/2026-11-16_t49_batches_2_3.md`, rounds 179 and 181):
+  `lucy_guard` (the body and the T27 Crown), `lodge_staff` (NIGHT MANAGER, G19) and `toll_guard` (TOLL GUARD, R3, replaces
+  the navy guard), then `labworker` (the suit keeps its baked gloss), `soldier` and `fireman` are T49 models. The power
+  armour is the last T19 class. "Speed up the clips": `characters_clips.py` writes `ground` (the planted toe against the
+  hips), and `CreateCharacterAssets.ApplyPace` plays the walk and the run of each T49 controller at the game speed /
+  (`ground` x height): Lucy at the TankController speeds (walk x1.38), the figures at the Invector AI speeds
+  (`ClassPace`, 2.0 and 3.0 m/s). AFTER A MODEL SWAP: `InvectorEnemyFactory.BuildT49EnemyPrefabs` (an old enemy prefab
+  keeps the old mesh; `Resources/Enemies/` is not in git). The AI body plays the vendor animator, not the class clips.
+  Bot `play Tutorial Main_Menu lucy 600`: every T49 class on a treadmill.
 - 2026-11-06, day, MK AS AMMUNITION (`devlog-notes/2026-11-06_mk_ammo_short_death_search.md`, Bruno: "that basically makes mk an ammo counter and the pills clips"): one MK bar for each power
   (`PsychicStats.Mk(kind)`; `Nalcon` reads the selected bar; only that bar shows on the HUD), no recharge, one capsule for each power (`DrugType.Nalcon`, `NalconFire`, `NalconLift`). Every point of MK spent fills
   SHORT (`ShortPerMkPoint`). A short can kill her (killer id `short`, its own death screen row); a second wind saves her and ends the short. SCARCITY and DEEP WELL change the cost. `FireTeam`: suppression
