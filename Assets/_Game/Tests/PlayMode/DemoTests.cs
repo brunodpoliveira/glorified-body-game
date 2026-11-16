@@ -2172,6 +2172,37 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator NoCut_FlipsHerScreenDirection_AndNoCameraMoves()
+        {
+            // Bruno, 2026-11-16: "check the entire demo for 180 violations, and add that as a rule for future camera additions";
+            // "no camera moves during normal gameplay"; "the brain eye continues movigin, it's the exception".
+            // The rule and the cuts: ScreenDirection. The zones of a flag (a FlagGate) are off at the start and out of the check.
+            yield return LoadWorld();
+            int solid = 1 << LayerMask.NameToLayer("Default");
+            var failures = new List<string>();
+            foreach (FixedCamera cam in UnityEngine.Object.FindObjectsByType<FixedCamera>(FindObjectsSortMode.None))
+                if (cam.followPlayerYaw && cam.GetComponentInParent<GlorifiedBody.Rooms.Room>() != null && cam.name != "Cam_B1_eye")
+                    failures.Add($"{cam.name} turns to follow her: no camera moves in play (only the brain eye)");
+            List<CameraZone> zones = UnityEngine.Object.FindObjectsByType<CameraZone>(FindObjectsSortMode.None)
+                .Where(z => z.isActiveAndEnabled && z.fixedCamera != null && z.GetComponentInParent<GlorifiedBody.Rooms.Room>() != null).ToList();
+            List<ScreenDirection.Cut> cuts = ScreenDirection.Cuts(GlorifiedBody.Rooms.Room.All, zones, solid);
+            var flips = new Dictionary<string, (int count, Vector3 at)>();
+            foreach (ScreenDirection.Cut cut in cuts)
+            {
+                FixedCamera a = cut.from.fixedCamera, b = cut.to.fixedCamera;
+                if (a.followPlayerYaw || b.followPlayerYaw || !ScreenDirection.Flips(cut)) continue;
+                string key = string.CompareOrdinal(a.name, b.name) < 0 ? $"{a.name} | {b.name}" : $"{b.name} | {a.name}";
+                flips[key] = flips.TryGetValue(key, out var f) ? (f.count + 1, f.at) : (1, cut.at);
+            }
+            foreach (var f in flips.OrderBy(f => f.Key))
+                failures.Add($"{f.Key}: {f.Value.count} steps flip, at {f.Value.at.x:0.0} {f.Value.at.y:0.0} {f.Value.at.z:0.0}");
+            foreach (string f in failures) Debug.Log("[Rule180] " + f);
+            Debug.Log($"[Rule180] {zones.Count} zones, {cuts.Count} cut steps, {flips.Count} camera pairs flip");
+            Assert.Greater(cuts.Count, 100, "the cuts of the demo");
+            Assert.IsEmpty(failures, string.Join("\n", failures));
+        }
+
+        [UnityTest]
         public IEnumerator NoCamera_SeesAnotherRoom_ExceptThroughADoorway()
         {
             // Bruno, 2026-11-07: "in some areas the walls are not fully built, so i can see through scenarion; ... auto build

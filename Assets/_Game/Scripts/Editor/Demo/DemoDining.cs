@@ -33,7 +33,7 @@ namespace GlorifiedBody.Editor.Demo
             // Bruno, 2026-11-15: "the dining hall needs to be a lot larger; it is meant to be this opulent place, and it needs to be large
             // enough for flanking opportunities both for the player and the enemies": 24 x 13 m (12 x 10 before), 6 m high. East is free;
             // the yard's backdrop of the ward stands 1 m north of z 13.
-            Authored(Spec("G18", "THE DINING HALL", 35, 0, 59, 13, 6f, G18, new Door('W', 3, "G2", width: 2.4f), new Door('S', 41, "G19"))), // its own five cameras (2026-11-16)
+            Authored(Spec("G18", "THE DINING HALL", 35, 0, 59, 13, 6f, G18, new Door('W', 3, "G2", width: 2.4f), new Door('S', 41, "G19"))), // its own six cameras (2026-11-16)
             Spec("G19", "THE KITCHEN", 38, -12, 44, 0, 3.5f, G19, new Door('N', 41, "G18"), ServiceExit("G9b"), new Door('S', 43, "G17b")), // G17b, facilities, and the halon room (2026-11-10)
         };
 
@@ -60,7 +60,7 @@ namespace GlorifiedBody.Editor.Demo
         // ── G18 ───────────────────────────────────────────────────────
 
         /// <summary>
-        /// The five cameras of the hall (Bruno, 2026-11-16: "too many tight angles from up looking down. we need angles that capture
+        /// The cameras of the hall (Bruno, 2026-11-16: "too many tight angles from up looking down. we need angles that capture
         /// wide shots of the room, we need angles that capture it sideways"; "verify if the change from one camera to the next does
         /// not violate the 180 rule"). The cells had placed 21 cameras, and 22 pairs of neighbours flipped her screen direction.
         /// A search offline, on the hall's colliders from the saved scene and the rules of CameraCoverage, chose these: every
@@ -68,6 +68,8 @@ namespace GlorifiedBody.Editor.Demo
         /// direction. No camera turns (Bruno, the same night: "no camera moves during normal gameplay"). The zones: the north
         /// aisle (north of the column row at z 9.2), the south aisle and the nave west of x 47, the east bay (x 47 to 53), the bar
         /// end. Result of that check: 0 of 1006 floor points out of frame, both exits in view, 0 cuts that flip.
+        /// The same night, the whole-demo 180 rule (ScreenDirection) measured the sideways share of her walk on the screen, not
+        /// the turn of the cameras: the east bay flipped against the north aisle, and the bay has a sixth camera for its north half.
         /// </summary>
         private static void Cameras(DemoRoom r)
         {
@@ -77,8 +79,12 @@ namespace GlorifiedBody.Editor.Demo
             r.ExtraCamera("entry", new Vector3(49.0f, 3.0f, 2.8f), new Vector3(39.73f, -0.75f, 2.80f), 55f, new Vector3(41.0f, 1.5f, 1.9f), new Vector3(12.0f, 3f, 3.8f));
             // The nave: down the middle of the hall to the entrance (yaw 260, pitch 15).
             r.ExtraCamera("nave", new Vector3(49.8f, 3.0f, 6.8f), new Vector3(40.29f, 0.41f, 5.12f), 55f, new Vector3(41.0f, 1.5f, 6.5f), new Vector3(12.0f, 3f, 5.4f));
-            // The east bay: the side shot across the hall from the north (yaw 170, pitch 15).
-            r.ExtraCamera("bay_east", new Vector3(47.4f, 4.0f, 11.6f), new Vector3(49.08f, 1.41f, 2.09f), 72f, new Vector3(50.0f, 1.5f, 4.6f), new Vector3(6.0f, 3f, 9.2f));
+            // The east bay: the side shot across the hall from the north (yaw 170, pitch 15), on the south half of the bay.
+            r.ExtraCamera("bay_east", new Vector3(47.4f, 4.0f, 11.6f), new Vector3(49.08f, 1.41f, 2.09f), 72f, new Vector3(50.0f, 1.5f, 2.3f), new Vector3(6.0f, 3f, 4.6f));
+            // The north half of the bay (2026-11-16, the 180 rule): the east bay shot showed her walk north into the north aisle
+            // going left, the aisle's shot going right, and no one pose for the whole bay fixed it. From the north wall, straight
+            // down the bay (yaw 180, pitch 28): her walk north comes at the lens. Found offline: 0 points out of frame, 0 flips.
+            r.ExtraCamera("bay_north", new Vector3(49.8f, 4.5f, 12.4f), new Vector3(49.8f, -0.19f, 3.57f), 62f, new Vector3(50.0f, 1.5f, 6.9f), new Vector3(6.0f, 3f, 4.6f));
             // The bar end: from the north-east corner along the bar (yaw 200, pitch 15).
             r.ExtraCamera("bar", new Vector3(58.6f, 3.0f, 12.4f), new Vector3(55.30f, 0.41f, 3.32f), 55f, new Vector3(56.0f, 1.5f, 4.6f), new Vector3(6.0f, 3f, 9.2f));
         }

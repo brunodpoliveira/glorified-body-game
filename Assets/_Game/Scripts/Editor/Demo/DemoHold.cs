@@ -613,6 +613,7 @@ namespace GlorifiedBody.Editor.Demo
             }
             for (float x = TubeX0 + 0.3f; x < TubeX1; x += 0.6f)
                 Visual(r, tube, "Rib_" + x.ToString("0.0"), new Vector3(x, 1.5f, TubeZ1 - 0.05f), new Vector3(0.06f, 3f, 0.06f), new Color(0.7f, 0.82f, 0.88f), "tube_rib");
+            MenuLoopSetup.EnsureComponent<GlorifiedBody.Rooms.Room>(r.Root).open = true; // the rails are no walls: the tube's cameras see the hall
             foreach (Transform child in r.Room.transform)
             {
                 if (!child.name.StartsWith("Wall_N") && !child.name.StartsWith("Wall_S")) continue;

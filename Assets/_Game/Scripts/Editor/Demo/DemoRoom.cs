@@ -371,6 +371,7 @@ namespace GlorifiedBody.Editor.Demo
                 string tag = Cameras.Count.ToString("00");
                 FixedCamera fc = MenuLoopSetup.EnsureFixedCamera(root, $"Cam_{s.Id}_{tag}", cam, look, fov);
                 Cameras.Add(fc);
+                CellCameras.Add((cell, fc));
                 MenuLoopSetup.EnsureCameraZone(root, $"Zone_{s.Id}_{tag}", new Vector3(cell.center.x, 1.5f, cell.center.y), new Vector3(cell.width, 3f, cell.height), fc, 1);
                 if (missed > 0f) Debug.Log($"[DemoRoom] {s.Id} {fc.cameraName}: {missed:P0} of its cell out of frame");
             }
@@ -379,20 +380,142 @@ namespace GlorifiedBody.Editor.Demo
 
         private static readonly float[] Lenses = { 62f, 72f, 84f };
 
+        /// <summary>The camera of each cell and its cell (plan metres): the 180 pass of the world moves them (DemoWorld.ScreenDirections).</summary>
+        internal readonly List<(Rect cell, FixedCamera cam)> CellCameras = new List<(Rect, FixedCamera)>();
+
         /// <summary>The camera pose that sees the most of a cell's floor points, and the share it misses.</summary>
         private (Vector3 cam, Vector3 look, float fov, float missed) BestPose(Rect cell)
         {
+            Pose best = Search(cell, Vector3.zero, null, null);
+            return (best.cam, best.look, best.fov, best.missed);
+        }
+
+        private struct Pose
+        {
+            public Vector3 cam, look;
+            public float fov, missed;
+            public int exits, points, flips;
+        }
+
+        /// <summary>
+        /// The 180 rule on a cell camera (Bruno, 2026-11-16: "check the entire demo for 180 violations, and add that as a rule
+        /// for future camera additions"): a pose with fewer cuts that flip her screen direction, which sees every exit and at
+        /// least every floor point the camera sees now. flipsOf counts the flips of a pose (world space). Returns the flips
+        /// after; the camera moves only for fewer.
+        /// </summary>
+        /// <param name="headings">The flat forward of each camera on the other side of its cuts: an aim along it is a pose that cannot flip with it.</param>
+        internal int Repose(Rect cell, FixedCamera camera, Func<Vector3, Quaternion, int> flipsOf, IEnumerable<Vector3> headings)
+        {
+            Vector3 o = Root.transform.position;
+            (List<Vector3> points, List<Door> exits, List<Vector3> doorways) = CellTargets(cell, o, true);
+            int solid = 1 << LayerMask.NameToLayer("Default");
+            Transform t = camera.transform;
+            (int exitsNow, int pointsNow) = Score(points, exits, doorways, o, t.position, t.rotation, camera.fieldOfView, solid);
+            int flipsNow = flipsOf(t.position, t.rotation);
+            Pose best = Search(cell, o, flipsOf, (exitsNow, pointsNow), headings);
+            if (best.flips >= flipsNow)
+            {
+                Debug.Log($"[Rule180] {camera.name}: no better pose ({flipsNow} flips; the best that sees {exitsNow} exits and {pointsNow} points: {(best.flips == int.MaxValue ? "none" : best.flips + " flips")})");
+                return flipsNow;
+            }
+            Place(camera, best, o);
+            return best.flips;
+        }
+
+        /// <summary>
+        /// A cell camera that no pose frees of a flip (the 180 pass): its cell splits in two, as a cell with a blind spot does.
+        /// Both ways to cut it are tried; each half takes the pose with the fewest flips on the cuts of its part that sees all
+        /// its floor points and exits (cuts: the old camera's cuts, with the camera on the other side). The way with fewer
+        /// flips than now wins. The camera keeps the first half, a new camera takes the second. Else nothing changes.
+        /// </summary>
+        internal bool Split(Rect cell, FixedCamera camera, IList<(Vector3 at, Vector3 walk, FixedCamera other)> cuts, int flipsNow, IEnumerable<Vector3> headings)
+        {
+            if (Mathf.Max(cell.width, cell.height) < 3f) return false;
+            Vector3 o = Root.transform.position;
+            int solid = 1 << LayerMask.NameToLayer("Default");
+            Pose PoseFor(Rect half)
+            {
+                (List<Vector3> points, List<Door> exits, List<Vector3> doorways) = CellTargets(half, o, true);
+                Rect area = new Rect(half.x + o.x - 0.3f, half.y + o.z - 0.3f, half.width + 0.6f, half.height + 0.6f);
+                var mine = cuts.Where(c => area.Contains(new Vector2(c.at.x, c.at.z))).ToList();
+                int FlipsOf(Vector3 pos, Quaternion rot) => mine.Count(c => ScreenDirection.Flips(pos, rot, c.other.transform.position, c.other.transform.rotation, c.at, c.walk));
+                return Search(half, o, FlipsOf, (exits.Count + doorways.Count, points.Count), headings);
+            }
+            (Rect a, Rect b, Pose pa, Pose pb)? best = null;
+            foreach (bool alongX in new[] { cell.width >= cell.height, cell.width < cell.height })
+            {
+                Rect a = alongX ? new Rect(cell.x, cell.y, cell.width * 0.5f, cell.height) : new Rect(cell.x, cell.y, cell.width, cell.height * 0.5f);
+                Rect b = alongX ? new Rect(cell.center.x, cell.y, cell.width * 0.5f, cell.height) : new Rect(cell.x, cell.center.y, cell.width, cell.height * 0.5f);
+                if (Mathf.Min(a.width, a.height) < 1.5f) continue;
+                Pose pa = PoseFor(a), pb = PoseFor(b);
+                if (pa.flips == int.MaxValue || pb.flips == int.MaxValue) continue; // a half with a blind spot
+                if (pa.flips + pb.flips < flipsNow && (best == null || pa.flips + pb.flips < best.Value.pa.flips + best.Value.pb.flips)) best = (a, b, pa, pb);
+            }
+            CameraZone zone = Root.GetComponentsInChildren<CameraZone>(true).FirstOrDefault(z => z.fixedCamera == camera && z.priority == 1);
+            if (best == null || zone == null)
+            {
+                Debug.Log($"[Rule180] {camera.name}: no split (no way to cut the cell gives two halves with no blind spot and fewer flips)");
+                return false;
+            }
+            (Rect ra, Rect rb, Pose posea, Pose poseb) = best.Value;
+            Place(camera, posea, o);
+            zone.transform.position = new Vector3(ra.center.x, 1.5f, ra.center.y) + o;
+            zone.GetComponent<BoxCollider>().size = new Vector3(ra.width, 3f, ra.height);
+            EditorUtility.SetDirty(zone.transform);
+            GameObject root = MenuLoopSetup.EnsureChild(Root, "[Cameras]");
+            int n = Cameras.Count;
+            while (root.transform.Find($"Cam_{Spec.Id}_{n:00}") != null) n++;
+            FixedCamera fc = MenuLoopSetup.EnsureFixedCamera(root, $"Cam_{Spec.Id}_{n:00}", poseb.cam + o, poseb.look + o, poseb.fov);
+            Cameras.Add(fc);
+            MenuLoopSetup.EnsureCameraZone(root, $"Zone_{Spec.Id}_{n:00}", new Vector3(rb.center.x, 1.5f, rb.center.y) + o, new Vector3(rb.width, 3f, rb.height), fc, 1);
+            var shot = new GameObject("ShotPoint_" + fc.cameraName);
+            shot.transform.SetParent(Root.transform, false);
+            shot.transform.SetPositionAndRotation(fc.transform.position, fc.transform.rotation);
+            var point = shot.AddComponent<GlorifiedBody.Level.Build.ShotPoint>();
+            point.shotName = fc.cameraName;
+            point.fieldOfView = fc.fieldOfView;
+            CellCameras.Remove((cell, camera));
+            CellCameras.Add((ra, camera));
+            CellCameras.Add((rb, fc));
+            Debug.Log($"[Rule180] {camera.name}: its cell splits, {fc.name} takes the second half ({posea.flips} and {poseb.flips} flips on the old cuts)");
+            return true;
+        }
+
+        /// <summary>A camera to a pose of the search (plan metres; o is where the room stands), its shot point with it.</summary>
+        private void Place(FixedCamera camera, Pose pose, Vector3 o)
+        {
+            Transform t = camera.transform;
+            t.position = pose.cam + o;
+            t.LookAt(pose.look + o);
+            camera.fieldOfView = pose.fov;
+            EditorUtility.SetDirty(camera);
+            EditorUtility.SetDirty(t);
+            foreach (GlorifiedBody.Level.Build.ShotPoint shot in Root.GetComponentsInChildren<GlorifiedBody.Level.Build.ShotPoint>(true))
+                if (shot.shotName == camera.cameraName)
+                {
+                    shot.transform.SetPositionAndRotation(t.position, t.rotation);
+                    shot.fieldOfView = camera.fieldOfView;
+                }
+        }
+
+        /// <summary>
+        /// The floor points of a cell (the coverage test's grid: 0.45 m in from the floor's edge, 0.5 m apart, the cell grown by
+        /// 0.3 m, a point on the edge between two zones can fall to either camera) and its exits, in plan metres; o is where
+        /// the room stands in the world.
+        /// </summary>
+        /// <param name="withDoorways">The 180 pass: also a floor point 0.1 m in from each doorway of the cell, where she stands as she
+        /// comes in (DemoTests.ADoorway_ChangesTheRoom_AsSheStepsThrough_InFrame_WithNoLoad); a new pose must keep them.</param>
+        private (List<Vector3> points, List<Door> exits, List<Vector3> doorways) CellTargets(Rect cell, Vector3 o, bool withDoorways = false)
+        {
             RoomSpec s = Spec;
             int solid = 1 << LayerMask.NameToLayer("Default");
-            // The test's grid (CameraCoverage.Check: 0.45 m in from the floor's edge, 0.5 m apart), the cell grown by 0.3 m:
-            // a point on the edge between two zones can fall to either camera.
             var points = new List<Vector3>();
             for (float x = s.X0 + 0.45f; x <= s.X1 - 0.45f; x += 0.5f)
                 for (float z = s.Z0 + 0.45f; z <= s.Z1 - 0.45f; z += 0.5f)
                 {
                     if (x < cell.xMin - 0.3f || x > cell.xMax + 0.3f || z < cell.yMin - 0.3f || z > cell.yMax + 0.3f) continue;
                     var p = new Vector3(x, 0f, z);
-                    if (Physics.CheckBox(p + Vector3.up * 0.9f, new Vector3(0.2f, 0.8f, 0.2f), Quaternion.identity, solid, QueryTriggerInteraction.Ignore)) continue;
+                    if (Physics.CheckBox(p + o + Vector3.up * 0.9f, new Vector3(0.2f, 0.8f, 0.2f), Quaternion.identity, solid, QueryTriggerInteraction.Ignore)) continue;
                     points.Add(p);
                 }
             // The exits of the cell (Bruno, 2026-11-05: "i also need to see the exits"): where she stands as she goes to them.
@@ -402,38 +525,86 @@ namespace GlorifiedBody.Editor.Demo
                 Vector3 p = InsideDoor(d, 0.7f);
                 return p.x >= cell.xMin - 0.3f && p.x <= cell.xMax + 0.3f && p.z >= cell.yMin - 0.3f && p.z <= cell.yMax + 0.3f;
             });
-            const int ExitWeight = 100000; // an exit counts before any floor point
+            var doorways = new List<Vector3>();
+            if (withDoorways)
+                foreach (Door d in s.Doors)
+                {
+                    Vector3 p = InsideDoor(d, 0.1f);
+                    if (p.x >= cell.xMin - 0.3f && p.x <= cell.xMax + 0.3f && p.z >= cell.yMin - 0.3f && p.z <= cell.yMax + 0.3f) doorways.Add(new Vector3(p.x, 0f, p.z));
+                }
+            return (points, exits, doorways);
+        }
+
+        /// <summary>The exits (and the doorway points) and the floor points a pose sees (the pose in world space).</summary>
+        private (int exits, int points) Score(List<Vector3> points, List<Door> exits, List<Vector3> doorways, Vector3 o, Vector3 cam, Quaternion rotation, float fov, int solid)
+        {
+            int seen = 0, doors = 0;
+            // A doorway point counts only with her chest in frame and in sight (no near pass: the doorway test looks at the screen).
+            foreach (Vector3 p in doorways)
+            {
+                Vector3 chest = p + o + Vector3.up * GlorifiedBody.Characters.Body.ChestHeight;
+                if (CameraCoverage.InFrame(cam, rotation, fov, chest, 0f) && !Physics.Linecast(cam, chest, solid, QueryTriggerInteraction.Ignore)) doors++;
+            }
+            foreach (Vector3 p in points) if (CameraCoverage.Sees(cam, rotation, fov, p + o, CameraCoverage.GameRoomNear, solid)) seen++;
+            foreach (Door d in exits) if (CameraCoverage.SeesExit(cam, rotation, fov, Mouth(d) + o, Outward(d.Side), d.Width, solid)) doors++;
+            return (doors, seen);
+        }
+
+        /// <summary>
+        /// The camera poses of a cell (its corners and edge middles, and 2 m past an inner edge; two aims and one for each exit;
+        /// three lenses). With no flipsOf: the pose that sees the most (the exits first). With flipsOf (the 180 pass): more
+        /// places and aims, only the poses that see at least keep, and the fewest flips first.
+        /// </summary>
+        private Pose Search(Rect cell, Vector3 o, Func<Vector3, Quaternion, int> flipsOf, (int exits, int points)? keep, IEnumerable<Vector3> headings = null)
+        {
+            RoomSpec s = Spec;
+            int solid = 1 << LayerMask.NameToLayer("Default");
+            (List<Vector3> points, List<Door> exits, List<Vector3> doorways) = CellTargets(cell, o, flipsOf != null);
             float camY = Mathf.Min(s.Height - 0.25f, 3.4f);
-            float[] xs = Places(cell.xMin, cell.xMax, s.X0, s.X1), zs = Places(cell.yMin, cell.yMax, s.Z0, s.Z1);
+            bool wide = flipsOf != null;
+            float[] xs = Places(cell.xMin, cell.xMax, s.X0, s.X1, wide), zs = Places(cell.yMin, cell.yMax, s.Z0, s.Z1, wide);
+            if (wide) // the 180 pass: also every metre of the room
+            {
+                xs = xs.Concat(Enumerable.Range(0, Mathf.FloorToInt(s.Width)).Select(i => Mathf.Clamp(s.X0 + 0.5f + i, s.X0 + 0.35f, s.X1 - 0.35f))).Distinct().ToArray();
+                zs = zs.Concat(Enumerable.Range(0, Mathf.FloorToInt(s.Depth)).Select(i => Mathf.Clamp(s.Z0 + 0.5f + i, s.Z0 + 0.35f, s.Z1 - 0.35f))).Distinct().ToArray();
+            }
             Vector3 middle = new Vector3(cell.center.x, 0.7f, cell.center.y);
-            (Vector3 cam, Vector3 look, float fov, int seen) best = (new Vector3(xs[0], camY, zs[0]), middle, Lenses[0], -1);
+            var best = new Pose { cam = new Vector3(xs[0], camY, zs[0]), look = middle, fov = Lenses[0], exits = -1, points = -1, flips = int.MaxValue };
             foreach (float x in xs)
             {
                 foreach (float z in zs)
                 {
                     var cam = new Vector3(x, camY, z);
                     if (Mathf.Abs(x - cell.center.x) < 0.5f && Mathf.Abs(z - cell.center.y) < 0.5f) continue; // the middle sees nothing behind it
-                    if (Physics.CheckSphere(cam, 0.2f, solid, QueryTriggerInteraction.Ignore)) continue;     // inside a column or a lintel
-                    if (OverATallThing(cam, solid)) continue; // the H1 frame under Cam_H1_04 hid the filter box and her (Bruno, 2026-11-14)
+                    if (Physics.CheckSphere(cam + o, 0.2f, solid, QueryTriggerInteraction.Ignore)) continue;     // inside a column or a lintel
+                    if (OverATallThing(cam + o, solid)) continue; // the H1 frame under Cam_H1_04 hid the filter box and her (Bruno, 2026-11-14)
                     Vector3 away = new Vector3(middle.x - x, 0f, middle.z - z);
                     var aims = new List<Vector3> { middle, middle + away.normalized * Mathf.Min(cell.width, cell.height) * 0.25f };
+                    if (wide)
+                    {
+                        aims.AddRange(new[] { middle + Vector3.right * 1.5f, middle + Vector3.left * 1.5f, middle + Vector3.forward * 1.5f, middle + Vector3.back * 1.5f });
+                        float reach = Mathf.Max(2f, new Vector2(middle.x - x, middle.z - z).magnitude);
+                        if (headings != null) foreach (Vector3 h in headings) aims.Add(new Vector3(x + h.x * reach, 0.7f, z + h.z * reach));
+                    }
                     foreach (Door d in exits) aims.Add(Vector3.Lerp(middle, Mouth(d) + Vector3.up, 0.5f));
                     foreach (Vector3 look in aims)
                     {
                         Quaternion rotation = Quaternion.LookRotation(look - cam);
+                        int flips = wide ? flipsOf(cam + o, rotation) : 0;
+                        if (flips > best.flips) continue;
                         foreach (float fov in Lenses)
                         {
-                            int seen = 0;
-                            foreach (Vector3 p in points) if (CameraCoverage.Sees(cam, rotation, fov, p, CameraCoverage.GameRoomNear, solid)) seen++;
-                            foreach (Door d in exits) if (CameraCoverage.SeesExit(cam, rotation, fov, Mouth(d), Outward(d.Side), d.Width, solid)) seen += ExitWeight;
-                            if (seen > best.seen) best = (cam, look, fov, seen); // equal counts keep the narrower lens (the earlier one)
+                            (int doors, int seen) = Score(points, exits, doorways, o, cam + o, rotation, fov, solid);
+                            if (keep.HasValue && (doors < keep.Value.exits || seen < keep.Value.points)) continue;
+                            // Equal counts keep the narrower lens (the earlier one).
+                            bool better = flips < best.flips || (flips == best.flips && (doors > best.exits || (doors == best.exits && seen > best.points)));
+                            if (better) best = new Pose { cam = cam, look = look, fov = fov, exits = doors, points = seen, flips = flips };
                         }
                     }
                 }
             }
-            int exitsSeen = best.seen / ExitWeight, pointsSeen = best.seen % ExitWeight;
-            float missed = exitsSeen < exits.Count ? 1f : points.Count == 0 ? 0f : 1f - (float)pointsSeen / points.Count;
-            return (best.cam, best.look, best.fov, missed);
+            best.missed = best.exits < exits.Count + doorways.Count ? 1f : points.Count == 0 ? 0f : 1f - (float)Mathf.Max(0, best.points) / points.Count;
+            return best;
         }
 
         /// <summary>
@@ -449,11 +620,16 @@ namespace GlorifiedBody.Editor.Demo
 
         public const float TallThing = 1.4f;
 
-        /// <summary>Camera places along one axis of a cell: its two edges, its middle, and 2 m past each edge, all inside the room's walls.</summary>
-        private static float[] Places(float a, float b, float room0, float room1)
+        /// <summary>
+        /// Camera places along one axis of a cell: its two edges, its middle, and 2 m past each edge, all inside the room's walls.
+        /// Wide (the 180 pass): also the quarters and 1 m past each edge.
+        /// </summary>
+        private static float[] Places(float a, float b, float room0, float room1, bool wide = false)
         {
             var places = new List<float>();
-            foreach (float v in new[] { a, (a + b) * 0.5f, b, a - 2f, b + 2f })
+            var at = new List<float> { a, (a + b) * 0.5f, b, a - 2f, b + 2f };
+            if (wide) at.AddRange(new[] { a + (b - a) * 0.25f, a + (b - a) * 0.75f, a - 1f, b + 1f });
+            foreach (float v in at)
             {
                 float inside = Mathf.Clamp(v, room0 + 0.35f, room1 - 0.35f);
                 if (!places.Exists(q => Mathf.Abs(q - inside) < 0.3f)) places.Add(inside);

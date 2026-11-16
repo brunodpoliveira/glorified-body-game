@@ -18,6 +18,7 @@ namespace GlorifiedBody.Automation
     {
         public const float NearCamera = 3f;      // the look rooms (reference sets)
         public const float GameRoomNear = 1.2f;  // a game room: the player is never beside the lens
+        public const float PlayerRadius = 0.3f;  // her CharacterController (MenuLoopSetup.EnsureLucy)
         public const float Aspect = 16f / 9f;
 
         public sealed class Report
@@ -68,7 +69,10 @@ namespace GlorifiedBody.Automation
                         }
                         // The camera zones are trigger boxes on the same layer: both queries ignore triggers.
                         int solid = targetsOcclude ? roomLayers | LayerMask.GetMask("Enemy") : roomLayers;
-                        if (Physics.CheckBox(p + Vector3.up * 0.9f, new Vector3(0.2f, 0.8f, 0.2f), Quaternion.identity, solid, QueryTriggerInteraction.Ignore)) continue;
+                        // A point she can stand on: her controller is 0.3 m wide each side (2026-11-16: a point 0.2 m from a G18
+                        // column was in the check, and no camera of that aisle sees past the column; she cannot stand there).
+                        // The room builders keep 0.2 m: their cameras frame a little more than this check asks.
+                        if (Physics.CheckBox(p + Vector3.up * 0.9f, new Vector3(PlayerRadius, 0.8f, PlayerRadius), Quaternion.identity, solid, QueryTriggerInteraction.Ignore)) continue;
                         report.Total++;
                         FixedCamera cam = CameraFor(p, zones, director);
                         if (cam == null) { report.Uncovered.Add($"{p.x:0.0},{p.z:0.0} no camera"); continue; }

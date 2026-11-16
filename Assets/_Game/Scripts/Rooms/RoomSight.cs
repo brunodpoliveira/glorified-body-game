@@ -70,7 +70,7 @@ namespace GlorifiedBody.Rooms
             int mask = SolidMask();
             // A camera outside its room's plan (the side shot of the Hold's tube, in the dark of the hall, 2026-11-16) has no wall to
             // leak through: it lists the rooms it sees, and the gap check skips it.
-            bool originInside = InFootprint(own, origin, 0f);
+            bool originInside = InFootprint(own, origin, 0f) && !own.open; // an open room (Room.open) has no wall to leak through either
             for (int i = 0; i < columns; i++)
                 for (int j = 0; j < rows; j++)
                 {

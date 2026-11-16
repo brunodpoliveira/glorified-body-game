@@ -22,6 +22,8 @@ namespace GlorifiedBody.Rooms
         [Min(0f)] public float below = 1.5f;
         [Tooltip("The rooms behind its doorways (their ids).")]
         public string[] neighbours = new string[0];
+        [Tooltip("Its walls are invisible on purpose (the Hold's tube over the dark hall): a camera of the room sees out, and the gap check (RoomSight) skips it.")]
+        public bool open;
 
         /// <summary>A way out of the room: the middle of its doorway on the floor (local to the root), the way out, its width.</summary>
         [System.Serializable]

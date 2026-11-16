@@ -74,6 +74,7 @@ namespace GlorifiedBody.Editor.Demo
             DemoBrain.Wire(rooms); // the brain fight of B1 (2026-11-09)
             DemoDark.Wire(rooms);  // the dark room of G9 and G9b (2026-11-09)
             DemoHold.Wire(rooms);  // the Hold (2026-11-13): the guards of H3, the black hall
+            ScreenDirections(world, rooms); // the 180 rule (2026-11-16): after every camera of the world stands
 
             GameObject director = MenuLoopSetup.EnsureChild(world, "[CameraDirector]");
             MenuLoopSetup.EnsureComponent<FixedCameraDirector>(director).SetDefaultCamera(rooms["H1"].Cameras[0]);
@@ -91,6 +92,95 @@ namespace GlorifiedBody.Editor.Demo
             AssetDatabase.SaveAssets();
             int cameras = rooms.Values.Sum(r => r.Cameras.Count) + stairCameras.Count;
             Debug.Log($"[DemoWorld] built {ScenePath}: {rooms.Count + 1} rooms, {cameras} cameras");
+        }
+
+        /// <summary>
+        /// The 180 rule over the whole world (Bruno, 2026-11-16: "check the entire demo for 180 violations, and add that as a
+        /// rule for future camera additions"). The cuts (ScreenDirection) of every room and doorway; each cell camera with a cut
+        /// that flips her screen direction takes the pose with the fewest flips that still sees its exits and its floor
+        /// (DemoRoom.Repose), three rounds at most. The cameras placed by hand stay: a flip left on one shows in the log, and
+        /// DemoTests.NoCut_FlipsHerScreenDirection_AndNoCameraMoves fails on it. The zones of a flag (a FlagGate) and the
+        /// cameras that turn (the brain eye) are out of the rule.
+        /// </summary>
+        private static void ScreenDirections(GameObject world, Dictionary<string, DemoRoom> rooms)
+        {
+            // The builder leaves each fire door's leaf shut in its doorway; in play a door that starts open moves the leaf
+            // into its pocket (FireDoor.Awake). The cuts of the pass are the cuts of the start: those leaves are out.
+            List<Collider> leaves = world.GetComponentsInChildren<GlorifiedBody.Interaction.FireDoor>(true)
+                .Where(d => !d.startsJammed && d.leaf != null).SelectMany(d => d.leaf.GetComponentsInChildren<Collider>()).Where(c => c.enabled).ToList();
+            foreach (Collider c in leaves) c.enabled = false;
+            try { ScreenDirectionsWithOpenDoors(world, rooms); }
+            finally { foreach (Collider c in leaves) c.enabled = true; }
+        }
+
+        private static void ScreenDirectionsWithOpenDoors(GameObject world, Dictionary<string, DemoRoom> rooms)
+        {
+            int solid = 1 << LayerMask.NameToLayer("Default");
+            Room[] all = world.GetComponentsInChildren<Room>(true);
+            List<ScreenDirection.Cut> cuts = null;
+            Dictionary<FixedCamera, List<(ScreenDirection.Cut cut, FixedCamera other)>> byCamera = null;
+            int FlipsOf(FixedCamera cam, Vector3 pos, Quaternion rot)
+            {
+                if (!byCamera.TryGetValue(cam, out var list)) return 0;
+                int n = 0;
+                foreach ((ScreenDirection.Cut c, FixedCamera other) in list)
+                    if (ScreenDirection.Flips(pos, rot, other.transform.position, other.transform.rotation, c.at, c.walk)) n++;
+                return n;
+            }
+            int before = -1, moved = 0;
+            // Two passes: the cell cameras take new poses; a cell still with a flip splits in two, and the poses again.
+            for (int pass = 0; pass < 2; pass++)
+            {
+                Physics.SyncTransforms();
+                List<CameraZone> zones = world.GetComponentsInChildren<CameraZone>(true)
+                    .Where(z => z.fixedCamera != null && z.GetComponentInParent<FlagGate>(true) == null && z.GetComponentInParent<Room>(true) != null).ToList();
+                cuts = ScreenDirection.Cuts(all, zones, solid).Where(c => !c.from.fixedCamera.followPlayerYaw && !c.to.fixedCamera.followPlayerYaw).ToList();
+                byCamera = new Dictionary<FixedCamera, List<(ScreenDirection.Cut cut, FixedCamera other)>>();
+                foreach (ScreenDirection.Cut c in cuts)
+                {
+                    foreach ((FixedCamera cam, FixedCamera other) in new[] { (c.from.fixedCamera, c.to.fixedCamera), (c.to.fixedCamera, c.from.fixedCamera) })
+                    {
+                        if (!byCamera.TryGetValue(cam, out var list)) byCamera[cam] = list = new List<(ScreenDirection.Cut, FixedCamera)>();
+                        list.Add((c, other));
+                    }
+                }
+                if (before < 0) before = cuts.Count(ScreenDirection.Flips);
+                for (int round = 0; round < 3; round++)
+                {
+                    bool changed = false;
+                    foreach (DemoRoom room in rooms.Values)
+                        foreach ((Rect cell, FixedCamera cam) in room.CellCameras.ToList())
+                        {
+                            int now = FlipsOf(cam, cam.transform.position, cam.transform.rotation);
+                            if (now == 0) continue;
+                            var headings = byCamera[cam].Select(e => e.other.transform.forward).Select(f => new Vector3(f.x, 0f, f.z).normalized).Where(f => f.sqrMagnitude > 0.5f).ToList();
+                            int after = room.Repose(cell, cam, (p, q) => FlipsOf(cam, p, q), headings);
+                            if (after >= now) continue;
+                            changed = true;
+                            moved++;
+                            Debug.Log($"[Rule180] {cam.name}: {now} flips, now {after}");
+                        }
+                    if (!changed) break;
+                }
+                if (pass > 0) break;
+                bool split = false;
+                foreach (DemoRoom room in rooms.Values)
+                    foreach ((Rect cell, FixedCamera cam) in room.CellCameras.ToList())
+                    {
+                        int now = FlipsOf(cam, cam.transform.position, cam.transform.rotation);
+                        if (now == 0) continue;
+                        var mine = byCamera[cam].Select(e => (e.cut.at, e.cut.walk, e.other)).ToList();
+                        var headings = byCamera[cam].Select(e => e.other.transform.forward).Select(f => new Vector3(f.x, 0f, f.z).normalized).Where(f => f.sqrMagnitude > 0.5f).ToList();
+                        if (room.Split(cell, cam, mine, now, headings)) split = true;
+                    }
+                if (!split) break;
+            }
+            Physics.SyncTransforms();
+            var left = cuts.Where(ScreenDirection.Flips)
+                .GroupBy(c => string.CompareOrdinal(c.from.fixedCamera.name, c.to.fixedCamera.name) < 0 ? c.from.fixedCamera.name + " | " + c.to.fixedCamera.name : c.to.fixedCamera.name + " | " + c.from.fixedCamera.name)
+                .OrderBy(g => g.Key, System.StringComparer.Ordinal).ToList();
+            foreach (var g in left) Debug.Log($"[Rule180] left: {g.Key}: {g.Count()} steps, at {g.First().at}, walk {g.First().walk}");
+            Debug.Log($"[Rule180] {cuts.Count} cut steps, {before} flipped, {moved} camera moves, {left.Sum(g => g.Count())} flip now in {left.Count} pairs");
         }
 
         /// <summary>The soldiers after the fireteam of G2 (TeamReinforcement): it needs both rooms, so it comes after them.</summary>

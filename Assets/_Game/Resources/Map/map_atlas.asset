@@ -350,10 +350,6 @@ MonoBehaviour:
       position: {x: 21.2, y: 33.45}
       label: A RECORDER
     - kind: 1
-      path: '[World]/[H2]/[Props]/Airlock_Card'
-      position: {x: 19.9, y: 34.1}
-      label: THE AIRLOCK CARD
-    - kind: 1
       path: '[World]/[H2]/[Story]/Gate_Capsules/Capsule_H2_Erebus'
       position: {x: 22.6, y: 35}
       label: EREBUS CAPSULE
@@ -464,6 +460,10 @@ MonoBehaviour:
       position: {x: 4, y: 35.5}
       targetScene: HT
     marks:
+    - kind: 0
+      path: '[World]/[H5]/[Props]/Door_HT'
+      position: {x: 4, y: 35.5}
+      label: the airlock card
     - kind: 1
       path: '[World]/[H5]/[Props]/Capsule_H5_Orzabal'
       position: {x: 8.4, y: 37.4}
@@ -505,11 +505,7 @@ MonoBehaviour:
     - path: H6/H7
       position: {x: -10, y: 29}
       targetScene: H7
-    marks:
-    - kind: 0
-      path: '[World]/[H6]/[Props]/Door_H7'
-      position: {x: -10, y: 29}
-      label: the airlock card
+    marks: []
   - scene: H7
     world: Demo
     floor: demo_2
