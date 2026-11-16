@@ -44,7 +44,7 @@ namespace GlorifiedBody.Interaction
         private TankController tank;
         private Collider body;
         private Rigidbody rb;
-        private float lift, herYaw, gapSaidAt = -9f;
+        private float lift, riseTo, herYaw, gapSaidAt = -9f;
         private bool wasKinematic;
         private RigidbodyInterpolation wasInterpolation;
         private int mask;
@@ -157,8 +157,12 @@ namespace GlorifiedBody.Interaction
             return false;
         }
 
-        /// <summary>The defend key on its top (PsychicPowers): the cost is spent, it rises with her. False: the bar is empty.</summary>
-        public bool StartRide(PsychicStats stats)
+        /// <summary>
+        /// The defend key on its top, or her step onto it from a hold (PsychicPowers): the cost is spent, it rises with her. It
+        /// rises RideHeight over where it starts, and at least RideHeight over floorY: a box lowered into a gap comes up over the
+        /// floor she stepped from, or the edge of the far floor would stop it. False: the bar is empty.
+        /// </summary>
+        public bool StartRide(PsychicStats stats, float floorY = float.NegativeInfinity)
         {
             if (Riding || !Find() || stats == null) return false;
             float bar = stats.Mk(PowerKind.Telekinesis);
@@ -186,6 +190,7 @@ namespace GlorifiedBody.Interaction
             Riding = true;
             Rides++;
             lift = 0f;
+            riseTo = Mathf.Max(Bottom + RideHeight, floorY + RideHeight);
             tank.LockMovement(true);
             Sfx.Play(Sfx.Lift, transform.position, 0.8f);
             RunTelemetry.Event("ride_on", $"{name}:cost={LastCost:0}");
@@ -193,13 +198,16 @@ namespace GlorifiedBody.Interaction
             return true;
         }
 
-        /// <summary>The release of the defend key (PsychicPowers). Over a floor it sets down and she stands on it. Over a gap: false, the ride goes on.</summary>
-        public bool EndRide()
+        /// <summary>
+        /// The release of the defend key (PsychicPowers). Over a floor it sets down and she stands on it. Over a gap: false, the
+        /// ride goes on. Quiet: no "Not over the gap." (a ride from the left-press lift has no key to release).
+        /// </summary>
+        public bool EndRide(bool quiet = false)
         {
             if (!Riding) return true;
             if (!OverFloor())
             {
-                if (Time.time - gapSaidAt > 2f && Say(gapText, "ride:gap")) gapSaidAt = Time.time;
+                if (!quiet && Time.time - gapSaidAt > 2f && Say(gapText, "ride:gap")) gapSaidAt = Time.time;
                 return false;
             }
             Riding = false;
@@ -247,9 +255,9 @@ namespace GlorifiedBody.Interaction
             if (dt <= 0f) return;
             GameManager gm = GameManager.Instance;
             bool live = gm == null || gm.IsPlaying;
-            if (lift < RideHeight)
+            if (Bottom < riseTo - 0.001f)
             {
-                float up = Mathf.Min(RideHeight - lift, dt * 1.2f);
+                float up = Mathf.Min(riseTo - Bottom, dt * 1.2f);
                 lift += up;
                 transform.position += Vector3.up * up;
             }

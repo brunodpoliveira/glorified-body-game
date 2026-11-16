@@ -748,7 +748,8 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   it (x -4 to 4, z -16 to -9, one door). The hall's low camera stands by the shutters and looks into the foyer. NOT COMPILED, NOT RUN.
 - 2026-11-16, THE GURNEY WITH NO CLIMB KEY (`devlog-notes/2026-11-16_gurney_step_softlock.md`, Bruno: "the interact to go on top of it must go";
   his pick: lower it over the gap): no key reaches a `Rideable`. Over a gap the carry's wheel lowers a box until its top is level with the floor
-  (`TelekinesisLift.LowestHeight`), and the walk key steps her onto it: the carry becomes the ride (`PsychicPowers.TryBoard`). A gurney lost in
+  (`TelekinesisLift.LowestHeight`), and the walk key steps her onto it from the carry or the left-press lift: the hold becomes the ride
+  (`PsychicPowers.TryBoard`), which rises over the floor she stepped from (`Rideable.StartRide(stats, floorY)`). A gurney lost in
   the gap before EXTEND ends the game (`Interaction/LostProp`, killer `softlock_gurney`, its death screen: run Build Death Screen Content). The
   pits of the Hold and G16 have no death volume (`PitReturn`). `DevRoomStart` parks the figures of every other room. NOT COMPILED, NOT RUN.
 - 2026-11-16, THE HALL CAMERAS (`devlog-notes/2026-11-16_dining_hall_crowd_cameras.md`, Bruno: "too many tight angles from up looking down";

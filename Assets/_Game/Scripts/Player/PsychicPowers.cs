@@ -407,7 +407,7 @@ namespace GlorifiedBody.Player
             if (riding != null)
             {
                 // The ride ends at the release, or when she changes the power; over a gap it goes on until a floor is under it.
-                if ((!held || Selected.kind != PowerKind.Telekinesis || stats.Health.IsDead) && riding.EndRide())
+                if ((!held || Selected.kind != PowerKind.Telekinesis || stats.Health.IsDead) && riding.EndRide(quiet: !rideByKey))
                 {
                     riding = null;
                     defendAfterCancel = held;
@@ -515,6 +515,7 @@ namespace GlorifiedBody.Player
         }
 
         private GlorifiedBody.Interaction.Rideable riding;
+        private bool rideByKey; // the ride began with the defend key held: its release can say "Not over the gap."
 
         /// <summary>The thing she rides now (the gurney, a box), or null.</summary>
         public GlorifiedBody.Interaction.Rideable Riding => riding;
@@ -536,6 +537,7 @@ namespace GlorifiedBody.Player
                 return true;
             }
             riding = under;
+            rideByKey = true;
             LastResult = "ride";
             LastResultTime = Time.time;
             OnChanged?.Invoke();
@@ -604,9 +606,9 @@ namespace GlorifiedBody.Player
                     OnChanged?.Invoke();
                     return;
                 }
-                else if (TryBoard(lift)) return;
                 else if (tank != null) tank.FaceTowards(lift.transform.position, 540f);
             }
+            if (lift != null && mine && TryBoard(lift)) return; // from the carry or from the left-press lift
             if (!mine) return;
             Camera cam = Camera.main;
             if (cam == null) return;
@@ -619,21 +621,24 @@ namespace GlorifiedBody.Player
         }
 
         /// <summary>
-        /// The step onto a carried thing (Bruno, 2026-11-16: "the player must manipulate the object successfully so they can step
-        /// on it and float to the other side"; his pick: lower it over the gap). Its top level with her feet and its edge in front
-        /// of her: the walk key steps her onto it, and the carry becomes the ride. The defend key is still held, so it floats on
-        /// with her; over the gap a release does not land it (Rideable.EndRide). An empty bar: she stays, and it still hangs.
+        /// The step onto a held thing (Bruno, 2026-11-16: "the player must manipulate the object successfully so they can step
+        /// on it and float to the other side"; his pick: lower it over the gap). It is held by the defend-key carry (her feet stop)
+        /// or by the left-press lift (she walks with it). Its top level with her feet and its edge in front of her: the walk key
+        /// steps her onto it, and the hold becomes the ride. Over the gap the ride does not land (Rideable.EndRide), with the
+        /// defend key held or not; over a floor with the key up, it sets down. An empty bar: she stays, and it still hangs.
         /// </summary>
         private bool TryBoard(TelekinesisLift lift)
         {
             if (!GameInput.GetAction(InputManager.GameAction.Forward, KeyCode.W)) return false;
             GlorifiedBody.Interaction.Rideable ride = lift.GetComponent<GlorifiedBody.Interaction.Rideable>();
             if (ride == null || !ride.CanBoardFrom(transform) || stats.Mk(PowerKind.Telekinesis) <= 0.01f) return false;
+            float floorY = transform.position.y; // the floor she steps from: the ride rises over it, not over the lowered start
             lift.Handover();
             activeLift = null;
-            EndCarry();
-            if (!ride.StartRide(stats)) return true; // the bar ran out on the same frame: it falls, as a release
+            if (carrying) EndCarry();
+            if (!ride.StartRide(stats, floorY)) return true; // the bar ran out on the same frame: it falls, as a release
             riding = ride;
+            rideByKey = GameInput.GetAction(InputManager.GameAction.Defend, KeyCode.Mouse1);
             LastResult = "ride";
             LastResultTime = Time.time;
             RunTelemetry.Event("tk_board", ride.name);

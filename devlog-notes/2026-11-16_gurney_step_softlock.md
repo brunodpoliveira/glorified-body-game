@@ -26,6 +26,24 @@ The way on:
 
 A box low enough for her step (0.3 m) she can still walk onto, and ride with the defend key.
 
+### Later the same night: the left-press lift too
+
+Bruno, on my words "she cannot walk while she carries a thing":
+
+```text
+what you mean? i can and i do with orzabal all the time. i'm able to walk and dodge during combat while carrying a soldier, so why not here?
+```
+
+He is right. mk_orzabal has two holds. The left-press lift lets her walk and dodge, and the thing floats with her. Only
+the defend-key carry stops her feet. The gurney lifts with the left press too, so she walks it from the theater to the gap.
+
+1. The step onto the deck now works from both holds (`PsychicPowers.TryBoard`, after the carry branch).
+2. A fault found on the way: a ride rose only 0.35 m from where it started. A gurney lowered under the floor rose to 0.4 m
+   under floor level, and the edge of the landing's floor stopped it. The ride now rises to 0.35 m over the floor she
+   stepped from (`Rideable.StartRide(stats, floorY)`).
+3. From the left-press lift the defend key is not held, so the ride goes on over the gap and sets down when its whole deck
+   is over the landing's floor. The message "Not over the gap." comes only on a real release of the defend key.
+
 ## 2. The softlock
 
 The gurney is the only way across before EXTEND. If she lets it go over the gap (or throws it in), it falls into the
@@ -64,7 +82,7 @@ lowering, the step on, the crossing, the walk off), `PhysicsTests.TheSurf_OnABox
 To test by hand:
 
 1. Run `Demo > Build the World`, then `Content > Build Death Screen Content` (the new death screen).
-2. In the airlock, stand at the gap edge. Lock the gurney, hold the defend key, move it over the gap, and turn the wheel
-   down until the deck is level with the floor.
-3. Press the walk key: she steps onto it. Keep the defend key held and ride across.
-4. Again, but let the defend key go over the gap: the softlock death screen comes.
+2. Lift the gurney with the left press and walk it to the gap edge in the airlock, the gurney in front of you over the
+   gap. Turn the wheel down until the deck is level with the floor.
+3. Press the walk key: she steps onto it, and it floats across. The walk keys steer it.
+4. Again with the defend-key carry (her feet stop): let the key go over the gap, and the softlock death screen comes.
