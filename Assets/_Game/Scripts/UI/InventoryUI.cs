@@ -47,6 +47,9 @@ namespace GlorifiedBody.UI
         private Text wordsText;
         private Text keysText;
         private Text slotsText;
+        private GameObject gauge;
+        private Image gaugeFill;
+        private Text gaugeText;
         private GameObject readerPanel;
         private Text readerTitle;
         private Text readerBody;
@@ -313,6 +316,7 @@ namespace GlorifiedBody.UI
         /// <summary>The three lists: each shows VisibleRows entries from its scroll, the selected one outlined.</summary>
         private void Draw()
         {
+            DrawGauge();
             for (int c = 0; c < CategoryNames.Length; c++)
             {
                 List<int> list = InCategory(c);
@@ -507,6 +511,18 @@ namespace GlorifiedBody.UI
             header.text = "INVENTORY";
             wordsText = Label(wordsBox.transform, "Words", 22, FontStyle.Normal, new Color(0.75f, 0.95f, 0.95f), TextAnchor.MiddleLeft, new Vector2(580f, 120f));
             keysText = Label(wordsBox.transform, "Keys", 18, FontStyle.Bold, new Color(0.85f, 0.85f, 0.85f), TextAnchor.LowerCenter, new Vector2(580f, 240f));
+            // The bar a consumable fills, under the words (Bruno, 2026-11-16: "consumables (when the consumable is selected) should
+            // show me how full the mk power is in the inventory screen itself").
+            gauge = Panel(wordsBox.transform, "Gauge", new Vector2(0.5f, 0.5f), new Vector2(60f, -78f), new Vector2(300f, 16f), new Color(0.02f, 0.02f, 0.03f, 0.95f));
+            gauge.AddComponent<Outline>().effectColor = new Color(0.6f, 0.65f, 0.7f, 0.9f);
+            GameObject fill = Panel(gauge.transform, "Fill", new Vector2(0f, 0.5f), Vector2.zero, new Vector2(300f, 16f), new Color(0.35f, 0.85f, 1f));
+            var fillRect = fill.GetComponent<RectTransform>();
+            fillRect.pivot = new Vector2(0f, 0.5f);
+            gaugeFill = fill.GetComponent<Image>();
+            gaugeText = Label(wordsBox.transform, "GaugeText", 18, FontStyle.Bold, new Color(0.9f, 0.92f, 0.95f), TextAnchor.MiddleRight, new Vector2(220f, 24f));
+            gaugeText.rectTransform.anchoredPosition = new Vector2(-200f, -78f); // left of the bar, inside the box
+            gauge.SetActive(false);
+            gaugeText.gameObject.SetActive(false);
             slotsText = Label(root.transform, "Slots", 22, FontStyle.Bold, new Color(0.95f, 0.92f, 0.8f), TextAnchor.MiddleCenter, new Vector2(1400f, 40f));
             slotsText.rectTransform.anchorMin = slotsText.rectTransform.anchorMax = new Vector2(0.5f, 0f);
             slotsText.rectTransform.anchoredPosition = new Vector2(-330f, 510f);
@@ -517,6 +533,47 @@ namespace GlorifiedBody.UI
             readerPanel.SetActive(false);
             root.SetActive(false);
         }
+
+        /// <summary>The gauge of the selected consumable: an MK capsule shows its power's bar, the SHORT capsule the SHORT bar,
+        /// the second wind pill whether the second wind is ready. Nothing for the other items.</summary>
+        private void DrawGauge()
+        {
+            if (gauge == null) return;
+            Entry e = entries.Count > 0 && Selected < entries.Count ? entries[Selected] : null;
+            float? share = null;
+            string words = "";
+            Color colour = new Color(0.35f, 0.85f, 1f);
+            if (e != null && e.Drug.HasValue && stats != null)
+            {
+                PowerKind? power = Capsules.PowerOf(e.Drug.Value);
+                if (power.HasValue)
+                {
+                    float mk = stats.Mk(power.Value);
+                    share = mk / PsychicStats.MaxNalcon;
+                    words = $"{PowerName(power.Value)}  {mk:0} / {PsychicStats.MaxNalcon:0}";
+                }
+                else if (e.Drug.Value == DrugType.Red)
+                {
+                    share = stats.Short / PsychicStats.MaxShort;
+                    words = $"SHORT  {stats.Short:0} / {PsychicStats.MaxShort:0}";
+                    colour = new Color(1f, 0.82f, 0.2f);
+                }
+                else if (e.Drug.Value == DrugType.DFelon)
+                {
+                    GlorifiedBody.Core.Health health = stats.GetComponentInChildren<GlorifiedBody.Core.Health>();
+                    bool ready = health != null && health.IsSecondWindAvailable;
+                    words = ready ? "SECOND WIND  ready" : "SECOND WIND  used";
+                }
+            }
+            gauge.SetActive(share.HasValue);
+            gaugeText.gameObject.SetActive(words.Length > 0);
+            gaugeText.text = words;
+            if (!share.HasValue) return;
+            gaugeFill.color = colour;
+            gaugeFill.rectTransform.sizeDelta = new Vector2(300f * Mathf.Clamp01(share.Value), 16f);
+        }
+
+        private static string PowerName(PowerKind kind) => kind == PowerKind.Blast ? "mk_warspite" : kind == PowerKind.Fire ? "mk_erebus" : kind == PowerKind.Telekinesis ? "mk_orzabal" : "mk_edgar";
 
         private static GameObject Panel(Transform parent, string name, Vector2 anchor, Vector2 position, Vector2 size, Color colour)
         {
