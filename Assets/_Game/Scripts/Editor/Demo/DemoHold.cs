@@ -315,8 +315,10 @@ namespace GlorifiedBody.Editor.Demo
         /// </summary>
         private static void H4(DemoRoom r)
         {
-            r.Prop("Surgery_Table", new Vector3(7.5f, 0f, 44.8f), new Vector3(2.0f, 0.85f, 0.8f), 0.7f);
-            GameObject drapes = r.Box(r.Props, "Drapes", new Vector3(7.5f, 0.92f, 44.8f), new Vector3(2.1f, 0.12f, 0.95f), DemoRoom.Colour("drapes", new Color(0.5f, 0.68f, 0.62f)));
+            // The table and the gurney changed places (Bruno, 2026-11-16: "it is possible to sequence break by floating the gurney
+            // outside of the room; invert the postions of the gurney and medical table"): the table by the door, the gurney in the west half.
+            r.Prop("Surgery_Table", new Vector3(12.0f, 0f, 44.6f), new Vector3(2.0f, 0.85f, 0.8f), 0.7f);
+            GameObject drapes = r.Box(r.Props, "Drapes", new Vector3(12.0f, 0.92f, 44.6f), new Vector3(2.1f, 0.12f, 0.95f), DemoRoom.Colour("drapes", new Color(0.5f, 0.68f, 0.62f)));
             Target(drapes);
             foreach ((string n, float x) in new[] { ("Font_Arm_A", 6.9f), ("Font_Arm_B", 8.1f) })
                 Visual(r, r.Props, n, new Vector3(x, 2.1f, 44.8f), new Vector3(0.12f, 1.2f, 0.12f), new Color(0.7f, 0.72f, 0.75f), "font_steel");
@@ -409,7 +411,7 @@ namespace GlorifiedBody.Editor.Demo
             // shuts behind her and nothing breaks it; the nurse in the booth holds the way out. Fire on her (or on the drapes) rings
             // the alarm and opens both doors; or the glass door breaks (two blasts of mk_warspite, or the gurney thrown at it with
             // mk_orzabal), and the button in the booth opens the theater's door. Then the gurney goes with her to the gap.
-            Gurney(r, new Vector3(12.0f, 0f, 44.6f), 180f); // on the door's line, its foot 1.6 m from the door: the way out is straight, and she walks in past it
+            Gurney(r, new Vector3(7.5f, 0f, 44.8f), 180f); // in the west half, where the table stood (2026-11-16)
             r.Switch("Theater_Release", new Vector3(TheaterX0 + 0.45f, 1.2f, TheaterZ1 - 0.18f), TheaterRelease, "Release the theater door?", "release the door", "").range = 1.2f; // not through the glass
             r.Beat("H4_Lock", "demo_h4_locked", new Vector3(9.5f, 1f, 43.9f), new Vector3(10.6f, 2f, 1.6f), ScriptStep.Raise(TheaterLocked));
             r.Beat("H4_Alarm_Release", "demo_h4_alarm_release", Vector3.zero, Vector3.zero, ScriptStep.WaitFlag(Alarm), ScriptStep.Raise(TheaterRelease));
@@ -424,6 +426,28 @@ namespace GlorifiedBody.Editor.Demo
         /// in the theater, she can throw it at the booth's glass door with mk_orzabal (a lock target, a prop that never breaks),
         /// and she rides it out to the gap (Rideable).
         /// </summary>
+        /// <summary>The softlock's cutscene, a PLACEHOLDER card until the writer makes it (Bruno, 2026-11-16).</summary>
+        private static GlorifiedBody.Story.CutsceneAsset GurneyLostCutscene()
+        {
+            System.IO.Directory.CreateDirectory(ScriptTestSetup.CutscenesFolder);
+            string path = ScriptTestSetup.CutscenesFolder + "/cutscene_hold_gurney_lost.asset";
+            var asset = AssetDatabase.LoadAssetAtPath<GlorifiedBody.Story.CutsceneAsset>(path);
+            if (asset == null)
+            {
+                asset = ScriptableObject.CreateInstance<GlorifiedBody.Story.CutsceneAsset>();
+                AssetDatabase.CreateAsset(asset, path);
+            }
+            asset.cutsceneId = "hold_gurney_lost";
+            asset.music = null;
+            asset.shots = new[]
+            {
+                new GlorifiedBody.Story.CutsceneAsset.Shot { still = TutorialSetup.EnsureScanImage(), seconds = 4f, lineId = "hold_gurney_lost_1",
+                    text = "PLACEHOLDER (the writer): the gurney falls into the dark under the tube. Later, it is back in the theater." },
+            };
+            EditorUtility.SetDirty(asset);
+            return asset;
+        }
+
         private static void Gurney(DemoRoom r, Vector3 at, float yaw)
         {
             GameObject gurney = new GameObject("Steel_Gurney");
@@ -470,10 +494,15 @@ namespace GlorifiedBody.Editor.Demo
             so.FindProperty("heavy").boolValue = false;
             so.FindProperty("unbreakable").boolValue = true; // steel: a throw does not break it
             so.ApplyModifiedPropertiesWithoutUndo();
-            // Lost in the gap before EXTEND, with her still on the Hold's side: the softlock's game over (Bruno, 2026-11-16).
+            // Lost in the gap before EXTEND, with her still on the Hold's side: the softlock (Bruno, 2026-11-16). No death: a cutscene,
+            // then the gurney is back here and she stands in the airlock (his pick: "the gurney comes back").
             LostProp lost = gurney.AddComponent<LostProp>();
             lost.unlessFlag = TubeOut;
             lost.strandedIn = "H1,H2,H2b,H3,H3b,H4,H5,HT";
+            lost.cutscene = GurneyLostCutscene();
+            GameObject spot = MenuLoopSetup.EnsureChild(r.Story, "Gurney_Lost_Spot");
+            spot.transform.SetPositionAndRotation(new Vector3(6.5f, 0f, DoorZ), Quaternion.Euler(0f, 270f, 0f)); // the airlock, facing the glass door
+            lost.herSpot = spot.transform;
             EditorUtility.SetDirty(lost);
 
         }
@@ -620,6 +649,13 @@ namespace GlorifiedBody.Editor.Demo
             r.Prop("Tube_Console", new Vector3(LandingX1 - 0.325f, 0f, 33.6f), new Vector3(0.35f, 1.0f, 0.9f), 0.2f); // the button on its top; she reaches it from 0.4 m (HoldTests)
             r.Sign("Sign_Tube_Control", "TUBE CONTROL", new Vector3(LandingX1 - 0.17f, 1.75f, 33.6f), Vector3.left, new Vector2(0.9f, 0.22f), 30);
             r.Switch("Extend_Button", new Vector3(LandingX1 - 0.35f, 1.2f, 33.6f), TubeOut, "Extend the tube?", "extend the tube", "");
+            // A checkpoint right after EXTEND (Bruno, 2026-11-16: "needs a checkpoint right after extending the tube"): a checkpoint box
+            // at the console, shown by the tube's flag. She stands in it as she presses the button, so it saves at once.
+            GameObject afterExtend = MenuLoopSetup.EnsureChild(r.Story, "Gate_Checkpoint_Extend");
+            FlagGate extendGate = MenuLoopSetup.EnsureComponent<FlagGate>(afterExtend);
+            extendGate.flag = TubeOut;
+            extendGate.showWhenRaised = true;
+            SaveAssets.Checkpoint("Checkpoint_H6_Extend", new Vector3(LandingX1 - 1.2f, 0f, 33.9f), 90f, new Vector3(2.4f, 2.5f, 2.6f)).transform.SetParent(afterExtend.transform, true);
             // The card door and the scan C11 of its reader were here until 2026-11-16: they are in the airlock H5 now, on her side of the
             // gap (DemoHold.H5). The way from the landing to the gallery H7 is open.
         }

@@ -176,7 +176,7 @@ namespace GlorifiedBody.Combat
                 if (fromHer.magnitude > reach) at = attacker.transform.position + fromHer.normalized * reach;
                 anchor = new Vector3(at.x, 0f, at.z);
                 float level = transform.position.y - floor.y;
-                holdHeight = Mathf.Clamp(Mathf.Clamp(holdHeight + height, level - MaxLead, level + MaxLead), LowestHeight(), MaxHeight);
+                holdHeight = Mathf.Clamp(Mathf.Clamp(holdHeight + height, level - MaxLead, level + MaxLead), LowestHeight(), HighestHeight());
                 return;
             }
             Quaternion toWorld = Quaternion.Euler(0f, HoldYawNow(attacker.transform), 0f);
@@ -191,6 +191,27 @@ namespace GlorifiedBody.Combat
             holdOffset = Quaternion.Inverse(toWorld) * offset;
             float now = transform.position.y - floor.y;
             holdHeight = Mathf.Clamp(Mathf.Clamp(holdHeight + height, now - MaxLead, now + MaxLead), LowestHeight(), MaxHeight);
+        }
+
+        public const float RiderHeight = 1.8f; // m: her height on a prop's top
+
+        /// <summary>
+        /// The wheel's high limit for a prop: MaxHeight. While she stands on its top, low enough that she stays under the ceiling of
+        /// the room it is in (Bruno, 2026-11-16: she floated the gurney out of the theater over the walls; the ceilings have no
+        /// collider). Off its top the limit stays MaxHeight: the box puzzles stack a box on a box.
+        /// </summary>
+        private float HighestHeight()
+        {
+            if (boxCollider == null || attacker == null) return MaxHeight;
+            Bounds b = boxCollider.bounds;
+            Vector3 her = attacker.transform.position;
+            bool onTop = her.x >= b.min.x - 0.1f && her.x <= b.max.x + 0.1f && her.z >= b.min.z - 0.1f && her.z <= b.max.z + 0.1f && her.y >= b.max.y - 0.3f;
+            if (!onTop) return MaxHeight;
+            GlorifiedBody.Rooms.Room room = GlorifiedBody.Rooms.Room.At(transform.position + Vector3.up * 0.1f);
+            if (room == null) return MaxHeight;
+            float top = boxCollider.bounds.max.y - transform.position.y; // the prop's top over its root
+            float cap = GlorifiedBody.Rooms.RoomSight.CeilingY(room) - floor.y - top - RiderHeight;
+            return Mathf.Clamp(cap, MinHeight, MaxHeight);
         }
 
         /// <summary>

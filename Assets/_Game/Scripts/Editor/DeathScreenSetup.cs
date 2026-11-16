@@ -38,8 +38,6 @@ namespace GlorifiedBody.Editor
             ("labworker_knife", "labworker", "PLACEHOLDER: the knife over her, the lab coat behind it", "PLACEHOLDER HINT: the knife runs at you. Dodge when it raises the knife, then strike."),
             ("short", "", "PLACEHOLDER: Lucy on the floor, the arcs still on her", "PLACEHOLDER HINT: a short takes half your HP. Under that it kills you. The SHORT capsule ends it, and every power fills the bar."),
             ("power_armour_launchers", "power_armour", "PLACEHOLDER: the rocket's trail, the armour behind it", "PLACEHOLDER HINT: a rocket follows the laser. Dodge to the side, or catch it with mk_orzabal and send it back."),
-            // The softlock of the Hold (Bruno, 2026-11-16: "an unique game over (with an unique death screen and a hint about softlocking)").
-            ("softlock_gurney", "", "PLACEHOLDER: the gurney falls into the dark under the tube, and Lucy alone at the edge", "PLACEHOLDER HINT: the gurney is the only way across the gap. Keep the defend key held over the gap: if you let go, the gurney falls, and you cannot leave the Hold. Lower it until the deck is level with the floor, then walk onto it."),
         };
 
         [MenuItem("GlorifiedBody/Content/Build Death Screen Content (after the writer's CSV changes)", priority = 24)]

@@ -315,6 +315,12 @@ namespace GlorifiedBody.Player
         private Vector3 platformAt;
         private Quaternion platformTurn;
 
+        [Tooltip("OFF until Bruno's playtest (2026-11-16: \"let's have the option ... player be stuck on the gurney until they move (on purpose, with the direction keys) just add that option but keep it disabled for now\"). On: on a moving prop she keeps her place on its top until a walk or turn key moves her.")]
+        [SerializeField] private bool stickToProp;
+        public bool StickToProp { get => stickToProp; set => stickToProp = value; }
+        private Vector3 stuckAt; // her place on the prop, in its own space
+        private bool stuckSet;
+
         /// <summary>
         /// The surf as plain physics (Bruno, 2026-11-16: "there was supposed to be no special treatment on the gurney"; "i'm also
         /// testing if it's possible for players to surf other physics objects"): a moving prop under her feet (a crate, a box, a
@@ -336,7 +342,23 @@ namespace GlorifiedBody.Player
                 Quaternion turn = under.rotation * Quaternion.Inverse(platformTurn);
                 Vector3 from = transform.position - platformAt;
                 delta = under.position - platformAt + (turn * from - from);
+                if (stickToProp)
+                {
+                    bool still = Mathf.Approximately(MoveInput, 0f) && Mathf.Approximately(TurnInput, 0f) && !IsDodging;
+                    if (still && stuckSet)
+                    {
+                        // Held to her place on its top: no slide off while the prop moves or turns.
+                        Vector3 want = under.transform.TransformPoint(stuckAt);
+                        delta = new Vector3(want.x - transform.position.x, delta.y, want.z - transform.position.z);
+                    }
+                    else
+                    {
+                        stuckAt = under.transform.InverseTransformPoint(transform.position + delta);
+                        stuckSet = true;
+                    }
+                }
             }
+            else stuckSet = false;
             platform = under;
             if (under != null)
             {
