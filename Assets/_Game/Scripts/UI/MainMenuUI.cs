@@ -36,7 +36,8 @@ namespace GlorifiedBody.UI
         public const string FontFolder = "UI/Fonts/";
         private const float HeadSqueeze = 0.64f;    // Roboto Condensed 700 at 64 % (round 129)
         private const float ProfileSqueeze = 0.77f; // Arimo 600 at 77 % (round 129)
-        private const float BackgroundBrightness = 0.85f;
+        private const float RowHeight = 250f;       // the symbol row: 250 px over the bottom, y 830 of 1080 (round 182)
+        private const float BackgroundBrightness = 1f; // the B12 frame is already at 80 % with a vignette (round 182)
 
         private static Font headFont, profileFont;
         public static Font HeadFont => headFont != null ? headFont : headFont = LoadFont("RobotoCondensed-wght700");
@@ -724,7 +725,7 @@ namespace GlorifiedBody.UI
             return btn;
         }
 
-        /// <summary>Centres the symbols on one row, 360 px over the bottom of the 1080 frame (the mockup).</summary>
+        /// <summary>Centres the symbols on one row, 250 px over the bottom of the 1080 frame (y 830, round 182).</summary>
         private static void LayRow(List<Button> row, float gap)
         {
             float x0 = -(row.Count - 1) * gap / 2f;
@@ -733,7 +734,7 @@ namespace GlorifiedBody.UI
                 var r = (RectTransform)row[i].transform;
                 r.anchorMin = r.anchorMax = new Vector2(0.5f, 0f);
                 r.pivot = new Vector2(0.5f, 0.5f);
-                r.anchoredPosition = new Vector2(x0 + i * gap, 360f);
+                r.anchoredPosition = new Vector2(x0 + i * gap, RowHeight);
             }
         }
 
