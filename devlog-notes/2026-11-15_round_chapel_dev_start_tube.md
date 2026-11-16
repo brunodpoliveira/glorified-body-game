@@ -40,6 +40,20 @@ a passage from the admissions office G13 to the main doors. The steel shutters a
 IN PLACE." It shows the player that the front door is shut by code silver. It never opens in the demo. A beat for it is a
 question for the writer.
 
+### The main entrance, larger
+
+Bruno, after the answer:
+
+```text
+if that is the main entrance, then it needs to be both wider and larger
+```
+
+G13b was 8 x 3 m, a corridor. It is now a hall 16 m long and 8 m wide (x -12 to 4, z -8 to 0), with the ridge of the
+glass roof at 7.2 m and the eaves at 4.2 m. The floor to the west and the south was free. G1 stands north of its east
+half, so it cannot grow north. The door from the admissions office stays where it was. The shutters rise to the eaves,
+and six benches stand along the glass walls. The axis camera keeps a strip 4 m wide down the middle, and the cameras of
+the cells take the sides. PROPOSED.
+
 ## 3. The dev start in the dining hall
 
 The fact-check: no such start existed. Only the tests put her in the hall.
@@ -73,5 +87,5 @@ it reads as a computer.
 
 ## Before the next push
 
-Run `DemoWorld.BuildAll`, then `MapAtlasSetup.BuildAtlas` (the chapel and the H6 console change the demo scene). Then
+Run `DemoWorld.BuildAll`, then `MapAtlasSetup.BuildAtlas` (the chapel, the main entrance and the H6 console change the demo scene). Then
 `DemoTests` (the cameras of the round chapel), `HoldTests.Extend_...`, `PlayerBuildFlagTests`, and the demo bot.

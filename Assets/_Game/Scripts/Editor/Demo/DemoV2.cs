@@ -72,8 +72,10 @@ namespace GlorifiedBody.Editor.Demo
             // Two doors: off the concourse and off the family rooms (a second way into G5 through G7, §12).
             Spec("G13", "ADMISSIONS OFFICE", DemoItems.Floor1, DemoPublic.Music, 4, -9, 12, 0, 3.5f, G13, new Door('N', 8, "G2"), new Door('S', 8, "G7"),
                 new Door('E', -4, "G5"), new Door('W', -1.5f, "G13b")), // a spoke of the foyer, and the way to the main entrance (2026-11-14)
-            // The main entrance (2026-11-14): a passage under a triangular glass roof, the shutters down at its end (the lockdown).
-            Spec("G13b", "THE MAIN ENTRANCE", DemoItems.Floor1, DemoPublic.Music, -4, -3, 4, 0, 4.8f, DemoPublic.G13b, new Door('E', -1.5f, "G13")),
+            // The main entrance (2026-11-14): a hall under a triangular glass roof, the shutters down at its end (the lockdown). 16 x 8 m since
+            // 2026-11-15 (Bruno: "if that is the main entrance, then it needs to be both wider and larger"; it was 8 x 3 m). Free floor to the west
+            // and the south; G1 stands north of its east half.
+            Spec("G13b", "THE MAIN ENTRANCE", DemoItems.Floor1, DemoPublic.Music, -12, -8, 4, 0, 7.5f, DemoPublic.G13b, new Door('E', -1.5f, "G13")),
             Spec("G14", "BUILDERS' STORAGE", DemoItems.Floor1, DemoPublic.Music, 26, -28, 32, -22, 4f, G14, new Door('W', -23, "U1")),
             Spec("G15", "STAFF TOILETS", DemoItems.Floor1, DemoPublic.Music, -2, -27, 6, -22, 3f, G15, new Door('N', 2, "G11")),
             // The gap (Bruno, 2026-11-06), a side puzzle off the concourse, PROPOSED.

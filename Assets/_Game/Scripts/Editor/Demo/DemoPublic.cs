@@ -497,15 +497,15 @@ namespace GlorifiedBody.Editor.Demo
         // ── G13b, the main entrance (2026-11-14) ─────────────────────────────
 
         /// <summary>
-        /// G13b: the main entrance of the Memorial, off the admissions office. A passage 8 m long under a triangular roof of glass
-        /// blocks on concrete A-frames (Bruno's pictures of 2026-11-14), the steel shutters down at its west end (the lockdown of code
-        /// silver), daylight through the slots. Its camera looks down the passage from the admissions end, a trolley in the
-        /// foreground. It never opens in the demo.
+        /// G13b: the main entrance of the Memorial, off the admissions office. A hall 16 m long and 8 m wide (2026-11-15) under a
+        /// triangular roof of glass blocks on concrete A-frames (Bruno's pictures of 2026-11-14), the steel shutters down at its west
+        /// end (the lockdown of code silver), daylight through the slots, benches along the glass walls. Its camera looks down the
+        /// hall from the admissions end, a trolley in the foreground. It never opens in the demo.
         /// </summary>
         public static void G13b(DemoRoom r)
         {
             float x0 = r.Spec.X0, x1 = r.Spec.X1, z0 = r.Spec.Z0, z1 = r.Spec.Z1, mid = (z0 + z1) * 0.5f;
-            const float eave = 2.9f, ridge = 4.6f;
+            const float eave = 4.2f, ridge = 7.2f;
             Material glass = DemoRoom.Colour("glass_block", new Color(0.72f, 0.8f, 0.84f)), concrete = DemoRoom.Grey(0.36f), steel = DemoRoom.Grey(0.16f);
             float half = (z1 - z0) * 0.5f, slope = Mathf.Atan2(ridge - eave, half) * Mathf.Rad2Deg, side = Mathf.Sqrt(half * half + (ridge - eave) * (ridge - eave));
             // The glass roof: two slopes from the eaves to the ridge, a grid of mullions on them.
@@ -527,17 +527,23 @@ namespace GlorifiedBody.Editor.Demo
             foreach (float s in new[] { -1f, 1f })
                 Object.DestroyImmediate(r.Box(r.Room, s < 0 ? "Glass_Wall_South" : "Glass_Wall_North", new Vector3((x0 + x1) * 0.5f, eave * 0.5f + 0.4f, mid + s * (half - 0.04f)), new Vector3(x1 - x0 - 0.4f, eave - 0.8f, 0.04f), glass).GetComponent<Collider>());
             // The shutters at the west end, down: steel slats and the daylight in the slots.
-            for (int i = 0; i < 12; i++)
+            int slats = Mathf.FloorToInt((eave - 0.3f) / 0.24f); // up to the eaves
+            for (int i = 0; i < slats; i++)
                 r.Box(r.Props, $"Shutter_Slat_{i:00}", new Vector3(x0 + 0.2f, 0.12f + i * 0.24f, mid), new Vector3(0.1f, 0.2f, z1 - z0 - 0.6f), steel);
-            for (int i = 0; i < 11; i++)
+            for (int i = 0; i < slats - 1; i++)
                 Object.DestroyImmediate(r.Box(r.Room, $"Shutter_Light_{i:00}", new Vector3(x0 + 0.14f, 0.24f + i * 0.24f, mid), new Vector3(0.02f, 0.04f, z1 - z0 - 0.7f), DemoRoom.Colour("daylight", new Color(1f, 0.98f, 0.9f))).GetComponent<Collider>());
-            r.Sign("Sign_Lockdown", "LOCKDOWN. SHELTER IN PLACE.", new Vector3(x0 + 0.3f, 3.2f, mid), Vector3.right, new Vector2(2.2f, 0.36f), 36);
+            r.Sign("Sign_Lockdown", "LOCKDOWN. SHELTER IN PLACE.", new Vector3(x0 + 0.3f, eave + 0.3f, mid), Vector3.right, new Vector2(3.2f, 0.5f), 36);
+            // Benches along the glass walls, between the posts of the frames (the posts stand on the odd metres).
+            foreach (float x in new[] { x0 + 4f, x0 + 8f, x0 + 12f })
+                foreach (float s in new[] { -1f, 1f })
+                    r.Prop($"Bench_{x:0}_{(s < 0 ? "S" : "N")}", new Vector3(x, 0f, mid + s * (half - 0.5f)), new Vector3(1.6f, 0.45f, 0.5f), 0.3f);
             // The trolley in the foreground of the camera, and the camera down the passage.
             r.Prop("Trolley", new Vector3(x1 - 1.4f, 0f, z0 + 0.6f), new Vector3(1.2f, 0.9f, 0.6f), 0.4f);
-            // Its zone: the passage from 2.6 m in front of the camera (where the frame reaches the floor) to the shutters.
-            float near = x1 - 3.1f;
+            // Its zone: a strip 4 m wide down the axis, from 3.5 m in front of the camera to the shutters (the 8 m hall: the corners
+            // near the camera fall out of the frame; the cameras of the cells take the sides).
+            float near = x1 - 4f;
             // Low, near the floor (Bruno, 2026-11-14: "lower closer to the ground"): the glass roof fills the top of the frame.
-            r.ExtraCamera("axis", new Vector3(x1 - 0.5f, 0.4f, mid), new Vector3(x0, 1.9f, mid), 64f, new Vector3((x0 + near) * 0.5f, 1.5f, mid), new Vector3(near - x0, 3f, z1 - z0));
+            r.ExtraCamera("axis", new Vector3(x1 - 0.5f, 0.4f, mid), new Vector3(x0, 2.4f, mid), 64f, new Vector3((x0 + 0.5f + near) * 0.5f, 1.5f, mid), new Vector3(near - x0 - 0.5f, 3f, 4f));
         }
 
         /// <summary>G6: the public bathrooms, a clerk who hides in a stall ("Occupied."). Since v2 at x 28..36, z -9..-5, east of the hall. A toilet that flushes (the hider answers it once), a faucet.</summary>
