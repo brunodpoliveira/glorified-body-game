@@ -344,7 +344,7 @@ namespace GlorifiedBody.Editor.Demo
         /// <summary>The airlock card of the second scientist of H2 (round 118): it opens the card door of the landing H6.</summary>
         public static ItemDefinition AirlockCard()
         {
-            return ItemAssets.Item("airlock_card", "THE AIRLOCK CARD", ItemKind.Key, ItemAssets.KeyColour, "A white card on a lanyard. AIRLOCK.", "", DrugType.Nalcon);
+            return ItemAssets.Item("airlock_card", "THE AIRLOCK CARD", ItemKind.Key, ItemAssets.KeyColour, "A white card on a lanyard. AIRLOCK. It opens the card door on the landing, across the gap.", "", DrugType.Nalcon);
         }
 
         public static ItemDefinition L9() => Log("l9_care_chart", "HER CARE CHART", DemoPlan.Log("L9", "V3. DAILY CARE. ORAL INTAKE: NONE. PCDH-Y: DONOR TISSUE PER PROTOCOL 7 (ALL DONORS CONSENTED). LAST DOSE: 6 DAYS AGO, HELD FOR THE V4 TRANSFER. EXPECT THE SUBJECT TO SEEK A SOURCE. NEVER ENTER ALONE."));

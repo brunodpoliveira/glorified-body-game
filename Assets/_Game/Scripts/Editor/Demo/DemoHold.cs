@@ -578,6 +578,8 @@ namespace GlorifiedBody.Editor.Demo
             r.Sign("Sign_Tube_Control", "TUBE CONTROL", new Vector3(LandingX1 - 0.17f, 1.75f, 33.6f), Vector3.left, new Vector2(0.9f, 0.22f), 30);
             r.Switch("Extend_Button", new Vector3(LandingX1 - 0.35f, 1.2f, 33.6f), TubeOut, "Extend the tube?", "extend the tube", "");
             r.LockedLeaf(r.DoorTo("H7"), DemoItems.AirlockCard().itemId, "the airlock card");
+            // The plan's sign over the card door (DEMO_PLAN §7; Bruno, 2026-11-16: "it's not clear what the airlock key acutally unlocks").
+            r.Sign("Sign_Card_Door", DemoPlan.Sign("H6, the card door", "AIRLOCK CARD REQUIRED."), new Vector3(LandingDoorX, DemoRoom.DoorHeight + 0.3f, 29.17f), Vector3.forward, new Vector2(1.6f, 0.24f), 30);
             r.Scan("Scan_C11", new Vector3(LandingX1 - 1.3f, 1.2f, 29.2f), "c11_card_reader",
                 DemoPlan.ScanCard("C11", "PLACEHOLDER (C11): a gloved hand in a light blue cuff clips a white card to a lanyard. Behind it, out of focus, the glass of the box and the steel of a treatment bench."),
                 CardScanned);

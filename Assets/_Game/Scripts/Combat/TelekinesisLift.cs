@@ -105,7 +105,9 @@ namespace GlorifiedBody.Combat
             {
                 lift.box.isKinematic = false;
                 lift.box.useGravity = false;
-                lift.box.constraints = RigidbodyConstraints.FreezeRotation;
+                // It turns about the vertical (Bruno, 2026-11-16: the gurney "can't pass through the door. it needs to interact with the
+                // ambient, be a physics object"): a wall or a door frame turns it, and a long box turns to point away from her (AlignLong).
+                lift.box.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
                 lift.boxTarget = victim.transform.position;
                 // Friction held a box still while the mouse pressed it against a wall: it could not rise or slide along it.
                 lift.boxCollider = victim.GetComponent<Collider>();
@@ -220,7 +222,30 @@ namespace GlorifiedBody.Combat
             if (box == null || !CanLaunch) return;
             Vector3 velocity = (boxTarget - box.position) / Time.fixedDeltaTime;
             box.linearVelocity = Vector3.ClampMagnitude(velocity, CarrySpeed);
-            box.angularVelocity = Vector3.zero;
+            box.angularVelocity = new Vector3(0f, AlignLong(), 0f);
+        }
+
+        public const float AlignTurnSpeed = 120f; // degrees a second at most, PROPOSED
+
+        /// <summary>
+        /// The turn of a long box (the gurney: 2 m by 0.75 m) toward the line from her to it, its nearer end first: she carries it
+        /// like a stretcher, end on, so it goes through a doorway in front of her. A box with no long side (a crate) does not turn
+        /// by itself. In radians a second, for the Rigidbody; walls and frames still turn it (the physics).
+        /// </summary>
+        private float AlignLong()
+        {
+            if (attacker == null || !(boxCollider is BoxCollider shape)) return 0f;
+            Vector3 size = Vector3.Scale(shape.size, transform.lossyScale);
+            bool alongZ = Mathf.Abs(size.z) >= Mathf.Abs(size.x) * 1.5f, alongX = Mathf.Abs(size.x) >= Mathf.Abs(size.z) * 1.5f;
+            if (!alongZ && !alongX) return 0f;
+            Vector3 away = Vector3.ProjectOnPlane(transform.position - attacker.transform.position, Vector3.up);
+            if (away.sqrMagnitude < 0.01f) return 0f;
+            Vector3 axis = Vector3.ProjectOnPlane(alongZ ? transform.forward : transform.right, Vector3.up);
+            float delta = Vector3.SignedAngle(axis, away, Vector3.up);
+            if (delta > 90f) delta -= 180f; // either end may lead
+            else if (delta < -90f) delta += 180f;
+            float degrees = Mathf.Clamp(delta * 4f, -AlignTurnSpeed, AlignTurnSpeed);
+            return degrees * Mathf.Deg2Rad;
         }
 
         /// <summary>A box leaves the physics while it flies or slams (the lift moves it), and it breaks at the end.</summary>
