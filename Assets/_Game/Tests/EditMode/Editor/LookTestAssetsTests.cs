@@ -87,27 +87,7 @@ namespace GlorifiedBody.Tests.EditMode
             }
         }
 
-        [Test]
-        public void TheScenes_AreInTheBuildList()
-        {
-            foreach (string path in LookTestSetup.ScenePaths)
-            {
-                Assert.IsTrue(File.Exists(path), path);
-                Assert.IsTrue(EditorBuildSettings.scenes.Any(s => s.enabled && s.path == path), path + " in Build Settings");
-            }
-        }
-
-        [Test]
-        public void TheBake_LeftLightmapsAndProbes_ForEveryLookScene()
-        {
-            Assert.IsNotNull(AssetDatabase.LoadAssetAtPath<LightingSettings>(LookTestSetup.LightingSettingsPath), "the lighting settings of the bake");
-            foreach (string path in LookTestSetup.ScenePaths)
-            {
-                string folder = Path.Combine(Path.GetDirectoryName(path), Path.GetFileNameWithoutExtension(path));
-                Assert.IsTrue(Directory.Exists(folder), folder + " (LookTestSetup.BakeAll)");
-                Assert.IsTrue(File.Exists(Path.Combine(folder, "LightingData.asset")), folder + "/LightingData.asset");
-                Assert.IsTrue(Directory.GetFiles(folder, "Lightmap-*").Any(), folder + ": a lightmap");
-            }
-        }
+        // The scenes of the look test and their bakes are gone (Bruno, 2026-11-16: "remove all redundant debug rooms"). The
+        // renderers and the textures stay: the game and the test rooms use them.
     }
 }

@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using GlorifiedBody.Player;
 using GlorifiedBody.Systems;
 
@@ -9,14 +8,11 @@ namespace GlorifiedBody.DebugTools
     /// Manual checks of the bars (Bruno, 2026-10-20): F5 fills the SHORT bar, so the next attack or defend press
     /// starts a short. F6 starts the short at once. F7 refills HP and nalcon and gives two drugs of each type.
     /// F8 removes 25 nalcon and F9 adds 25 (the low-nalcon warning by hand, Bruno: the dummies die too soon).
-    /// F11 loads the look test rooms of step 4, one after the other (the Gallery, then the corridor with the
-    /// recovery room and the therapy gym, then the Gallery again). F3 cycles the dressings there.
     /// F-keys are reserved and never rebound. Gone when the game ships. The tests call the public methods.
     /// </summary>
     public sealed class DebugCheatKeys : MonoBehaviour
     {
         public const float NalconStep = 25f;
-        public static readonly string[] LookScenes = { "LookTest", "LookTest2", "LookTestExterior" };
 
         [SerializeField] private KeyCode fillShortKey = KeyCode.F5;
         [SerializeField] private KeyCode startShortKey = KeyCode.F6;
@@ -24,7 +20,6 @@ namespace GlorifiedBody.DebugTools
         [SerializeField] private KeyCode removeNalconKey = KeyCode.F8;
         [SerializeField] private KeyCode addNalconKey = KeyCode.F9;
         [SerializeField] private KeyCode careTestKey = KeyCode.F12; // the soldiers' care counts her as unseen (toggle)
-        [SerializeField] private KeyCode lookTestKey = KeyCode.F11;
 
         private void Update()
         {
@@ -41,14 +36,6 @@ namespace GlorifiedBody.DebugTools
                 GlorifiedBody.Enemy.CorpseCare.DebugHidden = !GlorifiedBody.Enemy.CorpseCare.DebugHidden;
                 Debug.Log($"[DebugCheatKeys] F12: the care counts her as {(GlorifiedBody.Enemy.CorpseCare.DebugHidden ? "unseen" : "seen")}.");
             }
-            if (Input.GetKeyDown(lookTestKey) && GameManager.Instance != null) GameManager.Instance.LoadLevel(NextLookScene(SceneManager.GetActiveScene().name));
-        }
-
-        /// <summary>The look room after the given scene: the first one from any other room, the next one from a look room.</summary>
-        public static string NextLookScene(string currentScene)
-        {
-            int i = System.Array.IndexOf(LookScenes, currentScene);
-            return i < 0 ? LookScenes[0] : LookScenes[(i + 1) % LookScenes.Length];
         }
 
         /// <summary>F5: the SHORT bar goes to full. The next attack or defend press starts a short.</summary>

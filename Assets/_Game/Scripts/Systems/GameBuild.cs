@@ -6,7 +6,7 @@ namespace GlorifiedBody.Systems
     /// <summary>
     /// Dev or release (2026-10-31, the design sweep's rank 16: "a build script, a dev flag for the debug keys and the
     /// test-room buttons"). Dev: the editor, a development build, or a player started with -gbDev. A release build hides
-    /// the test rooms of the main menu and turns off the debug keys (F1, F2, F4 to F9, F11, F12).
+    /// the test rooms of the main menu and turns off the debug keys (F1, F2, F4 to F9, F12).
     /// </summary>
     public static class GameBuild
     {

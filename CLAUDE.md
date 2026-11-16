@@ -798,6 +798,10 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
 - 2026-11-16, THE SHORT IS 10 S (`devlog-notes/2026-11-16_short_10s.md`, Bruno: "make it 10 seconds, it deals the same damage both to the player
   and the enemies overall"): `ShortController.Seconds` 10 and `DamageToOthersTotal` 480 (25 shocks of 19.2), half her HP as before; constants
   now (the scenes kept their serialized 16 s). NOT COMPILED, NOT RUN.
+- 2026-11-16, THE TEST ROOMS TRIMMED (`devlog-notes/2026-11-16_test_rooms_trimmed.md`, Bruno: "remove all redundant debug rooms"): the TEST ROOMS
+  column holds TRAINING, DEMO: DINING HALL, AI, KIT, BRAIN, PHYSICS; the other test rooms stay for the tests and bots. The look test scenes
+  (LookTest, LookTest2, LookTestExterior, RemakeLook, RemakeLookBright, ArkhamLook, ArkhamLookBright), their setups, directors and bots, and F11
+  are deleted; `LookTestSetup` and `LookDirector` stay (the tutorial, the test-room builders). The look-test lines above are history.
 - 2026-11-06, day, MK AS AMMUNITION (`devlog-notes/2026-11-06_mk_ammo_short_death_search.md`, Bruno: "that basically makes mk an ammo counter and the pills clips"): one MK bar for each power
   (`PsychicStats.Mk(kind)`; `Nalcon` reads the selected bar; only that bar shows on the HUD), no recharge, one capsule for each power (`DrugType.Nalcon`, `NalconFire`, `NalconLift`). Every point of MK spent fills
   SHORT (`ShortPerMkPoint`). A short can kill her (killer id `short`, its own death screen row); a second wind saves her and ends the short. SCARCITY and DEEP WELL change the cost. `FireTeam`: suppression

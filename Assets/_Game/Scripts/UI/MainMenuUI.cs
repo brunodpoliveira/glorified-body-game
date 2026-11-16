@@ -25,20 +25,8 @@ namespace GlorifiedBody.UI
         [SerializeField] private string startLabel = "START";
         [SerializeField] private string tutorialScene = "Tutorial"; // the therapy gym demonstration (Bruno, 2026-10-22)
         [SerializeField] private string aiTestScene = "AiTest";     // the FSM soldiers' hall (Bruno, 2026-10-23)
-        [SerializeField] private string coverTestScene = "CoverTest"; // the breakable cover (Bruno, 2026-10-24)
-        [SerializeField] private string civilianTestScene = "CivilianTest"; // the unarmed civilians (Bruno, 2026-10-25)
         [SerializeField] private string kitTestScene = "KitTest";       // every system in one room (2026-10-26)
-        [SerializeField] private string scriptTestScene = "ScriptTest"; // the ultimatum, a gate, a cutscene (2026-10-26)
-        [SerializeField] private string travelTestScene = "TravelTest_A"; // two rooms and a door (2026-10-26)
-        [SerializeField] private string labTestScene = "LabTest";       // the armed lab workers, a carried key (2026-10-27)
-        [SerializeField] private string wardTestScene = "WardTest";     // a patient, a scan on a person, feeding (2026-10-30)
-        [SerializeField] private string screenTestScene = "ScreenTest"; // the in-world screens (2026-10-31)
-        [SerializeField] private string outfitTestScene = "OutfitTest"; // the outfit change (2026-10-31)
         [SerializeField] private string physicsTestScene = "PhysicsTest"; // the carry and the boxes (2026-11-06)
-        [SerializeField] private string edgarTestScene = "EdgarTest"; // mk_edgar (2026-11-06)
-        public const string DoorTestScene = "DoorTest"; // the doors she locks and the soldiers breach (2026-11-03)
-        public const string CodeTestScene = "CodeTest"; // the card, the rotated code, the terminal (2026-11-08)
-        public const string DarkTestScene = "DarkTest"; // the lights out, the UPS order (2026-11-08)
         public const string BrainTestScene = "BrainTest"; // the brain fight (2026-11-08)
         private const float TestButtonHeight = 32f; // 18 test rooms fit under the title
         /// <summary>START: the demo, one world scene with every room (2026-11-02; a scene per room since 2026-10-31).</summary>
@@ -56,9 +44,6 @@ namespace GlorifiedBody.UI
         private Button tutorialBtn;
         private Button continueBtn;
         private Button loadBtn;
-        private Button aiTestBtn;
-        private Button coverTestBtn;
-        private Button civilianTestBtn;
         private Button howToBtn;
         private Button optionsBtn;
         private Button creditsBtn;
@@ -176,28 +161,8 @@ namespace GlorifiedBody.UI
             GameManager.Instance?.LoadLevel(aiTestScene);
         }
 
-        private void OnCoverTestClicked()
-        {
-            GameManager.Instance?.LoadLevel(coverTestScene);
-        }
-
-        private void OnCivilianTestClicked()
-        {
-            GameManager.Instance?.LoadLevel(civilianTestScene);
-        }
-
         private void OnKitTestClicked() => GameManager.Instance?.LoadLevel(kitTestScene);
-        private void OnScriptTestClicked() => GameManager.Instance?.LoadLevel(scriptTestScene);
-        private void OnTravelTestClicked() => GameManager.Instance?.LoadLevel(travelTestScene);
-        private void OnLabTestClicked() => GameManager.Instance?.LoadLevel(labTestScene);
-        private void OnWardTestClicked() => GameManager.Instance?.LoadLevel(wardTestScene);
-        private void OnScreenTestClicked() => GameManager.Instance?.LoadLevel(screenTestScene);
-        private void OnOutfitTestClicked() => GameManager.Instance?.LoadLevel(outfitTestScene);
         private void OnPhysicsTestClicked() => GameManager.Instance?.LoadLevel(physicsTestScene);
-        private void OnEdgarTestClicked() => GameManager.Instance?.LoadLevel(edgarTestScene);
-        private void OnDoorTestClicked() => GameManager.Instance?.LoadLevel(DoorTestScene);
-        private void OnCodeTestClicked() => GameManager.Instance?.LoadLevel(CodeTestScene);
-        private void OnDarkTestClicked() => GameManager.Instance?.LoadLevel(DarkTestScene);
         private void OnBrainTestClicked() => GameManager.Instance?.LoadLevel(BrainTestScene);
         private void OnTrainingClicked() => GameManager.Instance?.LoadGameplay();
         // Inside the glass doors from G2, the hall in front of her (the point of DiningHallTests).
@@ -410,25 +375,12 @@ namespace GlorifiedBody.UI
             nav.Add(CreateButton(tests.transform, "TRAINING ROOM", 300, OnTrainingClicked, TestButtonHeight));
             // The demo from the Dining Hall (Bruno, 2026-11-15: "get the player dragged to the dining hall").
             nav.Add(CreateButton(tests.transform, "DEMO: DINING HALL", 300, OnDiningHallClicked, TestButtonHeight));
-            aiTestBtn = CreateButton(tests.transform, "AI TEST", 300, OnAiTestClicked, TestButtonHeight);
-            coverTestBtn = CreateButton(tests.transform, "COVER TEST", 300, OnCoverTestClicked, TestButtonHeight);
-            civilianTestBtn = CreateButton(tests.transform, "CIVILIAN TEST", 300, OnCivilianTestClicked, TestButtonHeight);
-            nav.Add(aiTestBtn);
-            nav.Add(coverTestBtn);
-            nav.Add(civilianTestBtn);
+            // Six rooms (Bruno, 2026-11-16: "remove all redundant debug rooms: keep only the current useful ones for us"; his pick:
+            // the menu only). The other test rooms stay for the tests and the bots: every system of theirs lives in a demo room now.
+            nav.Add(CreateButton(tests.transform, "AI TEST", 300, OnAiTestClicked, TestButtonHeight));
             nav.Add(CreateButton(tests.transform, "KIT TEST", 300, OnKitTestClicked, TestButtonHeight));
-            nav.Add(CreateButton(tests.transform, "SCRIPT TEST", 300, OnScriptTestClicked, TestButtonHeight));
-            nav.Add(CreateButton(tests.transform, "TRAVEL TEST", 300, OnTravelTestClicked, TestButtonHeight));
-            nav.Add(CreateButton(tests.transform, "LAB TEST", 300, OnLabTestClicked, TestButtonHeight));
-            nav.Add(CreateButton(tests.transform, "WARD TEST", 300, OnWardTestClicked, TestButtonHeight));
-            nav.Add(CreateButton(tests.transform, "SCREEN TEST", 300, OnScreenTestClicked, TestButtonHeight));
-            nav.Add(CreateButton(tests.transform, "OUTFIT TEST", 300, OnOutfitTestClicked, TestButtonHeight));
-            nav.Add(CreateButton(tests.transform, "DOOR TEST", 300, OnDoorTestClicked, TestButtonHeight));
-            nav.Add(CreateButton(tests.transform, "PHYSICS TEST", 300, OnPhysicsTestClicked, TestButtonHeight));
-            nav.Add(CreateButton(tests.transform, "EDGAR TEST", 300, OnEdgarTestClicked, TestButtonHeight));
-            nav.Add(CreateButton(tests.transform, "CODE TEST", 300, OnCodeTestClicked, TestButtonHeight));
-            nav.Add(CreateButton(tests.transform, "DARK TEST", 300, OnDarkTestClicked, TestButtonHeight));
             nav.Add(CreateButton(tests.transform, "BRAIN TEST", 300, OnBrainTestClicked, TestButtonHeight));
+            nav.Add(CreateButton(tests.transform, "PHYSICS TEST", 300, OnPhysicsTestClicked, TestButtonHeight));
 
             if (!GameBuild.Dev) nav.RemoveAll(b => b != null && b.transform.parent == tests.transform); // hidden: not in the keys' path
 

@@ -295,9 +295,7 @@ namespace GlorifiedBody.Editor
 
             EnsureBuildScene(scenes, MainMenuScenePath);
             EnsureBuildScene(scenes, TrainingRoomScenePath);
-            if (File.Exists(LookTestSetup.ScenePath)) EnsureBuildScene(scenes, LookTestSetup.ScenePath);
-            if (File.Exists(LookTestSetup.Scene2Path)) EnsureBuildScene(scenes, LookTestSetup.Scene2Path);
-            if (File.Exists(ExteriorLookSetup.ScenePath)) EnsureBuildScene(scenes, ExteriorLookSetup.ScenePath);
+            // The look test rooms are gone (Bruno, 2026-11-16: "remove all redundant debug rooms").
             if (File.Exists(TravelTestSetup.PathA)) EnsureBuildScene(scenes, TravelTestSetup.PathA);
             if (File.Exists(TravelTestSetup.PathB)) EnsureBuildScene(scenes, TravelTestSetup.PathB);
             if (File.Exists(ScriptTestSetup.ScenePath)) EnsureBuildScene(scenes, ScriptTestSetup.ScenePath);
