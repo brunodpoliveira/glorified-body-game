@@ -151,7 +151,7 @@ namespace GlorifiedBody.Editor.Demo
                 l.intensity = 1.6f;
                 l.color = new Color(0.55f, 0.85f, 0.7f);
                 l.shadows = LightShadows.None;
-                l.renderingLayerMask = (int)Darkness.DarkLayer; // they light only the dark
+                Darkness.LightOnlyTheDark(l); // they light only the dark
             }
             FlagSwitch release = r.Switch("Release_Button", new Vector3(9.8f, 1.2f, 7.4f), Released, "Press the release?", "press the release", "SECTOR C RELEASED.");
             release.requiredFlag = DoneFlag;

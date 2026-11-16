@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
 
 namespace GlorifiedBody.Rendering
 {
@@ -102,8 +103,26 @@ namespace GlorifiedBody.Rendering
         {
             var list = new List<Light>();
             foreach (Light l in Object.FindObjectsByType<Light>(FindObjectsSortMode.None))
-                if (l.isActiveAndEnabled && l.type != LightType.Directional && ((uint)l.renderingLayerMask & DarkLayer) != 0) list.Add(l);
+                if (l.isActiveAndEnabled && l.type != LightType.Directional && ((uint)l.renderingLayerMask & DarkLayer) != 0)
+                {
+                    // A scene built before 2026-11-16 set only Light.renderingLayerMask (the shadows' layers in URP).
+                    if ((uint)l.renderingLayerMask == DarkLayer) LightOnlyTheDark(l);
+                    list.Add(l);
+                }
             return list;
+        }
+
+        /// <summary>
+        /// Puts a light on DarkLayer (a monitor): it lights only the dark renderers. URP lights by the rendering layers of its
+        /// own light data, not by Light.renderingLayerMask (the shadows' layers), and it drops every layer with no name in the
+        /// project settings (RenderingLayerNames names DarkLayer "Dark").
+        /// </summary>
+        public static void LightOnlyTheDark(Light l)
+        {
+            if (l == null) return;
+            UniversalAdditionalLightData data = l.GetUniversalAdditionalLightData();
+            if ((uint)data.renderingLayers != DarkLayer) data.renderingLayers = DarkLayer;
+            l.renderingLayerMask = (int)DarkLayer;
         }
 
         private static bool IsUnlit(Renderer r) =>

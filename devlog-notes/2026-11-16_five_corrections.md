@@ -124,3 +124,33 @@ the hint in `death_screens.csv` ("The key of the post is on her."). OPEN for Bru
 2. Is W3 open before code silver?
 3. Does the give line of the ward sister fit a key?
 4. A sign on the W13 door?
+
+His answers:
+
+```text
+1: we'll apply the actual lines and interactbles once we start building out the actual level. this greybox is to test gameplay features and the map
+2: yes
+3: the ward sister has the key that unlocks the office that allows the reprogramming of the security card
+4: yes
+```
+
+1. The placeholder line stays until the real level is built.
+2. W3 opens with the card before code silver. The build already does this.
+3. The build already does this: the key opens W13, and the terminal there enrols the card.
+4. The sign "WARD SECURITY POST" is over the W13 door, on the W12 side (`Sign_Security_Post`). It shows after the next
+   `DemoWorld.BuildAll`.
+
+## The rendering layer of the dark room
+
+```text
+fix the rendering layer
+```
+
+1. `Editor/RenderingLayerNames` names rendering layer 1 "Dark" at each editor load (GlorifiedBody > Checks > Name The
+   Rendering Layers). URP then keeps `Darkness.DarkLayer`.
+2. `Darkness.LightOnlyTheDark` puts a monitor light on the dark layer through its URP light data. The G9 builder and
+   DARK TEST use it.
+3. A scene built before today: when a room goes dark, `DarkRoom` calls `Darkness.RefreshGlow`, which repairs the monitor
+   lights.
+
+NOT RUN: `DarkRoomTests` and the DARK TEST bot.

@@ -80,6 +80,7 @@ namespace GlorifiedBody.Rooms
                 foreach (Renderer w in t.GetComponentsInChildren<Renderer>(true))
                     if ((w.name.StartsWith("Wall_") || w.name.StartsWith("Lintel_")) && rooms.Exists(r => r.Contains(w.bounds.center, 0.25f))) shell.Add(w);
             }
+            Darkness.RefreshGlow(); // also puts the monitors of an older scene on the dark's light layer
             foreach (Renderer r in shell) Darkness.Set(r, true);
             if (!string.IsNullOrEmpty(darkFlag)) StoryFlags.Raise(darkFlag);
             RunTelemetry.Event("room_dark", room.id);

@@ -303,6 +303,8 @@ namespace GlorifiedBody.Editor.Demo
             GameObject door = r.LockedLeaf(r.DoorTo("S1"), DemoItems.SecurityCard().itemId, "the security card");
             Noticed(r.CodeLock(door, new Vector3(16.3f, 1.2f, -13.82f), Vector3.forward, CodesRotated, CardEnrolled));
             r.LockedLeaf(r.DoorTo("W13"), DemoItems.OfficeKey().itemId, "the security post key");
+            // Over the door of the post, on the W12 side (Bruno, 2026-11-16: a sign on the W13 door, "yes").
+            r.Sign("Sign_Security_Post", "WARD SECURITY POST", new Vector3(16.83f, DemoRoom.DoorHeight + 0.3f, -12f), Vector3.left, new Vector2(1.6f, 0.24f), 30);
             var rotation = MenuLoopSetup.EnsureChild(r.Story, "Code_Rotation").AddComponent<CodeRotation>();
             rotation.cardItemId = DemoItems.SecurityCard().itemId;
             rotation.rotatedFlag = CodesRotated;

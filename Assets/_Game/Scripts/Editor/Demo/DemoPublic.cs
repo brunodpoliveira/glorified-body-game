@@ -629,7 +629,7 @@ namespace GlorifiedBody.Editor.Demo
                 l.intensity = 1.2f;
                 l.color = new Color(0.55f, 0.85f, 0.7f);
                 l.shadows = LightShadows.None;
-                l.renderingLayerMask = (int)GlorifiedBody.Rendering.Darkness.DarkLayer; // they light only the dark
+                GlorifiedBody.Rendering.Darkness.LightOnlyTheDark(l); // they light only the dark
             }
             GameObject chair = r.Prop("Security_Chair", new Vector3(31f, 0f, -13.4f), new Vector3(0.6f, 1f, 0.6f), 0.15f);
             r.Scan("Scan_Security_Chair", chair.transform.position + Vector3.up * 0.4f, "demo_c7_chair", DemoPlan.ScanCard("C7", "PLACEHOLDER (C7): a man's hands on a row of switches. A wedding ring. A cold coffee."));
