@@ -567,6 +567,9 @@ namespace GlorifiedBody.Editor.Demo
         private static void H6(DemoRoom r)
         {
             r.Prop("Tube_Collar", new Vector3(LandingX1 - 0.35f, 0f, 37f - 0.2f), new Vector3(0.4f, 3f, 0.3f), 0.5f);
+            // The tube's control console (Bruno, 2026-11-15: "a button on a computer on the other side"): the way back to the Hold.
+            r.Prop("Tube_Console", new Vector3(LandingX1 - 0.325f, 0f, 33.6f), new Vector3(0.35f, 1.0f, 0.9f), 0.2f); // the button on its top; she reaches it from 0.4 m (HoldTests)
+            r.Sign("Sign_Tube_Control", "TUBE CONTROL", new Vector3(LandingX1 - 0.17f, 1.75f, 33.6f), Vector3.left, new Vector2(0.9f, 0.22f), 30);
             r.Switch("Extend_Button", new Vector3(LandingX1 - 0.35f, 1.2f, 33.6f), TubeOut, "Extend the tube?", "extend the tube", "");
             r.LockedLeaf(r.DoorTo("H7"), DemoItems.AirlockCard().itemId, "the airlock card");
             r.Scan("Scan_C11", new Vector3(LandingX1 - 1.3f, 1.2f, 29.2f), "c11_card_reader",

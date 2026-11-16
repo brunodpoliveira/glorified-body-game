@@ -734,6 +734,13 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   (`DemoDining.LodgeDoor`). A soldier refuses a firing spot when the walk to it passes within 2.5 m of her (`SoldierBrain.RoutePassesHer`:
   a flanker's walk cut through her and ended in a butt strike). NOT RUN: the shotgun test and the fight classes with it. Numbers PROPOSED.
 
+- 2026-11-15, THE ROUND CHAPEL, THE DEV START, THE TUBE CONSOLE (`devlog-notes/2026-11-15_round_chapel_dev_start_tube.md`, Bruno: "the chapel
+  room is also circular"; "get the player dragged to the dining hall"): G4 is a ring of panels (radius 3.6 m, solid corners, `DemoPublic.SolidCells`
+  shared with the foyer), the altar on three round steps in the centre, a screen of brass flakes, a skylight disc, six pews in an arc, the gear and
+  the verse on the west arc. DEMO: DINING HALL in the TEST ROOMS column (`DebugTools/DevRoomStart`: the demo, no opening, the F7 refill, in G18).
+  The H6 EXTEND button sits on a console (TUBE CONTROL); the tube already starts retracted in play (a `FlagGate`). G13b has no beat. NOT COMPILED,
+  NOT RUN (Bruno's RAM): run `DemoWorld.BuildAll`, `MapAtlasSetup.BuildAtlas`, then `DemoTests`. Numbers PROPOSED.
+
 ## Rules
 
 1. Unity 6000.3.15f1 (installed at `/home/pc/Unity/Hub/Editor/6000.3.15f1`). Start it only through `tools/unity.sh`

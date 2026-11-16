@@ -200,6 +200,8 @@ namespace GlorifiedBody.UI
         private void OnDarkTestClicked() => GameManager.Instance?.LoadLevel(DarkTestScene);
         private void OnBrainTestClicked() => GameManager.Instance?.LoadLevel(BrainTestScene);
         private void OnTrainingClicked() => GameManager.Instance?.LoadGameplay();
+        // Inside the glass doors from G2, the hall in front of her (the point of DiningHallTests).
+        private void OnDiningHallClicked() => GlorifiedBody.DebugTools.DevRoomStart.Begin("G18", new Vector3(36.3f, 0f, 3f), 90f);
 
         private void OnStartClicked()
         {
@@ -395,7 +397,7 @@ namespace GlorifiedBody.UI
             testsRect.pivot = new Vector2(0.5f, 1f);
             testsRect.sizeDelta = new Vector2(320f, 0f);
             var testsLayout = tests.AddComponent<VerticalLayoutGroup>();
-            testsLayout.spacing = 6; // 13 rooms (2026-11-03: DOOR TEST ran past the bottom)
+            testsLayout.spacing = 5; // 13 rooms (2026-11-03: DOOR TEST ran past the bottom); 19 buttons (2026-11-15)
             testsLayout.childAlignment = TextAnchor.UpperCenter;
             testsLayout.childControlWidth = false;
             testsLayout.childControlHeight = true;
@@ -406,6 +408,8 @@ namespace GlorifiedBody.UI
             testsHeader.rectTransform.sizeDelta = new Vector2(300f, testsHeader.rectTransform.sizeDelta.y); // the column does not size its children
             // The training room is dev only (Bruno, 2026-11-02: "remove the training room, or set it to dev only").
             nav.Add(CreateButton(tests.transform, "TRAINING ROOM", 300, OnTrainingClicked, TestButtonHeight));
+            // The demo from the Dining Hall (Bruno, 2026-11-15: "get the player dragged to the dining hall").
+            nav.Add(CreateButton(tests.transform, "DEMO: DINING HALL", 300, OnDiningHallClicked, TestButtonHeight));
             aiTestBtn = CreateButton(tests.transform, "AI TEST", 300, OnAiTestClicked, TestButtonHeight);
             coverTestBtn = CreateButton(tests.transform, "COVER TEST", 300, OnCoverTestClicked, TestButtonHeight);
             civilianTestBtn = CreateButton(tests.transform, "CIVILIAN TEST", 300, OnCivilianTestClicked, TestButtonHeight);

@@ -57,11 +57,14 @@ namespace GlorifiedBody.Editor.Demo
             r.ExtraCamera("lamp", new Vector3(13.3f, 1.5f, -4.7f), new Vector3(6f, 0.6f, -8.5f), 60f, new Vector3(6.5f, 1.5f, -8.05f), new Vector3(5f, 3f, 3.1f));
         }
 
-        /// <summary>G4, the chapel: from the south-west corner, a tall candle stand in front, the pews and the lectern beyond.</summary>
+        /// <summary>
+        /// G4, the chapel: from the way in, west of the door, a tall candle stand in front, the altar and the east pews beyond.
+        /// Since the round chapel (2026-11-15) the corners are solid: the camera stands inside the ring.
+        /// </summary>
         public static void G4(DemoRoom r)
         {
-            Candelabrum(r, "Chapel_Candles", new Vector3(25.4f, 0f, 7.3f), 1.45f);
-            r.ExtraCamera("candles", new Vector3(24.6f, 2.0f, 6.4f), new Vector3(29f, 1.0f, 12.5f), 64f, new Vector3(28.75f, 1.5f, 10.5f), new Vector3(4.5f, 3f, 4f));
+            Candelabrum(r, "Chapel_Candles", new Vector3(27.35f, 0f, 7.5f), 1.45f); // clear of the south-west pew's end
+            r.ExtraCamera("candles", new Vector3(27.0f, 2.6f, 6.7f), new Vector3(28.8f, 0.9f, 9.6f), 64f, new Vector3(27.85f, 1.5f, 8.3f), new Vector3(2.1f, 3f, 1.8f));
         }
 
         /// <summary>G10, the cafeteria: low by the side counter, Gene's birthday cake on the first table, the banner beyond.</summary>

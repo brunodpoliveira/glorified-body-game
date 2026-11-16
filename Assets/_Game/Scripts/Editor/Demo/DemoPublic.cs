@@ -114,23 +114,120 @@ namespace GlorifiedBody.Editor.Demo
             r.Scan("Scan_Donor_Wall", new Vector3(12f, 1.4f, 11.6f), "demo_c6_donor_wall", DemoPlan.ScanCard("C6", "PLACEHOLDER (C6): a hand pressed into wet paint, a larger hand on top of it."));
         }
 
-        /// <summary>G4: the chapel, a nurse who prays and does not stop (a hider never found), the prayer card L8, the verse (beat 19).</summary>
+        // ── G4, the round chapel (round 93, DEMO_PLAN §10.5b item 3; Bruno, 2026-11-15: "the chapel room is also circular") ──
+
+        public static readonly Vector3 ChapelCentre = new Vector3(28f, 0f, 10f);
+        public const float ChapelRadius = 3.6f, ChapelWayIn = 1.2f;
+
+        /// <summary>
+        /// G4: the chapel, round (round 93: the altar piece in its centre, a white marble block on a round stepped platform, the
+        /// screen of hanging brass flakes, one shaft of light from above, after the picture of the MIT chapel). The ring stands in
+        /// the square of the room, the corners behind it are solid, the way in from the door of G2 is open. Six pews in an arc
+        /// face the altar, the gear and the verse on a board on the west arc (PROPOSED). A nurse who prays and does not stop (a
+        /// hider never found), the prayer card L8 (beat 19).
+        /// </summary>
         private static void G4(DemoRoom r)
         {
-            DemoForeground.G4(r); // the candle stand in the foreground (2026-11-14)
-            for (int i = 0; i < 6; i++)
-                r.Prop($"Pew_{i}", new Vector3(i % 2 == 0 ? 26.2f : 29.8f, 0f, 8f + (i / 2) * 1.6f), new Vector3(2.6f, 0.5f, 0.5f), 0.1f);
-            r.Prop("Lectern", new Vector3(28f, 0f, 12.6f), new Vector3(0.6f, 1.1f, 0.5f), 0.15f);
-            r.Capsule("Capsule_G4", DrugType.NalconLift, new Vector3(25f, 0.15f, 13.2f));
-            r.Box(r.Props, "Gear", new Vector3(28f, 2.6f, 13.83f), new Vector3(1.2f, 1.2f, 0.04f), DemoRoom.Grey(0.9f));
-            r.Sign("Sign_Verse", DemoPlan.Sign("G4, the chapel, under the gear", "IT IS SOWN IN WEAKNESS. IT IS RAISED IN POWER."), new Vector3(28f, 1.7f, 13.83f), Vector3.back, new Vector2(3.4f, 0.4f), 40);
-            DemoArt.Place(r, "Art_Verse", "A3", new Vector3(28f, 1.4f, 13.4f), "the verse");
-            EnemySpawn nurse = r.Figure("Praying_Nurse", "nurse", new Vector3(29.8f, 0f, 11.4f), 0f, variant: 0);
+            Vector3 c = ChapelCentre;
+            float h = r.Spec.Height;
+            Material panel = DemoRoom.Grey(0.3f), fill = DemoRoom.Grey(0.2f), marble = DemoRoom.Colour("marble", new Color(0.92f, 0.9f, 0.86f));
+            Material brass = DemoRoom.Colour("brass", new Color(0.72f, 0.6f, 0.32f)), wood = DemoRoom.Colour("chapel_wood", new Color(0.24f, 0.17f, 0.12f));
+            SolidCells(r, "Chapel_Fill", ChapelSolid, fill);
+            // The ring of dark panels, open at the door (south).
+            for (int i = 0; i < 24; i++)
+            {
+                float deg = i * 15f;
+                if (Mathf.Abs(Mathf.DeltaAngle(deg, 180f)) < 20f) continue;
+                Vector3 dir = Quaternion.Euler(0f, deg, 0f) * Vector3.forward;
+                GameObject piece = r.Box(r.Room, $"Chapel_Panel_{i:00}", c + dir * ChapelRadius + Vector3.up * h * 0.5f, new Vector3(1.0f, h, 0.12f), panel);
+                piece.transform.rotation = Quaternion.LookRotation(-dir, Vector3.up);
+            }
+            DemoForeground.G4(r); // the candle stand in the foreground (2026-11-14), inside the ring since 2026-11-15
+            // The altar: three round steps, the marble block on the top one.
+            Disc(r.Props, "Altar_Step_0", c + Vector3.up * 0.06f, 1.2f, 0.12f, marble, true);
+            Disc(r.Props, "Altar_Step_1", c + Vector3.up * 0.18f, 0.95f, 0.12f, marble, true);
+            Disc(r.Props, "Altar_Step_2", c + Vector3.up * 0.3f, 0.7f, 0.12f, marble, true);
+            r.Box(r.Props, "Altar", c + Vector3.up * (0.36f + 0.475f), new Vector3(1.3f, 0.95f, 0.65f), marble);
+            // The screen behind the altar: brass flakes on wires from the ceiling, no collider (a veil of light, not a wall).
+            var random = new System.Random(93);
+            for (int i = 0; i < 72; i++)
+            {
+                Vector3 at = c + new Vector3(-1.0f + 2.0f * (float)random.NextDouble(), 0.5f + (h - 0.7f) * (float)random.NextDouble(), 1.45f + 0.2f * (float)random.NextDouble());
+                GameObject flake = r.Box(r.Props, $"Screen_Flake_{i:00}", at, new Vector3(0.14f, 0.05f, 0.01f), brass);
+                flake.transform.rotation = Quaternion.Euler(0f, -30f + 60f * (float)random.NextDouble(), 0f);
+                Object.DestroyImmediate(flake.GetComponent<Collider>());
+            }
+            // The shaft of light: a lit disc in the ceiling over the altar.
+            Disc(r.Room, "Chapel_Skylight", c + Vector3.up * (h - 0.06f), 0.9f, 0.02f, DemoRoom.Colour("skylight", new Color(1f, 0.97f, 0.88f)), false);
+            // Six pews in an arc, facing the altar; the way from the door to the altar stays open.
+            int n = 0;
+            foreach (float deg in new[] { 60f, 100f, 140f, 220f, 260f, 300f })
+            {
+                Vector3 dir = Quaternion.Euler(0f, deg, 0f) * Vector3.forward;
+                GameObject pew = r.Prop($"Pew_{n++}", c + dir * 2.0f, new Vector3(1.2f, 0.5f, 0.45f), 0.1f);
+                pew.transform.rotation = Quaternion.LookRotation(-dir, Vector3.up);
+            }
+            // The gear and the verse on a board on the west arc.
+            r.Box(r.Props, "Verse_Board", new Vector3(c.x - 3.45f, 1.9f, c.z), new Vector3(0.06f, 2.6f, 1.6f), wood);
+            r.Box(r.Props, "Gear", new Vector3(c.x - 3.4f, 2.6f, c.z), new Vector3(0.04f, 1.0f, 1.0f), DemoRoom.Grey(0.9f));
+            r.Sign("Sign_Verse", DemoPlan.Sign("G4, the chapel, under the gear", "IT IS SOWN IN WEAKNESS. IT IS RAISED IN POWER."), new Vector3(c.x - 3.38f, 1.7f, c.z), Vector3.right, new Vector2(1.5f, 0.4f), 40);
+            DemoArt.Place(r, "Art_Verse", "A3", new Vector3(c.x - 3.0f, 1.4f, c.z), "the verse");
+            r.Capsule("Capsule_G4", DrugType.NalconLift, c + Quaternion.Euler(0f, 320f, 0f) * Vector3.forward * 3.0f + Vector3.up * 0.15f);
+            // The nurse kneels behind the pew of 100 degrees, facing the altar.
+            Vector3 kneel = Quaternion.Euler(0f, 100f, 0f) * Vector3.forward;
+            EnemySpawn nurse = r.Figure("Praying_Nurse", "nurse", c + kneel * 2.65f, 280f, variant: 0);
             nurse.hides = true;
             nurse.foundAt = 0f; // she prays on, found or not
             nurse.hideLine = "Tonight we pray for the candidates in surgery, for the children of the programme.";
             EditorUtility.SetDirty(nurse);
-            r.Item("L8_Prayer_Card", DemoItems.L8(), new Vector3(26.2f, 0.52f, 9.6f), new Vector3(0.1f, 0.02f, 0.16f));
+            Vector3 cardPew = Quaternion.Euler(0f, 220f, 0f) * Vector3.forward; // on the seat of the south-west pew
+            r.Item("L8_Prayer_Card", DemoItems.L8(), c + cardPew * 2.0f + Vector3.up * 0.52f, new Vector3(0.1f, 0.02f, 0.16f));
+        }
+
+        /// <summary>A point of G4 outside the ring and off the way in from the door (the corners are solid).</summary>
+        public static bool ChapelSolid(Vector3 p)
+        {
+            Vector3 d = p - ChapelCentre;
+            d.y = 0f;
+            if (d.magnitude <= ChapelRadius + 0.1f) return false;
+            return !(Mathf.Abs(d.x) < ChapelWayIn && d.z < 0f);
+        }
+
+        /// <summary>A flat cylinder (a step, a skylight): a mesh collider when it is solid (the cylinder's capsule is no disc).</summary>
+        private static GameObject Disc(GameObject parent, string name, Vector3 centre, float radius, float height, Material m, bool solid)
+        {
+            GameObject d = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            d.name = name;
+            d.transform.SetParent(parent.transform, false);
+            d.transform.position = centre;
+            d.transform.localScale = new Vector3(radius * 2f, height * 0.5f, radius * 2f);
+            Object.DestroyImmediate(d.GetComponent<Collider>());
+            if (solid) d.AddComponent<MeshCollider>().sharedMesh = d.GetComponent<MeshFilter>().sharedMesh;
+            d.GetComponent<Renderer>().sharedMaterial = m;
+            d.isStatic = true;
+            return d;
+        }
+
+        /// <summary>Solid cells of 0.5 m where the test holds, one box for each run of cells in a row (the corners of a round room).</summary>
+        private static void SolidCells(DemoRoom r, string prefix, System.Func<Vector3, bool> solidAt, Material fill)
+        {
+            float h = r.Spec.Height;
+            const float cell = 0.5f;
+            for (float z = r.Spec.Z0 + cell * 0.5f; z < r.Spec.Z1; z += cell)
+            {
+                float runStart = float.NaN;
+                for (float x = r.Spec.X0 + cell * 0.5f; x < r.Spec.X1 + cell; x += cell)
+                {
+                    bool solid = x < r.Spec.X1 && solidAt(new Vector3(x, 0f, z));
+                    if (solid && float.IsNaN(runStart)) runStart = x;
+                    if (!solid && !float.IsNaN(runStart))
+                    {
+                        float x0 = runStart - cell * 0.5f, x1 = x - cell * 0.5f;
+                        r.Box(r.Room, $"{prefix}_{z:0.0}_{x0:0.0}", new Vector3((x0 + x1) * 0.5f, h * 0.5f, z), new Vector3(x1 - x0, h, cell), fill);
+                        runStart = float.NaN;
+                    }
+                }
+            }
         }
 
         /// <summary>G5: the reception hall, the fight, the sheeted door to sector C (a gate the security office opens, beat 20).</summary>
@@ -162,23 +259,8 @@ namespace GlorifiedBody.Editor.Demo
             Vector3 c = FoyerCentre;
             float h = r.Spec.Height;
             Material panel = DemoRoom.Grey(0.62f), fill = DemoRoom.Grey(0.2f), chrome = DemoRoom.Colour("chrome", new Color(0.78f, 0.8f, 0.84f));
-            // The corners: solid cells of 0.5 m outside the ring, except the corridors of the spokes; one box for each run of cells.
-            const float cell = 0.5f;
-            for (float z = r.Spec.Z0 + cell * 0.5f; z < r.Spec.Z1; z += cell)
-            {
-                float runStart = float.NaN;
-                for (float x = r.Spec.X0 + cell * 0.5f; x < r.Spec.X1 + cell; x += cell)
-                {
-                    bool solid = x < r.Spec.X1 && FoyerSolid(new Vector3(x, 0f, z));
-                    if (solid && float.IsNaN(runStart)) runStart = x;
-                    if (!solid && !float.IsNaN(runStart))
-                    {
-                        float x0 = runStart - cell * 0.5f, x1 = x - cell * 0.5f;
-                        r.Box(r.Room, $"Foyer_Fill_{z:0.0}_{x0:0.0}", new Vector3((x0 + x1) * 0.5f, h * 0.5f, z), new Vector3(x1 - x0, h, cell), fill);
-                        runStart = float.NaN;
-                    }
-                }
-            }
+            // The corners: solid cells of 0.5 m outside the ring, except the corridors of the spokes.
+            SolidCells(r, "Foyer_Fill", FoyerSolid, fill);
             // The ring of frosted panels, open at the spokes.
             for (int i = 0; i < 48; i++)
             {
