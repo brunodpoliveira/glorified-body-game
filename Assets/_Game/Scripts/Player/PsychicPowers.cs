@@ -425,11 +425,8 @@ namespace GlorifiedBody.Player
             }
             defendHeldFor += dt;
             if (defendHeldFor < ShieldHoldDelay) return;
-            if (TryRide())
-            {
-                defendHeldFor = 0f;
-                return;
-            }
+            // No ride by the defend key on the thing under her feet (2026-11-16): the surf is plain physics. She stands on a held
+            // prop, the mouse moves it, and it carries her (TankController.PlatformDelta).
             if (TryCarry(Selected))
             {
                 defendHeldFor = 0f;
@@ -520,30 +517,6 @@ namespace GlorifiedBody.Player
         /// <summary>The thing she rides now (the gurney, a box), or null.</summary>
         public GlorifiedBody.Interaction.Rideable Riding => riding;
 
-        /// <summary>
-        /// The surf (Bruno, 2026-11-14: "the player needs to ride the gurney themselves"): she stands on a rideable thing,
-        /// and the defend key held with mk_orzabal lifts it with her on it. The walk keys steer it (Rideable), the release
-        /// sets it down. It comes before the carry and the shield: on a box, the key means the box under her feet.
-        /// </summary>
-        private bool TryRide()
-        {
-            GlorifiedBody.Interaction.Rideable under = GlorifiedBody.Interaction.Rideable.Under(transform);
-            if (under == null) return false;
-            EndShieldCharge();
-            if (!under.StartRide(stats))
-            {
-                Result("no_nalcon", 0f);
-                defendAfterCancel = true;
-                return true;
-            }
-            riding = under;
-            rideByKey = true;
-            LastResult = "ride";
-            LastResultTime = Time.time;
-            OnChanged?.Invoke();
-            return true;
-        }
-
         /// <summary>A crate of the rooms has no Rigidbody until its first lift: from then on it falls and rests like a box.</summary>
         private static void EnsurePropBody(GameObject prop)
         {
@@ -608,7 +581,6 @@ namespace GlorifiedBody.Player
                 }
                 else if (tank != null) tank.FaceTowards(lift.transform.position, 540f);
             }
-            if (lift != null && mine && TryBoard(lift)) return; // from the carry or from the left-press lift
             if (!mine) return;
             Camera cam = Camera.main;
             if (cam == null) return;
@@ -618,32 +590,6 @@ namespace GlorifiedBody.Player
             Vector3 right = Vector3.ProjectOnPlane(cam.transform.right, Vector3.up).normalized;
             Vector3 away = Vector3.ProjectOnPlane(cam.transform.forward, Vector3.up).normalized;
             lift.SteerBy((right * x + away * y) * scale, wheel * CarryMetresPerWheel, Selected.range);
-        }
-
-        /// <summary>
-        /// The step onto a held thing (Bruno, 2026-11-16: "the player must manipulate the object successfully so they can step
-        /// on it and float to the other side"; his pick: lower it over the gap). It is held by the defend-key carry (her feet stop)
-        /// or by the left-press lift (she walks with it). Its top level with her feet and its edge in front of her: the walk key
-        /// steps her onto it, and the hold becomes the ride. Over the gap the ride does not land (Rideable.EndRide), with the
-        /// defend key held or not; over a floor with the key up, it sets down. An empty bar: she stays, and it still hangs.
-        /// </summary>
-        private bool TryBoard(TelekinesisLift lift)
-        {
-            if (!GameInput.GetAction(InputManager.GameAction.Forward, KeyCode.W)) return false;
-            GlorifiedBody.Interaction.Rideable ride = lift.GetComponent<GlorifiedBody.Interaction.Rideable>();
-            if (ride == null || !ride.CanBoardFrom(transform) || stats.Mk(PowerKind.Telekinesis) <= 0.01f) return false;
-            float floorY = transform.position.y; // the floor she steps from: the ride rises over it, not over the lowered start
-            lift.Handover();
-            activeLift = null;
-            if (carrying) EndCarry();
-            if (!ride.StartRide(stats, floorY)) return true; // the bar ran out on the same frame: it falls, as a release
-            riding = ride;
-            rideByKey = GameInput.GetAction(InputManager.GameAction.Defend, KeyCode.Mouse1);
-            LastResult = "ride";
-            LastResultTime = Time.time;
-            RunTelemetry.Event("tk_board", ride.name);
-            OnChanged?.Invoke();
-            return true;
         }
 
         private void EndCarry()

@@ -224,7 +224,7 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.AreEqual(boxB.transform.position.y + edge, boxA.transform.position.y, 0.1f, "it rests on the other box");
         }
 
-        [UnityTest]
+        [UnityTest, Ignore("2026-11-16: the surf is plain physics now (Bruno: no special treatment; the mouse moves the held thing under her, TankController.PlatformDelta carries her). A test of the new surf waits for a run.")]
         public IEnumerator TheSurf_OnABox_TheHeldKeyLiftsItWithHer_TheWalkKeysMoveIt_TheReleaseSetsItDown()
         {
             // Bruno, 2026-11-14: "i need to test if it's possible to manipulate objects to get her to surf on them".

@@ -67,6 +67,7 @@ namespace GlorifiedBody.Combat
         private GameObject attacker;
         private float slamDamage;
         private Vector3 floor;
+        private Vector3 anchor; // a prop's place in the world (flat), moved only by the mouse (SteerBy)
         private Vector3 holdOffset;   // from her to the victim at the lift start, flat
         private float holdYaw;        // her yaw at the lift start
         private float holdHeight;
@@ -165,6 +166,19 @@ namespace GlorifiedBody.Combat
         public void SteerBy(Vector3 flat, float height, float reach)
         {
             if (!CanLaunch || attacker == null) return;
+            if (box != null)
+            {
+                // The anchored prop: the mouse moves its place in the world, inside her reach. No nearest distance: she may stand on it.
+                Vector3 at = anchor + flat;
+                Vector3 ahead = Vector3.ProjectOnPlane(at - transform.position, Vector3.up);
+                if (ahead.magnitude > MaxLead) at = transform.position + ahead.normalized * MaxLead;
+                Vector3 fromHer = Vector3.ProjectOnPlane(at - attacker.transform.position, Vector3.up);
+                if (fromHer.magnitude > reach) at = attacker.transform.position + fromHer.normalized * reach;
+                anchor = new Vector3(at.x, 0f, at.z);
+                float level = transform.position.y - floor.y;
+                holdHeight = Mathf.Clamp(Mathf.Clamp(holdHeight + height, level - MaxLead, level + MaxLead), LowestHeight(), MaxHeight);
+                return;
+            }
             Quaternion toWorld = Quaternion.Euler(0f, HoldYawNow(attacker.transform), 0f);
             Vector3 her = attacker.transform.position;
             Vector3 point = her + toWorld * holdOffset + flat;
@@ -181,7 +195,7 @@ namespace GlorifiedBody.Combat
 
         /// <summary>
         /// The wheel's low limit. Over a gap (no floor under any corner) a box goes down until its top is level with the floor it
-        /// lay on, so she can step onto it (Bruno, 2026-11-16: "the player must manipulate the object successfully so they can step
+        /// lay on, so she can walk onto it (Bruno, 2026-11-16: "the player must manipulate the object successfully so they can step
         /// on it and float to the other side"; his pick: lower it over the gap). Over a floor: MinHeight.
         /// </summary>
         private float LowestHeight()
@@ -196,25 +210,6 @@ namespace GlorifiedBody.Combat
                     if (hit.collider != boxCollider) return MinHeight;
             }
             return -(b.max.y - transform.position.y);
-        }
-
-        /// <summary>The carry ends with the box where it hangs: she stepped onto it, and the ride takes it (Rideable). No fall.</summary>
-        public void Handover()
-        {
-            if (!CanLaunch) return;
-            StopAllCoroutines();
-            Ending = "handover";
-            if (box != null)
-            {
-                box.linearVelocity = Vector3.zero;
-                box.angularVelocity = Vector3.zero;
-                box.useGravity = true;
-                box.constraints = RigidbodyConstraints.None;
-                if (boxCollider != null) boxCollider.sharedMaterial = boxMaterial;
-            }
-            IsLifted = false;
-            RunTelemetry.Event("tk_handover", name);
-            Destroy(this);
         }
 
         private void FixedUpdate()
@@ -239,7 +234,7 @@ namespace GlorifiedBody.Combat
             bool alongZ = Mathf.Abs(size.z) >= Mathf.Abs(size.x) * 1.5f, alongX = Mathf.Abs(size.x) >= Mathf.Abs(size.z) * 1.5f;
             if (!alongZ && !alongX) return 0f;
             Vector3 away = Vector3.ProjectOnPlane(transform.position - attacker.transform.position, Vector3.up);
-            if (away.sqrMagnitude < 0.01f) return 0f;
+            if (away.magnitude < Mathf.Max(Mathf.Abs(size.x), Mathf.Abs(size.z)) * 0.5f + 0.3f) return 0f; // she stands on it or at its end: it holds its turn
             Vector3 axis = Vector3.ProjectOnPlane(alongZ ? transform.forward : transform.right, Vector3.up);
             float delta = Vector3.SignedAngle(axis, away, Vector3.up);
             if (delta > 90f) delta -= 180f; // either end may lead
@@ -277,6 +272,7 @@ namespace GlorifiedBody.Combat
         {
             IsLifted = true;
             floor = transform.position;
+            anchor = new Vector3(floor.x, 0f, floor.z);
             Transform holder = attacker != null ? attacker.transform : null;
             if (holder != null)
             {
@@ -416,6 +412,9 @@ namespace GlorifiedBody.Combat
             float y = floor.y + holdHeight;
             if (box != null)
             {
+                // A held prop keeps its place in the world while she walks (Bruno, 2026-11-16, his pick: "hold stays put"): only
+                // the mouse and the wheel move it (SteerBy), so she can walk onto it. An enemy in the air still follows her.
+                flat = anchor;
                 boxTarget = new Vector3(flat.x, y, flat.z);
                 floor = new Vector3(transform.position.x, floor.y, transform.position.z);
                 return;

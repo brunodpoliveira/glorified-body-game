@@ -307,8 +307,43 @@ namespace GlorifiedBody.Player
             if (controller.isGrounded && verticalVelocity < 0f) verticalVelocity = -2f;
             verticalVelocity += gravity * dt;
 
-            controller.Move(planar * dt + Vector3.up * (verticalVelocity * dt));
+            controller.Move(planar * dt + Vector3.up * (verticalVelocity * dt) + PlatformDelta());
             PlanarVelocity = planar;
+        }
+
+        private Rigidbody platform;
+        private Vector3 platformAt;
+        private Quaternion platformTurn;
+
+        /// <summary>
+        /// The surf as plain physics (Bruno, 2026-11-16: "there was supposed to be no special treatment on the gurney"; "i'm also
+        /// testing if it's possible for players to surf other physics objects"): a moving prop under her feet (a crate, a box, a
+        /// planter, the gurney) carries her, as a floor that moves. Its move and its turn since the last frame. Not a body (a
+        /// ragdoll limb would throw her).
+        /// </summary>
+        private Vector3 PlatformDelta()
+        {
+            Rigidbody under = null;
+            if (Physics.Raycast(transform.position + Vector3.up * 0.3f, Vector3.down, out RaycastHit hit, 0.5f, ~LayerMask.GetMask("Player"), QueryTriggerInteraction.Ignore)
+                && hit.rigidbody != null)
+            {
+                GlorifiedBody.Combat.LockOnTargetable prop = hit.rigidbody.GetComponent<GlorifiedBody.Combat.LockOnTargetable>();
+                if (prop != null && prop.IsProp) under = hit.rigidbody;
+            }
+            Vector3 delta = Vector3.zero;
+            if (under != null && under == platform)
+            {
+                Quaternion turn = under.rotation * Quaternion.Inverse(platformTurn);
+                Vector3 from = transform.position - platformAt;
+                delta = under.position - platformAt + (turn * from - from);
+            }
+            platform = under;
+            if (under != null)
+            {
+                platformAt = under.position;
+                platformTurn = under.rotation;
+            }
+            return delta;
         }
 
         /// <summary>The mouse moves what she holds with mk_orzabal: it does not turn her then.</summary>

@@ -20,6 +20,10 @@ namespace GlorifiedBody.Interaction
     /// walks onto it: the carry becomes the ride (PsychicPowers.TryBoard). A ride ends on its top; she walks off the edge.
     /// The cost (PROPOSED): the gurney 40 MK of the mk_orzabal bar (a full bar crosses twice; with less she rides on
     /// what is left), a box the cost of any lift. Walls and bodies stop it.
+    /// Since 2026-11-16 (Bruno: "there was supposed to be no special treatment on the gurney"; "it still auto puts her on top")
+    /// nothing starts this ride: the surf is plain physics. A held prop keeps its place in the world (TelekinesisLift), she walks
+    /// onto it, the mouse moves it, and a moving prop under her feet carries her (TankController.PlatformDelta). The component
+    /// stays as the marker of a thing that travels (RoomTracker.Travels: it is never culled) and for the old tests.
     /// </summary>
     public sealed class Rideable : Interactable
     {

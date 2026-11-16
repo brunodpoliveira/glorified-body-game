@@ -813,6 +813,10 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   opens, "then a side angle and front-facing towards the destination"): `Cam_H5_drop` (zone after `hold_airlock_open`, `LockedDoor.openedFlag`,
   `ExtraCamera(..., zoneFlag)`), `Cam_HT_side` (in the hall, the rails on Ignore Raycast, `RoomSight` skips the gap check of a camera outside its
   room), `Cam_H6_front`. The tube's doorways skip the exit rule (`Door.ExitShot`, `Room.Exit.noShot`). NOT COMPILED, NOT RUN.
+- 2026-11-16, THE SURF IS PLAIN PHYSICS (`devlog-notes/2026-11-16_surf_plain_physics.md`, Bruno: "no special treatment on the gurney"; his picks
+  "mouse moves it", "hold stays put"): a held prop keeps its place in the world (`TelekinesisLift` anchor; the mouse and the wheel move it), she walks
+  onto it, and a moving prop under her feet carries her (`TankController.PlatformDelta`). `TryBoard`, `TryRide` and `Handover` are gone; `Rideable`
+  is only the travel marker now. Three old ride tests are on `Ignore`. NOT COMPILED, NOT RUN. The gurney lines above (TryBoard, the ride) are history.
 - 2026-11-06, day, MK AS AMMUNITION (`devlog-notes/2026-11-06_mk_ammo_short_death_search.md`, Bruno: "that basically makes mk an ammo counter and the pills clips"): one MK bar for each power
   (`PsychicStats.Mk(kind)`; `Nalcon` reads the selected bar; only that bar shows on the HUD), no recharge, one capsule for each power (`DrugType.Nalcon`, `NalconFire`, `NalconLift`). Every point of MK spent fills
   SHORT (`ShortPerMkPoint`). A short can kill her (killer id `short`, its own death screen row); a second wind saves her and ends the short. SCARCITY and DEEP WELL change the cost. `FireTeam`: suppression
