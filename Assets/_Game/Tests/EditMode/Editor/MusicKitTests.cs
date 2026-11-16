@@ -100,6 +100,21 @@ namespace GlorifiedBody.Tests.EditMode
             Assert.IsNull(SetPieceMusic.Load("G2", 165.0), "a room with no files has no set piece");
         }
 
+        /// <summary>The main menu loop (2026-11-16, T45 Carol D, "carol d is the best"): 51 bars at 85 BPM, a WAV.</summary>
+        [Test]
+        public void TheMenuLoop_IsTheT45Take_51BarsAt85Bpm()
+        {
+            AudioClip clip = Resources.Load<AudioClip>(MusicDirector.Folder + MusicDirector.MenuKey + "/menu");
+            Assert.IsNotNull(clip, "Resources/Audio/Music/_menu/menu: tools/menu_music_import.sh");
+            Assert.AreEqual(Rate, clip.frequency, "48 kHz kept");
+            Assert.AreEqual(2, clip.channels, "stereo");
+            Assert.AreEqual(51 * 240.0 / 85.0 * Rate, clip.samples, 1.0, "51 bars at 85 BPM (144.00 s)");
+            string path = AssetDatabase.GetAssetPath(clip);
+            Assert.IsTrue(path.EndsWith(".wav"), "a WAV source, no MP3");
+            var importer = (AudioImporter)AssetImporter.GetAtPath(path);
+            Assert.AreEqual(AudioClipLoadType.CompressedInMemory, importer.defaultSampleSettings.loadType, "MusicImport");
+        }
+
         [Test]
         public void NextBarLine_At165Bpm_OnALoopAndOnASectionThatPlaysOnce()
         {

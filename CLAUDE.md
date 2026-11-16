@@ -674,6 +674,8 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   `MusicDirector.SetPiece` (`MusicDirector.SetPiece.cs`): the entry on the next combat bar line, the fight loop, the armour
   (`HeavyArrival` calls `SetPieceCue(Armour)`), the end at the last kill, then the states on its last bar line. A room with no
   files keeps the single track. Test: `SetPieceMusicTests` (PlayMode, 3, about 1 minute of real-time music).
+  2026-11-16, THE MENU MUSIC (`devlog-notes/2026-11-16_menu_music_t45.md`, Bruno: "carol d is the best"): T45 Carol D in
+  `Resources/Audio/Music/_menu/menu.wav` (`tools/menu_music_import.sh`, 51 bars at 85 BPM, one loop). Test: `MenuMusicTests`.
 
 - 2026-11-14, THE BOOTH, THE GURNEY, THE SURF (`devlog-notes/2026-11-14_booth_gurney_surf.md`, Bruno: "i don't see a nurse behind the
   theather control room", "the gurney is invisible", "the player needs to ride the gurney themselves"): the H4 booth panes and door are glass
