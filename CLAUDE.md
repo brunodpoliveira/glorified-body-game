@@ -825,6 +825,9 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
 - 2026-11-16, THE LOCK IS THE AIM OF A THROW (same note as the surf, Bruno: "as consistent as possible"): while she holds a thing the lock leaves it
   for the nearest enemy (`LockOnController.AimAwayFromHeld`, `IsHeld`), Tab and the wheel click reach only enemies, and a throw goes to the locked
   enemy; with no lock, the 25-degree cone of her facing, else straight ahead. NOT COMPILED, NOT RUN.
+- 2026-11-16, A ROOM'S FIGHT STAYS IN ITS ROOM (`devlog-notes/2026-11-16_concourse_crowd.md`, Bruno: "10+ enemies" in G2, "enemies from the foyer are
+  coming in"): a soldier hears an alert, a shot or a power hit in his own room only (`SoldierBrain`, `Room.Same`; it was `Room.Hear`, next door too).
+  He still chases her when he sees her. NOT COMPILED, NOT RUN.
 - 2026-11-06, day, MK AS AMMUNITION (`devlog-notes/2026-11-06_mk_ammo_short_death_search.md`, Bruno: "that basically makes mk an ammo counter and the pills clips"): one MK bar for each power
   (`PsychicStats.Mk(kind)`; `Nalcon` reads the selected bar; only that bar shows on the HUD), no recharge, one capsule for each power (`DrugType.Nalcon`, `NalconFire`, `NalconLift`). Every point of MK spent fills
   SHORT (`ShortPerMkPoint`). A short can kill her (killer id `short`, its own death screen row); a second wind saves her and ends the short. SCARCITY and DEEP WELL change the cost. `FireTeam`: suppression

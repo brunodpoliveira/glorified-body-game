@@ -436,7 +436,9 @@ namespace GlorifiedBody.Enemy
         private void OnAlertHeard(Vector3 origin, float radius, string reason)
         {
             if (Alerted || Current == Phase.Dead) return;
-            if (Flat(transform.position, origin) <= radius && GlorifiedBody.Rooms.Room.Hear(transform.position, origin)) Alert("heard " + reason, callOthers: false); // walls stop it two rooms away (2026-11-02)
+            // His own room only (Bruno, 2026-11-16: the concourse fight had "10+ enemies ... enemies from the foyer are coming in as
+            // well"): a call next door no longer brings a room's figures into another room's fight. He still chases her when he sees her.
+            if (Flat(transform.position, origin) <= radius && GlorifiedBody.Rooms.Room.Same(transform.position, origin)) Alert("heard " + reason, callOthers: false);
         }
 
         private void OnHurt(float amount)
@@ -458,7 +460,7 @@ namespace GlorifiedBody.Enemy
         private void OnHitHeard(HitInfo hit)
         {
             if (Current == Phase.Dead || hit.Attacker == null || !hit.Attacker.CompareTag("Player")) return;
-            if (Flat(transform.position, hit.HitPoint) > hearPowerRadius || !GlorifiedBody.Rooms.Room.Hear(transform.position, hit.HitPoint)) return;
+            if (Flat(transform.position, hit.HitPoint) > hearPowerRadius || !GlorifiedBody.Rooms.Room.Same(transform.position, hit.HitPoint)) return; // his own room only (2026-11-16)
             if (!Alerted) Alert("power", callOthers: true);
             else Team?.Heard(hit.Attacker.transform.position); // a power is loud: it gives her away
             DrawGun("power", say: true);
