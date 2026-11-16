@@ -349,6 +349,7 @@ namespace GlorifiedBody.Enemy
         public void Stagger(float seconds)
         {
             if (Current == Phase.Dead || seconds <= 0f) return;
+            Bark.Silence(gameObject); // a stun cuts the line (Bruno, 2026-11-16)
             stunUntil = Mathf.Max(stunUntil, Time.time + seconds);
             if (Current == Phase.Care) GetComponent<CorpseCare>()?.Stop("stunned");
             SetPose(Pose.Controller);

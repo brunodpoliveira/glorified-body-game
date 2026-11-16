@@ -5,10 +5,11 @@ using GlorifiedBody.Systems;
 namespace GlorifiedBody.UI
 {
     /// <summary>
-    /// The game-over screen, Arkham shape: a picture, a voice line, and a hint to beat that enemy
-    /// (DeathScreenContent). The killer sets LastKillerId before the lethal hit ("soldier_rifle"). Until the picture
-    /// and the voice clip exist, a grey card shows the writer's picture note and the killer id, and the voice line
-    /// shows as a caption (Bruno, 2026-10-25: test the feature in code before the assets).
+    /// The game-over screen, Arkham shape (Bruno, 2026-11-16): full screen, the killer on his set (DeathStage) says his line
+    /// (a subtitle, and the clip when it exists), the hint to beat him shows under him, and at the end the game reloads the
+    /// latest checkpoint by itself. The Interact key skips to the reload; Escape opens the menu (reload now, the main menu).
+    /// The content comes from DeathScreenContent by the killer id that the killer sets before the lethal hit
+    /// ("soldier_rifle"). A hazard has no model: a picture, or the writer's picture note on a card.
     /// </summary>
     public sealed class DeathMenuUI : RuntimeOverlayMenu
     {
@@ -89,21 +90,41 @@ namespace GlorifiedBody.UI
             return lastLine;
         }
 
-        public string PictureNoteShown => pictureNote != null && pictureNote.gameObject.activeSelf ? pictureNote.text : "";
+        public string PictureNoteShown => note != null && note.gameObject.activeSelf ? note.text : card != null && card.gameObject.activeSelf ? card.text : "";
+
+        // ── The scene (Bruno, 2026-11-16) ─────────────────────────────
+        // "like the batman arkham games, it is a full screen of the enemy doing the speech, animation and the hint; once completed
+        // it automatically reloads to last checkpoint". His pick: the Interact key skips, Escape opens a menu (reload now, or quit).
+
+        public const float MinSeconds = 5f;   // the shortest screen, PROPOSED
+        public const float TailSeconds = 2.5f; // after his line, for the hint, PROPOSED
+        public const float SkipAfter = 0.8f;   // a key held from the fight does not skip it
+
+        /// <summary>The seconds of this screen: his line, then the tail. Then the reload.</summary>
+        public float Duration { get; private set; } = MinSeconds;
+        public float Elapsed { get; private set; }
+        public bool MenuOpen { get; private set; }
+        /// <summary>The set with the killer's model, or null (a hazard: the card).</summary>
+        public DeathStage Stage => stage;
 
         [SerializeField] private DeathScreenContent content;
 
+        private RawImage stageImage;
         private Image picture;
-        private Text pictureNote;
+        private Text card;
+        private Text note;
         private Text caption;
         private Text hint;
-        private Sprite placeholderPicture;
+        private Text keys;
+        private GameObject panel;
+        private DeathStage stage;
         private AudioSource voice;
+        private bool reloading;
 
         protected override string MenuTitle => "YOU DIED";
-        protected override string MenuSubtitle => "Retry the room, or return to the menu.";
+        protected override string MenuSubtitle => "Restart from the latest checkpoint, or return to the menu.";
         protected override UnityEngine.Color AccentColor => new UnityEngine.Color(1f, 0.35f, 0.35f);
-        protected override Vector2 PanelSize => new Vector2(640f, 780f);
+        protected override Vector2 PanelSize => new Vector2(560f, 380f);
         protected override bool ShouldShow => GameManager.Instance != null && GameManager.Instance.IsGameOver;
 
         protected override void Update()
@@ -111,39 +132,26 @@ namespace GlorifiedBody.UI
             base.Update();
             if (!ShouldShow)
             {
+                if (stage != null) EndScene();
                 return;
             }
+            if (reloading) return;
+            if (Input.GetKeyDown(KeyCode.Escape)) SetMenu(!MenuOpen);
+            if (MenuOpen) return;
+            Elapsed += Time.unscaledDeltaTime;
+            if (Elapsed >= SkipAfter && (GameInput.GetActionDown(InputManager.GameAction.Interact, KeyCode.E) || Input.GetKeyDown(KeyCode.Return)))
+                Reload("skip");
+            else if (Elapsed >= Duration)
+                Reload("end");
+        }
 
-            if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.R))
-            {
-                Restart();
-            }
-            else if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.M))
-            {
-                GameManager.Instance?.LoadMainMenu();
-            }
+        private void OnDestroy()
+        {
+            if (stage != null) Destroy(stage.gameObject);
         }
 
         protected override void BuildBody(Transform parent)
         {
-            var pictureObj = CreateElement("Picture", parent);
-            pictureObj.AddComponent<LayoutElement>().preferredHeight = 270f;
-            picture = pictureObj.AddComponent<Image>();
-            picture.preserveAspect = true;
-            picture.color = Color.white;
-            pictureNote = AddLabel(pictureObj.transform, "", 17, TextAnchor.MiddleCenter, FontStyle.Normal, new Color(0.82f, 0.82f, 0.86f));
-            RectTransform noteRect = pictureNote.rectTransform;
-            noteRect.anchorMin = Vector2.zero;
-            noteRect.anchorMax = Vector2.one;
-            noteRect.offsetMin = new Vector2(70f, 16f);
-            noteRect.offsetMax = new Vector2(-70f, -16f);
-
-            caption = AddLabel(parent, "", 19, TextAnchor.MiddleCenter, FontStyle.Bold, new Color(0.95f, 0.95f, 0.95f));
-            caption.gameObject.AddComponent<LayoutElement>().preferredHeight = 48f;
-
-            hint = AddLabel(parent, "", 20, TextAnchor.MiddleCenter, FontStyle.Italic, new Color(0.9f, 0.88f, 0.8f));
-            hint.gameObject.AddComponent<LayoutElement>().preferredHeight = 64f;
-
             voice = GetComponent<AudioSource>();
             if (voice == null)
             {
@@ -154,12 +162,59 @@ namespace GlorifiedBody.UI
 
         protected override void BuildButtons(Transform parent)
         {
-            AddButton(parent, "Restart from latest checkpoint", Restart, true); // was "Retry" (Bruno, 2026-11-16)
+            AddButton(parent, "Restart from latest checkpoint", () => Reload("menu"), true); // was "Retry" (Bruno, 2026-11-16)
             AddButton(parent, "Main Menu", () => GameManager.Instance?.LoadMainMenu());
+            AddButton(parent, "Back", () => SetMenu(false));
+        }
+
+        /// <summary>The full-screen scene under the menu panel: the set's picture, the card, the hint, the keys.</summary>
+        private void BuildScene()
+        {
+            if (stageImage != null || Canvas == null) return;
+            foreach (Transform t in Canvas.GetComponentsInChildren<Transform>(true))
+                if (t.name == "Panel") panel = t.gameObject;
+            GameObject scene = CreateElement("Scene", Canvas.transform);
+            scene.transform.SetSiblingIndex(1); // over the dim overlay, under the menu panel
+            Stretch(scene.GetComponent<RectTransform>());
+            scene.AddComponent<Image>().color = Color.black;
+
+            GameObject set = CreateElement("Stage", scene.transform);
+            Stretch(set.GetComponent<RectTransform>());
+            stageImage = set.AddComponent<RawImage>();
+
+            GameObject pic = CreateElement("Picture", scene.transform);
+            Stretch(pic.GetComponent<RectTransform>());
+            picture = pic.AddComponent<Image>();
+            picture.preserveAspect = true;
+
+            card = AddLabel(scene.transform, "", 30, TextAnchor.MiddleCenter, FontStyle.Normal, new Color(0.8f, 0.8f, 0.84f));
+            Place(card.rectTransform, new Vector2(0.15f, 0.3f), new Vector2(0.85f, 0.8f));
+
+            note = AddLabel(scene.transform, "", 16, TextAnchor.UpperLeft, FontStyle.Normal, new Color(0.6f, 0.6f, 0.64f));
+            Place(note.rectTransform, new Vector2(0.02f, 0.86f), new Vector2(0.7f, 0.98f));
+
+            caption = AddLabel(scene.transform, "", 19, TextAnchor.MiddleCenter, FontStyle.Bold, Color.white);
+            caption.gameObject.SetActive(false); // the line shows as a subtitle (Bruno, 2026-10-25)
+
+            hint = AddLabel(scene.transform, "", 30, TextAnchor.MiddleCenter, FontStyle.Italic, new Color(0.95f, 0.92f, 0.82f));
+            Place(hint.rectTransform, new Vector2(0.12f, 0.17f), new Vector2(0.88f, 0.3f));
+            hint.gameObject.AddComponent<Outline>().effectColor = new Color(0f, 0f, 0f, 0.9f);
+
+            keys = AddLabel(scene.transform, "", 18, TextAnchor.LowerRight, FontStyle.Bold, new Color(0.75f, 0.75f, 0.78f));
+            Place(keys.rectTransform, new Vector2(0.6f, 0.02f), new Vector2(0.98f, 0.07f));
+        }
+
+        private static void Place(RectTransform rect, Vector2 min, Vector2 max)
+        {
+            rect.anchorMin = min;
+            rect.anchorMax = max;
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
         }
 
         protected override void OnShown()
         {
+            BuildScene();
             if (content == null)
             {
                 content = Resources.Load<DeathScreenContent>(ContentResourceName);
@@ -167,50 +222,54 @@ namespace GlorifiedBody.UI
 
             DeathScreenContent.Entry entry = content != null ? content.Find(LastKillerId) : null;
             Shown = entry;
-            bool hasPicture = entry != null && entry.picture != null;
-            if (picture != null)
-            {
-                picture.sprite = hasPicture ? entry.picture : PlaceholderPicture();
-            }
+            reloading = false;
+            Elapsed = 0f;
+            SetMenu(false);
 
-            if (pictureNote != null)
-            {
-                // The card until the picture exists: what it will show, and who killed her.
-                pictureNote.gameObject.SetActive(!hasPicture);
-                string note = entry != null && !string.IsNullOrEmpty(entry.pictureNote) ? entry.pictureNote : "PLACEHOLDER PICTURE";
-                string id = string.IsNullOrEmpty(LastKillerId) ? "unknown" : LastKillerId;
-                pictureNote.text = $"[{note}]\n\nkiller: {id}";
-            }
-
-            if (caption != null)
-            {
-                caption.text = entry != null ? entry.voiceText : "";
-                caption.gameObject.SetActive(false); // the line shows as a subtitle (Bruno, 2026-10-25)
-            }
-
-            // The voice line as a subtitle with its speaker ("COMPUTER: Subject contained."), until the screen goes. With the
+            // The killer's line as a subtitle with its speaker ("COMPUTER: Subject contained."), until the screen goes. With the
             // writer's death lines (DEMO_PLAN §3.6), one at random, never the same twice in a row.
             GlorifiedBody.Subtitles.SubtitleService.Clear();
             ShownLine = PickLine(entry);
+            string words = "";
             if (!string.IsNullOrEmpty(ShownLine))
             {
-                (string speaker, string words) = GlorifiedBody.Subtitles.SubtitleService.Split(ShownLine, GlorifiedBody.Subtitles.SubtitleService.UnknownSpeaker);
+                string speaker;
+                (speaker, words) = GlorifiedBody.Subtitles.SubtitleService.Split(ShownLine, GlorifiedBody.Subtitles.SubtitleService.UnknownSpeaker);
                 GlorifiedBody.Subtitles.SubtitleService.Show(SubtitleKey, speaker, words);
             }
+            caption.text = entry != null ? entry.voiceText : "";
 
-            if (hint != null)
-            {
-                string picked = PickHint(entry);
-                hint.text = !string.IsNullOrEmpty(picked) ? picked : "PLACEHOLDER HINT";
-            }
-
+            float speak = GlorifiedBody.Subtitles.SubtitleService.ReadSeconds(words);
             if (voice != null && entry != null && entry.voiceLine != null)
             {
                 // The Voice channel. The death screen pauses the world sounds, not its own line.
                 GlorifiedBody.Audio.GameAudio.Configure(voice, GlorifiedBody.Audio.SoundChannel.Voice, 1f, false);
                 voice.ignoreListenerPause = true;
                 voice.PlayOneShot(entry.voiceLine);
+                speak = GlorifiedBody.Audio.GameAudio.Length(entry.voiceLine, speak);
             }
+            Duration = Mathf.Max(MinSeconds, speak + TailSeconds);
+
+            // The killer on his set; a hazard has a picture or the writer's card.
+            if (stage != null) Destroy(stage.gameObject);
+            stage = DeathStage.Build(LastKillerId, speak, Duration);
+            bool hasPicture = stage == null && entry != null && entry.picture != null;
+            stageImage.texture = stage != null ? stage.Texture : null;
+            stageImage.enabled = stage != null;
+            picture.sprite = hasPicture ? entry.picture : null;
+            picture.enabled = hasPicture;
+            string pictureNote = entry != null && !string.IsNullOrEmpty(entry.pictureNote) ? entry.pictureNote : "PLACEHOLDER PICTURE";
+            string id = string.IsNullOrEmpty(LastKillerId) ? "unknown" : LastKillerId;
+            card.text = $"[{pictureNote}]\n\nkiller: {id}";
+            card.gameObject.SetActive(stage == null && !hasPicture);
+            // In a development build the corner names the killer and the note of the take to come.
+            note.text = $"PLACEHOLDER [{pictureNote}]  killer: {id}";
+            note.gameObject.SetActive(stage != null && GameBuild.Dev);
+
+            string picked = PickHint(entry);
+            hint.text = !string.IsNullOrEmpty(picked) ? picked : "PLACEHOLDER HINT";
+            keys.text = $"{KeyName(InputManager.GameAction.Interact, KeyCode.E)}  skip      ESC  menu";
+            GlorifiedBody.DebugTools.RunTelemetry.Event("death_screen", $"{id}:{(stage != null ? stage.ClassId : "card")}:{Duration:0.0}s");
 
             if (OverlayShot.Enabled && Canvas != null)
             {
@@ -218,16 +277,37 @@ namespace GlorifiedBody.UI
             }
         }
 
-        private Sprite PlaceholderPicture()
+        private void SetMenu(bool open)
         {
-            if (placeholderPicture != null) return placeholderPicture;
-            var texture = new Texture2D(16, 9, TextureFormat.RGBA32, false);
-            var pixels = new Color32[16 * 9];
-            for (int i = 0; i < pixels.Length; i++) pixels[i] = new Color32(70, 70, 76, 255);
-            texture.SetPixels32(pixels);
-            texture.Apply();
-            placeholderPicture = Sprite.Create(texture, new Rect(0f, 0f, 16f, 9f), new Vector2(0.5f, 0.5f), 1f);
-            return placeholderPicture;
+            MenuOpen = open;
+            if (panel != null) panel.SetActive(open);
+            if (!open) return;
+            UnityEngine.EventSystems.EventSystem events = FindFirstObjectByType<UnityEngine.EventSystems.EventSystem>();
+            Button first = panel != null ? panel.GetComponentInChildren<Button>() : null;
+            if (events != null && first != null) events.SetSelectedGameObject(first.gameObject);
+        }
+
+        private void EndScene()
+        {
+            if (stage != null) Destroy(stage.gameObject);
+            stage = null;
+            if (stageImage != null) stageImage.texture = null;
+            MenuOpen = false;
+        }
+
+        /// <summary>The end of the screen: the latest checkpoint (by itself, the skip key, or the menu).</summary>
+        private void Reload(string why)
+        {
+            if (reloading) return;
+            reloading = true;
+            GlorifiedBody.DebugTools.RunTelemetry.Event("death_screen_end", $"{why}:{Elapsed:0.0}s");
+            Restart();
+        }
+
+        private static string KeyName(InputManager.GameAction action, KeyCode fallback)
+        {
+            KeyCode key = InputManager.Instance != null ? InputManager.Instance.GetKey(action) : fallback;
+            return InputManager.GetKeyDisplayName(key == KeyCode.None ? fallback : key).ToUpperInvariant();
         }
 
         private static void Restart()

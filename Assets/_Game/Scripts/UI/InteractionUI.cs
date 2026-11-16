@@ -80,7 +80,8 @@ namespace GlorifiedBody.UI
             if (hintText == null) return;
             // The hint: what the two keys would do now.
             string hint = "";
-            if (interactor != null && interactor.Current == Interactor.State.Free && (scanner == null || !scanner.IsViewing))
+            bool hintsOn = SettingsManager.Instance == null || SettingsManager.Instance.InteractHintsOn; // Options > Interaction Hints
+            if (hintsOn && interactor != null && interactor.Current == Interactor.State.Free && (scanner == null || !scanner.IsViewing))
             {
                 // A comment shows no hint (Bruno, 2026-11-08: "no hint"): the key works, the screen stays clean.
                 if (interactor.Focus != null && interactor.Focus.ShowsHint) hint = $"{Key(InputManager.GameAction.Interact)}  {interactor.Focus.Hint}";

@@ -840,6 +840,16 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
 - 2026-11-16, night, the full suite (`devlog-notes/2026-11-16_night_suite_faults.md`): the human shield counted the figure a gun
   aims at (a dominated man never fired at his colleagues): `HumanShield.Covering` skips the target. Three tests follow the lock
   that leaves a held thing. PlayMode 536 (4 on `Ignore`), 25 bots: all pass after the fix (the changed classes run again).
+- 2026-11-16, FIVE CORRECTIONS (`devlog-notes/2026-11-16_five_corrections.md`): THE DEATH SCREEN is full screen, after the
+  Arkham games: the killer's catalog model alone (`UI/DeathStage`, layer 29, 2000 m under the world, a footlight from the
+  floor, rims, a grey glow, a low camera), his line, the hint, then the reload of the latest checkpoint by itself; E skips
+  (`GameManager.AllowsAction` lets Interact pass in the game over), Escape opens a small menu. URP DROPS A RENDERING LAYER
+  WITH NO NAME (only "Default" has one): a light on another layer reaches nothing (`Darkness.DarkLayer` 2 too, NOT FIXED).
+  No lines under a scan (`SubtitleUI`), Options > Display > Interaction Hints (on), a stun cuts the figure's line
+  (`Bark.Silence`, `Voice.Stop`; the gun's own drops use `DummyShooter.DropAim`). THE SECURITY CARD replaces the airlock and
+  stair cards: code silver rotates the codes (`CodeRotation.rotateOnFlag`, no PA), Lucy says it at the first refusal
+  (`LockedDoor.rotatedLine`, PLACEHOLDER), the ward sister's key opens W13 (`office_key`), the terminal enrols the card.
+  NOT RUN: the build of the demo and the tests (Bruno's manual test). Numbers PROPOSED.
 - 2026-11-06, day, MK AS AMMUNITION (`devlog-notes/2026-11-06_mk_ammo_short_death_search.md`, Bruno: "that basically makes mk an ammo counter and the pills clips"): one MK bar for each power
   (`PsychicStats.Mk(kind)`; `Nalcon` reads the selected bar; only that bar shows on the HUD), no recharge, one capsule for each power (`DrugType.Nalcon`, `NalconFire`, `NalconLift`). Every point of MK spent fills
   SHORT (`ShortPerMkPoint`). A short can kill her (killer id `short`, its own death screen row); a second wind saves her and ends the short. SCARCITY and DEEP WELL change the cost. `FireTeam`: suppression

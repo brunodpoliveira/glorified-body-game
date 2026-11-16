@@ -111,9 +111,30 @@ namespace GlorifiedBody.Audio
             bool world = mode == VoiceMode.World && speaker != null;
             Vector3 at = world ? speaker.transform.position + Vector3.up * 1.6f : Vector3.zero;
             LastSource = GameAudio.PlayClip(clip, at, SoundChannel.Voice, 1f, world, 1f, "voice:" + id);
+            if (speaker != null && LastSource != null) playing[speaker.GetInstanceID()] = (LastSource, clip);
             MusicDirector.DuckForVoice(seconds);
             RunTelemetry.Event("voice", id);
             return LastSource;
+        }
+
+        private static readonly Dictionary<int, (AudioSource source, AudioClip clip)> playing = new Dictionary<int, (AudioSource, AudioClip)>();
+
+        /// <summary>Stops the speaker's line now: its clip (when the pooled source still plays it) and its subtitle. True when a line showed or played.</summary>
+        public static bool Stop(GameObject speaker)
+        {
+            if (speaker == null) return false;
+            int key = speaker.GetInstanceID();
+            bool stopped = false;
+            if (playing.TryGetValue(key, out var p))
+            {
+                playing.Remove(key);
+                if (p.source != null && p.source.isPlaying && p.source.clip == p.clip) { p.source.Stop(); stopped = true; }
+            }
+            string owner = "object:" + key;
+            foreach (SubtitleService.Line line in SubtitleService.Lines)
+                if (line.Owner == owner) { stopped = true; break; }
+            SubtitleService.Hide(owner);
+            return stopped;
         }
 
         /// <summary>Lower case words joined by "_", at most the word count, letters and digits only.</summary>
@@ -145,6 +166,7 @@ namespace GlorifiedBody.Audio
         private static void ResetOnLoad()
         {
             missing.Clear();
+            playing.Clear();
             Said = 0;
             LastId = "";
             LastHadClip = false;

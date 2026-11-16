@@ -702,7 +702,16 @@ namespace GlorifiedBody.Enemy
             if (wasAiming) OnAimEnded?.Invoke();
         }
 
+        /// <summary>A stagger or a stun from outside (a power, the short, a blast, a thrown body): the aim breaks, and his line stops at once (Bruno, 2026-11-16).</summary>
         public void Stagger(float seconds)
+        {
+            if (IsDead || seconds <= 0f) return;
+            Bark.Silence(gameObject);
+            DropAim(seconds);
+        }
+
+        /// <summary>The aim breaks and the body holds for the seconds, with no stagger: a kneel, a door, a retreat, a shock. His line goes on.</summary>
+        public void DropAim(float seconds = 0.1f)
         {
             if (IsDead || seconds <= 0f) return;
             CancelAim(State.Staggered, seconds);

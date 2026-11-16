@@ -11,8 +11,8 @@ namespace GlorifiedBody.Interaction
     /// aside and clears the way. The key stays in the inventory (a key item takes no slot).
     /// The site code (DEMO_PLAN §10.2, the code rotation): once rotatedFlag is up, the card is refused ("CODE ROTATED.
     /// SEE SECURITY.", two bleats) until a terminal (CodeTerminal) raises enrolledFlag. The reader beside the door is red
-    /// until then, and green after. The codes rotate after the card opens some doors (CodeRotation), or at the first try
-    /// at the door of the way on (rotatesOnTry).
+    /// until then, and green after. The codes rotate at a story flag or after the card opens some doors (CodeRotation), or
+    /// at the first try at the door of the way on (rotatesOnTry). At the first refusal she can say a line (rotatedLine).
     /// </summary>
     public sealed class LockedDoor : Interactable
     {
@@ -35,6 +35,10 @@ namespace GlorifiedBody.Interaction
         [Tooltip("The way on: a try with the card before the codes rotate rotates them at once (2026-11-08: the puzzle " +
                  "cannot be passed by going there first).")]
         public bool rotatesOnTry;
+        [Tooltip("Her line at the first refusal of the card (Bruno, 2026-11-16: the PA says nothing; she says the code rotated). Empty: none.")]
+        [TextArea] public string rotatedLine = "";
+        [Tooltip("Raised when she says it: one time in the game, at any door that shares the flag.")]
+        public string rotatedLineFlag = "";
 
         public const string RotatedText = "CODE ROTATED. SEE SECURITY.";
         public static readonly Color ReaderRed = new Color(0.9f, 0.1f, 0.1f), ReaderGreen = new Color(0.15f, 0.85f, 0.25f);
@@ -70,6 +74,11 @@ namespace GlorifiedBody.Interaction
             if (!HasKey(who) || !CodeBlocked) return null;
             StartCoroutine(Bleats());
             RunTelemetry.Event("door_code_rotated", name);
+            if (!string.IsNullOrEmpty(rotatedLine) && (string.IsNullOrEmpty(rotatedLineFlag) || !StoryFlags.Has(rotatedLineFlag)))
+            {
+                if (!string.IsNullOrEmpty(rotatedLineFlag)) StoryFlags.Raise(rotatedLineFlag);
+                GlorifiedBody.Audio.Voice.Say(who.gameObject, "lucy.codes_rotated", rotatedLine, GlorifiedBody.Audio.VoiceMode.World, 2.4f);
+            }
             return "rotated:" + name;
         }
 

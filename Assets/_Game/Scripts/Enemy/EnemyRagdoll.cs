@@ -211,6 +211,7 @@ namespace GlorifiedBody.Enemy
         {
             // A dead body falls by DieFalling (the physical death), not by a knockdown.
             if (!Available || deathOnly || (health != null && health.IsDead) || Current == State.Held || Current == State.Corpse || Current == State.Dragged) return false;
+            Bark.Silence(gameObject); // knocked down: the line stops (Bruno, 2026-11-16)
             GoLimp(hipsHeld: false);
             SetVelocity(velocity);
             EnterDown(seconds);

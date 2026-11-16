@@ -120,6 +120,19 @@ namespace GlorifiedBody.Enemy
             return true;
         }
 
+        /// <summary>
+        /// Stops this figure's line at once, its clip and its subtitle (Bruno, 2026-11-16: "when the enemy gets staggered/stunned
+        /// their dialogue line gets cut out immediately"). Any line of the figure: a bark or a scripted line.
+        /// </summary>
+        public static void Silence(GameObject who)
+        {
+            if (who == null) return;
+            int own = Find(who);
+            if (own >= 0) Cut(own, true);
+            if (who.TryGetComponent(out Bark bark)) bark.hideAt = 0f;
+            if (Voice.Stop(who)) RunTelemetry.Event("bark_cut", who.name);
+        }
+
         private static int Find(GameObject who) => speaking.FindIndex(v => v.who == who);
 
         /// <summary>Takes a voice off: its clip stops and, when cut by another, its subtitle goes.</summary>

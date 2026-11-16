@@ -15,12 +15,17 @@ namespace GlorifiedBody.Story
     /// delaySeconds, plays the PA call and raises rotatedFlag: every card door not yet open refuses the card until a
     /// terminal enrols it (LockedDoor, CodeTerminal). An open door stays open. The count reads the doors, not a counter,
     /// so a load of a save gives the same answer. One for each card. A try at the door of the way on rotates them at once
-    /// (LockedDoor.rotatesOnTry), so the player cannot pass the puzzle by going there first.
+    /// (LockedDoor.rotatesOnTry), so the player cannot pass the puzzle by going there first. With rotateOnFlag the codes
+    /// rotate at that story flag instead (the demo since 2026-11-16: code silver, with no PA call).
     /// </summary>
     public sealed class CodeRotation : MonoBehaviour
     {
         public string cardItemId = "";
         public string rotatedFlag = "";
+        [Tooltip("The codes rotate when this flag goes up (the demo: code silver, Bruno, 2026-11-16). Empty: the door count below.")]
+        public string rotateOnFlag = "";
+        [Tooltip("Dropped at the rotation: a card enrolled before it works no more.")]
+        public string enrolledFlag = "";
         [Min(1)] public int opensBeforeRotation = 2;
         [Tooltip("The time from the last door that counts to the PA call: she is through the door when it speaks.")]
         [Min(0f)] public float delaySeconds = 2f;
@@ -44,6 +49,11 @@ namespace GlorifiedBody.Story
         private void Update()
         {
             if (Rotated || string.IsNullOrEmpty(cardItemId)) { dueAt = -1f; return; }
+            if (!string.IsNullOrEmpty(rotateOnFlag))
+            {
+                if (StoryFlags.Has(rotateOnFlag)) Rotate();
+                return;
+            }
             if (dueAt < 0f)
             {
                 if (Opened >= opensBeforeRotation) dueAt = Time.time + delaySeconds;
@@ -85,6 +95,7 @@ namespace GlorifiedBody.Story
         {
             if (Rotated) return;
             StoryFlags.Raise(rotatedFlag);
+            if (!string.IsNullOrEmpty(enrolledFlag)) StoryFlags.Drop(enrolledFlag);
             if (paLines != null && paLines.Length > 0) StartCoroutine(Call());
             else if (!string.IsNullOrEmpty(paLine)) Voice.PA(paId, paLine);
             RunTelemetry.Event("codes_rotate", $"{cardItemId} after {Opened}");

@@ -241,7 +241,7 @@ namespace GlorifiedBody.Editor.Demo
             r.Item("L7_Session_Note", DemoItems.L7(), new Vector3(19f, 0.78f, -5.2f), new Vector3(0.22f, 0.02f, 0.3f));
         }
 
-        /// <summary>W11: the ward sister with the card, two armed lab workers, the small chairs, the whiteboard L4, the scan C4 (beat 16).</summary>
+        /// <summary>W11: the ward sister with the key of the post, two armed lab workers, the small chairs, the whiteboard L4, the scan C4 (beat 16).</summary>
         private static void W11(DemoRoom r)
         {
             // Two groups of three, 1.8 m from the south wall (v2: the NavMesh agent, 0.5 m, reaches the doors to W16 and W17 behind them).
@@ -252,11 +252,12 @@ namespace GlorifiedBody.Editor.Demo
             r.Prop("Bench", new Vector3(11.4f, 0f, -10.65f), new Vector3(2f, 0.9f, 0.6f), 0.3f); // the mapping bench (L20)
             r.Item("L20_Recorder", DemoItems.L20(), new Vector3(11.4f, 0.93f, -10.65f), new Vector3(0.14f, 0.05f, 0.1f)); // the calibration note (round 49)
             r.Scan("Scan_Small_Chair", new Vector3(6f, 0.8f, -16.2f), "demo_c4_chair", DemoPlan.ScanCard("C4", "PLACEHOLDER (C4): \"Imagine your hand.\""));
-            // The ward sister carries the stairwell card (ItemCarrier): a hidden pickup she drops at her death.
-            ItemPickup card = r.Item("Stair_Card", DemoItems.StairCard(), new Vector3(11f, 0.05f, -13f), new Vector3(0.1f, 0.02f, 0.15f));
-            card.gameObject.SetActive(false);
+            // The ward sister carries the key of the security post W13 (ItemCarrier; Bruno, 2026-11-16): a hidden pickup she drops at
+            // her death, or gives when asked.
+            ItemPickup key = r.Item("Office_Key", DemoItems.OfficeKey(), new Vector3(11f, 0.05f, -13f), new Vector3(0.1f, 0.02f, 0.15f));
+            key.gameObject.SetActive(false);
             EnemySpawn sister = r.Figure("Ward_Sister", "nurse", new Vector3(11.5f, 0f, -12.5f), 200f, variant: 2);
-            sister.drop = card;
+            sister.drop = key;
             EditorUtility.SetDirty(sister);
             r.Figure("Lab_Pistol_A", "labworker_pistol", new Vector3(7f, 0f, -12f), 180f);
             r.Figure("Lab_Pistol_B", "labworker_pistol", new Vector3(10f, 0f, -14.5f), 160f);
@@ -265,33 +266,53 @@ namespace GlorifiedBody.Editor.Demo
             r.Beat("W11_Lab", "demo_w11_lab", new Vector3(8f, 1f, -11f), new Vector3(4f, 2f, 1.6f), lab.ToArray());
         }
 
-        public const string CodesRotated = "demo_codes_rotated", CardEnrolled = "demo_card_enrolled";
+        public const string CodesRotated = "demo_codes_rotated", CardEnrolled = "demo_card_enrolled", CodesNoticed = "demo_codes_noticed";
 
-        /// <summary>A door that the ward sister's card opens, with its reader on this side (the code rotation).</summary>
+        /// <summary>
+        /// Her line at the first card door that refuses the card (Bruno, 2026-11-16: "the player tries to use a security card to
+        /// open a door and it no longer works; lucy mentions that they must have rotated the security code"). PLACEHOLDER: the
+        /// writer's words replace it.
+        /// </summary>
+        public const string CodesNoticedLine = "They must have rotated the code.";
+
+        /// <summary>A door that the security card opens, with its reader on this side (the code rotation).</summary>
         public static LockedDoor CardDoor(DemoRoom r, string to, Vector3 readerAt, Vector3 facing)
         {
-            GameObject door = r.LockedLeaf(r.DoorTo(to), DemoItems.StairCard().itemId, "the ward sister's card");
-            return r.CodeLock(door, readerAt, facing, CodesRotated, CardEnrolled);
+            GameObject door = r.LockedLeaf(r.DoorTo(to), DemoItems.SecurityCard().itemId, "the security card");
+            return Noticed(r.CodeLock(door, readerAt, facing, CodesRotated, CardEnrolled));
+        }
+
+        private static LockedDoor Noticed(LockedDoor door)
+        {
+            door.rotatedLine = CodesNoticedLine;
+            door.rotatedLineFlag = CodesNoticed;
+            EditorUtility.SetDirty(door);
+            return door;
         }
 
         /// <summary>
-        /// W12: the stairwell door, locked by the card (beat 15); the scan C3 shows the card. The code rotation (DEMO_PLAN
-        /// §10.2; Bruno, 2026-11-08: a backtracker, the code 8675309, the doors W3 and W10): the card opens W3 and W10, and
-        /// after two doors the PA call 1B rotates the codes. A try here before that rotates them at once. Then the reader
-        /// refuses the card until the terminal of W13 enrols it with the code on the wall of W14.
+        /// W12: the stairwell door, locked by the security card (beat 15). The code rotation (DEMO_PLAN §10.2; Bruno, 2026-11-08:
+        /// a backtracker, the code 8675309, the doors W3 and W10; 2026-11-16: "once the code silver gets announced, the code is
+        /// rotated; ... the card stops working to unlock stuff. and now they need a special key to get into the office to
+        /// reprogram the security card"): code silver rotates the codes with no PA call, and the first refusal makes her say so.
+        /// The door to the security post W13 needs the ward sister's key; the scan C3 on it shows the key on her. The terminal
+        /// of W13 enrols the card with the code on the wall of W14.
         /// </summary>
         private static void W12(DemoRoom r)
         {
-            GameObject door = r.LockedLeaf(r.DoorTo("S1"), DemoItems.StairCard().itemId, "the ward sister's card");
-            r.CodeLock(door, new Vector3(16.3f, 1.2f, -13.82f), Vector3.forward, CodesRotated, CardEnrolled).rotatesOnTry = true;
+            GameObject door = r.LockedLeaf(r.DoorTo("S1"), DemoItems.SecurityCard().itemId, "the security card");
+            Noticed(r.CodeLock(door, new Vector3(16.3f, 1.2f, -13.82f), Vector3.forward, CodesRotated, CardEnrolled));
+            r.LockedLeaf(r.DoorTo("W13"), DemoItems.OfficeKey().itemId, "the security post key");
             var rotation = MenuLoopSetup.EnsureChild(r.Story, "Code_Rotation").AddComponent<CodeRotation>();
-            rotation.cardItemId = DemoItems.StairCard().itemId;
+            rotation.cardItemId = DemoItems.SecurityCard().itemId;
             rotation.rotatedFlag = CodesRotated;
-            rotation.opensBeforeRotation = 2;
-            rotation.paLine = "Site codes rotate at this time. Re-enrol your card at a security station."; // the fallback with no writer file
-            rotation.paLines = DemoScripts.Lines("lines/T5_pa.md", "Call 1C", "*").ConvertAll(l => l.text).ToArray(); // round 138: "re-enroll"
+            rotation.enrolledFlag = CardEnrolled;
+            rotation.rotateOnFlag = CodeSilver;
+            rotation.paLine = ""; // no call: she finds it at a door
+            rotation.paLines = new string[0];
             EditorUtility.SetDirty(rotation);
-            r.Scan("Scan_Stair_Door", new Vector3(15f, 1.2f, -13.7f), "demo_c3_door", DemoPlan.ScanCard("C3", "PLACEHOLDER (C3): a white card on a lanyard, against red scrubs."));
+            // The scan C3 shows the key of the post on the ward sister (round 172).
+            r.Scan("Scan_Office_Door", new Vector3(16.75f, 1.2f, -12f), "demo_c3_door", DemoPlan.ScanCard("C3", "PLACEHOLDER (C3): a brass key on a ring, against red scrubs."));
             r.Prop("Stairs_Down", new Vector3(13.8f, 0f, -11f), new Vector3(1.2f, 0.4f, 1.8f), 0.3f);
             r.Prop("Handrail", new Vector3(13.1f, 0.9f, -12f), new Vector3(0.05f, 0.05f, 3f), 0.7f); // the west wall: the east wall opens to W13 (v2)
         }

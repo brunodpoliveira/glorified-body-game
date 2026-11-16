@@ -515,7 +515,7 @@ namespace GlorifiedBody.Enemy
             kneeling = true;
             if (ducked) StandUp();
             if (Current == Phase.Care) StopCare("kneel");
-            if (gun.HoldsSlot) gun.Stagger(0.1f);
+            if (gun.HoldsSlot) gun.DropAim();
             gun.HoldFire = true;
             body.Stop();
             body.Crouch(true);
@@ -758,7 +758,7 @@ namespace GlorifiedBody.Enemy
             }
             if (doorWait <= 0f)
             {
-                if (gun.HoldsSlot) gun.Stagger(0.1f); // no aim through a door
+                if (gun.HoldsSlot) gun.DropAim(); // no aim through a door
                 if (Current == Phase.Care) StopCare("door");
             }
             doorWait = Mathf.Max(doorWait, seconds);
@@ -786,7 +786,7 @@ namespace GlorifiedBody.Enemy
             ShockCount++;
             DrawGun("shock", say: false); // the shock line plays
             if (Current == Phase.Care) StopCare("shock");
-            gun.Stagger(seconds); // the aim breaks; OnStaggered holds the body for the seconds
+            gun.DropAim(seconds); // the aim breaks; OnStaggered holds the body for the seconds (his shock line follows)
             Hold(seconds);
             body?.Flinch(transform.position + transform.forward, false);
             // The writer's lines (barks.csv, round 135: one "shock"): a plain death is "partner down" when his voice has the
@@ -804,7 +804,7 @@ namespace GlorifiedBody.Enemy
             DrawGun("retreat", say: false); // the baton falls, the gun shows, and the cower drops it
             FlankBoard.Release(this);
             gun.HoldFire = true;
-            if (gun.HoldsSlot) gun.Stagger(0.1f); // drop the aim
+            if (gun.HoldsSlot) gun.DropAim();
             // The aim braced the body (kinematic): the retreat phase skips the release, and a braced body runs in
             // place (Bruno, 2026-10-24).
             if (aimStarted)

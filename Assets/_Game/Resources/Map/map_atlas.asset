@@ -463,7 +463,7 @@ MonoBehaviour:
     - kind: 0
       path: '[World]/[H5]/[Props]/Door_HT'
       position: {x: 4, y: 35.5}
-      label: the airlock card
+      label: the security card
     - kind: 1
       path: '[World]/[H5]/[Props]/Capsule_H5_Orzabal'
       position: {x: 8.4, y: 37.4}
@@ -617,7 +617,7 @@ MonoBehaviour:
     - kind: 0
       path: '[World]/[W2]/[Props]/Door_W3'
       position: {x: 13, y: 14}
-      label: the ward sister's card
+      label: the security card
   - scene: W3
     world: Demo
     floor: demo_2
@@ -787,7 +787,7 @@ MonoBehaviour:
     - kind: 0
       path: '[World]/[W9]/[Props]/Door_W10'
       position: {x: 17, y: -7}
-      label: the ward sister's card
+      label: the security card
     - kind: 2
       path: '[World]/[W9]/[Props]/L19_Dictaphone'
       position: {x: 10.2, y: -5.7}
@@ -874,7 +874,11 @@ MonoBehaviour:
     - kind: 0
       path: '[World]/[W12]/[Props]/Door_S1'
       position: {x: 15, y: -14}
-      label: the ward sister's card
+      label: the security card
+    - kind: 0
+      path: '[World]/[W12]/[Props]/Door_W13'
+      position: {x: 17, y: -12}
+      label: the security post key
   - scene: W13
     world: Demo
     floor: demo_2
@@ -897,7 +901,7 @@ MonoBehaviour:
     - kind: 0
       path: '[World]/[W13]/[Props]/Door_W10'
       position: {x: 20, y: -10}
-      label: the ward sister's card
+      label: the security card
     - kind: 2
       path: '[World]/[W13]/[Props]/L39_Facilities_Notice'
       position: {x: 18.6, y: -13.83}

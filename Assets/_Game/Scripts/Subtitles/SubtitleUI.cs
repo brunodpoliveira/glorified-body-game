@@ -26,7 +26,12 @@ namespace GlorifiedBody.Subtitles
         private int drawnVersion = -1;
         private int drawnSize = -1;
         private Place drawnPlace = Place.Bottom;
+        private Only drawnOnly = Only.All;
         private GlorifiedBody.UI.InventoryUI inventory;
+
+        // The lines that may show: all; in the inventory the tape's; in a cutscene its own; under a scan or a page none
+        // (Bruno, 2026-11-16: "no dialogue, tapes etc during scanning cutscenes"). The world stops there, and its lines with it.
+        private enum Only { All, Tape, Cutscene, None }
 
         // In the inventory the tape's line shows above the panels; over a log page, at the top of the screen.
         private enum Place { Bottom, OverInventory, OverPage }
@@ -117,15 +122,18 @@ namespace GlorifiedBody.Subtitles
             canvas.enabled = (settings == null || settings.SubtitlesOn) && !(gm != null && gm.IsPaused);
             if (inInventory && inventory == null) inventory = FindFirstObjectByType<GlorifiedBody.UI.InventoryUI>();
             Place place = !inInventory ? Place.Bottom : inventory != null && inventory.ReaderOpen ? Place.OverPage : Place.OverInventory;
+            Only only = inInventory ? Only.Tape : gm != null && gm.IsCutscene ? Only.Cutscene : gm != null && gm.IsReading ? Only.None : Only.All;
             int size = Sizes[Mathf.Clamp(settings != null ? settings.SubtitleSize : 1, 0, Sizes.Length - 1)];
-            if (SubtitleService.Version == drawnVersion && size == drawnSize && place == drawnPlace) return;
+            if (SubtitleService.Version == drawnVersion && size == drawnSize && place == drawnPlace && only == drawnOnly) return;
             drawnVersion = SubtitleService.Version;
             drawnSize = size;
+            drawnOnly = only;
             if (place != drawnPlace) PlaceBox(place);
             drawnPlace = place;
             var shown = new List<SubtitleService.Line>();
             foreach (SubtitleService.Line line in SubtitleService.Lines)
-                if (!inInventory || line.Owner == SubtitleService.TapeOwner) shown.Add(line);
+                if (only == Only.All || (only == Only.Tape && line.Owner == SubtitleService.TapeOwner)
+                    || (only == Only.Cutscene && line.Owner == GlorifiedBody.Story.CutscenePlayer.SubtitleKey)) shown.Add(line);
             for (int i = 0; i < texts.Count; i++)
             {
                 bool used = i < shown.Count;

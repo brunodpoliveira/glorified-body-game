@@ -578,8 +578,8 @@ namespace GlorifiedBody.Tests.PlayMode
             yield return LoadWorld();
             yield return WaitUntil(() => Woke(), 120f); // the wake holds her feet while Stevens talks
             GameObject lucy = GameObject.FindGameObjectWithTag("Player");
-            GlorifiedBody.Interaction.LockedDoor door = GlorifiedBody.Rooms.Room.Of("W12").GetComponentInChildren<GlorifiedBody.Interaction.LockedDoor>();
-            Assert.IsNotNull(door, "the stair door is locked (the ward sister's card)");
+            GlorifiedBody.Interaction.LockedDoor door = GlorifiedBody.Rooms.Room.Of("W12").GetComponentsInChildren<GlorifiedBody.Interaction.LockedDoor>().First(d => d.name == "Door_S1");
+            Assert.IsNotNull(door, "the stair door is locked (the security card)");
             // 2026-11-03: the leaf stood at twice its doorway's place (a local position under a parent at the doorway).
             Assert.IsTrue(Physics.Linecast(new Vector3(15f, 1.2f, -12.5f), new Vector3(15f, 1.2f, -15.5f), out RaycastHit leafHit, LayerMask.GetMask("Default"), QueryTriggerInteraction.Ignore)
                 && leafHit.collider.transform.IsChildOf(door.transform), "the card door's leaf stands in W12's south doorway");
@@ -879,63 +879,95 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator TheCodeRotation_InTheWard_W3AndW10_ThenThePa_ThenW13Enrols_AndW12Opens()
+        public IEnumerator TheCodeRotation_AtCodeSilver_TheCardFails_SheSaysIt_TheKeyOpensW13_AndTheTerminalEnrols()
         {
+            // Bruno, 2026-11-16: "the airlock card is the security card; once the code silver gets announced, the code is rotated;
+            // ... the card stops working to unlock stuff. and now they need a special key to get into the office to reprogram the
+            // security card"; the PA says nothing, "lucy mentions that they must have rotated the security code".
             yield return LoadWorld();
-            // The W1 wake stops time, and the PA waits on game time: skip each of its cutscenes until the world runs.
+            // The W1 wake stops time: skip each of its cutscenes until the world runs.
             yield return WaitUntil(() =>
             {
                 if (CutscenePlayer.IsPlaying) CutscenePlayer.Skip();
                 return Woke() && !CutscenePlayer.IsPlaying && Time.timeScale > 0f;
             }, 120f);
             Interactor her = GameObject.FindGameObjectWithTag("Player").GetComponent<Interactor>();
-            ItemDefinition card = Resources.Load<ItemDefinition>("Items/item_stair_card");
-            Assert.IsNotNull(card, "the ward sister's card");
-            LockedDoor w3 = CardDoor("W2", "Door_W3"), w10 = CardDoor("W9", "Door_W10"), w10Back = CardDoor("W13", "Door_W10"), stairs = CardDoor("W12", "Door_S1");
+            ItemDefinition card = Resources.Load<ItemDefinition>("Items/item_security_card"), key = Resources.Load<ItemDefinition>("Items/item_office_key");
+            Assert.IsNotNull(card, "the security card");
+            Assert.IsNotNull(key, "the key of the security post");
+            LockedDoor w3 = CardDoor("W2", "Door_W3"), w10 = CardDoor("W9", "Door_W10"), w10Back = CardDoor("W13", "Door_W10"), stairs = CardDoor("W12", "Door_S1"), office = CardDoor("W12", "Door_W13");
+            Assert.AreEqual(key.itemId, office.keyItemId, "the post opens with the ward sister's key");
             CodeTerminal terminal = UnityEngine.Object.FindObjectsByType<CodeTerminal>(FindObjectsSortMode.None).Single();
             Assert.AreEqual("8675309", terminal.code, "Bruno, 2026-11-08");
-            Assert.IsTrue(stairs.rotatesOnTry, "the way on");
+            CodeRotation rotation = UnityEngine.Object.FindObjectsByType<CodeRotation>(FindObjectsInactive.Include, FindObjectsSortMode.None).Single();
+            Assert.IsFalse(stairs.rotatesOnTry, "code silver rotates the codes, not a try");
             try
             {
                 StringAssert.StartsWith("locked:", w3.Confirm(her), "W3 is locked before she has the card");
                 her.Inventory.TryAdd(card);
-                StringAssert.StartsWith("opened:", w3.Confirm(her), "the card opens W3");
-                StringAssert.StartsWith("opened:", w10.Confirm(her), "and W10");
-                yield return WaitUntil(() => StoryFlags.Has(DemoFlags.CodesRotated), 6f);
-                CodeRotation rotation = UnityEngine.Object.FindObjectsByType<CodeRotation>(FindObjectsInactive.Include, FindObjectsSortMode.None).Single();
-                Assert.IsTrue(StoryFlags.Has(DemoFlags.CodesRotated),
-                    $"two doors: the PA rotates the codes (rotation active={rotation.isActiveAndEnabled} opened={rotation.Opened} doors={rotation.Doors.Count} timeScale={Time.timeScale})");
-                Assert.IsTrue(stairs.CodeBlocked, "the stairwell reader refuses the card");
-                Assert.IsTrue(w10Back.CodeBlocked, "and so does the W13 side of W10");
+                StringAssert.StartsWith("opened:", w3.Confirm(her), "before code silver the card opens W3");
+                yield return new WaitForSeconds(0.2f);
+                Assert.IsFalse(StoryFlags.Has(DemoFlags.CodesRotated), "an open door rotates nothing now");
+
+                StoryFlags.Raise(DemoFlags.CodeSilver);
+                yield return WaitUntil(() => StoryFlags.Has(DemoFlags.CodesRotated), 2f);
+                Assert.IsTrue(StoryFlags.Has(DemoFlags.CodesRotated), "code silver rotates the codes");
+                yield return new WaitForSeconds(GlorifiedBody.Audio.Voice.PaDelay + 0.3f);
+                Assert.AreEqual(0, rotation.PaSaid, "no PA call");
+                Assert.IsFalse(GlorifiedBody.Subtitles.SubtitleService.Lines.Any(l => l.Speaker == GlorifiedBody.Audio.Voice.PaSpeaker), "no PA line");
+                Assert.IsTrue(w10.CodeBlocked && w10Back.CodeBlocked && stairs.CodeBlocked, "the card fails at every closed card door");
+                Assert.IsTrue(w3.IsOpen, "an open door stays open");
+
+                Assert.AreEqual("rotated:Door_S1", stairs.Shown(her), "the reader refuses the card");
+                Assert.IsTrue(GlorifiedBody.Subtitles.SubtitleService.Lines.Any(l => l.Speaker == GlorifiedBody.Subtitles.Speaker.Lucy && l.Text == DemoFlags.CodesNoticedLine), "she says the code rotated");
+                Assert.IsTrue(StoryFlags.Has(DemoFlags.CodesNoticed));
+                GlorifiedBody.Subtitles.SubtitleService.Hide("object:" + her.gameObject.GetInstanceID());
+                stairs.Shown(her);
+                w10.Shown(her);
+                Assert.IsFalse(GlorifiedBody.Subtitles.SubtitleService.Lines.Any(l => l.Speaker == GlorifiedBody.Subtitles.Speaker.Lucy), "she says it once");
+
+                StringAssert.StartsWith("locked:", office.Confirm(her), "the post needs the key");
+                her.Inventory.TryAdd(key);
+                StringAssert.StartsWith("opened:", office.Confirm(her), "the key opens the post");
                 Assert.IsFalse(terminal.TryCode("5281"), "the old code is wrong");
                 Assert.IsTrue(terminal.TryCode("8675309"), "the code on the wall of W14");
                 Assert.IsFalse(stairs.CodeBlocked);
                 StringAssert.StartsWith("opened:", stairs.Confirm(her), "the enrolled card opens the stairwell");
+                StringAssert.StartsWith("opened:", w10.Confirm(her), "and W10");
             }
             finally
             {
+                StoryFlags.Drop(DemoFlags.CodeSilver);
                 StoryFlags.Drop(DemoFlags.CodesRotated);
                 StoryFlags.Drop(DemoFlags.CardEnrolled);
+                StoryFlags.Drop(DemoFlags.CodesNoticed);
             }
         }
 
         [UnityTest]
-        public IEnumerator TheWardSistersCard_AtTheStairsFirst_RotatesTheCodesAtOnce()
+        public IEnumerator ACardEnrolledBeforeCodeSilver_FailsAfterIt()
         {
             yield return LoadWorld();
             Interactor her = GameObject.FindGameObjectWithTag("Player").GetComponent<Interactor>();
-            her.Inventory.TryAdd(Resources.Load<ItemDefinition>("Items/item_stair_card"));
+            her.Inventory.TryAdd(Resources.Load<ItemDefinition>("Items/item_security_card"));
             LockedDoor stairs = CardDoor("W12", "Door_S1");
+            CodeTerminal terminal = UnityEngine.Object.FindObjectsByType<CodeTerminal>(FindObjectsSortMode.None).Single();
             try
             {
-                stairs.BeforeKey(her);
-                Assert.IsTrue(StoryFlags.Has(DemoFlags.CodesRotated), "no way past the puzzle: the stairs rotate the codes");
+                Assert.IsTrue(terminal.TryCode("8675309"));
+                StoryFlags.Raise(DemoFlags.CodeSilver);
+                yield return WaitUntil(() => StoryFlags.Has(DemoFlags.CodesRotated), 2f);
+                Assert.IsFalse(StoryFlags.Has(DemoFlags.CardEnrolled), "the rotation drops the old enrolment");
+                Assert.IsTrue(stairs.CodeBlocked);
                 StringAssert.StartsWith("rotated:", stairs.Confirm(her));
                 Assert.IsFalse(stairs.IsOpen);
             }
             finally
             {
+                StoryFlags.Drop(DemoFlags.CodeSilver);
                 StoryFlags.Drop(DemoFlags.CodesRotated);
+                StoryFlags.Drop(DemoFlags.CardEnrolled);
+                StoryFlags.Drop(DemoFlags.CodesNoticed);
             }
         }
 
@@ -1300,7 +1332,7 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator W11_TheWardSister_GivesTheCard_WhenSheAsks()
+        public IEnumerator W11_TheWardSister_GivesTheKey_WhenSheAsks()
         {
             // Bruno, 2026-11-02: "the second way to grab cards from civvies is to simply interact/talk with them".
             yield return LoadWorld();
@@ -1310,8 +1342,8 @@ namespace GlorifiedBody.Tests.PlayMode
             var carrier = sister.GetComponent<GlorifiedBody.Interaction.ItemCarrier>();
             Assert.IsNotNull(talk, "the unarmed carrier talks");
             Assert.IsTrue(talk.Available);
-            Assert.IsTrue(carrier.ShowsItem, "the card on her belt");
-            StringAssert.Contains("ask for the ward sister's card", talk.Hint);
+            Assert.IsTrue(carrier.ShowsItem, "the key on her belt");
+            StringAssert.Contains("ask for the security post key", talk.Hint);
 
             GameObject lucy = GameObject.FindGameObjectWithTag("Player");
             Vector3 at = sister.transform.position + sister.transform.forward * 1.1f;
@@ -1319,11 +1351,11 @@ namespace GlorifiedBody.Tests.PlayMode
             yield return null;
             var hands = lucy.GetComponent<GlorifiedBody.Interaction.Interactor>();
             Assert.AreSame(talk, hands.FindFocus(), "the Interact key reaches her");
-            Assert.AreEqual("given:stair_card", talk.Confirm(hands));
-            Assert.IsTrue(lucy.GetComponent<GlorifiedBody.Interaction.ItemInventory>().Has("stair_card"), "the card is hers");
+            Assert.AreEqual("given:office_key", talk.Confirm(hands));
+            Assert.IsTrue(lucy.GetComponent<GlorifiedBody.Interaction.ItemInventory>().Has("office_key"), "the key is hers");
             Assert.IsFalse(sister.GetComponent<Health>().IsDead, "the sister lives");
             yield return null;
-            Assert.IsFalse(carrier.ShowsItem, "the card leaves her belt");
+            Assert.IsFalse(carrier.ShowsItem, "the key leaves her belt");
             Assert.IsFalse(talk.Available, "once");
             Assert.IsTrue(GlorifiedBody.Subtitles.SubtitleService.Lines.Any(l => l.Text.Contains(GlorifiedBody.Interaction.CarrierTalk.LineGive)), "she says her line");
 
@@ -2375,7 +2407,8 @@ namespace GlorifiedBody.Tests.PlayMode
         {
             public const string Released = "sector_c_released";
             public const string CodeSilver = "code_silver"; // DemoWard.CodeSilver
-            public const string CodesRotated = "demo_codes_rotated", CardEnrolled = "demo_card_enrolled"; // DemoWard
+            public const string CodesRotated = "demo_codes_rotated", CardEnrolled = "demo_card_enrolled", CodesNoticed = "demo_codes_noticed"; // DemoWard
+            public const string CodesNoticedLine = "They must have rotated the code."; // DemoWard, PLACEHOLDER
         }
 
         private const string SectorCReleased = "sector_c_released"; // DemoPublic.Released (editor code)

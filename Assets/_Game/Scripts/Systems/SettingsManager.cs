@@ -201,6 +201,21 @@ namespace GlorifiedBody.Systems
         }
         private bool subtitlesOn = true;
 
+        /// <summary>
+        /// The hint line of the Interact and Scan keys over the HUD (Bruno, 2026-11-16: "let the cue on screen for scan/interact
+        /// to be removable, on for now; play-testing will decide"). InteractionUI follows it.
+        /// </summary>
+        public bool InteractHintsOn
+        {
+            get => interactHintsOn;
+            set
+            {
+                interactHintsOn = value;
+                SaveSettings();
+            }
+        }
+        private bool interactHintsOn = true;
+
         /// <summary>The subtitle size: 0 Small, 1 Medium (the default), 2 Large.</summary>
         public int SubtitleSize
         {
@@ -227,6 +242,7 @@ namespace GlorifiedBody.Systems
         private const string KEY_VSYNC = "settings_vsync";
         private const string KEY_GORE_LEVEL = "settings_goreLevel";
         private const string KEY_SUBTITLES = "settings_subtitles";
+        private const string KEY_INTERACT_HINTS = "settings_interact_hints";
         private const string KEY_SUBTITLE_SIZE = "settings_subtitleSize";
 
         void Awake()
@@ -257,6 +273,7 @@ namespace GlorifiedBody.Systems
             vSyncCount = PlayerPrefs.GetInt(KEY_VSYNC, defaultVSync);
             goreLevel = Mathf.Clamp(PlayerPrefs.GetInt(KEY_GORE_LEVEL, 2), 0, 2);
             subtitlesOn = PlayerPrefs.GetInt(KEY_SUBTITLES, 1) == 1;
+            interactHintsOn = PlayerPrefs.GetInt(KEY_INTERACT_HINTS, 1) == 1;
             subtitleSize = Mathf.Clamp(PlayerPrefs.GetInt(KEY_SUBTITLE_SIZE, 1), 0, 2);
 
             ApplyAudioSettings();
@@ -282,6 +299,7 @@ namespace GlorifiedBody.Systems
             PlayerPrefs.SetInt(KEY_VSYNC, vSyncCount);
             PlayerPrefs.SetInt(KEY_GORE_LEVEL, goreLevel);
             PlayerPrefs.SetInt(KEY_SUBTITLES, subtitlesOn ? 1 : 0);
+            PlayerPrefs.SetInt(KEY_INTERACT_HINTS, interactHintsOn ? 1 : 0);
             PlayerPrefs.SetInt(KEY_SUBTITLE_SIZE, subtitleSize);
             PlayerPrefs.Save();
         }

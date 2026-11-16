@@ -41,6 +41,7 @@ namespace GlorifiedBody.UI
         private Dropdown goreDropdown;
         private Toggle subtitlesToggle;
         private Dropdown subtitleSizeDropdown;
+        private Toggle interactHintsToggle;
 
         // Graphics controls (GraphicsOptions, 2026-11-03)
         private Dropdown displayModeDropdown;
@@ -180,6 +181,8 @@ namespace GlorifiedBody.UI
                     subtitlesToggle.SetIsOnWithoutNotify(SettingsManager.Instance.SubtitlesOn);
                 if (subtitleSizeDropdown != null)
                     subtitleSizeDropdown.SetValueWithoutNotify(SettingsManager.Instance.SubtitleSize);
+                if (interactHintsToggle != null)
+                    interactHintsToggle.SetIsOnWithoutNotify(SettingsManager.Instance.InteractHintsOn);
             }
 
             RefreshResolutionDropdown();
@@ -568,6 +571,9 @@ namespace GlorifiedBody.UI
             subtitlesToggle = CreateToggleRow(content, "Subtitles", value => { if (SettingsManager.Instance != null) SettingsManager.Instance.SubtitlesOn = value; });
             subtitleSizeDropdown = CreateDropdownRow(content, "Subtitle Size", new List<string> { "Small", "Medium", "Large" },
                 index => { if (SettingsManager.Instance != null) SettingsManager.Instance.SubtitleSize = index; });
+
+            // The hint of the Interact and Scan keys (Bruno, 2026-11-16): on for now, play-testing decides.
+            interactHintsToggle = CreateToggleRow(content, "Interaction Hints", value => { if (SettingsManager.Instance != null) SettingsManager.Instance.InteractHintsOn = value; });
 
             return panel;
         }

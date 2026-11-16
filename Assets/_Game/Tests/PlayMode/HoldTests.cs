@@ -164,7 +164,7 @@ namespace GlorifiedBody.Tests.PlayMode
             CarrierTalk talk = UnityEngine.Object.FindObjectsByType<CarrierTalk>(FindObjectsSortMode.None).First(t => t.name == "Scientist_Runner");
             Assert.AreEqual("H2", Room.At(talk.transform.position + Vector3.up * 0.1f).id);
             StringAssert.StartsWith("denied:", talk.Confirm(hand), "before the scan C11 he denies it");
-            Assert.IsFalse(items.Has("airlock_card"));
+            Assert.IsFalse(items.Has("security_card"));
             // The scan C11 on him (Bruno, 2026-11-16: "scan him"; it was on the reader of the landing, across the gap).
             Vector3 front = talk.transform.position + talk.transform.forward * 0.9f;
             tank.Teleport(new Vector3(front.x, 0f, front.z), Quaternion.LookRotation(-talk.transform.forward).eulerAngles.y);
@@ -175,9 +175,9 @@ namespace GlorifiedBody.Tests.PlayMode
             scanner.End("test");
             Assert.IsTrue(StoryFlags.Has(DemoFlags.CardScanned), "the scan C11 raises its flag");
             LockedDoor landing = AirlockDoor(); // the glass door of the airlock, on her side of the gap since 2026-11-16
-            StringAssert.Contains("airlock card", landing.TextFor(hand), "the door needs the airlock card");
+            StringAssert.Contains("security card", landing.TextFor(hand), "the door needs the security card");
             StringAssert.StartsWith("given:", talk.Confirm(hand), "after the scan he gives it");
-            Assert.IsTrue(items.Has("airlock_card"), "the card is hers");
+            Assert.IsTrue(items.Has("security_card"), "the card is hers");
             Assert.AreEqual(1, talk.Denials);
             landing.Confirm(hand);
             yield return new WaitForSeconds(1.2f);
@@ -603,7 +603,7 @@ namespace GlorifiedBody.Tests.PlayMode
             yield return WaitUntil(() => (knife = UnityEngine.Object.FindObjectsByType<SoldierBrain>(FindObjectsSortMode.None).FirstOrDefault(b => b.name == "Scientist_Knife")) != null, 5f);
             knife.GetComponent<Health>().TakeDamage(9999f);
             Assert.IsTrue(Feeding.Locked);
-            lucy.GetComponent<ItemInventory>().TryAdd(ItemDefinition.Find("airlock_card"));
+            lucy.GetComponent<ItemInventory>().TryAdd(ItemDefinition.Find("security_card"));
             lucy.GetComponent<TankController>().Teleport(new Vector3(7.5f, 0f, 37f), 270f);
             var heard = new System.Collections.Generic.HashSet<string>();
             yield return WaitUntil(() => { Listen(heard); return CutscenePlayer.Current == "02b_the_chart"; }, 25f);
@@ -625,7 +625,7 @@ namespace GlorifiedBody.Tests.PlayMode
             yield return Freed();
             GameObject lucy = Her();
             StoryFlags.Raise(Feeding.UnlockFlag);
-            lucy.GetComponent<ItemInventory>().TryAdd(ItemDefinition.Find("airlock_card"));
+            lucy.GetComponent<ItemInventory>().TryAdd(ItemDefinition.Find("security_card"));
             lucy.GetComponent<TankController>().Teleport(new Vector3(7.5f, 0f, 37f), 270f);
             var heard = new System.Collections.Generic.HashSet<string>();
             yield return WaitUntil(() => { Listen(heard); return StoryFlags.Has(DemoFlags.VoiceFed); }, 25f);

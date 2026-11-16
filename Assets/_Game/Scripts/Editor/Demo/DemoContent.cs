@@ -341,17 +341,22 @@ namespace GlorifiedBody.Editor.Demo
             return Log("l36_incident_tape", "THE INCIDENT TAPE", string.Join("\n\n", lines.ConvertAll(l => l.speaker + ": " + l.text)));
         }
 
-        /// <summary>The airlock card of the second scientist of H2 (round 118): it opens the card door of the landing H6.</summary>
-        public static ItemDefinition AirlockCard()
+        /// <summary>
+        /// The security card of the second scientist of H2 (round 118; Bruno, 2026-11-16: "the airlock card is the security card"):
+        /// it opens the card door of the airlock H5, and the card doors of the ward (W3, W10, the stairwell W12) until code silver
+        /// rotates the codes. Then it works again only after the terminal of W13 enrols it.
+        /// </summary>
+        public static ItemDefinition SecurityCard()
         {
-            return ItemAssets.Item("airlock_card", "THE AIRLOCK CARD", ItemKind.Key, ItemAssets.KeyColour, "A white card on a lanyard. AIRLOCK. It opens the glass door of the airlock, to the tube.", "", DrugType.Nalcon);
+            return ItemAssets.Item("security_card", "THE SECURITY CARD", ItemKind.Key, ItemAssets.KeyColour, "A white card on a lanyard. SECURITY. It opens the card doors.", "", DrugType.Nalcon);
         }
 
         public static ItemDefinition L9() => Log("l9_care_chart", "HER CARE CHART", DemoPlan.Log("L9", "V3. DAILY CARE. ORAL INTAKE: NONE. PCDH-Y: DONOR TISSUE PER PROTOCOL 7 (ALL DONORS CONSENTED). LAST DOSE: 6 DAYS AGO, HELD FOR THE V4 TRANSFER. EXPECT THE SUBJECT TO SEEK A SOURCE. NEVER ENTER ALONE."));
 
-        public static ItemDefinition StairCard()
+        /// <summary>The key of the ward security post W13 (Bruno, 2026-11-16: "a special key to get into the office to reprogram the security card"). The ward sister carries it.</summary>
+        public static ItemDefinition OfficeKey()
         {
-            return ItemAssets.Item("stair_card", "THE WARD SISTER'S CARD", ItemKind.Key, ItemAssets.KeyColour, "A white card on a lanyard. It opens the stairwell door.", "", DrugType.Nalcon);
+            return ItemAssets.Item("office_key", "THE SECURITY POST KEY", ItemKind.Key, ItemAssets.KeyColour, "A brass key on the ward sister's ring. A tag: WARD SECURITY POST.", "", DrugType.Nalcon);
         }
     }
 }

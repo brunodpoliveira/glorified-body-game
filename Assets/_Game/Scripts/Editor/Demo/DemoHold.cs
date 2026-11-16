@@ -184,7 +184,7 @@ namespace GlorifiedBody.Editor.Demo
         /// and talks when she stops a step past the doorway, then attacks with the scalpel. The second stands at the bench
         /// by the door to the stores; when the first dies that door opens, he runs through it, cowers behind the linen shelf,
         /// and the door shuts behind him (Bruno, 2026-11-15, "run out of reach": the short killed him every time). He carries
-        /// the airlock card: asked before the scan C11 he denies it, after it he gives it. The capsules of the tray fall in
+        /// the security card: asked before the scan C11 he denies it, after it he gives it. The capsules of the tray fall in
         /// the talk. The recorder L35 on the bench.
         /// </summary>
         private static void H2(DemoRoom r)
@@ -202,7 +202,7 @@ namespace GlorifiedBody.Editor.Demo
             EditorUtility.SetDirty(knife);
 
             // The second scientist and his card.
-            ItemPickup card = r.Item("Airlock_Card", DemoItems.AirlockCard(), new Vector3(19.9f, 0.05f, 34.1f), new Vector3(0.1f, 0.02f, 0.15f));
+            ItemPickup card = r.Item("Security_Card", DemoItems.SecurityCard(), new Vector3(19.9f, 0.05f, 34.1f), new Vector3(0.1f, 0.02f, 0.15f));
             card.gameObject.SetActive(false); // hidden until he dies or gives it (ItemCarrier): it lay at his feet from the start, and a copy on his belt (2026-11-16)
             GameObject runTo = MenuLoopSetup.EnsureChild(r.Story, "Runner_Hide");
             runTo.transform.position = RunnerHide; // in the stores, behind the linen shelf: no line from H2 through the doorway
@@ -281,8 +281,8 @@ namespace GlorifiedBody.Editor.Demo
                 g.baton = true;
                 g.heldUntilFlag = GuardsOpen;
                 g.askLine = Bark("h3_deny_card");
-                g.askItemId = DemoItems.AirlockCard().itemId;
-                g.askItemName = "the airlock card";
+                g.askItemId = DemoItems.SecurityCard().itemId;
+                g.askItemName = "the security card";
                 EditorUtility.SetDirty(g);
             }
             r.Prop("Desk", new Vector3(10.2f, 0f, 37.2f), new Vector3(1.4f, 0.75f, 0.7f), 0.35f);
@@ -364,8 +364,8 @@ namespace GlorifiedBody.Editor.Demo
             nurse.foundLine = Bark("h4_booth_2");
             nurse.foundAt = 2.5f;
             nurse.askLine = Bark("h4_ask_card");
-            nurse.askItemId = DemoItems.AirlockCard().itemId;
-            nurse.askItemName = "the airlock card";
+            nurse.askItemId = DemoItems.SecurityCard().itemId;
+            nurse.askItemName = "the security card";
             EditorUtility.SetDirty(nurse);
             // In front of the glass, a camera from the south-east corner looks into the booth at the nurse (2026-11-14, Bruno:
             // "i don't see a nurse behind the theater control room"): the cell camera of that floor looked south, away from her.
@@ -548,7 +548,7 @@ namespace GlorifiedBody.Editor.Demo
             // tube, the sign, and the card reader beside it. A scan of the reader shows the card on the scientist of H2, as a scan of
             // him does (CardScanned: "the player has two chances to use the scan ability"). The glass is on Ignore Raycast, as the
             // booth's panes: the gap camera, the room cull and her powers see through it, her body and the gurney do not pass.
-            GameObject airlock = r.LockedLeaf(r.DoorTo("HT"), DemoItems.AirlockCard().itemId, "the airlock card");
+            GameObject airlock = r.LockedLeaf(r.DoorTo("HT"), DemoItems.SecurityCard().itemId, "the security card");
             LockedDoor airlockLock = airlock.GetComponent<LockedDoor>();
             airlockLock.openedFlag = AirlockOpen;
             EditorUtility.SetDirty(airlockLock);
@@ -556,7 +556,8 @@ namespace GlorifiedBody.Editor.Demo
             glassLeaf.GetComponent<Renderer>().sharedMaterial = DemoRoom.Glass("airlock_glass", new Color(0.7f, 0.8f, 0.86f), 0.35f);
             glassLeaf.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             glassLeaf.gameObject.layer = 2;
-            r.Sign("Sign_Card_Door", DemoPlan.Sign("H6, the card door", "AIRLOCK CARD REQUIRED."), new Vector3(TubeX1 + 0.17f, 1.85f, TubeZ0 - 0.75f), Vector3.right, new Vector2(1.1f, 0.24f), 30);
+            r.Sign("Sign_Card_Door", "SECURITY CARD REQUIRED.", // Bruno, 2026-11-16: "the airlock card is the security card" (the plan says AIRLOCK)
+                 new Vector3(TubeX1 + 0.17f, 1.85f, TubeZ0 - 0.75f), Vector3.right, new Vector2(1.1f, 0.24f), 30);
             GameObject reader = r.Box(r.Props, "Card_Reader_Airlock", new Vector3(TubeX1 + 0.17f, 1.2f, TubeZ0 - 0.75f), new Vector3(0.04f, 0.18f, 0.12f), DemoRoom.Colour("reader", Color.white));
             reader.isStatic = false;
             r.Scan("Scan_C11", reader.transform.position + Vector3.right * 0.05f, "c11_card_reader",
@@ -579,7 +580,7 @@ namespace GlorifiedBody.Editor.Demo
             light.intensity = 1.5f;
 
             // The voice (§10.6, H1_the_hold.md): the first step into the airlock with the card. Two sequences, one plays.
-            string card = DemoItems.AirlockCard().itemId;
+            string card = DemoItems.SecurityCard().itemId;
             var urge = new List<ScriptStep> { ScriptStep.WaitItem(card), ScriptStep.WaitRoom("H5"), ScriptStep.StopIfFlag(Feeding.UnlockFlag), ScriptStep.Raise(VoiceHeard), ScriptStep.LockHer() };
             urge.AddRange(DemoScripts.Steps(DemoItems.HoldLines, "The voice", "The script, the urge", "h5_urge"));
             urge.Add(ScriptStep.Feast(DemoScripts.Fmv("cutscenes/02b_the_chart.md", "02b_the_chart", "cs02b")));

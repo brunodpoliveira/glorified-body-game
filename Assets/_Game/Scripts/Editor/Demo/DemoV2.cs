@@ -134,11 +134,11 @@ namespace GlorifiedBody.Editor.Demo
 
         // ── The ward ──────────────────────────────────────────────────
 
-        /// <summary>W13: the post is empty. A terminal on the desk, the chair pushed back, a radio on a shelf. No puzzle yet.</summary>
+        /// <summary>W13: the post is empty, locked by the ward sister's key from W12. A terminal on the desk, the chair pushed back, a radio on a shelf.</summary>
         private static void W13(DemoRoom r)
         {
             // The code rotation (DEMO_PLAN §10.2): the terminal enrols the card with the code on the wall of W14, 8675309.
-            r.Terminal("Terminal", new Vector3(21.4f, 0f, -13.4f), Vector3.forward, DemoItems.StairCard().itemId, "8675309", DemoWard.CodesRotated, DemoWard.CardEnrolled);
+            r.Terminal("Terminal", new Vector3(21.4f, 0f, -13.4f), Vector3.forward, DemoItems.SecurityCard().itemId, "8675309", DemoWard.CodesRotated, DemoWard.CardEnrolled);
             r.Prop("Empty_Chair", new Vector3(22.7f, 0f, -12.2f), new Vector3(0.5f, 0.9f, 0.5f), 0.15f); // pushed back
             DemoWard.CardDoor(r, "W10", new Vector3(21.3f, 1.2f, -10.18f), Vector3.back);
             r.Prop("Shelf", new Vector3(18.6f, 0f, -13.5f), new Vector3(0.8f, 0.75f, 0.4f), 0.2f);

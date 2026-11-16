@@ -50,7 +50,9 @@ namespace GlorifiedBody.Systems
         /// <summary>False while a menu or the game over owns the keys; inside the inventory only its keys pass.</summary>
         public bool AllowsAction(InputManager.GameAction action)
         {
-            if (currentState == GameState.Paused || currentState == GameState.GameOver) return false;
+            if (currentState == GameState.Paused) return false;
+            // The death screen: only the skip key (Bruno, 2026-11-16: "e does not skip the scene").
+            if (currentState == GameState.GameOver) return action == InputManager.GameAction.Interact;
             // The skip key; with the skip menu open (2026-11-02) also forward and back, which choose RESUME or SKIP.
             if (currentState == GameState.Cutscene)
                 return action == InputManager.GameAction.Interact || (GlorifiedBody.Story.CutscenePlayer.MenuOpen

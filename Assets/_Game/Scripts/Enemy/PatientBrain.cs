@@ -118,7 +118,9 @@ namespace GlorifiedBody.Enemy
         /// <summary>A shock of the short: it jolts where it lies.</summary>
         public void Stagger(float seconds)
         {
-            if (!health.IsDead) tremble.Jolt(Mathf.Min(seconds, 0.6f));
+            if (health.IsDead) return;
+            Bark.Silence(gameObject); // a stun cuts the line (Bruno, 2026-11-16)
+            tremble.Jolt(Mathf.Min(seconds, 0.6f));
         }
 
         private void OnDeath()
