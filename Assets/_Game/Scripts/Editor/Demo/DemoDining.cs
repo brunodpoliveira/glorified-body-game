@@ -33,7 +33,7 @@ namespace GlorifiedBody.Editor.Demo
             // Bruno, 2026-11-15: "the dining hall needs to be a lot larger; it is meant to be this opulent place, and it needs to be large
             // enough for flanking opportunities both for the player and the enemies": 24 x 13 m (12 x 10 before), 6 m high. East is free;
             // the yard's backdrop of the ward stands 1 m north of z 13.
-            Spec("G18", "THE DINING HALL", 35, 0, 59, 13, 6f, G18, new Door('W', 3, "G2", width: 2.4f), new Door('S', 41, "G19")),
+            Authored(Spec("G18", "THE DINING HALL", 35, 0, 59, 13, 6f, G18, new Door('W', 3, "G2", width: 2.4f), new Door('S', 41, "G19"))), // its own five cameras (2026-11-16)
             Spec("G19", "THE KITCHEN", 38, -12, 44, 0, 3.5f, G19, new Door('N', 41, "G18"), ServiceExit("G9b"), new Door('S', 43, "G17b")), // G17b, facilities, and the halon room (2026-11-10)
         };
 
@@ -44,6 +44,12 @@ namespace GlorifiedBody.Editor.Demo
         public static ItemDefinition DutyKey() =>
             ItemAssets.Item(DutyKeyId, "THE DUTY KEY", ItemKind.Key, ItemAssets.KeyColour, "A brass key on a red tag: DUTY. It turns the release in the security office.", "", GlorifiedBody.Player.DrugType.Nalcon);
 
+        private static RoomSpec Authored(RoomSpec spec)
+        {
+            spec.AuthoredCameras = true;
+            return spec;
+        }
+
         private static RoomSpec Spec(string id, string title, float x0, float z0, float x1, float z1, float height, System.Action<DemoRoom> dress, params Door[] doors)
         {
             var spec = new RoomSpec { Id = id, Title = title, Floor = DemoItems.Floor1, Music = DemoPublic.Music, X0 = x0, Z0 = z0, X1 = x1, Z1 = z1, Height = height, Dress = dress };
@@ -53,9 +59,33 @@ namespace GlorifiedBody.Editor.Demo
 
         // ── G18 ───────────────────────────────────────────────────────
 
+        /// <summary>
+        /// The five cameras of the hall (Bruno, 2026-11-16: "too many tight angles from up looking down. we need angles that capture
+        /// wide shots of the room, we need angles that capture it sideways"; "verify if the change from one camera to the next does
+        /// not violate the 180 rule"). The cells had placed 21 cameras, and 22 pairs of neighbours flipped her screen direction.
+        /// A search offline, on the hall's colliders from the saved scene and the rules of CameraCoverage, chose these: every
+        /// camera looks south or west (the two exits are in the west and south walls), so no cut between two zones flips her
+        /// direction. The zones: the north aisle (north of the column row at z 9.2), and four bays between the column lines
+        /// (x 41, 47, 53). Result of that check: 0 of 1006 floor points out of frame, both exits in view, 0 cuts that flip.
+        /// </summary>
+        private static void Cameras(DemoRoom r)
+        {
+            // The north aisle: the wide shot from the north-east corner, down the whole hall (yaw 240, pitch 15, it turns to her up to 25 degrees).
+            r.ExtraCamera("north_aisle", new Vector3(58.6f, 3.0f, 12.4f), new Vector3(50.23f, 0.41f, 7.57f), 55f, new Vector3(47.0f, 1.5f, 11.1f), new Vector3(24.0f, 3f, 3.8f), follow: 25f);
+            // The entry bay: from the north, the glass doors and the kitchen door in frame (yaw 200, pitch 38, it turns to her up to 25 degrees).
+            r.ExtraCamera("entry", new Vector3(37.0f, 5.0f, 9.2f), new Vector3(34.30f, -1.16f, 1.80f), 72f, new Vector3(38.0f, 1.5f, 4.6f), new Vector3(6.0f, 3f, 9.2f), follow: 25f);
+            // The west bay: the side shot across the hall from the north (yaw 190, pitch 15, it turns to her up to 25 degrees).
+            r.ExtraCamera("bay_west", new Vector3(42.6f, 5.0f, 10.0f), new Vector3(40.92f, 2.41f, 0.49f), 84f, new Vector3(44.0f, 1.5f, 4.6f), new Vector3(6.0f, 3f, 9.2f), follow: 25f);
+            // The east bay: the side shot across the hall from the north (yaw 170, pitch 15).
+            r.ExtraCamera("bay_east", new Vector3(47.4f, 4.0f, 11.6f), new Vector3(49.08f, 1.41f, 2.09f), 72f, new Vector3(50.0f, 1.5f, 4.6f), new Vector3(6.0f, 3f, 9.2f));
+            // The bar end: from the north-east corner along the bar (yaw 200, pitch 15).
+            r.ExtraCamera("bar", new Vector3(58.6f, 3.0f, 12.4f), new Vector3(55.30f, 0.41f, 3.32f), 55f, new Vector3(56.0f, 1.5f, 4.6f), new Vector3(6.0f, 3f, 9.2f));
+        }
+
         private static void G18(DemoRoom r)
         {
-            DemoForeground.G18(r); // the candelabrum in the foreground (2026-11-14)
+            DemoForeground.G18(r); // the candelabrum (2026-11-14); its camera is gone (2026-11-16)
+            Cameras(r);
             // The host stand by the glass doors: the book of tonight (L31) and a comment card (L32).
             r.Prop("Host_Stand", new Vector3(36.6f, 0f, 4.9f), new Vector3(0.6f, 1.1f, 0.5f), 0.15f);
             r.Item("L31_Reservation_Book", L31(), new Vector3(36.55f, 1.11f, 4.9f), new Vector3(0.3f, 0.03f, 0.22f));

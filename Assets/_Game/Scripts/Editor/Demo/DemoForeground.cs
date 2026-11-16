@@ -81,12 +81,13 @@ namespace GlorifiedBody.Editor.Demo
             r.ExtraCamera("cake", new Vector3(29.0f, 1.1f, -3.9f), new Vector3(35f, 1.8f, -0.2f), 62f, new Vector3(34.5f, 1.5f, -2.5f), new Vector3(5f, 3f, 4f));
         }
 
-        /// <summary>G18, the Dining Hall: by the north-west corner, a tall candelabrum in front, the floor between the columns beyond.</summary>
+        /// <summary>G18, the Dining Hall: a tall candelabrum by the glass doors (the hall places its own cameras, DemoDining.Cameras).</summary>
         public static void G18(DemoRoom r)
         {
             // From the west wall, between the two rows of columns (z 3.8 and 9.2): the columns hide none of the zone.
             Candelabrum(r, "Hall_Candelabrum", new Vector3(36.6f, 0f, 6.4f), 1.7f);
-            r.ExtraCamera("candelabrum", new Vector3(35.6f, 2.2f, 5.6f), new Vector3(44f, 0.9f, 5.2f), 64f, new Vector3(41.75f, 1.5f, 5.2f), new Vector3(6f, 3f, 1.6f));
+            // Its camera looked east from the glass doors: against the hall's five, which look south or west, a cut to it flipped her
+            // screen direction (2026-11-16, the 180 rule). The candelabrum stays, in the shot of the entry bay.
         }
     }
 }
