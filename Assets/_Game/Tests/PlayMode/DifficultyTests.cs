@@ -51,6 +51,12 @@ namespace GlorifiedBody.Tests.PlayMode
         {
             MainMenuUI menu = UnityEngine.Object.FindFirstObjectByType<MainMenuUI>();
             yield return null;
+            // T46 (round 173): DIFFICULTY is on the ADVANCED row.
+            GameObject advanced = GameObject.Find("Btn_ADVANCED");
+            Assert.IsNotNull(advanced, "the ADVANCED symbol");
+            advanced.GetComponent<UnityEngine.UI.Button>().onClick.Invoke();
+            yield return null;
+            Assert.IsTrue(menu.AdvancedOpen, "ADVANCED opens its row");
             GameObject button = GameObject.Find("Btn_DIFFICULTY");
             Assert.IsNotNull(button, "the DIFFICULTY button");
             Assert.IsTrue(button.GetComponentInChildren<UnityEngine.UI.Text>().text.Contains("150%"), "it names the preset");

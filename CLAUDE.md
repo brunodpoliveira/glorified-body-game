@@ -676,6 +676,16 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   files keeps the single track. Test: `SetPieceMusicTests` (PlayMode, 3, about 1 minute of real-time music).
   2026-11-16, THE MENU MUSIC (`devlog-notes/2026-11-16_menu_music_t45.md`, Bruno: "carol d is the best"): T45 Carol D in
   `Resources/Audio/Music/_menu/menu.wav` (`tools/menu_music_import.sh`, 51 bars at 85 BPM, one loop). Test: `MenuMusicTests`.
+  2026-11-16, THE MAIN MENU, FINAL ART (T46, round 173; `~/MEGA/glorified/production/tests/T46_main_menu/README.md`): one row of
+  symbols after Ace Combat 3 (START or CONTINUE with a save, LOAD, ADVANCED, EXIT); ADVANCED is a second row (NEW GAME with a
+  save, DIFFICULTY, OPTIONS, TUTORIAL, HOW TO PLAY, CREDITS, BACK; Escape goes back). `MenuSymbol` tints the selected symbol
+  orange with its label (Roboto Condensed at 64 %) and a blue rule. Art in `Resources/UI/Menu/`, the five fonts in
+  `Resources/UI/Fonts/` (`MainMenuUI.HeadFont`, `ProfileFont`). The background `UI_menu_background.png` is a STAND-IN: the
+  final one is a render of the final hospital model (Bruno). The other screens (options, difficulty, load) keep the old look.
+  Round 174: the logo is the round 16 box logo as is (`UI_menu_logo.png`). A NEW GAME plays `MainMenuUI.NewGameIntro`
+  (2.6 s: the stripes `UI_menu_stripes.png` grow from the logo box to the whole screen, the background fades to black,
+  then the load); CONTINUE and LOAD do not. Bot `play Main_Menu Main_Menu intro 120` (checks, no shots: a camera-mode
+  render of the growing stripes crashes the batch editor, exit 139; the game draws the menu in overlay mode).
 
 - 2026-11-14, THE BOOTH, THE GURNEY, THE SURF (`devlog-notes/2026-11-14_booth_gurney_surf.md`, Bruno: "i don't see a nurse behind the
   theather control room", "the gurney is invisible", "the player needs to ride the gurney themselves"): the H4 booth panes and door are glass

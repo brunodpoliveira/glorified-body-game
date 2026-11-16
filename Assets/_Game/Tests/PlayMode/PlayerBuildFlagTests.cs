@@ -43,12 +43,21 @@ namespace GlorifiedBody.Tests.PlayMode
         public IEnumerator Start_LoadsTheDemo_AndAReleaseHasNoTrainingRoom()
         {
             GameBuild.Force = false;
-            yield return Menu();
+            // T46 (round 173): with a save the first symbol is CONTINUE, so this menu reads an empty save folder.
+            string saves = GlorifiedBody.Saving.SaveSystem.Folder;
+            GlorifiedBody.Saving.SaveSystem.Folder = System.IO.Path.Combine(Application.temporaryCachePath, "saves_none_" + Guid.NewGuid().ToString("N"));
+            try { yield return Menu(); }
+            finally { GlorifiedBody.Saving.SaveSystem.Folder = saves; }
             // Bruno, 2026-11-02: "remove the training room, or set it to dev only".
             Assert.IsNull(Button("TRAINING ROOM"), "no training room in a release menu");
             UnityEngine.UI.Button start = Button("START");
             Assert.IsNotNull(start, "START in a release menu");
             start.onClick.Invoke();
+            yield return null;
+            // Round 174: a new game plays the intro first (the stripes), then loads.
+            GlorifiedBody.UI.MainMenuUI menu = UnityEngine.Object.FindFirstObjectByType<GlorifiedBody.UI.MainMenuUI>();
+            Assert.IsTrue(menu != null && menu.IntroRunning, "START plays the new-game intro");
+            Assert.AreEqual("Main_Menu", SceneManager.GetActiveScene().name, "the intro plays before the load");
             float t0 = Time.realtimeSinceStartup;
             while ((SceneManager.GetActiveScene().name != "Demo" || !GameManager.Instance.IsPlaying) && Time.realtimeSinceStartup - t0 < 30f) yield return null;
             Assert.AreEqual("Demo", SceneManager.GetActiveScene().name, "START: the world scene");
