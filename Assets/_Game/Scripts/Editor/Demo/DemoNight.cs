@@ -184,8 +184,8 @@ namespace GlorifiedBody.Editor.Demo
         /// <summary>L38 in a tray on the first desk of G13, the scheduling desk.</summary>
         public static void G13Notice(DemoRoom r)
         {
-            r.Prop("In_Tray", new Vector3(4.85f, 0.75f, -4.15f), new Vector3(0.34f, 0.06f, 0.26f), 0.35f);
-            r.Item("L38_Supplier_Notice", L38(), new Vector3(4.85f, 0.82f, -4.15f), new Vector3(0.21f, 0.01f, 0.28f));
+            r.Prop("In_Tray", new Vector3(-2.95f, 0.75f, -12.75f), new Vector3(0.34f, 0.06f, 0.26f), 0.35f); // G13 south of the main entrance (2026-11-15)
+            r.Item("L38_Supplier_Notice", L38(), new Vector3(-2.95f, 0.82f, -12.75f), new Vector3(0.21f, 0.01f, 0.28f));
         }
 
         /// <summary>L39 taped to the south wall of W13, over the radio.</summary>
@@ -195,7 +195,7 @@ namespace GlorifiedBody.Editor.Demo
         public static void W9Email(DemoRoom r) => r.Item("L24_Station_Email", L24(), new Vector3(11.3f, 1.25f, -6.12f), new Vector3(0.3f, 0.22f, 0.01f));
 
         /// <summary>L27 on a monitor of G13 that a clerk left when she ran.</summary>
-        public static void G13Email(DemoRoom r) => r.Item("L27_Reply_All", L27(), new Vector3(10.6f, 0.92f, -3.86f), new Vector3(0.34f, 0.24f, 0.01f));
+        public static void G13Email(DemoRoom r) => r.Item("L27_Reply_All", L27(), new Vector3(2.6f, 0.92f, -12.46f), new Vector3(0.34f, 0.24f, 0.01f)); // on the monitor of the east desk, front row
 
         /// <summary>L14, the union letter (DEMO_PLAN §8): on the fridge of G11, a copy a guard kept. The plan's words, PROPOSED.</summary>
         public static ItemDefinition L14() => DemoItems.Log("l14_union_letter", "A UNION LETTER",

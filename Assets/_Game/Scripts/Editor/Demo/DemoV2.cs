@@ -69,13 +69,14 @@ namespace GlorifiedBody.Editor.Demo
             Spec("G10", "CAFETERIA", DemoItems.Floor1, DemoPublic.Music, 28, -5, 38, 0, 4f, G10, new Door('N', 30, "G2"), new Door('W', -3.5f, "G5")),
             Spec("G11", "STAFF BREAK ROOM", DemoItems.Floor1, DemoPublic.Music, -2, -22, 6, -16, 3f, G11, new Door('E', -19, "G8"), new Door('S', 2, "G15")),
             Spec("G12", "CONFERENCE ROOM", DemoItems.Floor1, DemoPublic.Music, 26, -22, 38, -16, 3.5f, G12, new Door('N', 27, "G5"), ShortcutS1("G17")),
-            // Two doors: off the concourse and off the family rooms (a second way into G5 through G7, §12).
-            Spec("G13", "ADMISSIONS OFFICE", DemoItems.Floor1, DemoPublic.Music, 4, -9, 12, 0, 3.5f, G13, new Door('N', 8, "G2"), new Door('S', 8, "G7"),
-                new Door('E', -4, "G5"), new Door('W', -1.5f, "G13b")), // a spoke of the foyer, and the way to the main entrance (2026-11-14)
-            // The main entrance (2026-11-14): a hall under a triangular glass roof, the shutters down at its end (the lockdown). 16 x 8 m since
-            // 2026-11-15 (Bruno: "if that is the main entrance, then it needs to be both wider and larger"; it was 8 x 3 m). Free floor to the west
-            // and the south; G1 stands north of its east half.
-            Spec("G13b", "THE MAIN ENTRANCE", DemoItems.Floor1, DemoPublic.Music, -12, -8, 4, 0, 7.5f, DemoPublic.G13b, new Door('E', -1.5f, "G13")),
+            // The admissions office, a side room off the main entrance (2026-11-15, Bruno: "it doesn't make much sense that a grand entrance
+            // will flow to a office desk and then the foyer"). It stood between the entrance and the foyer; now it is south of the entrance.
+            Spec("G13", "ADMISSIONS OFFICE", DemoItems.Floor1, DemoPublic.Music, -4, -16, 4, -9, 3.5f, G13, new Door('N', 0, "G13b")),
+            // The main entrance (2026-11-14): a hall under a triangular glass roof, the shutters down at its west end (the lockdown). 16 x 9 m,
+            // and it opens straight into the foyer by the west spoke (2026-11-15, Bruno: "wider and larger"; "the hallway is attached to the
+            // circular foyer"). The doors of the old admissions office: the concourse G2 and the family rooms G7 (two loops into G5, §12).
+            Spec("G13b", "THE MAIN ENTRANCE", DemoItems.Floor1, DemoPublic.Music, -4, -9, 12, 0, 7.5f, DemoPublic.G13b, new Door('E', -4, "G5"),
+                new Door('N', 8, "G2"), new Door('S', 8, "G7"), new Door('S', 0, "G13")),
             Spec("G14", "BUILDERS' STORAGE", DemoItems.Floor1, DemoPublic.Music, 26, -28, 32, -22, 4f, G14, new Door('W', -23, "U1")),
             Spec("G15", "STAFF TOILETS", DemoItems.Floor1, DemoPublic.Music, -2, -27, 6, -22, 3f, G15, new Door('N', 2, "G11")),
             // The gap (Bruno, 2026-11-06), a side puzzle off the concourse, PROPOSED.
@@ -354,25 +355,27 @@ namespace GlorifiedBody.Editor.Demo
             Label(r, "CONFERENCE ROOM", new Vector3(29.2f, 2.3f, -16.17f), Vector3.back, 1.8f);
         }
 
-        /// <summary>G13: the admissions office. A counter, a queue barrier, rows of desks with PCs (§12).</summary>
+        /// <summary>
+        /// G13: the admissions office, south of the main entrance since 2026-11-15 (x -4..4, z -16..-9, one door). The counter by the door,
+        /// a short queue barrier, six desks with monitors in two rows (aisles of 1.2 m), L27 on a monitor and L38 in a tray.
+        /// </summary>
         private static void G13(DemoRoom r)
         {
-            r.Prop("Counter", new Vector3(10.3f, 0f, -1.6f), new Vector3(2.6f, 1.1f, 0.7f), 0.25f);
-            r.Prop("Counter_Screen", new Vector3(10.3f, 1.1f, -1.6f), new Vector3(0.4f, 0.35f, 0.3f), 0.15f);
-            foreach ((string tag, float x, float z) in new[] { ("A", 5.8f, -1.3f), ("B", 5.8f, -2.7f), ("C", 7.2f, -2.7f) })
+            r.Prop("Counter", new Vector3(2.4f, 0f, -10.4f), new Vector3(2.6f, 1.1f, 0.7f), 0.25f);
+            r.Prop("Counter_Screen", new Vector3(2.4f, 1.1f, -10.4f), new Vector3(0.4f, 0.35f, 0.3f), 0.15f);
+            foreach ((string tag, float x, float z) in new[] { ("A", -1.2f, -10.0f), ("B", -1.2f, -11.2f) })
                 r.Prop("Post_" + tag, new Vector3(x, 0f, z), new Vector3(0.08f, 1f, 0.08f), 0.5f);
-            r.Prop("Tape_A", new Vector3(5.8f, 0.9f, -2f), new Vector3(0.02f, 0.02f, 1.4f), 0.7f);
-            r.Prop("Tape_B", new Vector3(6.5f, 0.9f, -2.7f), new Vector3(1.4f, 0.02f, 0.02f), 0.7f);
+            r.Prop("Tape_A", new Vector3(-1.2f, 0.9f, -10.6f), new Vector3(0.02f, 0.02f, 1.2f), 0.7f);
             int n = 0;
-            foreach (float z in new[] { -4f, -6f, -8f })
-                foreach (float x in new[] { 5.2f, 9.2f }) // 9.2: the spoke door to the foyer stands in the east wall (2026-11-14)
+            foreach (float z in new[] { -12.6f, -14.6f })
+                foreach (float x in new[] { -2.6f, 0f, 2.6f })
                 {
                     r.Prop($"Desk_{n}", new Vector3(x, 0f, z), new Vector3(1.4f, 0.75f, 0.7f), 0.25f);
                     r.Prop($"Monitor_{n}", new Vector3(x, 0.75f, z + 0.2f), new Vector3(0.4f, 0.33f, 0.08f), 0.1f);
                     r.Prop($"Keyboard_{n}", new Vector3(x, 0.75f, z - 0.1f), new Vector3(0.35f, 0.02f, 0.12f), 0.6f);
                     r.Prop($"Chair_{n++}", new Vector3(x, 0f, z - 0.8f), new Vector3(0.45f, 0.9f, 0.45f), 0.15f);
                 }
-            Label(r, "ADMISSIONS", new Vector3(10.4f, 2.3f, -0.17f), Vector3.back, 1.4f);
+            Label(r, "ADMISSIONS", new Vector3(2.4f, 2.3f, -9.17f), Vector3.back, 1.4f);
             DemoNight.G13Email(r); // L27
             DemoNight.G13Notice(r); // L38 (round 154)
         }

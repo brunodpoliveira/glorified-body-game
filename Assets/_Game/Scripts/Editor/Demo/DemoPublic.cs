@@ -28,7 +28,7 @@ namespace GlorifiedBody.Editor.Demo
             {
                 Room("G1", "STAIR LANDING", 0, 0, 5, 5, 3f, G1, new Door('N', 2.5f, "S1"), new Door('E', 2.5f, "G2")),
                 Room("G2", "THE CONCOURSE", 5, 0, 35, 6, 6f, G2, new Door('W', 2.5f, "G1"), new Door('N', 12, "G3"), new Door('N', 28, "G4"), new Door('S', 20, "G5", fire: true),
-                    new Door('S', 8, "G13"), new Door('S', 30, "G10"), new Door('N', 18, "G16"), new Door('E', 3, "G18", width: 2.4f)), // the glass doors of the Dining Hall (2026-11-10)
+                    new Door('S', 8, "G13b"), new Door('S', 30, "G10"), new Door('N', 18, "G16"), new Door('E', 3, "G18", width: 2.4f)), // the glass doors of the Dining Hall (2026-11-10)
                 Room("G3", "THE DONOR WALL", 8, 6, 16, 12, 3.5f, G3, new Door('S', 12, "G2")),
                 Room("G4", "THE CHAPEL", 24, 6, 32, 14, 4f, G4, new Door('S', 28, "G2")),
                 // The floorplan v2 (2026-11-05) moved two side rooms off G5's walls: G13 takes G6's old place (it needs G2 and G7), G10
@@ -36,9 +36,9 @@ namespace GlorifiedBody.Editor.Demo
                 // The round foyer (rounds 147 and 148; Bruno, 2026-11-14: "the foyer should be in the middle of the map ... the other rooms
                 // connected to it like spokes on a wheel"; "yes, i like the round foyer in g5"). The reception hall is round now.
                 Room("G5", "THE FOYER", 12, -16, 28, 0, 5f, G5, new Door('N', 20, "G2", fire: true), new Door('W', -12, "G7"), new Door('E', -12, "G9"), new Door('S', 20, "U1", flag: Released),
-                    new Door('E', -3.5f, "G10"), new Door('E', -7, "G6"), new Door('S', 13, "G8"), new Door('S', 27, "G12"), new Door('W', -4, "G13")),
+                    new Door('E', -3.5f, "G10"), new Door('E', -7, "G6"), new Door('S', 13, "G8"), new Door('S', 27, "G12"), new Door('W', -4, "G13b")), // the main entrance on the west spoke (2026-11-15)
                 Room("G6", "PUBLIC BATHROOMS", 28, -9, 36, -5, 3f, G6, new Door('W', -7, "G5")),
-                Room("G7", "FAMILY ROOMS", 4, -16, 12, -9, 3f, G7, new Door('E', -12, "G5"), new Door('N', 8, "G13")),
+                Room("G7", "FAMILY ROOMS", 4, -16, 12, -9, 3f, G7, new Door('E', -12, "G5"), new Door('N', 8, "G13b")),
                 Room("G8", "OFFICES AND RECORDS", 6, -22, 14, -16, 3f, G8, new Door('N', 13, "G5"), new Door('W', -19, "G11")),
                 Room("G9", "SECURITY OFFICE", 28, -16, 34, -9, 3f, G9, new Door('W', -12, "G5"), new Door('E', -14.5f, "G9b")),
                 Room("U1", "UNFINISHED WING", 14, -28, 26, -16, 4f, U1, new Door('N', 20, "G5"), new Door('E', -23, "G14")),
@@ -240,7 +240,7 @@ namespace GlorifiedBody.Editor.Demo
         public static readonly Vector3 LiftCar = new Vector3(13f, 0f, -2.34f);
         public const string PlinthsFlag = "demo_g5_plinths", LiftCarName = "Lift_Car_G5", LiftLandingName = "Lift_Landing_W2";
 
-        /// <summary>The spoke doors of the foyer on G5's walls (plan metres): G2, G13, G7, G10, G6, G9, G8, U1, G12, and the lift car.</summary>
+        /// <summary>The spoke doors of the foyer on G5's walls (plan metres): G2, G13b (the main entrance), G7, G10, G6, G9, G8, U1, G12, and the lift car.</summary>
         public static readonly Vector3[] FoyerSpokes =
         {
             new Vector3(20f, 0f, 0f), new Vector3(12f, 0f, -4f), new Vector3(12f, 0f, -12f), new Vector3(28f, 0f, -3.5f), new Vector3(28f, 0f, -7f),
@@ -497,10 +497,11 @@ namespace GlorifiedBody.Editor.Demo
         // ── G13b, the main entrance (2026-11-14) ─────────────────────────────
 
         /// <summary>
-        /// G13b: the main entrance of the Memorial, off the admissions office. A hall 16 m long and 8 m wide (2026-11-15) under a
-        /// triangular roof of glass blocks on concrete A-frames (Bruno's pictures of 2026-11-14), the steel shutters down at its west
-        /// end (the lockdown of code silver), daylight through the slots, benches along the glass walls. Its camera looks down the
-        /// hall from the admissions end, a trolley in the foreground. It never opens in the demo.
+        /// G13b: the main entrance of the Memorial, a hall 16 m long and 9 m wide under a triangular roof of glass blocks on concrete
+        /// A-frames (Bruno's pictures of 2026-11-14). Its east end opens into the foyer by the west spoke, the concourse G2 and the family
+        /// rooms G7 open off its sides, and the admissions office G13 off its south side (2026-11-15). The steel shutters are down at
+        /// its west end (the lockdown of code silver), daylight through the slots, benches along the glass walls. Its low camera stands
+        /// by the shutters and looks down the hall into the foyer, a trolley in the foreground. The shutters never open in the demo.
         /// </summary>
         public static void G13b(DemoRoom r)
         {
@@ -533,17 +534,21 @@ namespace GlorifiedBody.Editor.Demo
             for (int i = 0; i < slats - 1; i++)
                 Object.DestroyImmediate(r.Box(r.Room, $"Shutter_Light_{i:00}", new Vector3(x0 + 0.14f, 0.24f + i * 0.24f, mid), new Vector3(0.02f, 0.04f, z1 - z0 - 0.7f), DemoRoom.Colour("daylight", new Color(1f, 0.98f, 0.9f))).GetComponent<Collider>());
             r.Sign("Sign_Lockdown", "LOCKDOWN. SHELTER IN PLACE.", new Vector3(x0 + 0.3f, eave + 0.3f, mid), Vector3.right, new Vector2(3.2f, 0.5f), 36);
-            // Benches along the glass walls, between the posts of the frames (the posts stand on the odd metres).
-            foreach (float x in new[] { x0 + 4f, x0 + 8f, x0 + 12f })
+            // Benches along the glass walls, between the posts of the frames (the posts stand on the odd metres), never in front of a door.
+            foreach (float x in new[] { x0 + 6f, x0 + 10f, x0 + 14f })
                 foreach (float s in new[] { -1f, 1f })
-                    r.Prop($"Bench_{x:0}_{(s < 0 ? "S" : "N")}", new Vector3(x, 0f, mid + s * (half - 0.5f)), new Vector3(1.6f, 0.45f, 0.5f), 0.3f);
-            // The trolley in the foreground of the camera, and the camera down the passage.
-            r.Prop("Trolley", new Vector3(x1 - 1.4f, 0f, z0 + 0.6f), new Vector3(1.2f, 0.9f, 0.6f), 0.4f);
-            // Its zone: a strip 4 m wide down the axis, from 3.5 m in front of the camera to the shutters (the 8 m hall: the corners
-            // near the camera fall out of the frame; the cameras of the cells take the sides).
-            float near = x1 - 4f;
+                {
+                    char wall = s < 0 ? 'S' : 'N';
+                    if (r.Spec.Doors.Exists(d => d.Side == wall && Mathf.Abs(d.At - x) < 1.8f)) continue;
+                    r.Prop($"Bench_{x:0}_{wall}", new Vector3(x, 0f, mid + s * (half - 0.5f)), new Vector3(1.6f, 0.45f, 0.5f), 0.3f);
+                }
+            // The trolley in the foreground of the camera, and the camera down the hall into the foyer.
+            r.Prop("Trolley", new Vector3(x0 + 1.6f, 0f, mid - 1.6f), new Vector3(1.2f, 0.9f, 0.6f), 0.4f);
+            // Its zone: a strip 4 m wide down the axis, from 3.5 m in front of the camera to the foyer's doorway (the corners near the
+            // camera fall out of the frame; the cameras of the cells take the sides).
+            float near = x0 + 4f;
             // Low, near the floor (Bruno, 2026-11-14: "lower closer to the ground"): the glass roof fills the top of the frame.
-            r.ExtraCamera("axis", new Vector3(x1 - 0.5f, 0.4f, mid), new Vector3(x0, 2.4f, mid), 64f, new Vector3((x0 + 0.5f + near) * 0.5f, 1.5f, mid), new Vector3(near - x0 - 0.5f, 3f, 4f));
+            r.ExtraCamera("axis", new Vector3(x0 + 0.6f, 0.4f, mid), new Vector3(x1, 2.4f, mid), 64f, new Vector3((near + x1 - 0.5f) * 0.5f, 1.5f, mid), new Vector3(x1 - 0.5f - near, 3f, 4f));
         }
 
         /// <summary>G6: the public bathrooms, a clerk who hides in a stall ("Occupied."). Since v2 at x 28..36, z -9..-5, east of the hall. A toilet that flushes (the hider answers it once), a faucet.</summary>

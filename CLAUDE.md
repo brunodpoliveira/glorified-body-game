@@ -742,7 +742,10 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   hall of 16 x 8 m now (Bruno: "wider and larger"; x -12 to 4, z -8 to 0, the ridge at 7.2 m).
 - 2026-11-15, THE EDITOR MENU (`devlog-notes/2026-11-15_editor_menu.md`, Bruno: "keep only the useful ones for a production pipeline"):
   `GlorifiedBody/` has seven groups (Demo, Content, Gore, Checks, Scene View, Player Build, Test Rooms), 35 entries. The look tests, T26, T38
-  and the dither have no menu entry now; their methods stay for `tools/unity.sh exec`. A new builder goes into its group with a priority. NOT COMPILED,
+  and the dither have no menu entry now; their methods stay for `tools/unity.sh exec`. A new builder goes into its group with a priority.
+- 2026-11-16, THE ENTRANCE INTO THE FOYER (`devlog-notes/2026-11-16_entrance_into_foyer.md`, Bruno: "the hallway is attached to the circular
+  foyer"): G13b is x -4 to 12, z -9 to 0, and opens into G5 by the west spoke; G2 and G7 open into it. G13 ADMISSIONS is a side room south of
+  it (x -4 to 4, z -16 to -9, one door). The hall's low camera stands by the shutters and looks into the foyer. NOT COMPILED, NOT RUN. NOT COMPILED,
   NOT RUN (Bruno's RAM): run `DemoWorld.BuildAll`, `MapAtlasSetup.BuildAtlas`, then `DemoTests`. Numbers PROPOSED.
 
 ## Rules
