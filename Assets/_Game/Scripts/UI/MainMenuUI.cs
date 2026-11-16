@@ -153,6 +153,7 @@ namespace GlorifiedBody.UI
 
         private void OnTutorialClicked()
         {
+            TutorialRecord.StartGameAfter = false; // from the menu: the end screen of the tutorial, as before
             GameManager.Instance?.LoadLevel(tutorialScene);
         }
 
@@ -168,9 +169,74 @@ namespace GlorifiedBody.UI
         // Inside the glass doors from G2, the hall in front of her (the point of DiningHallTests).
         private void OnDiningHallClicked() => GlorifiedBody.DebugTools.DevRoomStart.Begin("G18", new Vector3(36.3f, 0f, 3f), 90f);
 
+        /// <summary>
+        /// START (Bruno, 2026-11-16: "add a prompt when starting the game: play tutorial first (Recommended) yes/no"): until the
+        /// player finished the tutorial once (TutorialRecord), START asks first. YES plays the tutorial, and the game starts at
+        /// its end. NO starts the game, and the next START asks again. Batch runs do not ask (the START test).
+        /// </summary>
         private void OnStartClicked()
         {
+            if (!TutorialRecord.Done && !Application.isBatchMode)
+            {
+                ShowTutorialPrompt();
+                return;
+            }
             GameManager.Instance?.LoadLevel(DemoScene);
+        }
+
+        private GameObject tutorialPrompt;
+
+        private void ShowTutorialPrompt()
+        {
+            if (tutorialPrompt == null) BuildTutorialPrompt();
+            menuPanel.SetActive(false);
+            tutorialPrompt.SetActive(true);
+            Button yes = tutorialPrompt.GetComponentInChildren<Button>();
+            if (eventSystem != null && yes != null) eventSystem.SetSelectedGameObject(yes.gameObject);
+        }
+
+        private void BuildTutorialPrompt()
+        {
+            tutorialPrompt = CreateUIElement("TutorialPrompt", menuPanel.transform.parent);
+            var rect = tutorialPrompt.GetComponent<RectTransform>();
+            rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.55f);
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.sizeDelta = new Vector2(760f, 0f);
+            var layout = tutorialPrompt.AddComponent<VerticalLayoutGroup>();
+            layout.spacing = 14;
+            layout.childAlignment = TextAnchor.UpperCenter;
+            layout.childControlWidth = false;
+            layout.childControlHeight = true;
+            layout.childForceExpandWidth = false;
+            layout.childForceExpandHeight = false;
+            tutorialPrompt.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            Text ask = CreateLabel(tutorialPrompt.transform, "Play the tutorial first?", 40, TextAnchor.MiddleCenter, 60, FontStyle.Bold);
+            ask.rectTransform.sizeDelta = new Vector2(760f, ask.rectTransform.sizeDelta.y);
+            Text why = CreateLabel(tutorialPrompt.transform, "It teaches the powers, the lock and the dodge in a safe room. The game starts after it.", 22, TextAnchor.MiddleCenter, 34, FontStyle.Normal, new Color(0.7f, 0.7f, 0.78f));
+            why.rectTransform.sizeDelta = new Vector2(760f, why.rectTransform.sizeDelta.y);
+            Button yes = CreateButton(tutorialPrompt.transform, "YES (RECOMMENDED)", 520, OnTutorialFirst, 64, 28,
+                new Color(0.62f, 0.1f, 0.12f, 0.95f), new Color(0.85f, 0.2f, 0.22f, 1f), new Color(0.96f, 0.93f, 0.9f));
+            Button no = CreateButton(tutorialPrompt.transform, "NO, START THE GAME", 420, OnSkipTutorial, 48);
+            Button back = CreateButton(tutorialPrompt.transform, "BACK", 420, OnTutorialPromptBack, 48);
+            SetVerticalNav(yes, back, no);
+            SetVerticalNav(no, yes, back);
+            SetVerticalNav(back, no, yes);
+            tutorialPrompt.SetActive(false);
+        }
+
+        private void OnTutorialFirst()
+        {
+            TutorialRecord.StartGameAfter = true;
+            GameManager.Instance?.LoadLevel(tutorialScene);
+        }
+
+        private void OnSkipTutorial() => GameManager.Instance?.LoadLevel(DemoScene);
+
+        private void OnTutorialPromptBack()
+        {
+            tutorialPrompt.SetActive(false);
+            menuPanel.SetActive(true);
+            if (eventSystem != null && startBtn != null) eventSystem.SetSelectedGameObject(startBtn.gameObject);
         }
 
         private void OnModifiersClicked()

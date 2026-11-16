@@ -660,7 +660,15 @@ namespace GlorifiedBody.Tutorial
             IsComplete = true;
             StepIndex = steps.Count;
             RunTelemetry.Event("tutorial_complete");
+            TutorialRecord.MarkDone(); // START no longer asks (2026-11-16)
             OnCompleted?.Invoke();
+            if (TutorialRecord.StartGameAfter)
+            {
+                // She chose the tutorial at START: the game starts now.
+                TutorialRecord.StartGameAfter = false;
+                GameManager.Instance?.LoadLevel(MainMenuUI.DemoScene);
+                return;
+            }
             GameManager.Instance?.CompleteLevel();
         }
 

@@ -806,6 +806,9 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   (`TelekinesisLift.AlignLong`: the gurney through a doorway); the airlock card's text and the landing door's sign say what it opens; the scan C11
   is on the card carrier of H2 (`EnemySpawn.scanFlag`, Bruno: the backtrack was "too obtuse"): ask, scan him, ask again. The card door is a
   locked glass door in the airlock H5 (Ignore Raycast), with a scannable reader (C11) beside it; the landing's door is open. NOT COMPILED, NOT RUN.
+- 2026-11-16, START ASKS FOR THE TUTORIAL (`devlog-notes/2026-11-16_tutorial_prompt.md`, Bruno: "play tutorial first (Recommended) yes/no"): until
+  `Systems/TutorialRecord` is set (the end of the tutorial, PlayerPrefs `tutorial_done`; batch runs use `batch_tutorial_done` and never ask), START
+  asks; YES plays the tutorial and then starts the game. NOT COMPILED, NOT RUN.
 - 2026-11-06, day, MK AS AMMUNITION (`devlog-notes/2026-11-06_mk_ammo_short_death_search.md`, Bruno: "that basically makes mk an ammo counter and the pills clips"): one MK bar for each power
   (`PsychicStats.Mk(kind)`; `Nalcon` reads the selected bar; only that bar shows on the HUD), no recharge, one capsule for each power (`DrugType.Nalcon`, `NalconFire`, `NalconLift`). Every point of MK spent fills
   SHORT (`ShortPerMkPoint`). A short can kill her (killer id `short`, its own death screen row); a second wind saves her and ends the short. SCARCITY and DEEP WELL change the cost. `FireTeam`: suppression
