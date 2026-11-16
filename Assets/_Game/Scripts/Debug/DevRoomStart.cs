@@ -11,7 +11,8 @@ namespace GlorifiedBody.DebugTools
     /// <summary>
     /// A manual test from one room of the demo (Bruno, 2026-11-15: "get the player dragged to the dining hall so i won't have
     /// to test the whole level"). It loads the demo, skips the opening (the wake, the frame), refills her as F7 does, and puts
-    /// her at the point in that room. The rooms before it stay as they are at the start: nothing there is dead or open.
+    /// her at the point in that room. Every figure outside that room is parked (inactive): with the rooms before it still full,
+    /// the gunfire of the hall called G2's four, and G2's gunfire called G5's four (Bruno, 2026-11-16: "at least 12 enemies").
     /// Dev only: the TEST ROOMS column of the main menu.
     /// </summary>
     public sealed class DevRoomStart : MonoBehaviour
@@ -58,11 +59,18 @@ namespace GlorifiedBody.DebugTools
             GameObject lucy = GameObject.FindGameObjectWithTag("Player");
             GlorifiedBody.Rooms.Room room = GlorifiedBody.Rooms.Room.Of(roomId);
             if (lucy == null || room == null) { Fail(lucy == null ? "no Lucy" : "no room " + roomId); yield break; }
+            int parked = 0;
+            foreach (GlorifiedBody.Interaction.FeedableBody figure in FindObjectsByType<GlorifiedBody.Interaction.FeedableBody>(FindObjectsSortMode.None))
+            {
+                if (GlorifiedBody.Rooms.Room.At(figure.transform.position) == room) continue;
+                figure.gameObject.SetActive(false);
+                parked++;
+            }
             // The frame leaves her with MK 0 and SHORT 90: the F7 refill (HP, MK, SHORT 0, two drugs of each).
             DebugCheatKeys cheats = FindFirstObjectByType<DebugCheatKeys>();
             if (cheats == null || !cheats.Refill()) lucy.GetComponent<PsychicStats>()?.RefillAll();
             lucy.GetComponent<TankController>().Teleport(room.transform.position + local, yaw);
-            Debug.Log($"[DevRoomStart] she starts in {roomId} at {local}.");
+            Debug.Log($"[DevRoomStart] she starts in {roomId} at {local}, {parked} figures of other rooms parked.");
             Destroy(gameObject);
         }
 
