@@ -59,7 +59,7 @@ namespace GlorifiedBody.UI
         // The enemy telegraph (Bruno, 2026-10-20): the circle is drawn here, over the locked aim point (her), so a
         // fixed camera that hides the shooter still shows the heads-up. An arrow at the screen edge points at a
         // shooter outside the frame while it aims or telegraphs.
-        private const int MaxThreats = 4;
+        private const int MaxThreats = 8; // the dining hall: six soldiers and the armour (2026-11-16)
         private readonly List<RectTransform> threatRings = new List<RectTransform>();
         private readonly List<Image> threatRingImages = new List<Image>();
         private readonly List<RectTransform> threatArrows = new List<RectTransform>();
@@ -803,7 +803,10 @@ namespace GlorifiedBody.UI
 
         /// <summary>
         /// One ring per shooter in its telegraph, over the locked aim point (her chest), 280 to 60 px as it closes,
-        /// one turn per second. One edge arrow per shooter outside the frame while it aims or telegraphs.
+        /// one turn per second. One edge arrow per shooter outside the frame while it aims or telegraphs, and, pale, while it is
+        /// alerted and knows where she is (Bruno, 2026-11-16: "it should be visible always, when they're in alert ... enemies
+        /// that are huning and unaware do not have the indicator"). No arrow for an enemy who has not seen her, searches for her,
+        /// or whose team lost her (AlertedOnHer), so a surprise stays a surprise.
         /// </summary>
         private void UpdateThreats(Camera cam)
         {
@@ -821,14 +824,17 @@ namespace GlorifiedBody.UI
 
                 foreach (DummyShooter shooter in shooters)
                 {
-                    if (shooter == null || !shooter.isActiveAndEnabled || !shooter.AimsAtHer) continue; // suppression aims at a place, not at her: its laser is the warning
-                    bool telegraph = shooter.Current == DummyShooter.State.Telegraph;
-                    bool aiming = shooter.Current == DummyShooter.State.Aiming;
-                    if (!telegraph && !aiming) continue;
+                    if (shooter == null || !shooter.isActiveAndEnabled) continue;
+                    // Suppression aims at a place, not at her: its laser is the warning, and it counts only as alerted.
+                    bool telegraph = shooter.AimsAtHer && shooter.Current == DummyShooter.State.Telegraph;
+                    bool aiming = shooter.AimsAtHer && shooter.Current == DummyShooter.State.Aiming;
+                    bool alerted = AlertedOnHer(shooter);
+                    if (!telegraph && !aiming && !alerted) continue;
                     Color threatColour = telegraph ? Color.Lerp(new Color(1f, 0.6f, 0.2f), new Color(1f, 0.15f, 0.1f), shooter.TelegraphProgress) : new Color(1f, 0.6f, 0.2f);
                     attackIcons.TryGetValue(shooter.CurrentAttack, out Sprite icon);
 
                     // The icon next to the circle, from the laser on: the circle's upper right, on its edge.
+                    if (!telegraph && !aiming) icon = null; // alerted only: an arrow, no attack yet
                     if (icon != null && icons < MaxThreats && ToCanvas(cam, shooter.AimPoint, out Vector2 iconAt))
                     {
                         float ringSize = telegraph ? Mathf.Lerp(280f, 60f, shooter.TelegraphProgress) : 280f;
@@ -874,7 +880,7 @@ namespace GlorifiedBody.UI
                     if (!arrow.gameObject.activeSelf) arrow.gameObject.SetActive(true);
                     arrow.anchoredPosition = local;
                     arrow.localEulerAngles = new Vector3(0f, 0f, Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg - 90f); // the sprite points up
-                    threatArrowImages[arrows].color = telegraph ? new Color(1f, 0.15f, 0.1f) : new Color(1f, 0.6f, 0.2f);
+                    threatArrowImages[arrows].color = telegraph ? new Color(1f, 0.15f, 0.1f) : aiming ? new Color(1f, 0.6f, 0.2f) : AlertArrow;
                     // The attack icon on the inner side of the arrow, upright.
                     RectTransform arrowIcon = arrowIcons[arrows];
                     arrowIconImages[arrows].enabled = icon != null;
@@ -894,6 +900,21 @@ namespace GlorifiedBody.UI
             ActiveThreatIcons = icons;
             ActiveThreatRings = rings;
             ActiveThreatArrows = arrows;
+        }
+
+        /// <summary>The colour of an arrow for an alerted enemy that does not aim yet: pale, under the orange of an aim.</summary>
+        public static readonly Color AlertArrow = new Color(1f, 0.85f, 0.45f, 0.6f);
+
+        /// <summary>
+        /// The enemy fights her and knows where she is: alerted, not dead, not cowering, not searching, and his fire team has
+        /// not lost her. A training dummy (no brain) never counts.
+        /// </summary>
+        public static bool AlertedOnHer(DummyShooter shooter)
+        {
+            SoldierBrain brain = shooter.GetComponent<SoldierBrain>();
+            if (brain == null || !brain.Alerted) return false;
+            if (brain.Current == SoldierBrain.Phase.Dead || brain.Current == SoldierBrain.Phase.Cower || brain.Current == SoldierBrain.Phase.Search) return false;
+            return brain.Team == null || !brain.Team.HerHidden;
         }
 
         private bool ToCanvas(Camera cam, Vector3 world, out Vector2 local)
