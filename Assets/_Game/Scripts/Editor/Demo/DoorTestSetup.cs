@@ -55,7 +55,7 @@ namespace GlorifiedBody.Editor.Demo
             return spec;
         }
 
-        [MenuItem("GlorifiedBody/Build Door Test Room (lock, breach, bang)")]
+        [MenuItem("GlorifiedBody/Test Rooms/Door Test (lock, breach, bang)", priority = 112)]
         public static void BuildDoorTest()
         {
             Directory.CreateDirectory(MenuLoopSetup.ScenesFolder);

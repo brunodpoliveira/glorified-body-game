@@ -32,7 +32,7 @@ namespace GlorifiedBody.Editor
         /// <summary>Just outside the alcove's mouth.</summary>
         public static readonly Vector3 AlcoveMouth = new Vector3(5.4f, 0f, 2.1f);
 
-        [MenuItem("GlorifiedBody/Build Civilian Test Room")]
+        [MenuItem("GlorifiedBody/Test Rooms/Civilian Test", priority = 103)]
         public static void BuildCivilianTest()
         {
             Scene scene = MenuLoopSetup.OpenOrCreate(ScenePath);

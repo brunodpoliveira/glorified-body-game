@@ -34,7 +34,7 @@ namespace GlorifiedBody.Editor
         public const string Door = "Door_Store";
         public const float Width = 20f, Depth = 14f, Height = 3f;
 
-        [MenuItem("GlorifiedBody/Build Lab Test Room (armed civilians, a carried key)")]
+        [MenuItem("GlorifiedBody/Test Rooms/Lab Test (armed civilians, a carried key)", priority = 104)]
         public static void BuildLabTest()
         {
             BreakableAssets.EnsureAll();

@@ -28,7 +28,7 @@ namespace GlorifiedBody.Editor
         public const float Width = 24f, Depth = 16f, Height = 3.5f;
         public const float RailZ = 3f, GateX = 8f, GateZ = 6f;
 
-        [MenuItem("GlorifiedBody/Build Edgar Test Room (figures, a boss, a puzzle guard, a switch)")]
+        [MenuItem("GlorifiedBody/Test Rooms/Edgar Test (figures, a boss, a puzzle guard, a switch)", priority = 111)]
         public static void BuildEdgarTest()
         {
             Scene scene = MenuLoopSetup.OpenOrCreate(ScenePath);

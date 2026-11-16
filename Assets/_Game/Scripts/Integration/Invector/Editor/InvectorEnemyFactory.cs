@@ -130,7 +130,7 @@ namespace GlorifiedBody.Integration.Invector.Build
         /// then each figure as BuildSoldier makes it, saved and removed. A room's EnemySpawn markers load them at run time.
         /// Batch: tools/unity.sh exec GlorifiedBody.Integration.Invector.Build.InvectorEnemyFactory.BuildEnemyPrefabs
         /// </summary>
-        [MenuItem("GlorifiedBody/Build Enemy Prefabs (the room kit)")]
+        [MenuItem("GlorifiedBody/Content/Build Enemy Prefabs (after a vendor import)", priority = 22)]
         public static void BuildEnemyPrefabs()
         {
             if (!AssetDatabase.IsValidFolder(PrefabFolder))

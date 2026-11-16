@@ -36,7 +36,7 @@ namespace GlorifiedBody.Editor.Demo
         // The stair room S1 in the world (floor 2's frame): 3 m wide, from W12's south door (z -14) down to G1 (z -26).
         public const float StairX0 = 13.5f, StairX1 = 16.5f, StairTop = -14f, StairBottom = -26f, StairRampTop = -16f, StairRampBottom = -24f;
 
-        [MenuItem("GlorifiedBody/Demo/Build the world (both floors)")]
+        [MenuItem("GlorifiedBody/Demo/Build the World (both floors)", priority = 1)]
         public static void BuildAll()
         {
             Directory.CreateDirectory(DemoRoom.Folder);

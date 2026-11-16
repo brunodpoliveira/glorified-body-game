@@ -29,7 +29,7 @@ namespace GlorifiedBody.Editor
         public static readonly string[] Civilians = { "Lab_K4", "Nurse_K5" };
         public const float Width = 20f, Depth = 14f, Height = 3f;
 
-        [MenuItem("GlorifiedBody/Build Kit Test Room (everything together)")]
+        [MenuItem("GlorifiedBody/Test Rooms/Kit Test (everything together)", priority = 100)]
         public static void BuildKitTest()
         {
             BreakableAssets.EnsureAll();

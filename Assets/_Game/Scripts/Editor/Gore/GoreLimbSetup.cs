@@ -17,7 +17,7 @@ namespace GlorifiedBody.Editor.Gore
         private const string Vendor = "Assets/ThatIndividual STORE ASSETS/GoreSystemsByThatIndividual/Prefabs/";
         private const string Ours = "Assets/_Game/Prefabs/Gore/ThatIndividual/";
 
-        [MenuItem("GlorifiedBody/Gore/Assign Limb And Pool Parts")]
+        [MenuItem("GlorifiedBody/Gore/Assign Limb And Pool Parts", priority = 40)]
         public static void Assign()
         {
             var profile = AssetDatabase.LoadAssetAtPath<ThatIndividualGoreProfile>(ProfilePath);

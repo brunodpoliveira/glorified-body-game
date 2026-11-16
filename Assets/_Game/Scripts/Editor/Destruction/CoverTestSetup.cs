@@ -30,7 +30,7 @@ namespace GlorifiedBody.Editor.Destruction
         public static readonly Vector3 LucyStart = new Vector3(0f, 0f, -4.5f);
         public static readonly string[] SoldierNames = { "Rifleman_A", "Soldier_B" };
 
-        [MenuItem("GlorifiedBody/Build Cover Test Room")]
+        [MenuItem("GlorifiedBody/Test Rooms/Cover Test", priority = 102)]
         public static void BuildCoverTest()
         {
             BreakableAssets.EnsureAll();

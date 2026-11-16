@@ -32,7 +32,7 @@ namespace GlorifiedBody.Editor
         private static readonly int[] At150 = { 150 };
         private static readonly int[] At200 = { 200 };
 
-        [MenuItem("GlorifiedBody/Create Difficulty Modules")]
+        [MenuItem("GlorifiedBody/Content/Create Difficulty Modules", priority = 25)]
         public static void CreateAll()
         {
             if (!AssetDatabase.IsValidFolder("Assets/_Game"))

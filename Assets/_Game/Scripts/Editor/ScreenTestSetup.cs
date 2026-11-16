@@ -42,7 +42,7 @@ namespace GlorifiedBody.Editor
             new TapeLine { at = 15.5f, speaker = "SCREEN", text = "A pause stops it with the world." },
         };
 
-        [MenuItem("GlorifiedBody/Build Screen Test Room (a CRT wall, a CRT on a cart)")]
+        [MenuItem("GlorifiedBody/Test Rooms/Screen Test (a CRT wall, a CRT on a cart)", priority = 108)]
         public static void BuildScreenTest()
         {
             Directory.CreateDirectory(MenuLoopSetup.ScenesFolder);

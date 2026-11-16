@@ -27,7 +27,7 @@ namespace GlorifiedBody.Editor
         public static readonly Vector3 LucyStart = new Vector3(0f, 0f, -5f);
         public static readonly string[] SoldierNames = { "Soldier_A", "Guard_B", "Armour_C", "Gasser_D" };
 
-        [MenuItem("GlorifiedBody/Build AI Test Room")]
+        [MenuItem("GlorifiedBody/Test Rooms/AI Test", priority = 101)]
         public static void BuildAiTest()
         {
             Scene scene = MenuLoopSetup.OpenOrCreate(ScenePath);

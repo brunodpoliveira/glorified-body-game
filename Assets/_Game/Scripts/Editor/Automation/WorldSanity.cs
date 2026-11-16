@@ -34,7 +34,7 @@ namespace GlorifiedBody.Editor.Automation
             public string detail;
         }
 
-        [MenuItem("GlorifiedBody/Automation/World Sanity (Active Scene)")]
+        [MenuItem("GlorifiedBody/Checks/World Sanity (the open scene)", priority = 60)]
         public static void RunOnActiveSceneMenu()
         {
             List<Check> checks = CheckActiveScene();

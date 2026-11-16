@@ -63,7 +63,7 @@ namespace GlorifiedBody.Editor.Demo
         public static ItemDefinition Card() =>
             ItemAssets.Item(CardId, "THE TEST CARD", ItemKind.Key, ItemAssets.KeyColour, "A white card. It opens the closet, when its code is current.", "", DrugType.Nalcon);
 
-        [MenuItem("GlorifiedBody/Build Code Test Room (card, rotated code, terminal)")]
+        [MenuItem("GlorifiedBody/Test Rooms/Code Test (card, rotated code, terminal)", priority = 113)]
         public static void BuildCodeTest()
         {
             Directory.CreateDirectory(MenuLoopSetup.ScenesFolder);

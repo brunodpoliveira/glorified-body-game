@@ -27,7 +27,7 @@ namespace GlorifiedBody.Editor
         public static readonly Vector3 HerPoint = new Vector3(-3f, 0f, -3f);
         public static readonly Vector3 BoxA = new Vector3(-3f, 0f, -0.8f), BoxB = new Vector3(-1f, 0f, -1.2f);
 
-        [MenuItem("GlorifiedBody/Build Physics Test Room (boxes, a plate, a gate)")]
+        [MenuItem("GlorifiedBody/Test Rooms/Physics Test (boxes, a plate, a gate)", priority = 110)]
         public static void BuildPhysicsTest()
         {
             Scene scene = MenuLoopSetup.OpenOrCreate(ScenePath);

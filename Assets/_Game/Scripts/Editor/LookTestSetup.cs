@@ -78,13 +78,10 @@ namespace GlorifiedBody.Editor
         private static int RoomLayerMask => 1 << LayerMask.NameToLayer("Default");
         private static int CharacterLayerMask => LayerMask.GetMask("Player", "Enemy");
 
-        [MenuItem("GlorifiedBody/Build Look Test (the Gallery)")]
         public static void BuildLookTest() => Build(gallery: true, second: false);
 
-        [MenuItem("GlorifiedBody/Build Look Test 2 (corridor, recovery, gym)")]
         public static void BuildLookTest2() => Build(gallery: false, second: true);
 
-        [MenuItem("GlorifiedBody/Build Look Tests (both)")]
         public static void BuildAll() => Build(gallery: true, second: true);
 
         private static void Build(bool gallery, bool second)
@@ -116,7 +113,6 @@ namespace GlorifiedBody.Editor
         /// dressing hides them (no bounce, the ruling), the baked dressing and the plate show them.
         /// Batch: tools/unity.sh exec GlorifiedBody.Editor.LookTestSetup.BakeAll
         /// </summary>
-        [MenuItem("GlorifiedBody/Bake Look Tests (the bounce light)")]
         public static void BakeAll()
         {
             foreach (string path in ScenePaths) Bake(path);
@@ -351,7 +347,6 @@ namespace GlorifiedBody.Editor
         /// dither skipped them) leave every renderer (GB_Full, GB_Expensive, the remake's GB_RemakeDither), and the shader
         /// and its material go. Run once: tools/unity.sh exec GlorifiedBody.Editor.LookTestSetup.RemoveDither
         /// </summary>
-        [MenuItem("GlorifiedBody/Rendering/Remove the dither")]
         public static void RemoveDither()
         {
             int removed = 0;

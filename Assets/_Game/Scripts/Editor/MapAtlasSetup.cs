@@ -84,7 +84,7 @@ namespace GlorifiedBody.Editor
             { "G18", "THE DINING HALL" }, { "G19", "THE KITCHEN" }, { "G17", "SERVER ROOM" }, { "G17b", "FACILITIES" }, // 2026-11-10
         };
 
-        [MenuItem("GlorifiedBody/Build Map Atlas")]
+        [MenuItem("GlorifiedBody/Demo/Build the Map Atlas (after a room change)", priority = 2)]
         public static void BuildAtlas()
         {
             // The rooms first: opening a scene unloads the assets in memory, the atlas with them (as the catalog, 2026-10-26).

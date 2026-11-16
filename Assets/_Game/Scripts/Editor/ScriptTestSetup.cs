@@ -26,7 +26,7 @@ namespace GlorifiedBody.Editor
         public const string TestCutscenePath = CutscenesFolder + "/cutscene_test.asset";
         public const string UltimatumFlag = "ultimatum_done";
 
-        [MenuItem("GlorifiedBody/Build Script Test (sequence, gate, cutscene)")]
+        [MenuItem("GlorifiedBody/Test Rooms/Script Test (sequence, gate, cutscene)", priority = 106)]
         public static void BuildScriptTest()
         {
             CutsceneAsset cutscene = BuildTestCutscene();

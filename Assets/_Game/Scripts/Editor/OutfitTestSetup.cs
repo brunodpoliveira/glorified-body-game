@@ -32,7 +32,7 @@ namespace GlorifiedBody.Editor
         public static readonly Vector3 GrabCentre = new Vector3(7f, 0f, -2f);
         public const int Pills = 6;
 
-        [MenuItem("GlorifiedBody/Build Outfit Test Room (a locker with the uniform, pills, the grab)")]
+        [MenuItem("GlorifiedBody/Test Rooms/Outfit Test (a locker, the uniform, the grab)", priority = 109)]
         public static void BuildOutfitTest()
         {
             Scene scene = MenuLoopSetup.OpenOrCreate(ScenePath);

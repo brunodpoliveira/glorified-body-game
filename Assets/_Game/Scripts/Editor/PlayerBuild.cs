@@ -43,10 +43,10 @@ namespace GlorifiedBody.Editor
             return scenes;
         }
 
-        [MenuItem("GlorifiedBody/Build/Release (Linux)")]
+        [MenuItem("GlorifiedBody/Player Build/Release (Linux)", priority = 90)]
         public static void Release() => Build(dev: false);
 
-        [MenuItem("GlorifiedBody/Build/Dev (Linux)")]
+        [MenuItem("GlorifiedBody/Player Build/Dev (Linux)", priority = 91)]
         public static void Dev() => Build(dev: true);
 
         private static void Build(bool dev)

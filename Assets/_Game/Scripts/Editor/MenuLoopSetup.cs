@@ -39,7 +39,7 @@ namespace GlorifiedBody.Editor
         public const string ResourcesFolder = "Assets/_Game/Resources";
         public const string DeathContentPath = ResourcesFolder + "/" + DeathMenuUI.ContentResourceName + ".asset";
 
-        [MenuItem("GlorifiedBody/Build Menu Loop Scenes")]
+        [MenuItem("GlorifiedBody/Demo/Build the Main Menu", priority = 3)]
         public static void BuildMenuLoopScenes()
         {
             Directory.CreateDirectory(ScenesFolder);

@@ -39,7 +39,6 @@ namespace GlorifiedBody.Editor
         public static readonly Vector3 RedAt = new Vector3(7.27f, 1.15f, 5.3f);
         public static readonly Vector3 TealAt = new Vector3(7.25f, 1.6f, 7.75f);
 
-        [MenuItem("GlorifiedBody/T38 Arkham Look/Build both rooms")]
         public static void Build()
         {
             foreach (string f in new[] { Root, TexturesFolder, MaterialsFolder, SettingsFolder }) Directory.CreateDirectory(f);
@@ -52,7 +51,6 @@ namespace GlorifiedBody.Editor
         }
 
         /// <summary>The grades only (after tools/ak_lut.py wrote new LUTs). Batch: ...ArkhamLookSetup.Grades</summary>
-        [MenuItem("GlorifiedBody/T38 Arkham Look/Grades only")]
         public static void Grades()
         {
             ImportTextures();

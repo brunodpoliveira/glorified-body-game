@@ -32,7 +32,6 @@ namespace GlorifiedBody.Editor
         public const float SunIntensity = 2.2f;
         public static readonly Vector3 SunAngles = new Vector3(32f, -38f, 0f);
 
-        [MenuItem("GlorifiedBody/Build Look Test Exterior (the yard)")]
         public static void BuildExterior()
         {
             Directory.CreateDirectory(MenuLoopSetup.ScenesFolder);
@@ -161,7 +160,6 @@ namespace GlorifiedBody.Editor
         }
 
         /// <summary>The bounce of the sun and the sky (minutes on the CPU lightmapper): 4 texels a metre, indirect only.</summary>
-        [MenuItem("GlorifiedBody/Bake Look Test Exterior")]
         public static void BakeExterior()
         {
             LookTestSetup.Bake(ScenePath, EnsureLightingSettings());

@@ -85,7 +85,7 @@ namespace GlorifiedBody.Editor
             return box;
         }
 
-        [MenuItem("GlorifiedBody/Build Tutorial")]
+        [MenuItem("GlorifiedBody/Demo/Build the Tutorial", priority = 4)]
         public static void BuildTutorial()
         {
             Directory.CreateDirectory(MenuLoopSetup.ScenesFolder);

@@ -739,7 +739,10 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   shared with the foyer), the altar on three round steps in the centre, a screen of brass flakes, a skylight disc, six pews in an arc, the gear and
   the verse on the west arc. DEMO: DINING HALL in the TEST ROOMS column (`DebugTools/DevRoomStart`: the demo, no opening, the F7 refill, in G18).
   The H6 EXTEND button sits on a console (TUBE CONTROL); the tube already starts retracted in play (a `FlagGate`). G13b has no beat, and it is a
-  hall of 16 x 8 m now (Bruno: "wider and larger"; x -12 to 4, z -8 to 0, the ridge at 7.2 m). NOT COMPILED,
+  hall of 16 x 8 m now (Bruno: "wider and larger"; x -12 to 4, z -8 to 0, the ridge at 7.2 m).
+- 2026-11-15, THE EDITOR MENU (`devlog-notes/2026-11-15_editor_menu.md`, Bruno: "keep only the useful ones for a production pipeline"):
+  `GlorifiedBody/` has seven groups (Demo, Content, Gore, Checks, Scene View, Player Build, Test Rooms), 35 entries. The look tests, T26, T38
+  and the dither have no menu entry now; their methods stay for `tools/unity.sh exec`. A new builder goes into its group with a priority. NOT COMPILED,
   NOT RUN (Bruno's RAM): run `DemoWorld.BuildAll`, `MapAtlasSetup.BuildAtlas`, then `DemoTests`. Numbers PROPOSED.
 
 ## Rules

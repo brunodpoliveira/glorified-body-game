@@ -43,7 +43,7 @@ namespace GlorifiedBody.Editor
             }
         }
 
-        [MenuItem("GlorifiedBody/Scene View/Hide Roofs")]
+        [MenuItem("GlorifiedBody/Scene View/Hide Roofs", priority = 70)]
         public static void HideRoofs()
         {
             GameObject[] roofs = Roofs();
@@ -51,7 +51,7 @@ namespace GlorifiedBody.Editor
             Debug.Log($"[SceneViewTools] {roofs.Length} roofs hidden in the Scene view");
         }
 
-        [MenuItem("GlorifiedBody/Scene View/Show Roofs")]
+        [MenuItem("GlorifiedBody/Scene View/Show Roofs", priority = 71)]
         public static void ShowRoofs()
         {
             GameObject[] roofs = Roofs();

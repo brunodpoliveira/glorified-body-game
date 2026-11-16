@@ -25,7 +25,7 @@ namespace GlorifiedBody.Editor
         public const string EntryFromA = "Entry_FromA"; // in B, inside its west door
         public const string EntryFromB = "Entry_FromB"; // in A, inside its east door
 
-        [MenuItem("GlorifiedBody/Build Travel Test (two rooms)")]
+        [MenuItem("GlorifiedBody/Test Rooms/Travel Test (two rooms)", priority = 107)]
         public static void BuildTravelTest()
         {
             // Room A: 12 x 10 m, the door in the east wall at z 0.

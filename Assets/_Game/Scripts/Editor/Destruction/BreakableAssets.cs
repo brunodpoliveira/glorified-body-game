@@ -59,7 +59,7 @@ namespace GlorifiedBody.Editor.Destruction
             AssetDatabase.SaveAssets();
         }
 
-        [MenuItem("GlorifiedBody/Breakables/Build Assets")]
+        [MenuItem("GlorifiedBody/Content/Build Breakable Assets", priority = 23)]
         public static void EnsureAll()
         {
             EnsureDebrisLayer();

@@ -33,7 +33,7 @@ namespace GlorifiedBody.Editor.Gore
             ("M_TI_Spray_bloodFlying_2_Trail", "bloodFlyingTextured"),
         };
 
-        [MenuItem("GlorifiedBody/Gore/Use Textured Sprays")]
+        [MenuItem("GlorifiedBody/Gore/Use Textured Sprays", priority = 42)]
         public static void UseTexturedSprays()
         {
             int done = 0;

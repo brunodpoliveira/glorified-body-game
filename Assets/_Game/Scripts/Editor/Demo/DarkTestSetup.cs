@@ -52,7 +52,7 @@ namespace GlorifiedBody.Editor.Demo
             return spec;
         }
 
-        [MenuItem("GlorifiedBody/Build Dark Test Room (lights out, the UPS order)")]
+        [MenuItem("GlorifiedBody/Test Rooms/Dark Test (lights out, the UPS order)", priority = 114)]
         public static void BuildDarkTest()
         {
             Directory.CreateDirectory(MenuLoopSetup.ScenesFolder);

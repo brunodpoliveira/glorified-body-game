@@ -14,7 +14,7 @@ namespace GlorifiedBody.Editor
     {
         private const string Resources = "Assets/_Game/Resources";
 
-        [MenuItem("GlorifiedBody/Create Power Assets")]
+        [MenuItem("GlorifiedBody/Content/Create Power Assets", priority = 26)]
         public static void CreateAll()
         {
             EnsureFolder("Assets", "_Game");

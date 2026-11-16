@@ -40,7 +40,7 @@ namespace GlorifiedBody.Editor
             ("power_armour_launchers", "power_armour", "PLACEHOLDER: the rocket's trail, the armour behind it", "PLACEHOLDER HINT: a rocket follows the laser. Dodge to the side, or catch it with mk_orzabal and send it back."),
         };
 
-        [MenuItem("GlorifiedBody/Build Death Screen Content")]
+        [MenuItem("GlorifiedBody/Content/Build Death Screen Content (after the writer's CSV changes)", priority = 24)]
         public static void Build()
         {
             DeathScreenContent content = AssetDatabase.LoadAssetAtPath<DeathScreenContent>(MenuLoopSetup.DeathContentPath);

@@ -35,7 +35,7 @@ namespace GlorifiedBody.Editor
         public const float Width = 20f, Depth = 14f, Height = 3f;
         public static readonly Vector3 BedTop = new Vector3(-6.4f, 0.55f, 5.9f); // the patient sits at the head end, facing east
 
-        [MenuItem("GlorifiedBody/Build Ward Test Room (a patient, a scan on a person, feeding)")]
+        [MenuItem("GlorifiedBody/Test Rooms/Ward Test (a patient, a scan on a person, feeding)", priority = 105)]
         public static void BuildWardTest()
         {
             Scene scene = MenuLoopSetup.OpenOrCreate(ScenePath);

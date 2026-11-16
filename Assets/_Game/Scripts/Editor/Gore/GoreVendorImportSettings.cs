@@ -26,7 +26,7 @@ namespace GlorifiedBody.Editor.Gore
         public const int MaxSize = 2048;
         private static readonly string[] Platforms = { "Standalone" };
 
-        [MenuItem("GlorifiedBody/Gore/Re-import ThatIndividual Textures")]
+        [MenuItem("GlorifiedBody/Gore/Re-import ThatIndividual Textures", priority = 41)]
         public static void Apply()
         {
             var paths = new List<string>();

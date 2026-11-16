@@ -55,10 +55,8 @@ namespace GlorifiedBody.Editor
         // The long lens (switch 10): from the south-west corner, beside the locker, onto the bed, the lamp and the curtain.
         public static readonly Vector3 LongCamPos = new Vector3(2.55f, 1.55f, 2.75f), LongCamAt = new Vector3(6.3f, 1.05f, 6.4f);
 
-        [MenuItem("GlorifiedBody/T26 Remake Look/Build (the dark room)")]
         public static void Build() => Build(false);
 
-        [MenuItem("GlorifiedBody/T26 Remake Look/Build (the bright room)")]
         public static void BuildBright() => Build(true);
 
         private static void Build(bool brightRoom)
@@ -289,7 +287,6 @@ namespace GlorifiedBody.Editor
         /// Batch: tools/unity.sh exec GlorifiedBody.Editor.RemakeLookSetup.Bake
         /// </summary>
         /// <summary>The grade alone (switch 6), no new scene and no new bake. Batch: ...RemakeLookSetup.Grade</summary>
-        [MenuItem("GlorifiedBody/T26 Remake Look/Grade only")]
         public static void Grade()
         {
             EnsureGrade();
@@ -297,10 +294,8 @@ namespace GlorifiedBody.Editor
             Debug.Log("[RemakeLookSetup] grade written.");
         }
 
-        [MenuItem("GlorifiedBody/T26 Remake Look/Bake the dark room (low, then high)")]
         public static void Bake() => Bake(ScenePath);
 
-        [MenuItem("GlorifiedBody/T26 Remake Look/Bake the bright room (low, then high)")]
         public static void BakeBright() => Bake(BrightScenePath);
 
         private static void Bake(string path)

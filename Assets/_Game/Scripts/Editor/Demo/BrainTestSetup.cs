@@ -51,7 +51,7 @@ namespace GlorifiedBody.Editor.Demo
             return spec;
         }
 
-        [MenuItem("GlorifiedBody/Build Brain Test Room (the brain fight)")]
+        [MenuItem("GlorifiedBody/Test Rooms/Brain Test (the brain fight)", priority = 115)]
         public static void BuildBrainTest()
         {
             Directory.CreateDirectory(MenuLoopSetup.ScenesFolder);

@@ -53,7 +53,7 @@ namespace GlorifiedBody.Editor.Characters
 
         public static IEnumerable<string> ClassIds { get { foreach (ClassDef c in Classes) yield return c.id; } }
 
-        [MenuItem("GlorifiedBody/Build Characters")]
+        [MenuItem("GlorifiedBody/Content/Build Characters", priority = 20)]
         public static void BuildAll()
         {
             EnsureFolder("Assets/_Game", "Characters");
@@ -127,7 +127,7 @@ namespace GlorifiedBody.Editor.Characters
         /// (frustrated_02 for the head pain at the start of the short, hurt for the sit). Both files come from
         /// tools/characters_export.py on the 3D Studio file with the motions.
         /// </summary>
-        [MenuItem("GlorifiedBody/Build Pose Clips")]
+        [MenuItem("GlorifiedBody/Content/Build Pose Clips", priority = 21)]
         public static void BuildPoseClips()
         {
             EnsureFolder("Assets/_Game/Resources", "Characters");
