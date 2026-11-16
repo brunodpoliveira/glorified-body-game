@@ -24,9 +24,29 @@ All of it in the Hold, before the gap. To kill him still drops the card.
 3. `DemoHold.H6`: the scan of the card reader is gone. The card door and its sign "AIRLOCK CARD REQUIRED." stay.
 4. `HoldTests.TheCard_DeniedBeforeTheScanOfHim_...`: the scan on him in H2.
 
+## Later: the card door on her side, two scans
+
+Bruno:
+
+```text
+there's also a scannable card reader near the drop, that can be scanned and will also point to the card the scientist holds; we'll add a glass lock on the player's end to avoid the player floating and smacking onto the lock. they'll see the locked glass door right away and knows there needs to be unlocked
+
+that way the player has two chances to use the scan hability
+```
+
+1. The card door moved from the landing H6 to the airlock H5: a locked glass door in the doorway to the tube, on her side
+   of the gap. She sees it before the ride. The sign "AIRLOCK CARD REQUIRED." and a card reader stand beside it.
+2. The scan of that reader (C11) and the scan of the scientist both raise `hold_c11`. After either one, he gives the card.
+3. The way from the landing to the gallery H7 is open.
+4. The glass is on the Ignore Raycast layer, as the booth's panes. The gap camera, the room cull and her powers see
+   through it. Her body and the gurney do not pass until the card opens it.
+5. The card's text: "It opens the glass door of the airlock, to the tube."
+6. `HoldTests`: the card test opens the airlock door, and the ride test opens it before the crossing.
+
 ## For the writer
 
 `DEMO_PLAN.md` puts the scan on the reader in four places: the C11 row, the H2 row, the H6 row and beat 5b. The scan is
-on the scientist now. His line "It opens the landing" still fits.
+on the scientist and on a reader in the airlock now, and the card door is in the airlock. His line "It opens the landing"
+does not fit any more: the card opens the airlock.
 
 NOT COMPILED, NOT RUN (no free RAM for Unity).

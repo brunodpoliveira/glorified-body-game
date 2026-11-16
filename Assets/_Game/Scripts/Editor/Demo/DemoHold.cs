@@ -209,8 +209,9 @@ namespace GlorifiedBody.Editor.Demo
             runner.escapeLines = new[] { Bark("h2_runner_1"), Bark("h2_runner_2") };
             runner.cowerFlag = RunnerCowered;
             runner.giveAfterFlag = CardScanned;
-            // The scan C11 is on him (Bruno, 2026-11-16: the reader on the landing, then back over the gap to ask, was "too obtuse";
-            // his pick: "scan him"). Ask: he lies. Scan him: the card on his lanyard. Ask again: he gives it. All in the Hold.
+            // The scan C11 is on him too (Bruno, 2026-11-16: the reader on the landing, then back over the gap to ask, was "too obtuse";
+            // his pick: "scan him"). Ask: he lies. Scan him, or the card reader by the airlock's glass door: the card on his lanyard.
+            // Ask again: he gives it. All in the Hold.
             runner.scanImage = TutorialSetup.EnsureScanImage();
             runner.scanCaption = DemoPlan.ScanCard("C11", "PLACEHOLDER (C11): a gloved hand in a light blue cuff clips a white card to a lanyard. Behind it, out of focus, the glass of the box and the steel of a treatment bench.");
             runner.scanFlag = CardScanned;
@@ -504,6 +505,23 @@ namespace GlorifiedBody.Editor.Demo
             sign.transform.rotation = Quaternion.LookRotation(Vector3.down, Vector3.left); // flat on the floor, the words read from the airlock
             r.ExtraCamera("gap", new Vector3(5.6f, 2.75f, 36.6f), new Vector3(0.0f, -2.5f, 35.3f), 74f, new Vector3(0.5f, 1.5f, DoorZ), new Vector3(5.0f, 3f, TubeWidth - 0.2f)); // the tube from x -2 to 3: the last metre before the airlock's doorway keeps its own camera (the exit rule)
 
+            // The card door is here, on her side of the gap (Bruno, 2026-11-16: "a glass lock on the player's end to avoid the player
+            // floating and smacking onto the lock. they'll see the locked glass door right away"): a glass leaf in the doorway to the
+            // tube, the sign, and the card reader beside it. A scan of the reader shows the card on the scientist of H2, as a scan of
+            // him does (CardScanned: "the player has two chances to use the scan ability"). The glass is on Ignore Raycast, as the
+            // booth's panes: the gap camera, the room cull and her powers see through it, her body and the gurney do not pass.
+            GameObject airlock = r.LockedLeaf(r.DoorTo("HT"), DemoItems.AirlockCard().itemId, "the airlock card");
+            Transform glassLeaf = airlock.transform.Find("Leaf");
+            glassLeaf.GetComponent<Renderer>().sharedMaterial = DemoRoom.Glass("airlock_glass", new Color(0.7f, 0.8f, 0.86f), 0.35f);
+            glassLeaf.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            glassLeaf.gameObject.layer = 2;
+            r.Sign("Sign_Card_Door", DemoPlan.Sign("H6, the card door", "AIRLOCK CARD REQUIRED."), new Vector3(TubeX1 + 0.17f, 1.85f, TubeZ0 - 0.75f), Vector3.right, new Vector2(1.1f, 0.24f), 30);
+            GameObject reader = r.Box(r.Props, "Card_Reader_Airlock", new Vector3(TubeX1 + 0.17f, 1.2f, TubeZ0 - 0.75f), new Vector3(0.04f, 0.18f, 0.12f), DemoRoom.Colour("reader", Color.white));
+            reader.isStatic = false;
+            r.Scan("Scan_C11", reader.transform.position + Vector3.right * 0.05f, "c11_card_reader",
+                DemoPlan.ScanCard("C11", "PLACEHOLDER (C11): a gloved hand in a light blue cuff clips a white card to a lanyard. Behind it, out of focus, the glass of the box and the steel of a treatment bench."),
+                CardScanned);
+
             r.Capsule("Capsule_H5_Orzabal", DrugType.NalconLift, new Vector3(8.4f, 0.15f, 37.4f));
             GameObject red = MenuLoopSetup.EnsureChild(r.Story, "Gate_Lockdown");
             FlagGate gate = MenuLoopSetup.EnsureComponent<FlagGate>(red);
@@ -582,10 +600,8 @@ namespace GlorifiedBody.Editor.Demo
             r.Prop("Tube_Console", new Vector3(LandingX1 - 0.325f, 0f, 33.6f), new Vector3(0.35f, 1.0f, 0.9f), 0.2f); // the button on its top; she reaches it from 0.4 m (HoldTests)
             r.Sign("Sign_Tube_Control", "TUBE CONTROL", new Vector3(LandingX1 - 0.17f, 1.75f, 33.6f), Vector3.left, new Vector2(0.9f, 0.22f), 30);
             r.Switch("Extend_Button", new Vector3(LandingX1 - 0.35f, 1.2f, 33.6f), TubeOut, "Extend the tube?", "extend the tube", "");
-            r.LockedLeaf(r.DoorTo("H7"), DemoItems.AirlockCard().itemId, "the airlock card");
-            // The plan's sign over the card door (DEMO_PLAN §7; Bruno, 2026-11-16: "it's not clear what the airlock key acutally unlocks").
-            r.Sign("Sign_Card_Door", DemoPlan.Sign("H6, the card door", "AIRLOCK CARD REQUIRED."), new Vector3(LandingDoorX, DemoRoom.DoorHeight + 0.3f, 29.17f), Vector3.forward, new Vector2(1.6f, 0.24f), 30);
-            // The scan C11 was on the card reader here until 2026-11-16: it is on the card carrier of H2 now (DemoHold.H2).
+            // The card door and the scan C11 of its reader were here until 2026-11-16: they are in the airlock H5 now, on her side of the
+            // gap (DemoHold.H5). The way from the landing to the gallery H7 is open.
         }
 
         // ── H7, the gallery ───────────────────────────────────────────

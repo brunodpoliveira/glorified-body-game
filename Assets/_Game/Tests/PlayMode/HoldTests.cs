@@ -153,7 +153,7 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator TheCard_DeniedBeforeTheScanOfHim_GivenAfterIt_AndItOpensTheLandingDoor()
+        public IEnumerator TheCard_DeniedBeforeTheScanOfHim_GivenAfterIt_AndItOpensTheAirlockGlassDoor()
         {
             yield return Freed();
             GameObject lucy = Her();
@@ -174,14 +174,14 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.AreSame(talk.GetComponent<Scannable>(), scanner.Viewing, "his own scan");
             scanner.End("test");
             Assert.IsTrue(StoryFlags.Has(DemoFlags.CardScanned), "the scan C11 raises its flag");
-            LockedDoor landing = UnityEngine.Object.FindObjectsByType<LockedDoor>(FindObjectsSortMode.None).First(d => d.GetComponentInParent<Room>().id == "H6");
+            LockedDoor landing = AirlockDoor(); // the glass door of the airlock, on her side of the gap since 2026-11-16
             StringAssert.Contains("airlock card", landing.TextFor(hand), "the door needs the airlock card");
             StringAssert.StartsWith("given:", talk.Confirm(hand), "after the scan he gives it");
             Assert.IsTrue(items.Has("airlock_card"), "the card is hers");
             Assert.AreEqual(1, talk.Denials);
             landing.Confirm(hand);
             yield return new WaitForSeconds(1.2f);
-            Assert.IsTrue(landing.IsOpen, "the card opens the door of the gallery");
+            Assert.IsTrue(landing.IsOpen, "the card opens the glass door to the tube");
             Debug.Log($"[HoldTests] the card: 1 denial before the scan, given after it, the landing door open: {landing.IsOpen}");
         }
 
@@ -401,6 +401,10 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.IsTrue(gurney.OnTop(lucy.transform), "on it all the way");
         }
 
+        /// <summary>The glass card door of the airlock H5, to the tube.</summary>
+        private static LockedDoor AirlockDoor() =>
+            UnityEngine.Object.FindObjectsByType<LockedDoor>(FindObjectsSortMode.None).First(d => d.GetComponentInParent<Room>().id == "H5");
+
         /// <summary>Steers the ride to the point: the turn keys first, then forward (a test's driver, not the player).</summary>
         private static IEnumerator Drive(Rideable ride, Vector3 point, float seconds)
         {
@@ -457,6 +461,7 @@ namespace GlorifiedBody.Tests.PlayMode
             tank.Teleport(gurney.transform.position + gurney.transform.right * 0.9f, gurney.transform.eulerAngles.y - 90f);
             yield return null;
             Assert.AreNotSame(gurney, hand.FindFocus(), "the Interact key does not reach the gurney");
+            AirlockDoor().Open(true); // the card's glass door (its own test: TheCard_...)
             gurney.transform.SetPositionAndRotation(new Vector3(2.9f, 0f, 35.5f), Quaternion.Euler(0f, 270f, 0f)); // over the gap, as the mouse brings it
             Physics.SyncTransforms();
             tank.Teleport(new Vector3(4.5f, 0f, 35.5f), 270f); // at the edge, facing the gap
