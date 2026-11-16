@@ -10,7 +10,8 @@ namespace GlorifiedBody.Editor.Characters
 {
     /// <summary>
     /// The nine T19 characters into game assets. From Assets/_Game/Characters/Models/<class>.fbx and
-    /// <class>_basecolor (tools/characters.sh wrote them) it makes: one matte URP material per class, one animator
+    /// <class>_basecolor (tools/characters.sh wrote them, plus <class>_normal and <class>_ms for a T49 class) it
+    /// makes: one URP material per class (matte, or the T49 map set), one animator
     /// controller per class (its own idle, walk and run, the Lucy or the Enemy state set), one prefab per class
     /// (the model scaled to its height, the material, the animator) and the catalog in Resources. Then it
     /// rebuilds the scenes. Idempotent.
@@ -70,8 +71,14 @@ namespace GlorifiedBody.Editor.Characters
                 string fbx = $"{ModelsFolder}/{c.id}.fbx";
                 if (!File.Exists(fbx)) { Debug.LogWarning($"[CreateCharacterAssets] missing {fbx} (run tools/characters.sh)"); continue; }
                 AssetDatabase.ImportAsset(fbx, ImportAssetOptions.ForceUpdate);
-                string tex = TexturePath(c.id);
-                if (tex != null) AssetDatabase.ImportAsset(tex, ImportAssetOptions.ForceUpdate);
+                // A new model under an old name keeps the old reference pose in its .meta: map it again.
+                CharacterImportSettings.RefreshStaleAvatar(fbx);
+                // The maps of the class and of its parts (<class>_<part>_basecolor.png and the rest: Lucy's Crown).
+                foreach (string tex in Directory.GetFiles(ModelsFolder, c.id + "_*"))
+                {
+                    string t = tex.Replace('\\', '/');
+                    if (t.EndsWith(".png") || t.EndsWith(".jpg") || t.EndsWith(".jpeg")) AssetDatabase.ImportAsset(t, ImportAssetOptions.ForceUpdate);
+                }
                 present++;
                 // The root motion decision per clip, from the measurement next to the FBX (CharacterImportSettings).
                 ClipTravelFile measured = CharacterImportSettings.ReadClipTravel(fbx);
@@ -165,6 +172,13 @@ namespace GlorifiedBody.Editor.Characters
             return null;
         }
 
+        /// <summary>An extra map of a T49 class (tools/characters_basecolor.py --maps): normal or ms. Null when absent.</summary>
+        private static string MapPath(string id, string kind)
+        {
+            string path = $"{ModelsFolder}/{id}_{kind}.png";
+            return File.Exists(path) ? path : null;
+        }
+
         private static Material BuildMaterial(string id)
         {
             string path = $"{MaterialsFolder}/{id}.mat";
@@ -182,17 +196,55 @@ namespace GlorifiedBody.Editor.Characters
 
             string texPath = TexturePath(id);
             Texture2D texture = texPath != null ? AssetDatabase.LoadAssetAtPath<Texture2D>(texPath) : null;
-            // Matte, the detail in the texture (ART_LESSONS §1.2): no gloss, no reflections, no specular.
             material.SetTexture("_BaseMap", texture);
             material.SetColor("_BaseColor", Color.white);
-            material.SetFloat("_Smoothness", 0f);
-            material.SetFloat("_Metallic", 0f);
-            material.SetFloat("_SpecularHighlights", 0f);
-            material.SetFloat("_EnvironmentReflections", 0f);
-            material.EnableKeyword("_SPECULARHIGHLIGHTS_OFF");
-            material.EnableKeyword("_ENVIRONMENTREFLECTIONS_OFF");
+            string normalPath = MapPath(id, "normal"), msPath = MapPath(id, "ms");
+            Texture2D normal = normalPath != null ? AssetDatabase.LoadAssetAtPath<Texture2D>(normalPath) : null;
+            Texture2D ms = msPath != null ? AssetDatabase.LoadAssetAtPath<Texture2D>(msPath) : null;
+            material.SetTexture("_BumpMap", normal);
+            material.SetFloat("_BumpScale", 1f);
+            material.SetTexture("_MetallicGlossMap", ms);
+            material.SetFloat("_SmoothnessTextureChannel", 0f); // the smoothness from the alpha of the metallic map
+            SetKeyword(material, "_NORMALMAP", normal != null);
+            SetKeyword(material, "_METALLICSPECGLOSSMAP", ms != null);
+            if (ms != null)
+            {
+                // A T49 map set (rounds 23, 24, 175, 178): the gloss by material is in the map. Lucy's skin is matte
+                // (smoothness 0.25), the gold veins metal 0.9 at smoothness 0.65; the cloth of the T27 bake is capped
+                // at 0.25 (ART_LESSONS §3 item 8), the hard parts keep their gloss; the Crown has its own material. _Smoothness multiplies the alpha, so 1 keeps the map as painted. A metal needs the
+                // highlights and the reflections, or the gold goes black.
+                material.SetFloat("_Smoothness", 1f);
+                material.SetFloat("_Metallic", 1f);
+                material.SetFloat("_SpecularHighlights", 1f);
+                material.SetFloat("_EnvironmentReflections", 1f);
+                SetKeyword(material, "_SPECULARHIGHLIGHTS_OFF", false);
+                SetKeyword(material, "_ENVIRONMENTREFLECTIONS_OFF", false);
+            }
+            else
+            {
+                // Matte, the detail in the texture (ART_LESSONS §1.2): no gloss, no reflections, no specular.
+                material.SetFloat("_Smoothness", 0f);
+                material.SetFloat("_Metallic", 0f);
+                material.SetFloat("_SpecularHighlights", 0f);
+                material.SetFloat("_EnvironmentReflections", 0f);
+                SetKeyword(material, "_SPECULARHIGHLIGHTS_OFF", true);
+                SetKeyword(material, "_ENVIRONMENTREFLECTIONS_OFF", true);
+            }
             EditorUtility.SetDirty(material);
             return material;
+        }
+
+        /// <summary>A mesh name as a file name: letters, digits and _ (the same rule as characters_basecolor.part_name).</summary>
+        public static string PartName(string name)
+        {
+            var chars = name.ToCharArray();
+            for (int i = 0; i < chars.Length; i++) if (!char.IsLetterOrDigit(chars[i])) chars[i] = '_';
+            return new string(chars);
+        }
+
+        private static void SetKeyword(Material material, string keyword, bool on)
+        {
+            if (on) material.EnableKeyword(keyword); else material.DisableKeyword(keyword);
         }
 
         /// <summary>The clips inside an FBX of ours, by their names (idle, walk, run after the import settings).</summary>
@@ -392,10 +444,19 @@ namespace GlorifiedBody.Editor.Characters
 
             foreach (Renderer renderer in instance.GetComponentsInChildren<Renderer>())
             {
-                renderer.sharedMaterial = material;
+                // A part with its own maps (tools/characters_basecolor.py --maps: <class>_<part>) has its own material.
+                string partId = c.id + "_" + PartName(renderer.name);
+                renderer.sharedMaterial = TexturePath(partId) != null ? BuildMaterial(partId) : material;
                 renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
                 if (renderer is SkinnedMeshRenderer skinned) skinned.updateWhenOffscreen = true;
             }
+
+            // Every model carries its character layer itself: Lucy on Player, every other figure on Enemy (the plate
+            // draws the character layers over the room). The scenes put the layer on each node of the instance as an
+            // override; a new model brings a node the old overrides do not name (the T49 meshes, 2026-11-16), and
+            // that node keeps the prefab's layer.
+            int layer = LayerMask.NameToLayer(c.role == CharacterRole.Player ? "Player" : "Enemy");
+            if (layer >= 0) foreach (Transform t in root.GetComponentsInChildren<Transform>(true)) t.gameObject.layer = layer;
 
             GameObject prefab = PrefabUtility.SaveAsPrefabAsset(root, path);
             Object.DestroyImmediate(root);

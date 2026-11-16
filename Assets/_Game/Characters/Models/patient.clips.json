@@ -1,5 +1,5 @@
 {
-  "source": "patient_animated.glb",
+  "source": "patient_t49_game.glb",
   "hips": "mixamorig:Hips",
   "chain": [
     "Armature",
@@ -11,25 +11,25 @@
     {
       "name": "idle",
       "duration": 15.3333,
-      "keys": 461,
-      "travel": 0.0,
-      "reach": 0.1586,
+      "keys": 369,
+      "travel": 0.0002,
+      "reach": 0.161,
       "travels": false
     },
     {
       "name": "run",
-      "duration": 1.2333,
-      "keys": 38,
-      "travel": 2.8783,
-      "reach": 2.8783,
+      "duration": 1.25,
+      "keys": 31,
+      "travel": 2.8772,
+      "reach": 2.8772,
       "travels": true
     },
     {
       "name": "walk",
       "duration": 2.3333,
-      "keys": 71,
-      "travel": 1.497,
-      "reach": 1.497,
+      "keys": 57,
+      "travel": 1.5008,
+      "reach": 1.5008,
       "travels": true
     }
   ]

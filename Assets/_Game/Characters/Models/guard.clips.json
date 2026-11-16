@@ -1,5 +1,5 @@
 {
-  "source": "guard_animated.glb",
+  "source": "guard_t49_game.glb",
   "hips": "mixamorig:Hips",
   "chain": [
     "Armature",
@@ -11,25 +11,25 @@
     {
       "name": "idle",
       "duration": 15.3333,
-      "keys": 461,
-      "travel": 0.0,
-      "reach": 0.1622,
+      "keys": 369,
+      "travel": 0.0002,
+      "reach": 0.1603,
       "travels": false
     },
     {
       "name": "run",
-      "duration": 1.2333,
-      "keys": 38,
-      "travel": 2.9437,
-      "reach": 2.9437,
+      "duration": 1.25,
+      "keys": 31,
+      "travel": 2.8631,
+      "reach": 2.8631,
       "travels": true
     },
     {
       "name": "walk",
       "duration": 2.3333,
-      "keys": 71,
-      "travel": 1.531,
-      "reach": 1.531,
+      "keys": 57,
+      "travel": 1.4934,
+      "reach": 1.4934,
       "travels": true
     }
   ]

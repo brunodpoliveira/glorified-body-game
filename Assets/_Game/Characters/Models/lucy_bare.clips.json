@@ -1,5 +1,5 @@
 {
-  "source": "lucy_bare_animated.glb",
+  "source": "lucy_t49v2_game.glb",
   "hips": "mixamorig:Hips",
   "chain": [
     "Armature",
@@ -11,26 +11,26 @@
     {
       "name": "idle",
       "duration": 15.3333,
-      "keys": 461,
+      "keys": 369,
       "travel": 0.0,
-      "reach": 0.1626,
+      "reach": 0.0003,
       "travels": false
     },
     {
       "name": "run",
-      "duration": 1.2333,
-      "keys": 38,
-      "travel": 2.9502,
-      "reach": 2.9502,
-      "travels": true
+      "duration": 1.2083,
+      "keys": 30,
+      "travel": 0.0,
+      "reach": 0.0,
+      "travels": false
     },
     {
       "name": "walk",
       "duration": 2.3333,
-      "keys": 71,
-      "travel": 1.5344,
-      "reach": 1.5344,
-      "travels": true
+      "keys": 57,
+      "travel": 0.0003,
+      "reach": 0.0019,
+      "travels": false
     }
   ]
 }

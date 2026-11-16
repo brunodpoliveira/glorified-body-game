@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 using System;
 using System.IO;
+using System.Linq;
 using System.Text;
 using UnityEditor;
 using UnityEngine;
@@ -55,8 +56,8 @@ namespace GlorifiedBody.Editor.Characters
 
     /// <summary>
     /// The import settings of the T19 characters (Assets/_Game/Characters/Models): the FBX as a Humanoid with
-    /// its own avatar and no materials, every clip a loop played in place, and the base colour at 1024 with
-    /// point sampling and no compression (the upscaled-PS1 look, ART_LESSONS §1 and §3). Numbers PROPOSED.
+    /// its own avatar and no materials, every clip a loop played in place, and the maps (a T19 base colour at
+    /// 1024, a T49 base colour, normal and metallic-smoothness set at 2048) with point sampling and no compression (the upscaled-PS1 look, ART_LESSONS §1 and §3). Numbers PROPOSED.
     /// A clip that travels in the source (the T19 walk and run: 1.5 m and 3.0 m per cycle at 1 m scale, the
     /// hips move) gives its travel to the root motion, which the Animator does not apply (no root motion on the
     /// prefab), so the body stays over the root. Baked into the pose, the model ran ahead of the controller and
@@ -69,6 +70,7 @@ namespace GlorifiedBody.Editor.Characters
     {
         public const string Folder = "Assets/_Game/Characters/Models/";
         public const int TextureSize = 1024;
+        public const int MapSetTextureSize = 2048;
 
         private bool Ours => assetPath.StartsWith(Folder);
 
@@ -155,14 +157,71 @@ namespace GlorifiedBody.Editor.Characters
         {
             if (!Ours) return;
             var importer = (TextureImporter)assetImporter;
-            importer.textureType = TextureImporterType.Default;
-            importer.maxTextureSize = TextureSize;
+            string name = Path.GetFileNameWithoutExtension(assetPath);
+            bool normal = name.EndsWith("_normal");
+            bool data = normal || name.EndsWith("_ms");
+            // A T19 class: the base colour at 1024. A T49 class (a <class>_normal.png next to it): the map set at 2048
+            // (round 24: "the helmet maps at 2048"; round 175: "2048 maps").
+            string stem = name.EndsWith("_basecolor") ? name.Substring(0, name.Length - "_basecolor".Length) : name;
+            bool mapSet = data || File.Exists(Path.Combine(Path.GetDirectoryName(assetPath), stem + "_normal.png"));
+            importer.textureType = normal ? TextureImporterType.NormalMap : TextureImporterType.Default;
+            importer.maxTextureSize = mapSet ? MapSetTextureSize : TextureSize;
             importer.filterMode = FilterMode.Point;
             importer.mipmapEnabled = true;
-            importer.textureCompression = TextureImporterCompression.Uncompressed;
-            importer.sRGBTexture = true;
+            // A T19 base colour (1024) stays uncompressed (the PS1 look). A T49 map set (2048, three maps for each
+            // material) is compressed at high quality: uncompressed it would take about 21 MB a map on a 2 GB card.
+            importer.textureCompression = mapSet ? TextureImporterCompression.CompressedHQ : TextureImporterCompression.Uncompressed;
+            importer.sRGBTexture = !data; // the normal and the metallic-smoothness maps are data, not colour
             importer.alphaIsTransparency = false;
             importer.wrapMode = TextureWrapMode.Repeat;
+        }
+
+        /// <summary>
+        /// True when the reference pose saved in the importer (humanDescription.skeleton) no longer matches the
+        /// bones of the FBX on disk: a new model under the old file name (T49 Lucy over the T19 Lucy, 2026-11-16).
+        /// Unity keeps the old reference pose on a reimport, and the avatar then bends the new body with the old
+        /// proportions.
+        /// </summary>
+        public static bool AvatarIsStale(string fbxPath, out string reason)
+        {
+            reason = "";
+            var importer = AssetImporter.GetAtPath(fbxPath) as ModelImporter;
+            GameObject model = AssetDatabase.LoadAssetAtPath<GameObject>(fbxPath);
+            if (importer == null || model == null) return false;
+            SkeletonBone[] skeleton = importer.humanDescription.skeleton;
+            if (skeleton == null || skeleton.Length == 0) return false;
+            // The names, not the positions: a T19 reference pose sits a millimetre off its own FBX (the import
+            // rounds), and a new model from another source brings other node names (the mesh, the helpers).
+            var saved = new System.Collections.Generic.HashSet<string>();
+            for (int i = 1; i < skeleton.Length; i++) saved.Add(skeleton[i].name); // [0] is the root object ("<class>(Clone)")
+            foreach (Transform t in model.GetComponentsInChildren<Transform>(true))
+            {
+                if (t == model.transform) continue;
+                if (!saved.Remove(t.name)) { reason = $"a new node {t.name}"; return true; }
+            }
+            if (saved.Count > 0) { reason = $"no node {saved.First()}"; return true; }
+            return false;
+        }
+
+        /// <summary>
+        /// Clears the saved bone map and reference pose of an FBX and imports it again: Unity maps the Humanoid
+        /// from the new bones (the importer's auto mapping). The muscle settings stay. True when it reset.
+        /// </summary>
+        public static bool RefreshStaleAvatar(string fbxPath)
+        {
+            if (!AvatarIsStale(fbxPath, out string reason)) return false;
+            var importer = (ModelImporter)AssetImporter.GetAtPath(fbxPath);
+            HumanDescription description = importer.humanDescription;
+            description.human = new HumanBone[0];
+            description.skeleton = new SkeletonBone[0];
+            importer.humanDescription = description;
+            importer.autoGenerateAvatarMappingIfUnspecified = true;
+            importer.SaveAndReimport();
+            Avatar avatar = AssetDatabase.LoadAssetAtPath<Avatar>(fbxPath);
+            Debug.Log($"[CharacterImportSettings] {fbxPath}: the saved avatar did not fit the bones ({reason}); mapped again: " +
+                      $"valid={(avatar != null && avatar.isValid)} human={(avatar != null && avatar.isHuman)} " +
+                      $"bones={importer.humanDescription.human.Length}");
+            return true;
         }
     }
 }

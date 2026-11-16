@@ -1,5 +1,5 @@
 {
-  "source": "nurse_animated.glb",
+  "source": "nurse_t49_game.glb",
   "hips": "mixamorig:Hips",
   "chain": [
     "Armature",
@@ -11,25 +11,25 @@
     {
       "name": "idle",
       "duration": 15.3333,
-      "keys": 461,
-      "travel": 0.0,
-      "reach": 0.1459,
+      "keys": 369,
+      "travel": 0.0002,
+      "reach": 0.1423,
       "travels": false
     },
     {
       "name": "run",
-      "duration": 1.2333,
-      "keys": 38,
-      "travel": 2.6469,
-      "reach": 2.6469,
+      "duration": 1.25,
+      "keys": 31,
+      "travel": 2.5416,
+      "reach": 2.5416,
       "travels": true
     },
     {
       "name": "walk",
       "duration": 2.3333,
-      "keys": 71,
-      "travel": 1.3767,
-      "reach": 1.3767,
+      "keys": 57,
+      "travel": 1.3257,
+      "reach": 1.3257,
       "travels": true
     }
   ]

@@ -58,10 +58,18 @@ namespace GlorifiedBody.Tests.PlayMode
                 Assert.IsNotNull(skin.sharedMaterial, id + ": a material");
                 Assert.IsTrue(skin.sharedMaterial.shader.name.Contains("Universal Render Pipeline"), id + ": a URP material (" + skin.sharedMaterial.shader.name + ")");
                 Assert.IsNotNull(skin.sharedMaterial.GetTexture("_BaseMap"), id + ": the base colour");
-                Assert.AreEqual(0f, skin.sharedMaterial.GetFloat("_Smoothness"), 0.01f, id + ": matte");
-                float height = skin.bounds.size.y;
+                // A T19 class is matte by the material. A T49 class (rounds 175, 178) takes its gloss from its
+                // metallic-smoothness map (the skin and the cloth at about 0.25: EditMode CharacterImportTests reads it).
+                if (skin.sharedMaterial.GetTexture("_MetallicGlossMap") == null)
+                    Assert.AreEqual(0f, skin.sharedMaterial.GetFloat("_Smoothness"), 0.01f, id + ": matte");
+                else
+                    Assert.IsNotNull(skin.sharedMaterial.GetTexture("_BumpMap"), id + ": a T49 map set has its normal map");
+                // Every skinned mesh of the figure (the T49 Lucy: the body and the Crown).
+                Bounds bounds = skin.bounds;
+                foreach (SkinnedMeshRenderer part in figure.GetComponentsInChildren<SkinnedMeshRenderer>()) bounds.Encapsulate(part.bounds);
+                float height = bounds.size.y;
                 Assert.AreEqual(entry.height, height, entry.height * 0.1f, $"{id}: the model stands {entry.height} m tall (measured {height:0.00})");
-                Assert.Less(Mathf.Abs(skin.bounds.min.y - figure.transform.position.y), entry.height * 0.06f, $"{id}: the feet on the root (off by {skin.bounds.min.y - figure.transform.position.y:0.000} m in its own idle)");
+                Assert.Less(Mathf.Abs(bounds.min.y - figure.transform.position.y), entry.height * 0.06f, $"{id}: the feet on the root (off by {bounds.min.y - figure.transform.position.y:0.000} m in its own idle)");
 
                 // The forward axis through the Humanoid bones: the right shoulder at +x, the toes in front of the ankles (+z).
                 Transform left = animator.GetBoneTransform(HumanBodyBones.LeftUpperArm);

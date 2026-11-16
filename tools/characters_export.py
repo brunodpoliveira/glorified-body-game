@@ -4,7 +4,8 @@ Run: kit/run_blender.sh -b --factory-startup -P tools/characters_export.py -- <c
 
 Steps:
 1. Import the animated GLB (the mesh, the mixamo rig, the actions idle, walk, run).
-2. Drop the stray helper mesh of the importer. Keep one mesh and one armature.
+2. Drop the stray helper mesh of the importer. Keep every skinned mesh (one for the T19 files; the T49 Lucy has two:
+   the body and the Crown) and one armature.
 3. The material: the Principled BSDF with the base colour from the game file only, matte (roughness 1, no specular).
    The normal and the metallic-roughness maps go (they ghost the painted detail, ART_LESSONS §3).
 4. Turn the figure from Blender +x to Blender -y and apply the rotation to the mesh and the armature, so Unity
@@ -34,15 +35,15 @@ if armature is None:
 for obj in list(bpy.data.objects):
     if obj.type == "MESH" and not any(m.type == "ARMATURE" for m in obj.modifiers):
         bpy.data.objects.remove(obj, do_unlink=True)
+# A T49 file may hold more than one skinned mesh (Lucy: the body and the Crown crown_t27 on the head bone, round 178).
 meshes = [o for o in bpy.data.objects if o.type == "MESH"]
-if len(meshes) != 1:
-    raise SystemExit(f"expected one skinned mesh, found {len(meshes)} in {GLB}")
-mesh = meshes[0]
+if not meshes:
+    raise SystemExit(f"no skinned mesh in {GLB}")
 
 # The material: base colour only, matte.
 image = bpy.data.images.load(BASECOLOR)
 image.colorspace_settings.name = "sRGB"
-for slot in mesh.material_slots:
+for slot in [slot for mesh in meshes for slot in mesh.material_slots]:
     mat = slot.material
     if mat is None:
         continue
@@ -76,29 +77,34 @@ for action in actions:
 # are local to each bone, so a turn of the whole rest pose keeps them valid. The corner normals of the import
 # (the custom split normals) turn with the mesh.
 turn = Matrix.Rotation(math.radians(-90.0), 4, "Z")
-mesh_world = turn @ mesh.matrix_world
 arm_world = turn @ armature.matrix_world
-rot3 = mesh_world.to_3x3()
-corner_normals = [(rot3 @ loop.normal).normalized() for loop in mesh.data.loops]
-mesh.data.transform(mesh_world)
-mesh.data.normals_split_custom_set(corner_normals)
+for mesh in meshes:
+    mesh_world = turn @ mesh.matrix_world
+    rot3 = mesh_world.to_3x3()
+    corner_normals = [(rot3 @ loop.normal).normalized() for loop in mesh.data.loops]
+    mesh.data.transform(mesh_world)
+    mesh.data.normals_split_custom_set(corner_normals)
 armature.data.transform(arm_world)
 armature.matrix_world = Matrix.Identity(4)
-mesh.matrix_parent_inverse = Matrix.Identity(4)
-mesh.matrix_basis = Matrix.Identity(4)
+for mesh in meshes:
+    mesh.matrix_parent_inverse = Matrix.Identity(4)
+    mesh.matrix_basis = Matrix.Identity(4)
 bpy.context.view_layer.update()
 
 # A report for the log: the size after the turn. The shoulders span x, the depth is along y (the front at -y).
-xs = [v.co.x for v in mesh.data.vertices]
-ys = [v.co.y for v in mesh.data.vertices]
-zs = [v.co.z for v in mesh.data.vertices]
-print(f"[characters_export] {os.path.basename(GLB)}: verts={len(mesh.data.vertices)} tris={len(mesh.data.polygons)} "
+verts = [v.co for mesh in meshes for v in mesh.data.vertices]
+xs = [v.x for v in verts]
+ys = [v.y for v in verts]
+zs = [v.z for v in verts]
+parts = ", ".join(f"{m.name} {len(m.data.polygons)}" for m in meshes)
+print(f"[characters_export] {os.path.basename(GLB)}: verts={len(verts)} tris={sum(len(m.data.polygons) for m in meshes)} ({parts}) "
       f"x={min(xs):.3f}..{max(xs):.3f} y={min(ys):.3f}..{max(ys):.3f} z={min(zs):.3f}..{max(zs):.3f} "
       f"actions={[a.name for a in actions]} bones={len(armature.data.bones)}")
 
 bpy.ops.object.select_all(action="DESELECT")
 armature.select_set(True)
-mesh.select_set(True)
+for mesh in meshes:
+    mesh.select_set(True)
 bpy.ops.export_scene.fbx(
     filepath=OUT,
     use_selection=True,

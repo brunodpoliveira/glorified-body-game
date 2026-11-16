@@ -865,6 +865,15 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   is a NEW scene beside `Demo.unity` (`Scenes/Act1/Act1.unity`, PROPOSED), with the same room ids. `Demo.unity` stays with
   its tests and bots. The names and folders for the asset agents: `~/MEGA/glorified/production/ASSET_NAMES.md`. The dark
   room's layer: `Editor/RenderingLayerNames` names rendering layer 1 "Dark"; monitors use `Darkness.LightOnlyTheDark`.
+- 2026-11-16, THE T49 MODELS (`devlog-notes/2026-11-16_lucy_t49.md`, rounds 175 and 178): `lucy_bare` (the body and the T27
+  Crown `crown_t27` with its own material), `guard`, `patient` and `nurse` are the T49 models (2048 maps). `tools/characters.sh`
+  reads a one-file class from `ONE_FILE` and carries one map set for each mesh (`characters_basecolor.py --maps`:
+  `<class>_basecolor|_normal|_ms`, a part as `<class>_<node>_*`); a T19 class keeps the base colour only.
+  `CreateCharacterAssets`: a map set gives a material with the normal map and the smoothness from the map, a part gets its
+  own material, every prefab carries its character layer (Player or Enemy: a new mesh node had no layer override in the
+  scenes), `CharacterImportSettings.RefreshStaleAvatar` maps the Humanoid again after a model swap. Bot
+  `play Tutorial Main_Menu lucy 300` (`LucyModelPlaythrough`). OPEN for Bruno: Lucy's walk clip moves the feet at 1.16 m/s,
+  the controller at 1.60 (the feet slide); the figures' walk clips: guard 1.19, patient 1.15, nurse 1.00 m/s.
 - 2026-11-06, day, MK AS AMMUNITION (`devlog-notes/2026-11-06_mk_ammo_short_death_search.md`, Bruno: "that basically makes mk an ammo counter and the pills clips"): one MK bar for each power
   (`PsychicStats.Mk(kind)`; `Nalcon` reads the selected bar; only that bar shows on the HUD), no recharge, one capsule for each power (`DrugType.Nalcon`, `NalconFire`, `NalconLift`). Every point of MK spent fills
   SHORT (`ShortPerMkPoint`). A short can kill her (killer id `short`, its own death screen row); a second wind saves her and ends the short. SCARCITY and DEEP WELL change the cost. `FireTeam`: suppression
