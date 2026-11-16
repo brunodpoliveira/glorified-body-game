@@ -495,3 +495,16 @@ MonoBehaviour:
     linePersonalities:
     - callous
     - sadistic
+  - killerId: softlock_gurney
+    picture: {fileID: 0}
+    pictureNote: 'PLACEHOLDER: the gurney falls into the dark under the tube, and
+      Lucy alone at the edge'
+    hint: 'PLACEHOLDER HINT: the gurney is the only way across the gap. Keep the
+      defend key held over the gap: if you let go, the gurney falls, and you cannot
+      leave the Hold. Lower it until the deck is level with the floor, then walk
+      onto it.'
+    moreHints: []
+    voiceLine: {fileID: 0}
+    voiceText: 
+    moreLines: []
+    linePersonalities: []

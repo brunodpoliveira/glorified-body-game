@@ -1020,9 +1020,9 @@ MonoBehaviour:
     - path: G2/G5
       position: {x: 32.5, y: -31}
       targetScene: G5
-    - path: G2/G13
+    - path: G2/G13b
       position: {x: 20.5, y: -31}
-      targetScene: G13
+      targetScene: G13b
     - path: G2/G10
       position: {x: 42.5, y: -31}
       targetScene: G10
@@ -1071,11 +1071,11 @@ MonoBehaviour:
     marks:
     - kind: 1
       path: '[World]/[G4]/[Props]/Capsule_G4'
-      position: {x: 37.5, y: -17.8}
+      position: {x: 38.571636, y: -18.701866}
       label: ORZABAL CAPSULE
     - kind: 2
       path: '[World]/[G4]/[Props]/L8_Prayer_Card'
-      position: {x: 38.7, y: -21.4}
+      position: {x: 39.214424, y: -22.53209}
       label: A PRAYER CARD
   - scene: G5
     world: Demo
@@ -1113,9 +1113,9 @@ MonoBehaviour:
     - path: G5/G12
       position: {x: 39.5, y: -47}
       targetScene: G12
-    - path: G5/G13
+    - path: G5/G13b
       position: {x: 24.5, y: -35}
-      targetScene: G13
+      targetScene: G13b
     marks:
     - kind: 1
       path: '[World]/[G5]/[Props]/Capsule_Lift_Edgar'
@@ -1164,9 +1164,9 @@ MonoBehaviour:
     - path: G7/G5
       position: {x: 24.5, y: -43}
       targetScene: G5
-    - path: G7/G13
+    - path: G7/G13b
       position: {x: 20.5, y: -40}
-      targetScene: G13
+      targetScene: G13b
     marks:
     - kind: 1
       path: '[World]/[G7]/[Props]/Capsule_G7'
@@ -1356,31 +1356,22 @@ MonoBehaviour:
     offset: {x: 0, y: 0}
     areas:
     - serializedVersion: 2
-      x: 16.5
-      y: -40
+      x: 8.5
+      y: -47
       width: 8
-      height: 9
+      height: 7
     exits:
-    - path: G13/G2
-      position: {x: 20.5, y: -31}
-      targetScene: G2
-    - path: G13/G7
-      position: {x: 20.5, y: -40}
-      targetScene: G7
-    - path: G13/G5
-      position: {x: 24.5, y: -35}
-      targetScene: G5
     - path: G13/G13b
-      position: {x: 16.5, y: -32.5}
+      position: {x: 12.5, y: -40}
       targetScene: G13b
     marks:
     - kind: 2
       path: '[World]/[G13]/[Props]/L27_Reply_All'
-      position: {x: 23.1, y: -34.86}
+      position: {x: 15.1, y: -43.46}
       label: A REPLY-ALL THREAD
     - kind: 2
       path: '[World]/[G13]/[Props]/L38_Supplier_Notice'
-      position: {x: 17.35, y: -35.15}
+      position: {x: 9.55, y: -43.75}
       label: A SUPPLIER NOTICE
   - scene: G13b
     world: Demo
@@ -1390,12 +1381,21 @@ MonoBehaviour:
     areas:
     - serializedVersion: 2
       x: 8.5
-      y: -34
-      width: 8
-      height: 3
+      y: -40
+      width: 16
+      height: 9
     exits:
+    - path: G13b/G5
+      position: {x: 24.5, y: -35}
+      targetScene: G5
+    - path: G13b/G2
+      position: {x: 20.5, y: -31}
+      targetScene: G2
+    - path: G13b/G7
+      position: {x: 20.5, y: -40}
+      targetScene: G7
     - path: G13b/G13
-      position: {x: 16.5, y: -32.5}
+      position: {x: 12.5, y: -40}
       targetScene: G13
     marks: []
   - scene: G14
