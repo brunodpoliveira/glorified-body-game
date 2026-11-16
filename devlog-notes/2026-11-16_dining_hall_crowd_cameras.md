@@ -32,22 +32,27 @@ The 180 rule, as the check reads it:
 
 The check found 22 pairs of neighbours that flip her direction. Two pairs looked at each other (yaw 90 and 270).
 
-The new hall has five cameras of its own (`DemoDining.Cameras`, `RoomSpec.AuthoredCameras`: no cells in this room).
+The new hall has five static cameras of its own (`DemoDining.Cameras`, `RoomSpec.AuthoredCameras`: no cells in this room).
 
 | Zone | Camera | Shot |
 |---|---|---|
-| The north aisle (z 9.2 to 13, the whole length) | the north-east corner, 3 m high, yaw 240, turns 25 degrees | the wide shot down the hall |
-| The entry bay (x 35 to 41) | from the north, 5 m high, yaw 200, turns 25 degrees | the glass doors and the kitchen door in frame |
-| The west bay (x 41 to 47) | from the north, 5 m high, yaw 190, turns 25 degrees | the side shot across the hall |
-| The east bay (x 47 to 53) | from the north, 4 m high, yaw 170 | the side shot across the hall |
-| The bar end (x 53 to 59) | the north-east corner, 3 m high, yaw 200 | along the bar |
+| The north aisle (z 9.2 to 13, the whole length) | the north-east corner, 3 m high, yaw 230, pitch 22 | the wide shot down the hall |
+| The entry: the south aisle, x 35 to 47 | 3 m high at x 49, yaw 270, pitch 22 | down the aisle to the glass doors and the kitchen door |
+| The nave, x 35 to 47 | 3 m high at x 49.8, yaw 260, pitch 15 | down the middle of the hall to the entrance |
+| The east bay (x 47 to 53) | from the north, 4 m high, yaw 170, pitch 15 | the side shot across the hall |
+| The bar end (x 53 to 59) | the north-east corner, 3 m high, yaw 200, pitch 15 | along the bar |
+
+The first version had three cameras that turned to follow her. Bruno: "the dining hall cameras are moving, which are no
+bueno; no other camera moves"; then "no camera moves during normal gameplay; a camera may do moves for establishing
+shots, etc"; "the brain eye continues movigin, it's the exception". So the search ran again with no turn, and the room
+kit lost its turn option (`DemoRoom.ExtraCamera`). The brain eye is not built by the room kit.
 
 The two exits are in the west wall and the south wall. So every camera looks south or west, and no cut between two
-zones of the hall flips her direction. Four cameras look down at 15 degrees, the entry camera at 38. The camera of the
+zones of the hall flips her direction. Three cameras look down at 15 degrees, two at 22. The camera of the
 candelabrum is gone: it looked east, against the other five. The candelabrum stays.
 
 How I chose them: a search offline in Python, on the colliders of the hall from the saved scene. It copies the C# rules
-(`CameraCoverage.Sees`, `SeesExit`, the turn of a following camera). On the old 21 cameras it gives the result of the
+(`CameraCoverage.Sees`, `SeesExit`). On the old 21 cameras it gives the result of the
 build: 0 points out of frame, both exits in view. So it reads the room the same way. For the five: 0 of 1006 floor
 points out of frame, both exits in view, 0 flips.
 

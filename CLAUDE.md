@@ -755,7 +755,8 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
 - 2026-11-16, THE HALL CAMERAS (`devlog-notes/2026-11-16_dining_hall_crowd_cameras.md`, Bruno: "too many tight angles from up looking down";
   "the 180 rule"): G18 has five authored cameras (`DemoDining.Cameras`, `RoomSpec.AuthoredCameras`: no cells), all looking south or west, chosen
   by an offline search on the scene's colliders (0 of 1006 points out of frame, both exits, 0 flips; the cells had 21 cameras and 22 flips).
-  `DemoRoom.ExtraCamera(..., follow)` makes a camera that turns to her. Open: the doorway cuts (the G2 glass doors flip), part of the whole-demo
+  All five are static (Bruno: "no camera moves during normal gameplay"; a scripted establishing move is fine; the brain eye is the
+  exception). Open: the doorway cuts (the G2 glass doors flip), part of the whole-demo
   180 check on his signal. NOT COMPILED, NOT RUN. NOT COMPILED,
   NOT RUN (Bruno's RAM): run `DemoWorld.BuildAll`, `MapAtlasSetup.BuildAtlas`, then `DemoTests`. Numbers PROPOSED.
 

@@ -65,17 +65,18 @@ namespace GlorifiedBody.Editor.Demo
         /// not violate the 180 rule"). The cells had placed 21 cameras, and 22 pairs of neighbours flipped her screen direction.
         /// A search offline, on the hall's colliders from the saved scene and the rules of CameraCoverage, chose these: every
         /// camera looks south or west (the two exits are in the west and south walls), so no cut between two zones flips her
-        /// direction. The zones: the north aisle (north of the column row at z 9.2), and four bays between the column lines
-        /// (x 41, 47, 53). Result of that check: 0 of 1006 floor points out of frame, both exits in view, 0 cuts that flip.
+        /// direction. No camera turns (Bruno, the same night: "no camera moves during normal gameplay"). The zones: the north
+        /// aisle (north of the column row at z 9.2), the south aisle and the nave west of x 47, the east bay (x 47 to 53), the bar
+        /// end. Result of that check: 0 of 1006 floor points out of frame, both exits in view, 0 cuts that flip.
         /// </summary>
         private static void Cameras(DemoRoom r)
         {
-            // The north aisle: the wide shot from the north-east corner, down the whole hall (yaw 240, pitch 15, it turns to her up to 25 degrees).
-            r.ExtraCamera("north_aisle", new Vector3(58.6f, 3.0f, 12.4f), new Vector3(50.23f, 0.41f, 7.57f), 55f, new Vector3(47.0f, 1.5f, 11.1f), new Vector3(24.0f, 3f, 3.8f), follow: 25f);
-            // The entry bay: from the north, the glass doors and the kitchen door in frame (yaw 200, pitch 38, it turns to her up to 25 degrees).
-            r.ExtraCamera("entry", new Vector3(37.0f, 5.0f, 9.2f), new Vector3(34.30f, -1.16f, 1.80f), 72f, new Vector3(38.0f, 1.5f, 4.6f), new Vector3(6.0f, 3f, 9.2f), follow: 25f);
-            // The west bay: the side shot across the hall from the north (yaw 190, pitch 15, it turns to her up to 25 degrees).
-            r.ExtraCamera("bay_west", new Vector3(42.6f, 5.0f, 10.0f), new Vector3(40.92f, 2.41f, 0.49f), 84f, new Vector3(44.0f, 1.5f, 4.6f), new Vector3(6.0f, 3f, 9.2f), follow: 25f);
+            // The north aisle: the wide shot from the north-east corner, down the whole hall (yaw 230, pitch 22).
+            r.ExtraCamera("north_aisle", new Vector3(58.6f, 3.0f, 12.4f), new Vector3(51.50f, -0.75f, 6.44f), 84f, new Vector3(47.0f, 1.5f, 11.1f), new Vector3(24.0f, 3f, 3.8f));
+            // The entry: down the south aisle to the glass doors and the kitchen door (yaw 270, pitch 22).
+            r.ExtraCamera("entry", new Vector3(49.0f, 3.0f, 2.8f), new Vector3(39.73f, -0.75f, 2.80f), 55f, new Vector3(41.0f, 1.5f, 1.9f), new Vector3(12.0f, 3f, 3.8f));
+            // The nave: down the middle of the hall to the entrance (yaw 260, pitch 15).
+            r.ExtraCamera("nave", new Vector3(49.8f, 3.0f, 6.8f), new Vector3(40.29f, 0.41f, 5.12f), 55f, new Vector3(41.0f, 1.5f, 6.5f), new Vector3(12.0f, 3f, 5.4f));
             // The east bay: the side shot across the hall from the north (yaw 170, pitch 15).
             r.ExtraCamera("bay_east", new Vector3(47.4f, 4.0f, 11.6f), new Vector3(49.08f, 1.41f, 2.09f), 72f, new Vector3(50.0f, 1.5f, 4.6f), new Vector3(6.0f, 3f, 9.2f));
             // The bar end: from the north-east corner along the bar (yaw 200, pitch 15).

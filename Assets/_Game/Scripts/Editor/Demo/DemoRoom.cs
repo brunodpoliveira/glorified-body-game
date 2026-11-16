@@ -323,15 +323,12 @@ namespace GlorifiedBody.Editor.Demo
         /// One more camera with its zone, over the cells of the room (a beat the cell's camera shows badly: the W1 door,
         /// 2026-11-05). The zone takes priority over the cells, and its floor points must be in this camera's frame.
         /// </summary>
-        public void ExtraCamera(string tag, Vector3 cam, Vector3 look, float fov, Vector3 zoneCentre, Vector3 zoneSize, float follow = 0f)
+        public void ExtraCamera(string tag, Vector3 cam, Vector3 look, float fov, Vector3 zoneCentre, Vector3 zoneSize)
         {
             extraCameras.Add(() =>
             {
                 GameObject root = MenuLoopSetup.EnsureChild(Root, "[Cameras]");
                 FixedCamera fc = MenuLoopSetup.EnsureFixedCamera(root, $"Cam_{Spec.Id}_{tag}", cam, look, fov);
-                fc.followPlayerYaw = follow > 0f; // it turns to her, up to this many degrees (FixedCameraDirector)
-                fc.followMaxYaw = follow;
-                EditorUtility.SetDirty(fc);
                 Cameras.Add(fc);
                 MenuLoopSetup.EnsureCameraZone(root, $"Zone_{Spec.Id}_{tag}", zoneCentre, zoneSize, fc, 2);
                 MenuLoopSetup.EnsureShotPoints(new[] { fc });
