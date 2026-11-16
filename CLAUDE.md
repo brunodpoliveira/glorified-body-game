@@ -850,6 +850,11 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   stair cards: code silver rotates the codes (`CodeRotation.rotateOnFlag`, no PA), Lucy says it at the first refusal
   (`LockedDoor.rotatedLine`, PLACEHOLDER), the ward sister's key opens W13 (`office_key`), the terminal enrols the card.
   NOT RUN: the build of the demo and the tests (Bruno's manual test). Numbers PROPOSED.
+- 2026-11-16, THE GREYBOX IS DONE (Bruno: "we've enough to actually start bvuilding the actual level"; "we'll start removing
+  placeholder gfx, sfx et al from this point on"): the backup is the git tag `greybox-2026-11-16`. His pick: the real level
+  is a NEW scene beside `Demo.unity` (`Scenes/Act1/Act1.unity`, PROPOSED), with the same room ids. `Demo.unity` stays with
+  its tests and bots. The names and folders for the asset agents: `~/MEGA/glorified/production/ASSET_NAMES.md`. The dark
+  room's layer: `Editor/RenderingLayerNames` names rendering layer 1 "Dark"; monitors use `Darkness.LightOnlyTheDark`.
 - 2026-11-06, day, MK AS AMMUNITION (`devlog-notes/2026-11-06_mk_ammo_short_death_search.md`, Bruno: "that basically makes mk an ammo counter and the pills clips"): one MK bar for each power
   (`PsychicStats.Mk(kind)`; `Nalcon` reads the selected bar; only that bar shows on the HUD), no recharge, one capsule for each power (`DrugType.Nalcon`, `NalconFire`, `NalconLift`). Every point of MK spent fills
   SHORT (`ShortPerMkPoint`). A short can kill her (killer id `short`, its own death screen row); a second wind saves her and ends the short. SCARCITY and DEEP WELL change the cost. `FireTeam`: suppression
