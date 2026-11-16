@@ -172,7 +172,10 @@ namespace GlorifiedBody.Player
         {
             if (!NeedsSight) return true;
             Vector3 eye = transform.position + Vector3.up * GlorifiedBody.Characters.Body.ChestHeight;
-            return !Physics.Linecast(eye, t.GetLockPoint(), SightMask, QueryTriggerInteraction.Ignore);
+            if (!Physics.Linecast(eye, t.GetLockPoint(), out RaycastHit hit, SightMask, QueryTriggerInteraction.Ignore)) return true;
+            // The line ends on the target itself: in sight, as for the switch (TargetRegistry). A lock point inside its own collider
+            // (the booth door, the box wall, a crate) dropped the lock after LostSightSeconds (Bruno, 2026-11-16).
+            return hit.transform == t.transform || hit.transform.IsChildOf(t.transform);
         }
 
         private LockOnTargetable Nearest(bool preferBoss = true)
