@@ -200,6 +200,7 @@ namespace GlorifiedBody.Editor.Demo
 
             // The second scientist and his card.
             ItemPickup card = r.Item("Airlock_Card", DemoItems.AirlockCard(), new Vector3(19.9f, 0.05f, 34.1f), new Vector3(0.1f, 0.02f, 0.15f));
+            card.gameObject.SetActive(false); // hidden until he dies or gives it (ItemCarrier): it lay at his feet from the start, and a copy on his belt (2026-11-16)
             GameObject runTo = MenuLoopSetup.EnsureChild(r.Story, "Runner_Hide");
             runTo.transform.position = RunnerHide; // in the stores, behind the linen shelf: no line from H2 through the doorway
             EnemySpawn runner = r.Figure("Scientist_Runner", "labworker", new Vector3(20.1f, 0f, 34.0f), 270f, variant: 0);
