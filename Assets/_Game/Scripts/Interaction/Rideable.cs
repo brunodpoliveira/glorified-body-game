@@ -50,6 +50,7 @@ namespace GlorifiedBody.Interaction
         private int mask;
 
         public override bool Available => false; // no key climbs on or off (2026-11-16)
+        public override string Hint => ""; // no key, no hint
 
         private void Awake()
         {
