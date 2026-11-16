@@ -1538,7 +1538,8 @@ namespace GlorifiedBody.Tests.PlayMode
             stats.SetOutfit(Resources.Load<OutfitProfile>("Outfits/outfit_guard"));
             stats.DebugSet(100f, 100f);
             float hpMax = health.MaxHealth;
-            Assert.AreEqual(16f, shortController.Duration, 0.01f, "16 s (Bruno, 2026-10-20). The scene must carry the C# default.");
+            Assert.AreEqual(10f, shortController.Duration, 0.01f, "10 s (Bruno, 2026-11-16: \"make it 10 seconds\"; 16 s before)");
+            Assert.AreEqual(480f, shortController.ShockDamage * Mathf.RoundToInt(shortController.Duration / 0.4f), 1f, "the enemies take the 16 s short's 480 in all");
             shortController.Begin();
             Assert.IsTrue(shortController.IsActive);
             yield return new WaitForSeconds(shortController.Duration + 0.6f);

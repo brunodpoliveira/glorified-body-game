@@ -21,7 +21,10 @@ namespace GlorifiedBody.Player
     /// goes on as normal, but it doesn't detract health while using up the second wind. reason: a player may strategically short
     /// themselves on purpose to save up on mk").
     /// Bruno, 2026-10-20: it lasts 16 s. She can walk, slowly: no run, no dodge, no powers (TankController.SlowWalk).
-    /// The HP drain spreads over the 16 s, and each shock does the same damage to the others as before.
+    /// The HP drain spreads over the short, and each shock does the same damage to the others as before.
+    /// Bruno, 2026-11-16: "16 seconds is too long for the short; make it 10 seconds, it deals the same damage both to the player
+    /// and the enemies overall". So 10 s (Seconds), half her HP as before, and the 480 damage of the 16 s short (40 shocks of 12)
+    /// spread over the shocks of the 10 s (25 shocks of 19.2 at 0.4 s). Both are constants: a scene kept its serialized 16 s.
     /// One enemy at a time (Bruno, 2026-10-22, design §11.4: "i want the enemies to see their colleagues dying in
     /// a gruesome manner"): every shock hits one victim, the nearest live enemy in the radius, and stays on it
     /// until it dies or leaves the radius. Then the next nearest. A shock-immune target (the bosses) is never
@@ -37,10 +40,10 @@ namespace GlorifiedBody.Player
     [RequireComponent(typeof(PsychicStats))]
     public sealed class ShortController : MonoBehaviour
     {
-        [SerializeField, Min(0.5f)] private float duration = 16f;
+        public const float Seconds = 10f;              // (Bruno, 2026-11-16; 16 s before)
+        public const float DamageToOthersTotal = 480f; // a whole short, on the enemies: the 16 s short's 40 shocks of 12
         [SerializeField, Min(0.1f)] private float shockInterval = 0.4f;
         [SerializeField, Min(1f)] private float shockRadius = 6f;
-        [SerializeField, Min(0f)] private float shockDamageToOthers = 12f;
         [SerializeField, Range(0f, 1f)] private float selfHpFraction = 0.5f;
 
         private const float SurgeRadius = 5f; // the lamps the short's start pops, PROPOSED
@@ -74,7 +77,10 @@ namespace GlorifiedBody.Player
         public int ShocksFired { get; private set; }
         /// <summary>The enemy the shocks hit now. Null when nobody is in the radius.</summary>
         public Health Victim { get; private set; }
-        public float Duration => duration;
+        public float Duration => Seconds;
+        /// <summary>One shock on an enemy: the total over the shocks of a whole short.</summary>
+        public float ShockDamage => DamageToOthersTotal / Shocks;
+        private int Shocks => Mathf.Max(1, Mathf.RoundToInt(Seconds / shockInterval));
         /// <summary>The start's freeze and pain ran this many times (the tests).</summary>
         public int StartPains { get; private set; }
         public int Zaps { get; private set; }
@@ -103,7 +109,7 @@ namespace GlorifiedBody.Player
         {
             if (IsActive || health.IsDead) return;
             IsActive = true;
-            Remaining = duration;
+            Remaining = Seconds;
             ShocksFired = 0;
             Victim = null;
             pendingSelf = 0f;
@@ -129,7 +135,7 @@ namespace GlorifiedBody.Player
         {
             if (IsActive || health.IsDead || secondsLeft <= 0f) return;
             IsActive = true;
-            Remaining = Mathf.Min(duration, secondsLeft);
+            Remaining = Mathf.Min(Seconds, secondsLeft);
             Victim = null;
             pendingSelf = 0f;
             windTaken = false;
@@ -173,8 +179,7 @@ namespace GlorifiedBody.Player
 
         private IEnumerator Run()
         {
-            int shocks = Mathf.Max(1, Mathf.RoundToInt(duration / shockInterval));
-            float selfPerShock = health.MaxHealth * selfHpFraction / shocks;
+            float selfPerShock = health.MaxHealth * selfHpFraction / Shocks;
             // The pain first: the world stands still while she holds her head. Then the power goes out of control.
             while (IsActive && InPain) yield return null;
             while (IsActive && Remaining > 0f)
@@ -202,7 +207,7 @@ namespace GlorifiedBody.Player
             if (other == null) ShockAThing(origin); // no one in reach: a lamp or a thing on a table (Bruno, 2026-11-15)
             if (other != null)
             {
-                other.TakeDamage(shockDamageToOthers);
+                other.TakeDamage(ShockDamage);
                 HitEventBus.Raise(new HitInfo
                 {
                     Attacker = gameObject,
@@ -210,7 +215,7 @@ namespace GlorifiedBody.Player
                     HitTransform = other.transform,
                     HitPoint = other.transform.position + Vector3.up,
                     HitNormal = (other.transform.position - origin).normalized,
-                    DamageAmount = shockDamageToOthers,
+                    DamageAmount = ShockDamage,
                     DamageType = DamageType.ShortShock,
                     WasFatal = other.IsDead
                 });

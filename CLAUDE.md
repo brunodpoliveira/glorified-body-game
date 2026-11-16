@@ -795,6 +795,9 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
 - 2026-11-16, THE OFF-SCREEN ARROWS (`devlog-notes/2026-11-16_offscreen_arrows_alerted.md`, Bruno: "it should be visible always, when they're in
   alert"): an enemy out of the frame has a pale arrow while alerted and on her (`PlayerHud.AlertedOnHer`: not dead, not cowering, not searching,
   his team has not lost her), orange at the aim, red at the telegraph; 8 arrows. NOT COMPILED, NOT RUN.
+- 2026-11-16, THE SHORT IS 10 S (`devlog-notes/2026-11-16_short_10s.md`, Bruno: "make it 10 seconds, it deals the same damage both to the player
+  and the enemies overall"): `ShortController.Seconds` 10 and `DamageToOthersTotal` 480 (25 shocks of 19.2), half her HP as before; constants
+  now (the scenes kept their serialized 16 s). NOT COMPILED, NOT RUN.
 - 2026-11-06, day, MK AS AMMUNITION (`devlog-notes/2026-11-06_mk_ammo_short_death_search.md`, Bruno: "that basically makes mk an ammo counter and the pills clips"): one MK bar for each power
   (`PsychicStats.Mk(kind)`; `Nalcon` reads the selected bar; only that bar shows on the HUD), no recharge, one capsule for each power (`DrugType.Nalcon`, `NalconFire`, `NalconLift`). Every point of MK spent fills
   SHORT (`ShortPerMkPoint`). A short can kill her (killer id `short`, its own death screen row); a second wind saves her and ends the short. SCARCITY and DEEP WELL change the cost. `FireTeam`: suppression
