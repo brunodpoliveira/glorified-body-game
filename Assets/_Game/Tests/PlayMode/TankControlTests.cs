@@ -359,6 +359,27 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator LockNearest_JumpsBackToTheNearest_TheMarkerDrawsOverEverything()
+        {
+            // Bruno, 2026-11-16: "it needs an option to lock onto the nearest target"; "the indicator is hidden behind walls".
+            yield return WaitUntil(() => lockOn.HasTarget, 1.5f);
+            Assert.AreEqual("Dummy_A", lockOn.TargetName, "the nearest dummy first");
+            pad.Tap(InputManager.GameAction.SwitchTarget);
+            yield return null;
+            yield return null;
+            Assert.AreEqual("Dummy_B", lockOn.TargetName);
+            pad.Tap(InputManager.GameAction.LockNearest);
+            yield return null;
+            yield return null;
+            Assert.AreEqual("Dummy_A", lockOn.TargetName, "the wheel click goes back to the nearest");
+            GameObject marker = GameObject.Find("LockMarker");
+            Assert.IsNotNull(marker, "the marker shows");
+            Assert.AreEqual("GB/OnTop", marker.GetComponent<Renderer>().sharedMaterial.shader.name, "no wall hides it");
+            Assert.IsNotNull(Resources.Load<Shader>("Shaders/GB_Silhouette"), "the silhouette shader is in a build");
+            Assert.AreSame(lockOn.CurrentTarget, lockOn.SilhouetteOn, "the silhouette follows the lock");
+        }
+
+        [UnityTest]
         public IEnumerator Charge_StopsTheWalk_AndFacesTheTarget()
         {
             yield return WaitUntil(() => lockOn.HasTarget, 1.5f);

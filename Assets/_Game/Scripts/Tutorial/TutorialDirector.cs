@@ -319,7 +319,7 @@ namespace GlorifiedBody.Tutorial
                 () => dodgedSide));
             steps.Add(new TutorialStep("switch",
                 "The lock finds the nearest dummy by itself. Choose another one.",
-                "{SwitchTarget} picks the next target.",
+                "{SwitchTarget} or the mouse wheel picks the next target. {LockNearest} goes back to the nearest one.",
                 () => targetChanges >= 1 && lockOn != null && lockOn.CurrentTarget != null));
             steps.Add(new TutorialStep("blast",
                 "Faculty one. Fill the circle on a dummy.",

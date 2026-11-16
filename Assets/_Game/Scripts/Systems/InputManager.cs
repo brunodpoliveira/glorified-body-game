@@ -41,6 +41,7 @@ namespace GlorifiedBody.Systems
             MapPreviousFloor, // the corner map: the floor before (Bruno, 2026-11-02: A and D turn her while it shows)
             MapNextFloor,
             PowerDomination, // key 4: mk_edgar (Bruno, 2026-11-06), once the story unlocks it
+            LockNearest, // the lock jumps to the nearest enemy (Bruno, 2026-11-16: "it is very furstrating to keep scrolling")
         }
 
         [Serializable]
@@ -60,6 +61,7 @@ namespace GlorifiedBody.Systems
                 GameAction.Dodge => "Dodge",
                 GameAction.Charge => "Charge Power (hold)",
                 GameAction.SwitchTarget => "Switch Target",
+                GameAction.LockNearest => "Lock Nearest Target",
                 GameAction.PowerBlast => "Power: mk_warspite (blast)",
                 GameAction.PowerFire => "Power: mk_erebus (fire)",
                 GameAction.PowerTelekinesis => "Power: mk_orzabal (telekinesis)",
@@ -93,6 +95,7 @@ namespace GlorifiedBody.Systems
             new KeyBinding { action = GameAction.Dodge, defaultKey = KeyCode.Space },
             new KeyBinding { action = GameAction.Charge, defaultKey = KeyCode.Mouse0 },
             new KeyBinding { action = GameAction.SwitchTarget, defaultKey = KeyCode.Tab },
+            new KeyBinding { action = GameAction.LockNearest, defaultKey = KeyCode.Mouse2 }, // the wheel click: the wheel switches
             new KeyBinding { action = GameAction.PowerBlast, defaultKey = KeyCode.Alpha1 },
             new KeyBinding { action = GameAction.PowerFire, defaultKey = KeyCode.Alpha2 },
             new KeyBinding { action = GameAction.PowerTelekinesis, defaultKey = KeyCode.Alpha3 },

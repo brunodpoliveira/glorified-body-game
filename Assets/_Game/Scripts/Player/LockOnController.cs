@@ -14,6 +14,10 @@ namespace GlorifiedBody.Player
     /// the target so the lock reads in the greybox. Props (crates): the auto-lock never picks one; the switch
     /// cycles through them too while IncludeProps is on (telekinesis selected, set by PsychicPowers), and a prop
     /// lock drops when it goes off.
+    /// Bruno, 2026-11-16: "it needs an option to lock onto the nearest target"; "the indicator is hidden behind walls and other
+    /// obstacles. it needs to be seen no matter what and if the enemy is not visible by the camera the enemy silhouette must
+    /// be highlighted". LockNearest (the wheel click) jumps to the nearest enemy. The marker draws over everything (GB/OnTop),
+    /// and the target's body draws a flat silhouette where something hides it from the camera (GB/Silhouette, LockSilhouette).
     /// </summary>
     [RequireComponent(typeof(TankController))]
     public sealed class LockOnController : MonoBehaviour
@@ -60,6 +64,7 @@ namespace GlorifiedBody.Player
 
         private void OnDisable()
         {
+            silhouette.Follow(null);
             if (IsCharging)
             {
                 IsCharging = false;
@@ -83,6 +88,16 @@ namespace GlorifiedBody.Player
         public bool WheelRaises { get; set; }
 
         /// <summary>Switches to the next target to the right (yaw order), or to the left. Returns false when no other target exists.</summary>
+        /// <summary>The lock jumps to the nearest live enemy in range and in her sight (the LockNearest key). False: none, or it is the target now.</summary>
+        public bool LockNearest()
+        {
+            LockOnTargetable nearest = Nearest(preferBoss: false);
+            if (nearest == null || nearest == CurrentTarget) return false;
+            SetTarget(nearest);
+            RunTelemetry.Event("lock_nearest", nearest.name);
+            return true;
+        }
+
         public bool SwitchTarget(int direction = +1)
         {
             LockOnTargetable next = TargetRegistry.Cycle(CurrentTarget, direction, null, transform.position, transform,
@@ -125,6 +140,7 @@ namespace GlorifiedBody.Player
             {
                 SwitchTarget();
             }
+            if (GameInput.GetActionDown(InputManager.GameAction.LockNearest, KeyCode.Mouse2)) LockNearest();
 
             // The wheel is a quicker switch (Bruno, 2026-11-07), both ways.
             float wheel = WheelRaises ? 0f : GameInput.GetAxis(GameInput.AxisScroll);
@@ -159,13 +175,13 @@ namespace GlorifiedBody.Player
             return !Physics.Linecast(eye, t.GetLockPoint(), SightMask, QueryTriggerInteraction.Ignore);
         }
 
-        private LockOnTargetable Nearest()
+        private LockOnTargetable Nearest(bool preferBoss = true)
         {
             LockOnTargetable best = null;
             float bestDistance = lockRange * lockRange;
             var all = TargetRegistry.All;
             // A default target (a boss) first, out to the drop range: she aims at the brain unless she switches.
-            for (int i = 0; i < all.Count; i++)
+            for (int i = 0; i < all.Count && preferBoss; i++)
             {
                 LockOnTargetable t = all[i];
                 if (t == null || !t.IsPreferred || !t.Selectable || !t.IsAlive) continue;
@@ -195,11 +211,16 @@ namespace GlorifiedBody.Player
             var renderer = obj.GetComponent<Renderer>();
             if (renderer != null)
             {
-                var shader = Shader.Find("Universal Render Pipeline/Unlit") ?? Shader.Find("Unlit/Color");
+                // Over everything (2026-11-16): a wall or a prop no longer hides it. The shader sits in Resources, so a build keeps it.
+                var shader = Resources.Load<Shader>("Shaders/GB_OnTop") ?? Shader.Find("Universal Render Pipeline/Unlit") ?? Shader.Find("Unlit/Color");
                 if (shader != null)
                 {
-                    renderer.material = new Material(shader) { color = new Color(1f, 0.15f, 0.15f) };
+                    var material = new Material(shader) { color = new Color(1f, 0.15f, 0.15f) };
+                    if (material.HasProperty("_Color")) material.SetColor("_Color", new Color(1f, 0.15f, 0.15f));
+                    renderer.material = material;
                 }
+                renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                renderer.receiveShadows = false;
             }
             marker = obj.transform;
             marker.gameObject.SetActive(false);
@@ -220,12 +241,18 @@ namespace GlorifiedBody.Player
         private LockOnTargetable markerOwner;
         private Renderer[] markerRenderers = Array.Empty<Renderer>();
 
+        private readonly LockSilhouette silhouette = new LockSilhouette();
+
+        /// <summary>The target that wears the silhouette now (tests).</summary>
+        public LockOnTargetable SilhouetteOn => silhouette.Target;
+
         private void UpdateMarker()
         {
             if (marker == null) return;
             bool show = showMarker && CurrentTarget != null;
             if (marker.gameObject.activeSelf != show) marker.gameObject.SetActive(show);
             if (show) marker.position = MarkerPoint(CurrentTarget);
+            silhouette.Follow(show ? CurrentTarget : null);
         }
 
         /// <summary>
@@ -257,6 +284,7 @@ namespace GlorifiedBody.Player
         private void OnDestroy()
         {
             if (marker != null) Destroy(marker.gameObject);
+            silhouette.Follow(null);
         }
     }
 }

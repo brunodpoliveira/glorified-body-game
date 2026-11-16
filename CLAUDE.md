@@ -788,6 +788,10 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
    means an error occurred"), until the demo is published on itch.io and Steam: no `tools/unity.sh build`. Editor batch runs,
    the tests and the bot play tests stay. Test cadence (Bruno, 2026-11-06): during a round, run only the test classes of the changed code and the bots of that feature. Run the whole PlayMode suite and all the bots once, before a push or overnight (about 50 minutes). Only the tutorial bot walks the whole tutorial, so it runs before every push.
 
+- 2026-11-16, THE LOCK ON (`devlog-notes/2026-11-16_lock_nearest_marker_silhouette.md`, Bruno: "an option to lock onto the nearest target";
+  "the indicator is hidden behind walls"): `GameAction.LockNearest` (the wheel click) locks the nearest enemy; the marker draws over everything
+  (`Resources/Shaders/GB_OnTop`); a hidden target shows a red silhouette (`Player/LockSilhouette`, `GB_Silhouette`, ZTest Greater, only when the
+  lines from the camera to its chest and head are blocked). NOT COMPILED, NOT RUN.
 - 2026-11-06, day, MK AS AMMUNITION (`devlog-notes/2026-11-06_mk_ammo_short_death_search.md`, Bruno: "that basically makes mk an ammo counter and the pills clips"): one MK bar for each power
   (`PsychicStats.Mk(kind)`; `Nalcon` reads the selected bar; only that bar shows on the HUD), no recharge, one capsule for each power (`DrugType.Nalcon`, `NalconFire`, `NalconLift`). Every point of MK spent fills
   SHORT (`ShortPerMkPoint`). A short can kill her (killer id `short`, its own death screen row); a second wind saves her and ends the short. SCARCITY and DEEP WELL change the cost. `FireTeam`: suppression
