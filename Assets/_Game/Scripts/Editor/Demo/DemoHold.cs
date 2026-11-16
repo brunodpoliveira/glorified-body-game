@@ -209,6 +209,11 @@ namespace GlorifiedBody.Editor.Demo
             runner.escapeLines = new[] { Bark("h2_runner_1"), Bark("h2_runner_2") };
             runner.cowerFlag = RunnerCowered;
             runner.giveAfterFlag = CardScanned;
+            // The scan C11 is on him (Bruno, 2026-11-16: the reader on the landing, then back over the gap to ask, was "too obtuse";
+            // his pick: "scan him"). Ask: he lies. Scan him: the card on his lanyard. Ask again: he gives it. All in the Hold.
+            runner.scanImage = TutorialSetup.EnsureScanImage();
+            runner.scanCaption = DemoPlan.ScanCard("C11", "PLACEHOLDER (C11): a gloved hand in a light blue cuff clips a white card to a lanyard. Behind it, out of focus, the glass of the box and the steel of a treatment bench.");
+            runner.scanFlag = CardScanned;
             runner.denyLine = Bark("h2_deny_card");
             runner.giveLine = Bark("h2_give_card");
             EditorUtility.SetDirty(runner);
@@ -580,9 +585,7 @@ namespace GlorifiedBody.Editor.Demo
             r.LockedLeaf(r.DoorTo("H7"), DemoItems.AirlockCard().itemId, "the airlock card");
             // The plan's sign over the card door (DEMO_PLAN §7; Bruno, 2026-11-16: "it's not clear what the airlock key acutally unlocks").
             r.Sign("Sign_Card_Door", DemoPlan.Sign("H6, the card door", "AIRLOCK CARD REQUIRED."), new Vector3(LandingDoorX, DemoRoom.DoorHeight + 0.3f, 29.17f), Vector3.forward, new Vector2(1.6f, 0.24f), 30);
-            r.Scan("Scan_C11", new Vector3(LandingX1 - 1.3f, 1.2f, 29.2f), "c11_card_reader",
-                DemoPlan.ScanCard("C11", "PLACEHOLDER (C11): a gloved hand in a light blue cuff clips a white card to a lanyard. Behind it, out of focus, the glass of the box and the steel of a treatment bench."),
-                CardScanned);
+            // The scan C11 was on the card reader here until 2026-11-16: it is on the card carrier of H2 now (DemoHold.H2).
         }
 
         // ── H7, the gallery ───────────────────────────────────────────

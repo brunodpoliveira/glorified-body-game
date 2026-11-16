@@ -26,6 +26,8 @@ namespace GlorifiedBody.Enemy
         public Texture2D scanImage;
         public UnityEngine.Video.VideoClip scanClip;
         public string scanCaption = "";
+        [Tooltip("The flag a scan of the person raises (the Hold: the scan C11 on the card carrier). Empty: <fate>_scanned, when it has a fate.")]
+        public string scanFlag = "";
         [Tooltip("The person's fate key (\"marta\"): the flags <fate>_killed, <fate>_spared, <fate>_scanned (FateFlag).")]
         public string fate = "";
         [Tooltip("A hider (CivilianBrain): it waits at its place and begs when she finds it. Its whisper and its found line.")]
@@ -133,7 +135,8 @@ namespace GlorifiedBody.Enemy
             scan.image = scanImage;
             scan.clip = scanClip;
             scan.caption = scanCaption;
-            if (!string.IsNullOrEmpty(fate)) scan.raiseFlag = fate + "_scanned";
+            if (!string.IsNullOrEmpty(scanFlag)) scan.raiseFlag = scanFlag;
+            else if (!string.IsNullOrEmpty(fate)) scan.raiseFlag = fate + "_scanned";
             Animator animator = figure.GetComponentInChildren<Animator>();
             if (animator != null && animator.isHuman) scan.focus = animator.GetBoneTransform(HumanBodyBones.Chest) ?? animator.GetBoneTransform(HumanBodyBones.Spine);
         }

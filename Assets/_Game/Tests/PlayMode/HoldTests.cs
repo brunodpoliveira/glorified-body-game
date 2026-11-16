@@ -153,7 +153,7 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator TheCard_DeniedBeforeTheScan_GivenAfterIt_AndItOpensTheLandingDoor()
+        public IEnumerator TheCard_DeniedBeforeTheScanOfHim_GivenAfterIt_AndItOpensTheLandingDoor()
         {
             yield return Freed();
             GameObject lucy = Her();
@@ -165,12 +165,13 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.AreEqual("H2", Room.At(talk.transform.position + Vector3.up * 0.1f).id);
             StringAssert.StartsWith("denied:", talk.Confirm(hand), "before the scan C11 he denies it");
             Assert.IsFalse(items.Has("airlock_card"));
-            // The scan of the reader on the landing.
-            tank.Teleport(new Vector3(-9.3f, 0f, 30.2f), 180f);
-            yield return WaitUntil(() => RoomTracker.CurrentId == "H6", 3f);
+            // The scan C11 on him (Bruno, 2026-11-16: "scan him"; it was on the reader of the landing, across the gap).
+            Vector3 front = talk.transform.position + talk.transform.forward * 0.9f;
+            tank.Teleport(new Vector3(front.x, 0f, front.z), Quaternion.LookRotation(-talk.transform.forward).eulerAngles.y);
+            yield return null;
             PsychicScanner scanner = lucy.GetComponent<PsychicScanner>();
-            Assert.IsTrue(scanner.TryScan(), "the scan of the card reader");
-            Assert.AreEqual("c11_card_reader", scanner.Viewing.scanId);
+            Assert.IsTrue(scanner.TryScan(), "the scan of the card carrier");
+            Assert.AreSame(talk.GetComponent<Scannable>(), scanner.Viewing, "his own scan");
             scanner.End("test");
             Assert.IsTrue(StoryFlags.Has(DemoFlags.CardScanned), "the scan C11 raises its flag");
             LockedDoor landing = UnityEngine.Object.FindObjectsByType<LockedDoor>(FindObjectsSortMode.None).First(d => d.GetComponentInParent<Room>().id == "H6");

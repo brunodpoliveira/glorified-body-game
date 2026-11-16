@@ -802,6 +802,9 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   column holds TRAINING, DEMO: DINING HALL, AI, KIT, BRAIN, PHYSICS; the other test rooms stay for the tests and bots. The look test scenes
   (LookTest, LookTest2, LookTestExterior, RemakeLook, RemakeLookBright, ArkhamLook, ArkhamLookBright), their setups, directors and bots, and F11
   are deleted; `LookTestSetup` and `LookDirector` stay (the tutorial, the test-room builders). The look-test lines above are history.
+- 2026-11-16, THE HOLD FIXES (`devlog-notes/2026-11-16_card_scan_on_him.md`): a carried box turns about the vertical and a long one goes end on
+  (`TelekinesisLift.AlignLong`: the gurney through a doorway); the airlock card's text and the landing door's sign say what it opens; the scan C11
+  is on the card carrier of H2 (`EnemySpawn.scanFlag`, Bruno: the backtrack was "too obtuse"): ask, scan him, ask again. NOT COMPILED, NOT RUN.
 - 2026-11-06, day, MK AS AMMUNITION (`devlog-notes/2026-11-06_mk_ammo_short_death_search.md`, Bruno: "that basically makes mk an ammo counter and the pills clips"): one MK bar for each power
   (`PsychicStats.Mk(kind)`; `Nalcon` reads the selected bar; only that bar shows on the HUD), no recharge, one capsule for each power (`DrugType.Nalcon`, `NalconFire`, `NalconLift`). Every point of MK spent fills
   SHORT (`ShortPerMkPoint`). A short can kill her (killer id `short`, its own death screen row); a second wind saves her and ends the short. SCARCITY and DEEP WELL change the cost. `FireTeam`: suppression
