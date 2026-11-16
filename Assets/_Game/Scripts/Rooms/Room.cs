@@ -31,6 +31,8 @@ namespace GlorifiedBody.Rooms
             public Vector3 outward;
             public float width;
             public string to;
+            [Tooltip("The exit rule skips it: a shot of the drop of the Hold asked for (Bruno, 2026-11-16), the tube shows the way.")]
+            public bool noShot;
         }
 
         [Tooltip("Its ways out. The camera of the floor in front of each one shows it (Bruno, 2026-11-05: \"i also need to see the exits\").")]

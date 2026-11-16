@@ -18,6 +18,8 @@ namespace GlorifiedBody.Interaction
     {
         public string keyItemId = "test_key";
         public string keyName = "the test key";
+        [Tooltip("Raised when it opens (the Hold: the close-up of the drop shows from then on). Empty: none.")]
+        public string openedFlag = "";
         [Tooltip("The leaf that slides: its collider goes when the door opens.")]
         public Transform leaf;
         public Vector3 openOffset = new Vector3(-1.25f, 0f, 0f);
@@ -93,6 +95,7 @@ namespace GlorifiedBody.Interaction
                 else StartCoroutine(Slide());
             }
             RunTelemetry.Event("door_opened", name);
+            if (!string.IsNullOrEmpty(openedFlag)) StoryFlags.Raise(openedFlag);
             if (!instant) GlorifiedBody.Audio.Sfx.Play(GlorifiedBody.Audio.Sfx.DoorOpen, transform.position + Vector3.up * 1.2f, 0.9f);
         }
 

@@ -68,6 +68,9 @@ namespace GlorifiedBody.Rooms
         {
             float tanV = Mathf.Tan(fov * 0.5f * Mathf.Deg2Rad), tanH = tanV * Aspect;
             int mask = SolidMask();
+            // A camera outside its room's plan (the side shot of the Hold's tube, in the dark of the hall, 2026-11-16) has no wall to
+            // leak through: it lists the rooms it sees, and the gap check skips it.
+            bool originInside = InFootprint(own, origin, 0f);
             for (int i = 0; i < columns; i++)
                 for (int j = 0; j < rows; j++)
                 {
@@ -111,7 +114,7 @@ namespace GlorifiedBody.Rooms
                             result.Seen.Add(r);
                             trace?.Add($"ray {i},{j}: crosses {r.id} before {far:0.00} (structure {(structureHit != null ? structureHit.name + " of " + structureHit.GetComponentInParent<Room>()?.id : "none")} at {structure:0.00}, stop {stop:0.00}, {n} hits)");
                         }
-                    if (!inside && solidHit != null) CheckGap(own, origin, dir, solid, leave, solidHit, result);
+                    if (!inside && solidHit != null && originInside) CheckGap(own, origin, dir, solid, leave, solidHit, result);
                 }
         }
 

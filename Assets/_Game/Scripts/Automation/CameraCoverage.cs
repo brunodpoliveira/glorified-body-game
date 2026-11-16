@@ -146,6 +146,7 @@ namespace GlorifiedBody.Automation
             foreach (GlorifiedBody.Rooms.Room room in GlorifiedBody.Rooms.Room.All)
                 foreach (GlorifiedBody.Rooms.Room.Exit exit in room.exits)
                 {
+                    if (exit.noShot) continue;
                     Vector3 mouth = room.transform.position + exit.mouth;
                     FixedCamera cam = CameraFor(mouth - exit.outward * ExitStandOff, zones, director);
                     if (cam == null) { missing.Add($"{room.id} to {exit.to}: no camera"); continue; }

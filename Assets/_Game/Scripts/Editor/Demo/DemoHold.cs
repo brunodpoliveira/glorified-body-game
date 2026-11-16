@@ -38,6 +38,7 @@ namespace GlorifiedBody.Editor.Demo
         public const string TapePlay = "hold_l36_play";
         public const string TapeDone = "demo_h4_tape";
         public const string TubeOut = "hold_tube_out";
+        public const string AirlockOpen = "hold_airlock_open"; // the card opened the glass door to the tube: the close-up of the drop shows
         public const string CardScanned = "hold_c11";
         public const string VoiceUrge = "demo_h5_voice_urge";
         public const string VoiceFed = "demo_h5_voice_fed";
@@ -76,9 +77,11 @@ namespace GlorifiedBody.Editor.Demo
                 new Door('W', DoorZ, "H5", height: TubeHeight), new Door('N', 12, "H3b", height: TubeHeight)),
             Spec("H3b", "SCRUB ROOM", 9, BoxZ1, 15, TheaterZ0, H3b, new Door('S', 12, "H3", height: TubeHeight), TheaterDoor("H4")),
             Spec("H4", "THE THEATER", TheaterX0, TheaterZ0, 15, TheaterZ1, H4, TheaterDoor("H3b")),
-            Spec("H5", "AIRLOCK", 4, BoxZ0, 9, BoxZ1, H5, new Door('E', DoorZ, "H3", height: TubeHeight), new Door('W', DoorZ, "HT", width: TubeWidth, height: TubeHeight)),
-            Spec("HT", "THE TUBE", TubeX0, TubeZ0, TubeX1, TubeZ1, HT, new Door('E', DoorZ, "H5", width: TubeWidth, height: TubeHeight),
-                new Door('W', DoorZ, "H6", width: TubeWidth, height: TubeHeight)),
+            // The doorways of the tube skip the exit rule (2026-11-16): the close-up of the drop and the front shot from the landing
+            // (Bruno's three shots of the crossing, DemoHold.H5 and HT) cannot show the doorway they stand at, and the tube shows the way.
+            Spec("H5", "AIRLOCK", 4, BoxZ0, 9, BoxZ1, H5, new Door('E', DoorZ, "H3", height: TubeHeight), new Door('W', DoorZ, "HT", width: TubeWidth, height: TubeHeight, exitShot: false)),
+            Spec("HT", "THE TUBE", TubeX0, TubeZ0, TubeX1, TubeZ1, HT, new Door('E', DoorZ, "H5", width: TubeWidth, height: TubeHeight, exitShot: false),
+                new Door('W', DoorZ, "H6", width: TubeWidth, height: TubeHeight, exitShot: false)),
             Spec("H6", "LANDING", LandingX0, 29, LandingX1, 37, H6, new Door('E', DoorZ, "HT", width: TubeWidth, height: TubeHeight), new Door('S', LandingDoorX, "H7")),
             Spec("H7", "THE GALLERY", LandingX0, 23, 14, 29, H7, new Door('N', LandingDoorX, "H6"), new Door('S', 4, "H8", fire: true)),
             Spec("H8", "SAVE ROOM", 1, 19, 7, 23, H8, new Door('N', 4, "H7", fire: true),
@@ -503,7 +506,13 @@ namespace GlorifiedBody.Editor.Demo
             NoCollider(warning);
             GameObject sign = r.Sign("Sign_Gap", "CAUTION: DROP. WAIT FOR THE TUBE.", new Vector3(TubeX1 + 0.45f, 0.03f, DoorZ), Vector3.back, new Vector2(2.0f, 0.5f), 40);
             sign.transform.rotation = Quaternion.LookRotation(Vector3.down, Vector3.left); // flat on the floor, the words read from the airlock
-            r.ExtraCamera("gap", new Vector3(5.6f, 2.75f, 36.6f), new Vector3(0.0f, -2.5f, 35.3f), 74f, new Vector3(0.5f, 1.5f, DoorZ), new Vector3(5.0f, 3f, TubeWidth - 0.2f)); // the tube from x -2 to 3: the last metre before the airlock's doorway keeps its own camera (the exit rule)
+            // The crossing in three shots (Bruno, 2026-11-16, after a film he showed: "after it being unlocked there's an extreme closeup
+            // of the 'careful with drop' notice. this will be both dramatic and help the player align the gurney with her feet before she
+            // steps on it; then a side angle and front-facing towards the destination. side angle needed to avoid violating 180 rule").
+            // 1. The close-up: from over her shoulder, down on the notice on the floor, the edge and the dark beyond. Its zone is the floor
+            //    in front of the glass door, and it shows only once the card opened that door (AirlockOpen). It looks west.
+            r.ExtraCamera("drop", new Vector3(5.6f, 2.6f, DoorZ), new Vector3(4.1f, 0f, DoorZ), 64f, new Vector3(4.7f, 1.5f, DoorZ), new Vector3(1.4f, 3f, TubeWidth), AirlockOpen);
+            // 2 and 3: DemoHold.HT (the side shot over the first half of the tube, the front shot from the landing over the second).
 
             // The card door is here, on her side of the gap (Bruno, 2026-11-16: "a glass lock on the player's end to avoid the player
             // floating and smacking onto the lock. they'll see the locked glass door right away"): a glass leaf in the doorway to the
@@ -511,6 +520,9 @@ namespace GlorifiedBody.Editor.Demo
             // him does (CardScanned: "the player has two chances to use the scan ability"). The glass is on Ignore Raycast, as the
             // booth's panes: the gap camera, the room cull and her powers see through it, her body and the gurney do not pass.
             GameObject airlock = r.LockedLeaf(r.DoorTo("HT"), DemoItems.AirlockCard().itemId, "the airlock card");
+            LockedDoor airlockLock = airlock.GetComponent<LockedDoor>();
+            airlockLock.openedFlag = AirlockOpen;
+            EditorUtility.SetDirty(airlockLock);
             Transform glassLeaf = airlock.transform.Find("Leaf");
             glassLeaf.GetComponent<Renderer>().sharedMaterial = DemoRoom.Glass("airlock_glass", new Color(0.7f, 0.8f, 0.86f), 0.35f);
             glassLeaf.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
@@ -574,9 +586,14 @@ namespace GlorifiedBody.Editor.Demo
                 Visual(r, tube, "Rib_" + x.ToString("0.0"), new Vector3(x, 1.5f, TubeZ1 - 0.05f), new Vector3(0.06f, 3f, 0.06f), new Color(0.7f, 0.82f, 0.88f), "tube_rib");
             foreach (Transform child in r.Room.transform)
             {
-                if (child.name.StartsWith("Wall_N") || child.name.StartsWith("Wall_S"))
-                    Object.DestroyImmediate(child.GetComponent<Renderer>()); // a rail she cannot see: she rides straight across
+                if (!child.name.StartsWith("Wall_N") && !child.name.StartsWith("Wall_S")) continue;
+                Object.DestroyImmediate(child.GetComponent<Renderer>()); // a rail she cannot see: she rides straight across
+                child.gameObject.layer = 2; // Ignore Raycast (2026-11-16): the side shot sees through it; the ride's own check (Rideable) still meets it
             }
+            // The side shot (yaw 0: from the south, at her height): the first part of the crossing, between the close-up (it looks west)
+            // and the front shot (it looks east), so no cut flips her direction. Out in the dark of the hall, past the invisible rail.
+            r.ExtraCamera("side", new Vector3(0.75f, 1.9f, 31.2f), new Vector3(0.75f, 1.0f, DoorZ), 60f, new Vector3(0.75f, 1.5f, DoorZ), new Vector3(6.5f, 3f, TubeWidth));
+            // The front shot of the rest of the crossing: a camera of the landing (DemoHold.H6), where it stands.
             var pitObj = new GameObject("Pit_Return");
             pitObj.transform.SetParent(r.Story.transform, false);
             pitObj.transform.position = new Vector3((TubeX0 + TubeX1) * 0.5f, -1.1f, DoorZ);
@@ -595,6 +612,9 @@ namespace GlorifiedBody.Editor.Demo
 
         private static void H6(DemoRoom r)
         {
+            // The front shot of the crossing (yaw 90: from the landing, through its doorway, at her as she comes; Bruno, 2026-11-16):
+            // the camera stands here, its zone is the far half of the tube (x -8 to -2.5). The side shot covers the near half (HT).
+            r.ExtraCamera("front", new Vector3(-10.0f, 2.3f, DoorZ), new Vector3(-3.0f, 1.0f, DoorZ), 55f, new Vector3(-5.25f, 1.5f, DoorZ), new Vector3(5.5f, 3f, TubeWidth));
             r.Prop("Tube_Collar", new Vector3(LandingX1 - 0.35f, 0f, 37f - 0.2f), new Vector3(0.4f, 3f, 0.3f), 0.5f);
             // The tube's control console (Bruno, 2026-11-15: "a button on a computer on the other side"): the way back to the Hold.
             r.Prop("Tube_Console", new Vector3(LandingX1 - 0.325f, 0f, 33.6f), new Vector3(0.35f, 1.0f, 0.9f), 0.2f); // the button on its top; she reaches it from 0.4 m (HoldTests)

@@ -33,7 +33,8 @@ namespace GlorifiedBody.Editor.Demo
         public string JamFlag = "";   // a fire door shuts and jams when this flag goes up (code silver)
         public string LeverRoom = ""; // a fire door with one lever: on the face of this room. Empty: both faces. "none": no lever
         public bool Unbreakable;      // a fire door no kick breaks (the service exit of G19: a push bar on one side)
-        public Door(char side, float at, string to, float width = 1.6f, string flag = "", bool fire = false, float height = DemoRoom.DoorHeight, int pocket = 1, bool jammed = false, string leverFlag = "", string jamFlag = "", string leverRoom = "", bool unbreakable = false) { Side = side; At = at; To = to; Width = width; Flag = flag; Fire = fire; Height = height; Pocket = pocket; Jammed = jammed; LeverFlag = leverFlag; JamFlag = jamFlag; LeverRoom = leverRoom; Unbreakable = unbreakable; }
+        public bool ExitShot = true;  // false: the exit rule skips it (the drop of the Hold, 2026-11-16: the shots Bruno asked for there)
+        public Door(char side, float at, string to, float width = 1.6f, string flag = "", bool fire = false, float height = DemoRoom.DoorHeight, int pocket = 1, bool jammed = false, string leverFlag = "", string jamFlag = "", string leverRoom = "", bool unbreakable = false, bool exitShot = true) { Side = side; At = at; To = to; Width = width; Flag = flag; Fire = fire; Height = height; Pocket = pocket; Jammed = jammed; LeverFlag = leverFlag; JamFlag = jamFlag; LeverRoom = leverRoom; Unbreakable = unbreakable; ExitShot = exitShot; }
     }
 
     /// <summary>One room of the demo: its id, its title, its floor, its place on the floor plan, its doors, its dressing.</summary>
@@ -155,7 +156,7 @@ namespace GlorifiedBody.Editor.Demo
             room.Shell();
             spec.Dress?.Invoke(room);
             Physics.SyncTransforms();
-            component.exits = spec.Doors.ConvertAll(d => new Room.Exit { mouth = room.Mouth(d), outward = Outward(d.Side), width = d.Width, to = d.To }).ToArray();
+            component.exits = spec.Doors.ConvertAll(d => new Room.Exit { mouth = room.Mouth(d), outward = Outward(d.Side), width = d.Width, to = d.To, noShot = !d.ExitShot }).ToArray();
             if (!spec.AuthoredCameras) room.CamerasOnCells();
             foreach (Action add in room.extraCameras) add();
             GameObject music = MenuLoopSetup.EnsureChild(root, "[Music]");
@@ -323,14 +324,23 @@ namespace GlorifiedBody.Editor.Demo
         /// One more camera with its zone, over the cells of the room (a beat the cell's camera shows badly: the W1 door,
         /// 2026-11-05). The zone takes priority over the cells, and its floor points must be in this camera's frame.
         /// </summary>
-        public void ExtraCamera(string tag, Vector3 cam, Vector3 look, float fov, Vector3 zoneCentre, Vector3 zoneSize)
+        /// <param name="zoneFlag">The zone shows only once this flag is up (a FlagGate): the close-up of the drop after the glass door opens.</param>
+        public void ExtraCamera(string tag, Vector3 cam, Vector3 look, float fov, Vector3 zoneCentre, Vector3 zoneSize, string zoneFlag = "")
         {
             extraCameras.Add(() =>
             {
                 GameObject root = MenuLoopSetup.EnsureChild(Root, "[Cameras]");
                 FixedCamera fc = MenuLoopSetup.EnsureFixedCamera(root, $"Cam_{Spec.Id}_{tag}", cam, look, fov);
                 Cameras.Add(fc);
-                MenuLoopSetup.EnsureCameraZone(root, $"Zone_{Spec.Id}_{tag}", zoneCentre, zoneSize, fc, 2);
+                GameObject zoneRoot = root;
+                if (!string.IsNullOrEmpty(zoneFlag))
+                {
+                    zoneRoot = MenuLoopSetup.EnsureChild(root, $"Gate_{Spec.Id}_{tag}");
+                    FlagGate gate = MenuLoopSetup.EnsureComponent<FlagGate>(zoneRoot);
+                    gate.flag = zoneFlag;
+                    gate.showWhenRaised = true;
+                }
+                MenuLoopSetup.EnsureCameraZone(zoneRoot, $"Zone_{Spec.Id}_{tag}", zoneCentre, zoneSize, fc, 2);
                 MenuLoopSetup.EnsureShotPoints(new[] { fc });
             });
         }
@@ -388,6 +398,7 @@ namespace GlorifiedBody.Editor.Demo
             // The exits of the cell (Bruno, 2026-11-05: "i also need to see the exits"): where she stands as she goes to them.
             List<Door> exits = s.Doors.FindAll(d =>
             {
+                if (!d.ExitShot) return false; // the exit rule skips it
                 Vector3 p = InsideDoor(d, 0.7f);
                 return p.x >= cell.xMin - 0.3f && p.x <= cell.xMax + 0.3f && p.z >= cell.yMin - 0.3f && p.z <= cell.yMax + 0.3f;
             });
