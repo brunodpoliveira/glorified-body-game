@@ -177,6 +177,10 @@ namespace GlorifiedBody.Player
             }
             lockOn.HeldThing = HeldLift != null ? HeldLift.transform : null;
             lockOn.WheelRaises = HeldLift != null && Selected.kind == PowerKind.Telekinesis;
+            // The lock is the aim of a throw (Bruno, 2026-11-16: "second one, we need to be as consistent as possible"): while she
+            // holds a thing, the lock leaves it for the nearest enemy, and Tab and the wheel click reach only enemies.
+            lockOn.IncludeProps = Selected.kind == PowerKind.Telekinesis && HeldLift == null;
+            if (HeldLift != null && lockOn.LockedOnHeld) lockOn.AimAwayFromHeld();
 
             // LMB attacks, RMB defends (Bruno, 2026-10-20). Telekinesis with an enemy in the air (Bruno,
             // 2026-10-22): the attack key charges as usual; a release throws it by the charge, a full charge slams it
@@ -1040,8 +1044,8 @@ namespace GlorifiedBody.Player
         public const float CatchBuffer = 0.2f;     // seconds an early RMB press stays valid, PROPOSED
 
         /// <summary>
-        /// Throws the enemy or the prop she holds in the air. She aims with her facing: the living enemy inside
-        /// LaunchAimCone of her forward, nearest first, else the nearest other enemy in range, else straight ahead.
+        /// Throws the enemy or the prop she holds in the air. She aims with the lock (2026-11-16): the locked enemy, else the
+        /// living enemy inside LaunchAimCone of her forward, nearest first, else straight ahead.
         /// Both take the damage (a prop has no HP). The charge sets the cost, the damage and the speed (Bruno, 2026-11-07: "a throw
         /// should cost relative to the power the player put into it"). A short press counts as the least charge. After a prop throw
         /// the lock goes back to the nearest enemy.
@@ -1055,7 +1059,11 @@ namespace GlorifiedBody.Player
             float scale = DamageScale; // the boost is read before the cost lowers the bar
             if (!stats.TrySpendMk(power.kind, power.nalconCost * charge)) return Result("no_nalcon", charge);
             float range = power.range;
-            LockOnTargetable victim = FindAimedTarget(lift.transform, range) ?? FindLaunchTarget(lift.transform, range);
+            // The locked enemy (the aim, 2026-11-16), else the enemy inside the cone of her facing, else straight ahead.
+            LockOnTargetable locked = lockOn.CurrentTarget;
+            bool aimed = locked != null && locked.IsAlive && locked.Selectable && !locked.IsProp && !locked.IsAlly
+                         && locked.transform != lift.transform && !locked.transform.IsChildOf(lift.transform);
+            LockOnTargetable victim = aimed ? locked : FindAimedTarget(lift.transform, range);
             Vector3 destination = victim != null
                 ? victim.GetLockPoint()
                 : lift.transform.position + Vector3.ProjectOnPlane(transform.forward, Vector3.up).normalized * 8f;
@@ -1157,22 +1165,6 @@ namespace GlorifiedBody.Player
             RunTelemetry.Event("bullet_caught", best.KillerId);
             OnChanged?.Invoke();
             return true;
-        }
-
-        private static LockOnTargetable FindLaunchTarget(Transform flyer, float range)
-        {
-            LockOnTargetable best = null;
-            float bestDistance = range;
-            foreach (LockOnTargetable candidate in TargetRegistry.All)
-            {
-                if (candidate == null || !candidate.IsAlive || !candidate.Selectable || candidate.IsAlly || candidate.IsProp) continue;
-                if (candidate.transform == flyer || candidate.transform.IsChildOf(flyer)) continue;
-                float distance = Vector3.Distance(flyer.position, candidate.GetLockPoint());
-                if (distance >= bestDistance) continue;
-                best = candidate;
-                bestDistance = distance;
-            }
-            return best;
         }
     }
 }

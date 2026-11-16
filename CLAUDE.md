@@ -822,6 +822,9 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   at the H6 EXTEND console (by `hold_tube_out`). The softlock plays a cutscene (PLACEHOLDER), then the gurney is back and she stands in the airlock
   (`LostProp`; no death). The theater's table and gurney swapped; a held prop she stands on stays under the room's ceiling
   (`TelekinesisLift.HighestHeight`). `TankController.StickToProp`, off, for his playtest. NOT COMPILED, NOT RUN.
+- 2026-11-16, THE LOCK IS THE AIM OF A THROW (same note as the surf, Bruno: "as consistent as possible"): while she holds a thing the lock leaves it
+  for the nearest enemy (`LockOnController.AimAwayFromHeld`, `IsHeld`), Tab and the wheel click reach only enemies, and a throw goes to the locked
+  enemy; with no lock, the 25-degree cone of her facing, else straight ahead. NOT COMPILED, NOT RUN.
 - 2026-11-06, day, MK AS AMMUNITION (`devlog-notes/2026-11-06_mk_ammo_short_death_search.md`, Bruno: "that basically makes mk an ammo counter and the pills clips"): one MK bar for each power
   (`PsychicStats.Mk(kind)`; `Nalcon` reads the selected bar; only that bar shows on the HUD), no recharge, one capsule for each power (`DrugType.Nalcon`, `NalconFire`, `NalconLift`). Every point of MK spent fills
   SHORT (`ShortPerMkPoint`). A short can kill her (killer id `short`, its own death screen row); a second wind saves her and ends the short. SCARCITY and DEEP WELL change the cost. `FireTeam`: suppression

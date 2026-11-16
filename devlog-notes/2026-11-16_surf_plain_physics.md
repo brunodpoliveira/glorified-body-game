@@ -45,3 +45,19 @@ To test by hand:
    the mouse, and lower it with the wheel until the deck is level with the floor.
 2. Walk onto it. Move it with the mouse: she goes with it.
 3. Try the same with a crate or a box in another room.
+
+## Later: the lock is the aim of a throw
+
+Bruno: "how can the player aim a orzabal lifted object at an enemy rn?" Before, a throw went to the nearest enemy inside
+25 degrees of her facing, else to the nearest enemy in any direction, else straight ahead. The lock stayed on the held
+thing, and no marker showed the aim. His pick of two: the lock is the aim ("we need to be as consistent as possible"), and
+"with no lock as a fallback it does the aim with her facing thing".
+
+1. While she holds a thing, the lock leaves it for the nearest enemy (`LockOnController.AimAwayFromHeld`).
+2. While she holds a thing, Tab and the wheel click reach only enemies. The held thing is never a target. The wheel still
+   raises the held thing.
+3. A throw goes to the locked enemy. With no lock, it goes to the enemy inside 25 degrees of her facing, else straight
+   ahead. The search for the nearest enemy in any direction is gone.
+4. A charge turns her to the locked enemy, as for the other powers.
+
+NOT COMPILED, NOT RUN. Tests that expect the lock to stay on a held thing can fail: they wait for a run.

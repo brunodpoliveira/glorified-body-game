@@ -102,10 +102,20 @@ namespace GlorifiedBody.Player
         {
             LockOnTargetable next = TargetRegistry.Cycle(CurrentTarget, direction, null, transform.position, transform,
                 lockRange, 360f, SightMask, NeedsSight, IncludeProps);
-            if (next == null || next == CurrentTarget) return false;
+            if (next != null && IsHeld(next)) // the thing in her hold is no aim: one step further
+                next = TargetRegistry.Cycle(next, direction, null, transform.position, transform, lockRange, 360f, SightMask, NeedsSight, IncludeProps);
+            if (next == null || next == CurrentTarget || IsHeld(next)) return false;
             SetTarget(next);
             return true;
         }
+
+        /// <summary>The lock is on the thing she holds in the air (PsychicPowers moves it to an enemy: the lock is the aim of the throw).</summary>
+        public bool LockedOnHeld => CurrentTarget != null && IsHeld(CurrentTarget);
+
+        private bool IsHeld(LockOnTargetable t) => HeldThing != null && t != null && (t.transform == HeldThing || t.transform.IsChildOf(HeldThing));
+
+        /// <summary>The lock leaves the held thing for the nearest enemy, or for none (2026-11-16).</summary>
+        public void AimAwayFromHeld() => SetTarget(Nearest(preferBoss: true));
 
         private void Update()
         {
@@ -187,13 +197,13 @@ namespace GlorifiedBody.Player
             for (int i = 0; i < all.Count && preferBoss; i++)
             {
                 LockOnTargetable t = all[i];
-                if (t == null || !t.IsPreferred || !t.Selectable || !t.IsAlive) continue;
+                if (t == null || !t.IsPreferred || !t.Selectable || !t.IsAlive || IsHeld(t)) continue;
                 if ((t.GetLockPoint() - transform.position).sqrMagnitude <= dropRange * dropRange && InSight(t)) return t;
             }
             for (int i = 0; i < all.Count; i++)
             {
                 LockOnTargetable t = all[i];
-                if (t == null || !t.Selectable || t.IsProp || t.IsCivilian || t.IsAlly || !t.IsAlive || t.transform == transform || t.transform.IsChildOf(transform)) continue;
+                if (t == null || !t.Selectable || t.IsProp || t.IsCivilian || t.IsAlly || !t.IsAlive || t.transform == transform || t.transform.IsChildOf(transform) || IsHeld(t)) continue;
                 float d = (t.GetLockPoint() - transform.position).sqrMagnitude;
                 if (d < bestDistance && InSight(t))
                 {
