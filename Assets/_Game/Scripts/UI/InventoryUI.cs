@@ -60,6 +60,7 @@ namespace GlorifiedBody.UI
         private ItemInventory inventory;
         private DrugInventory drugs;
         private PsychicPowers powers;
+        private PsychicStats stats; // the bars of the gauge (DrawGauge)
         private Interactor interactor;
         private PsychicScanner scanner;
         private readonly List<Entry> entries = new List<Entry>();
@@ -88,6 +89,7 @@ namespace GlorifiedBody.UI
             inventory = player.GetComponent<ItemInventory>();
             drugs = player.GetComponent<DrugInventory>();
             powers = player.GetComponent<PsychicPowers>();
+            stats = player.GetComponent<PsychicStats>();
             interactor = player.GetComponent<Interactor>();
             scanner = player.GetComponent<PsychicScanner>();
             Build();
