@@ -460,6 +460,11 @@ namespace GlorifiedBody.Editor.Demo
             so.FindProperty("heavy").boolValue = false;
             so.FindProperty("unbreakable").boolValue = true; // steel: a throw does not break it
             so.ApplyModifiedPropertiesWithoutUndo();
+            // Lost in the gap before EXTEND, with her still on the Hold's side: the softlock's game over (Bruno, 2026-11-16).
+            LostProp lost = gurney.AddComponent<LostProp>();
+            lost.unlessFlag = TubeOut;
+            lost.strandedIn = "H1,H2,H2b,H3,H3b,H4,H5,HT";
+            EditorUtility.SetDirty(lost);
 
         }
 

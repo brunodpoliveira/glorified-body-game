@@ -225,7 +225,7 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator TheSurf_SheClimbsOnABox_TheHeldKeyLiftsItWithHer_TheWalkKeysMoveIt_TheReleaseSetsItDown()
+        public IEnumerator TheSurf_OnABox_TheHeldKeyLiftsItWithHer_TheWalkKeysMoveIt_TheReleaseSetsItDown()
         {
             // Bruno, 2026-11-14: "i need to test if it's possible to manipulate objects to get her to surf on them".
             stats.DebugSet(100f, 0f);
@@ -235,8 +235,8 @@ namespace GlorifiedBody.Tests.PlayMode
             Vector3 start = boxA.transform.position;
             tank.Teleport(new Vector3(start.x, 0f, start.z - 0.9f), 0f);
             yield return null;
-            Assert.AreSame(ride, hand.FindFocus(), "the Interact key reaches the box");
-            Assert.AreEqual("ride:up", ride.Confirm(hand), "she climbs on, no question");
+            Assert.AreNotSame(ride, hand.FindFocus(), "no key climbs on (Bruno, 2026-11-16)");
+            Assert.IsTrue(ride.ClimbOn(), "the test's step onto it");
             yield return new WaitForSeconds(0.3f);
             Assert.IsTrue(ride.OnTop(lucy.transform), "she stands on the box");
             float mk = stats.Mk(PowerKind.Telekinesis);
@@ -260,7 +260,9 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.AreEqual(start.y, boxA.transform.position.y, 0.06f, "on the floor");
             Assert.IsFalse(boxA.GetComponent<Rigidbody>().isKinematic, "a box again: it falls and rests");
             Assert.IsTrue(ride.OnTop(lucy.transform), "she still stands on it");
-            Assert.AreEqual("ride:down", ride.Confirm(hand), "the Interact key climbs her down");
+            pad.SetHeld(InputManager.GameAction.Forward, true); // she walks off it
+            yield return new WaitForSeconds(1.0f);
+            pad.SetHeld(InputManager.GameAction.Forward, false);
             yield return new WaitForSeconds(0.3f);
             Assert.Less(lucy.transform.position.y, 0.2f, "she stands on the floor");
             Assert.IsFalse(tank.MovementLocked);

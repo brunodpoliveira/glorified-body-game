@@ -604,6 +604,7 @@ namespace GlorifiedBody.Player
                     OnChanged?.Invoke();
                     return;
                 }
+                else if (TryBoard(lift)) return;
                 else if (tank != null) tank.FaceTowards(lift.transform.position, 540f);
             }
             if (!mine) return;
@@ -615,6 +616,29 @@ namespace GlorifiedBody.Player
             Vector3 right = Vector3.ProjectOnPlane(cam.transform.right, Vector3.up).normalized;
             Vector3 away = Vector3.ProjectOnPlane(cam.transform.forward, Vector3.up).normalized;
             lift.SteerBy((right * x + away * y) * scale, wheel * CarryMetresPerWheel, Selected.range);
+        }
+
+        /// <summary>
+        /// The step onto a carried thing (Bruno, 2026-11-16: "the player must manipulate the object successfully so they can step
+        /// on it and float to the other side"; his pick: lower it over the gap). Its top level with her feet and its edge in front
+        /// of her: the walk key steps her onto it, and the carry becomes the ride. The defend key is still held, so it floats on
+        /// with her; over the gap a release does not land it (Rideable.EndRide). An empty bar: she stays, and it still hangs.
+        /// </summary>
+        private bool TryBoard(TelekinesisLift lift)
+        {
+            if (!GameInput.GetAction(InputManager.GameAction.Forward, KeyCode.W)) return false;
+            GlorifiedBody.Interaction.Rideable ride = lift.GetComponent<GlorifiedBody.Interaction.Rideable>();
+            if (ride == null || !ride.CanBoardFrom(transform) || stats.Mk(PowerKind.Telekinesis) <= 0.01f) return false;
+            lift.Handover();
+            activeLift = null;
+            EndCarry();
+            if (!ride.StartRide(stats)) return true; // the bar ran out on the same frame: it falls, as a release
+            riding = ride;
+            LastResult = "ride";
+            LastResultTime = Time.time;
+            RunTelemetry.Event("tk_board", ride.name);
+            OnChanged?.Invoke();
+            return true;
         }
 
         private void EndCarry()

@@ -10,10 +10,14 @@ namespace GlorifiedBody.Interaction
     /// The ride (round 118, CANON: she "surfs" across a gap on an object she moves with mk_orzabal). Bruno, 2026-11-14:
     /// "the player needs to ride the gurney themselves; i need to test if it's possible to manipulate objects to get her
     /// to surf on them". So the ride is no question any more, it is the power (DEMO_PLAN §2.1, PROPOSED there and built
-    /// so): the Interact key climbs her onto the thing and down again; on it, the defend key held with mk_orzabal lifts
-    /// the thing with her on it, the walk keys steer it (forward and back along her facing, the turn keys turn it), and a
-    /// release sets it down. Over a gap it does not land: the ride goes on until a floor is under it. PsychicPowers
-    /// starts and ends the ride. Every box of the physics puzzles is rideable, and the steel gurney of the airlock H5.
+    /// so): on it, the defend key held with mk_orzabal lifts the thing with her on it, the walk keys steer it (forward and
+    /// back along her facing, the turn keys turn it), and a release sets it down. Over a gap it does not land: the ride goes
+    /// on until a floor is under it. PsychicPowers starts and ends the ride. Every box of the physics puzzles is rideable,
+    /// and the steel gurney of the Hold.
+    /// No key climbs her on (Bruno, 2026-11-16: "the interact to go on top of it must go. the player must manipulate the
+    /// object successfully so they can step on it and float to the other side"). She steps onto a top low enough for her
+    /// step, or she carries the thing over a gap, lowers it until its top is level with the floor (TelekinesisLift), and
+    /// walks onto it: the carry becomes the ride (PsychicPowers.TryBoard). A ride ends on its top; she walks off the edge.
     /// The cost (PROPOSED): the gurney 40 MK of the mk_orzabal bar (a full bar crosses twice; with less she rides on
     /// what is left), a box the cost of any lift. Walls and bodies stop it.
     /// </summary>
@@ -45,9 +49,7 @@ namespace GlorifiedBody.Interaction
         private RigidbodyInterpolation wasInterpolation;
         private int mask;
 
-        public override int Priority => Find() && OnTop(her.transform) ? 2 : 1; // on it, the key climbs down; beside it, the nearest thing wins
-        public override bool Available => base.Available && !Riding && Find() && (OnTop(her.transform) || Top - her.transform.position.y <= ClimbHeight);
-        public override string Hint => Find() && OnTop(her.transform) ? "climb down (hold the defend key with mk_orzabal to ride it)" : "climb on"; // the hint line: a message would lock her feet
+        public override bool Available => false; // no key climbs on or off (2026-11-16)
 
         private void Awake()
         {
@@ -105,7 +107,24 @@ namespace GlorifiedBody.Interaction
             return ClimbOn() ? "ride:up" : "ride:far";
         }
 
-        /// <summary>She climbs onto the top. No cost. The gurney: she faces along it. A box: she keeps her facing.</summary>
+        /// <summary>
+        /// The step from the floor onto a carried thing (PsychicPowers.TryBoard): its top level with her feet, its near edge a
+        /// short step in front of her.
+        /// </summary>
+        public bool CanBoardFrom(Transform who)
+        {
+            if (Riding || body == null) return false;
+            if (Mathf.Abs(Top - who.position.y) > BoardLevel) return false;
+            Vector3 feet = who.position + Vector3.up * 0.05f;
+            Vector3 edge = body.ClosestPoint(new Vector3(feet.x, Top - 0.05f, feet.z));
+            Vector3 to = Vector3.ProjectOnPlane(edge - feet, Vector3.up);
+            return to.magnitude <= BoardReach && (to.magnitude < 0.05f || Vector3.Dot(to.normalized, who.forward) > 0.3f);
+        }
+
+        public const float BoardLevel = 0.25f; // m: its top this close to her feet
+        public const float BoardReach = 0.9f;  // m: its near edge this close in front of her
+
+        /// <summary>Tests and bots: she stands on the top at once, as after a step onto it. No cost. The gurney: she faces along it. A box: she keeps her facing.</summary>
         public bool ClimbOn()
         {
             if (!Find() || Riding) return false;
@@ -153,6 +172,7 @@ namespace GlorifiedBody.Interaction
             stats.TrySpendMk(PowerKind.Telekinesis, Mathf.Max(0.01f, amount));
             LastCost = bar - stats.Mk(PowerKind.Telekinesis);
             herYaw = Mathf.DeltaAngle(transform.eulerAngles.y, her.transform.eulerAngles.y);
+            if (rb == null) rb = GetComponent<Rigidbody>(); // the first carry gives a prop its Rigidbody (PsychicPowers.EnsurePropBody)
             if (rb != null)
             {
                 wasKinematic = rb.isKinematic;

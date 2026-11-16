@@ -174,7 +174,45 @@ namespace GlorifiedBody.Combat
             if (distance > 0.001f) offset *= Mathf.Clamp(distance, NearestToHer, reach) / distance;
             holdOffset = Quaternion.Inverse(toWorld) * offset;
             float now = transform.position.y - floor.y;
-            holdHeight = Mathf.Clamp(Mathf.Clamp(holdHeight + height, now - MaxLead, now + MaxLead), MinHeight, MaxHeight);
+            holdHeight = Mathf.Clamp(Mathf.Clamp(holdHeight + height, now - MaxLead, now + MaxLead), LowestHeight(), MaxHeight);
+        }
+
+        /// <summary>
+        /// The wheel's low limit. Over a gap (no floor under any corner) a box goes down until its top is level with the floor it
+        /// lay on, so she can step onto it (Bruno, 2026-11-16: "the player must manipulate the object successfully so they can step
+        /// on it and float to the other side"; his pick: lower it over the gap). Over a floor: MinHeight.
+        /// </summary>
+        private float LowestHeight()
+        {
+            if (box == null || boxCollider == null) return MinHeight;
+            Bounds b = boxCollider.bounds;
+            int floors = Physics.DefaultRaycastLayers & ~LayerMask.GetMask("Player");
+            foreach (Vector3 corner in new[] { b.center, new Vector3(b.min.x, 0f, b.min.z), new Vector3(b.min.x, 0f, b.max.z), new Vector3(b.max.x, 0f, b.min.z), new Vector3(b.max.x, 0f, b.max.z) })
+            {
+                Vector3 from = new Vector3(corner.x, b.min.y + 0.05f, corner.z);
+                foreach (RaycastHit hit in Physics.RaycastAll(from, Vector3.down, 0.65f, floors, QueryTriggerInteraction.Ignore))
+                    if (hit.collider != boxCollider) return MinHeight;
+            }
+            return -(b.max.y - transform.position.y);
+        }
+
+        /// <summary>The carry ends with the box where it hangs: she stepped onto it, and the ride takes it (Rideable). No fall.</summary>
+        public void Handover()
+        {
+            if (!CanLaunch) return;
+            StopAllCoroutines();
+            Ending = "handover";
+            if (box != null)
+            {
+                box.linearVelocity = Vector3.zero;
+                box.angularVelocity = Vector3.zero;
+                box.useGravity = true;
+                box.constraints = RigidbodyConstraints.None;
+                if (boxCollider != null) boxCollider.sharedMaterial = boxMaterial;
+            }
+            IsLifted = false;
+            RunTelemetry.Event("tk_handover", name);
+            Destroy(this);
         }
 
         private void FixedUpdate()
