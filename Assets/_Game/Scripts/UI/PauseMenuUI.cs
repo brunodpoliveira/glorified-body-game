@@ -30,7 +30,8 @@ namespace GlorifiedBody.UI
             AddButton(parent, "Resume", () => GameManager.Instance?.Resume(), true);
             AddButton(parent, "Difficulty", () => GetComponent<DifficultyMenuUI>()?.Show());
             AddButton(parent, "Options", () => GetComponent<OptionsMenuUI>()?.Show());
-            AddButton(parent, "Restart", () =>
+            // Bruno, 2026-11-16: "restart needs to be clearer: restart from latest checkpoint". With no checkpoint the demo starts over.
+            AddButton(parent, "Restart from latest checkpoint", () =>
             {
                 if (GameManager.Instance != null && !GameManager.Instance.RestartFromLatestCheckpoint())
                 {

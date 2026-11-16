@@ -59,6 +59,23 @@ namespace GlorifiedBody.DebugTools
             GameObject lucy = GameObject.FindGameObjectWithTag("Player");
             GlorifiedBody.Rooms.Room room = GlorifiedBody.Rooms.Room.Of(roomId);
             if (lucy == null || room == null) { Fail(lucy == null ? "no Lucy" : "no room " + roomId); yield break; }
+            int parked = Park(room);
+            // The frame leaves her with MK 0 and SHORT 90: the F7 refill (HP, MK, SHORT 0, two drugs of each).
+            DebugCheatKeys cheats = FindFirstObjectByType<DebugCheatKeys>();
+            if (cheats == null || !cheats.Refill()) lucy.GetComponent<PsychicStats>()?.RefillAll();
+            Vector3 at = room.transform.position + local;
+            lucy.GetComponent<TankController>().Teleport(at, yaw);
+            yield return null;
+            // A checkpoint here (2026-11-16: Restart loads only checkpoints, and with none the demo starts over at H1). A load
+            // brings the parked figures back, so this object stays for the session and parks them again after each load.
+            SaveSystem.SaveCheckpoint(SaveSystem.PoseSpot(at, yaw));
+            SceneManager.sceneLoaded += OnLoaded;
+            Debug.Log($"[DevRoomStart] she starts in {roomId} at {local}, {parked} figures of other rooms parked, a checkpoint saved.");
+        }
+
+        /// <summary>Every figure outside the room goes inactive. The count.</summary>
+        private static int Park(GlorifiedBody.Rooms.Room room)
+        {
             int parked = 0;
             foreach (GlorifiedBody.Interaction.FeedableBody figure in FindObjectsByType<GlorifiedBody.Interaction.FeedableBody>(FindObjectsSortMode.None))
             {
@@ -66,12 +83,25 @@ namespace GlorifiedBody.DebugTools
                 figure.gameObject.SetActive(false);
                 parked++;
             }
-            // The frame leaves her with MK 0 and SHORT 90: the F7 refill (HP, MK, SHORT 0, two drugs of each).
-            DebugCheatKeys cheats = FindFirstObjectByType<DebugCheatKeys>();
-            if (cheats == null || !cheats.Refill()) lucy.GetComponent<PsychicStats>()?.RefillAll();
-            lucy.GetComponent<TankController>().Teleport(room.transform.position + local, yaw);
-            Debug.Log($"[DevRoomStart] she starts in {roomId} at {local}, {parked} figures of other rooms parked.");
-            Destroy(gameObject);
+            return parked;
+        }
+
+        private void OnDestroy() => SceneManager.sceneLoaded -= OnLoaded;
+
+        private void OnLoaded(Scene scene, LoadSceneMode mode)
+        {
+            if (scene.name != World) { Destroy(gameObject); return; } // the menu: the session of the dev start ends
+            StartCoroutine(ParkAgain());
+        }
+
+        /// <summary>After a load of the checkpoint: the figures spawn at the room's load, then they go inactive again.</summary>
+        private IEnumerator ParkAgain()
+        {
+            float t0 = Time.realtimeSinceStartup;
+            while (!(GameManager.Instance != null && GameManager.Instance.IsPlaying) && Time.realtimeSinceStartup - t0 < 10f) yield return null;
+            yield return new WaitForSecondsRealtime(0.5f); // the markers spawn their figures, and the load applies the rooms
+            GlorifiedBody.Rooms.Room room = GlorifiedBody.Rooms.Room.Of(roomId);
+            if (room != null) Debug.Log($"[DevRoomStart] after the load: {Park(room)} figures of other rooms parked again.");
         }
 
         private void Fail(string why)

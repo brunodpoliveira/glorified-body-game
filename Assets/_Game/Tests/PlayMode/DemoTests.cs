@@ -611,9 +611,10 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator ARetry_PutsHerAtTheDoorway_OfHerRoom_AsSheCameIn()
+        public IEnumerator ARestart_WithNoCheckpoint_StartsTheDemoOver()
         {
-            // The world scene has no room scene to reload: the retry point moves when she walks into a room.
+            // Bruno, 2026-11-16: "restart from latest checkpoint"; his pick: checkpoints only. The hidden retry point at each room's
+            // doorway is gone: with no checkpoint, a restart starts the demo over, the wake and all.
             yield return LoadWorld();
             yield return WaitUntil(() => Woke(), 120f);
             GameObject lucy = GameObject.FindGameObjectWithTag("Player");
@@ -622,22 +623,16 @@ namespace GlorifiedBody.Tests.PlayMode
             yield return WaitUntil(() => GlorifiedBody.Rooms.RoomTracker.CurrentId == "W2", 3f);
             tank.Teleport(new Vector3(13f, 0f, 14.6f), 0f); // into W3
             yield return WaitUntil(() => GlorifiedBody.Rooms.RoomTracker.CurrentId == "W3", 3f);
-            Vector3 cameIn = lucy.transform.position;
-            float shortAtDoor = lucy.GetComponent<PsychicStats>().Short;
-            lucy.GetComponent<PsychicStats>().AddShort(-30f); // after the doorway: a RETRY undoes it
-            tank.Teleport(new Vector3(16f, 0f, 16f), 90f); // she walks on in the room
-            yield return null;
-            int arrivals = SaveSystem.Arrivals;
+            Assert.IsFalse(SaveSystem.HasSessionCheckpoint, "no checkpoint yet");
+            Assert.IsFalse(GameManager.Instance.RestartFromLatestCheckpoint(), "nothing to load");
             GameManager.Instance.RestartLevel();
-            yield return WaitUntil(() => GameManager.Instance.IsPlaying && GlorifiedBody.Rooms.RoomTracker.CurrentId == "W3", 15f);
+            yield return WaitUntil(() => GameManager.Instance.IsPlaying && GlorifiedBody.Rooms.RoomTracker.CurrentId != "W3", 15f);
             yield return new WaitForSeconds(0.3f);
-            lucy = GameObject.FindGameObjectWithTag("Player");
             Assert.AreEqual(World, SceneManager.GetActiveScene().name);
-            Assert.AreEqual("W3", GlorifiedBody.Rooms.RoomTracker.CurrentId, "back in her room");
-            Assert.Less(Vector3.Distance(lucy.transform.position, cameIn), 0.5f, "at the doorway where she came in");
-            Assert.AreEqual(shortAtDoor, lucy.GetComponent<PsychicStats>().Short, 1f, "her state as she came in");
-            Assert.IsTrue(Woke(), "the story as it was: the wake does not play again");
-            Assert.IsTrue(GlorifiedBody.Rooms.RoomTracker.WasIn("W2"), "the map keeps the rooms she was in");
+            Assert.AreEqual("H1", GlorifiedBody.Rooms.RoomTracker.CurrentId, "the demo starts over in the cell");
+            Assert.IsFalse(Woke(), "the story starts over: the wake plays again");
+            SaveSystem.Folder = null;
+            yield return null;
         }
 
         [UnityTest]

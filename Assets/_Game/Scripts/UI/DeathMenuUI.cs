@@ -154,7 +154,7 @@ namespace GlorifiedBody.UI
 
         protected override void BuildButtons(Transform parent)
         {
-            AddButton(parent, "Retry", Restart, true);
+            AddButton(parent, "Restart from latest checkpoint", Restart, true); // was "Retry" (Bruno, 2026-11-16)
             AddButton(parent, "Main Menu", () => GameManager.Instance?.LoadMainMenu());
         }
 

@@ -390,27 +390,6 @@ namespace GlorifiedBody.Saving
             if (shortController != null && p.shortLeft > 0f) shortController.GoOn(p.shortLeft);
         }
 
-        /// <summary>
-        /// She walks into another room of the world scene (2026-11-02): the retry point moves here. Her state, the world
-        /// as she found it, the flags, the rooms she was in and the place where she came in: a RETRY with no checkpoint
-        /// gives these back, as the door of a room scene did before.
-        /// </summary>
-        private static void OnRoomChanged(GlorifiedBody.Rooms.Room from, GlorifiedBody.Rooms.Room to)
-        {
-            if (from == null || to == null) return; // the first room of a load: the load set the retry point
-            GameObject lucy = GameObject.FindWithTag("Player");
-            if (lucy == null) return;
-            entryFlags.Clear();
-            entryFlags.AddRange(StoryFlags.All);
-            entryPlayer = CapturePlayer(lucy);
-            entryRoom = CaptureRoom(SceneManager.GetActiveScene());
-            Vector3 p = lucy.transform.position;
-            entryDoor = PoseSpot(p, lucy.transform.eulerAngles.y);
-            entryVisited.Clear();
-            entryVisited.AddRange(GlorifiedBody.Rooms.RoomTracker.Visited);
-            RunTelemetry.Event("retry_point", to.id);
-        }
-
         /// <summary>A place as a spot id: "@x;y;z;yaw" (PlaceAt reads it).</summary>
         public static string PoseSpot(Vector3 p, float yaw) =>
             string.Format(System.Globalization.CultureInfo.InvariantCulture, "@{0:0.###};{1:0.###};{2:0.###};{3:0.#}", p.x, p.y, p.z, yaw);
@@ -465,9 +444,9 @@ namespace GlorifiedBody.Saving
                 GlorifiedBody.Rooms.RoomTracker.SetVisited(null);
                 return;
             }
-            // The world scene: a door between two rooms is a room change, not a load (2026-11-02).
-            GlorifiedBody.Rooms.RoomTracker.OnChanged -= OnRoomChanged;
-            GlorifiedBody.Rooms.RoomTracker.OnChanged += OnRoomChanged;
+            // The world scene: a door between two rooms is a room change, not a load (2026-11-02). Its hidden retry point at each
+            // room's doorway is gone (Bruno, 2026-11-16: "restart from latest checkpoint"; his pick: checkpoints only). With no
+            // checkpoint, a restart reloads the world with the story flags of its start: the demo starts over.
             Baseline(scene);
             bool restart = scene.name == currentRoom && pending == null && !WorldState.Travelling;
             currentRoom = scene.name;
