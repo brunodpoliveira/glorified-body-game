@@ -1064,15 +1064,19 @@ namespace GlorifiedBody.Tests.PlayMode
             to = Vector3.ProjectOnPlane(dummyB.transform.position - tank.transform.position, Vector3.up);
             Assert.Less(Vector3.Angle(tank.transform.forward, to), 5f, "she faces it");
 
-            // The mouse takes it to one side, and the charge must not chase it: it turns with her.
+            // The lock is the aim of the throw (Bruno, 2026-11-16: "we need to be as consistent as possible"): it leaves the
+            // thing in the air for the other enemy. The mouse takes the thing to one side, and the charge does not chase it:
+            // the charge turns her to the lock.
+            LockOnTargetable aim = lockOn.CurrentTarget;
+            Assert.AreEqual(dummyA, aim, "the lock leaves the thing for the other enemy");
             pad.Look = new Vector2(1f, 0f);
             yield return new WaitForSeconds(0.3f);
             pad.Look = Vector2.zero;
-            float yaw = tank.transform.eulerAngles.y;
             pad.SetHeld(InputManager.GameAction.Charge, true);
             yield return new WaitForSeconds(0.4f);
             Assert.Greater(powers.Charge, 0f, "the circle fills with a thing in the air");
-            Assert.AreEqual(0f, Mathf.DeltaAngle(yaw, tank.transform.eulerAngles.y), 0.5f, "she does not turn");
+            Vector3 toAim = Vector3.ProjectOnPlane(aim.transform.position - tank.transform.position, Vector3.up);
+            Assert.Less(Vector3.Angle(tank.transform.forward, toAim), 10f, "the charge turns her to the lock, not to the thing");
             pad.Tap(InputManager.GameAction.Defend);
             yield return null;
             pad.SetHeld(InputManager.GameAction.Charge, false);
@@ -1143,12 +1147,15 @@ namespace GlorifiedBody.Tests.PlayMode
             pad.Tap(InputManager.GameAction.Charge);
             yield return new WaitForSeconds(powers.Selected.liftSeconds + 0.1f);
             Assert.IsNotNull(powers.HeldLift);
+            // The lock is the aim of the throw (2026-11-16): it leaves the thing in the air.
+            LockOnTargetable aim = lockOn.CurrentTarget;
+            Assert.AreNotEqual(dummyA, aim, "the lock leaves the thing in the air");
             float y = dummyA.transform.position.y;
             pad.Scroll = 0.1f;
             yield return null;
             pad.Scroll = 0f;
             yield return new WaitForSeconds(0.2f);
-            Assert.AreEqual(dummyA, lockOn.CurrentTarget, "with a thing in the air the wheel does not switch");
+            Assert.AreEqual(aim, lockOn.CurrentTarget, "with a thing in the air the wheel does not switch");
             Assert.Greater(dummyA.transform.position.y, y + 0.1f, "it raises the thing");
 
             // With another power selected the wheel is the switch again, and the thing stays where it is.
@@ -1159,7 +1166,7 @@ namespace GlorifiedBody.Tests.PlayMode
             yield return null;
             pad.Scroll = 0f;
             yield return new WaitForSeconds(0.2f);
-            Assert.AreNotEqual(dummyA, lockOn.CurrentTarget, "another power: the wheel switches");
+            Assert.AreNotEqual(dummyA, lockOn.CurrentTarget, "another power: the wheel switches, never to the thing in the air");
             Assert.AreEqual(y, dummyA.transform.position.y, 0.05f, "and raises nothing");
             powers.HeldLift.Release(tank.gameObject);
         }

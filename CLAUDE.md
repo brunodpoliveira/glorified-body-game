@@ -828,6 +828,16 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
 - 2026-11-16, A ROOM'S FIGHT STAYS IN ITS ROOM (`devlog-notes/2026-11-16_concourse_crowd.md`, Bruno: "10+ enemies" in G2, "enemies from the foyer are
   coming in"): a soldier hears an alert, a shot or a power hit in his own room only (`SoldierBrain`, `Room.Same`; it was `Room.Hear`, next door too).
   He still chases her when he sees her. NOT COMPILED, NOT RUN.
+- 2026-11-16, night, THE 180 RULE OVER THE DEMO (`devlog-notes/2026-11-16_rule_180.md`, Bruno: "check the entire demo for 180 violations, and
+  add that as a rule for future camera additions"): `Automation/ScreenDirection` (the cuts on a 0.5 m grid of every floor and doorway; a flip:
+  her walk is at least half sideways on both screens, right on one and left on the other). `DemoWorld.ScreenDirections` repairs the cell cameras
+  in `BuildAll` (`DemoRoom.Repose`, else `DemoRoom.Split`; never a lost floor point, exit or doorway frame); a camera placed by hand must pass by
+  itself (`[Rule180] left:` in the build log). `DemoTests.NoCut_FlipsHerScreenDirection_AndNoCameraMoves` (and no camera turns but `Cam_B1_eye`).
+  The first check: 69 pairs flip; now 0, 209 cameras. G18 has `Cam_G18_bay_north`. The coverage check skips points within her radius (0.3 m)
+  of a solid; the tube HT is `Room.open` (no gap check). The flip share 0.5 is PROPOSED.
+- 2026-11-16, night, the full suite (`devlog-notes/2026-11-16_night_suite_faults.md`): the human shield counted the figure a gun
+  aims at (a dominated man never fired at his colleagues): `HumanShield.Covering` skips the target. Three tests follow the lock
+  that leaves a held thing. PlayMode 536 (4 on `Ignore`), 25 bots: all pass after the fix (the changed classes run again).
 - 2026-11-06, day, MK AS AMMUNITION (`devlog-notes/2026-11-06_mk_ammo_short_death_search.md`, Bruno: "that basically makes mk an ammo counter and the pills clips"): one MK bar for each power
   (`PsychicStats.Mk(kind)`; `Nalcon` reads the selected bar; only that bar shows on the HUD), no recharge, one capsule for each power (`DrugType.Nalcon`, `NalconFire`, `NalconLift`). Every point of MK spent fills
   SHORT (`ShortPerMkPoint`). A short can kill her (killer id `short`, its own death screen row); a second wind saves her and ends the short. SCARCITY and DEEP WELL change the cost. `FireTeam`: suppression

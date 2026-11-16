@@ -963,7 +963,7 @@ namespace GlorifiedBody.Enemy
 
         /// <summary>A person covers the line from this spot to her chest, and his rank holds its fire for it (HumanShield).</summary>
         private bool PersonOnLine(Vector3 spot, Vector3 chest) =>
-            gun.HoldsFireForPeople && HumanShield.Covering(spot + Vector3.up * GlorifiedBody.Characters.Body.MuzzleHeight, chest, gameObject) != null;
+            gun.HoldsFireForPeople && HumanShield.Covering(spot + Vector3.up * GlorifiedBody.Characters.Body.MuzzleHeight, chest, gameObject, player) != null;
 
         private static float Flat(Vector3 a, Vector3 b)
         {

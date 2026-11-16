@@ -39,12 +39,16 @@ namespace GlorifiedBody.Enemy
             return person != null && Alive(person) ? person : null;
         }
 
-        /// <summary>The first live person whose body covers the line from the gun to the target, or null.</summary>
-        public static GameObject Covering(Vector3 from, Vector3 to, GameObject shooter)
+        /// <summary>
+        /// The first live person whose body covers the line from the gun to the target, or null. The figure he aims at is no
+        /// shield (mk_edgar: a dominated man and his colleagues aim at each other; the target stood on its own line, and no one fired).
+        /// </summary>
+        public static GameObject Covering(Vector3 from, Vector3 to, GameObject shooter, Transform target = null)
         {
             foreach (EnemyMorale m in EnemyMorale.All)
             {
                 if (m == null || m.gameObject == shooter || !m.isActiveAndEnabled) continue;
+                if (target != null && (target == m.transform || target.IsChildOf(m.transform))) continue;
                 GameObject person = m.gameObject;
                 if (!Alive(person)) continue;
                 TelekinesisLift lift = person.GetComponent<TelekinesisLift>();

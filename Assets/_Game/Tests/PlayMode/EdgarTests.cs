@@ -524,9 +524,10 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator OnAFloater_ItDoesNothing_ButItCosts()
+        public IEnumerator OnAFloater_TheLockLeavesIt_AndNoMindIsTaken()
         {
-            // Bruno, 2026-11-07: "mind control does nothing, but it can be used".
+            // Bruno, 2026-11-07: "mind control does nothing, but it can be used". Since 2026-11-16 the thing she holds is never
+            // a target (the lock is the aim of a throw: "we need to be as consistent as possible"), so the circle has no mind.
             yield return Only("Worker_C");
             GameObject worker = GameObject.Find("Worker_C");
             powers.Select(PowerKind.Telekinesis);
@@ -534,13 +535,12 @@ namespace GlorifiedBody.Tests.PlayMode
             pad.Tap(InputManager.GameAction.Charge);
             yield return new WaitForSeconds(powers.Selected.liftSeconds + 0.5f);
             Assert.AreEqual(worker, powers.HeldLift != null ? powers.HeldLift.gameObject : null, "she holds him");
+            LockOnTargetable locked = lockOn.CurrentTarget;
+            Assert.IsTrue(locked == null || !locked.transform.IsChildOf(worker.transform), "the lock leaves him");
 
             powers.Select(PowerKind.Domination);
             yield return FullCircle();
-            yield return WaitUntil(() => powers.LastResult == "dom_nothing", 0.5f);
-            Assert.AreEqual("dom_nothing", powers.LastResult);
             Assert.IsFalse(Mind(worker).IsDominated, "no mind");
-            Assert.AreEqual(100f - powers.Selected.nalconCost, stats.Mk(PowerKind.Domination), 0.01f, "a full circle's cost");
             Assert.IsNotNull(powers.HeldLift, "he stays in the air");
             KneelPose kneel = worker.GetComponentInChildren<Animator>().GetComponent<KneelPose>();
             Assert.IsTrue(kneel == null || !kneel.On, "no kneel");

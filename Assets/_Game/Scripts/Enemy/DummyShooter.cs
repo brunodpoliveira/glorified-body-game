@@ -185,7 +185,7 @@ namespace GlorifiedBody.Enemy
             if (attack == Attack.None || attack == Attack.Melee || IsLobbed(attack)) return false;
             if (shieldRank < 0) shieldRank = HumanShield.HoldsFireFor(gameObject) ? 1 : 0;
             if (shieldRank != 1) return false;
-            coveredBy = HumanShield.Covering(Muzzle, target, gameObject);
+            coveredBy = HumanShield.Covering(Muzzle, target, gameObject, player);
             return coveredBy != null;
         }
 
@@ -215,7 +215,7 @@ namespace GlorifiedBody.Enemy
         public bool LineCovered(Vector3 target)
         {
             Attack attack = RangedAttackOf(weapon);
-            return attack != Attack.None && !IsLobbed(attack) && HoldsFireForPeople && HumanShield.Covering(Muzzle, target, gameObject) != null;
+            return attack != Attack.None && !IsLobbed(attack) && HoldsFireForPeople && HumanShield.Covering(Muzzle, target, gameObject, player) != null;
         }
 
         private void HoldForShield()
