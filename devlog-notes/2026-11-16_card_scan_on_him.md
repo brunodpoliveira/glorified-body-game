@@ -1,6 +1,6 @@
 # 2026-11-16: the scan C11 is on the card carrier
 
-Bruno, after the card beat as built (round 118: he denies the card until the scan C11 of the card reader on the landing):
+Bruno, after the card beat as built. In round 118, he denies the card until she scans the card reader on the landing (C11).
 
 ```text
 so the player has to go with the gurney, smack on the lock, then float back again to ask for the card? too obtuse. most won't even think to ask him in the first place
@@ -26,7 +26,7 @@ All of it in the Hold, before the gap. To kill him still drops the card.
 
 ## For the writer
 
-`DEMO_PLAN.md`: the C11 row (the card reader, H6), the H2 and H6 rows and beat 5b put the scan on the reader. The scan is
-on the scientist now. The line "It opens the landing" still fits.
+`DEMO_PLAN.md` puts the scan on the reader in four places: the C11 row, the H2 row, the H6 row and beat 5b. The scan is
+on the scientist now. His line "It opens the landing" still fits.
 
 NOT COMPILED, NOT RUN (no free RAM for Unity).
