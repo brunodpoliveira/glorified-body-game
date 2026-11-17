@@ -9,7 +9,8 @@ namespace GlorifiedBody.UI
     /// <summary>
     /// The prompt of the tutorial at the bottom of the screen: the step count, the presenter's line and the
     /// control hint with the bound keys in place of the {Action} tokens (the remap changes the words).
-    /// On "[RuntimeUI]" of the tutorial room. Hidden when there is no director.
+    /// On "[RuntimeUI]" of the tutorial room. Hidden when there is no director. The look (T46, 2026-11-17) follows the AC3
+    /// menus: a dark rounded plate, the step count on an orange tag with the stripes, the line in Arimo, the keys in green.
     /// </summary>
     public sealed class TutorialPromptUI : MonoBehaviour
     {
@@ -19,11 +20,12 @@ namespace GlorifiedBody.UI
         private Text stepText;
         private Text lineText;
         private Text hintText;
+        private string hintPlain = "";
         private TutorialDirector director;
 
         public Canvas Canvas => canvas;
         public string LineShown => lineText != null ? lineText.text : "";
-        public string HintShown => hintText != null ? hintText.text : "";
+        public string HintShown => hintText != null ? hintPlain : "";
 
         private void Start()
         {
@@ -56,40 +58,37 @@ namespace GlorifiedBody.UI
             root.AddComponent<CanvasScaler>().uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             root.GetComponent<CanvasScaler>().referenceResolution = new Vector2(1920f, 1080f);
 
-            var panel = new GameObject("Panel", typeof(RectTransform));
-            panel.transform.SetParent(root.transform, false);
-            var panelRect = panel.GetComponent<RectTransform>();
-            panelRect.anchorMin = new Vector2(0.5f, 0f);
-            panelRect.anchorMax = new Vector2(0.5f, 0f);
-            panelRect.pivot = new Vector2(0.5f, 0f);
-            panelRect.anchoredPosition = new Vector2(0f, 150f);
-            panelRect.sizeDelta = new Vector2(1240f, 130f);
-            var image = panel.AddComponent<Image>();
-            image.color = new Color(0f, 0f, 0f, 0.72f);
+            Image panel = MenuStyle.Plate(root.transform, "Panel", new Color(0.02f, 0.025f, 0.035f, 0.84f), new Color(0.95f, 0.94f, 0.9f, 0.55f));
+            MenuStyle.Place(panel.rectTransform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 150f), new Vector2(1240f, 130f));
 
-            stepText = MakeText(panel.transform, "Step", 18, FontStyle.Normal, new Color(0.7f, 0.7f, 0.75f), new Vector2(0f, 48f), 24f);
-            lineText = MakeText(panel.transform, "Line", 26, FontStyle.Bold, new Color(0.96f, 0.93f, 0.9f), new Vector2(0f, 10f), 38f);
-            hintText = MakeText(panel.transform, "Hint", 20, FontStyle.Normal, new Color(0.85f, 0.9f, 1f), new Vector2(0f, -30f), 32f);
+            // The step count on an orange tag over the top edge, the stripes after it.
+            Image tag = MenuStyle.Plate(panel.transform, "Tag", MenuStyle.Orange, MenuStyle.OrangeDeep);
+            MenuStyle.Place(tag.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 0.5f), new Vector2(30f, 0f), new Vector2(400f, 38f));
+            stepText = MenuStyle.Words(tag.transform, "Step", "", MenuStyle.Head, 24, new Color(0.03f, 0.03f, 0.04f, 1f), TextAnchor.MiddleLeft);
+            MenuStyle.Fill(stepText.rectTransform, 0f);
+            stepText.rectTransform.offsetMin = new Vector2(18f, 0f);
+            RawImage stripes = MenuStyle.StripeStrip(panel.transform, "Stripes", new Vector2(180f, 16f));
+            MenuStyle.Place(stripes.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 0.5f), new Vector2(444f, 0f), new Vector2(180f, 16f));
+
+            lineText = MakeText(panel.transform, "Line", MenuStyle.Body, 30, MenuStyle.OffWhite, new Vector2(0f, 10f), 40f);
+            hintText = MakeText(panel.transform, "Hint", MenuStyle.Head, 24, MenuStyle.Silver, new Vector2(0f, -36f), 32f);
         }
 
-        private static Text MakeText(Transform parent, string name, int size, FontStyle style, Color colour, Vector2 offset, float height)
+        private static Text MakeText(Transform parent, string name, Font font, int size, Color colour, Vector2 offset, float height)
         {
-            var obj = new GameObject(name, typeof(RectTransform));
-            obj.transform.SetParent(parent, false);
-            var rect = obj.GetComponent<RectTransform>();
+            Text text = MenuStyle.Words(parent, name, "", font, size, colour, TextAnchor.MiddleCenter);
+            var rect = text.rectTransform;
             rect.anchorMin = new Vector2(0f, 0.5f);
             rect.anchorMax = new Vector2(1f, 0.5f);
             rect.pivot = new Vector2(0.5f, 0.5f);
             rect.anchoredPosition = offset;
-            rect.sizeDelta = new Vector2(-40f, height);
-            var text = obj.AddComponent<Text>();
-            text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            text.fontSize = size;
-            text.fontStyle = style;
-            text.color = colour;
-            text.alignment = TextAnchor.MiddleCenter;
+            rect.sizeDelta = new Vector2(-48f, height);
             text.horizontalOverflow = HorizontalWrapMode.Wrap;
-            text.verticalOverflow = VerticalWrapMode.Overflow;
+            // One line in its box: a long hint gets smaller (some run to 125 characters), down to 70 % of its size.
+            text.verticalOverflow = VerticalWrapMode.Truncate;
+            text.resizeTextForBestFit = true;
+            text.resizeTextMaxSize = size;
+            text.resizeTextMinSize = Mathf.RoundToInt(size * 0.7f);
             return text;
         }
 
@@ -99,24 +98,28 @@ namespace GlorifiedBody.UI
             canvas.gameObject.SetActive(true);
             stepText.text = $"THE DEMONSTRATION   {director.StepIndex + 1} / {director.Steps.Count}";
             lineText.text = step.Line;
-            hintText.text = Resolve(step.Hint);
+            hintPlain = Resolve(step.Hint);
+            hintText.text = Resolve(step.Hint, true);
         }
 
         private void OnCompleted()
         {
-            if (stepText != null) stepText.text = "THE DEMONSTRATION   complete";
+            if (stepText != null) stepText.text = "THE DEMONSTRATION   COMPLETE";
+            hintPlain = "";
             if (hintText != null) hintText.text = "";
         }
 
         /// <summary>The {Action} tokens of a hint become the bound key names ("Space", "Mouse0", "W").</summary>
-        public static string Resolve(string hint)
+        /// <param name="green">Wrap each key name in a green colour tag (the words on screen).</param>
+        public static string Resolve(string hint, bool green = false)
         {
             if (string.IsNullOrEmpty(hint)) return "";
             return Token.Replace(hint, m =>
             {
                 if (!System.Enum.TryParse(m.Groups[1].Value, out InputManager.GameAction action)) return m.Value;
                 KeyCode key = InputManager.Instance != null ? InputManager.Instance.GetKey(action) : KeyCode.None;
-                return key == KeyCode.None ? m.Groups[1].Value : InputManager.GetKeyDisplayName(key);
+                string name = key == KeyCode.None ? m.Groups[1].Value : InputManager.GetKeyDisplayName(key);
+                return green ? MenuStyle.KeyTag(name) : name;
             });
         }
     }

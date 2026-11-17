@@ -216,6 +216,9 @@ namespace GlorifiedBody.Systems
         }
         private bool interactHintsOn = true;
 
+        /// <summary>Sets the hint line for this session only, with no save (a bot shot; the player's setting stays).</summary>
+        public void SetInteractHintsUnsaved(bool on) => interactHintsOn = on;
+
         /// <summary>The subtitle size: 0 Small, 1 Medium (the default), 2 Large.</summary>
         public int SubtitleSize
         {

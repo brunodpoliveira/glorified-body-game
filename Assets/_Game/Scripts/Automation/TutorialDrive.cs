@@ -398,6 +398,13 @@ namespace GlorifiedBody.Automation
                     ItemPickup log = FindPickup(c.Director.LogItemId);
                     if (log == null) break;
                     yield return TurnTo(c, log.Point, 4f);
+                    // A shot of the hint line (T46): on for the shot only, with no save, then the player's setting again.
+                    SettingsManager settings = SettingsManager.Instance;
+                    bool hintsWere = settings == null || settings.InteractHintsOn;
+                    if (settings != null) settings.SetInteractHintsUnsaved(true);
+                    yield return BotClock.Wait(0.2f);
+                    c.Moment?.Invoke("log_hint");
+                    if (settings != null) settings.SetInteractHintsUnsaved(hintsWere);
                     c.Pad.Tap(InputManager.GameAction.Interact); // "Take it?"
                     yield return BotClock.Wait(0.3f);
                     c.Moment?.Invoke("log_confirm");

@@ -218,7 +218,8 @@ namespace GlorifiedBody.UI
             r.offsetMax = new Vector2(-inset, -inset);
         }
 
-        private static RectTransform Place(RectTransform r, Vector2 anchor, Vector2 pivot, Vector2 position, Vector2 size)
+        /// <summary>Sets the anchor (both corners), the pivot, the position and the size of a rect.</summary>
+        public static RectTransform Place(RectTransform r, Vector2 anchor, Vector2 pivot, Vector2 position, Vector2 size)
         {
             r.anchorMin = r.anchorMax = anchor;
             r.pivot = pivot;
@@ -227,7 +228,8 @@ namespace GlorifiedBody.UI
             return r;
         }
 
-        private static Text Words(Transform parent, string name, string words, Font font, int size, Color colour, TextAnchor anchor)
+        /// <summary>A Text that ignores the pointer and overflows its box (the parts of a frame).</summary>
+        public static Text Words(Transform parent, string name, string words, Font font, int size, Color colour, TextAnchor anchor)
         {
             var obj = new GameObject(name, typeof(RectTransform));
             obj.transform.SetParent(parent, false);
@@ -419,6 +421,23 @@ namespace GlorifiedBody.UI
             f.Content = (RectTransform)contentObj.transform;
             Fill(f.Content, 22f);
             return f;
+        }
+
+        /// <summary>A key name in green, for a key line in rich text ("E  TAKE"). The keys of the death screen are green too.</summary>
+        public static string KeyTag(string key) => "<color=#" + ColorUtility.ToHtmlStringRGB(Green) + ">" + key + "</color>";
+
+        /// <summary>A strip of the hazard stripes with an off-white outline. The caller places it.</summary>
+        public static RawImage StripeStrip(Transform parent, string name, Vector2 size)
+        {
+            var obj = new GameObject(name, typeof(RectTransform));
+            obj.transform.SetParent(parent, false);
+            ((RectTransform)obj.transform).sizeDelta = size;
+            var img = obj.AddComponent<RawImage>();
+            img.texture = Stripes;
+            img.uvRect = new Rect(0f, 0f, size.x / size.y, 1f);
+            img.raycastTarget = false;
+            obj.AddComponent<Outline>().effectColor = new Color(0.95f, 0.94f, 0.9f, 0.9f);
+            return img;
         }
 
         /// <summary>Squeezes a Text across, about its aligned edge, so it stays where its alignment puts it.</summary>
