@@ -359,6 +359,68 @@ namespace GlorifiedBody.UI
             return f;
         }
 
+        /// <summary>
+        /// A compact AC3 dialog for a question over another screen (the START prompt of the main menu): the orange
+        /// header plate, the stripes and the white bar under it, and a framed black body. The parent places Root.
+        /// </summary>
+        public static MenuFrame Dialog(Transform parent, string title, string subtitle, Vector2 size)
+        {
+            var f = new MenuFrame();
+            var rootObj = new GameObject("Dialog", typeof(RectTransform));
+            rootObj.transform.SetParent(parent, false);
+            f.Root = (RectTransform)rootObj.transform;
+            f.Root.sizeDelta = size;
+            Transform root = f.Root;
+
+            Image plate = Plate(root, "HeaderPlate", Orange, OrangeDeep);
+            var plateRect = plate.rectTransform;
+            plateRect.anchorMin = new Vector2(0f, 1f); plateRect.anchorMax = new Vector2(1f, 1f);
+            plateRect.pivot = new Vector2(0.5f, 1f);
+            plateRect.anchoredPosition = Vector2.zero;
+            plateRect.sizeDelta = new Vector2(0f, 118f);
+            f.Title = Words(plate.transform, "Title", title, Head, 80, new Color(0.03f, 0.03f, 0.04f, 1f), TextAnchor.MiddleLeft);
+            var titleRect = f.Title.rectTransform;
+            titleRect.pivot = new Vector2(0f, 0.5f);
+            titleRect.anchorMin = new Vector2(0f, 0.36f); titleRect.anchorMax = new Vector2(1f, 1f);
+            titleRect.offsetMin = new Vector2(30f, 0f); titleRect.offsetMax = new Vector2(-30f, -6f);
+            titleRect.localScale = new Vector3(TitleSqueeze, 1f, 1f);
+            var rule = new GameObject("PlateRule", typeof(RectTransform), typeof(Image));
+            rule.transform.SetParent(plate.transform, false);
+            var ruleRect = (RectTransform)rule.transform;
+            ruleRect.anchorMin = new Vector2(0f, 0.36f); ruleRect.anchorMax = new Vector2(1f, 0.36f);
+            ruleRect.offsetMin = new Vector2(30f, -2f); ruleRect.offsetMax = new Vector2(-30f, 2f);
+            rule.GetComponent<Image>().color = new Color(0.03f, 0.03f, 0.04f, 0.9f);
+            rule.GetComponent<Image>().raycastTarget = false;
+            f.Subtitle = Words(plate.transform, "Subtitle", subtitle, Head, 22, new Color(0.03f, 0.03f, 0.04f, 0.9f), TextAnchor.MiddleLeft);
+            var subRect = f.Subtitle.rectTransform;
+            subRect.anchorMin = Vector2.zero; subRect.anchorMax = new Vector2(1f, 0.36f);
+            subRect.offsetMin = new Vector2(32f, 4f); subRect.offsetMax = new Vector2(-32f, -2f);
+
+            var stripeObj = new GameObject("Stripes", typeof(RectTransform));
+            stripeObj.transform.SetParent(root, false);
+            Place((RectTransform)stripeObj.transform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, -128f), new Vector2(size.x * 0.45f, 22f));
+            var stripeImg = stripeObj.AddComponent<RawImage>();
+            stripeImg.texture = Stripes;
+            stripeImg.uvRect = new Rect(0f, 0f, size.x * 0.45f / 22f, 1f);
+            stripeImg.raycastTarget = false;
+            stripeObj.AddComponent<Outline>().effectColor = new Color(0.95f, 0.94f, 0.9f, 0.9f);
+            var bar = new GameObject("WhiteBar", typeof(RectTransform), typeof(Image));
+            bar.transform.SetParent(root, false);
+            Place((RectTransform)bar.transform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(size.x * 0.45f + 20f, -135f), new Vector2(size.x * 0.4f, 8f));
+            bar.GetComponent<Image>().color = OffWhite;
+            bar.GetComponent<Image>().raycastTarget = false;
+
+            Image body = Plate(root, "Body", new Color(0.02f, 0.025f, 0.035f, 0.92f), new Color(0.95f, 0.94f, 0.9f, 0.85f));
+            var bodyRect = body.rectTransform;
+            bodyRect.anchorMin = Vector2.zero; bodyRect.anchorMax = Vector2.one;
+            bodyRect.offsetMin = Vector2.zero; bodyRect.offsetMax = new Vector2(0f, -164f);
+            var contentObj = new GameObject("Content", typeof(RectTransform));
+            contentObj.transform.SetParent(body.transform, false);
+            f.Content = (RectTransform)contentObj.transform;
+            Fill(f.Content, 22f);
+            return f;
+        }
+
         /// <summary>Squeezes a Text across, about its aligned edge, so it stays where its alignment puts it.</summary>
         public static void Squeeze(Text t, float amount)
         {

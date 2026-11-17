@@ -8,6 +8,11 @@ namespace GlorifiedBody.UI
         protected override string MenuTitle => "PAUSED";
         protected override string MenuSubtitle => "Resume, or retry the room.";
         protected override Vector2 PanelSize => new Vector2(500f, 620f);
+        // The AC3 frame of the menu screens (T46, 2026-11-17).
+        protected override bool UseFrame => true;
+        protected override string FrameSide => "PAUSE";
+        protected override string FrameIcon => "continue";
+        protected override string FrameStatus => "ESC  RESUME";
 
         protected override bool ShouldShow =>
             GameManager.Instance != null

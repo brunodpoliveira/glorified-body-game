@@ -104,6 +104,9 @@ namespace GlorifiedBody.UI
             // The "intro" bot (tools/unity.sh play Main_Menu Main_Menu intro 120): START after the menu shot, the intro,
             // its checks (RunIntroBot); no level loads.
             if (IntroBot) StartCoroutine(RunIntroBot());
+            // The "menu" bot (tools/unity.sh play Main_Menu Main_Menu menu 120): shots of the ADVANCED row and of the
+            // START prompt, then its checks (RunMenuBot); no level loads.
+            if (MenuBot) StartCoroutine(RunMenuBot());
         }
 
         private void EnsureDifficultyManagerExists()
@@ -271,27 +274,43 @@ namespace GlorifiedBody.UI
 
         private void BuildTutorialPrompt()
         {
+            // A compact AC3 dialog (T46, 2026-11-17): the orange plate, the stripes, the framed body with the question.
+            // It sits under the logo, over the place of the symbol rows (they hide while it shows).
             tutorialPrompt = CreateUIElement("TutorialPrompt", menuPanel.transform.parent);
             var rect = tutorialPrompt.GetComponent<RectTransform>();
-            rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.55f);
-            rect.pivot = new Vector2(0.5f, 0.5f);
-            rect.sizeDelta = new Vector2(760f, 0f);
-            var layout = tutorialPrompt.AddComponent<VerticalLayoutGroup>();
-            layout.spacing = 14;
+            rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 1f);
+            rect.pivot = new Vector2(0.5f, 1f);
+            rect.anchoredPosition = new Vector2(0f, -440f);
+            rect.sizeDelta = new Vector2(980f, 500f);
+            MenuStyle.MenuFrame dialog = MenuStyle.Dialog(tutorialPrompt.transform, "NEW GAME", "THE TUTORIAL  /  THE DEMO", rect.sizeDelta);
+            MenuStyle.Fill(dialog.Root, 0f);
+
+            var layout = dialog.Content.gameObject.AddComponent<VerticalLayoutGroup>();
+            layout.spacing = 12;
             layout.childAlignment = TextAnchor.UpperCenter;
             layout.childControlWidth = false;
             layout.childControlHeight = true;
             layout.childForceExpandWidth = false;
             layout.childForceExpandHeight = false;
-            tutorialPrompt.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-            Text ask = CreateLabel(tutorialPrompt.transform, "Play the tutorial first?", 40, TextAnchor.MiddleCenter, 60, FontStyle.Bold);
-            ask.rectTransform.sizeDelta = new Vector2(760f, ask.rectTransform.sizeDelta.y);
-            Text why = CreateLabel(tutorialPrompt.transform, "It teaches the powers, the lock and the dodge in a safe room. The game starts after it.", 22, TextAnchor.MiddleCenter, 34, FontStyle.Normal, new Color(0.7f, 0.7f, 0.78f));
-            why.rectTransform.sizeDelta = new Vector2(760f, why.rectTransform.sizeDelta.y);
-            Button yes = CreateButton(tutorialPrompt.transform, "YES (RECOMMENDED)", 520, OnTutorialFirst, 64, 28,
-                new Color(0.6f, 0.3f, 0.05f, 0.95f), MenuSymbol.Orange, MenuSymbol.OffWhite);
-            Button no = CreateButton(tutorialPrompt.transform, "NO, START THE GAME", 420, OnSkipTutorial, 48);
-            Button back = CreateButton(tutorialPrompt.transform, "BACK", 420, OnTutorialPromptBack, 48);
+            Text ask = CreateLabel(dialog.Content, "Play the tutorial first?", 40, TextAnchor.MiddleCenter, 52);
+            ask.color = MenuSymbol.OffWhite;
+            ask.rectTransform.sizeDelta = new Vector2(900f, ask.rectTransform.sizeDelta.y);
+            Text why = CreateLabel(dialog.Content, "It teaches the powers, the lock and the dodge in a safe room. The game starts after it.", 22, TextAnchor.MiddleCenter, 34, FontStyle.Normal, MenuSymbol.Silver);
+            why.font = ProfileFont;
+            why.rectTransform.sizeDelta = new Vector2(900f, why.rectTransform.sizeDelta.y);
+            Button yes = CreateButton(dialog.Content, "YES (RECOMMENDED)", 560, OnTutorialFirst, 60, 30,
+                MenuStyle.OrangeDeep, MenuSymbol.Orange, MenuSymbol.OffWhite);
+            Button no = CreateButton(dialog.Content, "NO, START THE GAME", 460, OnSkipTutorial, 48);
+            Button back = CreateButton(dialog.Content, "BACK", 460, OnTutorialPromptBack, 48);
+            foreach (Button b in new[] { yes, no, back })
+            {
+                var img = (Image)b.targetGraphic;
+                img.sprite = MenuStyle.RoundFill; // the small rounded corners of the AC3 buttons
+                img.type = Image.Type.Sliced;
+                img.pixelsPerUnitMultiplier = 2.5f;
+            }
+            MenuStyle.Style(no);
+            MenuStyle.Style(back);
             SetVerticalNav(yes, back, no);
             SetVerticalNav(no, yes, back);
             SetVerticalNav(back, no, yes);
@@ -607,6 +626,34 @@ namespace GlorifiedBody.UI
                 + Step("no_level_in_bot", stayed, "") + "\n  ]\n}\n";
             System.IO.File.WriteAllText(System.IO.Path.Combine(GlorifiedBody.Automation.BotArgs.RunDir, "playthrough.json"), json);
             Debug.Log("[IntroBot] finished");
+        }
+
+        private static bool MenuBot => OverlayShot.Enabled && string.Equals(GlorifiedBody.Automation.BotArgs.Bot, "menu", System.StringComparison.OrdinalIgnoreCase);
+
+        /// <summary>
+        /// The "menu" bot (T46): the ADVANCED row (main_menu_advanced.png), back to the main row, the START prompt
+        /// (main_menu_tutorial_prompt.png), back again. Three checks into playthrough.json. Plain overlay shots: only a
+        /// render of the growing intro stripes crashed the batch editor.
+        /// </summary>
+        private System.Collections.IEnumerator RunMenuBot()
+        {
+            yield return new WaitForSecondsRealtime(1.5f);
+            OnAdvancedClicked();
+            yield return OverlayShot.Capture(canvas, "main_menu_advanced.png", 0.4f);
+            bool advanced = advancedOpen && advancedPanel.activeSelf && !menuPanel.activeSelf;
+            OnBackClicked();
+            yield return new WaitForSecondsRealtime(0.3f);
+            ShowTutorialPrompt();
+            yield return OverlayShot.Capture(canvas, "main_menu_tutorial_prompt.png", 0.4f);
+            bool prompt = tutorialPrompt != null && tutorialPrompt.activeSelf && !menuPanel.activeSelf;
+            OnTutorialPromptBack();
+            yield return new WaitForSecondsRealtime(0.3f);
+            bool back = menuPanel.activeSelf && !advancedOpen && !tutorialPrompt.activeSelf;
+            string Step(string name, bool ok) => $"{{\"name\": \"{name}\", \"ok\": {(ok ? "true" : "false")}, \"detail\": \"\"}}";
+            string json = "{\n  \"bot\": \"menu\",\n  \"pass\": " + (advanced && prompt && back ? "true" : "false") + ",\n  \"steps\": [\n    "
+                + Step("advanced_row", advanced) + ",\n    " + Step("start_prompt", prompt) + ",\n    " + Step("back_to_main_row", back) + "\n  ]\n}\n";
+            System.IO.File.WriteAllText(System.IO.Path.Combine(GlorifiedBody.Automation.BotArgs.RunDir, "playthrough.json"), json);
+            Debug.Log("[MenuBot] finished");
         }
 
         private void PlayNewGameIntro(string scene)

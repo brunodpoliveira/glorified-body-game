@@ -23,6 +23,13 @@ namespace GlorifiedBody.UI
         protected virtual Color AccentColor => accentColor;
         protected virtual Vector2 PanelSize => new Vector2(500f, 390f);
 
+        // The AC3 frame of the menu screens (T46, MenuStyle.Frame). A menu turns it on. The death menu keeps its own
+        // design (the Arkham death screen), so the default is off.
+        protected virtual bool UseFrame => false;
+        protected virtual string FrameSide => "";
+        protected virtual string FrameIcon => "advanced";
+        protected virtual string FrameStatus => "";
+
         protected virtual void Start()
         {
             BuildUI();
@@ -96,6 +103,13 @@ namespace GlorifiedBody.UI
 
             Text text = AddLabel(obj.transform, label, 22, TextAnchor.MiddleCenter, FontStyle.Bold, Color.white);
             Stretch(text.rectTransform);
+            if (UseFrame)
+            {
+                MenuStyle.Style(button);
+                text.text = label.ToUpperInvariant();
+                text.fontSize = 28;
+                MenuStyle.HeadText(text, MenuStyle.OffWhite);
+            }
 
             if (defaultButton == null || makeDefault)
             {
@@ -161,21 +175,39 @@ namespace GlorifiedBody.UI
 
             var overlay = CreateElement("Overlay", canvasObj.transform);
             Stretch(overlay.GetComponent<RectTransform>());
-            overlay.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0.68f);
+            overlay.AddComponent<Image>().color = UseFrame ? MenuStyle.Scrim : new Color(0f, 0f, 0f, 0.68f);
 
             Transform safeRoot = RuntimeUIRootUtility.CreateSafeAreaRoot(canvasObj.transform);
-            var panel = CreateElement("Panel", safeRoot);
+            Transform panelParent = safeRoot;
+            if (UseFrame)
+            {
+                MenuStyle.MenuFrame frame = MenuStyle.Frame(safeRoot, MenuTitle, MenuSubtitle.ToUpperInvariant(), FrameSide, FrameIcon, FrameStatus);
+                panelParent = frame.Content;
+            }
+            var panel = CreateElement("Panel", panelParent);
             var panelRect = panel.GetComponent<RectTransform>();
-            panelRect.anchorMin = new Vector2(0.5f, 0.5f);
-            panelRect.anchorMax = new Vector2(0.5f, 0.5f);
-            panelRect.pivot = new Vector2(0.5f, 0.5f);
-            panelRect.sizeDelta = PanelSize;
-            panel.AddComponent<Image>().color = panelColor;
+            if (UseFrame)
+            {
+                // A column of buttons in the middle of the framed body. The plate holds the title and the subtitle.
+                panelRect.anchorMin = new Vector2(0.5f, 0f);
+                panelRect.anchorMax = new Vector2(0.5f, 1f);
+                panelRect.pivot = new Vector2(0.5f, 0.5f);
+                panelRect.sizeDelta = new Vector2(PanelSize.x + 160f, 0f);
+                panel.AddComponent<Image>().color = Color.clear;
+            }
+            else
+            {
+                panelRect.anchorMin = new Vector2(0.5f, 0.5f);
+                panelRect.anchorMax = new Vector2(0.5f, 0.5f);
+                panelRect.pivot = new Vector2(0.5f, 0.5f);
+                panelRect.sizeDelta = PanelSize;
+                panel.AddComponent<Image>().color = panelColor;
+            }
 
             var layout = panel.AddComponent<VerticalLayoutGroup>();
             layout.spacing = 12;
             layout.padding = new RectOffset(34, 34, 34, 34);
-            layout.childAlignment = TextAnchor.UpperCenter;
+            layout.childAlignment = UseFrame ? TextAnchor.MiddleCenter : TextAnchor.UpperCenter;
             // Control the height, so each LayoutElement.preferredHeight applies (buttons 56, title 52, picture 270).
             // With childControlHeight off every element keeps the default 100 units and the panel overflows.
             layout.childControlWidth = true;
@@ -183,10 +215,13 @@ namespace GlorifiedBody.UI
             layout.childForceExpandWidth = true;
             layout.childForceExpandHeight = false;
 
-            Text titleText = AddLabel(panel.transform, MenuTitle, 34, TextAnchor.MiddleCenter, FontStyle.Bold, AccentColor);
-            titleText.gameObject.AddComponent<LayoutElement>().preferredHeight = 52f;
+            if (!UseFrame)
+            {
+                Text titleText = AddLabel(panel.transform, MenuTitle, 34, TextAnchor.MiddleCenter, FontStyle.Bold, AccentColor);
+                titleText.gameObject.AddComponent<LayoutElement>().preferredHeight = 52f;
+            }
 
-            if (!string.IsNullOrWhiteSpace(MenuSubtitle))
+            if (!UseFrame && !string.IsNullOrWhiteSpace(MenuSubtitle))
             {
                 Text subtitleText = AddLabel(panel.transform, MenuSubtitle, 18, TextAnchor.MiddleCenter, FontStyle.Normal, new Color(0.85f, 0.86f, 0.9f));
                 subtitleText.gameObject.AddComponent<LayoutElement>().preferredHeight = 48f;

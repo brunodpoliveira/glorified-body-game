@@ -213,6 +213,11 @@ namespace GlorifiedBody.Tests.PlayMode
             GameManager.Instance.LoadMainMenu();
             yield return WaitUntil(() => SceneManager.GetActiveScene().name == MainMenu && GameManager.Instance.IsInMenu, 10f);
             yield return new WaitForSecondsRealtime(0.3f);
+            // T46 (round 173): TUTORIAL is on the ADVANCED row, which is hidden until ADVANCED opens it.
+            GameObject advanced = GameObject.Find("Btn_ADVANCED");
+            Assert.IsNotNull(advanced, "the ADVANCED symbol");
+            advanced.GetComponent<Button>().onClick.Invoke();
+            yield return null;
             Button tutorial = UnityEngine.Object.FindObjectsByType<Button>(FindObjectsSortMode.None)
                 .FirstOrDefault(b => b.GetComponentInChildren<Text>() != null && b.GetComponentInChildren<Text>().text == "TUTORIAL");
             Assert.IsNotNull(tutorial, "a TUTORIAL button in the main menu");
