@@ -29,6 +29,8 @@ namespace GlorifiedBody.Enemy
         [SerializeField] private ParticleSystem smoke;
         [SerializeField] private Light flashLight;
         [SerializeField] private AudioSource source;
+        /// <summary>The gun's sound source: the shots play on it (tests).</summary>
+        public AudioSource Source => source;
         // Bruno, 2026-10-29: "a pistol sits a few cm in front of the fingers". Since 2026-10-31 a pistol's grip sits in
         // the palm (Palm, PistolGripForward); gripForward is for the long guns off the shoulder.
         [SerializeField, Min(0f)] private float gripForward = 0.06f; // metres from the palm along the aim
@@ -122,8 +124,9 @@ namespace GlorifiedBody.Enemy
 
         private void Awake()
         {
-            // The gun follows the SFX slider and the shared 3D curve (2026-10-26).
-            if (source != null) GlorifiedBody.Audio.GameAudio.Bind(source, GlorifiedBody.Audio.SoundChannel.Sfx, 1f);
+            // The gun follows the SFX slider (2026-10-26). Its shots (pistol, rifle, launcher, rocket) are full within
+            // 8 m, so they carry across a room (T50, 2026-11-17).
+            if (source != null) GlorifiedBody.Audio.GameAudio.Bind(source, GlorifiedBody.Audio.SoundChannel.Sfx, 1f, minDistance: GlorifiedBody.Audio.GameAudio.LoudMinDistance);
             shooter = GetComponent<DummyShooter>();
             health = GetComponent<Health>();
             animator = GetComponent<Animator>();

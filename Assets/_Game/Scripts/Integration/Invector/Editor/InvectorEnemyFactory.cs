@@ -497,6 +497,7 @@ namespace GlorifiedBody.Integration.Invector.Build
         private const string ImpactFolder = "Assets/Invector-3rdPersonController/Shooter/Scripts/DecalManager/BulletEffect/Resources/prefabs/";
         private const string ImpactPath = ImpactFolder + "impactConcrete.prefab";
         private const string ImpactAudio = "Assets/_Game/Audio/Impacts/";
+        private const string GameWeaponAudio = "Assets/_Game/Audio/Weapons/"; // T50, in the public repo
 
         /// <summary>
         /// The vendor AI handgun without its scripts and colliders: the mesh, the flash and smoke particles, the
@@ -782,9 +783,11 @@ namespace GlorifiedBody.Integration.Invector.Build
                 fx = ScriptableObject.CreateInstance<ShotEffects>();
                 AssetDatabase.CreateAsset(fx, EffectsPath);
             }
-            // One family of shots for each gun (Bruno, 2026-10-25: "the pistol has two sound effects?"): the old
-            // Handgun@Fire and Rifle@Fire sound like other guns next to the new sets.
-            fx.fireClips = Clips(WeaponAudio, "NewWeaponSounds/LightWeaponShot.mp3", "NewWeaponSounds/LightWeaponShot2.mp3", "NewWeaponSounds/LightWeaponShot3.mp3");
+            // One family of shots for each gun (Bruno, 2026-10-25: "the pistol has two sound effects?"). The shots, the
+            // melee and the explosion are the T50 RFab takes with our corridor reverb (Bruno, 2026-11-17, round 203:
+            // "Dry + our reverb"). The vendor files peaked 20 dB under the other effects. The aim clicks, the blocks and
+            // the gas stay vendor clips. Weapons/Hall/ holds the hall set for big rooms (not in use yet).
+            fx.fireClips = Clips(GameWeaponAudio, "pistol_shot_1.wav", "pistol_shot_2.wav");
             fx.aimClip = AssetDatabase.LoadAssetAtPath<AudioClip>(WeaponAudio + "NewWeaponSounds/LightWeaponAim.mp3");
             fx.impactPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(ImpactPath);
             // The impact prefabs' own clip (pistol-shot-ricochet, from the FSM package, the same on every surface) opens
@@ -804,17 +807,17 @@ namespace GlorifiedBody.Integration.Invector.Build
             {
                 if (s.prefab == null || s.clips.Length == 0) Debug.LogError($"[InvectorEnemyFactory] surface {s.kind}: prefab {(s.prefab != null)}, {s.clips.Length} clips. Run python3 tools/impact_sfx.py.");
             }
-            fx.rifleFireClips = Clips(WeaponAudio, "NewWeaponSounds/MediumWeaponShot1.mp3", "NewWeaponSounds/MediumWeaponShot2.mp3", "NewWeaponSounds/MediumWeaponShot3.mp3");
+            fx.rifleFireClips = Clips(GameWeaponAudio, "rifle_shot_1.wav", "rifle_shot_2.wav");
             fx.rifleAimClip = AssetDatabase.LoadAssetAtPath<AudioClip>(WeaponAudio + "NewWeaponSounds/MediumWeaponAim.mp3");
             fx.launcherAimClip = AssetDatabase.LoadAssetAtPath<AudioClip>(WeaponAudio + "NewWeaponSounds/MediumWeaponAimB.mp3");
-            fx.meleeSwingClips = Clips(MeleeAudio, "slash_A.wav", "slash_B.wav", "slash_C.wav");
-            fx.meleeHitClips = Clips(MeleeAudio, "PunchA.wav", "PunchB.wav", "Kick.wav");
+            fx.meleeSwingClips = Clips(GameWeaponAudio, "melee_swing_1.wav", "melee_swing_2.wav");
+            fx.meleeHitClips = Clips(GameWeaponAudio, "melee_hit_1.wav", "melee_hit_2.wav");
             fx.blockClips = Clips(MeleeAudio, "Block 1.wav", "Block 2.wav");
             fx.explosionPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(ExplosionPath);
             if (fx.explosionPrefab == null) Debug.LogWarning($"[InvectorEnemyFactory] no explosion prefab at {ExplosionPath}.");
-            fx.explosionClip = AssetDatabase.LoadAssetAtPath<AudioClip>(WeaponAudio + "Explosion_A.wav");
-            fx.launcherFireClips = Clips(WeaponAudio, "PumpShotgun@FireA.mp3", "PumpShotgun@FireB.mp3");
-            fx.rocketFireClips = Clips(WeaponAudio, "RPG@Fire.wav", "RPG@FireB.mp3");
+            fx.explosionClip = AssetDatabase.LoadAssetAtPath<AudioClip>(GameWeaponAudio + "explosion_1.wav"); // one clip field: explosion_2 waits
+            fx.launcherFireClips = Clips(GameWeaponAudio, "launcher_shot_1.wav", "launcher_shot_2.wav");
+            fx.rocketFireClips = Clips(GameWeaponAudio, "rocket_shot_1.wav", "rocket_shot_2.wav");
             fx.gasClip = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Invector-3rdPersonController/Basic Locomotion/Audio/Others/grenade-explosion-sfx-medium-sized.flac");
             fx.gasPrefab = BuildGasSmoke();
             ReadRocketMesh(fx);

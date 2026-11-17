@@ -12,6 +12,8 @@ namespace GlorifiedBody.Audio
     /// music slider nothing). Every sound of the game plays on a channel, and the channel's slider sets its volume:
     /// a one-shot takes it when it starts, a long source (a gun, a loop) follows the slider (ChannelSource).
     /// The 3D sounds share one curve: full within 1.5 m, logarithmic to 40 m. The listener is on Lucy (ListenerRig).
+    /// The loud sounds (the enemy guns, the explosions) are full within 8 m, so a shot carries across a room
+    /// (T50, 2026-11-17: at 1.5 m, a shot 12 m away played at about -18 dB).
     /// The pause, the inventory and the death screen pause the world sounds. The music and the UI go on.
     /// </summary>
     public static class GameAudio
@@ -32,6 +34,8 @@ namespace GlorifiedBody.Audio
 
         public const float MinDistance = 1.5f;
         public const float MaxDistance = 40f;
+        /// <summary>The full-volume radius of a loud sound: a gun, an explosion (T50).</summary>
+        public const float LoudMinDistance = 8f;
 
         public static int Played { get; private set; }
         public static AudioClip LastClip { get; private set; }
@@ -63,13 +67,14 @@ namespace GlorifiedBody.Audio
         }
 
         /// <summary>The shared settings of a source on a channel: the 3D curve, the pause rule, the volume.</summary>
-        public static void Configure(AudioSource source, SoundChannel channel, float baseVolume, bool spatial)
+        /// <param name="minDistance">The full-volume radius: MinDistance, or LoudMinDistance for a gun or an explosion.</param>
+        public static void Configure(AudioSource source, SoundChannel channel, float baseVolume, bool spatial, float minDistance = MinDistance)
         {
             if (source == null) return;
             source.playOnAwake = false;
             source.spatialBlend = spatial ? 1f : 0f;
             source.dopplerLevel = 0f;
-            source.minDistance = MinDistance;
+            source.minDistance = minDistance;
             source.maxDistance = MaxDistance;
             source.rolloffMode = AudioRolloffMode.Logarithmic;
             source.ignoreListenerPause = channel == SoundChannel.Ui || channel == SoundChannel.Music;
@@ -77,10 +82,10 @@ namespace GlorifiedBody.Audio
         }
 
         /// <summary>A long-lived source that follows its channel's slider (a gun, a loop).</summary>
-        public static void Bind(AudioSource source, SoundChannel channel, float baseVolume, bool spatial = true)
+        public static void Bind(AudioSource source, SoundChannel channel, float baseVolume, bool spatial = true, float minDistance = MinDistance)
         {
             if (source == null) return;
-            Configure(source, channel, baseVolume, spatial);
+            Configure(source, channel, baseVolume, spatial, minDistance);
             ChannelSource bound = null;
             foreach (ChannelSource c in source.GetComponents<ChannelSource>())
                 if (c.Source == source) bound = c;
@@ -89,13 +94,13 @@ namespace GlorifiedBody.Audio
         }
 
         /// <summary>A one-shot at a point on a channel. It destroys itself when the clip ends.</summary>
-        public static AudioSource PlayClip(AudioClip clip, Vector3 at, SoundChannel channel, float volume = 1f, bool spatial = true, float pitch = 1f, string key = null)
+        public static AudioSource PlayClip(AudioClip clip, Vector3 at, SoundChannel channel, float volume = 1f, bool spatial = true, float pitch = 1f, string key = null, float minDistance = MinDistance)
         {
             if (clip == null) return null;
             var obj = new GameObject("Sound_" + clip.name);
             obj.transform.position = at;
             var source = obj.AddComponent<AudioSource>();
-            Configure(source, channel, volume, spatial);
+            Configure(source, channel, volume, spatial, minDistance);
             source.clip = clip;
             source.pitch = pitch;
             source.Play();

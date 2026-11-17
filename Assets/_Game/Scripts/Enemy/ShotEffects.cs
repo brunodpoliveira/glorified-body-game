@@ -143,7 +143,7 @@ namespace GlorifiedBody.Enemy
                 GameObject boom = SpawnSilent(fx.explosionPrefab, point + Vector3.up * 0.1f, Quaternion.identity);
                 Destroy(boom, fx.explosionLifetime);
             }
-            if (fx.explosionClip != null) PlayAt(fx.explosionClip, point, 1f);
+            if (fx.explosionClip != null) PlayAt(fx.explosionClip, point, 1f, GlorifiedBody.Audio.GameAudio.LoudMinDistance);
         }
 
         /// <summary>
@@ -179,10 +179,13 @@ namespace GlorifiedBody.Enemy
             return clip;
         }
 
-        /// <summary>A 3D one-shot on the SFX channel (GameAudio). A missing clip is silent (a clone without the vendor clips).</summary>
-        public static void PlayAt(AudioClip clip, Vector3 point, float volume)
+        /// <summary>
+        /// A 3D one-shot on the SFX channel (GameAudio). A missing clip is silent (a clone without the vendor clips).
+        /// A loud sound (an explosion) gives GameAudio.LoudMinDistance.
+        /// </summary>
+        public static void PlayAt(AudioClip clip, Vector3 point, float volume, float minDistance = GlorifiedBody.Audio.GameAudio.MinDistance)
         {
-            GlorifiedBody.Audio.GameAudio.PlayClip(clip, point, GlorifiedBody.Audio.SoundChannel.Sfx, volume);
+            GlorifiedBody.Audio.GameAudio.PlayClip(clip, point, GlorifiedBody.Audio.SoundChannel.Sfx, volume, minDistance: minDistance);
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]

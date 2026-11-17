@@ -261,6 +261,9 @@ namespace GlorifiedBody.Tests.PlayMode
                 Assert.IsNotNull(gun, s.name + " carries a gun");
                 Assert.IsNotNull(gun.Model, s.name + " gun model");
                 Assert.IsNotNull(gun.Muzzle, s.name + " gun muzzle");
+                // T50 (2026-11-17): a shot carries across a room, full within 8 m.
+                Assert.IsNotNull(gun.Source, s.name + " gun sound source");
+                Assert.AreEqual(GlorifiedBody.Audio.GameAudio.LoudMinDistance, gun.Source.minDistance, 0.001f, s.name + " gun full-volume radius");
             }
             yield return new WaitForSeconds(0.5f);
             foreach (SoldierBrain s in soldiers)

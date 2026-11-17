@@ -83,10 +83,45 @@ namespace GlorifiedBody.Tests.PlayMode
         public void EachGun_FiresOneFamilyOfSounds()
         {
             // The pistol set mixed the old Handgun@Fire with the new LightWeaponShot clips, the rifle set the old
-            // Rifle@Fire with the MediumWeaponShot clips: two different guns in one hand.
+            // Rifle@Fire with the MediumWeaponShot clips: two different guns in one hand. Since T50 (2026-11-17) each
+            // set is the RFab takes of Assets/_Game/Audio/Weapons/.
             ShotEffects fx = ShotEffects.Load();
-            Assert.IsTrue(fx.fireClips.All(c => c != null && c.name.StartsWith("LightWeaponShot")), "pistol: " + string.Join(", ", fx.fireClips.Select(c => c != null ? c.name : "null")));
-            Assert.IsTrue(fx.rifleFireClips.All(c => c != null && c.name.StartsWith("MediumWeaponShot")), "rifle: " + string.Join(", ", fx.rifleFireClips.Select(c => c != null ? c.name : "null")));
+            AssertFamily("pistol", fx.fireClips, "pistol_shot_");
+            AssertFamily("rifle", fx.rifleFireClips, "rifle_shot_");
+            AssertFamily("launcher", fx.launcherFireClips, "launcher_shot_");
+            AssertFamily("rocket", fx.rocketFireClips, "rocket_shot_");
+            AssertFamily("melee hit", fx.meleeHitClips, "melee_hit_");
+            AssertFamily("melee swing", fx.meleeSwingClips, "melee_swing_");
+            Assert.IsNotNull(fx.explosionClip, "the explosion clip");
+            Assert.AreEqual("explosion_1", fx.explosionClip.name, "the explosion");
+        }
+
+        private static void AssertFamily(string gun, AudioClip[] clips, string prefix)
+        {
+            string names = clips == null ? "none" : string.Join(", ", clips.Select(c => c != null ? c.name : "null"));
+            Assert.IsTrue(clips != null && clips.Length > 0 && clips.All(c => c != null && c.name.StartsWith(prefix)), gun + ": " + names);
+        }
+
+        /// <summary>
+        /// T50 (2026-11-17): the loud sounds carry across a room. Every world sound was full only within 1.5 m, so a
+        /// shot 12 m away played at about -18 dB. An explosion is full within 8 m. A wall hit keeps 1.5 m.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator AnExplosion_IsFullWithinEightMetres_AWallHitWithinOneAndAHalf()
+        {
+            ShotEffects.Explosion(Point);
+            yield return null;
+            AudioSource boom = SourcesAt(Point).Single();
+            Assert.AreEqual(GlorifiedBody.Audio.GameAudio.LoudMinDistance, boom.minDistance, 0.001f, "explosion " + boom.clip.name);
+            Assert.AreEqual(8f, GlorifiedBody.Audio.GameAudio.LoudMinDistance, 0.001f);
+            UnityEngine.Object.Destroy(boom.gameObject);
+            yield return null;
+
+            Vector3 wall = Point + Vector3.right * 20f;
+            ShotEffects.Impact(wall, Vector3.up);
+            yield return null;
+            AudioSource hit = SourcesAt(wall).Single();
+            Assert.AreEqual(GlorifiedBody.Audio.GameAudio.MinDistance, hit.minDistance, 0.001f, "wall hit " + hit.clip.name);
         }
 
         /// <summary>
@@ -167,12 +202,14 @@ namespace GlorifiedBody.Tests.PlayMode
         }
 
         /// <summary>The clips of the live sources within 3 m of the point: enabled, with a clip, playing or set to play.</summary>
-        private static List<string> SoundsAt(Vector3 point)
+        private static List<string> SoundsAt(Vector3 point) => SourcesAt(point).Select(s => s.clip.name).ToList();
+
+        private static List<AudioSource> SourcesAt(Vector3 point)
         {
             return UnityEngine.Object.FindObjectsByType<AudioSource>(FindObjectsSortMode.None)
                 .Where(s => s.enabled && s.gameObject.activeInHierarchy && s.clip != null && (s.isPlaying || s.playOnAwake)
                     && s.spatialBlend > 0.5f && Vector3.Distance(s.transform.position, point) <= 3f) // world sounds: not the music or the room tone
-                .Select(s => s.clip.name).ToList();
+                .ToList();
         }
     }
 }

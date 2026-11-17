@@ -13,9 +13,8 @@ MonoBehaviour:
   m_Name: shot_effects
   m_EditorClassIdentifier: Assembly-CSharp::GlorifiedBody.Enemy.ShotEffects
   fireClips:
-  - {fileID: 8300000, guid: ef1015be63ea9a94e9842b72298f9a5f, type: 3}
-  - {fileID: 8300000, guid: dab4dfa00ed487b44bf0f2c9115a3da3, type: 3}
-  - {fileID: 8300000, guid: 2b6a41a7e8f643b4293751cf8f5b5e07, type: 3}
+  - {fileID: 8300000, guid: f74487fd7e596f30e80dd1b4eb87ba3d, type: 3}
+  - {fileID: 8300000, guid: 8058deecf986309719c5d3cd061abd45, type: 3}
   aimClip: {fileID: 8300000, guid: f00ac47e5c7659440a21afd1175d8f20, type: 3}
   impactPrefab: {fileID: 100000, guid: 623c02857372d0e4c9a8dc809104498c, type: 3}
   impactClips:
@@ -59,33 +58,30 @@ MonoBehaviour:
   impactLifetime: 3
   tracerColour: {r: 1, g: 0.85, b: 0.45, a: 1}
   rifleFireClips:
-  - {fileID: 8300000, guid: a1d3b6d76325cf747be2333e91108aaf, type: 3}
-  - {fileID: 8300000, guid: b4bc1655997cd78488375e6627dbd4dd, type: 3}
-  - {fileID: 8300000, guid: bb9f8df4580fca94eb4ec5149f83cd86, type: 3}
+  - {fileID: 8300000, guid: 63bacb6fee2699498bf7472a7fa1d2b2, type: 3}
+  - {fileID: 8300000, guid: fb1ebd8385a7a076eb644866bf21d352, type: 3}
   rifleAimClip: {fileID: 8300000, guid: a3c47d05e2db5d2469c40c5304cdb283, type: 3}
   launcherFireClips:
-  - {fileID: 8300000, guid: 80e63cbc50e5b9646a825374aaf68fb0, type: 3}
-  - {fileID: 8300000, guid: fe90135ad668a394287ca68605d4763b, type: 3}
+  - {fileID: 8300000, guid: 2ae7d64fa5110d05d884a1b5c39886d8, type: 3}
+  - {fileID: 8300000, guid: d5e6f621b87f5e2cab7943b4986dcd28, type: 3}
   launcherAimClip: {fileID: 8300000, guid: b6c0d23db0a9040448ebbc333b284e8f, type: 3}
   meleeSwingClips:
-  - {fileID: 8300000, guid: 032c161149a1c104284b736112470e73, type: 3}
-  - {fileID: 8300000, guid: 60fdfa301881bae48ae59759cc83b842, type: 3}
-  - {fileID: 8300000, guid: f82a7d93926f978479349ce3a9e025f6, type: 3}
+  - {fileID: 8300000, guid: 9ddfe7e14c5f1a94fb3769b3d32856cd, type: 3}
+  - {fileID: 8300000, guid: d5c3c153fe0e55371be66dbfc9f625b0, type: 3}
   meleeHitClips:
-  - {fileID: 8300000, guid: 04e7958f2a1963f48bda0503464ed37e, type: 3}
-  - {fileID: 8300000, guid: fb4f3c8f4af0baf40a1ccb289ccefff9, type: 3}
-  - {fileID: 8300000, guid: 5bf70ae8e138f0444961a41e089c2f02, type: 3}
+  - {fileID: 8300000, guid: 90d58abe856bc1606a87a79ee53967d8, type: 3}
+  - {fileID: 8300000, guid: ce7df94215b02d7c582e15df2127484c, type: 3}
   blockClips:
   - {fileID: 8300000, guid: d488746f170863748a00445cf31c5420, type: 3}
   - {fileID: 8300000, guid: 720e39bac05da5048b9276f12dd7b342, type: 3}
   explosionPrefab: {fileID: 100000, guid: 617596ca1a1abd1469a7013007096cb8, type: 3}
-  explosionClip: {fileID: 8300000, guid: 29ef1fd8a82190d4086450ffcce231f7, type: 3}
+  explosionClip: {fileID: 8300000, guid: 0f29cb4b89b2456939616462fd3113d2, type: 3}
   explosionLifetime: 4
   gasPrefab: {fileID: 3576302887141160372, guid: 67a09f2f1ca09e4cea5492032b3f13e6, type: 3}
   gasClip: {fileID: 8300000, guid: d3ff19b1dfa10734c9ae088d93d28ded, type: 3}
   rocketFireClips:
-  - {fileID: 8300000, guid: a16c0f7348674944f84b445509080684, type: 3}
-  - {fileID: 8300000, guid: 69277c056cb02354597bfbe822abe3c0, type: 3}
+  - {fileID: 8300000, guid: af9dc02c953a0e6fd8cb312be3ac47f7, type: 3}
+  - {fileID: 8300000, guid: 32f031bd3758a1829a5a4c7051ab83ed, type: 3}
   rocketMesh: {fileID: 4300000, guid: 1b131df6def5c584388fda0f0938427c, type: 2}
   rocketMaterial: {fileID: 2100000, guid: 6e28447ba2c689044ad64c578428b199, type: 2}
   rocketMeshRotation: {x: -0, y: -0, z: -0, w: 1}
