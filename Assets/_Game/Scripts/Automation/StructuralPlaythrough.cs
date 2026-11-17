@@ -183,11 +183,13 @@ namespace GlorifiedBody.Automation
                 GameObject dummy = GameObject.Find(dummyName);
                 if (dummy != null && dummy.GetComponentInChildren<SkinnedMeshRenderer>() != null) dummiesWithModels++;
             }
-            int castFigures = 0;
+            // Distinct figures, not skins: a T49 figure may have two skinned meshes (Lucy guard: the body and the Crown).
+            var castRoots = new HashSet<Transform>();
             foreach (SkinnedMeshRenderer skin in FindObjectsByType<SkinnedMeshRenderer>(FindObjectsSortMode.None))
             {
-                if (skin.transform.root.name.StartsWith("Cast_")) castFigures++;
+                if (skin.transform.root.name.StartsWith("Cast_")) castRoots.Add(skin.transform.root);
             }
+            int castFigures = castRoots.Count;
             // The shooter rests for the two shots: its laser crossed the east shot (the camera stands next to it).
             GameObject dummyAObject = GameObject.Find("Dummy_A");
             DummyShooter castShooter = dummyAObject != null ? dummyAObject.GetComponent<DummyShooter>() : null;
