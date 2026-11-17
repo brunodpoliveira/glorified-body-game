@@ -220,8 +220,8 @@ namespace GlorifiedBody.Editor.Characters
             if (importer == null || model == null) return false;
             SkeletonBone[] skeleton = importer.humanDescription.skeleton;
             if (skeleton == null || skeleton.Length == 0) return false;
-            // The names, not the positions: a T19 reference pose sits a millimetre off its own FBX (the import
-            // rounds), and a new model from another source brings other node names (the mesh, the helpers).
+            // The names first: a new model from another source brings other node names (the mesh, the helpers). Then
+            // the positions (ReferencePoseDiffers): a new model under the same names (2026-11-17).
             var saved = new System.Collections.Generic.HashSet<string>();
             for (int i = 1; i < skeleton.Length; i++) saved.Add(skeleton[i].name); // [0] is the root object ("<class>(Clone)")
             foreach (Transform t in model.GetComponentsInChildren<Transform>(true))
@@ -230,7 +230,42 @@ namespace GlorifiedBody.Editor.Characters
                 if (!saved.Remove(t.name)) { reason = $"a new node {t.name}"; return true; }
             }
             if (saved.Count > 0) { reason = $"no node {saved.First()}"; return true; }
-            return false;
+            return ReferencePoseDiffers(model, importer.humanDescription, out reason);
+        }
+
+        /// <summary>The most a saved reference bone may sit off its FBX node, as a share of its offset from the parent.</summary>
+        public const float MaxReferenceOffset = 0.01f;
+
+        /// <summary>
+        /// True when a bone of the saved reference pose sits more than MaxReferenceOffset off its node in the FBX: a
+        /// new model under the old node names (the T49 guard of round 184, the power armour of round 185). The names
+        /// check cannot see it, and the Humanoid then poses the new body with the old bone offsets and turns
+        /// (2026-11-17: the guard's shoulder bones turned 179 degrees in every clip, the shoulders 5 cm low, a long
+        /// thin neck). Positions only: a fresh avatar keeps every offset (0.0 %, a T19 one a millimetre off from the
+        /// import's rounding), but Unity's own T-pose turns the arms by up to 67 degrees, so a rotation limit would
+        /// flag every fresh avatar. The hips are skipped: Unity moves them in the reference pose of a fresh avatar too.
+        /// </summary>
+        public static bool ReferencePoseDiffers(GameObject model, HumanDescription description, out string reason)
+        {
+            reason = "";
+            SkeletonBone[] skeleton = description.skeleton;
+            if (model == null || skeleton == null) return false;
+            var nodes = new System.Collections.Generic.Dictionary<string, Transform>();
+            foreach (Transform t in model.GetComponentsInChildren<Transform>(true))
+                if (t != model.transform && !nodes.ContainsKey(t.name)) nodes[t.name] = t;
+            string hips = description.human == null ? null : description.human.FirstOrDefault(h => h.humanName == "Hips").boneName;
+            float worst = 0f;
+            for (int i = 1; i < skeleton.Length; i++) // [0] is the root object
+            {
+                if (skeleton[i].name == hips || !nodes.TryGetValue(skeleton[i].name, out Transform node)) continue;
+                float scale = Mathf.Max(skeleton[i].position.magnitude, node.localPosition.magnitude);
+                if (scale < 1e-9f) continue;
+                float off = Vector3.Distance(skeleton[i].position, node.localPosition) / scale;
+                if (off <= worst) continue;
+                worst = off;
+                if (off > MaxReferenceOffset) reason = $"the reference bone {skeleton[i].name} sits {off * 100f:0.0} % off its FBX node";
+            }
+            return worst > MaxReferenceOffset;
         }
 
         /// <summary>

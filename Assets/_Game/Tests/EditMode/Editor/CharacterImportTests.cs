@@ -2,6 +2,8 @@ using System;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Animations;
+using UnityEngine.Playables;
 using GlorifiedBody.Characters;
 using GlorifiedBody.Editor.Characters;
 
@@ -342,6 +344,95 @@ namespace GlorifiedBody.Tests.EditMode
                 Assert.IsNotNull(animator, entry.id + " has an Animator");
                 Assert.IsFalse(animator.applyRootMotion, entry.id + ": the Animator applies no root motion (the controller moves the root)");
             }
+        }
+
+        /// <summary>
+        /// Every Humanoid avatar keeps the reference pose of its own FBX (2026-11-17). A new model under the old node
+        /// names kept the old pose: the guard's shoulder bones turned 179 degrees in every clip and its neck showed long
+        /// and thin. CreateCharacterAssets.BuildAll maps a stale avatar again.
+        /// </summary>
+        [Test]
+        public void EveryCharacterAvatar_KeepsTheReferencePoseOfItsFbx()
+        {
+            int checkedCount = 0;
+            foreach (string path in CharacterFbxPaths())
+            {
+                var importer = AssetImporter.GetAtPath(path) as ModelImporter;
+                if (importer == null || importer.animationType != ModelImporterAnimationType.Human) continue;
+                Assert.IsFalse(CharacterImportSettings.AvatarIsStale(path, out string reason), $"{path}: {reason} (run CreateCharacterAssets.BuildAll)");
+                checkedCount++;
+            }
+            Assert.Greater(checkedCount, 0, "Humanoid character FBX files");
+        }
+
+        /// <summary>
+        /// The effect of a stale reference pose, measured: the class's own idle at 0.5 s, played through its avatar,
+        /// turns the shoulder bones only a little from the FBX rest (3.7 to 6.6 degrees on the fresh avatars). With the
+        /// stale avatars of 2026-11-17 the guard's turned 178.9 degrees (its shoulders 5 cm low) and the power armour's 86.
+        /// </summary>
+        [Test]
+        public void EveryOwnIdle_KeepsTheShoulderBonesNearTheirRest()
+        {
+            int checkedCount = 0;
+            var report = new System.Text.StringBuilder();
+            foreach (string path in CharacterFbxPaths())
+            {
+                var importer = AssetImporter.GetAtPath(path) as ModelImporter;
+                if (importer == null || importer.animationType != ModelImporterAnimationType.Human) continue;
+                AnimationClip idle = null;
+                foreach (UnityEngine.Object asset in AssetDatabase.LoadAllAssetsAtPath(path))
+                    if (asset is AnimationClip clip && clip.name == "idle") idle = clip;
+                if (idle == null) continue;
+                GameObject figure = UnityEngine.Object.Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>(path));
+                try
+                {
+                    Animator animator = figure.GetComponentInChildren<Animator>();
+                    Assert.IsNotNull(animator, path + " has an Animator");
+                    animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+                    animator.applyRootMotion = false;
+                    Transform left = animator.GetBoneTransform(HumanBodyBones.LeftShoulder), right = animator.GetBoneTransform(HumanBodyBones.RightShoulder);
+                    Assert.IsNotNull(left, path + " maps the shoulders");
+                    Quaternion leftRest = left.localRotation, rightRest = right.localRotation;
+                    var graph = UnityEngine.Playables.PlayableGraph.Create("idle check");
+                    try
+                    {
+                        graph.SetTimeUpdateMode(UnityEngine.Playables.DirectorUpdateMode.Manual);
+                        var output = UnityEngine.Animations.AnimationPlayableOutput.Create(graph, "pose", animator);
+                        var play = UnityEngine.Animations.AnimationClipPlayable.Create(graph, idle);
+                        play.SetApplyFootIK(false);
+                        play.SetTime(0.5);
+                        output.SetSourcePlayable(play);
+                        graph.Evaluate(0f);
+                        float turn = Mathf.Max(Quaternion.Angle(leftRest, left.localRotation), Quaternion.Angle(rightRest, right.localRotation));
+                        report.Append($"{System.IO.Path.GetFileNameWithoutExtension(path)} {turn:0.0}; ");
+                        Assert.Less(turn, 20f, $"{path}: the shoulder bones turn {turn:0.0} degrees from rest in the idle (a stale avatar?)");
+                    }
+                    finally { graph.Destroy(); }
+                    checkedCount++;
+                }
+                finally { UnityEngine.Object.DestroyImmediate(figure); }
+            }
+            Debug.Log("[CharacterImportTests] the shoulder bones in the own idle, degrees from rest: " + report);
+            Assert.Greater(checkedCount, 0, "classes with an idle clip");
+        }
+
+        /// <summary>The check sees a reference bone moved by 5 % (an old model's proportions) and passes the pose as it is.</summary>
+        [Test]
+        public void TheReferencePoseCheck_SeesAMovedBone()
+        {
+            string path = CharacterImportSettings.Folder + "soldier.fbx";
+            var importer = AssetImporter.GetAtPath(path) as ModelImporter;
+            GameObject model = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+            Assert.IsNotNull(importer, path);
+            HumanDescription description = importer.humanDescription;
+            Assert.IsFalse(CharacterImportSettings.ReferencePoseDiffers(model, description, out string reason), "the soldier as imported: " + reason);
+            SkeletonBone[] moved = (SkeletonBone[])description.skeleton.Clone();
+            int neck = Array.FindIndex(moved, b => b.name == "mixamorig:Neck");
+            Assert.GreaterOrEqual(neck, 0, "the soldier's reference pose has the neck");
+            moved[neck].position *= 1.05f;
+            description.skeleton = moved;
+            Assert.IsTrue(CharacterImportSettings.ReferencePoseDiffers(model, description, out reason), "a neck 5 % longer is seen");
+            StringAssert.Contains("mixamorig:Neck", reason);
         }
     }
 }
