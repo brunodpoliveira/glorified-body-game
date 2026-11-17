@@ -91,26 +91,24 @@ namespace GlorifiedBody.UI
             GameObject overlay = CreateUIElement("Overlay", canvasObj.transform);
             StretchFill(overlay.GetComponent<RectTransform>());
             var overlayImg = overlay.AddComponent<Image>();
-            overlayImg.color = new Color(0, 0, 0, 0.8f);
+            overlayImg.color = MenuStyle.Scrim;
 
             Transform safeAreaRoot = RuntimeUIRootUtility.CreateSafeAreaRoot(canvasObj.transform);
 
-            // Root panel (centered)
-            rootPanel = CreateUIElement("CreditsRoot", safeAreaRoot);
+            // The AC3 frame (T46): the header plate holds the title, the framed body holds the names.
+            MenuStyle.MenuFrame frame = MenuStyle.Frame(safeAreaRoot, "CREDITS", "THE GLORIFIED BODY  /  VERTICAL SLICE DEMO", "STAFF", "credits", "ESC  BACK");
+            rootPanel = CreateUIElement("CreditsRoot", frame.Content);
             var rootRect = rootPanel.GetComponent<RectTransform>();
-            rootRect.anchorMin = new Vector2(0.5f, 0.5f);
-            rootRect.anchorMax = new Vector2(0.5f, 0.5f);
+            rootRect.anchorMin = new Vector2(0.5f, 0f);
+            rootRect.anchorMax = new Vector2(0.5f, 1f);
             rootRect.pivot = new Vector2(0.5f, 0.5f);
             rootRect.anchoredPosition = Vector2.zero;
-            rootRect.sizeDelta = new Vector2(480, 620);
-
-            var panelImg = rootPanel.AddComponent<Image>();
-            panelImg.color = new Color(0.06f, 0.06f, 0.09f, 0.97f);
+            rootRect.sizeDelta = new Vector2(640, 0);
 
             // Single vertical layout for all content
             var layout = rootPanel.AddComponent<VerticalLayoutGroup>();
             layout.spacing = 4;
-            layout.padding = new RectOffset(50, 50, 25, 20);
+            layout.padding = new RectOffset(20, 20, 12, 10);
             layout.childAlignment = TextAnchor.UpperCenter;
             layout.childControlWidth = true;
             layout.childControlHeight = true;
@@ -120,12 +118,7 @@ namespace GlorifiedBody.UI
             var p = rootPanel.transform; // shorthand
 
             // ── Title ──
-            CreateLabel(p, "CREDITS", 32, TextAnchor.MiddleCenter, 40, FontStyle.Bold);
             CreateSpacer(p, 4);
-            CreateLabel(p, "THE GLORIFIED BODY", 20, TextAnchor.MiddleCenter, 28, FontStyle.Bold, new Color(0.85f, 0.85f, 1f));
-            CreateLabel(p, "Vertical Slice Demo", 14, TextAnchor.MiddleCenter, 18, FontStyle.Italic, new Color(0.55f, 0.55f, 0.65f));
-            CreateDivider(p, new Color(0.3f, 0.35f, 0.5f, 0.4f), 1);
-            CreateSpacer(p, 8);
 
             // Development
             CreateCreditSection(p, "DEVELOPMENT");
@@ -156,7 +149,7 @@ namespace GlorifiedBody.UI
             CreateSpacer(p, 12);
 
             // ── Back Button ──
-            backBtn = CreateButton(p, "Back", OnBackClicked);
+            backBtn = CreateButton(p, "BACK", OnBackClicked);
 
             // Wire nav (single button, just needs explicit mode)
             var nav = new Navigation();
@@ -194,14 +187,14 @@ namespace GlorifiedBody.UI
             txt.fontSize = fontSize;
             txt.alignment = alignment;
             txt.fontStyle = style;
-            txt.color = color ?? Color.white;
-            txt.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            txt.color = color ?? MenuStyle.OffWhite;
+            txt.font = MenuStyle.Body;
             return txt;
         }
 
         private void CreateCreditSection(Transform parent, string title)
         {
-            CreateLabel(parent, title, 13, TextAnchor.MiddleCenter, 18, FontStyle.Bold, new Color(0.55f, 0.65f, 1f));
+            MenuStyle.HeadText(CreateLabel(parent, title, 18, TextAnchor.MiddleCenter, 24), MenuStyle.Blue);
         }
 
         private void CreateDivider(Transform parent, Color color, float height)
@@ -215,7 +208,7 @@ namespace GlorifiedBody.UI
 
         private void CreateCreditEntry(Transform parent, string name)
         {
-            CreateLabel(parent, name, 16, TextAnchor.MiddleCenter, 22, FontStyle.Normal, new Color(0.9f, 0.9f, 0.9f));
+            CreateLabel(parent, name, 19, TextAnchor.MiddleCenter, 25, FontStyle.Normal, MenuStyle.OffWhite);
         }
 
         private Button CreateButton(Transform parent, string label, UnityEngine.Events.UnityAction onClick)
@@ -224,16 +217,9 @@ namespace GlorifiedBody.UI
             var le = obj.AddComponent<LayoutElement>();
             le.preferredHeight = 50;
 
-            var img = obj.AddComponent<Image>();
-            img.color = new Color(0.2f, 0.2f, 0.25f, 1f);
-
+            obj.AddComponent<Image>();
             var btn = obj.AddComponent<Button>();
-            var colors = btn.colors;
-            colors.normalColor = new Color(0.2f, 0.2f, 0.25f, 1f);
-            colors.highlightedColor = new Color(0.35f, 0.35f, 0.4f, 1f);
-            colors.selectedColor = new Color(0.35f, 0.35f, 0.4f, 1f);
-            colors.pressedColor = new Color(0.15f, 0.15f, 0.2f, 1f);
-            btn.colors = colors;
+            MenuStyle.Style(btn);
             btn.onClick.AddListener(onClick);
 
             var txtObj = CreateUIElement("Text", obj.transform);
@@ -242,10 +228,9 @@ namespace GlorifiedBody.UI
 
             var txt = txtObj.AddComponent<Text>();
             txt.text = label;
-            txt.fontSize = 22;
+            txt.fontSize = 26;
             txt.alignment = TextAnchor.MiddleCenter;
-            txt.color = Color.white;
-            txt.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            MenuStyle.HeadText(txt, MenuStyle.OffWhite);
 
             return btn;
         }

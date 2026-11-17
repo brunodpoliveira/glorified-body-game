@@ -23,6 +23,7 @@ namespace GlorifiedBody.UI
         private Canvas canvas;
         private GameObject root;
         private Text title;
+        private Text caption; // the name under the badge of the AC3 frame (T46)
         private Text keys;
         private Text toast;
         private readonly List<Text> rows = new List<Text>();
@@ -88,6 +89,7 @@ namespace GlorifiedBody.UI
             for (int slot = 1; slot <= SaveSystem.ManualSlots; slot++) slots.Add(slot);
             if (mode == Mode.Load) slots.Add(SaveSystem.CheckpointSlot);
             title.text = mode == Mode.Save ? "SAVE" : "LOAD GAME";
+            if (caption != null) caption.text = mode == Mode.Save ? "SAVE" : "LOAD";
             root.SetActive(true);
             Select(mode == Mode.Load ? Mathf.Max(0, slots.IndexOf(SaveSystem.Newest())) : 0);
         }
@@ -169,8 +171,8 @@ namespace GlorifiedBody.UI
                 if (!used) continue;
                 rows[i].text = Describe(slots[i]);
                 bool on = i == Selected;
-                rows[i].color = on ? new Color(1f, 0.9f, 0.1f) : new Color(0.85f, 0.88f, 0.9f);
-                rows[i].transform.parent.GetComponent<Image>().color = on ? new Color(0.18f, 0.2f, 0.24f, 0.96f) : new Color(0.08f, 0.1f, 0.12f, 0.92f);
+                rows[i].color = on ? MenuStyle.OffWhite : MenuStyle.Silver;
+                rows[i].transform.parent.GetComponent<Image>().color = on ? MenuStyle.WellOn : MenuStyle.Well;
             }
             string action = Current == Mode.Save ? "SAVE" : "LOAD";
             keys.text = $"{KeyName(InputManager.GameAction.Forward)}/{KeyName(InputManager.GameAction.Back)} MOVE   {KeyName(InputManager.GameAction.Interact)} {action}   ESC CANCEL";
@@ -211,21 +213,27 @@ namespace GlorifiedBody.UI
             scaler.referenceResolution = new Vector2(1920f, 1080f);
             gameObject.AddComponent<GraphicRaycaster>();
 
-            root = Box(transform, "Root", Vector2.zero, new Vector2(1920f, 1080f), new Color(0f, 0f, 0f, 0.55f));
-            GameObject panel = Box(root.transform, "Panel", new Vector2(0f, 20f), new Vector2(1100f, 520f), new Color(0.06f, 0.07f, 0.09f, 0.95f));
-            panel.AddComponent<Outline>().effectColor = new Color(0.85f, 0.88f, 0.9f, 0.9f);
-            title = Label(panel.transform, "Title", 40, FontStyle.Bold, new Color(0.7f, 0.95f, 0.95f), TextAnchor.UpperCenter, new Vector2(0f, 205f), new Vector2(1000f, 60f));
+            // T46: the menu look. A dark see-through panel, a thin silver edge, the selected slot in orange.
+            root = Box(transform, "Root", Vector2.zero, new Vector2(1920f, 1080f), MenuStyle.Scrim);
+            MenuStyle.Fill((RectTransform)root.transform, 0f); // the whole screen at any shape (the frame stretches over it)
+            MenuStyle.MenuFrame frame = MenuStyle.Frame(root.transform, "LOAD GAME", "THE SLOTS  /  THE CHECKPOINT", "MEMORY", "load", "ESC  CANCEL");
+            title = frame.Title;
+            caption = frame.Caption;
+            GameObject panel = Box(frame.Content, "Panel", new Vector2(0f, 40f), new Vector2(1100f, 520f), Color.clear);
             for (int i = 0; i <= SaveSystem.ManualSlots; i++)
             {
-                GameObject row = Box(panel.transform, "Row" + i, new Vector2(0f, 110f - i * 88f), new Vector2(1000f, 74f), new Color(0.08f, 0.1f, 0.12f, 0.92f));
+                GameObject row = Box(panel.transform, "Row" + i, new Vector2(0f, 110f - i * 88f), new Vector2(1000f, 74f), MenuStyle.Well);
                 int index = i;
                 row.AddComponent<Button>().onClick.AddListener(() => { Select(index); Choose(index); });
-                rows.Add(Label(row.transform, "Text", 26, FontStyle.Bold, Color.white, TextAnchor.MiddleLeft, Vector2.zero, new Vector2(960f, 70f)));
+                Text rowText = Label(row.transform, "Text", 28, FontStyle.Normal, MenuStyle.OffWhite, TextAnchor.MiddleLeft, Vector2.zero, new Vector2(960f, 70f));
+                rowText.font = MenuStyle.Head;
+                rows.Add(rowText);
             }
-            keys = Label(panel.transform, "Keys", 20, FontStyle.Bold, new Color(0.85f, 0.85f, 0.85f), TextAnchor.LowerCenter, new Vector2(0f, -225f), new Vector2(1000f, 40f));
+            keys = Label(panel.transform, "Keys", 20, FontStyle.Normal, MenuStyle.Dim, TextAnchor.LowerCenter, new Vector2(0f, -225f), new Vector2(1000f, 40f));
             root.SetActive(false);
 
-            toast = Label(transform, "Toast", 30, FontStyle.Bold, new Color(0.7f, 0.95f, 0.95f), TextAnchor.MiddleCenter, Vector2.zero, new Vector2(900f, 50f));
+            toast = Label(transform, "Toast", 32, FontStyle.Normal, MenuStyle.Green, TextAnchor.MiddleCenter, Vector2.zero, new Vector2(900f, 50f));
+            toast.font = MenuStyle.Head;
             toast.rectTransform.anchorMin = toast.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             toast.rectTransform.anchoredPosition = new Vector2(0f, -90f);
             toast.gameObject.AddComponent<Outline>().effectColor = Color.black;
@@ -253,7 +261,7 @@ namespace GlorifiedBody.UI
             rect.anchoredPosition = position;
             rect.sizeDelta = box;
             var text = obj.AddComponent<Text>();
-            text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            text.font = MenuStyle.Body;
             text.fontSize = size;
             text.fontStyle = style;
             text.color = colour;

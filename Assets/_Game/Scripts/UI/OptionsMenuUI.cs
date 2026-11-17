@@ -141,7 +141,7 @@ namespace GlorifiedBody.UI
         {
             var img = btn.GetComponent<Image>();
             if (img != null)
-                img.color = active ? new Color(0.3f, 0.3f, 0.4f, 1f) : new Color(0.18f, 0.18f, 0.22f, 1f);
+                img.color = active ? MenuStyle.WellOn : MenuStyle.Well;
         }
 
         private void ScrollPanelToTop(GameObject panel)
@@ -269,7 +269,7 @@ namespace GlorifiedBody.UI
             Image image = button.GetComponent<Image>();
             if (image != null)
             {
-                image.color = active ? new Color(0.36f, 0.36f, 0.48f, 1f) : new Color(0.2f, 0.2f, 0.25f, 1f);
+                image.color = active ? MenuStyle.WellOn : MenuStyle.Well;
             }
         }
 
@@ -405,19 +405,17 @@ namespace GlorifiedBody.UI
             GameObject overlay = CreateUIElement("Overlay", canvasObj.transform);
             StretchFill(overlay.GetComponent<RectTransform>());
             var overlayImg = overlay.AddComponent<Image>();
-            overlayImg.color = new Color(0, 0, 0, 0.7f);
+            overlayImg.color = MenuStyle.Scrim;
 
             Transform safeAreaRoot = RuntimeUIRootUtility.CreateSafeAreaRoot(canvasObj.transform);
 
-            // Root panel
-            rootPanel = CreateUIElement("OptionsRoot", safeAreaRoot);
+            // The AC3 frame (T46): the header plate holds the title, the framed body holds the tabs and the rows.
+            MenuStyle.MenuFrame frame = MenuStyle.Frame(safeAreaRoot, "OPTIONS", "SOUND  /  PICTURE  /  KEYS", "CONFIG", "options", "ESC  BACK");
+            rootPanel = CreateUIElement("OptionsRoot", frame.Content);
             var rootRect = rootPanel.GetComponent<RectTransform>();
-            rootRect.anchorMin = new Vector2(0.5f, 0.5f);
-            rootRect.anchorMax = new Vector2(0.5f, 0.5f);
-            rootRect.pivot = new Vector2(0.5f, 0.5f);
-            rootRect.sizeDelta = new Vector2(860, 680);
+            StretchFill(rootRect);
             var rootImg = rootPanel.AddComponent<Image>();
-            rootImg.color = new Color(0.1f, 0.1f, 0.12f, 0.97f);
+            rootImg.color = Color.clear;
 
             var rootLayout = rootPanel.AddComponent<VerticalLayoutGroup>();
             rootLayout.spacing = 0;
@@ -427,18 +425,11 @@ namespace GlorifiedBody.UI
             rootLayout.childForceExpandWidth = true;
             rootLayout.childForceExpandHeight = false;
 
-            // Title bar
-            var titleBar = CreateUIElement("TitleBar", rootPanel.transform);
-            var titleLE = titleBar.AddComponent<LayoutElement>();
-            titleLE.preferredHeight = 50;
-            var titleImg = titleBar.AddComponent<Image>();
-            titleImg.color = new Color(0.08f, 0.08f, 0.1f, 1f);
-            CreateLabel(titleBar.transform, "OPTIONS", 28, TextAnchor.MiddleCenter, 50).horizontalOverflow = HorizontalWrapMode.Overflow; // one line (2026-11-03: it wrapped "OPTIO NS")
 
             // Tab bar
             var tabBar = CreateUIElement("TabBar", rootPanel.transform);
             var tabLE = tabBar.AddComponent<LayoutElement>();
-            tabLE.preferredHeight = 40;
+            tabLE.preferredHeight = 48;
             var tabLayout = tabBar.AddComponent<HorizontalLayoutGroup>();
             tabLayout.spacing = 2;
             tabLayout.childControlWidth = true;
@@ -446,9 +437,9 @@ namespace GlorifiedBody.UI
             tabLayout.childForceExpandWidth = true;
             tabLayout.childForceExpandHeight = true;
 
-            audioTabBtn = CreateTabButton(tabBar.transform, "Audio", () => ShowTab(audioPanel, audioTabBtn));
-            displayTabBtn = CreateTabButton(tabBar.transform, "Display/Graphics", () => ShowTab(displayPanel, displayTabBtn));
-            controlsTabBtn = CreateTabButton(tabBar.transform, "Controls", () => ShowTab(controlsPanel, controlsTabBtn));
+            audioTabBtn = CreateTabButton(tabBar.transform, "AUDIO", () => ShowTab(audioPanel, audioTabBtn));
+            displayTabBtn = CreateTabButton(tabBar.transform, "DISPLAY / GRAPHICS", () => ShowTab(displayPanel, displayTabBtn));
+            controlsTabBtn = CreateTabButton(tabBar.transform, "CONTROLS", () => ShowTab(controlsPanel, controlsTabBtn));
 
             // Content area
             var contentArea = CreateUIElement("ContentArea", rootPanel.transform);
@@ -475,8 +466,8 @@ namespace GlorifiedBody.UI
             bottomLayout.childForceExpandHeight = true;
             bottomLayout.childAlignment = TextAnchor.MiddleRight;
 
-            CreateFixedButton(bottomBar.transform, "Reset Settings", 150, OnResetSettingsClicked);
-            CreateFixedButton(bottomBar.transform, "Back", 100, OnBackClicked);
+            CreateFixedButton(bottomBar.transform, "RESET SETTINGS", 190, OnResetSettingsClicked);
+            CreateFixedButton(bottomBar.transform, "BACK", 130, OnBackClicked);
 
             // Rebind prompt overlay (hidden by default)
             rebindPromptText = CreateLabel(rootPanel.transform, "Press any key to bind...\n(Escape to cancel)", 24, TextAnchor.MiddleCenter, 50);
@@ -598,7 +589,7 @@ namespace GlorifiedBody.UI
             CreateSpacer(content, 10);
 
             // Section header
-            CreateLabel(content, "KEY BINDINGS", 16, TextAnchor.MiddleLeft, 25);
+            MenuStyle.HeadText(CreateLabel(content, "KEY BINDINGS", 20, TextAnchor.MiddleLeft, 28), MenuStyle.Blue);
 
             keybindContainer = content;
 
@@ -646,7 +637,7 @@ namespace GlorifiedBody.UI
             scrollbarRect.pivot = new Vector2(1f, 1f);
             scrollbarRect.offsetMin = new Vector2(-14f, 8f);
             scrollbarRect.offsetMax = new Vector2(-4f, -8f);
-            scrollbarObj.AddComponent<Image>().color = new Color(1f, 1f, 1f, 0.08f);
+            scrollbarObj.AddComponent<Image>().color = MenuStyle.Track;
 
             var slidingArea = CreateUIElement("SlidingArea", scrollbarObj.transform);
             var slidingAreaRect = slidingArea.GetComponent<RectTransform>();
@@ -658,7 +649,7 @@ namespace GlorifiedBody.UI
             var handleRect = handleObj.GetComponent<RectTransform>();
             StretchFill(handleRect);
             var handleImage = handleObj.AddComponent<Image>();
-            handleImage.color = new Color(0.55f, 0.55f, 0.65f, 0.95f);
+            handleImage.color = new Color(0.72f, 0.75f, 0.78f, 0.8f);
 
             var scrollbar = scrollbarObj.AddComponent<Scrollbar>();
             scrollbar.direction = Scrollbar.Direction.BottomToTop;
@@ -713,16 +704,12 @@ namespace GlorifiedBody.UI
             var btnLE = btnObj.AddComponent<LayoutElement>();
             btnLE.flexibleWidth = 1;
             btnLE.preferredHeight = 32;
-            var btnImg = btnObj.AddComponent<Image>();
-            btnImg.color = new Color(0.22f, 0.22f, 0.28f, 1f);
-
+            btnObj.AddComponent<Image>();
             var btn = btnObj.AddComponent<Button>();
-            var colors = btn.colors;
-            colors.highlightedColor = new Color(0.35f, 0.35f, 0.4f, 1f);
-            colors.pressedColor = new Color(0.15f, 0.15f, 0.2f, 1f);
-            btn.colors = colors;
+            MenuStyle.Style(btn);
 
-            var keyLabel = CreateLabel(btnObj.transform, InputManager.GetKeyDisplayName(binding.currentKey), 16, TextAnchor.MiddleCenter, 32);
+            var keyLabel = CreateLabel(btnObj.transform, InputManager.GetKeyDisplayName(binding.currentKey), 19, TextAnchor.MiddleCenter, 32);
+            MenuStyle.HeadText(keyLabel, MenuStyle.Orange);
 
             var action = binding.action; // Capture for closure
             btn.onClick.AddListener(() => OnRebindClicked(action));
@@ -755,9 +742,8 @@ namespace GlorifiedBody.UI
         /// <summary>A section name between the rows of a tab.</summary>
         private void CreateSectionLabel(Transform parent, string text)
         {
-            Text label = CreateLabel(parent, text, 20, TextAnchor.LowerLeft, 40);
-            label.fontStyle = FontStyle.Bold;
-            label.color = new Color(0.6f, 0.6f, 0.7f);
+            Text label = CreateLabel(parent, text, 22, TextAnchor.LowerLeft, 40);
+            MenuStyle.HeadText(label, MenuStyle.Blue);
         }
 
         private Text CreateLabel(Transform parent, string text, int fontSize, TextAnchor alignment, float height)
@@ -770,8 +756,8 @@ namespace GlorifiedBody.UI
             txt.text = text;
             txt.fontSize = fontSize;
             txt.alignment = alignment;
-            txt.color = Color.white;
-            txt.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            txt.color = MenuStyle.OffWhite;
+            txt.font = MenuStyle.Body;
             return txt;
         }
 
@@ -800,7 +786,7 @@ namespace GlorifiedBody.UI
             var bgObj = CreateUIElement("Background", sliderObj.transform);
             var bgRect = bgObj.GetComponent<RectTransform>();
             StretchFill(bgRect);
-            bgObj.AddComponent<Image>().color = new Color(0.15f, 0.15f, 0.2f, 1f);
+            bgObj.AddComponent<Image>().color = MenuStyle.Track;
 
             // Fill area
             var fillArea = CreateUIElement("FillArea", sliderObj.transform);
@@ -816,7 +802,7 @@ namespace GlorifiedBody.UI
             fillRect.anchorMax = Vector2.one;
             fillRect.offsetMin = Vector2.zero;
             fillRect.offsetMax = Vector2.zero;
-            fill.AddComponent<Image>().color = new Color(0.4f, 0.6f, 0.8f, 1f);
+            fill.AddComponent<Image>().color = MenuStyle.Blue;
 
             // Handle area
             var handleArea = CreateUIElement("HandleSlideArea", sliderObj.transform);
@@ -829,7 +815,7 @@ namespace GlorifiedBody.UI
             var handle = CreateUIElement("Handle", handleArea.transform);
             var handleRect = handle.GetComponent<RectTransform>();
             handleRect.sizeDelta = new Vector2(20, 0);
-            handle.AddComponent<Image>().color = Color.white;
+            handle.AddComponent<Image>().color = MenuStyle.OffWhite;
 
             var slider = sliderObj.AddComponent<Slider>();
             slider.fillRect = fillRect;
@@ -876,7 +862,7 @@ namespace GlorifiedBody.UI
             var toggleBg = CreateUIElement("Background", toggleObj.transform);
             var bgRect = toggleBg.GetComponent<RectTransform>();
             StretchFill(bgRect);
-            toggleBg.AddComponent<Image>().color = new Color(0.2f, 0.2f, 0.25f, 1f);
+            toggleBg.AddComponent<Image>().color = MenuStyle.Track;
 
             // Checkmark
             var checkmark = CreateUIElement("Checkmark", toggleBg.transform);
@@ -885,7 +871,7 @@ namespace GlorifiedBody.UI
             checkRect.anchorMax = new Vector2(0.85f, 0.85f);
             checkRect.offsetMin = Vector2.zero;
             checkRect.offsetMax = Vector2.zero;
-            checkmark.AddComponent<Image>().color = new Color(0.4f, 0.8f, 0.4f, 1f);
+            checkmark.AddComponent<Image>().color = MenuStyle.Green;
 
             var toggle = toggleObj.AddComponent<Toggle>();
             toggle.graphic = checkmark.GetComponent<Image>();
@@ -940,13 +926,10 @@ namespace GlorifiedBody.UI
             le.preferredHeight = 34;
 
             var image = obj.AddComponent<Image>();
-            image.color = new Color(0.2f, 0.2f, 0.25f, 1f);
+            image.color = MenuStyle.Well; // SetModeButtonHighlight shows the active mode
 
             var button = obj.AddComponent<Button>();
-            var colors = button.colors;
-            colors.highlightedColor = new Color(0.42f, 0.42f, 0.5f, 1f);
-            colors.pressedColor = new Color(0.15f, 0.15f, 0.2f, 1f);
-            button.colors = colors;
+            button.colors = MenuStyle.StateColors(button.colors);
             button.onClick.AddListener(onClick);
 
             CreateLabel(obj.transform, label, 16, TextAnchor.MiddleCenter, 34);
@@ -984,7 +967,7 @@ namespace GlorifiedBody.UI
         {
             const float itemHeight = 30f;
             var bgImg = parent.AddComponent<Image>();
-            bgImg.color = new Color(0.2f, 0.2f, 0.25f, 1f);
+            bgImg.color = Color.white;
 
             // Caption
             var captionObj = CreateUIElement("Label", parent.transform);
@@ -996,8 +979,8 @@ namespace GlorifiedBody.UI
             var captionText = captionObj.AddComponent<Text>();
             captionText.fontSize = 16;
             captionText.alignment = TextAnchor.MiddleLeft;
-            captionText.color = Color.white;
-            captionText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            captionText.color = MenuStyle.OffWhite;
+            captionText.font = MenuStyle.Body;
 
             // Arrow
             var arrowObj = CreateUIElement("Arrow", parent.transform);
@@ -1006,7 +989,7 @@ namespace GlorifiedBody.UI
             arrowRect.anchorMax = new Vector2(1, 1);
             arrowRect.offsetMin = new Vector2(-25, 5);
             arrowRect.offsetMax = new Vector2(-5, -5);
-            arrowObj.AddComponent<Image>().color = new Color(0.6f, 0.6f, 0.6f, 1f);
+            arrowObj.AddComponent<Image>().color = MenuStyle.Silver;
 
             // Template
             var templateObj = CreateUIElement("Template", parent.transform);
@@ -1015,7 +998,7 @@ namespace GlorifiedBody.UI
             templateRect.anchorMax = new Vector2(1, 0);
             templateRect.pivot = new Vector2(0.5f, 1f);
             templateRect.sizeDelta = new Vector2(0, Mathf.Max(1, visibleItemCount) * itemHeight + 4f);
-            templateObj.AddComponent<Image>().color = new Color(0.15f, 0.15f, 0.2f, 1f);
+            templateObj.AddComponent<Image>().color = new Color(0.04f, 0.045f, 0.06f, 0.98f);
 
             var scrollRect = templateObj.AddComponent<ScrollRect>();
             scrollRect.horizontal = false;
@@ -1068,7 +1051,8 @@ namespace GlorifiedBody.UI
             var itemBgRect = itemBg.GetComponent<RectTransform>();
             StretchFill(itemBgRect);
             var itemBgImage = itemBg.AddComponent<Image>();
-            itemBgImage.color = new Color(0.25f, 0.25f, 0.3f, 1f);
+            itemBgImage.color = Color.white;
+            itemToggle.colors = MenuStyle.Colors(itemToggle.colors);
             itemToggle.targetGraphic = itemBgImage;
 
             // Item checkmark
@@ -1078,7 +1062,7 @@ namespace GlorifiedBody.UI
             itemCheckRect.anchorMax = new Vector2(0, 1);
             itemCheckRect.offsetMin = new Vector2(2, 2);
             itemCheckRect.offsetMax = new Vector2(22, -2);
-            itemCheck.AddComponent<Image>().color = new Color(0.4f, 0.8f, 0.4f, 1f);
+            itemCheck.AddComponent<Image>().color = MenuStyle.Green;
             itemToggle.graphic = itemCheck.GetComponent<Image>();
 
             // Item label
@@ -1091,8 +1075,8 @@ namespace GlorifiedBody.UI
             var itemLabel = itemLabelObj.AddComponent<Text>();
             itemLabel.fontSize = 14;
             itemLabel.alignment = TextAnchor.MiddleLeft;
-            itemLabel.color = Color.white;
-            itemLabel.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            itemLabel.color = MenuStyle.OffWhite;
+            itemLabel.font = MenuStyle.Body;
             itemLabel.raycastTarget = false;
             itemLabel.text = "Option";
 
@@ -1100,6 +1084,7 @@ namespace GlorifiedBody.UI
 
             var dropdown = parent.AddComponent<Dropdown>();
             dropdown.targetGraphic = bgImg;
+            dropdown.colors = MenuStyle.Colors(dropdown.colors);
             dropdown.template = templateRect;
             dropdown.captionText = captionText;
             dropdown.itemText = itemLabel;
@@ -1111,16 +1096,14 @@ namespace GlorifiedBody.UI
         {
             var obj = CreateUIElement("Tab_" + label, parent);
             var img = obj.AddComponent<Image>();
-            img.color = new Color(0.18f, 0.18f, 0.22f, 1f);
+            img.color = MenuStyle.Well; // SetTabHighlight shows the open tab
 
             var btn = obj.AddComponent<Button>();
-            var colors = btn.colors;
-            colors.highlightedColor = new Color(0.28f, 0.28f, 0.35f, 1f);
-            colors.pressedColor = new Color(0.15f, 0.15f, 0.2f, 1f);
-            btn.colors = colors;
+            btn.colors = MenuStyle.StateColors(btn.colors);
             btn.onClick.AddListener(onClick);
 
-            var txt = CreateLabel(obj.transform, label, 18, TextAnchor.MiddleCenter, 40);
+            var txt = CreateLabel(obj.transform, label, 24, TextAnchor.MiddleCenter, 48);
+            MenuStyle.HeadText(txt, MenuStyle.OffWhite);
             StretchFill(txt.rectTransform); // the whole tab, one line (2026-11-03: "Display/Graphics" wrapped)
             txt.horizontalOverflow = HorizontalWrapMode.Overflow;
 
@@ -1134,17 +1117,15 @@ namespace GlorifiedBody.UI
             le.preferredWidth = width;
             le.preferredHeight = 34;
 
-            var img = obj.AddComponent<Image>();
-            img.color = new Color(0.2f, 0.2f, 0.25f, 1f);
-
+            obj.AddComponent<Image>();
             var btn = obj.AddComponent<Button>();
-            var colors = btn.colors;
-            colors.highlightedColor = new Color(0.35f, 0.35f, 0.4f, 1f);
-            colors.pressedColor = new Color(0.15f, 0.15f, 0.2f, 1f);
-            btn.colors = colors;
+            MenuStyle.Style(btn);
             btn.onClick.AddListener(onClick);
 
-            var txt = CreateLabel(obj.transform, label, 16, TextAnchor.MiddleCenter, 34);
+            var txt = CreateLabel(obj.transform, label, 19, TextAnchor.MiddleCenter, 34);
+            MenuStyle.HeadText(txt, MenuStyle.OffWhite);
+            StretchFill(txt.rectTransform); // the whole button, one line ("Reset Settings" wrapped in a 100 px label)
+            txt.horizontalOverflow = HorizontalWrapMode.Overflow;
 
             return btn;
         }

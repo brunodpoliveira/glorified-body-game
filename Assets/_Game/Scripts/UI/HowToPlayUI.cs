@@ -85,26 +85,20 @@ namespace GlorifiedBody.UI
 
             GameObject overlay = CreateUIElement("Overlay", canvasObj.transform);
             StretchFill(overlay.GetComponent<RectTransform>());
-            overlay.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0.85f);
+            overlay.AddComponent<Image>().color = MenuStyle.Scrim;
 
             Transform safeAreaRoot = RuntimeUIRootUtility.CreateSafeAreaRoot(canvasObj.transform);
 
-            rootPanel = CreateUIElement("HowToPlayRoot", safeAreaRoot);
+            // The AC3 frame (T46). Three columns: the controls in two, the system keys in the third. One column of
+            // 1050 px overflowed with 39 rows, and the layout then shrank the premise into the controls (2026-11-17).
+            MenuStyle.MenuFrame frame = MenuStyle.Frame(safeAreaRoot, "HOW TO PLAY", "THE PREMISE  /  THE KEYS  /  OPTIONS > CONTROLS REMAPS THEM", "MANUAL", "howtoplay", "ESC  BACK");
+            rootPanel = CreateUIElement("HowToPlayRoot", frame.Content);
             var rootRect = rootPanel.GetComponent<RectTransform>();
-            rootRect.anchorMin = new Vector2(0.5f, 0.5f);
-            rootRect.anchorMax = new Vector2(0.5f, 0.5f);
-            rootRect.pivot = new Vector2(0.5f, 0.5f);
-            rootRect.anchoredPosition = Vector2.zero;
-            // 17 control rows at 24 px, the premise at its own height, the button: 760 overflowed after the dodge
-            // and debug rows (2026-10-20). 990 holds them all, with the two telekinesis rows and the Defend binding,
-            // on the 1080 reference height. 1050 with the look test row (2026-10-22).
-            rootRect.sizeDelta = new Vector2(720, 1050);
-
-            rootPanel.AddComponent<Image>().color = new Color(0.06f, 0.06f, 0.09f, 0.97f);
+            StretchFill(rootRect);
 
             var layout = rootPanel.AddComponent<VerticalLayoutGroup>();
             layout.spacing = 3;
-            layout.padding = new RectOffset(48, 48, 24, 20);
+            layout.padding = new RectOffset(24, 24, 10, 8);
             layout.childAlignment = TextAnchor.UpperCenter;
             layout.childControlWidth = true;
             layout.childControlHeight = true;
@@ -113,11 +107,7 @@ namespace GlorifiedBody.UI
 
             var p = rootPanel.transform;
 
-            // ── Title + premise ──
-            CreateLabel(p, "HOW TO PLAY", 32, TextAnchor.MiddleCenter, 40, FontStyle.Bold);
-            CreateDivider(p, new Color(0.3f, 0.35f, 0.5f, 0.4f), 1);
-            CreateSpacer(p, 6);
-
+            // ── Premise ──
             CreateSection(p, "PREMISE");
             CreateBody(p,
                 "You are Lucy. You wake in the lab with no memory and three psychic powers: mk_warspite (blast), " +
@@ -126,25 +116,38 @@ namespace GlorifiedBody.UI
                 "of that power fills its bar. Every power you use, every kill and every hit you take fills SHORT. A short takes about half your HP, and below that it kills you. PLACEHOLDER TEXT: the writer supplies the final words.");
             CreateSpacer(p, 10);
 
-            // ── Controls: the live bindings, so a remap shows here too ──
-            CreateSection(p, "CONTROLS  (remap them in OPTIONS > CONTROLS)");
+            var columns = CreateUIElement("Columns", p);
+            columns.AddComponent<LayoutElement>().flexibleHeight = 1;
+            var cols = columns.AddComponent<HorizontalLayoutGroup>();
+            cols.spacing = 40;
+            cols.childControlWidth = true;
+            cols.childControlHeight = true;
+            cols.childForceExpandWidth = true;
+            cols.childForceExpandHeight = true;
+            Transform left = CreateColumn(columns.transform);
+            Transform middle = CreateColumn(columns.transform);
+            Transform right = CreateColumn(columns.transform);
+
+            // ── Controls: the live bindings, so a remap shows here too. Half in each of the first two columns. ──
+            var controls = new System.Collections.Generic.List<(string key, string desc)>();
             if (InputManager.Instance != null)
             {
                 foreach (var binding in InputManager.Instance.GetAllBindings())
-                {
-                    string key = InputManager.GetKeyDisplayName(InputManager.Instance.GetKey(binding.action));
-                    CreateControl(p, key, binding.DisplayName);
-                }
-                CreateControl(p, "Mouse left / right", "Turn left / right (OPTIONS > CONTROLS: Mouse Turn)");
+                    controls.Add((InputManager.GetKeyDisplayName(InputManager.Instance.GetKey(binding.action)), binding.DisplayName));
+                controls.Add(("Mouse left / right", "Turn left / right (OPTIONS > CONTROLS: Mouse Turn)"));
             }
             else
             {
-                CreateControl(p, "W / S", "Walk forward / back");
-                CreateControl(p, "A / D", "Turn left / right");
-                CreateControl(p, "LMB (hold)", "Charge a power, release to strike");
+                controls.Add(("W / S", "Walk forward / back"));
+                controls.Add(("A / D", "Turn left / right"));
+                controls.Add(("LMB (hold)", "Charge a power, release to strike"));
             }
-            CreateSpacer(p, 8);
-
+            int half = (controls.Count + 1) / 2;
+            CreateSection(left, "CONTROLS");
+            CreateSection(middle, " ");
+            for (int i = 0; i < controls.Count; i++)
+                CreateControl(i < half ? left : middle, controls[i].key, controls[i].desc);
+            p = right;
             CreateSection(p, "SYSTEM");
             CreateControl(p, "Esc", "Pause / menus");
             CreateControl(p, "Space + W/A/S/D", "Dodge that way (no direction key: a step back)");
@@ -163,9 +166,10 @@ namespace GlorifiedBody.UI
                 CreateControl(p, "F8 / F9", "Debug: selected MK -25 / +25");
                 CreateControl(p, "F12", "Debug: the soldiers' care counts her as unseen"); // F11 left with the look test rooms (2026-11-16)
             }
-            CreateSpacer(p, 14);
+            p = rootPanel.transform;
+            CreateSpacer(p, 6);
 
-            backBtn = CreateButton(p, "Back", OnBackClicked);
+            backBtn = CreateButton(p, "BACK", OnBackClicked);
             var nav = new Navigation { mode = Navigation.Mode.Explicit };
             backBtn.navigation = nav;
 
@@ -189,6 +193,19 @@ namespace GlorifiedBody.UI
             rect.offsetMax = Vector2.zero;
         }
 
+        private Transform CreateColumn(Transform parent)
+        {
+            var col = CreateUIElement("Column", parent);
+            var v = col.AddComponent<VerticalLayoutGroup>();
+            v.spacing = 3;
+            v.childAlignment = TextAnchor.UpperLeft;
+            v.childControlWidth = true;
+            v.childControlHeight = true;
+            v.childForceExpandWidth = true;
+            v.childForceExpandHeight = false;
+            return col.transform;
+        }
+
         private Text CreateLabel(Transform parent, string text, int fontSize, TextAnchor alignment, float height, FontStyle style = FontStyle.Normal, Color? color = null)
         {
             var obj = CreateUIElement("Label", parent);
@@ -199,8 +216,8 @@ namespace GlorifiedBody.UI
             txt.fontSize = fontSize;
             txt.alignment = alignment;
             txt.fontStyle = style;
-            txt.color = color ?? Color.white;
-            txt.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            txt.color = color ?? MenuStyle.OffWhite;
+            txt.font = MenuStyle.Body;
             txt.horizontalOverflow = HorizontalWrapMode.Wrap;
             txt.verticalOverflow = VerticalWrapMode.Overflow;
             return txt;
@@ -208,12 +225,12 @@ namespace GlorifiedBody.UI
 
         private void CreateSection(Transform parent, string title)
         {
-            CreateLabel(parent, title, 15, TextAnchor.MiddleLeft, 22, FontStyle.Bold, new Color(0.55f, 0.65f, 1f));
+            MenuStyle.HeadText(CreateLabel(parent, title, 20, TextAnchor.MiddleLeft, 28), MenuStyle.Blue);
         }
 
         private void CreateBody(Transform parent, string text)
         {
-            var label = CreateLabel(parent, text, 14, TextAnchor.UpperLeft, 0, FontStyle.Italic, new Color(0.78f, 0.8f, 0.86f));
+            var label = CreateLabel(parent, text, 16, TextAnchor.UpperLeft, 0, FontStyle.Normal, MenuStyle.Silver);
             // The vertical layout controls the height. A LayoutElement with -1 is "not set", so the Text supplies its
             // own preferred height from the wrapped lines. With 0 the row collapsed and the text overlapped the
             // controls (seen in how_to_play_ui.png, 2026-10-20). A ContentSizeFitter fights the layout group.
@@ -223,8 +240,13 @@ namespace GlorifiedBody.UI
         private void CreateControl(Transform parent, string key, string desc)
         {
             var row = CreateUIElement("Control", parent);
-            row.AddComponent<LayoutElement>().preferredHeight = 24;
+            // One line is 24 px. A long description takes a second line. No flexible height: with it, the rows
+            // spread out to fill a column that has room (the HorizontalLayoutGroup reports a flexible height of 1).
+            var rowLe = row.AddComponent<LayoutElement>();
+            rowLe.minHeight = 24;
+            rowLe.flexibleHeight = 0;
             var h = row.AddComponent<HorizontalLayoutGroup>();
+            h.childForceExpandHeight = false;
             h.spacing = 12;
             h.childControlWidth = true;
             h.childControlHeight = true;
@@ -232,25 +254,28 @@ namespace GlorifiedBody.UI
 
             var keyObj = CreateUIElement("Key", row.transform);
             var keyLe = keyObj.AddComponent<LayoutElement>();
-            keyLe.preferredWidth = 220;
-            keyLe.minWidth = 220;
+            keyLe.preferredWidth = 190;
+            keyLe.minWidth = 190;
             var keyTxt = keyObj.AddComponent<Text>();
             keyTxt.text = key;
-            keyTxt.fontSize = 16;
+            keyTxt.fontSize = 18;
             keyTxt.alignment = TextAnchor.MiddleLeft;
-            keyTxt.fontStyle = FontStyle.Bold;
-            keyTxt.color = new Color(1f, 0.85f, 0.4f);
-            keyTxt.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            keyTxt.color = MenuStyle.Orange;
+            keyTxt.font = MenuStyle.Head;
+            keyTxt.horizontalOverflow = HorizontalWrapMode.Wrap;
+            keyTxt.verticalOverflow = VerticalWrapMode.Overflow;
+            keyTxt.alignment = TextAnchor.UpperLeft;
 
             var descObj = CreateUIElement("Desc", row.transform);
             descObj.AddComponent<LayoutElement>().flexibleWidth = 1;
             var descTxt = descObj.AddComponent<Text>();
             descTxt.text = desc;
             descTxt.fontSize = 16;
-            descTxt.alignment = TextAnchor.MiddleLeft;
-            descTxt.color = new Color(0.9f, 0.9f, 0.92f);
-            descTxt.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            descTxt.alignment = TextAnchor.UpperLeft;
+            descTxt.color = MenuStyle.OffWhite;
+            descTxt.font = MenuStyle.Body;
             descTxt.horizontalOverflow = HorizontalWrapMode.Wrap;
+            descTxt.verticalOverflow = VerticalWrapMode.Overflow;
         }
 
         private void CreateDivider(Transform parent, Color color, float height)
@@ -263,28 +288,20 @@ namespace GlorifiedBody.UI
         private Button CreateButton(Transform parent, string label, UnityEngine.Events.UnityAction onClick)
         {
             var obj = CreateUIElement("Btn_" + label, parent);
-            obj.AddComponent<LayoutElement>().preferredHeight = 50;
+            obj.AddComponent<LayoutElement>().preferredHeight = 44;
 
-            var img = obj.AddComponent<Image>();
-            img.color = new Color(0.2f, 0.2f, 0.25f, 1f);
-
+            obj.AddComponent<Image>();
             var btn = obj.AddComponent<Button>();
-            var colors = btn.colors;
-            colors.normalColor = new Color(0.2f, 0.2f, 0.25f, 1f);
-            colors.highlightedColor = new Color(0.35f, 0.35f, 0.4f, 1f);
-            colors.selectedColor = new Color(0.35f, 0.35f, 0.4f, 1f);
-            colors.pressedColor = new Color(0.15f, 0.15f, 0.2f, 1f);
-            btn.colors = colors;
+            MenuStyle.Style(btn);
             btn.onClick.AddListener(onClick);
 
             var txtObj = CreateUIElement("Text", obj.transform);
             StretchFill(txtObj.GetComponent<RectTransform>());
             var txt = txtObj.AddComponent<Text>();
             txt.text = label;
-            txt.fontSize = 22;
+            txt.fontSize = 26;
             txt.alignment = TextAnchor.MiddleCenter;
-            txt.color = Color.white;
-            txt.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            MenuStyle.HeadText(txt, MenuStyle.OffWhite);
 
             return btn;
         }
