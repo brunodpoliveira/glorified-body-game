@@ -883,7 +883,10 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   keeps the old mesh; `Resources/Enemies/` is not in git). The AI body plays the vendor animator, not the class clips.
   Bot `play Tutorial Main_Menu lucy 600`: every T49 class on a treadmill. Round 185: the armour is rigged again straight
   (`renders/T49_characters/power_armour_rerig/power_armour_t49_game.glb`, 8,974), so `CharacterImportSettings.TurnedRigs`
-  is empty; `CharacterImportSettings.Lifts` lifts its clips (-0.01: the idle stood 4.2 cm in the floor, now 2.4). The soldier's helmet fin is flat (round 183 file). THE
+  is empty; `CharacterImportSettings.Lifts` lifts its clips (-0.01: the idle stood 4.2 cm in the floor, now 2.4). THE PACE
+  FROM THE BOT (round 185, Bruno: "From the bot reading"): `ApplyPace` takes the speed of the feet in play at x1 from
+  `Assets/_Game/Characters/pace_from_bot.json` (`tools/characters_pace.py <lucy run> ...` adds the bot's treadmill readings
+  as samples; then `BuildAll`, then a new bot run). The treadmill windows hold whole cycles. The soldier's helmet fin is flat (round 183 file). THE
   LONG-GUN SUPPORT HAND: the T49 soldier's left arm (0.498 m, the T19 one 0.527 m) stopped 7.2 cm short of the gas
   launcher's grip; `EnemyGun.Protract` turns the left clavicle forward (at most 20 degrees, only when the straight arm is
   short). The bot `holds` logs the arm, the reach, the shoulder turn and the pump.

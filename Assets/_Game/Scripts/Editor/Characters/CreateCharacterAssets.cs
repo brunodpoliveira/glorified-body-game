@@ -253,14 +253,17 @@ namespace GlorifiedBody.Editor.Characters
         /// <summary>
         /// Bruno, round 179 ("Speed up the clips"): the walk and the run of every T49 class (a class with the map set)
         /// play at the pace that fits the game's speed for the class, so the planted foot keeps its place on the floor.
-        /// The pace = the speed / (the clip's ground speed, clips.json "ground" from tools/characters_clips.py, x the
-        /// class height). Lucy: the TankController defaults (walk, run, back). The figures: the Invector AI walk and run
-        /// (ClassPace). The speeds stay as they are. A T19 class, or a clip without a measured ground speed, plays at 1.
+        /// The pace = the speed / the speed of the clip's planted foot in play at x1. Round 185 (Bruno: "From the bot
+        /// reading"): that speed comes from the bot lucy (PacePath, tools/characters_pace.py). A class that is not in that
+        /// file uses the source measure: clips.json "ground" (tools/characters_clips.py) x the class height; in play it
+        /// differs by up to 10 %. Lucy: the TankController defaults (walk, run, back). The figures: the Invector AI walk
+        /// and run (ClassPace). The speeds stay as they are. A T19 class, or a clip without a measured ground speed, plays at 1.
         /// </summary>
         private static void ApplyPace(BlendTree tree, AnimatorState walkBack, string id, float height, bool lucy)
         {
             if (MapPath(id, "normal") == null) return; // a T19 class
             ClipTravelFile measured = CharacterImportSettings.ReadClipTravel($"{ModelsFolder}/{id}.fbx");
+            PlaySpeed inPlay = ReadPaceFromBot()?.Find(id);
             float walkSpeed, runSpeed, backSpeed;
             if (lucy)
             {
@@ -280,6 +283,8 @@ namespace GlorifiedBody.Editor.Characters
             }
             float Pace(string clip, float speed)
             {
+                float bot = inPlay == null ? 0f : clip == "walk" ? inPlay.walk : inPlay.run;
+                if (bot > 0.05f) return speed / bot;
                 ClipTravel info = measured?.Find(clip);
                 return info != null && info.ground > 0.05f ? speed / (info.ground * height) : 1f;
             }
@@ -292,7 +297,37 @@ namespace GlorifiedBody.Editor.Characters
             }
             tree.children = children;
             walkBack.speed = -backPace;
-            Debug.Log($"[CreateCharacterAssets] {id}: the pace of the clips (round 179): walk x{walkPace:0.00} ({walkSpeed} m/s), run x{runPace:0.00} ({runSpeed} m/s), back x{backPace:0.00} ({backSpeed} m/s)");
+            Debug.Log($"[CreateCharacterAssets] {id}: the pace of the clips ({(inPlay != null ? "the bot reading" : "the source measure")}): walk x{walkPace:0.00} ({walkSpeed} m/s), run x{runPace:0.00} ({runSpeed} m/s), back x{backPace:0.00} ({backSpeed} m/s)");
+        }
+
+        /// <summary>The speeds of the planted foot in play at x1 (m/s), from the bot lucy: tools/characters_pace.py writes it.</summary>
+        public const string PacePath = "Assets/_Game/Characters/pace_from_bot.json";
+
+        [System.Serializable]
+        public sealed class PlaySpeed
+        {
+            public string id;
+            public float walk;
+            public float run;
+        }
+
+        [System.Serializable]
+        public sealed class PlaySpeedFile
+        {
+            public PlaySpeed[] classes;
+
+            public PlaySpeed Find(string id)
+            {
+                if (classes == null) return null;
+                foreach (PlaySpeed c in classes) if (c.id == id) return c;
+                return null;
+            }
+        }
+
+        /// <summary>The bot readings (PacePath), or null when the file is absent.</summary>
+        public static PlaySpeedFile ReadPaceFromBot()
+        {
+            return File.Exists(PacePath) ? JsonUtility.FromJson<PlaySpeedFile>(File.ReadAllText(PacePath)) : null;
         }
 
         /// <summary>The pace of a clip in a class controller: the timeScale of its blend child (walk 0.5, run 1). 1 when absent.</summary>

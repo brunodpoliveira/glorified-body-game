@@ -168,8 +168,10 @@ namespace GlorifiedBody.Tests.EditMode
 
         /// <summary>
         /// Round 179 ("Speed up the clips"): in every T49 class controller the walk and the run play at the game speed
-        /// over the clip's ground speed (clips.json) x the class height. Lucy: the TankController speeds (her walk about
-        /// x1.38). The figures: the Invector AI speeds (ClassPace). A T19 class plays at 1.
+        /// over the speed of the clip's planted foot at x1. Round 185 ("From the bot reading"): that speed is the bot
+        /// lucy's reading in play (pace_from_bot.json), for every T49 class. It stays within 15 % of the source measure
+        /// (clips.json ground x the class height), so a bad reading shows. Lucy: the TankController speeds. The figures:
+        /// the Invector AI speeds (ClassPace).
         /// </summary>
         [TestCase("lucy_bare", 1.70f, true)]
         [TestCase("lucy_guard", 1.70f, true)]
@@ -193,10 +195,13 @@ namespace GlorifiedBody.Tests.EditMode
             var controller = AssetDatabase.LoadAssetAtPath<UnityEditor.Animations.AnimatorController>($"Assets/_Game/Characters/Anim/{id}.controller");
             Assert.IsNotNull(controller, id + ".controller");
             float walkPace = CreateCharacterAssets.PaceOf(controller, 0.5f), runPace = CreateCharacterAssets.PaceOf(controller, 1f);
-            Debug.Log($"[CharacterImportTests] {id} pace: walk x{walkPace:0.00} (feet {walkGround * height:0.00} m/s at x1, game {walkSpeed:0.00}), run x{runPace:0.00} (feet {runGround * height:0.00} m/s at x1, game {runSpeed:0.00})");
-            Assert.AreEqual(walkSpeed, walkGround * height * walkPace, 0.02f, id + ": the walk's feet move at the game walk speed");
-            Assert.AreEqual(runSpeed, runGround * height * runPace, 0.02f, id + ": the run's feet move at the game run speed");
-            if (id == "lucy_bare") Assert.AreEqual(1.38f, walkPace, 0.02f, "Lucy's walk x1.38 (round 179)");
+            CreateCharacterAssets.PlaySpeed inPlay = CreateCharacterAssets.ReadPaceFromBot()?.Find(id);
+            Assert.IsNotNull(inPlay, id + ": a bot reading in " + CreateCharacterAssets.PacePath + " (tools/characters_pace.py)");
+            Debug.Log($"[CharacterImportTests] {id} pace: walk x{walkPace:0.00} (feet in play {inPlay.walk:0.00} m/s at x1, source {walkGround * height:0.00}, game {walkSpeed:0.00}), run x{runPace:0.00} (feet in play {inPlay.run:0.00} m/s at x1, source {runGround * height:0.00}, game {runSpeed:0.00})");
+            Assert.AreEqual(walkGround * height, inPlay.walk, walkGround * height * 0.15f, id + ": the walk's bot reading is near the source measure");
+            Assert.AreEqual(runGround * height, inPlay.run, runGround * height * 0.15f, id + ": the run's bot reading is near the source measure");
+            Assert.AreEqual(walkSpeed, inPlay.walk * walkPace, 0.02f, id + ": the walk's feet move at the game walk speed");
+            Assert.AreEqual(runSpeed, inPlay.run * runPace, 0.02f, id + ": the run's feet move at the game run speed");
         }
 
         /// <summary>
