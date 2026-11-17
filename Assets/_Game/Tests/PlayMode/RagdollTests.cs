@@ -615,8 +615,12 @@ namespace GlorifiedBody.Tests.PlayMode
             public float MinFlex = float.MaxValue, FlexAtDeath = float.NaN;
             /// <summary>The same angle in the mesh's bind pose (a straight leg): the zero the knee must not pass.</summary>
             public float FlexBind = float.NaN;
-            /// <summary>How far the knee went past its straight leg, in degrees (0: never).</summary>
-            public float PastStraight => float.IsNaN(FlexBind) ? 0f : Mathf.Max(0f, FlexBind - MinFlex);
+            /// <summary>
+            /// How far the knee went past its straight leg, in degrees (0: never). The straight leg is the bind pose, or 0
+            /// (thigh and shin in line) when the bind pose has a bent knee: the T49 power armour's rig (round 183) binds its
+            /// knees at 15 and 21 degrees, and its own clips straighten them to 3 to 7 degrees.
+            /// </summary>
+            public float PastStraight => float.IsNaN(FlexBind) ? 0f : Mathf.Max(0f, Mathf.Min(FlexBind, 0f) - MinFlex);
             public string Trace = "";
             private Transform foot;
             private float nextTrace;

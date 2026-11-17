@@ -875,13 +875,18 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   `play Tutorial Main_Menu lucy 300` (`LucyModelPlaythrough`). The foot slide: closed by round 179, see the next item.
 - 2026-11-16, T49 BATCHES 2 AND 3 AND THE CLIP PACE (`devlog-notes/2026-11-16_t49_batches_2_3.md`, rounds 179 and 181):
   `lucy_guard` (the body and the T27 Crown), `lodge_staff` (NIGHT MANAGER, G19) and `toll_guard` (TOLL GUARD, R3, replaces
-  the navy guard), then `labworker` (the suit keeps its baked gloss), `soldier` and `fireman` are T49 models. The power
-  armour is the last T19 class. "Speed up the clips": `characters_clips.py` writes `ground` (the planted toe against the
+  the navy guard), then `labworker` (the suit keeps its baked gloss), `soldier`, `fireman` and `power_armour` (round 183,
+  2.90 m, the white plates keep their gloss) are T49 models: all eleven classes. "Speed up the clips": `characters_clips.py` writes `ground` (the planted toe against the
   hips), and `CreateCharacterAssets.ApplyPace` plays the walk and the run of each T49 controller at the game speed /
   (`ground` x height): Lucy at the TankController speeds (walk x1.38), the figures at the Invector AI speeds
   (`ClassPace`, 2.0 and 3.0 m/s). AFTER A MODEL SWAP: `InvectorEnemyFactory.BuildT49EnemyPrefabs` (an old enemy prefab
   keeps the old mesh; `Resources/Enemies/` is not in git). The AI body plays the vendor animator, not the class clips.
-  Bot `play Tutorial Main_Menu lucy 600`: every T49 class on a treadmill.
+  Bot `play Tutorial Main_Menu lucy 600`: every T49 class on a treadmill. The armour's rig stands turned about 14 degrees
+  in its file: `CharacterImportSettings.TurnedRigs` takes its clips' root turn from the body (the body faces the root; the
+  walk still steps 12 degrees off, a new rig upstream fixes it). The soldier's helmet fin is flat (round 183 file). THE
+  LONG-GUN SUPPORT HAND: the T49 soldier's left arm (0.498 m, the T19 one 0.527 m) stopped 7.2 cm short of the gas
+  launcher's grip; `EnemyGun.Protract` turns the left clavicle forward (at most 20 degrees, only when the straight arm is
+  short). The bot `holds` logs the arm, the reach, the shoulder turn and the pump.
 - 2026-11-06, day, MK AS AMMUNITION (`devlog-notes/2026-11-06_mk_ammo_short_death_search.md`, Bruno: "that basically makes mk an ammo counter and the pills clips"): one MK bar for each power
   (`PsychicStats.Mk(kind)`; `Nalcon` reads the selected bar; only that bar shows on the HUD), no recharge, one capsule for each power (`DrugType.Nalcon`, `NalconFire`, `NalconLift`). Every point of MK spent fills
   SHORT (`ShortPerMkPoint`). A short can kill her (killer id `short`, its own death screen row); a second wind saves her and ends the short. SCARCITY and DEEP WELL change the cost. `FireTeam`: suppression

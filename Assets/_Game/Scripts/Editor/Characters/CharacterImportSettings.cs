@@ -141,12 +141,23 @@ namespace GlorifiedBody.Editor.Characters
                 // A clip that travels: the XZ motion of the body goes to the root motion (not baked), and the
                 // body stays centred over the root (the centre of mass, not the original offset).
                 clip.lockRootPositionXZ = !travels;
-                clip.keepOriginalOrientation = true;
+                // A rig that stands turned in its own file (TurnedRigs) takes its root turn from the body, so the body faces the
+                // root's forward. Every other class keeps the turn of its file.
+                clip.keepOriginalOrientation = !TurnedRigs.Contains(Path.GetFileNameWithoutExtension(assetPath));
                 clip.keepOriginalPositionY = true;
                 clip.keepOriginalPositionXZ = !travels;
             }
             importer.clipAnimations = clips;
         }
+
+        /// <summary>
+        /// The classes whose rig stands turned against its file's forward. The T49 power armour (round 183): the mesh and
+        /// the bones in the rest pose and in every clip turn about 14 degrees from +X (the hips 19, the shoulders 15), so
+        /// with the file's turn the armour stood 14 degrees off its root in play. With the body orientation, Unity turns
+        /// each clip so the body faces the root. The walk still steps about 12 degrees off the body (the clips in the
+        /// file); only a new rig upstream removes that.
+        /// </summary>
+        public static readonly string[] TurnedRigs = { "power_armour" };
 
         /// <summary>The fallback without a measurement: the clips named walk and run travel.</summary>
         public static bool Travels(string clipName)

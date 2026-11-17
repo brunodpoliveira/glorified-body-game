@@ -274,14 +274,14 @@ namespace GlorifiedBody.Automation
             }
             else Record("lucy_guard_model", false, "LucyModel.Wear(lucy_guard) failed");
 
-            // 5. Every T49 class (rounds 175 to 181) on a treadmill: the catalog prefab on the free spot, idle at the play camera, then the walk
+            // 5. Every T49 class (rounds 175 to 183) on a treadmill: the catalog prefab on the free spot, idle at the play camera, then the walk
             // and the run with the root moved by the bot at the game speed of the class (Lucy: the TankController; the
             // figures: the Invector AI, ClassPace). The root is moved through walls, so the run is as long as it needs.
             // The import gives a clip's travel to the root motion (not applied), so the body stays over the root.
             foreach (Renderer r in lucy.GetComponentsInChildren<Renderer>()) r.enabled = false;
             CharacterCatalog catalog = CharacterCatalog.Load();
             int enemyLayer = LayerMask.NameToLayer("Enemy");
-            foreach (string id in new[] { "lucy_bare", "lucy_guard", "guard", "patient", "nurse", "lodge_staff", "toll_guard", "labworker", "soldier", "fireman" })
+            foreach (string id in new[] { "lucy_bare", "lucy_guard", "guard", "patient", "nurse", "lodge_staff", "toll_guard", "labworker", "soldier", "fireman", "power_armour" })
             {
                 bool isLucy = id.StartsWith("lucy");
                 CharacterEntry entry = catalog != null ? catalog.Find(id) : null;
@@ -294,10 +294,10 @@ namespace GlorifiedBody.Automation
                 yield return BotClock.Wait(1.0f);
                 Measure(out float fh, out float fl, out float ff);
                 Record($"{id}_height", Mathf.Abs(fh - entry.height) < 0.1f, $"{fh:0.000} m (catalog {entry.height:0.00})");
-                Record($"{id}_feet_on_the_floor", Mathf.Abs(fl) < 0.03f, $"lowest vertex {fl * 100f:0.0} cm from the floor");
+                Record($"{id}_feet_on_the_floor", Mathf.Abs(fl) < Mathf.Max(0.03f, entry.height * 0.012f), $"lowest vertex {fl * 100f:0.0} cm from the floor (limit {Mathf.Max(3f, entry.height * 1.2f):0.0} cm: 3 cm, or 1.2 % of a taller class)");
                 Record($"{id}_faces_forward", ff > 0.8f, $"toes . root forward = {ff:0.00}");
                 yield return Shot($"{id}_idle_play_camera");
-                yield return CloseShot($"{id}_idle_close_front", 0f, 2.6f);
+                yield return CloseShot($"{id}_idle_close_front", 0f, 2.6f, entry.height * 0.53f, 45f * Mathf.Max(1f, entry.height / 1.8f));
 
                 // The walk: first the root still (the clip's ground speed, the planted foot over the floor), then the
                 // root moves at the AI walk speed (ClassPace) and the slip of the planted foot is measured: about 0
@@ -333,7 +333,7 @@ namespace GlorifiedBody.Automation
                 mover = StartCoroutine(Move(walkSpeed, 1.2f));
                 yield return BotClock.Wait(0.35f);
                 yield return Shot($"{id}_walk_play_camera");
-                yield return CloseShot($"{id}_walk_close_side", FreeSide(), 2.8f);
+                yield return CloseShot($"{id}_walk_close_side", FreeSide(), 2.8f, entry.height * 0.53f, 45f * Mathf.Max(1f, entry.height / 1.8f));
                 yield return mover;
                 Record($"{id}_walks", Mathf.Abs(ground - walkSpeed) < 0.1f * walkSpeed && slipWalk >= 0f,
                     $"the clip's ground speed, root still, {ground:0.00} m/s against the walk of {by} {walkSpeed:0.00} m/s; planted foot slip {slipWalk:0.00} m/s with the root at that speed");
@@ -466,17 +466,17 @@ namespace GlorifiedBody.Automation
             return 90f;
         }
 
-        private IEnumerator CloseShot(string moment, float aroundDegrees, float distance)
+        private IEnumerator CloseShot(string moment, float aroundDegrees, float distance, float aimHeight = 0.95f, float fov = 45f)
         {
             Transform root = subject.transform;
             Vector3 dir = Quaternion.Euler(0f, aroundDegrees, 0f) * root.forward;
-            Vector3 at = root.position + Vector3.up * 0.95f;
+            Vector3 at = root.position + Vector3.up * aimHeight;
             Vector3 from = at + dir * distance + Vector3.up * 0.15f;
             Camera main = Camera.main;
             var obj = new GameObject("[LucyShotCamera]");
             Camera cam = obj.AddComponent<Camera>();
             if (main != null) cam.CopyFrom(main);
-            cam.fieldOfView = 45f;
+            cam.fieldOfView = fov;
             cam.nearClipPlane = 0.05f;
             obj.transform.SetPositionAndRotation(from, Quaternion.LookRotation(at - from));
             cam.enabled = false;

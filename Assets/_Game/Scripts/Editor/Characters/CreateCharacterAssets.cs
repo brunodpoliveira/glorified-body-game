@@ -49,7 +49,7 @@ namespace GlorifiedBody.Editor.Characters
             new ClassDef("guard", "SECURITY GUARD", 1.80f, "", CharacterRole.Enemy),
             new ClassDef("soldier", "SOLDIER", 1.80f, "", CharacterRole.Enemy),
             new ClassDef("fireman", "FIREMAN", 1.80f, "", CharacterRole.Civilian),
-            new ClassDef("power_armour", "POWER ARMOUR", 2.60f, "", CharacterRole.Enemy),
+            new ClassDef("power_armour", "POWER ARMOUR", 2.90f, "", CharacterRole.Enemy), // DEMO_PLAN §3.2: 2.90 m (the T49 model, round 183)
             // Round 179 (the T49 models; DEMO_PLAN §3.2): the night manager of the lodge in G19 and the navy guard of R3.
             new ClassDef("lodge_staff", "NIGHT MANAGER", 1.75f, "", CharacterRole.Civilian),
             new ClassDef("toll_guard", "TOLL GUARD", 1.82f, "", CharacterRole.Enemy),

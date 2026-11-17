@@ -55,7 +55,7 @@ namespace GlorifiedBody.Enemy
         private float swingStart = -10f;
         private const float SwingSeconds = 0.35f;
         private bool hasUpperBody, hasAiming, hasCanAim, hasShotId, hasShoot, hasWeakAttack;
-        private Transform leftGrip, leftUpper, leftLower, leftHand;
+        private Transform leftGrip, leftUpper, leftLower, leftHand, leftClavicle;
         private Transform rightUpper, rightLower, rightKnuckle, leftKnuckle;
         private Vector3 stockLocal; // the butt of a long gun, in the gun's space
         private bool shouldered;
@@ -140,6 +140,7 @@ namespace GlorifiedBody.Enemy
             {
                 if (upperBodyId != 1 || twoHanded) leftGrip = FindDeep(gun, "leftHandIK");
                 leftUpper = animator.GetBoneTransform(HumanBodyBones.LeftUpperArm);
+                leftClavicle = animator.GetBoneTransform(HumanBodyBones.LeftShoulder);
                 leftLower = animator.GetBoneTransform(HumanBodyBones.LeftLowerArm);
                 leftHand = animator.GetBoneTransform(HumanBodyBones.LeftHand);
                 leftKnuckle = animator.GetBoneTransform(HumanBodyBones.LeftMiddleProximal);
@@ -491,9 +492,13 @@ namespace GlorifiedBody.Enemy
                 Vector3 leftTarget = handFrames
                     ? leftGrip.position - gunUp * PalmSide - leftFingers * PalmLength
                     : leftGrip.position - aim * WristBehind - gunUp * WristUnder;
+                LeftArm = Vector3.Distance(leftUpper.position, leftLower.position) + Vector3.Distance(leftLower.position, leftHand.position);
+                LeftReach = Vector3.Distance(leftUpper.position, leftTarget);
+                LeftShoulderTurn = Protract(leftClavicle, leftUpper, LeftArm, leftTarget);
                 Reach(leftUpper, leftLower, leftHand, handFrames ? null : leftKnuckle, leftTarget, -Vector3.up - right * 0.15f, aim * 0.7f + gunRight * 0.5f + gunUp * 0.2f);
                 if (handFrames) Turn(leftHand, leftHandFrame, leftFingers, leftPalm);
                 LeftGap = Vector3.Distance(leftHand.position, leftTarget);
+                LeftGripAlong = Vector3.Dot(leftGrip.position - pocket, aim.normalized);
             }
         }
 
@@ -600,6 +605,41 @@ namespace GlorifiedBody.Enemy
         /// <summary>How far each wrist stays from its target after the reach (0: on it; more: the arm is too short). The bot logs it.</summary>
         public float RightGap { get; private set; }
         public float LeftGap { get; private set; }
+        /// <summary>The long-gun hold: the left arm's length (shoulder to elbow to wrist), the distance from the left shoulder to the wrist's target, and the grip point ahead of the butt along the barrel (metres). The bot logs them.</summary>
+        public float LeftArm { get; private set; }
+        public float LeftReach { get; private set; }
+        public float LeftGripAlong { get; private set; }
+        /// <summary>The degrees the left shoulder came forward for the last long-gun hold (Protract; 0: the arm reached).</summary>
+        public float LeftShoulderTurn { get; private set; }
+
+        private const float MaxProtract = 20f; // degrees: the most the support shoulder comes forward, PROPOSED
+
+        /// <summary>
+        /// The support shoulder comes forward when the wrist's target is past the straight arm, as a shooter's does on a
+        /// long gun. The T49 soldier (round 181): his left arm is 0.498 m from the shoulder joint to the wrist (the T19
+        /// soldier 0.527 m) and his shoulder joint sits 1 cm farther out, so the straight arm stopped 7.2 cm short of the
+        /// gas launcher's grip (0.569 m from the shoulder) and 2.6 cm short of the rifle's. The clavicle turns toward the
+        /// target, only as far as the arm needs and at most MaxProtract degrees (about 6 cm of reach on a 0.18 m clavicle).
+        /// Returns the turn in degrees.
+        /// </summary>
+        private static float Protract(Transform clavicle, Transform upper, float arm, Vector3 target)
+        {
+            if (clavicle == null || upper == null || arm < 0.01f) return 0f;
+            Vector3 c = clavicle.position, bone = upper.position - c;
+            float reach = arm - 0.002f;
+            if ((target - upper.position).magnitude <= reach) return 0f;
+            Vector3 axis = Vector3.Cross(bone, target - c);
+            if (axis.sqrMagnitude < 1e-8f) return 0f;
+            axis.Normalize();
+            float turn = 0f;
+            while (turn < MaxProtract)
+            {
+                turn = Mathf.Min(MaxProtract, turn + 1f);
+                if ((target - (c + Quaternion.AngleAxis(turn, axis) * bone)).magnitude <= reach) break;
+            }
+            clavicle.rotation = Quaternion.AngleAxis(turn, axis) * clavicle.rotation;
+            return turn;
+        }
         /// <summary>The right elbow over the shoulder joint, in metres (above 0: the arm is up). The bot logs it.</summary>
         public float RightElbowLift { get; private set; }
 

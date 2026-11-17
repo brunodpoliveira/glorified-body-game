@@ -64,7 +64,7 @@ MonoBehaviour:
   - id: power_armour
     displayName: POWER ARMOUR
     prefab: {fileID: 8160538590636394547, guid: 15e059578b4d07a11860e2af70594f1f, type: 3}
-    height: 2.6
+    height: 2.9
     outfitId: 
     role: 1
   - id: lodge_staff

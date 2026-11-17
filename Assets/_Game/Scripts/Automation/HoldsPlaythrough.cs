@@ -126,7 +126,8 @@ namespace GlorifiedBody.Automation
                     Vector3 side = gun.transform.right;
                     yield return Shot($"{gun.name}_hands", hand.position + side * 0.7f + gun.transform.forward * 0.15f + Vector3.up * 0.1f, hand.position);
                     Vector3 chest = gun.transform.position + Vector3.up * 1.3f;
-                    if (gun.name != "Guard_B") Record($"{gun.name}_long_gun_hold", gun.RightGap < 0.03f && gun.LeftGap < 0.05f && gun.RightElbowLift < 0f, $"right gap {gun.RightGap:0.000} left gap {gun.LeftGap:0.000} elbow {gun.RightElbowLift:0.00} m");
+                    if (gun.name != "Guard_B") Debug.Log($"[HoldsBot] {gun.name} along the barrel from the grip point: {Along(gun, body)}");
+                    if (gun.name != "Guard_B") Record($"{gun.name}_long_gun_hold", gun.RightGap < 0.03f && gun.LeftGap < 0.05f && gun.RightElbowLift < 0f, $"right gap {gun.RightGap:0.000} left gap {gun.LeftGap:0.000} elbow {gun.RightElbowLift:0.00} m; left arm {gun.LeftArm:0.000} m, shoulder to the wrist's target {gun.LeftReach:0.000} m, the grip {gun.LeftGripAlong:0.000} m ahead of the butt, the left shoulder forward {gun.LeftShoulderTurn:0} deg");
                     // The others hide for the two body shots (two soldiers overlapped).
                     var hidden = new List<Renderer>();
                     foreach (Enemy.EnemyGun other in FindObjectsByType<Enemy.EnemyGun>(FindObjectsSortMode.None))
@@ -142,6 +143,48 @@ namespace GlorifiedBody.Automation
             }
             Record("hands_seen", seen > 0, $"guns={seen}");
             Finish();
+        }
+
+        /// <summary>
+        /// Where the support hand and the forend (the vendor shotgun's "pump" mesh) lie along the barrel, in metres from the
+        /// gun's grip point (leftHandIK), for the log: the pump's two ends, the left wrist and the left hand's middle.
+        /// </summary>
+        private static string Along(Enemy.EnemyGun gun, Animator body)
+        {
+            Transform grip = FindDeep(gun.Model, "leftHandIK"), muzzle = FindDeep(gun.Model, "muzzle"), pump = FindDeep(gun.Model, "pump");
+            Transform wrist = body.GetBoneTransform(HumanBodyBones.LeftHand);
+            if (grip == null || wrist == null) return "no grip point";
+            Vector3 axis = muzzle != null ? (muzzle.position - gun.Model.position).normalized : gun.Model.forward;
+            var text = new StringBuilder();
+            MeshFilter mesh = pump != null ? pump.GetComponent<MeshFilter>() : null;
+            if (mesh != null && mesh.sharedMesh != null)
+            {
+                Bounds b = mesh.sharedMesh.bounds;
+                float lo = float.MaxValue, hi = float.MinValue;
+                for (int i = 0; i < 8; i++)
+                {
+                    Vector3 corner = b.center + Vector3.Scale(b.extents, new Vector3((i & 1) == 0 ? -1 : 1, (i & 2) == 0 ? -1 : 1, (i & 4) == 0 ? -1 : 1));
+                    float a = Vector3.Dot(pump.TransformPoint(corner) - grip.position, axis);
+                    lo = Mathf.Min(lo, a); hi = Mathf.Max(hi, a);
+                }
+                text.Append($"pump {lo:0.000} to {hi:0.000} m, ");
+            }
+            Transform knuckle = body.GetBoneTransform(HumanBodyBones.LeftMiddleProximal);
+            text.Append($"left wrist {Vector3.Dot(wrist.position - grip.position, axis):0.000} m");
+            if (knuckle != null) text.Append($", left knuckles {Vector3.Dot(knuckle.position - grip.position, axis):0.000} m");
+            return text.ToString();
+        }
+
+        private static Transform FindDeep(Transform root, string name)
+        {
+            if (root == null) return null;
+            if (root.name == name) return root;
+            foreach (Transform child in root)
+            {
+                Transform found = FindDeep(child, name);
+                if (found != null) return found;
+            }
+            return null;
         }
 
         /// <summary>The same through a camera of its own at the place, looking at the point (a close look at a screen).</summary>

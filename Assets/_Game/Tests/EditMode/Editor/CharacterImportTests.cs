@@ -180,6 +180,7 @@ namespace GlorifiedBody.Tests.EditMode
         [TestCase("labworker", 1.78f, false)]
         [TestCase("soldier", 1.80f, false)]
         [TestCase("fireman", 1.80f, false)]
+        [TestCase("power_armour", 2.90f, false)]
         public void T49Clips_PlayAtTheGameSpeed(string id, float height, bool lucy)
         {
             ClipTravelFile measured = CharacterImportSettings.ReadClipTravel($"{CreateCharacterAssets.ModelsFolder}/{id}.fbx");
@@ -197,14 +198,17 @@ namespace GlorifiedBody.Tests.EditMode
             if (id == "lucy_bare") Assert.AreEqual(1.38f, walkPace, 0.02f, "Lucy's walk x1.38 (round 179)");
         }
 
+        /// <summary>
+        /// The T49 power armour (round 183): 8,972 triangles (the voxel remesh before the bake), 2.90 m in the game, the walk
+        /// and the run travel. The white plates keep their baked gloss (hard parts, metal 0), the black rubber joints are
+        /// matte: no cloth cap for this class, and the gloss must stay.
+        /// </summary>
         [Test]
-        public void T19Clips_PlayAtOne()
+        public void ThePowerArmour_IsTheT49Model_AndKeepsItsGlossyPlates()
         {
-            // The power armour is the last T19 class (round 181).
-            var controller = AssetDatabase.LoadAssetAtPath<UnityEditor.Animations.AnimatorController>("Assets/_Game/Characters/Anim/power_armour.controller");
-            Assert.IsNotNull(controller, "power_armour.controller");
-            Assert.AreEqual(1f, CreateCharacterAssets.PaceOf(controller, 0.5f), 1e-4f, "a T19 walk plays at 1");
-            Assert.AreEqual(1f, CreateCharacterAssets.PaceOf(controller, 1f), 1e-4f, "a T19 run plays at 1");
+            CheckT49Class("power_armour", travels: true, new[] { ("power_armour_t49", 8972) }, maxClothSmoothness: 1f, wantsMetal: false, minClothSmoothness: 0.6f);
+            var catalog = AssetDatabase.LoadAssetAtPath<CharacterCatalog>(CreateCharacterAssets.CatalogPath);
+            Assert.AreEqual(2.90f, catalog.Find("power_armour").height, 1e-3f, "DEMO_PLAN §3.2: 2.90 m");
         }
 
         /// <summary>
@@ -227,6 +231,8 @@ namespace GlorifiedBody.Tests.EditMode
         [TestCase("soldier_shield", "soldier")]
         [TestCase("soldier_shotgun", "soldier")]
         [TestCase("soldier_grenades", "soldier")]
+        [TestCase("power_armour", "power_armour")]
+        [TestCase("power_armour_guns", "power_armour")]
         public void T49EnemyPrefabs_WearTheCurrentModel(string kind, string classId)
         {
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>($"Assets/_Game/Resources/Enemies/{kind}.prefab");
