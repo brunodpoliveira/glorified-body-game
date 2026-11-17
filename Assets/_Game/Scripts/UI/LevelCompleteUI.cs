@@ -11,6 +11,11 @@ namespace GlorifiedBody.UI
         protected override string MenuTitle => "LEVEL COMPLETE";
         protected override string MenuSubtitle => "Arena clear. Restart or return to menu.";
         protected override UnityEngine.Color AccentColor => new UnityEngine.Color(0.4f, 1f, 0.55f);
+        // The AC3 frame of the menu screens (T46, 2026-11-17).
+        protected override bool UseFrame => true;
+        protected override string FrameSide => "CLEAR";
+        protected override string FrameIcon => "start";
+        protected override string FrameStatus => "";
         protected override bool ShouldShow =>
             GameManager.Instance != null && GameManager.Instance.IsLevelComplete;
 

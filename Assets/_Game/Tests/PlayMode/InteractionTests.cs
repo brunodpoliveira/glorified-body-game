@@ -42,6 +42,7 @@ namespace GlorifiedBody.Tests.PlayMode
             yield return WaitUntil(() => SceneManager.GetActiveScene().name == MainMenu && GameManager.Instance != null && GameManager.Instance.IsInMenu, 10f);
             GameManager.Instance.LoadLevel(TutorialDirector.SceneName);
             yield return WaitUntil(() => SceneManager.GetActiveScene().name == TutorialDirector.SceneName && GameManager.Instance.IsPlaying, 10f);
+            HintsOn(true);
             yield return new WaitForSecondsRealtime(0.5f);
             director = TutorialDirector.Instance;
             GameObject player = GameObject.FindGameObjectWithTag("Player");
@@ -66,7 +67,30 @@ namespace GlorifiedBody.Tests.PlayMode
             if (GameManager.Instance != null && GameManager.Instance.IsInventory) GameManager.Instance.CloseInventory();
             GameInput.ClearBotSource(pad);
             if (driver != null) UnityEngine.Object.Destroy(driver.gameObject);
+            HintsOn(null);
             yield return null;
+        }
+
+        // The tests read the hint line, so Options > Interaction Hints must be on. The player's saved choice can be off
+        // (2026-11-17: settings_interact_hints was 0 on this machine). The field is set in memory only: the public
+        // setter saves to PlayerPrefs, and a test must not change the player's settings. null puts the old value back.
+        private static readonly System.Reflection.FieldInfo HintsField =
+            typeof(SettingsManager).GetField("interactHintsOn", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        private bool? savedHints;
+
+        private void HintsOn(bool? on)
+        {
+            if (SettingsManager.Instance == null || HintsField == null) return;
+            if (on.HasValue)
+            {
+                savedHints = (bool)HintsField.GetValue(SettingsManager.Instance);
+                HintsField.SetValue(SettingsManager.Instance, on.Value);
+            }
+            else if (savedHints.HasValue)
+            {
+                HintsField.SetValue(SettingsManager.Instance, savedHints.Value);
+                savedHints = null;
+            }
         }
 
         [UnityTest]

@@ -48,7 +48,10 @@ namespace GlorifiedBody.Tests.PlayMode
             Debug.Log($"[DeathScreenTests] killer {DeathMenuUI.LastKillerId}, entry {screen.Shown?.killerId}, caption '{screen.CaptionShown}', card '{screen.PictureNoteShown}'");
             Assert.AreEqual("soldier_rifle", DeathMenuUI.LastKillerId, "the rifle soldier killed her");
             Assert.AreEqual("soldier_rifle", screen.Shown.killerId, "the rifle's own entry");
-            Assert.AreEqual(screen.Shown.hint, screen.HintShown, "its hint on the screen");
+            // Round 163: the screen picks the hint or one of the more hints at random (DeathMenuUI.PickHint).
+            var hints = new System.Collections.Generic.List<string> { screen.Shown.hint };
+            hints.AddRange(screen.Shown.moreHints);
+            CollectionAssert.Contains(hints, screen.HintShown, "one of its hints on the screen");
             StringAssert.Contains("killer: soldier_rifle", screen.PictureNoteShown, "the card names the killer until the picture exists");
             // Its own voice line when the writer gave it one (soldier_rifle has one since the rows of 2026-11-07), else the class's.
             string voice = !string.IsNullOrEmpty(screen.Shown.voiceText) ? screen.Shown.voiceText : ClassEntry("soldier")?.voiceText;

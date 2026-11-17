@@ -173,6 +173,7 @@ namespace GlorifiedBody.UI
             if (stageImage != null || Canvas == null) return;
             foreach (Transform t in Canvas.GetComponentsInChildren<Transform>(true))
                 if (t.name == "Panel") panel = t.gameObject;
+            if (panel != null) StyleMenuAsLines(panel);
             GameObject scene = CreateElement("Scene", Canvas.transform);
             scene.transform.SetSiblingIndex(1); // over the dim overlay, under the menu panel
             Stretch(scene.GetComponent<RectTransform>());
@@ -187,21 +188,52 @@ namespace GlorifiedBody.UI
             picture = pic.AddComponent<Image>();
             picture.preserveAspect = true;
 
-            card = AddLabel(scene.transform, "", 30, TextAnchor.MiddleCenter, FontStyle.Normal, new Color(0.8f, 0.8f, 0.84f));
+            card = AddLabel(scene.transform, "", 30, TextAnchor.MiddleCenter, FontStyle.Normal, MenuStyle.Silver);
             Place(card.rectTransform, new Vector2(0.15f, 0.3f), new Vector2(0.85f, 0.8f));
 
-            note = AddLabel(scene.transform, "", 16, TextAnchor.UpperLeft, FontStyle.Normal, new Color(0.6f, 0.6f, 0.64f));
+            note = AddLabel(scene.transform, "", 16, TextAnchor.UpperLeft, FontStyle.Normal, MenuStyle.Dim);
             Place(note.rectTransform, new Vector2(0.02f, 0.86f), new Vector2(0.7f, 0.98f));
 
             caption = AddLabel(scene.transform, "", 19, TextAnchor.MiddleCenter, FontStyle.Bold, Color.white);
             caption.gameObject.SetActive(false); // the line shows as a subtitle (Bruno, 2026-10-25)
 
-            hint = AddLabel(scene.transform, "", 30, TextAnchor.MiddleCenter, FontStyle.Italic, new Color(0.95f, 0.92f, 0.82f));
+            hint = AddLabel(scene.transform, "", 30, TextAnchor.MiddleCenter, FontStyle.Italic, MenuStyle.OffWhite);
             Place(hint.rectTransform, new Vector2(0.12f, 0.17f), new Vector2(0.88f, 0.3f));
             hint.gameObject.AddComponent<Outline>().effectColor = new Color(0f, 0f, 0f, 0.9f);
 
-            keys = AddLabel(scene.transform, "", 18, TextAnchor.LowerRight, FontStyle.Bold, new Color(0.75f, 0.75f, 0.78f));
+            keys = AddLabel(scene.transform, "", 20, TextAnchor.LowerRight, FontStyle.Normal, MenuStyle.Green);
             Place(keys.rectTransform, new Vector2(0.6f, 0.02f), new Vector2(0.98f, 0.07f));
+        }
+
+        /// <summary>
+        /// T46 (2026-11-17): the menu keeps the Arkham style (Bruno: "keep the arkham style, it fits better ... change it
+        /// to the correct font"). No box: the choices are lines of words at the bottom left, over the stage, under the
+        /// hint. The selected line is orange with a blue rule (MenuLine). The title and the subtitle of the old box go.
+        /// </summary>
+        private static void StyleMenuAsLines(GameObject panel)
+        {
+            var rect = panel.GetComponent<RectTransform>();
+            rect.anchorMin = rect.anchorMax = Vector2.zero;
+            rect.pivot = Vector2.zero;
+            rect.anchoredPosition = new Vector2(120f, 24f);
+            rect.sizeDelta = new Vector2(820f, 160f);
+            Image box = panel.GetComponent<Image>();
+            if (box != null) box.color = Color.clear;
+            var layout = panel.GetComponent<VerticalLayoutGroup>();
+            if (layout != null)
+            {
+                layout.padding = new RectOffset(0, 0, 0, 0);
+                layout.spacing = 4;
+                layout.childAlignment = TextAnchor.LowerLeft;
+            }
+            foreach (Transform child in panel.transform)
+                if (child.GetComponent<Button>() == null) child.gameObject.SetActive(false);
+            foreach (Button b in panel.GetComponentsInChildren<Button>(true))
+            {
+                MenuLine.Make(b, 40);
+                LayoutElement le = b.GetComponent<LayoutElement>();
+                if (le != null) le.preferredHeight = 50f;
+            }
         }
 
         private static void Place(RectTransform rect, Vector2 min, Vector2 max)
@@ -273,9 +305,26 @@ namespace GlorifiedBody.UI
 
             if (OverlayShot.Enabled && Canvas != null)
             {
-                StartCoroutine(OverlayShot.Capture(Canvas, "death_ui.png", 0.3f));
+                StartCoroutine(BotShots());
             }
         }
+
+        /// <summary>Bot runs only: the screen (death_ui.png), then the Escape menu open (death_menu_ui.png), then closed again.</summary>
+        private System.Collections.IEnumerator BotShots()
+        {
+            BotShotsDone = false;
+            yield return OverlayShot.Capture(Canvas, "death_ui.png", 0.3f);
+            if (IsVisible && !reloading)
+            {
+                SetMenu(true);
+                yield return OverlayShot.Capture(Canvas, "death_menu_ui.png", 0.2f);
+                if (IsVisible && !reloading) SetMenu(false);
+            }
+            BotShotsDone = true;
+        }
+
+        /// <summary>The bot's two shots of this screen are saved (the structural bot waits for them before its restart).</summary>
+        public static bool BotShotsDone { get; private set; } = true;
 
         private void SetMenu(bool open)
         {

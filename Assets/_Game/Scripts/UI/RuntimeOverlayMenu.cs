@@ -128,7 +128,7 @@ namespace GlorifiedBody.UI
             label.alignment = alignment;
             label.fontStyle = fontStyle;
             label.color = color;
-            label.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            label.font = MenuStyle.Body; // T46: Arimo 600, the body font of the menus
             return label;
         }
 

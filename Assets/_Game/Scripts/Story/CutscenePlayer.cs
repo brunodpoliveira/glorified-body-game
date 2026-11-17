@@ -133,16 +133,16 @@ namespace GlorifiedBody.Story
             menu.transform.SetParent(transform, false);
             Stretch(menu.GetComponent<RectTransform>());
             menu.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0.6f);
-            var panel = new GameObject("Panel", typeof(RectTransform));
-            panel.transform.SetParent(menu.transform, false);
-            RectTransform rect = panel.GetComponent<RectTransform>();
-            rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
-            rect.sizeDelta = new Vector2(420f, 230f);
-            panel.AddComponent<Image>().color = new Color(0.03f, 0.03f, 0.04f, 1f);
-            Font font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            Label(panel.transform, font, "PAUSED", 30, new Vector2(0f, 70f), new Color(0.7f, 0.7f, 0.75f));
-            resumeLabel = Label(panel.transform, font, "RESUME", 38, new Vector2(0f, 5f), Color.white);
-            skipLabel = Label(panel.transform, font, "SKIP", 38, new Vector2(0f, -55f), Color.white);
+            // T46 (2026-11-17): the compact AC3 dialog of the menus (the orange plate, the stripes, the framed body),
+            // two rows in it. The selected row has the orange wash, as in the menu screens.
+            GlorifiedBody.UI.MenuStyle.MenuFrame dialog = GlorifiedBody.UI.MenuStyle.Dialog(menu.transform, "PAUSED", "THE CUTSCENE  /  RESUME OR SKIP", new Vector2(640f, 400f));
+            dialog.Root.anchorMin = dialog.Root.anchorMax = new Vector2(0.5f, 0.5f);
+            dialog.Root.anchoredPosition = Vector2.zero;
+            Font font = GlorifiedBody.UI.MenuStyle.Head;
+            resumeRow = Row(dialog.Content, new Vector2(0f, 46f));
+            skipRow = Row(dialog.Content, new Vector2(0f, -40f));
+            resumeLabel = Label(resumeRow.transform, font, "RESUME", 40, Vector2.zero, GlorifiedBody.UI.MenuStyle.OffWhite);
+            skipLabel = Label(skipRow.transform, font, "SKIP", 40, Vector2.zero, GlorifiedBody.UI.MenuStyle.OffWhite);
             foreach ((Text label, int index) in new[] { (resumeLabel, 0), (skipLabel, 1) })
             {
                 Button button = label.gameObject.AddComponent<Button>();
@@ -153,17 +153,29 @@ namespace GlorifiedBody.Story
             menu.SetActive(false);
         }
 
+        private Image resumeRow, skipRow;
+
+        /// <summary>A row of the skip menu: a rounded wash, orange when selected (ShowMenu).</summary>
+        private static Image Row(Transform parent, Vector2 at)
+        {
+            Image row = GlorifiedBody.UI.MenuStyle.Plate(parent, "Row", GlorifiedBody.UI.MenuStyle.Well, new Color(0f, 0f, 0f, 0f), 2.5f);
+            row.rectTransform.anchorMin = row.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+            row.rectTransform.anchoredPosition = at;
+            row.rectTransform.sizeDelta = new Vector2(480f, 70f);
+            return row;
+        }
+
         private static Text Label(Transform parent, Font font, string words, int size, Vector2 at, Color colour)
         {
             var obj = new GameObject(words, typeof(RectTransform));
             obj.transform.SetParent(parent, false);
             RectTransform rect = obj.GetComponent<RectTransform>();
             rect.anchoredPosition = at;
-            rect.sizeDelta = new Vector2(380f, 50f);
+            rect.sizeDelta = new Vector2(440f, 62f);
             Text text = obj.AddComponent<Text>();
             text.font = font;
             text.fontSize = size;
-            text.fontStyle = FontStyle.Bold;
+            text.fontStyle = FontStyle.Normal;
             text.alignment = TextAnchor.MiddleCenter;
             text.color = colour;
             text.text = words;
@@ -173,10 +185,12 @@ namespace GlorifiedBody.Story
         private void ShowMenu()
         {
             menu.SetActive(MenuOpen);
-            resumeLabel.text = choice == 0 ? "> RESUME <" : "RESUME";
-            skipLabel.text = choice == 1 ? "> SKIP <" : "SKIP";
-            resumeLabel.color = choice == 0 ? new Color(1f, 0.85f, 0.3f) : Color.white;
-            skipLabel.color = choice == 1 ? new Color(1f, 0.85f, 0.3f) : Color.white;
+            resumeLabel.text = "RESUME";
+            skipLabel.text = "SKIP";
+            resumeLabel.color = choice == 0 ? GlorifiedBody.UI.MenuStyle.OffWhite : GlorifiedBody.UI.MenuStyle.Silver;
+            skipLabel.color = choice == 1 ? GlorifiedBody.UI.MenuStyle.OffWhite : GlorifiedBody.UI.MenuStyle.Silver;
+            resumeRow.color = choice == 0 ? GlorifiedBody.UI.MenuStyle.WellOn : GlorifiedBody.UI.MenuStyle.Well;
+            skipRow.color = choice == 1 ? GlorifiedBody.UI.MenuStyle.WellOn : GlorifiedBody.UI.MenuStyle.Well;
         }
 
         private void Confirm()

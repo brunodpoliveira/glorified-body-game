@@ -291,6 +291,7 @@ namespace GlorifiedBody.Automation
             bool deathShown = deathCanvas != null && deathCanvas.activeSelf;
             Record("death_screen", deathShown, deathShown ? "DeathMenuUICanvas active" : "DeathMenuUICanvas not visible");
             yield return WaitReal(0.6f);
+            yield return WaitUntilReal(() => GlorifiedBody.UI.DeathMenuUI.BotShotsDone, 5f); // death_ui.png, then death_menu_ui.png (T46)
 
             // 6. Restart: no checkpoint in step 1, so the scene reloads and the player is alive again.
             if (!gm.RestartFromLatestCheckpoint()) gm.RestartLevel();
