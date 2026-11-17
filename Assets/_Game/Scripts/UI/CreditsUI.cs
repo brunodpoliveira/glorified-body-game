@@ -96,7 +96,7 @@ namespace GlorifiedBody.UI
             Transform safeAreaRoot = RuntimeUIRootUtility.CreateSafeAreaRoot(canvasObj.transform);
 
             // The AC3 frame (T46): the header plate holds the title, the framed body holds the names.
-            MenuStyle.MenuFrame frame = MenuStyle.Frame(safeAreaRoot, "CREDITS", "THE GLORIFIED BODY  /  VERTICAL SLICE DEMO", "STAFF", "credits", "ESC  BACK");
+            MenuStyle.MenuFrame frame = MenuStyle.Frame(safeAreaRoot, "CREDITS", "GLORIFIED  /  DEMO " + Application.version, "STAFF", "credits", "ESC  BACK");
             rootPanel = CreateUIElement("CreditsRoot", frame.Content);
             var rootRect = rootPanel.GetComponent<RectTransform>();
             rootRect.anchorMin = new Vector2(0.5f, 0f);

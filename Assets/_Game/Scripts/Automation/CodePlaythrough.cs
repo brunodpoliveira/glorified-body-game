@@ -174,6 +174,9 @@ namespace GlorifiedBody.Automation
                     if (GlorifiedBody.UI.KeypadUI.Instance.Cursor < GlorifiedBody.UI.KeypadUI.Instance.Length - 1) yield return Press(InputManager.GameAction.TurnRight);
                 }
                 yield return Shot("keypad", terminal.Point + new Vector3(1.2f, 0.7f, -1.8f), terminal.transform.position);
+                // The keypad screen itself (an overlay canvas: the camera shot above misses it). T46, 2026-11-17.
+                GameObject keypadCanvas = GameObject.Find("KeypadCanvas");
+                if (keypadCanvas != null) yield return GlorifiedBody.UI.OverlayShot.Capture(keypadCanvas.GetComponent<Canvas>(), "keypad_ui.png", 0f);
                 yield return Press(InputManager.GameAction.Interact);
                 yield return Shot("keypad_enrolled", terminal.Point + new Vector3(1.2f, 0.7f, -1.8f), terminal.transform.position);
             }

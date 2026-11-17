@@ -35,7 +35,7 @@ namespace GlorifiedBody.Subtitles
 
         // In the inventory the tape's line shows above the panels; over a log page, at the top of the screen.
         private enum Place { Bottom, OverInventory, OverPage }
-        private const float OverInventoryGap = 560f; // the inventory panels end at 530 px of a 1080 frame
+        private const float OverInventoryGap = 160f; // T46 frame: the lists end about 336 px over the bottom, so the lines sit under them
         private const float OverPageGap = 8f; // a log page starts 100 px under the top
 
         public static SubtitleUI Instance => instance;
@@ -86,7 +86,8 @@ namespace GlorifiedBody.Subtitles
             layout.childForceExpandHeight = false;
             box.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
-            Font font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            // T46 (2026-11-17): Arimo 600, the body font of the menus. The yellow and the black outline stay (2026-10-25).
+            Font font = GlorifiedBody.UI.MainMenuUI.ProfileFont;
             for (int i = 0; i < SubtitleService.MaxLines; i++)
             {
                 var obj = new GameObject("Line" + i, typeof(RectTransform));

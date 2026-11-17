@@ -407,11 +407,13 @@ namespace GlorifiedBody.Map
             scaler.referenceResolution = new Vector2(1920f, 1080f);
 
             // The corner: a dark sheet you can see the room through at its edges.
-            root = Panel(canvasObj.transform, "Root", new Vector2(0f, 1f), Vector2.zero, new Vector2(CornerWidth, CornerHeight), new Color(0.02f, 0.03f, 0.04f, 0.82f));
+            // T46 (2026-11-17): an AC3 data panel, rounded, with an off-white edge and an orange title band.
+            root = GlorifiedBody.UI.MenuStyle.Plate(canvasObj.transform, "Root", new Color(0.02f, 0.03f, 0.04f, 0.84f), new Color(0.95f, 0.94f, 0.9f, 0.8f), 2f).gameObject;
             RectTransform rootRect = root.GetComponent<RectTransform>();
+            rootRect.anchorMin = rootRect.anchorMax = new Vector2(0f, 1f);
             rootRect.pivot = new Vector2(0f, 1f);
+            rootRect.sizeDelta = new Vector2(CornerWidth, CornerHeight);
             rootRect.anchoredPosition = CornerPlace;
-            root.AddComponent<Outline>().effectColor = new Color(0.85f, 0.88f, 0.9f, 0.7f);
             var planObj = new GameObject("Plan", typeof(RectTransform));
             planObj.transform.SetParent(root.transform, false);
             plan = planObj.GetComponent<RectTransform>();
@@ -419,11 +421,17 @@ namespace GlorifiedBody.Map
             plan.sizeDelta = new Vector2(PlanWidth, PlanHeight);
             plan.anchoredPosition = new Vector2(0f, -4f);
 
-            titleText = Label(root.transform, "Title", 18, FontStyle.Bold, new Color(0.7f, 0.95f, 0.95f), TextAnchor.MiddleLeft, new Vector2(CornerWidth - 24f, 26f));
+            var band = GlorifiedBody.UI.MenuStyle.Plate(root.transform, "TitleBand", GlorifiedBody.UI.MenuStyle.Orange, GlorifiedBody.UI.MenuStyle.OrangeDeep, 2.5f).rectTransform;
+            band.anchorMin = new Vector2(0f, 1f); band.anchorMax = new Vector2(1f, 1f);
+            band.pivot = new Vector2(0.5f, 1f);
+            band.anchoredPosition = new Vector2(0f, -3f);
+            band.sizeDelta = new Vector2(-6f, 32f);
+            titleText = Label(root.transform, "Title", 20, FontStyle.Normal, new Color(0.03f, 0.03f, 0.04f), TextAnchor.MiddleLeft, new Vector2(CornerWidth - 24f, 26f));
+            titleText.font = GlorifiedBody.UI.MenuStyle.Head;
             titleText.rectTransform.anchoredPosition = new Vector2(0f, CornerHeight * 0.5f - 18f);
-            keysText = Label(root.transform, "Keys", 13, FontStyle.Bold, new Color(0.85f, 0.85f, 0.85f), TextAnchor.MiddleRight, new Vector2(CornerWidth - 24f, 26f));
+            keysText = Label(root.transform, "Keys", 14, FontStyle.Normal, new Color(0.03f, 0.03f, 0.04f, 0.85f), TextAnchor.MiddleRight, new Vector2(CornerWidth - 24f, 26f));
             keysText.rectTransform.anchoredPosition = new Vector2(0f, CornerHeight * 0.5f - 18f);
-            noteText = Label(root.transform, "Note", 12, FontStyle.Normal, new Color(0.95f, 0.92f, 0.8f), TextAnchor.MiddleLeft, new Vector2(CornerWidth - 24f, 18f));
+            noteText = Label(root.transform, "Note", 13, FontStyle.Normal, GlorifiedBody.UI.MenuStyle.Silver, TextAnchor.MiddleLeft, new Vector2(CornerWidth - 24f, 18f));
             noteText.rectTransform.anchoredPosition = new Vector2(0f, CornerHeight * 0.5f - 38f);
 
             // Her place: kept from draw to draw, moved every frame.
@@ -440,7 +448,8 @@ namespace GlorifiedBody.Map
                 float x = -CornerWidth * 0.5f + 12f + i * step + 6f;
                 float y = -CornerHeight * 0.5f + 16f;
                 Panel(root.transform, "Legend_" + legend[i].Item1, new Vector2(0.5f, 0.5f), new Vector2(x, y), new Vector2(10f, 10f), legend[i].Item2);
-                Text word = Label(root.transform, "LegendWord_" + legend[i].Item1, 12, FontStyle.Bold, new Color(0.85f, 0.85f, 0.85f), TextAnchor.MiddleLeft, new Vector2(step - 14f, 20f));
+                Text word = Label(root.transform, "LegendWord_" + legend[i].Item1, 14, FontStyle.Normal, GlorifiedBody.UI.MenuStyle.Silver, TextAnchor.MiddleLeft, new Vector2(step - 14f, 20f));
+                word.font = GlorifiedBody.UI.MenuStyle.Head;
                 word.text = legend[i].Item1;
                 word.rectTransform.anchoredPosition = new Vector2(x + 10f + (step - 14f) * 0.5f, y);
             }
@@ -469,7 +478,7 @@ namespace GlorifiedBody.Map
             rect.pivot = new Vector2(0.5f, 0.5f);
             rect.sizeDelta = box;
             var text = obj.AddComponent<Text>();
-            text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            text.font = GlorifiedBody.UI.MenuStyle.Body;
             text.fontSize = size;
             text.fontStyle = style;
             text.color = colour;

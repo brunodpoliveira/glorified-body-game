@@ -331,7 +331,7 @@ namespace GlorifiedBody.UI
                 scrolls[c] = Mathf.Clamp(scrolls[c], 0, Mathf.Max(0, list.Count - VisibleRows));
                 bool more = list.Count > VisibleRows;
                 categoryHeaders[c].text = CategoryNames[c] + (more ? $"  {(scrolls[c] > 0 ? "^" : " ")}{(scrolls[c] + VisibleRows < list.Count ? "v" : " ")}" : "");
-                categoryHeaders[c].color = at >= 0 ? new Color(1f, 0.95f, 0.6f) : new Color(0.7f, 0.75f, 0.75f);
+                categoryHeaders[c].color = at >= 0 ? MenuStyle.Orange : MenuStyle.Blue;
                 for (int r = 0; r < VisibleRows; r++)
                 {
                     Image cell = cells[c, r];
@@ -355,7 +355,7 @@ namespace GlorifiedBody.UI
                     label.color = c2.r * 0.3f + c2.g * 0.6f + c2.b * 0.1f > 0.65f ? new Color(0.05f, 0.05f, 0.06f) : Color.white; // dark words on a white capsule
                     label.GetComponent<Outline>().enabled = label.color == Color.white;
                     bool selected = index == Selected;
-                    outline.effectColor = selected ? new Color(1f, 0.95f, 0.6f, 1f) : new Color(0f, 0f, 0f, 0.6f);
+                    outline.effectColor = selected ? MenuStyle.Orange : new Color(0f, 0f, 0f, 0.6f);
                     outline.effectDistance = selected ? new Vector2(4f, 4f) : new Vector2(1f, 1f);
                 }
             }
@@ -483,55 +483,73 @@ namespace GlorifiedBody.UI
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(1920f, 1080f);
 
-            root = Panel(canvasObj.transform, "Root", new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(1920f, 1080f), new Color(0f, 0f, 0f, 0.35f));
+            // T46 (2026-11-17): the AC3 frame of the menu screens around the Galerians layout. Left: the item name on an
+            // orange data plate, the three lists under it. Right: the words, the gauge and the keys. The slot count is
+            // on the header plate. Positions are in the frame's content (about 1624 x 644 on the 1080 frame).
+            root = Panel(canvasObj.transform, "Root", new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(1920f, 1080f), MenuStyle.Scrim);
+            MenuStyle.Fill(root.GetComponent<RectTransform>(), 0f);
+            MenuStyle.MenuFrame frame = MenuStyle.Frame(root.transform, "INVENTORY", "", "ITEMS", "inventory", "PAUSE");
+            Transform content = frame.Content;
 
-            // Left: the title, and under it the three lists.
-            GameObject titleBox = Panel(root.transform, "TitleBox", new Vector2(0.5f, 0f), new Vector2(-330f, 450f), new Vector2(1000f, 70f), new Color(0.08f, 0.1f, 0.12f, 0.92f));
-            titleBox.AddComponent<Outline>().effectColor = new Color(0.85f, 0.88f, 0.9f, 0.9f);
-            titleText = Label(titleBox.transform, "Title", 32, FontStyle.Bold, new Color(0.7f, 0.95f, 0.95f), TextAnchor.MiddleLeft, new Vector2(960f, 60f));
-            GameObject rowBox = Panel(root.transform, "RowBox", new Vector2(0.5f, 0f), new Vector2(-330f, 240f), new Vector2(1000f, 340f), new Color(0.08f, 0.1f, 0.12f, 0.92f));
-            rowBox.AddComponent<Outline>().effectColor = new Color(0.85f, 0.88f, 0.9f, 0.9f);
+            Image titlePlate = MenuStyle.Plate(content, "TitleBox", MenuStyle.Orange, MenuStyle.OrangeDeep, 1.6f);
+            Place(titlePlate.rectTransform, new Vector2(-292f, 272f), new Vector2(1000f, 68f));
+            titleText = Label(titlePlate.transform, "Title", 34, FontStyle.Normal, new Color(0.03f, 0.03f, 0.04f), TextAnchor.MiddleLeft, new Vector2(960f, 60f));
+            titleText.font = MenuStyle.Head;
+            GameObject rowBox = new GameObject("RowBox", typeof(RectTransform));
+            rowBox.transform.SetParent(content, false);
+            Place((RectTransform)rowBox.transform, new Vector2(-292f, 48f), new Vector2(1000f, 340f));
             for (int c = 0; c < CategoryNames.Length; c++)
             {
                 float x = -330f + c * 330f;
-                categoryHeaders[c] = Label(rowBox.transform, "Header_" + CategoryNames[c], 22, FontStyle.Bold, Color.white, TextAnchor.MiddleCenter, new Vector2(310f, 34f));
+                categoryHeaders[c] = Label(rowBox.transform, "Header_" + CategoryNames[c], 24, FontStyle.Normal, Color.white, TextAnchor.MiddleCenter, new Vector2(310f, 34f));
+                categoryHeaders[c].font = MenuStyle.Head;
                 categoryHeaders[c].rectTransform.anchoredPosition = new Vector2(x, 142f);
                 for (int r = 0; r < VisibleRows; r++)
                 {
                     GameObject cell = Panel(rowBox.transform, $"Cell_{c}_{r}", new Vector2(0.5f, 0.5f), new Vector2(x, 100f - r * 46f), new Vector2(310f, 40f), Color.grey);
+                    Image cellImage = cell.GetComponent<Image>();
+                    cellImage.sprite = MenuStyle.RoundFill; // the small rounded corners of the AC3 rows
+                    cellImage.type = Image.Type.Sliced;
+                    cellImage.pixelsPerUnitMultiplier = 2.5f;
                     cell.AddComponent<Outline>();
-                    Text label = Label(cell.transform, "Label", 18, FontStyle.Bold, Color.white, TextAnchor.MiddleCenter, new Vector2(300f, 36f));
+                    Text label = Label(cell.transform, "Label", 20, FontStyle.Normal, Color.white, TextAnchor.MiddleCenter, new Vector2(300f, 36f));
+                    label.font = MenuStyle.Head;
                     label.gameObject.AddComponent<Outline>().effectColor = new Color(0f, 0f, 0f, 0.9f);
-                    cells[c, r] = cell.GetComponent<Image>();
+                    cells[c, r] = cellImage;
                 }
             }
 
             // Right: the words and the keys (Galerians: "FACULTY  Select Shock Wave?  X SELECT  Δ CANCEL").
-            GameObject wordsBox = Panel(root.transform, "WordsBox", new Vector2(0.5f, 0f), new Vector2(520f, 220f), new Vector2(620f, 270f), new Color(0.08f, 0.1f, 0.12f, 0.92f));
-            wordsBox.AddComponent<Outline>().effectColor = new Color(0.85f, 0.88f, 0.9f, 0.9f);
-            Text header = Label(wordsBox.transform, "Header", 26, FontStyle.Bold, new Color(0.9f, 0.9f, 0.9f), TextAnchor.UpperRight, new Vector2(580f, 230f));
-            header.text = "INVENTORY";
-            wordsText = Label(wordsBox.transform, "Words", 22, FontStyle.Normal, new Color(0.75f, 0.95f, 0.95f), TextAnchor.MiddleLeft, new Vector2(580f, 120f));
-            keysText = Label(wordsBox.transform, "Keys", 18, FontStyle.Bold, new Color(0.85f, 0.85f, 0.85f), TextAnchor.LowerCenter, new Vector2(580f, 240f));
+            Image wordsPlate = MenuStyle.Plate(content, "WordsBox", new Color(0.72f, 0.75f, 0.78f, 0.08f), new Color(0.72f, 0.75f, 0.78f, 0.6f), 1.6f);
+            Place(wordsPlate.rectTransform, new Vector2(522f, 100f), new Vector2(560f, 404f));
+            GameObject wordsBox = wordsPlate.gameObject;
+            Text header = Label(wordsBox.transform, "Header", 24, FontStyle.Normal, MenuStyle.Blue, TextAnchor.UpperLeft, new Vector2(520f, 370f));
+            header.font = MenuStyle.Head;
+            header.text = "DATA";
+            wordsText = Label(wordsBox.transform, "Words", 22, FontStyle.Normal, MenuStyle.OffWhite, TextAnchor.MiddleLeft, new Vector2(520f, 160f));
+            wordsText.rectTransform.anchoredPosition = new Vector2(0f, 50f);
+            keysText = Label(wordsBox.transform, "Keys", 19, FontStyle.Normal, MenuStyle.Green, TextAnchor.LowerCenter, new Vector2(520f, 370f));
             // The bar a consumable fills, under the words (Bruno, 2026-11-16: "consumables (when the consumable is selected) should
             // show me how full the mk power is in the inventory screen itself").
-            gauge = Panel(wordsBox.transform, "Gauge", new Vector2(0.5f, 0.5f), new Vector2(60f, -78f), new Vector2(300f, 16f), new Color(0.02f, 0.02f, 0.03f, 0.95f));
-            gauge.AddComponent<Outline>().effectColor = new Color(0.6f, 0.65f, 0.7f, 0.9f);
-            GameObject fill = Panel(gauge.transform, "Fill", new Vector2(0f, 0.5f), Vector2.zero, new Vector2(300f, 16f), new Color(0.35f, 0.85f, 1f));
+            gauge = Panel(wordsBox.transform, "Gauge", new Vector2(0.5f, 0.5f), new Vector2(100f, -82f), new Vector2(300f, 16f), new Color(0.02f, 0.02f, 0.03f, 0.95f));
+            gauge.AddComponent<Outline>().effectColor = new Color(0.95f, 0.94f, 0.9f, 0.9f);
+            GameObject fill = Panel(gauge.transform, "Fill", new Vector2(0f, 0.5f), Vector2.zero, new Vector2(300f, 16f), MenuStyle.Blue);
             var fillRect = fill.GetComponent<RectTransform>();
             fillRect.pivot = new Vector2(0f, 0.5f);
             gaugeFill = fill.GetComponent<Image>();
-            gaugeText = Label(wordsBox.transform, "GaugeText", 18, FontStyle.Bold, new Color(0.9f, 0.92f, 0.95f), TextAnchor.MiddleRight, new Vector2(220f, 24f));
-            gaugeText.rectTransform.anchoredPosition = new Vector2(-200f, -78f); // left of the bar, inside the box
+            gaugeText = Label(wordsBox.transform, "GaugeText", 18, FontStyle.Normal, MenuStyle.OffWhite, TextAnchor.MiddleRight, new Vector2(200f, 24f));
+            gaugeText.font = MenuStyle.Head;
+            gaugeText.rectTransform.anchoredPosition = new Vector2(-160f, -82f); // left of the bar, inside the box
             gauge.SetActive(false);
             gaugeText.gameObject.SetActive(false);
-            slotsText = Label(root.transform, "Slots", 22, FontStyle.Bold, new Color(0.95f, 0.92f, 0.8f), TextAnchor.MiddleCenter, new Vector2(1400f, 40f));
-            slotsText.rectTransform.anchorMin = slotsText.rectTransform.anchorMax = new Vector2(0.5f, 0f);
-            slotsText.rectTransform.anchoredPosition = new Vector2(-330f, 510f);
+            slotsText = frame.Subtitle; // "SLOTS 1 / 4   KEY ITEMS 2 (no slot)" on the header plate
 
-            readerPanel = Panel(root.transform, "Reader", new Vector2(0.5f, 0.5f), new Vector2(0f, 120f), new Vector2(1000f, 640f), new Color(0.06f, 0.06f, 0.07f, 0.96f));
-            readerTitle = Label(readerPanel.transform, "Title", 30, FontStyle.Bold, new Color(0.96f, 0.93f, 0.9f), TextAnchor.UpperCenter, new Vector2(900f, 600f));
-            readerBody = Label(readerPanel.transform, "Body", 22, FontStyle.Normal, new Color(0.88f, 0.88f, 0.86f), TextAnchor.MiddleLeft, new Vector2(880f, 460f));
+            Image reader = MenuStyle.Plate(content, "Reader", new Color(0.03f, 0.035f, 0.05f, 0.98f), new Color(0.95f, 0.94f, 0.9f, 0.85f));
+            Place(reader.rectTransform, new Vector2(0f, 0f), new Vector2(1000f, 620f));
+            readerPanel = reader.gameObject;
+            readerTitle = Label(readerPanel.transform, "Title", 34, FontStyle.Normal, MenuStyle.Orange, TextAnchor.UpperCenter, new Vector2(900f, 580f));
+            readerTitle.font = MenuStyle.Head;
+            readerBody = Label(readerPanel.transform, "Body", 22, FontStyle.Normal, MenuStyle.OffWhite, TextAnchor.MiddleLeft, new Vector2(880f, 460f));
             readerPanel.SetActive(false);
             root.SetActive(false);
         }
@@ -544,7 +562,7 @@ namespace GlorifiedBody.UI
             Entry e = entries.Count > 0 && Selected < entries.Count ? entries[Selected] : null;
             float? share = null;
             string words = "";
-            Color colour = new Color(0.35f, 0.85f, 1f);
+            Color colour = MenuStyle.Blue;
             if (e != null && e.Drug.HasValue && stats != null)
             {
                 PowerKind? power = Capsules.PowerOf(e.Drug.Value);
@@ -590,6 +608,14 @@ namespace GlorifiedBody.UI
             return obj;
         }
 
+        private static void Place(RectTransform rect, Vector2 position, Vector2 size)
+        {
+            rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = position;
+            rect.sizeDelta = size;
+        }
+
         private static Text Label(Transform parent, string name, int size, FontStyle style, Color colour, TextAnchor anchor, Vector2 box)
         {
             var obj = new GameObject(name, typeof(RectTransform));
@@ -599,7 +625,7 @@ namespace GlorifiedBody.UI
             rect.pivot = new Vector2(0.5f, 0.5f);
             rect.sizeDelta = box;
             var text = obj.AddComponent<Text>();
-            text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            text.font = MenuStyle.Body;
             text.fontSize = size;
             text.fontStyle = style;
             text.color = colour;

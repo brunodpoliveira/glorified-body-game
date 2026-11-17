@@ -26,6 +26,7 @@ namespace GlorifiedBody.UI
         private Text caption; // the name under the badge of the AC3 frame (T46)
         private Text keys;
         private Text toast;
+        private GameObject toastTag; // the AC3 tag behind the note (T46): shown and hidden with it
         private readonly List<Text> rows = new List<Text>();
         private readonly List<int> slots = new List<int>();
         private int openFrame = -1;
@@ -39,7 +40,7 @@ namespace GlorifiedBody.UI
         public bool AskingOverwrite => asking >= 0;
         public IReadOnlyList<int> Slots => slots;
         public string RowText(int index) => index >= 0 && index < rows.Count ? rows[index].text : "";
-        public string ToastShown => toast != null && toast.gameObject.activeSelf ? toast.text : "";
+        public string ToastShown => toast != null && toastTag.activeSelf ? toast.text : "";
         public string Spot { get; private set; } = "";
 
         public static SaveMenuUI Ensure()
@@ -104,7 +105,7 @@ namespace GlorifiedBody.UI
 
         private void Update()
         {
-            if (toast.gameObject.activeSelf && Time.unscaledTime >= toastUntil) toast.gameObject.SetActive(false);
+            if (toastTag.activeSelf && Time.unscaledTime >= toastUntil) toastTag.SetActive(false);
             if (!IsOpen) return;
             if (Current == Mode.Save && GameManager.Instance != null && !GameManager.Instance.IsInventory)
             {
@@ -191,7 +192,7 @@ namespace GlorifiedBody.UI
         private void ShowToast(string words)
         {
             toast.text = words;
-            toast.gameObject.SetActive(true);
+            toastTag.SetActive(true);
             toastUntil = Time.unscaledTime + ToastSeconds;
         }
 
@@ -232,12 +233,15 @@ namespace GlorifiedBody.UI
             keys = Label(panel.transform, "Keys", 20, FontStyle.Normal, MenuStyle.Dim, TextAnchor.LowerCenter, new Vector2(0f, -225f), new Vector2(1000f, 40f));
             root.SetActive(false);
 
-            toast = Label(transform, "Toast", 32, FontStyle.Normal, MenuStyle.Green, TextAnchor.MiddleCenter, Vector2.zero, new Vector2(900f, 50f));
+            // The note after a save: green words on a black AC3 tag with a green edge, at the top of the screen.
+            Image tag = MenuStyle.Plate(transform, "ToastTag", new Color(0.01f, 0.02f, 0.02f, 0.9f), new Color(0.22f, 0.89f, 0.48f, 0.9f), 2f);
+            tag.rectTransform.anchorMin = tag.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+            tag.rectTransform.anchoredPosition = new Vector2(0f, -90f);
+            tag.rectTransform.sizeDelta = new Vector2(640f, 64f);
+            toastTag = tag.gameObject;
+            toast = Label(tag.transform, "Toast", 32, FontStyle.Normal, MenuStyle.Green, TextAnchor.MiddleCenter, Vector2.zero, new Vector2(620f, 50f));
             toast.font = MenuStyle.Head;
-            toast.rectTransform.anchorMin = toast.rectTransform.anchorMax = new Vector2(0.5f, 1f);
-            toast.rectTransform.anchoredPosition = new Vector2(0f, -90f);
-            toast.gameObject.AddComponent<Outline>().effectColor = Color.black;
-            toast.gameObject.SetActive(false);
+            toastTag.SetActive(false);
         }
 
         private static GameObject Box(Transform parent, string name, Vector2 position, Vector2 size, Color colour)

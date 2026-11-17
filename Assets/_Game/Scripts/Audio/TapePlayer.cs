@@ -286,13 +286,13 @@ namespace GlorifiedBody.Audio
             textObj.transform.SetParent(obj.transform, false);
             RectTransform rect = textObj.GetComponent<RectTransform>();
             rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(1f, 1f);
-            rect.anchoredPosition = new Vector2(-40f, -40f);
-            rect.sizeDelta = new Vector2(760f, 80f);
+            rect.anchoredPosition = new Vector2(-70f, -4f); // above the top rule of the menu frame (T46): the inventory shows it too
+            rect.sizeDelta = new Vector2(760f, 36f);
             label = textObj.AddComponent<Text>();
-            label.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            label.fontSize = 24;
-            label.fontStyle = FontStyle.Bold;
-            label.color = new Color(0.96f, 0.95f, 0.88f);
+            label.font = GlorifiedBody.UI.MainMenuUI.HeadFont; // T46: Roboto Condensed 700, off-white
+            label.fontSize = 28;
+            label.fontStyle = FontStyle.Normal;
+            label.color = GlorifiedBody.UI.MenuSymbol.OffWhite;
             label.alignment = TextAnchor.UpperRight;
             textObj.AddComponent<Outline>().effectColor = new Color(0f, 0f, 0f, 0.9f);
             textObj.SetActive(false);

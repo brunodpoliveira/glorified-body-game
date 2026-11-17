@@ -176,18 +176,27 @@ namespace GlorifiedBody.UI
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(1920f, 1080f);
 
-            panel = new GameObject("Panel", typeof(RectTransform));
-            panel.transform.SetParent(root.transform, false);
-            var rect = panel.GetComponent<RectTransform>();
+            // T46 (2026-11-17): a device in the world, so no menu frame. The green terminal of the AC3 HUD: a rounded
+            // black plate with a green edge, a green band for the title, the digits big in Roboto Condensed.
+            Image plate = MenuStyle.Plate(root.transform, "Panel", new Color(0.01f, 0.03f, 0.02f, 0.95f), new Color(0.22f, 0.89f, 0.48f, 0.9f));
+            panel = plate.gameObject;
+            var rect = plate.rectTransform;
             rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0.5f, 0.5f);
             rect.sizeDelta = new Vector2(1100f, 420f);
-            panel.AddComponent<Image>().color = new Color(0.03f, 0.05f, 0.04f, 0.95f);
+            var band = MenuStyle.Plate(panel.transform, "TitleBand", new Color(0.22f, 0.89f, 0.48f, 0.9f), new Color(0f, 0f, 0f, 0f), 2.5f).rectTransform;
+            band.anchorMin = band.anchorMax = new Vector2(0.5f, 0.5f);
+            band.anchoredPosition = new Vector2(0f, 150f);
+            band.sizeDelta = new Vector2(1060f, 48f);
 
-            Text title = MakeText(panel.transform, "Title", 26, new Color(0.55f, 0.9f, 0.6f), new Vector2(0f, 150f), new Vector2(1060f, 40f));
+            Text title = MakeText(panel.transform, "Title", 30, new Color(0.02f, 0.06f, 0.03f), new Vector2(0f, 150f), new Vector2(1040f, 44f));
             title.text = "WARD SECURITY. SITE CODE";
-            digitsText = MakeText(panel.transform, "Digits", 64, new Color(0.7f, 1f, 0.75f), new Vector2(0f, 40f), new Vector2(1060f, 90f));
-            messageText = MakeText(panel.transform, "Message", 26, new Color(0.9f, 0.95f, 0.85f), new Vector2(0f, -60f), new Vector2(1060f, 40f));
-            keysText = MakeText(panel.transform, "Keys", 18, new Color(0.6f, 0.7f, 0.65f), new Vector2(0f, -160f), new Vector2(1060f, 30f));
+            title.alignment = TextAnchor.MiddleLeft;
+            digitsText = MakeText(panel.transform, "Digits", 96, MenuStyle.Green, new Vector2(0f, 40f), new Vector2(1060f, 130f));
+            digitsText.verticalOverflow = VerticalWrapMode.Overflow; // a Roboto Condensed line at 96 is about 112 px: a short box drops it
+            messageText = MakeText(panel.transform, "Message", 26, MenuStyle.OffWhite, new Vector2(0f, -60f), new Vector2(1060f, 40f));
+            messageText.font = MenuStyle.Body;
+            keysText = MakeText(panel.transform, "Keys", 20, new Color(0.22f, 0.89f, 0.48f, 0.7f), new Vector2(0f, -160f), new Vector2(1060f, 30f));
+            keysText.font = MenuStyle.Body;
             panel.SetActive(false);
         }
 
@@ -200,9 +209,9 @@ namespace GlorifiedBody.UI
             rect.anchoredPosition = position;
             rect.sizeDelta = box;
             var text = obj.AddComponent<Text>();
-            text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            text.font = MenuStyle.Head;
             text.fontSize = size;
-            text.fontStyle = FontStyle.Bold;
+            text.fontStyle = FontStyle.Normal;
             text.color = colour;
             text.alignment = TextAnchor.MiddleCenter;
             return text;
