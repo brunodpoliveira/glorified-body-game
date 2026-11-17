@@ -31,7 +31,7 @@ declare -A ONE_FILE=(
   [labworker]="$T49/labworker_v2/labworker_t49_game.glb"       # round 181 (the suit keeps its baked gloss)
   [soldier]="$T49/soldier_v2/soldier_t49_game.glb"             # round 181
   [fireman]="$T49/fireman_v2/fireman_t49_game.glb"             # round 181
-  [power_armour]="$T49/power_armour_v2/power_armour_t49_game.glb" # round 183 (the white plates keep their gloss)
+  [power_armour]="$T49/../power_armour_rerig/power_armour_t49_game.glb" # round 185: rigged again straight (the white plates keep their gloss)
 )
 classes=("$@")
 [ ${#classes[@]} -eq 0 ] && classes=(lucy_bare lucy_guard patient nurse labworker guard soldier fireman power_armour lodge_staff toll_guard)

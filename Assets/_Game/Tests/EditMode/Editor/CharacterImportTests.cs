@@ -200,14 +200,14 @@ namespace GlorifiedBody.Tests.EditMode
         }
 
         /// <summary>
-        /// The T49 power armour (round 183): 8,972 triangles (the voxel remesh before the bake), 2.90 m in the game, the walk
+        /// The T49 power armour (round 183, rigged again in round 185): 8,974 triangles (the voxel remesh before the bake), 2.90 m in the game, the walk
         /// and the run travel. The white plates keep their baked gloss (hard parts, metal 0), the black rubber joints are
         /// matte: no cloth cap for this class, and the gloss must stay.
         /// </summary>
         [Test]
         public void ThePowerArmour_IsTheT49Model_AndKeepsItsGlossyPlates()
         {
-            CheckT49Class("power_armour", travels: true, new[] { ("power_armour_t49", 8972) }, maxClothSmoothness: 1f, wantsMetal: false, minClothSmoothness: 0.6f);
+            CheckT49Class("power_armour", travels: true, new[] { ("power_armour_t49", 8974) }, maxClothSmoothness: 1f, wantsMetal: false, minClothSmoothness: 0.6f);
             var catalog = AssetDatabase.LoadAssetAtPath<CharacterCatalog>(CreateCharacterAssets.CatalogPath);
             Assert.AreEqual(2.90f, catalog.Find("power_armour").height, 1e-3f, "DEMO_PLAN §3.2: 2.90 m");
         }

@@ -146,18 +146,35 @@ namespace GlorifiedBody.Editor.Characters
                 clip.keepOriginalOrientation = !TurnedRigs.Contains(Path.GetFileNameWithoutExtension(assetPath));
                 clip.keepOriginalPositionY = true;
                 clip.keepOriginalPositionXZ = !travels;
+                clip.heightOffset = Lift(Path.GetFileNameWithoutExtension(assetPath));
             }
             importer.clipAnimations = clips;
         }
 
         /// <summary>
-        /// The classes whose rig stands turned against its file's forward. The T49 power armour (round 183): the mesh and
-        /// the bones in the rest pose and in every clip turn about 14 degrees from +X (the hips 19, the shoulders 15), so
-        /// with the file's turn the armour stood 14 degrees off its root in play. With the body orientation, Unity turns
-        /// each clip so the body faces the root. The walk still steps about 12 degrees off the body (the clips in the
-        /// file); only a new rig upstream removes that.
+        /// The classes whose rig stands turned against its file's forward: with the body orientation, Unity turns each clip
+        /// so the body faces the root (the walk can still step off the body). None now. The round 183 power armour stood
+        /// 14 degrees off +X and was on the list; the round 185 file is rigged again straight (the mesh turned 13 degrees
+        /// before the rig) and faces forward with the file's turn.
         /// </summary>
-        public static readonly string[] TurnedRigs = { "power_armour" };
+        public static readonly string[] TurnedRigs = { };
+
+        /// <summary>
+        /// The classes whose clips stand under the floor: the clip import's root height offset ("level") for each clip of the
+        /// class. A negative value lifts the body (Unity subtracts it), in the units of the Humanoid body, not of the mesh.
+        /// The round 185 power armour: in the file the lowest vertex of the idle is 0.7 to 1.3 cm under the ground (1 m
+        /// model), the walk and the run go to 2.3 cm under it. In the game the idle stood 4.2 cm in the floor at 2.90 m (the
+        /// bot limit is 3.5 cm); with -0.01 it stands 2.4 cm in it (the bot lucy, 2026-11-16). With +0.01 the PlayMode
+        /// CharacterTests feet check failed (the bounds 0.189 m under the root, limit 0.174). PROPOSED: a fix upstream (the clips on the ground in the file) removes this entry.
+        /// </summary>
+        public static readonly (string id, float offset)[] Lifts = { ("power_armour", -0.01f) };
+
+        /// <summary>The root height offset of the clips of a class (0 for a class that is not in Lifts).</summary>
+        public static float Lift(string id)
+        {
+            foreach ((string liftId, float offset) in Lifts) if (liftId == id) return offset;
+            return 0f;
+        }
 
         /// <summary>The fallback without a measurement: the clips named walk and run travel.</summary>
         public static bool Travels(string clipName)

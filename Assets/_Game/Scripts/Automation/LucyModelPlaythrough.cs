@@ -307,8 +307,12 @@ namespace GlorifiedBody.Automation
                 figure.transform.SetPositionAndRotation(start - walkDir * 1.4f, Quaternion.LookRotation(walkDir));
                 fa.SetFloat("Speed", 0.5f);
                 yield return BotClock.Wait(0.6f);
+                // The window holds one full cycle (two steps) at least: 1.8 s, or longer for a slow cycle (the 2.90 m power
+                // armour plays its walk at x0.9 and its run at x0.43, so a cycle lasts 2.6 s and 2.9 s).
+                float walkWindow = 1.8f;
+                yield return CycleSeconds(fa, c => walkWindow = Mathf.Max(1.8f, c * 1.05f));
                 float ground = 0f;
-                yield return Slip(1.8f, v => ground = v);
+                yield return Slip(walkWindow, v => ground = v);
                 float slipWalk = -1f;
                 IEnumerator Move(float speed, float seconds)
                 {
@@ -324,8 +328,8 @@ namespace GlorifiedBody.Automation
                 // 0.2 to 0.4 m/s for a walk, 0.5 to 0.9 for a run, from one run to the next; at the old pace the walk
                 // feet of the figures were 0.8 m/s off).
                 // Move runs as its own coroutine beside Slip; the shots are taken while the root still moves.
-                Coroutine mover = StartCoroutine(Move(walkSpeed, 2.0f));
-                yield return Slip(1.8f, v => slipWalk = v, walkSpeed * 0.8f);
+                Coroutine mover = StartCoroutine(Move(walkSpeed, walkWindow + 0.2f));
+                yield return Slip(walkWindow, v => slipWalk = v, walkSpeed * 0.8f);
                 yield return mover;
                 // The walk shots: a short walk through the free spot, so the figure is in the frame (the measure above
                 // ends 2 m past it).
@@ -341,15 +345,17 @@ namespace GlorifiedBody.Automation
                 figure.transform.SetPositionAndRotation(start - walkDir * 1.4f, Quaternion.LookRotation(walkDir));
                 fa.SetFloat("Speed", 1f);
                 yield return BotClock.Wait(0.5f);
+                float runWindow = 1.8f;
+                yield return CycleSeconds(fa, c => runWindow = Mathf.Max(1.8f, c * 1.05f));
                 float runGround = 0f;
-                yield return Slip(1.8f, v => runGround = v);
+                yield return Slip(runWindow, v => runGround = v);
                 figure.transform.SetPositionAndRotation(start - walkDir * 1.4f, Quaternion.LookRotation(walkDir));
                 float slipRun = -1f;
-                mover = StartCoroutine(Move(runSpeed, 1.9f));
-                yield return Slip(1.8f, v => slipRun = v, runSpeed * 0.8f);
+                mover = StartCoroutine(Move(runSpeed, runWindow + 0.1f));
+                yield return Slip(runWindow, v => slipRun = v, runSpeed * 0.8f);
                 yield return mover;
                 Record($"{id}_runs", Mathf.Abs(runGround - runSpeed) < 0.1f * runSpeed && slipRun >= 0f,
-                    $"the clip's ground speed, root still, {runGround:0.00} m/s against the run of {by} {runSpeed:0.00} m/s; planted foot slip {slipRun:0.00} m/s with the root at that speed");
+                    $"the clip's ground speed, root still, {runGround:0.00} m/s against the run of {by} {runSpeed:0.00} m/s; planted foot slip {slipRun:0.00} m/s with the root at that speed (windows: walk {walkWindow:0.0} s, run {runWindow:0.0} s)");
                 fa.SetFloat("Speed", 0f);
                 Destroy(figure);
                 yield return null;
@@ -397,6 +403,16 @@ namespace GlorifiedBody.Automation
                 }
             }
             Debug.Log($"[LucyBot] measure {subject.name}: height {height:0.000} lowest {lowest:0.000} floor {floor:0.000} root y {root.position.y:0.000} facing {facing:0.00}");
+        }
+
+        /// <summary>The seconds of one cycle of the clip that plays now (layer 0), from its normalized time over 0.3 s; 0 when unknown.</summary>
+        private static IEnumerator CycleSeconds(Animator animator, Action<float> result)
+        {
+            if (animator == null) { result(0f); yield break; }
+            float n0 = animator.GetCurrentAnimatorStateInfo(0).normalizedTime, t0 = BotClock.Now;
+            yield return BotClock.Wait(0.3f);
+            float dn = animator.GetCurrentAnimatorStateInfo(0).normalizedTime - n0, dt = BotClock.Now - t0;
+            result(dn > 0.01f ? dt / dn : 0f);
         }
 
         /// <summary>

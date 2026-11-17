@@ -13,27 +13,27 @@
       "duration": 15.3333,
       "keys": 369,
       "travel": 0.0002,
-      "reach": 0.1896,
+      "reach": 0.1862,
       "travels": false,
-      "ground": 0.0186
+      "ground": 0.0148
     },
     {
       "name": "run",
       "duration": 1.25,
       "keys": 31,
-      "travel": 3.3876,
-      "reach": 3.3876,
+      "travel": 3.3258,
+      "reach": 3.3258,
       "travels": true,
-      "ground": 2.4234
+      "ground": 2.407
     },
     {
       "name": "walk",
       "duration": 2.3333,
       "keys": 57,
-      "travel": 1.767,
-      "reach": 1.767,
+      "travel": 1.7348,
+      "reach": 1.7348,
       "travels": true,
-      "ground": 0.7725
+      "ground": 0.7704
     }
   ]
 }
