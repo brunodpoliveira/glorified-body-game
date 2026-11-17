@@ -901,6 +901,12 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   The knife: the blade along the forearm, the handle in the palm. AFTER A MODEL SWAP OR A NEW ARMED CLASS: run
   `HoldCalibration.Build` (add the class to `HoldCalibration.Holds`), then the bot `play AiTest Main_Menu holds 600`
   (every armed kind in a lineup, shots `holds_<n>_<kind>_{rest,aim}_*`). Tune a class in the asset's tune fields.
+  THE SHIELD AND THE KNIFE (`devlog-notes/2026-11-17_shield_and_knife.md`, Bruno: "Yes, fix them first"): the shield
+  rides the left forearm (`EnemyShield.HoldOn`: the handle at the wrist, the cuff on the forearm, its frame from its
+  mesh; `vIKSolver` carries the arm), in rest, walk, aim and the strike. The knife takes Invector's one-hand sword
+  poses on the class's rig (`HoldOffsets` upper body 0: rest, wind-up, thrust) and the sword's grip; the knife model's
+  `grip` and `muzzle` points drive it, so a stock knife drops in. The bot `holds` also walks and strikes the shield and
+  knife kinds and checks nothing cuts the body or crosses the face (`Clear`).
 - 2026-11-06, day, MK AS AMMUNITION (`devlog-notes/2026-11-06_mk_ammo_short_death_search.md`, Bruno: "that basically makes mk an ammo counter and the pills clips"): one MK bar for each power
   (`PsychicStats.Mk(kind)`; `Nalcon` reads the selected bar; only that bar shows on the HUD), no recharge, one capsule for each power (`DrugType.Nalcon`, `NalconFire`, `NalconLift`). Every point of MK spent fills
   SHORT (`ShortPerMkPoint`). A short can kill her (killer id `short`, its own death screen row); a second wind saves her and ends the short. SCARCITY and DEEP WELL change the cost. `FireTeam`: suppression

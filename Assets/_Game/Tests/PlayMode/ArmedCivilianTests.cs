@@ -25,6 +25,8 @@ namespace GlorifiedBody.Tests.PlayMode
     /// </summary>
     public class ArmedCivilianTests
     {
+        private const float InvectorKnifeReach = 0.39f; // InvectorEnemyFactory.KnifeLength 0.45 less KnifeGripBack 0.06
+
         private const string Room = "LabTest";
         private const string Knife = "Lab_Knife", Carrier = "Lab_Gun1", Gunman = "Lab_Gun2", Drop = "Drop_LabCard", Door = "Door_Store";
         private GameObject lucy;
@@ -104,7 +106,7 @@ namespace GlorifiedBody.Tests.PlayMode
             Assert.IsNotNull(knifeHold.Model, "the knife model in the hand");
             Assert.IsNotNull(knifeHold.Model.Find("Blade"), "the vendor short sword as the knife (Bruno, 2026-10-29)");
             float reach = Vector3.Distance(knifeHold.Model.position, knifeHold.Muzzle.position);
-            Assert.AreEqual(0.26f, reach, 0.02f, "a knife, not a sword: 0.26 m from the hand point to the tip");
+            Assert.AreEqual(InvectorKnifeReach, reach, 0.02f, "a knife, not a sword: 0.39 m from the hand point to the tip (2026-11-17: larger, to read at the play camera)");
 
             DummyShooter pistol = GameObject.Find(Gunman).GetComponent<DummyShooter>();
             Assert.AreEqual(DummyShooter.Weapon.Pistol, pistol.WeaponKind);

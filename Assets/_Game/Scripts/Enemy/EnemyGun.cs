@@ -175,6 +175,22 @@ namespace GlorifiedBody.Enemy
                     hold = set != null ? set.Find(HoldOffsets.ClassOf(animator), upperBodyId) : null;
                     aimSpine = animator.GetBoneTransform(HumanBodyBones.UpperChest) ?? animator.GetBoneTransform(HumanBodyBones.Chest);
                 }
+                // The knife (2026-11-17, Bruno: "Yes, fix them first"): Invector's sword grip and sword poses, when measured.
+                if (shooter.WeaponKind == DummyShooter.Weapon.Knife)
+                {
+                    HoldOffsets set = HoldOffsets.Load();
+                    knifeHold = set != null ? set.Find(HoldOffsets.ClassOf(animator), 0) : null;
+                    if (knifeHold != null && !knifeHold.HasKnifeArms) knifeHold = null;
+                    knifeBones = new Transform[HoldOffsets.KnifeBones.Length];
+                    for (int i = 0; i < knifeBones.Length; i++)
+                    {
+                        knifeBones[i] = animator.GetBoneTransform(HoldOffsets.KnifeBones[i]);
+                        if (knifeBones[i] == null) knifeHold = null;
+                    }
+                    knifeGrip = FindDeep(gun, "grip") ?? gun;
+                    if (muzzle != null && (muzzle.position - knifeGrip.position).sqrMagnitude > 1e-8f)
+                        knifeBladeLocal = Quaternion.Inverse(gun.rotation) * (muzzle.position - knifeGrip.position).normalized;
+                }
             }
             ragdoll = GetComponent<IRagdollBody>();
             brain = GetComponent<SoldierBrain>();
@@ -418,6 +434,7 @@ namespace GlorifiedBody.Enemy
             LastAim = aim.normalized;
             gun.position = upperBodyId == 1 ? Palm : hand.position + aim.normalized * gripForward;
             if (leftGrip != null && !HandsFree) Reach(leftUpper, leftLower, leftHand, null, leftGrip.position, -transform.up - transform.right * 0.3f, Vector3.zero);
+            else if (hold != null && leftGrip == null && !HandsFree) SupportHandOff(flatForward, Vector3.Cross(Vector3.up, flatForward)); // the strike: the shield stays on the arm
             FreeHand();
         }
 
@@ -717,20 +734,32 @@ namespace GlorifiedBody.Enemy
         {
             if (FreeHandTo != null) return;
             if (leftIK == null) leftIK = new vIKSolver(animator, AvatarIKGoal.LeftHand);
-            EnemyShield shield = GetComponent<EnemyShield>();
+            if (shield == null) shield = GetComponent<EnemyShield>();
             float arm = Vector3.Distance(leftUpper.position, leftLower.position) + Vector3.Distance(leftLower.position, leftHand.position);
-            Vector3 target;
-            if (shield != null && shield.IsUp && shield.Model != null)
-            {
-                Renderer face = shield.Model.GetComponentInChildren<Renderer>();
-                Vector3 middle = face != null ? face.bounds.center : shield.Model.position;
-                target = middle - flatForward * 0.06f;
-            }
-            else target = leftUpper.position - Vector3.up * (arm * 0.92f) - right * 0.06f + flatForward * 0.04f;
             leftIK.SetIKWeight(1f);
+            if (shield != null && shield.IsUp && shield.HasPoints)
+            {
+                // The shield on the forearm: the arm carries it ahead of the chest (EnemyShield.RestHand ... AimElbow), then
+                // the shield sits on the arm, its handle at the wrist and its strap along the forearm; the fingers round the
+                // handle toward his right, the palm to the shield.
+                float scale = Mathf.Max(1f, transform.lossyScale.y / 1.8f), blend = shield.AimBlend;
+                Vector3 wrist = transform.TransformPoint(Vector3.Lerp(EnemyShield.RestHand, EnemyShield.AimHand, blend) * scale / Mathf.Max(1e-4f, transform.lossyScale.y));
+                Vector3 elbow = transform.TransformPoint(Vector3.Lerp(EnemyShield.RestElbow, EnemyShield.AimElbow, blend) * scale / Mathf.Max(1e-4f, transform.lossyScale.y));
+                LeftShoulderTurn = Protract(leftClavicle, leftUpper, arm, wrist);
+                leftIK.SetIKHintPosition(elbow);
+                leftIK.SetIKPosition(wrist);
+                shield.HoldOn(leftHand.position, leftLower.position, flatForward);
+                Quaternion frame = shield.Frame;
+                if (handFrames) Turn(leftHand, leftHandFrame, frame * Vector3.right, frame * Vector3.forward);
+                LeftGap = Vector3.Distance(leftHand.position, shield.Grip);
+                return;
+            }
+            Vector3 target = leftUpper.position - Vector3.up * (arm * 0.92f) - right * 0.06f + flatForward * 0.04f;
             leftIK.SetIKHintPosition(leftLower.position - right * 0.2f - flatForward * 0.1f);
             leftIK.SetIKPosition(target);
         }
+
+        private EnemyShield shield;
 
         // ── The knife (Invector has no knife hold; 2026-11-17) ───────────────
 
@@ -742,6 +771,11 @@ namespace GlorifiedBody.Enemy
         /// </summary>
         private void KnifeHold(Vector3 flatForward, float swing, bool windUp)
         {
+            if (knifeHold != null)
+            {
+                InvectorKnife(swing, windUp);
+                return;
+            }
             Vector3 right = Vector3.Cross(Vector3.up, flatForward);
             float arm = Vector3.Distance(rightUpper.position, rightLower.position) + Vector3.Distance(rightLower.position, hand.position);
             Vector3 over = rightUpper.position + Vector3.up * (arm * KnifeOverUp) + right * (arm * 0.05f) - flatForward * (arm * 0.05f);
@@ -764,6 +798,43 @@ namespace GlorifiedBody.Enemy
             LastAim = forearm;
         }
 
+        private HoldOffsets.Entry knifeHold;
+        private Transform[] knifeBones;
+        private Transform knifeGrip;
+        private Vector3 knifeBladeLocal = Vector3.forward;
+        private float knifeGuard;
+
+        /// <summary>
+        /// The knife by Invector's one-hand sword (2026-11-17): both arms take the poses of the sword clips on this rig
+        /// (HoldOffsets: the sword idle at rest and in the walk, the slash drawn back for the wind-up, the thrust for the
+        /// strike), and the knife sits in the right hand by the vendor sword's grip: its grip point (the child "grip", or
+        /// its root) in the palm, the line from the grip to the tip ("muzzle") along the sword's blade. A new knife model
+        /// drops in with its own grip and tip. The vendor animator's unarmed arms (the fists at the face) are not used.
+        /// </summary>
+        private void InvectorKnife(float swing, bool windUp)
+        {
+            float up = windUp ? 0.3f + 0.7f * (shooter.Current == DummyShooter.State.Telegraph ? shooter.TelegraphProgress : 0f) : 0f;
+            knifeGuard = Mathf.MoveTowards(knifeGuard, up, Time.deltaTime * 4f);
+            float guard = Mathf.SmoothStep(0f, 1f, knifeGuard);
+            bool striking = swing >= 0f && swing < 1f;
+            for (int i = 0; i < knifeBones.Length; i++)
+            {
+                Quaternion pose = Quaternion.Slerp(knifeHold.restArms[i], knifeHold.guardArms[i], guard);
+                if (striking)
+                    pose = swing < KnifeThrustAt
+                        ? Quaternion.Slerp(knifeHold.guardArms[i], knifeHold.strikeArms[i], Mathf.SmoothStep(0f, 1f, swing / KnifeThrustAt))
+                        : Quaternion.Slerp(knifeHold.strikeArms[i], knifeHold.restArms[i], Mathf.SmoothStep(0f, 1f, (swing - KnifeThrustAt) / (1f - KnifeThrustAt)));
+                knifeBones[i].localRotation = pose;
+            }
+            if (striking) knifeGuard = 0f;
+            float fore = Vector3.Distance(hand.position, rightLower.position);
+            Quaternion blade = hand.rotation * knifeHold.GripRotation;
+            gun.rotation = blade * Quaternion.FromToRotation(knifeBladeLocal, Vector3.forward);
+            gun.position += hand.position + hand.rotation * knifeHold.gripOffset * fore + blade * knifeHold.tuneGripOffset - knifeGrip.position;
+            LastAim = blade * Vector3.forward;
+        }
+
+        private const float KnifeThrustAt = 0.45f; // of the strike: the thrust at its end, then back to the rest, PROPOSED
         private const float KnifeOverUp = 0.45f, KnifeAheadForward = 0.75f, KnifeAheadDown = 0.35f; // of the arm's length, PROPOSED
         private const float KnifeArmReference = 0.52f; // metres: the arm the palm numbers are for (the T19 soldier)
 

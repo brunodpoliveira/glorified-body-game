@@ -553,7 +553,7 @@ namespace GlorifiedBody.Integration.Invector.Build
         public const string KnifeMaterialFolder = "Assets/_Game/Rendering/Materials";
 
         public const string ShortSwordPath = "Assets/Invector-3rdPersonController/Melee Combat/3DModels/vMeleeWeapons/vSword/SwordV_short.fbx";
-        public const float KnifeLength = 0.32f;  // metres, grip to tip, PROPOSED
+        public const float KnifeLength = 0.45f;  // metres, pommel to tip, PROPOSED (0.32 until 2026-11-17: Bruno, the blade must read at the play camera; T51 brings the stock knife)
         public const float KnifeGripBack = 0.06f; // metres of the knife behind the hand point
 
         /// <summary>
@@ -570,6 +570,9 @@ namespace GlorifiedBody.Integration.Invector.Build
             knife.transform.localScale = Vector3.one / scale; // the root carries the model scale: the knife in metres
             Transform tip;
             if (!VendorKnife(knife.transform, out tip)) tip = BoxKnife(knife.transform);
+            // The hold's points (EnemyGun.InvectorKnife): the grip in the palm, the tip ("muzzle") along the blade. A new model brings its own.
+            var grip = new GameObject("grip").transform;
+            grip.SetParent(knife.transform, false);
             SetLayer(knife, LayerMask.NameToLayer("Enemy"));
             EnemyGun enemyGun = root.AddComponent<EnemyGun>();
             enemyGun.Bind(knife.transform, tip, new ParticleSystem[0], null, null, null, 0, 0);

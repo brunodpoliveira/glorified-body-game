@@ -34,6 +34,18 @@ namespace GlorifiedBody.Integration.Invector.Build
             ("power_armour", 2), ("power_armour", 3),
         };
 
+        /// <summary>The classes that hold a knife (InvectorEnemyFactory: labworker_knife).</summary>
+        public static readonly string[] KnifeHolders = { "labworker" };
+        private const string MeleeVBotPrefab = "Assets/Invector-FSMAIController/Prefabs/AI - Arena_Blue_Melee.prefab";
+        private const string MeleeClips = "Assets/Invector-3rdPersonController/Melee Combat/3DModels/Animations/";
+        /// <summary>The knife poses (2026-11-17, from the probe shots): the sword idle (the blade low at his side), the slash drawn back (the wind-up), the thrust.</summary>
+        private static readonly (string fbx, string clip, float at)[] KnifePoses =
+        {
+            (MeleeClips + "Melee_StrafeMoveset.fbx", "standing_idle", 0.3f),
+            (MeleeClips + "Melee_CombatSet.fbx", "WeakAttack_SwordA", 0.10f),
+            (MeleeClips + "Melee_CombatSet.fbx", "WeakAttack_SwordA", 0.55f),
+        };
+
         private static (string gun, string clip) SetOf(int upperBody)
         {
             switch (upperBody)
@@ -65,6 +77,16 @@ namespace GlorifiedBody.Integration.Invector.Build
                 }
                 if (Measure(classId, upperBody, entry, out string line)) log.Append("\n  ").Append(line);
                 else log.Append($"\n  {classId} {upperBody}: NOT MEASURED ({line})");
+            }
+            foreach (string classId in KnifeHolders)
+            {
+                HoldOffsets.Entry entry = set.Find(classId, 0);
+                if (entry == null)
+                {
+                    entry = new HoldOffsets.Entry { classId = classId, upperBody = 0 };
+                    set.entries.Add(entry);
+                }
+                log.Append("\n  ").Append(MeasureKnife(classId, entry));
             }
             set.entries.Sort((a, b) => a.classId == b.classId ? a.upperBody.CompareTo(b.upperBody) : string.CompareOrdinal(a.classId, b.classId));
             EditorUtility.SetDirty(set);
@@ -114,6 +136,90 @@ namespace GlorifiedBody.Integration.Invector.Build
             }
         }
 
+        /// <summary>
+        /// The knife: the grip and the blade's line of the vendor short sword in the melee vBot's right hand (its Handler)
+        /// in the sword idle, carried across the Humanoid hand frame; and the arms of the class's own rig in the three
+        /// sword poses (the clip retargeted onto it), as local bone turns.
+        /// </summary>
+        private static string MeasureKnife(string classId, HoldOffsets.Entry entry)
+        {
+            var poses = new List<Quaternion[]>();
+            for (int p = 0; p < KnifePoses.Length; p++)
+            {
+                var (fbx, clipName, at) = KnifePoses[p];
+                AnimationClip clip = AssetDatabase.LoadAllAssetsAtPath(fbx).OfType<AnimationClip>().FirstOrDefault(c => c.name == clipName);
+                if (clip == null) return $"{classId} knife: NOT MEASURED (no clip {clipName})";
+                var graphs = new List<PlayableGraph>();
+                GameObject vbot = null, figure = null;
+                try
+                {
+                    vbot = Spawn(MeleeVBotPrefab, new Vector3(-1.5f, 0f, 0f));
+                    figure = Spawn($"{CreateCharacterAssetsFolder}/{classId}.prefab", new Vector3(1.5f, 0f, 0f));
+                    if (vbot == null || figure == null) return $"{classId} knife: NOT MEASURED (a prefab is missing)";
+                    Animator v = vbot.GetComponentInChildren<Animator>(), u = figure.GetComponentInChildren<Animator>();
+                    graphs.Add(Sample(v, clip, at * clip.length));
+                    graphs.Add(Sample(u, clip, at * clip.length));
+                    var arms = new Quaternion[HoldOffsets.KnifeBones.Length];
+                    for (int i = 0; i < arms.Length; i++)
+                    {
+                        Transform bone = u.GetBoneTransform(HoldOffsets.KnifeBones[i]);
+                        arms[i] = bone != null ? bone.localRotation : Quaternion.identity;
+                    }
+                    poses.Add(arms);
+                    if (p != 0) continue;
+                    // The grip, from the sword idle.
+                    Transform vHand = v.GetBoneTransform(HumanBodyBones.RightHand), uHand = u.GetBoneTransform(HumanBodyBones.RightHand);
+                    Transform vFore = v.GetBoneTransform(HumanBodyBones.RightLowerArm);
+                    Transform handler = FindDeep(vHand, "Handler");
+                    Transform sword = handler != null ? FindDeep(handler, "SwordV_short") : null;
+                    if (sword == null) return $"{classId} knife: NOT MEASURED (no sword in the melee vBot's Handler)";
+                    BladeAxes(sword, out Vector3 blade, out Vector3 width);
+                    entry.gripOffset = Quaternion.Inverse(uHand.rotation) * (sword.position - vHand.position) / Vector3.Distance(vHand.position, vFore.position);
+                    entry.gripEuler = (Quaternion.Inverse(uHand.rotation) * Quaternion.LookRotation(blade, width)).eulerAngles;
+                    entry.leftEuler = Vector3.zero;
+                }
+                finally
+                {
+                    foreach (PlayableGraph g in graphs) if (g.IsValid()) g.Destroy();
+                    if (vbot != null) Object.DestroyImmediate(vbot);
+                    if (figure != null) Object.DestroyImmediate(figure);
+                }
+            }
+            entry.restArms = poses[0];
+            entry.guardArms = poses[1];
+            entry.strikeArms = poses[2];
+            return $"{classId} knife: grip {entry.gripOffset} forearms, turn {entry.gripEuler}; arms from {string.Join(", ", KnifePoses.Select(k => $"{k.clip} {k.at:0.00}"))}";
+        }
+
+        /// <summary>The sword's blade line (from its pivot to the far end of its long side) and its width, in the world.</summary>
+        private static void BladeAxes(Transform sword, out Vector3 blade, out Vector3 width)
+        {
+            Vector3 min = Vector3.one * float.MaxValue, max = Vector3.one * float.MinValue;
+            foreach (MeshFilter mf in sword.GetComponentsInChildren<MeshFilter>(true))
+            {
+                if (mf.sharedMesh == null) continue;
+                Bounds b = mf.sharedMesh.bounds;
+                for (int i = 0; i < 8; i++)
+                {
+                    Vector3 corner = b.center + Vector3.Scale(b.extents, new Vector3((i & 1) == 0 ? -1 : 1, (i & 2) == 0 ? -1 : 1, (i & 4) == 0 ? -1 : 1));
+                    Vector3 local = sword.InverseTransformPoint(mf.transform.TransformPoint(corner));
+                    min = Vector3.Min(min, local);
+                    max = Vector3.Max(max, local);
+                }
+            }
+            Vector3 size = max - min, middle = (min + max) * 0.5f;
+            Vector3[] axes = { Vector3.right, Vector3.up, Vector3.forward };
+            int along = 0, thin = 0;
+            for (int i = 1; i < 3; i++)
+            {
+                if (size[i] > size[along]) along = i;
+                if (size[i] < size[thin]) thin = i;
+            }
+            int across = 3 - along - thin;
+            blade = sword.TransformDirection(axes[along] * Mathf.Sign(middle[along] == 0f ? 1f : middle[along])).normalized;
+            width = sword.TransformDirection(axes[across]).normalized;
+        }
+
         private const string CreateCharacterAssetsFolder = "Assets/_Game/Characters/Prefabs";
 
         private static GameObject Spawn(string path, Vector3 position)
@@ -138,14 +244,16 @@ namespace GlorifiedBody.Integration.Invector.Build
             return go;
         }
 
-        private static PlayableGraph Sample(Animator animator, AnimationClip clip)
+        private static PlayableGraph Sample(Animator animator, AnimationClip clip) => Sample(animator, clip, ClipTime);
+
+        private static PlayableGraph Sample(Animator animator, AnimationClip clip, float time)
         {
             PlayableGraph graph = PlayableGraph.Create("hold calibration");
             graph.SetTimeUpdateMode(DirectorUpdateMode.Manual);
             var output = AnimationPlayableOutput.Create(graph, "pose", animator);
             var play = AnimationClipPlayable.Create(graph, clip);
             play.SetApplyFootIK(false);
-            play.SetTime(ClipTime);
+            play.SetTime(time);
             output.SetSourcePlayable(play);
             graph.Evaluate(0f);
             return graph;

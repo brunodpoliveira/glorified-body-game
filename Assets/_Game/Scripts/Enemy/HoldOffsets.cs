@@ -18,7 +18,7 @@ namespace GlorifiedBody.Enemy
         public sealed class Entry
         {
             public string classId;
-            [Tooltip("The vendor weapon set: 1 handgun, 2 rifle, 3 shotgun (EnemyGun.upperBodyId).")]
+            [Tooltip("The vendor weapon set: 1 handgun, 2 rifle, 3 shotgun (EnemyGun.upperBodyId); 0 the knife (the vendor short sword's grip).")]
             public int upperBody;
             [Tooltip("Measured: the gun's grip from the wrist, in the hand bone's turn, in forearm lengths.")]
             public Vector3 gripOffset;
@@ -36,12 +36,29 @@ namespace GlorifiedBody.Enemy
             [Tooltip("Degrees in leftHandIK's own axes.")]
             public Vector3 tuneLeftEuler;
 
+            [Header("The knife (upper body 0): the arms of Invector's one-hand sword clips, on this class's rig")]
+            [Tooltip("Local turns of RightShoulder, RightUpperArm, RightLowerArm, RightHand, LeftShoulder, LeftUpperArm, LeftLowerArm, LeftHand (KnifeBones).")]
+            public Quaternion[] restArms;   // Melee_StrafeMoveset standing_idle: the blade low at his side
+            public Quaternion[] guardArms;  // WeakAttack_SwordA at 0.10: drawn back for the stab (the wind-up)
+            public Quaternion[] strikeArms; // WeakAttack_SwordA at 0.55: the thrust
+
+            /// <summary>True when the three knife poses are measured for every bone.</summary>
+            public bool HasKnifeArms => restArms != null && guardArms != null && strikeArms != null
+                && restArms.Length == KnifeBones.Length && guardArms.Length == KnifeBones.Length && strikeArms.Length == KnifeBones.Length;
+
             /// <summary>The gun's turn in the hand bone's turn, with the tune.</summary>
             public Quaternion GripRotation => Quaternion.Euler(gripEuler) * Quaternion.Euler(tuneGripEuler);
 
             /// <summary>The left hand bone's world turn on a leftHandIK with this world turn.</summary>
             public Quaternion LeftHand(Quaternion leftHandIK) => leftHandIK * Quaternion.Euler(tuneLeftEuler) * Quaternion.Euler(leftEuler);
         }
+
+        /// <summary>The bones of the knife poses, in the order of Entry.restArms.</summary>
+        public static readonly HumanBodyBones[] KnifeBones =
+        {
+            HumanBodyBones.RightShoulder, HumanBodyBones.RightUpperArm, HumanBodyBones.RightLowerArm, HumanBodyBones.RightHand,
+            HumanBodyBones.LeftShoulder, HumanBodyBones.LeftUpperArm, HumanBodyBones.LeftLowerArm, HumanBodyBones.LeftHand,
+        };
 
         public List<Entry> entries = new List<Entry>();
 

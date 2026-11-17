@@ -190,25 +190,134 @@ namespace GlorifiedBody.Automation
                 Animator animator = body != null ? body.GetComponent<Animator>() : null;
                 if (gun == null || shooter == null || animator == null) { Record($"{kind}_spawn", false, "no armed figure"); if (body != null) Destroy(body); continue; }
                 yield return BotClock.Wait(0.8f);
+                bool moves = MotionKinds.Contains(kind);
                 yield return Views(kind, "rest", animator);
-                tank.Teleport(body.transform.position + body.transform.forward * 6f, 0f);
-                body.GetComponent<Enemy.SoldierBrain>()?.Alert("bot", callOthers: false);
+                if (moves) Clear(kind, "rest", animator, gun);
+                if (moves)
+                {
+                    // The walk: she stands far ahead, he comes for her.
+                    tank.Teleport(body.transform.position + body.transform.forward * 14f, 0f);
+                    body.GetComponent<Enemy.SoldierBrain>()?.Alert("bot", callOthers: false);
+                    Vector3 from = body.transform.position;
+                    float w0 = BotClock.Now;
+                    while (BotClock.Now - w0 < 8f && Vector3.Distance(from, body.transform.position) < 0.8f) yield return null;
+                    yield return BotClock.Wait(0.3f);
+                    yield return Views(kind, "walk", animator);
+                    Clear(kind, "walk", animator, gun);
+                }
                 bool melee = shooter.WeaponKind == Enemy.DummyShooter.Weapon.Knife;
-                float t0 = BotClock.Now;
-                while (BotClock.Now - t0 < 20f && !(shooter.HoldsSlot && (shooter.CurrentAttack == Enemy.DummyShooter.Attack.Melee) == melee)) yield return null;
-                if (!shooter.HoldsSlot) { Record($"{kind}_aims", false, "no aim in 20 s"); Destroy(body); yield return null; continue; }
+                // A gun that comes for her from afar aims on the way (the shield guard keeps his distance): wait for it first.
+                float a0 = BotClock.Now;
+                while (moves && !melee && BotClock.Now - a0 < 4f && !(shooter.HoldsSlot && shooter.CurrentAttack != Enemy.DummyShooter.Attack.Melee)) yield return null;
+                if (!(shooter.HoldsSlot && (shooter.CurrentAttack == Enemy.DummyShooter.Attack.Melee) == melee))
+                {
+                    tank.Teleport(body.transform.position + body.transform.forward * 6f, 0f);
+                    body.GetComponent<Enemy.SoldierBrain>()?.Alert("bot", callOthers: false);
+                }
+                float t0 = BotClock.Now, again = BotClock.Now;
+                while (BotClock.Now - t0 < 30f && !(shooter.HoldsSlot && (shooter.CurrentAttack == Enemy.DummyShooter.Attack.Melee) == melee))
+                {
+                    if (!melee && BotClock.Now - again > 4f)
+                    {
+                        // He walked off to a firing spot: she stands in front of him again.
+                        again = BotClock.Now;
+                        tank.Teleport(body.transform.position + body.transform.forward * 6f, 0f);
+                    }
+                    yield return null;
+                }
+                if (!shooter.HoldsSlot) { Record($"{kind}_aims", false, "no aim in 30 s"); Destroy(body); yield return null; continue; }
                 yield return BotClock.Wait(melee ? 0.25f : 0.6f);
                 bool ok = MeasureHold(kind, gun, shooter, animator, melee, out string detail);
                 Transform hand = animator.GetBoneTransform(HumanBodyBones.RightHand);
                 float scale = Scale(animator);
                 yield return Shot($"{kind}_aim_hands", hand.position + body.transform.right * 0.7f * scale + body.transform.forward * 0.15f * scale + Vector3.up * 0.1f * scale, hand.position);
                 yield return Views(kind, "aim", animator);
+                if (moves) Clear(kind, "aim", animator, gun);
                 Record($"{kind}_hold", ok, detail);
+                if (moves && shooter.CanMelee)
+                {
+                    // The strike: she stands in his reach.
+                    int swings = gun.MeleeSwings;
+                    tank.Teleport(body.transform.position + body.transform.forward * 1.3f, 0f);
+                    float s0 = BotClock.Now;
+                    while (BotClock.Now - s0 < 12f && gun.MeleeSwings == swings) yield return null;
+                    if (gun.MeleeSwings == swings) Record($"{kind}_strikes", false, "no strike in 12 s");
+                    else
+                    {
+                        yield return BotClock.Wait(0.12f);
+                        yield return Views(kind, "strike", animator);
+                        Clear(kind, "strike", animator, gun);
+                    }
+                }
                 seen++;
                 Destroy(body);
                 yield return null;
             }
             Record("hands_seen", seen == LineupKinds.Length, $"figures={seen} of {LineupKinds.Length}");
+        }
+
+        /// <summary>The kinds the lineup also shows walking and striking (the shield and the knife, Bruno 2026-11-17: "Yes, fix them first").</summary>
+        public static readonly HashSet<string> MotionKinds = new HashSet<string> { "guard_shield", "soldier_shield", "labworker_knife" };
+
+        /// <summary>
+        /// Nothing cuts through the body: no point of his head, chest or right arm (and the gun) inside the shield's box
+        /// (1 cm margin), and no point of the right arm or the knife across his face (a box ahead of the head, 0.12 m
+        /// each side, 0.15 m up and down, 0.45 m forward, in a 1.8 m man).
+        /// </summary>
+        private void Clear(string kind, string moment, Animator animator, Enemy.EnemyGun gun)
+        {
+            float s = Scale(animator);
+            Transform B(HumanBodyBones b) => animator.GetBoneTransform(b);
+            var body = new List<(string, Vector3)>();
+            foreach (var b in new[] { HumanBodyBones.Head, HumanBodyBones.Neck, HumanBodyBones.UpperChest, HumanBodyBones.Chest, HumanBodyBones.RightShoulder, HumanBodyBones.RightUpperArm })
+                if (B(b) != null) body.Add((b.ToString(), B(b).position));
+            Transform ru = B(HumanBodyBones.RightUpperArm), rl = B(HumanBodyBones.RightLowerArm), rh = B(HumanBodyBones.RightHand);
+            var arm = new List<(string, Vector3)>();
+            for (int i = 0; i <= 4; i++) arm.Add(($"right upper arm {i}", Vector3.Lerp(ru.position, rl.position, i / 4f)));
+            for (int i = 0; i <= 4; i++) arm.Add(($"right forearm {i}", Vector3.Lerp(rl.position, rh.position, i / 4f)));
+            if (gun.Model != null) arm.Add(("gun", gun.Model.position));
+            if (gun.Muzzle != null) arm.Add(("muzzle", gun.Muzzle.position));
+            if (gun.Model != null && gun.Muzzle != null) arm.Add(("blade middle", Vector3.Lerp(gun.Model.position, gun.Muzzle.position, 0.5f)));
+            var cuts = new List<string>();
+            Enemy.EnemyShield shield = animator.GetComponent<Enemy.EnemyShield>();
+            MeshFilter face = shield != null && shield.Model != null && shield.Model.gameObject.activeInHierarchy ? shield.Model.GetComponentInChildren<MeshFilter>() : null;
+            if (face != null && face.sharedMesh != null)
+            {
+                Bounds box = face.sharedMesh.bounds;
+                foreach (var (name, point) in body.Concat(arm))
+                {
+                    Vector3 local = face.transform.InverseTransformPoint(point);
+                    Vector3 margin = new Vector3(0.01f / Mathf.Max(1e-4f, face.transform.lossyScale.x), 0.01f / Mathf.Max(1e-4f, face.transform.lossyScale.y), 0.01f / Mathf.Max(1e-4f, face.transform.lossyScale.z));
+                    Bounds grown = box;
+                    grown.Expand(margin * 2f);
+                    if (grown.Contains(local)) cuts.Add("shield/" + name);
+                }
+            }
+            Transform head = B(HumanBodyBones.Head);
+            if (gun.UpperBody == 0 && head != null) // the knife
+            {
+                Vector3 forward = Vector3.ProjectOnPlane(animator.transform.forward, Vector3.up).normalized, right = Vector3.Cross(Vector3.up, forward);
+                foreach (var (name, point) in arm)
+                {
+                    Vector3 d = point - head.position;
+                    if (Mathf.Abs(Vector3.Dot(d, right)) < 0.12f * s && Vector3.Dot(d, forward) > 0f && Vector3.Dot(d, forward) < 0.45f * s && Mathf.Abs(d.y) < 0.15f * s)
+                        cuts.Add("face/" + name);
+                }
+            }
+            string armNote = "";
+            bool held = true;
+            if (shield != null && shield.HasPoints && shield.IsUp)
+            {
+                // The shield on the forearm: the left wrist on the handle, the forearm through the strap.
+                Transform lh = B(HumanBodyBones.LeftHand), ll = B(HumanBodyBones.LeftLowerArm);
+                float grip = Vector3.Distance(lh.position, shield.Grip);
+                Vector3 along = lh.position - ll.position;
+                float t = Mathf.Clamp01(Vector3.Dot(shield.Forearm - ll.position, along) / Mathf.Max(1e-6f, along.sqrMagnitude));
+                float strap = Vector3.Distance(shield.Forearm, ll.position + along * t);
+                held = grip < 0.03f * s && strap < 0.08f * s;
+                armNote = $"; left wrist {grip:0.000} m from the handle, forearm {strap:0.000} m from the strap";
+            }
+            Record($"{kind}_{moment}_clear", cuts.Count == 0 && held, (cuts.Count == 0 ? "nothing through the body or across the face" : string.Join(", ", cuts)) + armNote);
         }
 
         /// <summary>The figure's height against a 1.8 m man (the power armour stands 2.9 m).</summary>
@@ -225,6 +334,9 @@ namespace GlorifiedBody.Automation
             Vector3 chest = t.position + Vector3.up * 1.3f * s;
             yield return Shot($"{kind}_{moment}_side", chest + t.right * 2.1f * s + Vector3.up * 0.1f * s, chest);
             yield return Shot($"{kind}_{moment}_front", chest + t.forward * 2.2f * s + t.right * 0.9f * s + Vector3.up * 0.2f * s, chest);
+            Enemy.EnemyShield shield = animator.GetComponent<Enemy.EnemyShield>();
+            if (shield != null && shield.HasPoints && shield.IsUp) // the hand on the handle, from over his left shoulder
+                yield return Shot($"{kind}_{moment}_shieldarm", shield.Grip - t.right * 0.9f * s - t.forward * 0.5f * s + Vector3.up * 0.55f * s, shield.Grip);
         }
 
         /// <summary>
@@ -239,15 +351,24 @@ namespace GlorifiedBody.Automation
             Transform model = gun.Model, muzzle = gun.Muzzle != null ? gun.Muzzle : gun.Model;
             var text = new StringBuilder();
             float palmAngle = gun.TryHandFrame(true, out Vector3 fingers, out Vector3 palm) ? Vector3.Angle(palm, model.position - right.position) : -1f;
-            if (melee)
-            {
-                float blade = Vector3.Angle(muzzle.position - model.position, right.position - fore.position);
-                text.Append($"blade to forearm {blade:0.0} deg, palm to the handle {palmAngle:0.0} deg, handle {Vector3.Distance(model.position, right.position):0.000} m from the wrist");
-                detail = text.ToString();
-                return blade < 25f;
-            }
             string classId = Enemy.HoldOffsets.ClassOf(animator);
             Enemy.HoldOffsets set = Enemy.HoldOffsets.Load();
+            if (melee)
+            {
+                // The knife against Invector's sword grip (HoldOffsets, upper body 0): the grip point and the blade's line.
+                Enemy.HoldOffsets.Entry sword = set != null ? set.Find(classId, 0) : null;
+                Transform gripPoint = FindDeep(model, "grip") ?? model;
+                float forearm = Vector3.Angle(muzzle.position - gripPoint.position, right.position - fore.position);
+                text.Append($"blade to forearm {forearm:0.0} deg, handle {Vector3.Distance(gripPoint.position, right.position):0.000} m from the wrist");
+                if (sword == null) { detail = text.Append("; no Invector sword grip measured").ToString(); return false; }
+                float length = Vector3.Distance(right.position, fore.position);
+                Vector3 wantGrip = right.position + right.rotation * sword.gripOffset * length;
+                Vector3 wantBlade = right.rotation * sword.GripRotation * Vector3.forward;
+                float bladeTurn = Vector3.Angle(muzzle.position - gripPoint.position, wantBlade), gripGap = Vector3.Distance(gripPoint.position, wantGrip);
+                text.Append($"; blade {bladeTurn:0.0} deg from Invector's sword, grip {gripGap:0.000} m off it, blade {Vector3.Distance(gripPoint.position, muzzle.position):0.00} m");
+                detail = text.ToString();
+                return bladeTurn < 5f && gripGap < 0.02f;
+            }
             Enemy.HoldOffsets.Entry entry = set != null ? set.Find(classId, gun.UpperBody) : null;
             float aim = Vector3.Angle(muzzle.forward, shooter.AimPoint - muzzle.position);
             text.Append($"{classId} set {gun.UpperBody}, clip hold {gun.ClipHold}; barrel to the aim {aim:0.0} deg, the chest turned {gun.AimTurn:0.0} deg to it; palm to the grip {palmAngle:0.0} deg");

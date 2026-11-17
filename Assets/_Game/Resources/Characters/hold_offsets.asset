@@ -22,6 +22,45 @@ MonoBehaviour:
     tuneGripEuler: {x: 0, y: 0, z: 0}
     tuneLeftOffset: {x: 0, y: 0, z: 0}
     tuneLeftEuler: {x: 0, y: 0, z: 0}
+    restArms: []
+    guardArms: []
+    strikeArms: []
+  - classId: labworker
+    upperBody: 0
+    gripOffset: {x: -0.05010299, y: 0.28412062, z: 0.04440085}
+    gripEuler: {x: 349.3244, y: 135.52692, z: 21.461842}
+    leftEuler: {x: 0, y: 0, z: 0}
+    tuneGripOffset: {x: 0, y: 0, z: 0}
+    tuneGripEuler: {x: 0, y: 0, z: 0}
+    tuneLeftOffset: {x: 0, y: 0, z: 0}
+    tuneLeftEuler: {x: 0, y: 0, z: 0}
+    restArms:
+    - {x: 0.5938059, y: 0.38826394, z: -0.28056228, w: 0.6464755}
+    - {x: -0.5798941, y: 0.027884014, z: 0.28804898, w: -0.7615597}
+    - {x: 0.2217769, y: -0.3294671, z: -0.49256086, w: -0.7743709}
+    - {x: -0.19614479, y: 0.46796724, z: 0.19883718, w: 0.83844966}
+    - {x: -0.46367332, y: 0.50066864, z: 0.5725011, w: 0.4545112}
+    - {x: -0.19007415, y: -0.8090335, z: 0.5305549, w: -0.16687799}
+    - {x: -0.10926018, y: -0.29777882, z: -0.32231197, w: 0.8919109}
+    - {x: -0.06916146, y: -0.7645506, z: -0.14607087, w: 0.62397313}
+    guardArms:
+    - {x: 0.45921442, y: 0.5686761, z: -0.48829028, w: 0.4767622}
+    - {x: -0.37743598, y: -0.027293948, z: 0.052365303, w: -0.92415106}
+    - {x: -0.041251387, y: -0.2743928, z: -0.5890304, w: -0.7589797}
+    - {x: 0.18489195, y: 0.16882753, z: 0.14497347, w: 0.95723295}
+    - {x: -0.5065458, y: 0.46100777, z: 0.52876, w: 0.5012944}
+    - {x: -0.13657798, y: -0.9771585, z: 0.15853705, w: -0.037065353}
+    - {x: -0.28957298, y: -0.28916574, z: -0.6595954, w: 0.630448}
+    - {x: -0.03032229, y: -0.82331127, z: -0.14523886, w: 0.5478548}
+    strikeArms:
+    - {x: 0.60932547, y: 0.39756906, z: -0.36782208, w: 0.5791098}
+    - {x: -0.094562426, y: 0.2797023, z: -0.4207959, w: -0.85776186}
+    - {x: -0.030421603, y: -0.09165261, z: -0.1896958, w: -0.9770823}
+    - {x: 0.2719561, y: -0.049194835, z: 0.37751043, w: 0.8838019}
+    - {x: -0.591746, y: 0.35376874, z: 0.4058384, w: 0.59998304}
+    - {x: 0.09066937, y: -0.95839924, z: 0.26689637, w: 0.044902466}
+    - {x: -0.3168372, y: -0.26759425, z: -0.6788759, w: 0.6059167}
+    - {x: -0.007293455, y: -0.81451464, z: -0.20562233, w: 0.54243183}
   - classId: labworker
     upperBody: 1
     gripOffset: {x: -0.008431578, y: 0.29607612, z: 0.055098798}
@@ -31,6 +70,9 @@ MonoBehaviour:
     tuneGripEuler: {x: 0, y: 0, z: 0}
     tuneLeftOffset: {x: 0, y: 0, z: 0}
     tuneLeftEuler: {x: 0, y: 0, z: 0}
+    restArms: []
+    guardArms: []
+    strikeArms: []
   - classId: power_armour
     upperBody: 2
     gripOffset: {x: -0.016809901, y: 0.3005791, z: 0.011747208}
@@ -40,6 +82,9 @@ MonoBehaviour:
     tuneGripEuler: {x: 0, y: 0, z: 0}
     tuneLeftOffset: {x: 0, y: 0, z: 0}
     tuneLeftEuler: {x: 0, y: 0, z: 0}
+    restArms: []
+    guardArms: []
+    strikeArms: []
   - classId: power_armour
     upperBody: 3
     gripOffset: {x: -0.010380951, y: 0.30085957, z: 0.011999302}
@@ -49,6 +94,9 @@ MonoBehaviour:
     tuneGripEuler: {x: 0, y: 0, z: 0}
     tuneLeftOffset: {x: 0, y: 0, z: 0}
     tuneLeftEuler: {x: 0, y: 0, z: 0}
+    restArms: []
+    guardArms: []
+    strikeArms: []
   - classId: soldier
     upperBody: 1
     gripOffset: {x: 0.12110344, y: 0.27238476, z: 0.043687988}
@@ -58,6 +106,9 @@ MonoBehaviour:
     tuneGripEuler: {x: 0, y: 0, z: 0}
     tuneLeftOffset: {x: 0, y: 0, z: 0}
     tuneLeftEuler: {x: 0, y: 0, z: 0}
+    restArms: []
+    guardArms: []
+    strikeArms: []
   - classId: soldier
     upperBody: 2
     gripOffset: {x: 0.14174901, y: 0.2623747, z: 0.042837642}
@@ -67,6 +118,9 @@ MonoBehaviour:
     tuneGripEuler: {x: 0, y: 0, z: 0}
     tuneLeftOffset: {x: 0, y: 0, z: 0}
     tuneLeftEuler: {x: 0, y: 0, z: 0}
+    restArms: []
+    guardArms: []
+    strikeArms: []
   - classId: soldier
     upperBody: 3
     gripOffset: {x: 0.1444726, y: 0.26219147, z: 0.033934105}
@@ -76,6 +130,9 @@ MonoBehaviour:
     tuneGripEuler: {x: 0, y: 0, z: 0}
     tuneLeftOffset: {x: 0, y: 0, z: 0}
     tuneLeftEuler: {x: 0, y: 0, z: 0}
+    restArms: []
+    guardArms: []
+    strikeArms: []
   - classId: toll_guard
     upperBody: 1
     gripOffset: {x: 0.0714792, y: 0.2899468, z: 0.03987137}
@@ -85,3 +142,6 @@ MonoBehaviour:
     tuneGripEuler: {x: 0, y: 0, z: 0}
     tuneLeftOffset: {x: 0, y: 0, z: 0}
     tuneLeftEuler: {x: 0, y: 0, z: 0}
+    restArms: []
+    guardArms: []
+    strikeArms: []
