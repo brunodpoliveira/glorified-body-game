@@ -2,6 +2,7 @@ using UnityEngine;
 using GlorifiedBody.Core;
 using GlorifiedBody.Combat;
 using GlorifiedBody.DebugTools;
+using Invector.IK;
 
 namespace GlorifiedBody.Enemy
 {
@@ -82,6 +83,23 @@ namespace GlorifiedBody.Enemy
         public float ShakeDegrees => shakeDegrees;
         /// <summary>The gun's tremble in the last frame, in degrees (0 when still). For the tests.</summary>
         public float LastShake { get; private set; }
+        /// <summary>The vendor weapon set: 1 handgun, 2 rifle, 3 shotgun, 0 none (the knife, a dropped gun).</summary>
+        public int UpperBody => upperBodyId;
+        /// <summary>The aim comes from Invector's clip, the gun from Invector's grip (HoldOffsets), the left hand from vIKSolver.</summary>
+        public bool ClipHold => hold != null;
+        private HoldOffsets.Entry hold;
+
+        /// <summary>The hand's fingers and palm in the world now, from the frame of the bind pose (FindHandFrame). False without it.</summary>
+        public bool TryHandFrame(bool rightSide, out Vector3 fingers, out Vector3 palm)
+        {
+            fingers = palm = Vector3.zero;
+            Transform bone = rightSide ? hand : leftHand;
+            if (!handFrames || bone == null) return false;
+            Quaternion frame = bone.rotation * (rightSide ? rightHandFrame : leftHandFrame);
+            fingers = frame * Vector3.forward;
+            palm = frame * Vector3.up;
+            return true;
+        }
 
         /// <summary>The armed lab worker's hold: both hands on the pistol, and the gun shakes by up to the degrees.</summary>
         public void SetHold(bool bothHands, float shake)
@@ -150,6 +168,13 @@ namespace GlorifiedBody.Enemy
                 shouldered = upperBodyId != 1 && rightUpper != null && rightLower != null && hand != null && muzzle != null && FindStock(out stockLocal);
                 handFrames = FindHandFrame(hand, rightLower, true, out rightHandFrame) & FindHandFrame(leftHand, leftLower, false, out leftHandFrame);
                 pistolHeld = upperBodyId == 1 && shooter.WeaponKind == DummyShooter.Weapon.Pistol && rightUpper != null && rightLower != null && hand != null;
+                // Option B (Bruno, 2026-11-17: "Yes, build B"): Invector's grip for this class and weapon set, when measured.
+                if ((shouldered || pistolHeld) && leftUpper != null && leftLower != null && leftHand != null && muzzle != null)
+                {
+                    HoldOffsets set = HoldOffsets.Load();
+                    hold = set != null ? set.Find(HoldOffsets.ClassOf(animator), upperBodyId) : null;
+                    aimSpine = animator.GetBoneTransform(HumanBodyBones.UpperChest) ?? animator.GetBoneTransform(HumanBodyBones.Chest);
+                }
             }
             ragdoll = GetComponent<IRagdollBody>();
             brain = GetComponent<SoldierBrain>();
@@ -344,6 +369,12 @@ namespace GlorifiedBody.Enemy
             flatForward = flatForward.sqrMagnitude > 0.0001f ? flatForward.normalized : Vector3.forward;
             float swing = (Time.time - swingStart) / SwingSeconds;
             bool windUp = shooter.HoldsSlot && shooter.CurrentAttack == DummyShooter.Attack.Melee;
+            if (shooter.WeaponKind == DummyShooter.Weapon.Knife && handFrames && rightUpper != null && rightLower != null && !HandsFree && !(health != null && health.IsDead))
+            {
+                KnifeHold(flatForward, swing, windUp);
+                FreeHand();
+                return;
+            }
             if (swing >= 0f && swing < 1f && !(health != null && health.IsDead))
             {
                 // The strike: the gun comes down from over the shoulder, butt first, to the front.
@@ -354,6 +385,12 @@ namespace GlorifiedBody.Enemy
                 // The wind-up: the gun rises over the shoulder while the circle closes (the telegraph of a strike).
                 float up = shooter.Current == DummyShooter.State.Telegraph ? shooter.TelegraphProgress : 0f;
                 aim = Vector3.Slerp(flatForward, Vector3.up * 0.9f + flatForward * 0.1f, 0.3f + 0.7f * up);
+            }
+            else if (hold != null && !HandsFree)
+            {
+                ClipHoldPose(flatForward);
+                FreeHand();
+                return;
             }
             else if (shouldered && !HandsFree)
             {
@@ -542,6 +579,193 @@ namespace GlorifiedBody.Enemy
             if (handFrames) Turn(leftHand, leftHandFrame, leftFingers, (gunRight * 0.7f + gunUp * 0.7f).normalized);
             LeftGap = Vector3.Distance(leftHand.position, leftTarget);
         }
+
+        // ── Option B: Invector's aim clip, Invector's grip, vIKSolver on the left hand (2026-11-17) ──────────
+
+        private Transform aimSpine;
+        private vIKSolver leftIK;
+        private float clipWeight;
+        private const float MaxAimYaw = 45f, MaxAimPitch = 60f; // degrees the chest turns to the aim point, PROPOSED
+        /// <summary>The barrel against the line to the aim point in the last aiming frame, degrees (0 at rest).</summary>
+        public float AimError { get; private set; }
+        /// <summary>The degrees the chest turned to the aim in the last frame (the vendor clip holds the gun across a bladed stance).</summary>
+        public float AimTurn { get; private set; }
+
+        /// <summary>
+        /// The hold of option B. In the aim, Invector's upper-body clip (UpperBody_ID, IsAiming) sets the arms; the chest
+        /// turns so the barrel follows the aim point up, down and a little to the side; the gun sits in the right hand by
+        /// Invector's grip (HoldOffsets: the vBot's Handler, carried across the Humanoid hand frame); vIKSolver puts the
+        /// left hand on the gun's leftHandIK, turned as the vBot's. At rest the low ready of the procedural hold stays:
+        /// the gun ahead and down (a long gun's butt in the shoulder pocket, a pistol at the hip), the right hand on it by
+        /// the same grip. The raise blends the two in a fifth of a second. A one-hand gun: the left hand on the shield, or
+        /// down at the side.
+        /// </summary>
+        private void ClipHoldPose(Vector3 flatForward)
+        {
+            bool aiming = shooter.HoldsSlot && shooter.CurrentAttack != DummyShooter.Attack.Melee;
+            clipWeight = Mathf.MoveTowards(clipWeight, aiming ? 1f : 0f, Time.deltaTime * PistolRaiseRate);
+            Vector3 right = Vector3.Cross(Vector3.up, flatForward);
+            if (clipWeight < 1f)
+            {
+                Quaternion clipUpper = rightUpper.localRotation, clipLower = rightLower.localRotation, clipHand = hand.localRotation;
+                LowReadyGun(flatForward, right, out Vector3 gunPosition, out Quaternion gunRotation);
+                Quaternion handRotation = gunRotation * Quaternion.Inverse(hold.GripRotation);
+                float fore = Vector3.Distance(hand.position, rightLower.position);
+                Vector3 wrist = gunPosition - gunRotation * hold.tuneGripOffset - handRotation * hold.gripOffset * fore;
+                Reach(rightUpper, rightLower, hand, null, wrist, -Vector3.up + right * 0.35f - flatForward * 0.1f, Vector3.zero);
+                hand.rotation = handRotation;
+                if (clipWeight > 0f)
+                {
+                    rightUpper.localRotation = Quaternion.Slerp(rightUpper.localRotation, clipUpper, clipWeight);
+                    rightLower.localRotation = Quaternion.Slerp(rightLower.localRotation, clipLower, clipWeight);
+                    hand.localRotation = Quaternion.Slerp(hand.localRotation, clipHand, clipWeight);
+                }
+            }
+            PlaceGun();
+            AimError = 0f;
+            AimTurn = 0f;
+            if (clipWeight > 0f && aimSpine != null)
+            {
+                Vector3 target = aiming ? shooter.AimPoint : muzzle.position + flatForward * 10f;
+                target = muzzle.position + Shake(target - muzzle.position);
+                for (int i = 0; i < 2; i++)
+                {
+                    AimAlign(target, clipWeight);
+                    PlaceGun();
+                }
+                if (aiming) AimError = Vector3.Angle(muzzle.forward, shooter.AimPoint - muzzle.position);
+            }
+            LastAim = muzzle.forward;
+            RightGap = 0f;
+            RightElbowLift = rightLower.position.y - rightUpper.position.y;
+            if (leftGrip != null) LeftOnGrip();
+            else SupportHandOff(flatForward, right);
+        }
+
+        /// <summary>The gun of the low ready: as the procedural hold puts it (Shoulder, PistolHold), with the tremble.</summary>
+        private void LowReadyGun(Vector3 flatForward, Vector3 right, out Vector3 position, out Quaternion rotation)
+        {
+            Vector3 aim = Escorting ? flatForward // the escort (round 160): "gun raised", level, to her
+                : Quaternion.AngleAxis(-LowReadyIn, Vector3.up) * Quaternion.AngleAxis(LowReadyDown, right) * flatForward;
+            aim = Shake(aim);
+            Quaternion muzzleLocal = Quaternion.Inverse(gun.rotation) * muzzle.rotation;
+            rotation = Quaternion.LookRotation(aim.normalized, Vector3.up) * Quaternion.Inverse(muzzleLocal);
+            if (shouldered)
+            {
+                Vector3 pocket = rightUpper.position - right * PocketIn + flatForward * PocketForward - Vector3.up * PocketDown;
+                position = pocket - rotation * Vector3.Scale(gun.lossyScale, stockLocal);
+                return;
+            }
+            float arm = Vector3.Distance(rightUpper.position, rightLower.position) + Vector3.Distance(rightLower.position, hand.position);
+            position = rightUpper.position + flatForward * (arm * PistolLowForward) - Vector3.up * (arm * PistolLowDown) - right * (leftGrip != null ? PistolLowIn : 0f);
+        }
+
+        /// <summary>The gun in the right hand by Invector's grip (HoldOffsets), in the forearm's length.</summary>
+        private void PlaceGun()
+        {
+            float fore = Vector3.Distance(hand.position, rightLower.position);
+            Quaternion turn = hand.rotation * hold.GripRotation;
+            gun.SetPositionAndRotation(hand.position + hand.rotation * hold.gripOffset * fore + turn * hold.tuneGripOffset, turn);
+        }
+
+        /// <summary>The chest turns (yaw about the up axis, then pitch about the body's side) so the barrel points at the target.</summary>
+        private void AimAlign(Vector3 target, float weight)
+        {
+            Vector3 from = muzzle.forward, want = target - muzzle.position;
+            if (want.sqrMagnitude < 0.01f) return;
+            want.Normalize();
+            Vector3 fromFlat = Vector3.ProjectOnPlane(from, Vector3.up), wantFlat = Vector3.ProjectOnPlane(want, Vector3.up);
+            if (wantFlat.sqrMagnitude < 1e-4f) wantFlat = transform.forward;
+            float yaw = fromFlat.sqrMagnitude > 1e-4f ? Mathf.Clamp(Vector3.SignedAngle(fromFlat, wantFlat, Vector3.up), -MaxAimYaw, MaxAimYaw) : 0f;
+            Vector3 turned = Quaternion.AngleAxis(yaw, Vector3.up) * from;
+            Vector3 side = Vector3.Cross(Vector3.up, wantFlat.normalized);
+            float pitch = Mathf.Clamp(Vector3.SignedAngle(turned, want, side), -MaxAimPitch, MaxAimPitch);
+            Quaternion turn = Quaternion.AngleAxis(pitch * weight, side) * Quaternion.AngleAxis(yaw * weight, Vector3.up);
+            AimTurn += Quaternion.Angle(Quaternion.identity, turn);
+            // Two joints share the bend (the chest, then the upper chest), so the back curves and does not fold at one place.
+            Transform chest = animator.GetBoneTransform(HumanBodyBones.Chest);
+            if (chest != null && chest != aimSpine)
+            {
+                Quaternion half = Quaternion.Slerp(Quaternion.identity, turn, 0.5f);
+                chest.rotation = half * chest.rotation;
+                aimSpine.rotation = half * aimSpine.rotation;
+            }
+            else aimSpine.rotation = turn * aimSpine.rotation;
+        }
+
+        /// <summary>vIKSolver puts the left wrist on leftHandIK, the hand turned as the vBot's (HoldOffsets.leftEuler).</summary>
+        private void LeftOnGrip()
+        {
+            if (FreeHandTo != null) return; // the escort's hand is on the civilian (FreeHand)
+            Vector3 target = leftGrip.position + gun.rotation * hold.tuneLeftOffset;
+            LeftArm = Vector3.Distance(leftUpper.position, leftLower.position) + Vector3.Distance(leftLower.position, leftHand.position);
+            LeftReach = Vector3.Distance(leftUpper.position, target);
+            LeftShoulderTurn = Protract(leftClavicle, leftUpper, LeftArm, target);
+            if (leftIK == null) leftIK = new vIKSolver(animator, AvatarIKGoal.LeftHand);
+            leftIK.SetIKWeight(1f);
+            leftIK.SetIKPosition(target);
+            leftIK.SetIKRotation(hold.LeftHand(leftGrip.rotation));
+            LeftGap = Vector3.Distance(leftHand.position, target);
+            LeftGripAlong = Vector3.Dot(leftGrip.position - gun.position, muzzle.forward);
+        }
+
+        /// <summary>
+        /// A one-hand gun: the vendor clip holds the left hand up at the gun (or at the face at rest). It goes to the shield's
+        /// inner side (the shield guard), or down at the side.
+        /// </summary>
+        private void SupportHandOff(Vector3 flatForward, Vector3 right)
+        {
+            if (FreeHandTo != null) return;
+            if (leftIK == null) leftIK = new vIKSolver(animator, AvatarIKGoal.LeftHand);
+            EnemyShield shield = GetComponent<EnemyShield>();
+            float arm = Vector3.Distance(leftUpper.position, leftLower.position) + Vector3.Distance(leftLower.position, leftHand.position);
+            Vector3 target;
+            if (shield != null && shield.IsUp && shield.Model != null)
+            {
+                Renderer face = shield.Model.GetComponentInChildren<Renderer>();
+                Vector3 middle = face != null ? face.bounds.center : shield.Model.position;
+                target = middle - flatForward * 0.06f;
+            }
+            else target = leftUpper.position - Vector3.up * (arm * 0.92f) - right * 0.06f + flatForward * 0.04f;
+            leftIK.SetIKWeight(1f);
+            leftIK.SetIKHintPosition(leftLower.position - right * 0.2f - flatForward * 0.1f);
+            leftIK.SetIKPosition(target);
+        }
+
+        // ── The knife (Invector has no knife hold; 2026-11-17) ───────────────
+
+        /// <summary>
+        /// The knife in the closed hand, the blade along the forearm's line. The hand lies straight on the forearm, the
+        /// handle in the middle of the palm. At rest the arm is the animation's (the blade down at his side). The wind-up
+        /// raises the hand over the shoulder while the circle closes (the blade up); the strike brings it down and ahead to
+        /// her chest height. The rigs have no finger bones: the hand's own sculpt is the grip.
+        /// </summary>
+        private void KnifeHold(Vector3 flatForward, float swing, bool windUp)
+        {
+            Vector3 right = Vector3.Cross(Vector3.up, flatForward);
+            float arm = Vector3.Distance(rightUpper.position, rightLower.position) + Vector3.Distance(rightLower.position, hand.position);
+            Vector3 over = rightUpper.position + Vector3.up * (arm * KnifeOverUp) + right * (arm * 0.05f) - flatForward * (arm * 0.05f);
+            Vector3 ahead = rightUpper.position + flatForward * (arm * KnifeAheadForward) - Vector3.up * (arm * KnifeAheadDown) - right * (arm * 0.12f);
+            Vector3 bend = -Vector3.up + right * 0.6f;
+            if (swing >= 0f && swing < 1f)
+                Reach(rightUpper, rightLower, hand, null, Vector3.Lerp(over, ahead, Mathf.SmoothStep(0f, 1f, swing)), right - flatForward * 0.3f, Vector3.zero);
+            else if (windUp)
+            {
+                float up = shooter.Current == DummyShooter.State.Telegraph ? shooter.TelegraphProgress : 0f;
+                Reach(rightUpper, rightLower, hand, null, Vector3.Lerp(hand.position, over, 0.3f + 0.7f * up), bend, Vector3.zero);
+            }
+            // The hand straight on the forearm, its palm kept on the side it faces now.
+            Vector3 forearm = (hand.position - rightLower.position).normalized;
+            TryHandFrame(true, out Vector3 fingers, out Vector3 palm);
+            hand.rotation = Quaternion.FromToRotation(fingers, forearm) * hand.rotation;
+            TryHandFrame(true, out fingers, out palm);
+            float scale = arm / KnifeArmReference;
+            gun.SetPositionAndRotation(hand.position + fingers * (PalmLength * scale) + palm * (PalmSide * scale), Quaternion.LookRotation(forearm, -palm));
+            LastAim = forearm;
+        }
+
+        private const float KnifeOverUp = 0.45f, KnifeAheadForward = 0.75f, KnifeAheadDown = 0.35f; // of the arm's length, PROPOSED
+        private const float KnifeArmReference = 0.52f; // metres: the arm the palm numbers are for (the T19 soldier)
 
         private bool pistolHeld;
         private float pistolRaise;

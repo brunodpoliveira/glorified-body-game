@@ -96,6 +96,12 @@ namespace GlorifiedBody.Automation
             yield return BotClock.Wait(1f);
             GameObject lucy = GameObject.FindGameObjectWithTag("Player");
             lucy.GetComponentInChildren<Health>().SetInvulnerable(true);
+            if (room == "AiTest")
+            {
+                yield return Lineup(lucy);
+                Finish();
+                yield break;
+            }
             if (room == "LabTest")
             {
                 // The armed lab worker at rest, then the room reduced to him, with her in his sight.
@@ -143,6 +149,126 @@ namespace GlorifiedBody.Automation
             }
             Record("hands_seen", seen > 0, $"guns={seen}");
             Finish();
+        }
+
+        /// <summary>Every armed kind (InvectorEnemyFactory.Kinds), the rifle soldier and the pistol guard first.</summary>
+        public static readonly string[] LineupKinds =
+        {
+            "soldier_rifle", "guard_pistol", "guard_shield", "soldier_gas", "labworker_pistol", "power_armour_guns", "power_armour",
+            "toll_guard_pistol", "labworker_knife", "soldier_pistol", "soldier_shotgun", "soldier_grenades", "soldier_shield",
+        };
+
+        /// <summary>
+        /// The lineup (option B, 2026-11-17): the room's figures go, then every armed kind stands alone at the same place.
+        /// Shots at the same angles from the figure: its first pose (rest), then with her 6 m ahead, while it aims (or
+        /// winds up a strike): the hands, the side, the front. The hold is measured against Invector's grip (HoldOffsets,
+        /// HoldCalibration): the turn of each hand from that grip, the gaps, the barrel against the line to its aim point.
+        /// </summary>
+        private IEnumerator Lineup(GameObject lucy)
+        {
+            Enemy.EnemyGun first = FindObjectsByType<Enemy.EnemyGun>(FindObjectsSortMode.InstanceID).FirstOrDefault();
+            Vector3 spot = first != null ? first.transform.position : Vector3.zero;
+            Quaternion facing = first != null ? Quaternion.Euler(0f, first.transform.eulerAngles.y, 0f) : Quaternion.identity;
+            foreach (Enemy.DummyShooter figure in FindObjectsByType<Enemy.DummyShooter>(FindObjectsSortMode.None)) figure.gameObject.SetActive(false);
+            foreach (Enemy.CivilianBrain figure in FindObjectsByType<Enemy.CivilianBrain>(FindObjectsSortMode.None)) figure.gameObject.SetActive(false);
+            var tank = lucy.GetComponent<TankController>();
+            int seen = 0;
+            foreach (string kind in LineupKinds)
+            {
+                if (Resources.Load<GameObject>(Enemy.EnemySpawn.Folder + kind) == null) { Record($"{kind}_prefab", false, "no prefab (InvectorEnemyFactory.BuildEnemyPrefabs)"); continue; }
+                tank.Teleport(spot - facing * Vector3.forward * 7f, 0f);
+                string label = "Hold_" + kind;
+                var marker = new GameObject(label);
+                marker.SetActive(false);
+                marker.transform.SetPositionAndRotation(spot, facing);
+                marker.AddComponent<Enemy.EnemySpawn>().kind = kind;
+                marker.SetActive(true); // the figure takes the marker's place and name
+                yield return null;
+                GameObject body = GameObject.Find(label);
+                Enemy.EnemyGun gun = body != null ? body.GetComponent<Enemy.EnemyGun>() : null;
+                Enemy.DummyShooter shooter = body != null ? body.GetComponent<Enemy.DummyShooter>() : null;
+                Animator animator = body != null ? body.GetComponent<Animator>() : null;
+                if (gun == null || shooter == null || animator == null) { Record($"{kind}_spawn", false, "no armed figure"); if (body != null) Destroy(body); continue; }
+                yield return BotClock.Wait(0.8f);
+                yield return Views(kind, "rest", animator);
+                tank.Teleport(body.transform.position + body.transform.forward * 6f, 0f);
+                body.GetComponent<Enemy.SoldierBrain>()?.Alert("bot", callOthers: false);
+                bool melee = shooter.WeaponKind == Enemy.DummyShooter.Weapon.Knife;
+                float t0 = BotClock.Now;
+                while (BotClock.Now - t0 < 20f && !(shooter.HoldsSlot && (shooter.CurrentAttack == Enemy.DummyShooter.Attack.Melee) == melee)) yield return null;
+                if (!shooter.HoldsSlot) { Record($"{kind}_aims", false, "no aim in 20 s"); Destroy(body); yield return null; continue; }
+                yield return BotClock.Wait(melee ? 0.25f : 0.6f);
+                bool ok = MeasureHold(kind, gun, shooter, animator, melee, out string detail);
+                Transform hand = animator.GetBoneTransform(HumanBodyBones.RightHand);
+                float scale = Scale(animator);
+                yield return Shot($"{kind}_aim_hands", hand.position + body.transform.right * 0.7f * scale + body.transform.forward * 0.15f * scale + Vector3.up * 0.1f * scale, hand.position);
+                yield return Views(kind, "aim", animator);
+                Record($"{kind}_hold", ok, detail);
+                seen++;
+                Destroy(body);
+                yield return null;
+            }
+            Record("hands_seen", seen == LineupKinds.Length, $"figures={seen} of {LineupKinds.Length}");
+        }
+
+        /// <summary>The figure's height against a 1.8 m man (the power armour stands 2.9 m).</summary>
+        private static float Scale(Animator animator)
+        {
+            Transform head = animator.GetBoneTransform(HumanBodyBones.Head);
+            return head != null ? Mathf.Max(0.5f, (head.position.y - animator.transform.position.y) / 1.62f) : 1f;
+        }
+
+        private IEnumerator Views(string kind, string moment, Animator animator)
+        {
+            Transform t = animator.transform;
+            float s = Scale(animator);
+            Vector3 chest = t.position + Vector3.up * 1.3f * s;
+            yield return Shot($"{kind}_{moment}_side", chest + t.right * 2.1f * s + Vector3.up * 0.1f * s, chest);
+            yield return Shot($"{kind}_{moment}_front", chest + t.forward * 2.2f * s + t.right * 0.9f * s + Vector3.up * 0.2f * s, chest);
+        }
+
+        /// <summary>
+        /// The hold against Invector's grip on the same gun (HoldOffsets): the right hand's turn from the grip and the gun's
+        /// gap from it, the left hand's turn and gap on leftHandIK (two hands), the barrel against the line to the aim point.
+        /// The knife: the blade against the forearm's line, and the handle against the palm.
+        /// </summary>
+        private static bool MeasureHold(string kind, Enemy.EnemyGun gun, Enemy.DummyShooter shooter, Animator animator, bool melee, out string detail)
+        {
+            Transform right = animator.GetBoneTransform(HumanBodyBones.RightHand), fore = animator.GetBoneTransform(HumanBodyBones.RightLowerArm);
+            Transform left = animator.GetBoneTransform(HumanBodyBones.LeftHand);
+            Transform model = gun.Model, muzzle = gun.Muzzle != null ? gun.Muzzle : gun.Model;
+            var text = new StringBuilder();
+            float palmAngle = gun.TryHandFrame(true, out Vector3 fingers, out Vector3 palm) ? Vector3.Angle(palm, model.position - right.position) : -1f;
+            if (melee)
+            {
+                float blade = Vector3.Angle(muzzle.position - model.position, right.position - fore.position);
+                text.Append($"blade to forearm {blade:0.0} deg, palm to the handle {palmAngle:0.0} deg, handle {Vector3.Distance(model.position, right.position):0.000} m from the wrist");
+                detail = text.ToString();
+                return blade < 25f;
+            }
+            string classId = Enemy.HoldOffsets.ClassOf(animator);
+            Enemy.HoldOffsets set = Enemy.HoldOffsets.Load();
+            Enemy.HoldOffsets.Entry entry = set != null ? set.Find(classId, gun.UpperBody) : null;
+            float aim = Vector3.Angle(muzzle.forward, shooter.AimPoint - muzzle.position);
+            text.Append($"{classId} set {gun.UpperBody}, clip hold {gun.ClipHold}; barrel to the aim {aim:0.0} deg, the chest turned {gun.AimTurn:0.0} deg to it; palm to the grip {palmAngle:0.0} deg");
+            if (entry == null) { detail = text.Append("; no Invector grip measured (HoldCalibration)").ToString(); return false; }
+            float foreLength = Vector3.Distance(right.position, fore.position);
+            Vector3 grip = right.position + right.rotation * entry.gripOffset * foreLength + model.rotation * entry.tuneGripOffset;
+            float turnRight = Quaternion.Angle(right.rotation, model.rotation * Quaternion.Inverse(entry.GripRotation));
+            float gapRight = Vector3.Distance(model.position, grip);
+            text.Append($"; right hand {turnRight:0.0} deg from Invector's grip, gun {gapRight:0.000} m off it");
+            bool ok = turnRight < 10f && gapRight < 0.03f && aim < 6f;
+            Transform leftIK = FindDeep(model, "leftHandIK");
+            if (leftIK != null && gun.FreeHandTo == null)
+            {
+                float turnLeft = Quaternion.Angle(left.rotation, entry.LeftHand(leftIK.rotation));
+                float gapLeft = Vector3.Distance(left.position, leftIK.position + model.rotation * entry.tuneLeftOffset);
+                text.Append($"; left hand {turnLeft:0.0} deg from the grip on leftHandIK, wrist {gapLeft:0.000} m off it");
+                ok &= turnLeft < 30f && gapLeft < 0.03f;
+            }
+            else text.Append("; one hand");
+            detail = text.ToString();
+            return ok;
         }
 
         /// <summary>

@@ -1,0 +1,87 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 31241ffec0c4671199f434f01922115a, type: 3}
+  m_Name: hold_offsets
+  m_EditorClassIdentifier: Assembly-CSharp::GlorifiedBody.Enemy.HoldOffsets
+  entries:
+  - classId: guard
+    upperBody: 1
+    gripOffset: {x: 0.09006885, y: 0.26917365, z: 0.10100138}
+    gripEuler: {x: 303.108, y: 68.52545, z: 288.0492}
+    leftEuler: {x: 341.77383, y: 255.35771, z: 327.9711}
+    tuneGripOffset: {x: 0, y: 0, z: 0}
+    tuneGripEuler: {x: 0, y: 0, z: 0}
+    tuneLeftOffset: {x: 0, y: 0, z: 0}
+    tuneLeftEuler: {x: 0, y: 0, z: 0}
+  - classId: labworker
+    upperBody: 1
+    gripOffset: {x: -0.008431578, y: 0.29607612, z: 0.055098798}
+    gripEuler: {x: 285.92316, y: 55.173134, z: 275.94327}
+    leftEuler: {x: 337.5132, y: 194.82607, z: 348.41574}
+    tuneGripOffset: {x: 0, y: 0, z: 0}
+    tuneGripEuler: {x: 0, y: 0, z: 0}
+    tuneLeftOffset: {x: 0, y: 0, z: 0}
+    tuneLeftEuler: {x: 0, y: 0, z: 0}
+  - classId: power_armour
+    upperBody: 2
+    gripOffset: {x: -0.016809901, y: 0.3005791, z: 0.011747208}
+    gripEuler: {x: 281.4915, y: 84.37329, z: 245.0359}
+    leftEuler: {x: 348.51932, y: 218.12845, z: 348.91086}
+    tuneGripOffset: {x: 0, y: 0, z: 0}
+    tuneGripEuler: {x: 0, y: 0, z: 0}
+    tuneLeftOffset: {x: 0, y: 0, z: 0}
+    tuneLeftEuler: {x: 0, y: 0, z: 0}
+  - classId: power_armour
+    upperBody: 3
+    gripOffset: {x: -0.010380951, y: 0.30085957, z: 0.011999302}
+    gripEuler: {x: 282.74112, y: 84.01657, z: 244.78989}
+    leftEuler: {x: 344.78137, y: 217.20012, z: 346.4137}
+    tuneGripOffset: {x: 0, y: 0, z: 0}
+    tuneGripEuler: {x: 0, y: 0, z: 0}
+    tuneLeftOffset: {x: 0, y: 0, z: 0}
+    tuneLeftEuler: {x: 0, y: 0, z: 0}
+  - classId: soldier
+    upperBody: 1
+    gripOffset: {x: 0.12110344, y: 0.27238476, z: 0.043687988}
+    gripEuler: {x: 298.4747, y: 102.229256, z: 298.54767}
+    leftEuler: {x: 22.168188, y: 296.93805, z: 328.79764}
+    tuneGripOffset: {x: 0, y: 0, z: 0}
+    tuneGripEuler: {x: 0, y: 0, z: 0}
+    tuneLeftOffset: {x: 0, y: 0, z: 0}
+    tuneLeftEuler: {x: 0, y: 0, z: 0}
+  - classId: soldier
+    upperBody: 2
+    gripOffset: {x: 0.14174901, y: 0.2623747, z: 0.042837642}
+    gripEuler: {x: 304.3284, y: 99.61949, z: 294.71005}
+    leftEuler: {x: 16.809433, y: 303.92932, z: 336.16345}
+    tuneGripOffset: {x: 0, y: 0, z: 0}
+    tuneGripEuler: {x: 0, y: 0, z: 0}
+    tuneLeftOffset: {x: 0, y: 0, z: 0}
+    tuneLeftEuler: {x: 0, y: 0, z: 0}
+  - classId: soldier
+    upperBody: 3
+    gripOffset: {x: 0.1444726, y: 0.26219147, z: 0.033934105}
+    gripEuler: {x: 305.13507, y: 102.37048, z: 292.09216}
+    leftEuler: {x: 17.57975, y: 296.50165, z: 325.45557}
+    tuneGripOffset: {x: 0, y: 0, z: 0}
+    tuneGripEuler: {x: 0, y: 0, z: 0}
+    tuneLeftOffset: {x: 0, y: 0, z: 0}
+    tuneLeftEuler: {x: 0, y: 0, z: 0}
+  - classId: toll_guard
+    upperBody: 1
+    gripOffset: {x: 0.0714792, y: 0.2899468, z: 0.03987137}
+    gripEuler: {x: 298.1339, y: 82.93633, z: 258.7533}
+    leftEuler: {x: 337.85248, y: 258.89227, z: 322.7056}
+    tuneGripOffset: {x: 0, y: 0, z: 0}
+    tuneGripEuler: {x: 0, y: 0, z: 0}
+    tuneLeftOffset: {x: 0, y: 0, z: 0}
+    tuneLeftEuler: {x: 0, y: 0, z: 0}

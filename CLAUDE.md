@@ -891,6 +891,16 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   launcher's grip; `EnemyGun.Protract` turns the left clavicle forward (at most 20 degrees, only when the straight arm is
   short). The bot `holds` logs the arm, the reach, the shoulder turn and the pump.
   Round 184: the `guard` class is the new T49 guard (`renders/T49_characters/guard_t27/guard_t49_game.glb`, 8,999).
+- 2026-11-17, THE STALE AVATARS AND THE INVECTOR HOLDS (`devlog-notes/2026-11-17_stale_avatar_neck.md`,
+  `2026-11-17_invector_holds.md`). The guard's "REAL thin neck": a new FBX under the old node names kept the old
+  reference pose; `AvatarIsStale` now compares the reference positions too (more than 1 %), `BuildAll` maps a stale
+  avatar again. OPTION B (Bruno: "Yes, build B"): in the aim, Invector's upper-body clip sets the arms, the gun sits in the
+  right hand by Invector's grip (`HoldOffsets`, `Resources/Characters/hold_offsets.asset`, measured on the vBot by
+  `HoldCalibration.Build`), the chest turns so the barrel follows the aim point, `vIKSolver` puts the left hand on
+  `leftHandIK`. The low ready stays procedural with the same grip; a one-hand gun's left hand goes to the shield or down.
+  The knife: the blade along the forearm, the handle in the palm. AFTER A MODEL SWAP OR A NEW ARMED CLASS: run
+  `HoldCalibration.Build` (add the class to `HoldCalibration.Holds`), then the bot `play AiTest Main_Menu holds 600`
+  (every armed kind in a lineup, shots `holds_<n>_<kind>_{rest,aim}_*`). Tune a class in the asset's tune fields.
 - 2026-11-06, day, MK AS AMMUNITION (`devlog-notes/2026-11-06_mk_ammo_short_death_search.md`, Bruno: "that basically makes mk an ammo counter and the pills clips"): one MK bar for each power
   (`PsychicStats.Mk(kind)`; `Nalcon` reads the selected bar; only that bar shows on the HUD), no recharge, one capsule for each power (`DrugType.Nalcon`, `NalconFire`, `NalconLift`). Every point of MK spent fills
   SHORT (`ShortPerMkPoint`). A short can kill her (killer id `short`, its own death screen row); a second wind saves her and ends the short. SCARCITY and DEEP WELL change the cost. `FireTeam`: suppression
