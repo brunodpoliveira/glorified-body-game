@@ -99,9 +99,10 @@ namespace GlorifiedBody.Tests.EditMode
             Assert.AreEqual(crown, crownRenderer.sharedMaterial, "the Crown wears its own material");
         }
 
-        /// <summary>The T49 guard, patient and nurse (round 178, the T26 full mesh + the T27 bake): 9,000 triangles, the
-        /// walk and the run travel, the 2048 map set with the cloth capped at about 0.25 (ART_LESSONS §3 item 8).</summary>
-        [TestCase("guard", "guard_t49", 9000)]
+        /// <summary>The T49 guard, patient and nurse (round 178, the T26 full mesh + the T27 bake; the guard baked again in
+        /// round 184 with the round shoulder patches): about 9,000 triangles, the walk and the run travel, the 2048 map set
+        /// with the cloth capped at about 0.25 (ART_LESSONS §3 item 8).</summary>
+        [TestCase("guard", "guard_t49", 8999)]
         [TestCase("patient", "patient_t49", 8999)]
         [TestCase("nurse", "nurse_t49", 9000)]
         public void TheRound178Classes_AreT49Models_WithTheirMaps(string id, string mesh, int triangles)

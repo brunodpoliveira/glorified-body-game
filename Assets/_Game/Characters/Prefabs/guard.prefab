@@ -144,14 +144,6 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 9
       objectReference: {fileID: 0}
-    - target: {fileID: -1132994117033720733, guid: 42deba20f92988ca3be66f4578b282cb, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: -0.04913187
-      objectReference: {fileID: 0}
-    - target: {fileID: -1132994117033720733, guid: 42deba20f92988ca3be66f4578b282cb, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: -0.045708712
-      objectReference: {fileID: 0}
     - target: {fileID: -166481425867965182, guid: 42deba20f92988ca3be66f4578b282cb, type: 3}
       propertyPath: m_Layer
       value: 9

@@ -887,6 +887,7 @@ memory and three psychic powers, escapes the cult's lab. Started 2026-10-20 (the
   LONG-GUN SUPPORT HAND: the T49 soldier's left arm (0.498 m, the T19 one 0.527 m) stopped 7.2 cm short of the gas
   launcher's grip; `EnemyGun.Protract` turns the left clavicle forward (at most 20 degrees, only when the straight arm is
   short). The bot `holds` logs the arm, the reach, the shoulder turn and the pump.
+  Round 184: the `guard` class is the new T49 guard (`renders/T49_characters/guard_t27/guard_t49_game.glb`, 8,999).
 - 2026-11-06, day, MK AS AMMUNITION (`devlog-notes/2026-11-06_mk_ammo_short_death_search.md`, Bruno: "that basically makes mk an ammo counter and the pills clips"): one MK bar for each power
   (`PsychicStats.Mk(kind)`; `Nalcon` reads the selected bar; only that bar shows on the HUD), no recharge, one capsule for each power (`DrugType.Nalcon`, `NalconFire`, `NalconLift`). Every point of MK spent fills
   SHORT (`ShortPerMkPoint`). A short can kill her (killer id `short`, its own death screen row); a second wind saves her and ends the short. SCARCITY and DEEP WELL change the cost. `FireTeam`: suppression
